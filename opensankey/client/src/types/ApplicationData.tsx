@@ -46,6 +46,7 @@ import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
+import { ExcelOptionType } from '../components/dialogs/ExcelModalSaver'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -529,7 +530,7 @@ export class Class_ApplicationData {
    */
   public saveToExcel(
     url_prefix: string,
-    option:JSON
+    option:ExcelOptionType
   ) {
     this.sendWaitingToast(
       () => {
@@ -560,7 +561,7 @@ export class Class_ApplicationData {
    */
   protected _saveToExcel(
     url_prefix: string,
-    save_options:JSON
+    save_options:ExcelOptionType
   ) {
     JSONtoExcel(
       this._toJSON(),
@@ -1065,7 +1066,7 @@ public readUrlJSON(url_data: string) {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via Excel saving button
-      this.saveToExcel('/opensankey/',{} as JSON)
+      this.saveToExcel('/opensankey/',{} as ExcelOptionType)
     }
     // Fullscreen --------------------------------------------------------------------
     // else if (evtCtrlF) {

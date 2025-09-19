@@ -420,7 +420,7 @@ class SankeyToJson(object):
                 for level in range(1, dimension.depth + 1)
             }
             # Siblings
-            siblings = [_ for _ in sankey.dimensions.values() if (dimension.is_antagonist(_) and _ != dimension)]
+            siblings = dimension.siblings.values()
             unactivated_dimensions += siblings
             # Dimension dict
             level_tags_json[dimension.id] = {
@@ -1066,11 +1066,11 @@ class SankeyToJson(object):
                 # ie : Node is parent-root
                 # Nothing to do
                 pass
-            # else:
-            #     # Node does not exist in given dim
-            #     node_json["dimensions"][id] = {}
-            #     if node._dimensions_as_child or node._dimensions_as_parent:
-            #         node_json["dimensions"][id]["antitag"] = True
+            elif dimension.is_antagonist(node):
+                # Node does not exist in given dim
+                node_json["dimensions"][id] = {}
+                #if node._dimensions_as_child or node._dimensions_as_parent:
+                node_json["dimensions"][id]["antitag"] = True
         return node_json
 
 
@@ -1191,6 +1191,12 @@ class JsonToSankey(object):
             if tagg_type == CONST_IO_XL.TAG_TYPE_LEVEL:
                 dim = self.sankey.get_or_create_dimension(tagg_json["name"])
                 self._dimensions_id_corresp[tagg_id] = dim
+                if "siblings" in tagg_json.keys():
+                    for sib_tagg_id in tagg_json["siblings"]:
+                        sibling_dim_name = self.json[tagg_type_json][sib_tagg_id]['name']
+                        sib_tagg = self.sankey.get_or_create_dimension(sibling_dim_name)
+                        dim.add_sibling(sib_tagg)
+                        sib_tagg.add_sibling(dim)
                 continue
             # Specific taggs to ignore
             if (tagg_type == CONST_IO_XL.TAG_TYPE_FLUX) and (tagg_id == "flux_types"):
@@ -1291,6 +1297,8 @@ class JsonToSankey(object):
             for dimension_id, dimension in node_json["dimensions"].items():
                 if "parent_name" in dimension.keys():
                     all_dim_parent_child.append((dimension_id, dimension["parent_name"], node_id))
+                if "antitag" in dimension.keys():
+                    self.sankey.get_or_create_dimension(dimension_id).add_antagonist(node)           
         # Apply all dimensions
         for dim_parent_child in all_dim_parent_child:
             dim_id, parent_id, child_id = dim_parent_child
