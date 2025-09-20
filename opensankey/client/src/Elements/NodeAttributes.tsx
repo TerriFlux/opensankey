@@ -264,6 +264,7 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
 
   public copyFrom(element: Class_NodeAttribute) {
     Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
+      if (element._attributes[key as AttributeKey] == undefined) return
       //@ts-expect-error Copy operation
       this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
     })
