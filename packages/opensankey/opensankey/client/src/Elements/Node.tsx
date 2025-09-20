@@ -415,8 +415,13 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
     this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
 
-    const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
-    this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
+    if (!Array.isArray(json_node_object.style)) {
+      const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
+      this.style = [this.sankey.node_styles_dict[style_id]]
+    } else {
+      const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
+      this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
+    }
 
     OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
     const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
