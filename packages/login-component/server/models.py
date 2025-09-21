@@ -119,11 +119,11 @@ class User(UserMixin, db.Model):
             user_license.delete()
         db.session.delete(self)
         db.session.commit()
-        
+
     def get_is_dev(self):
         """
         Return True if user is a developer
-        
+
         Returns
         -------
         :return: True if user is developer, False otherwise

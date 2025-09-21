@@ -283,7 +283,7 @@ def has_license():
                     ),
                     500,
                 )
-        if current_user.get_is_dev() == True:
+        if current_user.get_is_dev():
             response['dev'] = True
 
         return jsonify({"licenses": response, "message": "Success"}), 200
