@@ -7,6 +7,7 @@ export class LoginComponent {
   protected _has_account: boolean = false // token when user is connected with an account
   protected _has_licence_sankeyplus: boolean = false
   protected _has_licence_sankeysuite: boolean = false
+  protected _has_licence_dev: boolean = false
   protected _ok_to_check_account = true
   protected _ok_to_check_account_timeout: NodeJS.Timeout | null = null
 
@@ -21,6 +22,7 @@ export class LoginComponent {
     // Default config on creation
     this._has_licence_sankeyplus = false
     this._has_licence_sankeysuite = false
+    this._has_licence_dev = false
   }
 
 public async checkTokens(
@@ -55,6 +57,7 @@ public async checkTokens(
         }
         this._has_licence_sankeyplus = false
         this._has_licence_sankeysuite = false
+        this._has_licence_dev = false
         // Si l'utilisateur a un compte, vérifier ses licences
         if (this._has_account) {
           console.log('checkTokens: Checking licenses for authenticated user')
@@ -72,6 +75,7 @@ public async checkTokens(
                   // Mettre à jour les états des licences spécifiques
                   this._has_licence_sankeyplus = license.licenses['OpenSankey+'] == true
                   this._has_licence_sankeysuite = license.licenses['terriflux'] == true
+                  this._has_licence_dev = license.licenses['dev'] == true
                   console.log('checkTokens: SankeyPlus license:', this._has_licence_sankeyplus)
                   console.log('checkTokens: SankeySuite license:', this._has_licence_sankeysuite)
                 })
@@ -119,4 +123,5 @@ public async checkTokens(
   public get has_account() { return this._has_account }
   public get has_licence_sankeyplus() { return this._has_licence_sankeyplus }
   public get has_licence_sankeysuite() { return this._has_licence_sankeysuite }
+  public get has_licence_dev() { return this._has_licence_dev }
 }
