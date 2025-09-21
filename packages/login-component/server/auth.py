@@ -118,9 +118,8 @@ def signup_post():
     # Create validation token
     serializer = Serializer(current_app.config["SECRET_KEY"])
     token = serializer.dumps(user_infos)
-    license_token = serializer.dumps(license)
     if license:
-        url = f"register?t={token}&license={license_token}"
+        url = f"register?t={token}&license={license}"
     else:
         url = f"register?t={token}"
     # Send confirm mail
