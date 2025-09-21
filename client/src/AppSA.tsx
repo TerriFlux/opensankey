@@ -58,6 +58,7 @@ import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/M
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+import { ZDD_MENU_CONFIG } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextZDDConfig'
 
 
 // Specific methods ==================================================================================
@@ -189,6 +190,9 @@ export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDat
     new_data_app.has_sankey_afm = has_account && log_component.has_licence_sankeysuite
     console.log('new_data_app.has_sankey_afm set to:', new_data_app.has_sankey_afm)
 
+    new_data_app.has_sankey_dev = has_account && log_component.has_licence_dev
+    console.log('new_data_app.has_sankey_dev set to:', new_data_app.has_sankey_dev)
+
     console.log('Calling updateAllMenuComponents...')
     new_data_app.menu_configuration.updateAllMenuComponents()
     new_data_app.menu_configuration.ref_rerender_submodules_menus.current()
@@ -209,7 +213,8 @@ export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDat
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       createZDDModifier={(app_data) => createZDDModifierPlus(app_data as Class_ApplicationDataSA)}
-      ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
+      //@ts-expect-error xxx
+      ZDD_MENU_CONFIG={new_data_app.has_sankey_dev ? createZDDMenuConfigPlus() : ZDD_MENU_CONFIG}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
       NODE_MENU_CONFIG={createNodeMenuConfigPlus()}
