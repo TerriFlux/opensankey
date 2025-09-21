@@ -29,7 +29,8 @@ export async function userSignUp(
   password: string,
   firstname: string,
   lastname: string,
-  callback: (ok: boolean) => void
+  callback: (ok: boolean) => void,
+  license: LicenseType
 ) {
   resetLogs()
   fetch(window.location.origin + '/auth/signup/create', {
@@ -42,7 +43,8 @@ export async function userSignUp(
       password: password,
       firstname: firstname,
       lastname: lastname,
-      lang: i18next.language
+      lang: i18next.language,
+      license: license
     })
   })
     .then((response) => {
@@ -76,7 +78,7 @@ export async function userValidate(
   loginComponent:LoginComponent,
   navigate: NavigateFunction,
   setLicenses:React.MutableRefObject<() => void>,
-  license: LicenseType 
+  license: LicenseType | null
 ) {
   resetLogs()
 

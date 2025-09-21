@@ -115,7 +115,8 @@ const Register = ({
           lastname,
           (ok: boolean) => {
             setOkAccountCreated(ok)
-          }
+          },
+          license
         )
           .then(() =>
             setOnWait(false)
@@ -130,6 +131,7 @@ const Register = ({
   // Token validation
   const [searchParams,] = useSearchParams()
   const token = searchParams.get('t')
+  const the_license = searchParams.get('license') as LicenseType | null
   if (token && registerStep !== 2) {
     setRegisterStep(2)
     userValidate(
@@ -137,7 +139,7 @@ const Register = ({
       loginComponent,
       navigate,
       setLicenses,
-      license
+      the_license
     )
   }
 

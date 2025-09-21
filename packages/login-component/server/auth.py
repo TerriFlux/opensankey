@@ -97,6 +97,7 @@ def signup_post():
     """
     # Read request
     user_infos = request.get_json()
+    license = user_infos.pop('license', None)
 
     # Prepare response
     response = {"message": "ok"}
@@ -117,10 +118,14 @@ def signup_post():
     # Create validation token
     serializer = Serializer(current_app.config["SECRET_KEY"])
     token = serializer.dumps(user_infos)
-
+    license_token = serializer.dumps(license)
+    if license:
+        url = f"register?t={token}&license={license_token}"
+    else:
+        url = f"register?t={token}"
     # Send confirm mail
     try:
-        send_account_confirm_mail(user_infos, "register?t={}".format(token))
+        send_account_confirm_mail(user_infos, url)
     except Exception as e:
         return "Error on send confirm mail : {}".format(e), 500
 
