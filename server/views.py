@@ -298,30 +298,30 @@ def optimize_launch():
         # Load from input excel file
         excel_sheets_to_remove = []
         do_coherence_checks = not session["create_empty_ter"]
-        try:
-            io_excel = IOExcel()
-            ok, msg = io_excel.load_sankey_from_excel_file(
-                session["input_excel_file_abspath"],
-                do_coherence_checks=do_coherence_checks,
-                sheet_to_remove_names=excel_sheets_to_remove,
-            )
-            sankey = io_excel.sankey
-        except Exception as e:
-            # Logging unexpected error
-            trace.logger.error("UNEXPECTED ERROR in input file")
-            trace.logger.error("Please report this issue to support@open-sankey.fr")
-            trace.logger.debug("UNEXPECTED ERROR {}".format(e))
-            trace.logger.info(
-                "{:-<{w}}".format(
-                    "[FAILED] Could not extract datas from input file ",
-                    w=MAX_LINE_LENGTH,
-                )
-            )
-            # Return response
-            err_msg = "UNEXPECTED ERROR: "
-            err_msg += "load_sankey_from_excel_file - erreur fatale. "
-            err_msg += "{}".format(e)
-            return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
+        # try:
+        io_excel = IOExcel()
+        ok, msg = io_excel.load_sankey_from_excel_file(
+            session["input_excel_file_abspath"],
+            do_coherence_checks=do_coherence_checks,
+            sheet_to_remove_names=excel_sheets_to_remove,
+        )
+        sankey = io_excel.sankey
+        # except Exception as e:
+        #     # Logging unexpected error
+        #     trace.logger.error("UNEXPECTED ERROR in input file")
+        #     trace.logger.error("Please report this issue to support@open-sankey.fr")
+        #     trace.logger.debug("UNEXPECTED ERROR {}".format(e))
+        #     trace.logger.info(
+        #         "{:-<{w}}".format(
+        #             "[FAILED] Could not extract datas from input file ",
+        #             w=MAX_LINE_LENGTH,
+        #         )
+        #     )
+        #     # Return response
+        #     err_msg = "UNEXPECTED ERROR: "
+        #     err_msg += "load_sankey_from_excel_file - erreur fatale. "
+        #     err_msg += "{}".format(e)
+        #     return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
         if not ok:
             # logging error that are anticipated
             trace.logger.error("ERROR in input file.")
