@@ -13,6 +13,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       titleKey: 'Positionnement',
       children: [
         { type: 'button', actionName: 'computeAutoPosition' },
+        { type: 'button', actionName: 'computeAutoPositionOptim' },
         { type: 'button', actionName: 'toggleParametricMode' },
         { type: 'button', actionName: 'toggleAutoX' },
         { type: 'button', actionName: 'setTradeClose' },
@@ -131,6 +132,18 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       labels: {
         en: 'Auto position',
         fr: 'Positionnement auto'
+      },
+      tooltips: {
+        en: 'Automatically position all nodes in the diagram',
+        fr: 'Positionner automatiquement tous les nœuds du diagramme'
+      }
+    },
+
+    computeAutoPositionOptim: {
+      type: 'action',
+      labels: {
+        en: 'Auto position (optim)',
+        fr: 'Positionnement auto (optim)'
       },
       tooltips: {
         en: 'Automatically position all nodes in the diagram',
@@ -355,7 +368,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     bgGridValue: () => drawing_area.grid_visible,
     maskLegend: () => drawing_area.maskLegend(),
     maskLegendValue: () => drawing_area.legend.masked,
-    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false,true); saveToCache() },
+    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false,false); saveToCache() },
+    computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false,true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().position_type === 'parametric',
