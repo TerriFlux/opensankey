@@ -2,7 +2,7 @@
 import React, { FC, useState, useRef } from 'react'
 
 import ReCAPTCHA from 'react-google-recaptcha'
-import { useNavigate,NavigateFunction, useSearchParams } from 'react-router-dom'
+import { useNavigate, NavigateFunction, useSearchParams } from 'react-router-dom'
 import { FaCheck } from 'react-icons/fa'
 import { LuBadgeAlert } from 'react-icons/lu'
 import { TFunction } from 'i18next'
@@ -10,6 +10,7 @@ import { TFunction } from 'i18next'
 import {
   Box,
   Button,
+  ButtonGroup,
   Card,
   CardBody,
   CardHeader,
@@ -22,6 +23,7 @@ import {
   InputLeftAddon,
   InputRightElement,
   Spinner,
+  Text,
   useDisclosure,
 } from '@chakra-ui/react'
 
@@ -32,6 +34,7 @@ import { logError, userSignUp, userValidate } from './RegisterFunctions'
 import TermsOfUse from './TermsOfUse'
 import { Presentation } from './Presentation'
 import { LoginComponent } from '../LoginComponent'
+import { LicenseType } from '../Paiement/PaiementFunctions'
 
 
 export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,})$'
@@ -47,19 +50,20 @@ export const lic_regex_str = '^([a-zA-Z0-9- ]{2,})$'
  * @return {*}
  */
 const Register = ({
-  t, logo, logo_sankey_plus, loginComponent, setLicenses, returnToApp,theme
-}:{
+  t, logo, logo_sankey_plus, loginComponent, setLicenses, returnToApp, theme
+}: {
   t: TFunction,
   logo: string,
   logo_sankey_plus: string,
-  loginComponent:LoginComponent,
-  setLicenses:React.MutableRefObject<() => void>,
+  loginComponent: LoginComponent,
+  setLicenses: React.MutableRefObject<() => void>,
   returnToApp: (navigate: NavigateFunction) => void,
-  theme:Record<string, any>
+  theme: Record<string, any>
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
   const [registerStep, setRegisterStep] = useState(0)
+
 
   // License registrering informations
   const [user_name, setUserName] = useState('')
@@ -67,6 +71,7 @@ const Register = ({
   const [firstname, setUserFirstName] = useState('')
   const [lastname, setUserLastName] = useState('')
   const captchaRef = useRef<ReCAPTCHA>(null)
+  const [license, setLicense] = useState<LicenseType>('osplusmensuel')
 
   // Initialise navigation function
   const navigate = useNavigate()
@@ -84,13 +89,13 @@ const Register = ({
   const [ok_captcha, setOkCaptcha] = useState(false)
   const [ok_account_created, setOkAccountCreated] = useState(false)
   const okAccountInfos =
-      (ok_email > 1) &&
-      (ok_password > 1) &&
-      (ok_firstname > 1) &&
-      (ok_lastname > 1) &&
-      ok_terms_of_uses &&
-      ok_captcha &&
-      (!ok_account_created)
+    (ok_email > 1) &&
+    (ok_password > 1) &&
+    (ok_firstname > 1) &&
+    (ok_lastname > 1) &&
+    ok_terms_of_uses &&
+    ok_captcha &&
+    (!ok_account_created)
 
   // Handler : License registrering
   const handleSubmit = async () => {
@@ -131,7 +136,8 @@ const Register = ({
       token,
       loginComponent,
       navigate,
-      setLicenses
+      setLicenses,
+      license
     )
   }
 
@@ -162,16 +168,53 @@ const Register = ({
       logo_sankey_plus={logo_sankey_plus}
     />,
     <Box
-      display="inline-grid"
+      display="flex"
+      flexDirection="column"
+      alignItems="center" // Centre horizontalement
+      gap={4}
     >
-      <Button
-        variant='btn_lone_navigation_tertiary'
-        maxWidth='inherit'
-        width='fit-content'
-        type='submit'
-        onClick={handleSubmit}>
-        {t('Register.presentation.btn_next')}
-      </Button>
+      {/* Texte avant les boutons - plus gros et gras */}
+      <Text
+        textAlign="center"
+        mb={2}
+        fontSize="lg" // ou "2xl", "3xl" pour plus gros
+        fontWeight="bold"
+      >
+        {t('Register.presentation.choose_plan')}
+      </Text>
+      <Text
+        textAlign="center"
+        mb={2}
+        fontSize="md" // ou "2xl", "3xl" pour plus gros
+        fontWeight="bold"
+      >
+        {t('Register.presentation.trial_month')}
+      </Text>
+      {/* Boutons avec espace entre eux - centrés */}
+      <ButtonGroup spacing={30} justifyContent="center">
+        <Button
+          variant='btn_lone_navigation_tertiary'
+          maxWidth='inherit'
+          width='fit-content'
+          type='submit'
+          onClick={() => {
+            setLicense('osplusmensuel')
+            handleSubmit()
+          }}>
+          {t('Register.presentation.buy_opensankeyplus_monthly')}
+        </Button>
+        <Button
+          variant='btn_lone_navigation_tertiary'
+          maxWidth='inherit'
+          width='fit-content'
+          type='submit'
+          onClick={() => {
+            setLicense('osplusannuel')
+            handleSubmit()
+          }}>
+          {t('Register.presentation.buy_opensankeyplus_annual')}
+        </Button>
+      </ButtonGroup>
     </Box>
   ]
 
@@ -362,7 +405,7 @@ const Register = ({
         {
           on_wait ?
             <Spinner /> :
-            t('Register.account.btn_next')
+            t('Register.account.create_account')
         }
       </Button>
     </Box>,
@@ -387,7 +430,7 @@ const Register = ({
   }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-  
+
   return (
     <ChakraProvider
       theme={theme}

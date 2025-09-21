@@ -4,6 +4,7 @@ import LZString from 'lz-string'
 import i18next from 'i18next'
 import { NavigateFunction } from 'react-router-dom'
 import { LoginComponent } from '../LoginComponent'
+import { LicenseType } from '../Paiement/PaiementFunctions'
 
 export const app_name_opensankeyplus = 'OpenSankey+'
 export const app_name_sankeysuite = 'SankeySuite'
@@ -74,7 +75,8 @@ export async function userValidate(
   token: string,
   loginComponent:LoginComponent,
   navigate: NavigateFunction,
-  setLicenses:React.MutableRefObject<() => void>
+  setLicenses:React.MutableRefObject<() => void>,
+  license: LicenseType 
 ) {
   resetLogs()
 
@@ -106,7 +108,7 @@ export async function userValidate(
       let next_page
       if (loginComponent.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
-        next_page = '/license/checkout'
+        next_page = `/license/checkout/${license}`
       }
       else {
         next_page = '/login'

@@ -1,6 +1,6 @@
 
-import React, { FC, useState, useEffect, useCallback } from 'react'
-import { Navigate, NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
+import React, { FC, useState, useEffect, useMemo } from 'react'
+import { Navigate, NavigateFunction, useNavigate, useSearchParams,useParams } from 'react-router-dom'
 import { TFunction } from 'i18next'
 import { loadStripe } from '@stripe/stripe-js'
 import {
@@ -20,7 +20,8 @@ import {
 
 import {
   createSubscription,
-  getStripePublishableKey
+  getStripePublishableKey,
+  LicenseType
 } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
 
@@ -29,11 +30,16 @@ import { Presentation } from '../Register/Presentation'
  * @return {*}
  */
 export const PaiementCheckout = () => {
+  const { license } = useParams<{ license: LicenseType }>()
+  
   // States
   const [publishableKey, setPublishableKey] = useState('')
-  let stripePromise = undefined
-  if (publishableKey !== '')
-    stripePromise = loadStripe(publishableKey)
+  const [clientSecret, setClientSecret] = useState('')
+  
+  // Créer stripePromise de manière stable
+  const stripePromise = useMemo(() => {
+    return publishableKey ? loadStripe(publishableKey) : undefined
+  }, [publishableKey])
 
   // Effects
   const fetchPublishableKey = async () => {
@@ -41,18 +47,33 @@ export const PaiementCheckout = () => {
     setPublishableKey(key)
   }
 
+  const fetchClientSecret = async () => {
+    if (license) {
+      try {
+        const secret = await createSubscription(license)
+        setClientSecret(secret)
+      } catch (error) {
+        console.error('Erreur lors de la création de la souscription:', error)
+      }
+    }
+  }
+
   useEffect(() => {
     fetchPublishableKey()
   }, [])
 
-  const fetchClientSecret = useCallback(createSubscription, [])
+  useEffect(() => {
+    if (license) {
+      fetchClientSecret()
+    }
+  }, [license]) // Se déclenche quand 'license' change
 
-  const options = { fetchClientSecret }
+  const options = { clientSecret  }
 
   return (
     <div id="checkout">
       {
-        (stripePromise === undefined) ?
+        (stripePromise === undefined || !clientSecret) ?
           <Spinner /> :
           <EmbeddedCheckoutProvider
             stripe={stripePromise}

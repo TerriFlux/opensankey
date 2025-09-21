@@ -42,6 +42,7 @@ STRIPE_KEYS = {
     "secret_key": None,
     "publishable_key": None,
     "price_id_osplusmensuel": None,
+    "price_id_osplusannuel": None,
     "endpoint_secret": None,
 }
 CLIENT_ROOT_URL = None
@@ -50,6 +51,7 @@ if "STRIPE_SECRET_KEY" in os.environ:
         "secret_key": os.environ["STRIPE_SECRET_KEY"],
         "publishable_key": os.environ["STRIPE_PUBLISHABLE_KEY"],
         "price_id_osplusmensuel": os.environ["STRIPE_PRICE_ID_OSPLUSMENSUEL"],
+        "price_id_osplusannuel": os.environ["STRIPE_PRICE_ID_OSPLUSANNUEL"],
         "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
     }
     CLIENT_ROOT_URL = os.environ["CLIENT_ROOT_URL"]
@@ -78,17 +80,33 @@ def get_publishable_key():
     return jsonify(stripe_config)
 
 
-@stripe_blueprint.route("/stripe/create-checkout-session/osplus", methods=["POST"])
-def create_checkout_session():
+@stripe_blueprint.route("/stripe/create-checkout-session/<license_type>", methods=["POST"])
+def create_checkout_session(license_type):
     """
     Create and return a checkout object for stripe client.
 
+    Parameters
+    ----------
+    license_type : str
+        Type de licence (osplusmensuel ou osplusannuel)
+
     Returns
     -------
-    :return: _description_
-    :rtype: _type_
+    :return: JSON avec clientSecret ou erreur
+    :rtype: dict
     """
+    # Mapping des types de licences vers les price_id
+    price_mapping = {
+        "osplusmensuel": STRIPE_KEYS["price_id_osplusmensuel"],
+        "osplusannuel": STRIPE_KEYS["price_id_osplusannuel"]
+    }
+
+    # Vérifier que le type de licence est valide
+    if license_type not in price_mapping:
+        return jsonify(error="Type de licence invalide"), 400
+
     stripe.api_key = STRIPE_KEYS["secret_key"]
+
     try:
         checkout_session = stripe.checkout.Session.create(
             ui_mode="embedded",
@@ -101,12 +119,11 @@ def create_checkout_session():
             allow_promotion_codes=True,
             line_items=[
                 {
-                    "price": STRIPE_KEYS["price_id_osplusmensuel"],
+                    "price": price_mapping[license_type],
                     "quantity": 1,
                 }
             ],
         )
-        # return jsonify({url: checkout_session.url}), 200
         return jsonify(clientSecret=checkout_session.client_secret)
     except Exception as e:
         return jsonify(error=str(e)), 500

@@ -20,14 +20,15 @@ export async function getStripePublishableKey(){
     })
 }
 
+export type LicenseType = 'osplusmensuel' | 'osplusannuel'
 /**
  * Get stripe subscription infos
  * @return {*}
  */
-export async function createSubscription(){
+export async function createSubscription(license:LicenseType){
   // Get server api url
   const path = window.location.origin
-  const url = path + '/stripe/create-checkout-session/osplus'
+  const url = path + `/stripe/create-checkout-session/${license}`
   // use server as proxy to fetch informations
   // -> Avoid "Same-Origin" problem with CORS
   return fetch(url, { method: 'POST' })
@@ -41,3 +42,4 @@ export async function createSubscription(){
       return response_json.clientSecret
     })
 }
+
