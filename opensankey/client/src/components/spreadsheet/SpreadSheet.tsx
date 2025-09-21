@@ -26,10 +26,10 @@
 
 // External imports
 import React, { useState } from 'react'
-import {Checkbox} from '@chakra-ui/react'
+import { Checkbox } from '@chakra-ui/react'
 import {
-  ReactGrid,Column,Row,CellChange,TextCell,NumberCell,Id,MenuOption,SelectionMode,
-  Cell,Compatible,CellLocation
+  ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption, SelectionMode,
+  Cell, Compatible, CellLocation, DefaultCellTypes
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
@@ -51,9 +51,9 @@ interface IType_SpreadSheetFlux {
 export const SpreadSheet = (
   { app_data }: { app_data: Class_ApplicationData }
 ) => {
-  const { menu_configuration,drawing_area } = app_data
-  const { sankey} = drawing_area
-  const {nodes_dict, links_list, nodes_list} = sankey
+  const { menu_configuration, drawing_area } = app_data
+  const { sankey } = drawing_area
+  const { nodes_dict, links_list, nodes_list } = sankey
   const [freeze, set_freeze] = useState(menu_configuration.spreadsheet_freeze)
   // // Fonction pour déterminer si on doit afficher la colonne "Valeurs calculées"
   // const shouldShowCalculatedValues = (): boolean => {
@@ -77,76 +77,66 @@ export const SpreadSheet = (
     return a
   }
 
+  const col_sizes = app_data.has_sankey_dev ? [0.05,0.05,0.03,0.03] : [0.055,0.055,0.045]
   // Générer les colonnes dynamiquement
   const getColumns = (): Column[] => {
     const innerW = window.innerWidth
     const baseColumns: Column[] = [
-      { columnId: 'source', width: innerW * 0.050, resizable: true },
-      { columnId: 'target', width: innerW * 0.050, resizable: true },
-      { columnId: 'value_data', width: innerW * 0.030, resizable: true },
-      { columnId: 'value_result', width: innerW * 0.030, resizable: true } // Valeurs collectées
+      { columnId: 'source', width: innerW * col_sizes[0], resizable: true },
+      { columnId: 'target', width: innerW * col_sizes[1], resizable: true },
+      { columnId: 'value_data', width: innerW * col_sizes[2], resizable: true }
     ]
 
-    // Ajouter la colonne "Valeurs calculées" si nécessaire
-    // if (shouldShowCalculatedValues()) {
-    //   baseColumns.push({ columnId: 'valueResult', width: innerW * 0.045, resizable: true })
-    // }
+    // Ajouter la colonne "Valeurs calculées" seulement si l'utilisateur est développeur
+    if (app_data.has_sankey_dev) {
+      baseColumns.push({ columnId: 'value_result', width: innerW * col_sizes[3], resizable: true })
+    }
 
     return baseColumns
   }
 
-  // Table header
-  const headerRow: Row = {
-    rowId: 'header', // Header row
-    cells: [
-      { type: 'header', text: app_data.t('Flux.src') },
-      { type: 'header', text: app_data.t('Flux.trgt') },
-      { type: 'header', text: app_data.t('Flux.value') },
-      { type: 'header', text: 'Val. Calculée' }
-    ]
+// Table header - générer dynamiquement selon is_dev
+const getHeaderRow = (): Row => {
+  const baseCells = [
+    { type: 'header', text: app_data.t('Flux.src') },
+    { type: 'header', text: app_data.t('Flux.trgt') },
+    { type: 'header', text: app_data.t('Flux.value') }
+  ]
+
+  if (app_data.has_sankey_dev) {
+    baseCells.push({ type: 'header', text: app_data.t('Flux.calculated_value') })
   }
 
-  // Get all table rows
-  const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => [
-    headerRow as Row,
-    ...all_flux.map<Row>((flux, idx) => {
-      return {
-        rowId: idx,
-        cells: [
-          { type: 'text', text: flux.source },
-          { type: 'text', text: flux.target },
-          { type: 'number', value: flux.value_data as number },
-          { type: 'number', value: flux.value_result as number }
-        ]
-      }
-    })
-  ]
-  // // Get all table rows
-  // const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => {
-  //   const headerRow = getHeaderRow()
-  //   const showCalculated = shouldShowCalculatedValues()
+  return {
+    rowId: 'header',
+    cells: baseCells as DefaultCellTypes[]
+  }
+}
 
-  //   const dataRows = all_flux.map<Row>((flux, idx) => {
-  //     const baseCells = [
-  //       { type: 'text', text: flux.source },
-  //       { type: 'text', text: flux.target },
-  //       { type: 'number', value: flux.valueData as number }
-  //     ]
+// Get all table rows
+const getRows = (all_flux: IType_SpreadSheetFlux[]): Row[] => {
+  const headerRow = getHeaderRow()
+  
+  const dataRows = all_flux.map<Row>((flux, idx) => {
+    const baseCells = [
+      { type: 'text', text: flux.source },
+      { type: 'text', text: flux.target },
+      { type: 'number', value: flux.value_data as number }
+    ]
 
-  //     // Ajouter la cellule "Valeurs calculées" si nécessaire
-  //     if (showCalculated) {
-  //       baseCells.push({ type: 'number', value: flux.valueResult as number })
-  //     }
+    // Ajouter la cellule "Valeurs calculées" seulement si l'utilisateur est développeur
+    if (app_data.has_sankey_dev) {
+      baseCells.push({ type: 'number', value: flux.value_result as number })
+    }
 
-  //     return {
-  //       rowId: idx,
-  //       cells: baseCells
-  //     }
-  //   })
+    return {
+      rowId: idx,
+      cells: baseCells as DefaultCellTypes[]
+    } 
+  })
 
-  //   return [headerRow as Row, ...dataRows]
-  // }
-
+  return [headerRow as Row, ...dataRows]
+}
   // Define the spreadsheet rows and columns
   const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(app_data))
   const rows = getRows(spreadSheetFlux)
@@ -252,7 +242,7 @@ export const SpreadSheet = (
 
   const redraw = () => {
     if (!app_data.menu_configuration.spreadsheet_freeze) {
-      drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
+      drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
     }
     app_data.draw()
   }
@@ -660,7 +650,7 @@ export const SpreadSheet = (
               }
 
               //Snapshot of current sankey before update 
-              const prevSankey = drawing_area.toJSON(false,false,true)
+              const prevSankey = drawing_area.toJSON(false, false, true)
 
               // Format spreadsheet with pasted rows =============================
 
@@ -726,11 +716,11 @@ export const SpreadSheet = (
                 synchronizeSpreadSheet = true
               })
               //Snapshot of current sankey after update 
-              const nextSankey = drawing_area.toJSON(false,false,true)
+              const nextSankey = drawing_area.toJSON(false, false, true)
 
               // Post-paste functions ====================================
               if (redraw) {
-                drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
                 app_data.draw()
                 drawing_area.setToModeEdition(false)
                 menu_configuration.updateComponentRelatedToLinksData()
@@ -759,7 +749,7 @@ export const SpreadSheet = (
 
               const redoPaste = () => {
                 drawing_area.fromJSON(nextSankey, false)
-                drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
+                drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
                 app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()
               }

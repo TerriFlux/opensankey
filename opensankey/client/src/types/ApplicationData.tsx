@@ -102,9 +102,10 @@ initializeTooltipSystem()
  * @class Class_ApplicationData
  */
 export class Class_ApplicationData {
-
-  // PUBLIC ATTRIBUTES =================================================================
-  // PUBLIC METHODS ====================================================================
+  
+  protected _has_sankey_dev: boolean = false
+  public get has_sankey_dev() { return this._has_sankey_dev }
+  public set has_sankey_dev(_) { this._has_sankey_dev = _ }
 
   public createNewMenuConfiguration(): Class_MenuConfig {
     this._toast = useToast()
