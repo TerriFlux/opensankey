@@ -184,29 +184,6 @@ use_context_config(resources_app_elements, ZDD_MENU_CONFIG, 'ContextMenuZDD')
 use_context_config(resources_app_elements, LINK_MENU_CONFIG, 'ContextMenuLinks')
 use_context_config(resources_app_elements, NODE_MENU_CONFIG, 'ContextMenuNodes')
 
-// Par ceci :
-const add_menu_specific_translations = () => {
-  // Ajout des traductions manquantes pour les menus
-  const menuTranslations = {
-    en: {
-      EditionHierarchy: 'Edit Hierarchy',
-      NavHierarchy: 'Navigate Hierarchy'
-    },
-    fr: {
-      EditionHierarchy: 'Éditer Hiérarchie',
-      NavHierarchy: 'Naviguer Hiérarchie'
-    }
-  };
-
-    // Utiliser une assertion de type pour éviter les erreurs TypeScript
-    (resources_app_elements.en.translation.Menu as any).EditionHierarchy = menuTranslations.en.EditionHierarchy;
-  (resources_app_elements.en.translation.Menu as any).NavHierarchy = menuTranslations.en.NavHierarchy;
-  (resources_app_elements.fr.translation.Menu as any).EditionHierarchy = menuTranslations.fr.EditionHierarchy;
-  (resources_app_elements.fr.translation.Menu as any).NavHierarchy = menuTranslations.fr.NavHierarchy;
-}
-
-add_menu_specific_translations()
-
 // Concat traductions resources
 export const resources_opensankey = {}
 deep_assign_resources(rcc_shortcuts, resources_opensankey)

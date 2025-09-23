@@ -211,7 +211,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   private _nodeDrawValueLabel: NodeDrawValueLabel
   public _nodeTooltip: NodeTooltip
   public _nodeEventsHandler: NodeEventsHandler
-  private _nodeTagsManager: NodeTagsManager
+  public _nodeTagsManager: NodeTagsManager
   private _nodeDimensionsManager: NodeDimensionsManager
 
   private _input_links: { [id: string]: Class_LinkElement } = {}

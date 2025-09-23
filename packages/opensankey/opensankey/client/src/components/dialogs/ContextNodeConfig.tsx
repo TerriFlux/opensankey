@@ -12,7 +12,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'resetAttr' },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
-    },   
+    },
     {
       type: 'submenu',
       titleKey: 'maskAttr',
@@ -81,6 +81,15 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             // Les dimensions existantes seront générées dynamiquement par createParent_${dimension.id}
           ]
         }
+      ],
+      visibilityConditions: [
+        {
+          type: 'custom',
+          customCheck: (app_data) => {
+            if (!app_data.has_sankey_dev) return false
+            return true
+          }
+        }
       ]
     },
 
@@ -110,200 +119,34 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         }
       ],
       children: [
-        // Section Agrégation
+
+        // Boutons de contraction
         {
-          type: 'submenu',
-          titleKey: 'aggregation',
+          type: 'button',
+          actionName: 'contractLeft',
           visibilityConditions: [
             {
               type: 'custom',
               customCheck: (app_data) => {
+                if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                if (!node) return false
-
-                const child_dims = node.master_node ?
-                  node.master_node.dimensions_as_child_pure :
-                  node.dimensions_as_child_pure
-
-                return (child_dims.length > 0) ||
-                  !!(node.master_node && (node.id.includes('expandleft') || node.id.includes('expandright')))
+                return !!(node?.master_node && node.id.includes('expandleft'))
               }
-            }
-          ],
-          children: [
-            // Cas simple : une seule dimension child
-            {
-              type: 'button',
-              actionName: 'aggregate',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    const selected = app_data.drawing_area.visible_and_selected_nodes_list
-                    if (!node || selected.length !== 1 || !selected.includes(node) || !node.is_child) return false
-
-                    const child_dims = node.master_node ?
-                      node.master_node.dimensions_as_child_pure :
-                      node.dimensions_as_child_pure
-
-                    return child_dims.length === 1
-                  }
-                }
-              ]
-            },
-            {
-              type: 'button',
-              actionName: 'aggregateLeft',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    if (!node) return false
-
-                    const child_dims = node.master_node ?
-                      node.master_node.dimensions_as_child_pure :
-                      node.dimensions_as_child_pure
-
-                    return child_dims.length === 1
-                  }
-                }
-              ]
-            },
-            {
-              type: 'button',
-              actionName: 'aggregateRight',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    if (!node) return false
-
-                    const child_dims = node.master_node ?
-                      node.master_node.dimensions_as_child_pure :
-                      node.dimensions_as_child_pure
-
-                    return child_dims.length === 1
-                  }
-                }
-              ]
-            },
-            // Les sous-menus pour chaque dimension child seront générés dynamiquement
-            // avec les actions aggregate_${dim.id}, aggregateLeft_${dim.id}, aggregateRight_${dim.id}
-
-            // Boutons de contraction
-            {
-              type: 'button',
-              actionName: 'contractLeft',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    return !!(node?.master_node && node.id.includes('expandleft'))
-                  }
-                }
-              ]
-            },
-            {
-              type: 'button',
-              actionName: 'contractRight',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    return !!(node?.master_node && node.id.includes('expandright'))
-                  }
-                }
-              ]
             }
           ]
         },
-
-        // Section Désagrégation
         {
-          type: 'submenu',
-          titleKey: 'disaggregation',
+          type: 'button',
+          actionName: 'contractRight',
           visibilityConditions: [
             {
               type: 'custom',
               customCheck: (app_data) => {
+                if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                if (!node) return false
-
-                const parent_dims = node.master_node ?
-                  node.master_node.dimensions_as_parent_pure :
-                  node.dimensions_as_parent_pure
-
-                return parent_dims.length > 0
+                return !!(node?.master_node && node.id.includes('expandright'))
               }
             }
-          ],
-          children: [
-            // Cas simple : une seule dimension parent
-            {
-              type: 'button',
-              actionName: 'disaggregate',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data: Class_ApplicationData) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    if (!node) return false
-
-                    const parent_dims = node.master_node ?
-                      node.master_node.dimensions_as_parent_pure :
-                      node.dimensions_as_parent_pure
-
-                    return (parent_dims.length === 1) &&
-                      !!(node.nodeDimensionAsParent(parent_dims[0].related_level_tagg))
-                  }
-                }
-              ]
-            },
-            {
-              type: 'button',
-              actionName: 'expandLeft',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    if (!node) return false
-
-                    const parent_dims = node.master_node ?
-                      node.master_node.dimensions_as_parent_pure :
-                      node.dimensions_as_parent_pure
-
-                    return parent_dims.length === 1
-                  }
-                }
-              ]
-            },
-            {
-              type: 'button',
-              actionName: 'expandRight',
-              visibilityConditions: [
-                {
-                  type: 'custom',
-                  customCheck: (app_data) => {
-                    const node = app_data.drawing_area.node_contextualised
-                    if (!node) return false
-
-                    const parent_dims = node.master_node ?
-                      node.master_node.dimensions_as_parent_pure :
-                      node.dimensions_as_parent_pure
-
-                    return parent_dims.length === 1
-                  }
-                }
-              ]
-            }
-            // Les sous-menus pour chaque dimension parent seront générés dynamiquement
-            // avec les actions disaggregate_${dim.id}, expandLeft_${dim.id}, expandRight_${dim.id}
           ]
         }
       ]
@@ -380,7 +223,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     // Actions d'agrégation
     aggregate: {
       type: 'action',
-      labels: { en: 'Without expansion', fr: 'Sans expansion' },
+      labels: { en: 'Aggregate', fr: 'Agréger' },
       tooltips: { en: 'Aggregate this node', fr: 'Agréger ce nœud' },
       undoable: true,
       closeMenuAfter: true
@@ -403,7 +246,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     // Actions de désagrégation
     disaggregate: {
       type: 'action',
-      labels: { en: 'Without expansion', fr: 'Sans expansion' },
+      labels: { en: 'Disaggregate', fr: 'Désagréger' },
       tooltips: { en: 'Disaggregate this node', fr: 'Désagréger ce nœud' },
       undoable: true,
       closeMenuAfter: true
@@ -637,8 +480,8 @@ export const NODE_MENU_CONFIG: MenuConfig = {
   sectionTitles: {
     editionHierarchy: { en: 'Hierarchy Edition', fr: 'Édition hiérarchie' },
     navHierarchy: { en: 'Hierarchy Navigation', fr: 'Navigation hiérarchie' },
-    aggregation: { en: 'Aggregation', fr: 'Agrégation' },
-    disaggregation: { en: 'Disaggregation', fr: 'Désagrégation' },
+    // aggregation: { en: 'Expansion Agg.', fr: 'Expansion Agg.' },
+    // disaggregation: { en: 'Expansion Disagg.', fr: 'Expansion Désag.' },
     setChild: { en: 'Set as child', fr: 'Définir comme enfant' },
     createParent: { en: 'Create parent', fr: 'Créer parent' },
     align: { en: 'Align nodes', fr: 'Aligner les nœuds' },
