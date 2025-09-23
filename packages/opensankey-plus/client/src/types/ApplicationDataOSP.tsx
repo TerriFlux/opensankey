@@ -691,7 +691,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.sankey.nodes_list
       .forEach(node => {node.position_v = -1})
 
-    new_drawing_area.nodePositioning.computeParametrization()
+    new_drawing_area.nodePositioning.computeParametrization(true)
     new_drawing_area.container_activated = false
     // Remove tag group
 
