@@ -237,105 +237,132 @@ export const ContextMenuRenderer = ({
         children: [...item.children, ...dynamicDimensions]
       }]
     }
-    // Génération des sous-menus par dimension pour l'agrégation
-    if (item.titleKey === 'aggregation' && item.children) {
+
+    // Génération des sous-menus par dimension pour la désagrégation
+    if (item.titleKey === 'navHierarchy') {
       const contextualised_node = app_data.drawing_area.node_contextualised
       if (contextualised_node) {
         const child_dims = contextualised_node.master_node ?
           contextualised_node.master_node.dimensions_as_child_pure :
           contextualised_node.dimensions_as_child_pure
-        if (child_dims.length == 1) {
-          // Garder les boutons existants (cas dimension unique) et les boutons de contraction
-          const existingButtons = item.children.filter(child =>
-            child.type === 'button' &&
-            (child.actionName === 'aggregate' || child.actionName === 'aggregateLeft' ||
-              child.actionName === 'aggregateRight' || child.actionName === 'contractLeft' ||
-              child.actionName === 'contractRight')
-          )
-          return [{
-            ...item,
-            children: existingButtons
-          }]
-        }
+        const parent_dims = contextualised_node.master_node ?
+          contextualised_node.master_node.dimensions_as_parent_pure :
+          contextualised_node.dimensions_as_parent_pure
+        const existingButtons = item.children!.filter(child =>
+          child.type === 'button'  && child.actionName === 'contractLeft' ||
+            child.actionName === 'contractRight')
         // Créer un sous-menu pour chaque dimension child
-        const dimensionSubmenus = child_dims.map((dim) => ({
-          type: 'submenu' as const,
-          titleName: `-> ${dim.parent.name}`,
-          children: [
-            {
-              type: 'button' as const,
-              actionName: `aggregate_${dim.related_level_tagg.id}`,
-              titleKey: 'Sans expansion'
-            },
-            {
-              type: 'button' as const,
-              actionName: `aggregateLeft_${dim.related_level_tagg.id}`,
-              titleKey: 'Expansion à gauche'
-            },
-            {
-              type: 'button' as const,
-              actionName: `aggregateRight_${dim.related_level_tagg.id}`,
-              titleKey: 'Expansion à droite'
+        let dimensionSubmenusAgg = [] as MenuStructureItem[]
+        if (child_dims.length > 0) {
+          if (!app_data.has_sankey_dev) {
+            if (child_dims.filter(dim => dim.force_show_children).length == 0) {
+              dimensionSubmenusAgg = child_dims.map(dim => ({
+                type: 'button' as const,
+                actionName: `aggregate_${dim.related_level_tagg.id}`,
+                titleName: `${dim.parent.name} <- `,
+              })
+              )
+            } else {
+              dimensionSubmenusAgg = child_dims.filter(dim => dim.force_show_children).map(dim => ({
+                type: 'button' as const,
+                actionName: `aggregate_${dim.related_level_tagg.id}`,
+                titleName: `${dim.parent.name} <- `,
+              })
+              )
             }
-          ]
-        }))
+
+          } else {
+            dimensionSubmenusAgg = child_dims.map((dim) => ({
+              type: 'submenu' as const,
+              titleName: `${dim.parent.name}  <- `,
+              children: [
+                {
+                  type: 'button' as const,
+                  actionName: `aggregate_${dim.related_level_tagg.id}`,
+                  titleKey: 'Sans expansion'
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `aggregateLeft_${dim.related_level_tagg.id}`,
+                  titleKey: 'Expansion à gauche',
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: (app_data: Class_ApplicationData) => {
+                      if (!app_data.has_sankey_dev) return false
+                      return true
+                    }
+                  }]
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `aggregateRight_${dim.related_level_tagg.id}`,
+                  titleKey: 'Expansion à droite',
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: (app_data: Class_ApplicationData) => {
+                      if (!app_data.has_sankey_dev) return false
+                      return true
+                    }
+                  }]
+                },
+              ]
+            }))
+          }
+        }
+        // Créer un sous-menu pour chaque dimension parent
+        let dimensionSubmenusDesagg = [] as MenuStructureItem[]
+        if (parent_dims.length > 0) {
+          if (!app_data.has_sankey_dev) {
+            dimensionSubmenusDesagg = parent_dims.map((dim) => ({
+              type: 'button' as const,
+              actionName: `disaggregate_${dim.related_level_tagg.id}`,
+              titleName: `${dim.short_name}`,
+            }))
+          } else {
+            dimensionSubmenusDesagg = parent_dims.map((dim) => ({
+              type: 'submenu' as const,
+              titleName: `${dim.short_name}`,
+              children: [
+                {
+                  type: 'button' as const,
+                  actionName: `disaggregate_${dim.related_level_tagg.id}`,
+                  titleKey: 'Sans expansion'
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `expandLeft_${dim.related_level_tagg.id}`,
+                  titleKey: 'Expansion à gauche',
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: (app_data: Class_ApplicationData) => {
+                      if (!app_data.has_sankey_dev) return false
+                      return true
+                    }
+                  }]
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `expandRight_${dim.related_level_tagg.id}`,
+                  titleKey: 'Expansion à droite',
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: (app_data: Class_ApplicationData) => {
+                      if (!app_data.has_sankey_dev) return false
+                      return true
+                    }
+                  }]
+                }
+              ]
+            }))
+          }
+        }
         return [{
           ...item,
-          children: dimensionSubmenus
+          children: [...existingButtons,...dimensionSubmenusAgg, ...dimensionSubmenusDesagg]
         }]
       }
     }
 
-    // Génération des sous-menus par dimension pour la désagrégation
-    if (item.titleKey === 'disaggregation' && item.children) {
-      const contextualised_node = app_data.drawing_area.node_contextualised
-      if (contextualised_node) {
-        const parent_dims = contextualised_node.master_node ?
-          contextualised_node.master_node.dimensions_as_parent_pure :
-          contextualised_node.dimensions_as_parent_pure
-
-
-        if (parent_dims.length == 1) {
-          const existingButtons = item.children.filter(child =>
-            child.type === 'button' &&
-            (child.actionName === 'disaggregate' || child.actionName === 'expandLeft' ||
-              child.actionName === 'expandRight')
-          )
-          return [{
-            ...item,
-            children: existingButtons
-          }]
-        } else {
-
-          // Créer un sous-menu pour chaque dimension parent
-          const dimensionSubmenus = parent_dims.map((dim) => ({
-            type: 'submenu' as const,
-            titleName: `${dim.name}`,
-            children: [
-              {
-                type: 'button' as const,
-                actionName: `disaggregate_${dim.related_level_tagg.id}`,
-                titleKey: 'Sans expansion'
-              },
-              {
-                type: 'button' as const,
-                actionName: `expandLeft_${dim.related_level_tagg.id}`,
-                titleKey: 'Expansion à gauche'
-              },
-              {
-                type: 'button' as const,
-                actionName: `expandRight_${dim.related_level_tagg.id}`,
-                titleKey: 'Expansion à droite'
-              }
-            ]
-          }))
-          return [{
-            ...item,
-            children: dimensionSubmenus
-          }]
-        }
-      }
-    }
     // Génération des styles disponibles pour selectStyle
     // if (item.actionName === 'selectStyle' && item.type === 'button') {
     //   const sankey = app_data.drawing_area.sankey

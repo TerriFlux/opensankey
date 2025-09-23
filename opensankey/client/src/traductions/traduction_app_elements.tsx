@@ -466,8 +466,6 @@ export const resources_app_elements = {
         EF: 'Étiquettes des flux',
         EdF: 'Édition des flux',
         ED: 'Étiquettes des données',
-        EditionHierarchy: 'Edition Hiérarchie',
-        NavHierarchy: 'Navigation Hiérarchie',
         Leg: 'Légende',
         LegX: 'Position horizontale',
         LegY: 'Position verticale',
