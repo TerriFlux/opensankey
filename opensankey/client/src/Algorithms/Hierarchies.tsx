@@ -130,7 +130,7 @@ const finalizeOperation = (
   new_data: Class_ApplicationData,
   nodes: Class_NodeElement[]
 ) => {
-  new_data.drawing_area.nodePositioning.computeParametrization()
+  new_data.drawing_area.nodePositioning.computeParametrization(false)
   nodes.forEach(n => n.resetPositionAttribute('dy'))
   new_data.drawing_area.draw()
 
@@ -648,7 +648,9 @@ const createDisaggregationExpansionNodes = (
     )
 
     newNode.master_node = child
-    newNode.copyFrom(child)
+    newNode.copyAttrFrom(child)
+    newNode.tooltip_text = child.tooltip_text
+    newNode._nodeTagsManager.copyTagsFrom(child)
 
     updateNodeDimensions(newNode, config.contextualised_node, config.tagg, true)
     newNode.position_x = config.contextualised_node.position_x
@@ -695,16 +697,24 @@ export const aggregate = (
   if (!child_dim) {
     return
   }
+  const parent = child_dim.parent
+  const Do = () => {
+    child_dim.setForceToShowParent()
+    const aggregateNode = child_dim.parent
+    aggregateNode.input_links_list.forEach(l => l.source.draw())
+    aggregateNode.output_links_list.forEach(l => l.target.draw())
 
-  child_dim.setForceToShowParent()
-  const aggregateNode = child_dim.parent
-  aggregateNode.input_links_list.forEach(l => l.source.draw())
-  aggregateNode.output_links_list.forEach(l => l.target.draw())
+    aggregateNode.position_u = contextualised_node.position_u
 
-  aggregateNode.position_u = contextualised_node.position_u
-
-  // Gestion des nœuds d'échange
-  handleExchangeNodes(new_data, contextualised_node, tagg, 'aggregate')
+    // Gestion des nœuds d'échange
+    handleExchangeNodes(new_data, contextualised_node, tagg, 'aggregate')
+  }
+  const undo = () => {
+    disaggregate(new_data,parent,tagg)
+  }
+  new_data.history.saveUndo(undo)
+  new_data.history.saveRedo(Do)
+  Do()
 }
 
 
@@ -885,22 +895,32 @@ export const disaggregate = (
   if (!parent_dim) {
     return
   }
-  const vertical_spacing = aggregateNode.position_dy!
-  const current_height = aggregateNode.getShapeHeightToUse()
-  parent_dim.setForceToShowChildren()
-  const new_nodes = parent_dim.children
-  const total_height = calculateTotalHeight(new_nodes as Class_NodeElement[], vertical_spacing)
-  const shift_y = total_height / 2
+  const child_node = parent_dim.children[0] as Class_NodeElement
+  const Do = () => {
+    const vertical_spacing = aggregateNode.position_dy!
+    const current_height = aggregateNode.getShapeHeightToUse()
+    parent_dim.setForceToShowChildren()
+    const new_nodes = parent_dim.children
+    const total_height = calculateTotalHeight(new_nodes as Class_NodeElement[], vertical_spacing)
+    const shift_y = total_height / 2
 
-  new_nodes.forEach((n, i) => {
-    n.position_u = aggregateNode.position_u
-    if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position.type == 'parametric' && i == 0) {
-      n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
-    }
-  })
+    new_nodes.forEach((n, i) => {
+      n.position_u = aggregateNode.position_u
+      if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position.type == 'parametric' && i == 0) {
+        n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
+      }
+    })
 
-  // Gestion des nœuds d'échange
-  handleExchangeNodes(new_data, aggregateNode, tagg, 'disaggregate')
+    // Gestion des nœuds d'échange
+    handleExchangeNodes(new_data, aggregateNode, tagg, 'disaggregate')
+  }
+
+  const undo = () => {
+    aggregate(new_data,child_node,tagg)
+  }
+  new_data.history.saveUndo(undo)
+  new_data.history.saveRedo(Do)
+  Do()
 }
 
 /**
@@ -1003,7 +1023,7 @@ export const contract = (
     contractLegacy(new_data, contextualised_node)
   }*/
 
-  new_data.drawing_area.nodePositioning.computeParametrization()
+  new_data.drawing_area.nodePositioning.computeParametrization(false)
   new_data.drawing_area.draw()
 }
 
@@ -1140,8 +1160,9 @@ const contractAfterExpand = (
     : parent_node.output_links_list.filter(l => l.is_visible)
 
   // Supprimer les nœuds enfants temporaires
-  children.forEach((c) => {
+  children.forEach(c => {
     new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
+    parent_node.dimensions_as_parent_pure.forEach(dim=>dim.removeNodeFromChildren(expand_left ? c.source : c.target))
   })
 
   // Restaurer les liens du parent

@@ -12,12 +12,51 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'Positionnement',
       children: [
+        { type: 'button', actionName: 'toggleParametricMode' },
+        {
+          type: 'button', actionName: 'resetVerticalIntervals',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+            }
+          }]
+        },
         { type: 'button', actionName: 'computeAutoPosition' },
         { type: 'button', actionName: 'computeAutoPositionOptim' },
-        { type: 'button', actionName: 'toggleParametricMode' },
-        { type: 'button', actionName: 'toggleAutoX' },
-        { type: 'button', actionName: 'setTradeClose' },
-        { type: 'button', actionName: 'setTradeOpen' },
+        {
+          type: 'button', actionName: 'toggleAutoX',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+            }
+          }]
+        },
+        {
+          type: 'button', actionName: 'toggleTradeMode',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              const sankey = app_data.drawing_area.sankey
+              if (!sankey.node_taggs_dict['type de noeud']) {
+                return false
+              }
+              const process_nodes = sankey.nodes_list
+              const echangeTag = sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
+              const import_nodes = process_nodes.filter(n =>
+                n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+              )
+              const export_nodes = process_nodes.filter(n =>
+                n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
+              )
+              if (import_nodes.length + export_nodes.length === 0) {
+                return false
+              }
+              return true
+            }
+          }]
+        },
         { type: 'button', actionName: 'arrangeNodesToGrid' }
       ]
     },
@@ -51,7 +90,13 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
-      actionName: 'toggleZDTActivated'
+      actionName: 'toggleZDTActivated',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              return app_data.drawing_area.containers_list.length > 0
+            }
+          }]
     }
   ],
 
@@ -131,11 +176,11 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Auto position',
-        fr: 'Positionnement auto'
+        fr: 'Option centrage des nœuds'
       },
       tooltips: {
         en: 'Automatically position all nodes in the diagram',
-        fr: 'Positionner automatiquement tous les nœuds du diagramme'
+        fr: 'Option centrage des nœuds'
       }
     },
 
@@ -143,11 +188,11 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Auto position (optim)',
-        fr: 'Positionnement auto (optim)'
+        fr: 'Option Minimisation des croisements'
       },
       tooltips: {
-        en: 'Automatically position all nodes in the diagram',
-        fr: 'Positionner automatiquement tous les nœuds du diagramme'
+        en: 'Automatically position all nodes in the diagram minimizing crossings',
+        fr: 'Positionner automatiquement tous les nœuds du diagramme en minimisant les croisements'
       }
     },
 
@@ -185,7 +230,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       },
       getToggleValue: 'toggleParametricModeValue'
     },
-
+    resetVerticalIntervals: {
+      type: 'action',
+      labels: {
+        en: 'Reset vertical intervals',
+        fr: 'Réinitialiser les intervalles verticaux'
+      },
+      tooltips: {
+        en: 'Reset vertical intervals',
+        fr: 'Réinitialiser les intervalles verticaux'
+      }
+    },
     toggleAutoX: {
       type: 'toggle',
       labels: {
@@ -209,28 +264,27 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       getToggleValue: 'toggleAutoXValue'
     },
 
-    setTradeClose: {
-      type: 'action',
+    toggleTradeMode: {
+      type: 'toggle',
       labels: {
         en: 'Import/export close',
         fr: 'Import/export proche'
       },
       tooltips: {
-        en: 'Set import/export nodes close to their connected nodes',
-        fr: 'Placer les nœuds import/export près de leurs nœuds connectés'
-      }
-    },
-
-    setTradeOpen: {
-      type: 'action',
-      labels: {
-        en: 'Import/export top/bottom',
-        fr: 'Import/export haut/bas'
+        en: 'Set import/export nodes close to their connected nodes oir at the top and bottom of the diagram',
+        fr: 'Placer les nœuds import/export près de leurs nœuds connectés ou en haut et en bas du diagramme'
       },
-      tooltips: {
-        en: 'Set import/export nodes at the top and bottom of the diagram',
-        fr: 'Placer les nœuds import/export en haut et en bas du diagramme'
-      }
+      labelsToggle: {
+        en: {
+          true: 'Option Import/export close',
+          false: 'Option Import/export top/bottom'
+        },
+        fr: {
+          true: 'Option Import/export proche',
+          false: 'Option Import/export haut/bas'
+        }
+      },
+      getToggleValue: 'toggleTradeValue'
     },
 
     applyRandomNodeColors: {
@@ -336,8 +390,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       fr: 'Zone de dessin'
     },
     Positionnement: {
-      en: 'Positioning',
-      fr: 'Positionnement'
+      en: 'Automatic Positioning',
+      fr: 'Positionnement Automatique'
     },
     GestionCouleurs: {
       en: 'Color Management',
@@ -355,9 +409,9 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const { sankey } = drawing_area
   const { nodePositioning } = drawing_area
   const { dict_setter_show_dialog } = menu_configuration
-  const { 
-    ref_setter_show_modal_styles_nodes_visual, ref_setter_show_modal_styles_nodes_labels, 
-    ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_links_labels 
+  const {
+    ref_setter_show_modal_styles_nodes_visual, ref_setter_show_modal_styles_nodes_labels,
+    ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_links_labels
   } = dict_setter_show_dialog
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.node_styles_dict['default']
@@ -368,15 +422,16 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     bgGridValue: () => drawing_area.grid_visible,
     maskLegend: () => drawing_area.maskLegend(),
     maskLegendValue: () => drawing_area.legend.masked,
-    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false,false); saveToCache() },
-    computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false,true); saveToCache() },
+    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
+    computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
-    toggleParametricMode: () => drawing_area.setParametricMode(),
+    toggleParametricMode: () => getNodeStyle().position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().position_type === 'parametric',
+    resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
     toggleAutoX: () => { getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
     toggleAutoXValue: () => getNodeStyle().position.auto_x,
-    setTradeClose: () => { sankey.setTrade(true); saveToCache() },
-    setTradeOpen: () => { sankey.setTrade(false); saveToCache() },
+    toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
+    toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
     applyRandomLinkColors: () => { applyRandomColors(app_data, sankey.links_list); saveToCache() },
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedNodes('shape_color', sankey.nodes_list); saveToCache() },

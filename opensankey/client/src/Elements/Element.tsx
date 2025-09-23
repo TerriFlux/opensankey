@@ -508,6 +508,8 @@ export abstract class ClassTemplate_ProtoElement {
   protected eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
+    this.sankey.links_list.forEach(l => l.unsetMouseOver())
     // Update mouse over indicator for element
     this.setMouseOver()
   }

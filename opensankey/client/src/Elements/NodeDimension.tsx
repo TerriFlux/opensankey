@@ -366,7 +366,7 @@ export class Class_NodeDimension {
   }
 
   public get short_name() {
-    return this.name.substring(0,50)
+    return '->(' + this.children.map(c=>c.name+' ')+')'.substring(0,30)
   }
 
   public get children_name() {

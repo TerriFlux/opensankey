@@ -267,6 +267,27 @@ export class Class_Sankey {
     })
     this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
+
+  public tradeOption() {
+    if (!this.node_taggs_dict['type de noeud']) {
+      return
+    }
+    this.drawing_area.bypass_redraws = true
+    const process_nodes = this.nodes_list
+    const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
+    const import_nodes = process_nodes.filter(n =>
+      n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
+    )
+    if (import_nodes.length > 0) {
+      if (import_nodes[0].style.includes(this.node_styles_dict['NodeImportExportCloseStyle'])) {
+        return 'close'
+      } else { 
+        return 'above_below'
+      }
+    }
+    return 'none'    
+  }
+
   public setTrade = (close: boolean) => {
     const node_styles_dict = this.node_styles_dict
     const link_styles_dict = this.link_styles_dict
