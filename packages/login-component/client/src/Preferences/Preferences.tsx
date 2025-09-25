@@ -303,6 +303,7 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
 
 const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, additionalMenus: MutableRefObject<Type_AdditionalMenus> }> = ({ user_data, app_data, additionalMenus }) => {
   const { t } = app_data
+  user_data.t = t
   const [, setUpdate] = useState(0)
   user_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater.current = () => setUpdate(a => a + 1)
   user_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current = () => setUpdate(a => a + 1)
