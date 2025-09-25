@@ -1,4 +1,4 @@
-import { getNumberFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
+import { getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
 import { Class_LinkElement } from './Link';
 import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes';
 import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig';
@@ -201,8 +201,8 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
     // 2. Gestion spécifique des positions
     this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
-    this._position.dx = getNumberFromJSON(json_local_object, 'dx', default_dx)
-    this._position.dy = getNumberFromJSON(json_local_object, 'dy', default_dy)
+    this._position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
+    this._position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
 
     // 3. Marquer comme customisables les attributs chargés
     Object.keys(this._attributes).forEach(key => {
@@ -219,10 +219,10 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     const json_object = super.toJSON(null, default_style)
 
     // Ajouter les informations de position
-    if (this.position.type) json_object['position'] = this.position.type
-    if (this.position.dx) json_object['dx'] = this.position.dx
-    if (this.position.dy) json_object['dy'] = this.position.dy
-    if (this.position.auto_x) json_object['auto_x'] = this.position.auto_x
+    if (this.position.type != undefined) json_object['position'] = this.position.type
+    if (this.position.dx != undefined) json_object['dx'] = this.position.dx
+    if (this.position.dy != undefined ) json_object['dy'] = this.position.dy
+    if (this.position.auto_x != undefined) json_object['auto_x'] = this.position.auto_x
 
     return json_object
   }

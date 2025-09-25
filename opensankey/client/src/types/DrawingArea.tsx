@@ -197,7 +197,7 @@ export class Class_DrawingArea {
   public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
-
+  public bypass_autofit: boolean = false
   // PROTECTED ATTRIBUTES ===============================================================
 
   // Attributes that describe drawing area ----------------------------------------------
@@ -239,7 +239,7 @@ export class Class_DrawingArea {
    * @memberof Class_Sankey
    */
   protected _containers: { [_: string]: Class_ContainerElement } = {}
-  protected _container_activated : boolean = true
+  protected _container_activated: boolean = true
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -450,7 +450,7 @@ export class Class_DrawingArea {
   public afterFromJSON() {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
-    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length>1 || exchanges_nodes[0].output_links_list.length>1)) {
+    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length > 1 || exchanges_nodes[0].output_links_list.length > 1)) {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)
