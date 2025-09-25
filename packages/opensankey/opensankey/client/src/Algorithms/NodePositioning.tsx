@@ -1583,7 +1583,7 @@ export class NodePositioning {
       })
     } else {
       nodes_to_process.forEach(node => {
-        node.display.position.u = node.display.position.x/this.drawingArea.sankey.node_styles_dict['default'].position.dx!
+        node.display.position.u = Math.round(node.display.position.x/this.drawingArea.sankey.node_styles_dict['default'].position.dx!)
       })      
     }
 
