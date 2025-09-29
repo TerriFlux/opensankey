@@ -667,7 +667,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         }
 
         this._dy += ((this.d3_selection?.select('#GrpTag_title_' + id_to_use).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
-
+        }
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
         tag_group.selected_tags_list.filter(tag => {
@@ -972,7 +972,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     g_draggable?.append('text')
       .attr('class', 'measurment_scale')
       .attr('transform', 'translate(5,25)')
-      .text(Math.round(scale)+ ' ' + unit)
+      .text(Math.round(scale) + ' ' + unit)
 
 
     // Add drag event for the scale representation
