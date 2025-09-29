@@ -534,13 +534,17 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       const nb_tags = tags_entry.length
       const colors = colormap({
         colormap: _,
-        nshades: nb_tags,
+        nshades: Math.max(11, nb_tags),
         format: 'hex',
         alpha: 1
       })
+      let step = 1
+      if (nb_tags < 11) {
+        step = Math.round(11 / nb_tags)
+      }
       // Apply colors to tags
       tags_entry.forEach(
-        (tag, i) => tag.color = colors[i]
+        (tag, i) => tag.color = colors[i*step]
       )
       // Update displayed menu
       setColorMap(_)

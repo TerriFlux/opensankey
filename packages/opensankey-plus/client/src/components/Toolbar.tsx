@@ -402,9 +402,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
     const dict_old_val = Object.fromEntries(Object.values(taggs_dict).map(t => [t.id, t.use_colors]))
 
     const applyPalette = () => {
-      Object.values(taggs_dict).forEach(t => t.use_colors = false)
+      //Object.values(taggs_dict).forEach(t => t.use_colors = false)
       if (checked) {
         tagg.use_colors = true
+      } else {
+        tagg.use_colors = false
       }
       app_data.drawing_area.legend.draw()
       app_data.drawing_area.orderElementOnDA()
@@ -541,6 +543,8 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
+            app_data.drawing_area.sankey.showAccordingToLevelTags()
+            app_data.drawing_area.nodePositioning.computeParametricVForTagg(level_tagg)
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
             app_data.drawing_area.draw()
             updateComponents()
