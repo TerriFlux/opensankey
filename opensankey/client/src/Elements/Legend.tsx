@@ -648,7 +648,11 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         // Tag froup id can have caracter that 'break' html id selection so we normalize it
         const id_to_use = tag_group.id.replaceAll(' ', '_').replaceAll('\'', '_')
 
-        // Ajout du tagGroup.name
+        const selected_tags_list = tag_group.selected_tags_list.filter(tag => {
+          // Filter tag that doens't have element visible on the drawing_area (or display them if it's a data_tag since if it's selected it is visible)
+          return node_list.filter(n => n.hasGivenTag(tag as Class_Tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag as Class_Tag)).length !== 0 || tag instanceof Class_DataTag
+        })
+        if (selected_tags_list.length > 0) {
         this.d3_selection?.append('text')
           .attr('id', 'GrpTag_title_' + id_to_use)
           .attr('transform', 'translate(' + this._dx + ',' + this._dy + ' )')
@@ -946,6 +950,17 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       .text(this.drawing_area.application_data.t('scale') + ':')
       .style('font-size', this._legend_police + 'px')
 
+    let scale = this.drawing_area.scale / 2
+    const unit_tagg = this.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
+    let unit = ''
+    if (unit_tagg) {
+      const selected_unit = unit_tagg.selected_tags_list.find(t => t.is_selected)
+      if (selected_unit) {
+        scale = selected_unit.scale / 2
+      }
+      unit = selected_unit ? ' ' + selected_unit.name : ''
+    }
+
     const g_draggable = g_scale?.append('g')
       .attr('class', 'g_draggable_scale')
       .style('cursor', 'grab')
@@ -957,7 +972,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     g_draggable?.append('text')
       .attr('class', 'measurment_scale')
       .attr('transform', 'translate(5,25)')
-      .text(Math.round((this.drawing_area.scale / 2)))
+      .text(Math.round(scale)+ ' ' + unit)
 
 
     // Add drag event for the scale representation
@@ -1073,5 +1088,5 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
 
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
-  public set stick_to_drawing(_) {this._stick_to_drawing = _;this.draw()}
+  public set stick_to_drawing(_) { this._stick_to_drawing = _; this.draw() }
 }

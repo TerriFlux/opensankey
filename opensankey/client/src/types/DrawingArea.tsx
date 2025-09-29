@@ -1709,15 +1709,17 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private setEventsListeners() {
-    if (
-      !this.static &&
-      (this.d3_selection !== null)
-    ) {
-      // Right mouse button clicks
+    if (this.d3_selection !== null) {
       this.d3_selection?.on(
         'click',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleLMBCLick(event))
+      }
+    if (
+      !this.static &&
+      (this.d3_selection !== null)
+    ) {
+
       this.d3_selection?.on(
         'dblclick',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
@@ -1775,6 +1777,7 @@ export class Class_DrawingArea {
     this.closeAllContextMenus()
     const tooltipManager = TooltipEventManager.getInstance();
     tooltipManager.closeTooltip();
+    if (this.static) this.purgeSelection()
   }
 
   /**

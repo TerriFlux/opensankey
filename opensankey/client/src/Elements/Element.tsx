@@ -314,21 +314,23 @@ export abstract class ClassTemplate_ProtoElement {
    * @memberof ClassTemplate_Element
    */
   public setEventsListeners() {
-    if (!this._drawing_area.static) {
+    this.d3_selection?.on(
+      'contextmenu',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventSimpleRMBCLick(event))
       // Right mouse button clicks
       this.d3_selection?.on(
         'click',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleLMBCLick(event))
+    if (!this._drawing_area.static) {
+
       this.d3_selection?.on(
         'dblclick',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventDoubleLMBCLick(event))
       // Left mouse button click
-      this.d3_selection?.on(
-        'contextmenu',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
+
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
       if (this.drawing_area.isInSelectionMode()) {
         this.d3_selection?.call(

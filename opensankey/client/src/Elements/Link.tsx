@@ -919,7 +919,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
-    if (this.shape_color_rule == 'gradient') {
+    if (!this.is_multi_link && this.shape_color_rule == 'gradient') {
 
       const defGradient = this.drawing_area.d3_selection_def_gradient
       const n_source = this.source
@@ -1283,6 +1283,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     super.eventSimpleLMBCLick(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return      
+    }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
       // Purge selection list
@@ -1323,6 +1327,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected eventSimpleRMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    if (this.drawing_area.application_data.is_static) {
+      return      
+    }
     // Apply parent behavior first
     super.eventSimpleRMBCLick(event)
     // SELECTION MODE =========================================================

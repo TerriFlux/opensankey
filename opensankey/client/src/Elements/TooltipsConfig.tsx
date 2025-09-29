@@ -230,7 +230,7 @@ export function implementTooltipForNode(NodeClass: typeof Class_NodeElement) {
     this: Class_NodeElement,
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    const show_tooltip = this.sankey.drawing_area.application_data.is_static && !event.shiftKey || event.altKey
+    const show_tooltip = this.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const tooltipManager = TooltipEventManager.getInstance();
       tooltipManager.showTooltip(this, event.pageX, event.pageY);
@@ -305,7 +305,7 @@ export function implementTooltipForLink(LinkClass: typeof Class_LinkElement) {
     this: Class_LinkElement,
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    const show_tooltip = this.sankey.drawing_area.application_data.is_static && !event.shiftKey || event.altKey
+    const show_tooltip = this.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
     if (show_tooltip) {
       const tooltipManager = TooltipEventManager.getInstance();
 
