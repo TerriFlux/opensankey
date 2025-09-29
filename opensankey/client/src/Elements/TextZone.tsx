@@ -635,6 +635,10 @@ export class Class_ContainerElement extends ClassTemplate_Element{
 
     // Get related drawing area
     const drawing_area = this.drawing_area
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return      
+    }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
       // Purge selection list

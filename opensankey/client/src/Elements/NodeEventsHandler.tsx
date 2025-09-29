@@ -48,7 +48,10 @@ export class NodeEventsHandler {
   public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return      
+    }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
       // Purge selection list
@@ -288,7 +291,7 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    const show_tooltip = this._node.sankey.drawing_area.application_data.is_static && !event.shiftKey || event.altKey
+    const show_tooltip = this._node.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip');

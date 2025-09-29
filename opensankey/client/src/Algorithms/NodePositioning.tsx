@@ -1566,7 +1566,7 @@ export class NodePositioning {
    * Computes u,v for nodes in the drawing area
    * Utilise l'algorithme amélioré
    */
-  public computeParametrization(use_horizontal_index:boolean) {
+  public computeParametrization(use_horizontal_index: boolean) {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
@@ -1583,7 +1583,7 @@ export class NodePositioning {
       })
     } else {
       nodes_to_process.forEach(node => {
-        node.display.position.u = Math.round(node.display.position.x/this.drawingArea.sankey.node_styles_dict['default'].position.dx!)
+        node.display.position.u = Math.round(node.display.position.x / this.drawingArea.sankey.node_styles_dict['default'].position.dx!)
       })      
     }
 
@@ -1649,13 +1649,11 @@ export class NodePositioning {
     //   node.reorganizeIOFromListIds(new_links_ids)
     //})
   }
-
-  /**
-   * Computes v for nodes in the drawing area
-   */
-  public computeParametricV() {
+  // Fonction qui calcule les colonnes
+  private computeColumns(): { [_: number]: Class_NodeElement[] } {
     const columns: { [_: number]: Class_NodeElement[] } = {}
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ? this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+
     this.drawingArea.sankey.visible_nodes_list.forEach(n => {
       if (n.hasGivenTag(echangeTag!)) {
         return
@@ -1667,6 +1665,7 @@ export class NodePositioning {
       }
     })
 
+    // Calcul des positions dy
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       column.forEach((n, i) => {
@@ -1682,6 +1681,28 @@ export class NodePositioning {
       })
     })
 
+    return columns
+  }
+
+  // Fonction qui applique le V pour un level tag donné
+  private applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: any) {
+      Object.values(columns).forEach(column => {
+        column.sort((n1, n2) => n1.position_y - n2.position_y)
+        let current_v = 0
+      column.forEach(n => {
+         n.position_v = -1 
+         current_v = this.applyVDesagregate(n, current_v, tagGroup)
+      }) 
+    })
+    Object.values(columns).forEach(column => {
+      column.forEach(n => this.applyVAgregate(n, tagGroup))
+      })
+    }
+
+  // Fonction principale refactorisée
+  public computeParametricV() {
+    const columns = this.computeColumns()
+
     if (this.drawingArea.sankey.level_taggs_list.length == 0) {
       Object.values(columns).forEach(column => {
         column.sort((n1, n2) => n1.position_y - n2.position_y)
@@ -1691,19 +1712,18 @@ export class NodePositioning {
     }
 
     this.drawingArea.sankey.level_taggs_list.forEach(tagGroup => {
-      Object.values(columns).forEach(column => {
-        column.sort((n1, n2) => n1.position_y - n2.position_y)
-        let current_v = 0
-        column.forEach(n => current_v = this.applyVDesagregate(n, current_v, tagGroup))
-      })
-      Object.values(columns).forEach(column => {
-        column.forEach(n => this.applyVAgregate(n, tagGroup))
-      })
+      this.applyVForLevelTag(columns, tagGroup)
     })
 
     this.drawingArea.sankey.sortNodes()
   }
 
+  // Fonction qui compute le V paramétrique pour un tag spécifique
+  public computeParametricVForTagg(tagGroup: any) {
+    const columns = this.computeColumns()
+    this.applyVForLevelTag(columns, tagGroup)
+    this.drawingArea.sankey.sortNodes()
+  }
   /**
    * Apply v aggregation for nodes
    */

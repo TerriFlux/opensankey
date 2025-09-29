@@ -327,7 +327,7 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
         <Box>
           <ConfigMenuNumberInput
             t={new_data.t}
-            default_value={new_data.drawing_area.scale}
+            default_value={unit_taggs.length > 0 ?unit_taggs[0].tags_dict[selectedTag].scale:new_data.drawing_area.scale}
             function_on_blur={eventScale}
             minimum_value={1}
             stepper={true}
