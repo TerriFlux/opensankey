@@ -1,6 +1,66 @@
-import { MenuConfig, MenuCondition } from "./SankeyMenuContext";
-import { Class_ApplicationData } from "../../types/ApplicationData";
+import { MenuConfig } from "./SankeyMenuContext";
 
+
+export const STATIC_NODE_MENU_CONFIG: MenuConfig = {
+  structure: [
+    {
+      type: 'button',
+      actionName: 'aggregate',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          return selected_nodes.length === 1 && selected_nodes[0].is_child
+        }
+      }]
+    },
+    {
+      type: 'button',
+      actionName: 'disaggregate',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          return selected_nodes.length === 1 && selected_nodes[0].is_parent
+        }
+      }]
+    },
+    { type: 'button', actionName: 'startAnimation',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          return selected_nodes.length === 1 && selected_nodes[0].hasOutputLinks()
+        }
+      }]
+    },
+  ],
+  actions: {
+    aggregate: {
+      type: 'action',
+      labels: { en: 'Aggregate', fr: 'Agréger' },
+      tooltips: { en: 'Aggregate this node', fr: 'Agréger ce nœud' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    disaggregate: {
+      type: 'action',
+      labels: { en: 'Disaggregate', fr: 'Désagréger' },
+      tooltips: { en: 'Disaggregate this node', fr: 'Désagréger ce nœud' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    startAnimation: {
+      type: 'action',
+      labels: { en: 'Launch animation', fr: 'Lancer animation' },
+      tooltips: { en: 'Launch animation', fr: 'Lancer animation' },
+      closeMenuAfter: true
+    }
+  },
+
+  sectionTitles: {},
+  maxDepth: 0
+}
 // Configuration du menu contextuel des nœuds avec la structure hiérarchique correcte
 export const NODE_MENU_CONFIG: MenuConfig = {
   structure: [
