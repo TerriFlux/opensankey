@@ -146,6 +146,7 @@ export const resources_app_elements = {
         ter_gen: 'Gen. Supply-Use table'
       },
       ModalAFM: {
+        writing_option: 'Options for writing the Excel file',
         title: 'Reconciliation',
         success_status_optim: 'Download results',
         success_status_check_excel: 'Verification finished',
@@ -731,6 +732,7 @@ export const resources_app_elements = {
         ter_gen: 'Génération T.E.R'
       },
       ModalAFM: {
+        writing_option: 'Options d\'écriture du fichier excel',
         title: 'Réconciliation',
         success_status_optim: 'Télécharger les résultats',
         success_status_check_excel: 'Vérification terminée',

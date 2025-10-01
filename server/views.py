@@ -135,6 +135,7 @@ def solve_optimisation_problem(
     json_output_filename: str,
     excel_output_filename: str,
     excel_sheets_to_remove: list,
+    with_sheet_formating: bool,
     write_mode: str,
     log_name,
     t_start,
@@ -177,6 +178,7 @@ def solve_optimisation_problem(
         io_excel.write_excel_from_sankey(
             excel_output_filename,
             sankey,
+            with_sheet_formating=with_sheet_formating,
             sheets_to_remove__names=excel_sheets_to_remove,
             mode=write_mode,
         )
@@ -250,6 +252,7 @@ def optimize_launch():
         session["check_excel"] = request.form["check_excel"] == "true"
         session["uncertainty"] = request.form["uncertainty_analysis"] == "true"
         session["nb_realizations"] = int(request.form["nb_realizations"])
+        session["with_sheet_formating"] = request.form["with_sheet_formating"] == 'true'
         # Get files from request
         if session["optim_sankey"] is False:
             # Get Excel file and save it in temp dir
@@ -498,6 +501,7 @@ def optimize_launch():
             session["output_json_file_abspath"],
             session["output_excel_file_abspath"],
             excel_sheets_to_remove,
+            session["with_sheet_formating"],
             write_mode,
             session["trace_file_abspath"],
             t_start,
