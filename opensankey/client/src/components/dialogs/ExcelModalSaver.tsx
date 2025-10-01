@@ -357,19 +357,19 @@ export const EXCEL_CATEGORIES = {
 } as const
 
 // Types
-interface ConfigurableCheckboxProps {
+export interface ConfigurableCheckboxProps {
   t: TFunction
   onChange: (evt: React.ChangeEvent<HTMLInputElement>) => void
   propertyName: keyof ExcelOptionType
   options: ExcelOptionType
 }
 
-interface AutoConfigCheckboxProps {
+export interface AutoConfigCheckboxProps {
   propertyName: keyof ExcelOptionType
 }
 
 // Composant 1 : Checkbox générique qui prend onChange, propertyName et options
-const ConfigurableCheckbox = ({ t, onChange, propertyName, options }: ConfigurableCheckboxProps) => {
+export const ConfigurableCheckbox = ({ t, onChange, propertyName, options }: ConfigurableCheckboxProps) => {
   return (
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
