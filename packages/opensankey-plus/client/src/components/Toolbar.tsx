@@ -71,7 +71,10 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
           style={{ padding: '0', width: width_fitler_drawer }}
         >
           <Box layerStyle='drawerFilterBox'>
-            <FilterDataType app_data={app_data} />
+            {
+            //@ts-expect-error xxx
+            window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
+            }
             <FlowValueFilter app_data={app_data} />
             <LevelTagFilter app_data={app_data} />
             <NodeTagGroupFilter app_data={app_data} level={false} />
@@ -545,6 +548,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
             level_tagg.activated = evt.target.checked
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg(level_tagg)
+            app_data.drawing_area.resetAllVerticalIntervals()         
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
             app_data.drawing_area.draw()
             updateComponents()

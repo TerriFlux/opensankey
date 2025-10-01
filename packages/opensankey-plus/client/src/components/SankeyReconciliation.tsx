@@ -7,6 +7,8 @@ import {Alert,AlertIcon,Box,Button,Collapse,Divider,Input,Modal,
 } from '@chakra-ui/react'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { default_font_size } from '../deps/OpenSankey/css/Theme'
+import { WrapperCheckBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { DEFAULT_EXCEL_OPTIONS, ExcelOptionType,AutoConfigCheckboxProps,ConfigurableCheckbox } from '../deps/OpenSankey/components/dialogs/ExcelModalSaver'
 
 
 
@@ -42,7 +44,27 @@ export const SupplyUseModelisationProd = ({
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
   const _load_excel = useRef<HTMLInputElement>(null)
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
+  const [option_open, setOptionOpen] = useState(false)
+  const [options, setOptions] = useState<ExcelOptionType>(DEFAULT_EXCEL_OPTIONS)
 
+  // Composant 2 : Checkbox spécialisé qui utilise le premier et ne prend que propertyName
+  const AutoConfigCheckbox = ({ propertyName }: AutoConfigCheckboxProps) => {
+    const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+      setOptions(prevOptions => ({
+        ...prevOptions,
+        [propertyName]: evt.target.checked
+      }));
+    }
+    return (
+      <ConfigurableCheckbox
+        t={t}
+        onChange={handleChange}
+        propertyName={propertyName}
+        options={options}
+      />
+    )
+  }
+  
   const [show_reconciliation, set_show_reconciliation] = useState(false)
   application_data_mfa.menu_configuration_osp.dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current = set_show_reconciliation
 
@@ -354,7 +376,7 @@ export const SupplyUseModelisationProd = ({
     setResult('')
   }
 
-  const launchReconciliation = () => {
+  const launchReconciliation = (option:ExcelOptionType) => {
     if (!input_file && menu_configuration_osp.action_type !== 'optim_sankey') {
       return
     }
@@ -367,6 +389,7 @@ export const SupplyUseModelisationProd = ({
     data_server.append('uncertainty_analysis', String(uncertainty))
     data_server.append('nb_realizations', String(nb_realizations))
     data_server.append('upper_level_file', (upper_level_file_ as unknown as HTMLFormElement).name)
+    data_server.append('with_sheet_formating', String(option.with_sheet_formating))
     if (menu_configuration_osp.action_type === 'optim_sankey') {
       const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
       new_sankey_json_obj.icon_catalog = {}
@@ -439,7 +462,7 @@ export const SupplyUseModelisationProd = ({
   
   if (show_reconciliation) {
     if (not_started && menu_configuration_osp.action_type === 'optim_sankey') {
-      launchReconciliation()
+      launchReconciliation(options)
     } else if (menu_configuration_osp.action_type === '') {
       setResult('')
     }
@@ -539,6 +562,14 @@ export const SupplyUseModelisationProd = ({
             </>
             ) : (<></>)} */}
 
+              <WrapperCheckBoxSubSectionMenu
+                open={option_open}
+                onClick={() => { setOptionOpen(!option_open) }}
+                title={t('ModalAFM.writing_option')}>
+                <>
+                  <AutoConfigCheckbox propertyName='with_sheet_formating' />
+                </>
+              </WrapperCheckBoxSubSectionMenu>
             <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
 
             <Box
@@ -550,7 +581,7 @@ export const SupplyUseModelisationProd = ({
               layerStyle='menuconfigpanel_grid'
             >
               {input_file || menu_configuration_osp.action_type === 'optim_sankey' ?
-                (not_started ? (<Button variant="menuconfigpanel_option_button_primary_activated" onClick={launchReconciliation}>
+                (not_started ? (<Button variant="menuconfigpanel_option_button_primary_activated" onClick={()=>launchReconciliation(options)}>
                   {t('ModalAFM.launch')}
                 </Button>) :
                   processing ? (
@@ -571,8 +602,9 @@ export const SupplyUseModelisationProd = ({
                         <Button variant="menuconfigpanel_option_button_secondary_activated" onClick={FinishReconciliation} size='sizeButtonDialog'>{success_status}</Button>
                         <Button variant="menuconfigpanel_del_button" onClick={reset} size='sizeButtonDialog'>{t('ModalAFM.reset')}</Button>
                       </Box>
-                  )) : (<Button variant="primary" disabled onClick={launchReconciliation} size='sizeButtonDialog'>{t('ModalAFM.launch')}</Button>)}
+                  )) : (<Button variant="primary" disabled onClick={()=>launchReconciliation(options)} size='sizeButtonDialog'>{t('ModalAFM.launch')}</Button>)}
             </Box>
+
 
             {input_file === undefined && menu_configuration_osp.action_type !== 'optim_sankey' ? <Alert status='warning'>
               <AlertIcon />
