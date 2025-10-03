@@ -130,17 +130,17 @@ const finalizeOperation = (
   new_data: Class_ApplicationData,
   nodes: Class_NodeElement[]
 ) => {
-  new_data.drawing_area.nodePositioning.computeParametrization(false)
+  new_data.drawing_area.nodePositioning.computeParametrization(true)
   nodes.forEach(n => n.resetPositionAttribute('dy'))
+  new_data.drawing_area.bypass_autoy = true
   new_data.drawing_area.draw()
-
-  // Réorganisation des liens
   nodes.forEach(n => {
     const v = n.is_visible
     n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
     n.output_links_list.forEach(l => l.target.reorganizeIOLinks())
     n.reorganizeIOLinks()
   })
+    new_data.drawing_area.bypass_autoy = false
 }
 
 // ============================================================================
