@@ -214,8 +214,7 @@ export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDat
       moduleDialogs={moduleDialogsSA}
       ModalWelcome={ModalWelcomeBuilderOSP}
       createZDDModifier={(app_data) => createZDDModifierPlus(app_data as Class_ApplicationDataSA)}
-      //@ts-expect-error xxx
-      ZDD_MENU_CONFIG={new_data_app.has_sankey_dev ? createZDDMenuConfigPlus() : ZDD_MENU_CONFIG}
+      ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
       NODE_MENU_CONFIG={new_data_app.is_static ? STATIC_NODE_MENU_CONFIG :createNodeMenuConfigPlus()}
