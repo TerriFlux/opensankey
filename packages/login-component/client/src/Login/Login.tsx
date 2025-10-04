@@ -101,6 +101,12 @@ export const Login = ({
           </Box>
           <Box></Box>
           <Button
+            variant='btn_lone_navigation'
+            onClick={() => returnToApp(navigate)}
+          >
+            {t('UserNav.to_app')}
+          </Button>
+          <Button
             variant='btn_lone_navigation_secondary'
             onClick={() => navigate('/register')}
           >
