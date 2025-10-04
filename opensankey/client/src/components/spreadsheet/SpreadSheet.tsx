@@ -646,6 +646,9 @@ export const SpreadSheet = (
             getCellsFromClipboardPlainText().then((rows) => {
               rows = rows.filter(r => r.length == 2 || r.length == 3) //Only keep row with [source,target] or [source,target,value]
               // Paste and handle clipboard data
+              if (rows.length == 0) {
+                return
+              }
               if (rows.length == 1) {
                 return
               }
