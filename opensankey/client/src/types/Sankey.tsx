@@ -391,6 +391,15 @@ export class Class_Sankey {
     this._level_taggs = {}
   }
 
+  public delete_all_nodes_and_links() {
+    // Properly delete all nodes & link (links will be deleted by node.delete())      
+    this.nodes_list.forEach(n => {
+      n.delete() // Will also trigger delete() on links
+    })
+    this._nodes = {}
+    this._links = {}
+  }
+  
   // COPY METHODS =======================================================================
 
   /**
