@@ -29,12 +29,6 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
-
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
-
-// Local modules imports
 import {
   ClassTemplate_Element
 } from '../Elements/Element'
@@ -464,8 +458,8 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     }
     // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
     requestAnimationFrame(() => {
-      this.updateDragZone();
-      this.drawing_area.checkAndUpdateAreaSize();
+      this.updateDragZone()
+      this.drawing_area.checkAndUpdateAreaSize()
     })
   }
 
@@ -610,13 +604,13 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    */
   private _drawLegendBg() {
     this.d3_selection?.select('.g_drag_zone_leg').remove()
-    let legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
+    const legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
     this.d3_selection?.append('g')
       .attr('class', 'g_drag_zone_leg')
       .append('rect')
       .attr('class', 'zone_for_dragging')
-      .attr('width', legendBbox?.width!)
-      .attr('height', legendBbox?.height!)
+      .attr('width', legendBbox?legendBbox.width!:null)
+      .attr('height', legendBbox?legendBbox.height!:null)
       .attr('rx', '2px')
       .attr('ry', '2px')
       .attr('stroke-dasharray', () => '')
@@ -653,20 +647,20 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
           return node_list.filter(n => n.hasGivenTag(tag as Class_Tag)).length !== 0 || flux_list.filter(f => f.hasGivenTag(tag as Class_Tag)).length !== 0 || tag instanceof Class_DataTag
         })
         if (selected_tags_list.length > 0) {
-        this.d3_selection?.append('text')
-          .attr('id', 'GrpTag_title_' + id_to_use)
-          .attr('transform', 'translate(' + this._dx + ',' + this._dy + ' )')
-          .attr('x', 0)
-          .attr('y', this._legend_police)
-          .text(tag_group.name)
-          .attr('style', 'font-weight:bold;font-size:' + this._legend_police + 'px')
-          .call(this._wrapper)
+          this.d3_selection?.append('text')
+            .attr('id', 'GrpTag_title_' + id_to_use)
+            .attr('transform', 'translate(' + this._dx + ',' + this._dy + ' )')
+            .attr('x', 0)
+            .attr('y', this._legend_police)
+            .text(tag_group.name)
+            .attr('style', 'font-weight:bold;font-size:' + this._legend_police + 'px')
+            .call(this._wrapper)
 
-        if (document.getElementById('GrpTag_title_' + id_to_use)?.getElementsByTagName('tspan')[0].innerHTML === '') {
-          document.getElementById('GrpTag_title_' + id_to_use)?.setAttribute('y', '5')
-        }
+          if (document.getElementById('GrpTag_title_' + id_to_use)?.getElementsByTagName('tspan')[0].innerHTML === '') {
+            document.getElementById('GrpTag_title_' + id_to_use)?.setAttribute('y', '5')
+          }
 
-        this._dy += ((this.d3_selection?.select('#GrpTag_title_' + id_to_use).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
+          this._dy += ((this.d3_selection?.select('#GrpTag_title_' + id_to_use).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 4
         }
         const legendElements2 = this.d3_selection?.append('g').attr('transform', 'translate(0,' + this._legend_police + ')')
 
@@ -1021,18 +1015,18 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
  */
   private updateDragZone(): void {
     // S'assurer qu'on a une sélection valide
-    if (!this.d3_selection) return;
+    if (!this.d3_selection) return
 
     // Supprimer l'ancienne zone
-    this.d3_selection.select('.g_drag_zone_leg').remove();
+    this.d3_selection.select('.g_drag_zone_leg').remove()
 
     // Calculer la bbox du contenu réel (sans la zone de drag)
-    const contentBbox = this.d3_selection.node()?.getBBox();
-    if (!contentBbox) return;
+    const contentBbox = this.d3_selection.node()?.getBBox()
+    if (!contentBbox) return
 
     // Créer la nouvelle zone avec les bonnes dimensions
     const dragZone = this.d3_selection.insert('g', ':first-child') // Insérer en premier pour être en arrière-plan
-      .attr('class', 'g_drag_zone_leg');
+      .attr('class', 'g_drag_zone_leg')
 
     dragZone.append('rect')
       .attr('class', 'zone_for_dragging')
@@ -1046,7 +1040,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       .attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
       .attr('stroke-width', (this._legend_bg_border || this.is_selected) ? 1 : 0)
       .attr('fill', this._legend_bg_color)
-      .attr('fill-opacity', this._legend_bg_opacity / 100);
+      .attr('fill-opacity', this._legend_bg_opacity / 100)
   }
   // GETTERS / SETTERS ==================================================================
 

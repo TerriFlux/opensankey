@@ -1,109 +1,109 @@
 export class TooltipBehaviorManager {
-  private tooltip: HTMLElement;
-  private escHandler: (e: KeyboardEvent) => void;
-  private protectTooltip: (e: Event) => void;
-  private onClose: () => void; // ✅ AJOUTÉ : Sauvegarder le callback
+  private tooltip: HTMLElement
+  private escHandler: (e: KeyboardEvent) => void
+  private protectTooltip: (e: Event) => void
+  private onClose: () => void // ✅ AJOUTÉ : Sauvegarder le callback
 
   constructor(tooltip: HTMLElement, onClose: () => void) {
-    this.tooltip = tooltip;
-    this.escHandler = this.createEscHandler(onClose);
-    this.protectTooltip = this.createProtectionHandler();
-    this.onClose = onClose; // ✅ AJOUTÉ : Sauvegarder le callback
+    this.tooltip = tooltip
+    this.escHandler = this.createEscHandler(onClose)
+    this.protectTooltip = this.createProtectionHandler()
+    this.onClose = onClose // ✅ AJOUTÉ : Sauvegarder le callback
   }
 
   public initialize() {
-    this.setupCloseButton();
-    this.setupKeyboardHandlers();
-    this.setupProtection();
-    this.setupScrollBehavior();
-    this.setupFocus();
+    this.setupCloseButton()
+    this.setupKeyboardHandlers()
+    this.setupProtection()
+    this.setupScrollBehavior()
+    this.setupFocus()
   }
 
   private createEscHandler(onClose: () => void) {
     return (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
-        this.cleanup();
+        onClose()
+        this.cleanup()
       }
-    };
+    }
   }
 
   private createProtectionHandler() {
     return (e: Event) => {
-      const target = e.target as HTMLElement;
+      const target = e.target as HTMLElement
       if (this.tooltip.contains(target)) {
-        return; // Laisser l'événement normal dans le tooltip
+        return // Laisser l'événement normal dans le tooltip
       }
 
-      const rect = this.tooltip.getBoundingClientRect();
+      const rect = this.tooltip.getBoundingClientRect()
       const safeZone = {
         left: rect.left - 20,
         right: rect.right + 20,
         top: rect.top - 20,
         bottom: rect.bottom + 20
-      };
+      }
 
-      const mouseEvent = e as MouseEvent;
+      const mouseEvent = e as MouseEvent
       if (mouseEvent.clientX >= safeZone.left && mouseEvent.clientX <= safeZone.right &&
         mouseEvent.clientY >= safeZone.top && mouseEvent.clientY <= safeZone.bottom) {
-        e.stopPropagation();
+        e.stopPropagation()
       }
-    };
+    }
   }
 
   private setupCloseButton() {
-    const closeBtn = this.tooltip.querySelector('.tooltip-close') as HTMLElement;
+    const closeBtn = this.tooltip.querySelector('.tooltip-close') as HTMLElement
     if (closeBtn) {
       closeBtn.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        this.onClose();
-      };
+        e.preventDefault()
+        e.stopPropagation()
+        this.onClose()
+      }
     }
   }
 
   private setupKeyboardHandlers() {
-    document.addEventListener('keydown', this.escHandler);
+    document.addEventListener('keydown', this.escHandler)
   }
 
   private setupProtection() {
     ['click', 'mousedown', 'mouseup'].forEach(eventType => {
-      document.addEventListener(eventType, this.protectTooltip, true);
-    });
+      document.addEventListener(eventType, this.protectTooltip, true)
+    })
   }
 
   private setupScrollBehavior() {
     setTimeout(() => {
-      const content = this.tooltip.querySelector('.tooltip-content') as HTMLElement;
+      const content = this.tooltip.querySelector('.tooltip-content') as HTMLElement
       if (content) {
-        content.style.pointerEvents = 'auto';
-        content.style.touchAction = 'auto';
+        content.style.pointerEvents = 'auto'
+        content.style.touchAction = 'auto'
 
         content.addEventListener('wheel', (e) => {
           if (e.shiftKey || content.scrollWidth > content.clientWidth) {
-            e.preventDefault();
-            content.scrollLeft += e.deltaY > 0 ? 50 : -50;
+            e.preventDefault()
+            content.scrollLeft += e.deltaY > 0 ? 50 : -50
           }
-        });
+        })
       }
-    }, 100);
+    }, 100)
   }
 
   private setupFocus() {
     const forceFocus = () => {
-      this.tooltip.focus();
-    };
+      this.tooltip.focus()
+    }
 
-    forceFocus();
-    setTimeout(forceFocus, 50);
-    setTimeout(forceFocus, 100);
+    forceFocus()
+    setTimeout(forceFocus, 50)
+    setTimeout(forceFocus, 100)
   }
 
   public cleanup() {
     document.removeEventListener('keydown', this.escHandler);
     ['click', 'mousedown', 'mouseup'].forEach(eventType => {
-      document.removeEventListener(eventType, this.protectTooltip, true);
-    });
+      document.removeEventListener(eventType, this.protectTooltip, true)
+    })
   }
 }
 
@@ -300,4 +300,4 @@ export const TOOLTIP_STYLES = `
     outline: 2px solid #4a9eff;
     outline-offset: 2px;
   }
-`;
+`

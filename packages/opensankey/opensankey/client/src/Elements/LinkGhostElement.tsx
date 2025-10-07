@@ -1,6 +1,5 @@
 
 import { Class_DrawingArea } from '../types/DrawingArea'
-import type { Class_MenuConfig } from '../types/MenuConfig'
 import { Class_Sankey } from '../types/Sankey'
 import { Type_ElementPosition } from '../types/Utils'
 import { Class_LinkElement } from './Link'
@@ -13,7 +12,7 @@ import { Class_NodeElement } from './Node'
 export class ClassTemplate_GhostLinkElement
   extends Class_LinkElement {
 
-  protected _display: {
+  public _display: {
     drawing_area: Class_DrawingArea;
     sankey: Class_Sankey;
     position_starting: Type_ElementPosition;

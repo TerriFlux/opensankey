@@ -656,9 +656,9 @@ export class LinkControlPoints {
       // Only in recylcing
       if (this.link.shape_is_recycling) {
         if (this.link.is_horizontal) {
-          const handle_new_pos_y = this._control_points.middle_recycling_point.position_y + event.dy
-          const y0 = this.link.position_y_start
-          const yf = this.link.position_y_end
+          // const handle_new_pos_y = this._control_points.middle_recycling_point.position_y + event.dy
+          // const y0 = this.link.position_y_start
+          // const yf = this.link.position_y_end
           this.link.shape_middle_recycling += event.dy
         }
         else if (this.link.is_vertical) {

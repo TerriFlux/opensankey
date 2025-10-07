@@ -153,7 +153,7 @@ export class LinkDrawValue {
       // Failsafe
       if (this._link.source && this._link.target) {
         // Compute label to display
-        let label_to_display = link_val
+        const label_to_display = link_val
 
         const x0 = this._link.position_x_start
         const y0 = this._link.position_y_start

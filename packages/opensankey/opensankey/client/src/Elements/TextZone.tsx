@@ -312,8 +312,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
   }
 
   private unescapeHtml = (html: string): string => {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    return doc.documentElement.textContent || "";
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    return doc.documentElement.textContent || ''
   }
 
   /**
