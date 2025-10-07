@@ -504,7 +504,7 @@ export class Class_ApplicationData {
     this.drawing_area.draw()
     if (this.options_save_json?.mode_compressed) {
       const compressed = compressJSONToGzip(json_data)
-      const blob = new Blob([compressed], { type: 'application/gzip' })
+      const blob = new Blob([compressed as BlobPart], { type: 'application/gzip' })
       const gzFilename = this._file_name.endsWith('.json') 
         ? this._file_name.replace('.json', '.json.gz')
         : this._file_name + '.json.gz'
