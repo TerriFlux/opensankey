@@ -25,7 +25,6 @@
 // ==================================================================================================
 
 import { Class_DrawingArea } from './DrawingArea'
-import { Class_MenuConfig } from '../types/MenuConfig'
 import { 
   Class_LinkStyle, nodeStyleConfigs, Class_NodeStyle, linkStyleConfigs, NodeStyleConfigsDict, 
   product_sector_styles, NodeStyleKey, node_exchanges_style, LinkStyleConfigsDict, LinkStyleKey, 
@@ -38,7 +37,6 @@ import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../Eleme
 import { Class_NodeElement, sortNodesElements } from '../Elements/Node'
 import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
-import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_DataTag, Class_Tag, } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup } from './TagGroup'
 import {
@@ -98,7 +96,7 @@ export class Class_Sankey {
   public showAccordingToLevelTags() {
     Object.values(this._nodes_dimensions).forEach(dim=>{
       dim.unsetForcingToShow()
-  })
+    })
   }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {

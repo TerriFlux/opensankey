@@ -40,7 +40,7 @@ export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
 
     //@ts-expect-error xxx
-    initializeApplicationData={()=>new Class_ApplicationData(window.sankey.publish)} // Data, displayed data, default data
+    initializeApplicationData={()=>new Class_ApplicationData(window.sankey?.publish ?? false)} // Data, displayed data, default data
 
     // Ref to some key ui element in the application
     initializeAdditionalMenus={initializeAdditionalMenus}

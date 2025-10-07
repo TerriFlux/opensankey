@@ -7,6 +7,7 @@ import {
   default_font,
   default_element_color_source,
 } from '../types/Utils'
+import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
 
 // Types spécifiques
@@ -23,7 +24,6 @@ export type ActionType =
   | 'drawPath'               // Redessiner uniquement le chemin
   | 'drawArrow'              // Redessiner uniquement la flèche
   | 'drawControlPoint'       // Redessiner les points de contrôle
-  | 'update'                 // Update générique
 
 // Interface pour la configuration d'un attribut
 interface AttributeConfig<T> {
@@ -862,21 +862,21 @@ export class LinkSetterGenerator {
    * Génère automatiquement les setters pour une classe LinkElement
    * Override les propriétés héritées de LinkAttributeTypeScript
    */
-  static generateSetters(instance: any) {
+  static generateSetters(instance: Class_LinkElement) {
     (Object.keys(LINKS_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       const config = LINKS_ATTRIBUTES_CONFIG[key]
       
       Object.defineProperty(instance, key, {
         get: () => instance.getLinkProperty(key),
-        set: (value: any) => {
+        set: (value: AttributeTypes[typeof key]) => {
           // 1. Setter personnalisé si défini
           //@ts-expect-error xxx
           if (config.setter && typeof instance[config.setter] === 'function') {
             //@ts-expect-error xxx
             instance[config.setter](value)
           } else {
-            // 2. Setter standard
-            instance._display.attributes[key] = value
+            //@ts-expect-error xxx
+            (instance._display.attributes)[key] = value
           }
 
           // 3. Callback spécifique si défini
@@ -894,12 +894,7 @@ export class LinkSetterGenerator {
                 instance[action]()
               }
             })
-          } else {
-            // 5. Action par défaut si aucune action spécifiée
-            if (typeof instance.update === 'function') {
-              instance.update()
-            }
-          }
+          } 
         },
         enumerable: true,
         configurable: true  // 🆕 Important pour pouvoir override !

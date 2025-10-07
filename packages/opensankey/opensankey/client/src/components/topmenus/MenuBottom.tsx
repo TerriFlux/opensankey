@@ -69,7 +69,7 @@ const ComponentMouseMode = (
     label={t('Banner.tooltipLiason')}
     isAlwaysOpen={menu_configuration.show_splashscreen}
   >
-    <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}> {/* Orientation verticale */}
+    <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
       <Button
         variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
@@ -109,7 +109,7 @@ const ComponentUndoRedo = ({ app_data, updateParentComponent }: { app_data: Clas
   const { history, icon_library } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   { /* Buttons to apply undo or redo function */ }
-  return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}> {/* Orientation verticale */}
+  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
     <Button
       variant={history.can_undo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
       isDisabled={!history.can_undo}
@@ -164,7 +164,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     updateParentComponent()
   }
 
-  return <ButtonGroup isAttached orientation={app_data.is_static ? "vertical" : 'horizontal'}>
+  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}

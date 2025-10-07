@@ -24,7 +24,6 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import * as d3 from 'd3'
 import { makeId, Type_JSON } from '../types/Utils'
 import {
   SankeyNode,
@@ -53,7 +52,6 @@ import {
   DefaultNodeStyleFuncType,
   ReturnLocalLinkValueFuncType,
   ReturnLocalNodeValueFuncType,
-  ReturnValueLinkFuncType,
   ConvertSankeyLink,
   ConvertSankeyNode,
   ConvertSankeyValue,
@@ -2391,17 +2389,17 @@ const convert_links: convert_linksFuncType = (
 
         const shift_dist_min = 200
         const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift-50 : -50
-          let original_dist = Math.abs(left_horiz_shift)
-          let shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
-          AssignLinkLocalAttribute(l, 'right_horiz_shift',shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'ending_tangeant', 0.01) // value in [0; +oo]
+        let original_dist = Math.abs(left_horiz_shift)
+        let shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
+        AssignLinkLocalAttribute(l, 'right_horiz_shift',shift_dist / dist) // value in [0; +oo]
+        AssignLinkLocalAttribute(l, 'ending_tangeant', 0.01) // value in [0; +oo]
         // }
         const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift+50 : 50
-          original_dist = Math.abs(right_horiz_shift)
-          //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
-          shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
-          AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
-          AssignLinkLocalAttribute(l, 'starting_tangeant', 0.01) // value in [0; +oo]
+        original_dist = Math.abs(right_horiz_shift)
+        //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
+        shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
+        AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
+        AssignLinkLocalAttribute(l, 'starting_tangeant', 0.01) // value in [0; +oo]
       }
     }
 
