@@ -1,4 +1,4 @@
-import type { Class_DataTag, Class_ProtoTag, Class_Tag } from '../types/Tag'
+import type { Class_DataTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
 import { Class_LinkElement } from './Link'
@@ -22,7 +22,7 @@ export class Class_LinkValueTree {
   public unit_data_tag(child: Class_LinkValueTree | Class_LinkValue): Class_DataTag | undefined {
     if (this.data_tag_group.is_unit) return this.data_tag_group.tags_dict[this.getDataTagIdFromChild(child) as string]
     if (this.parent instanceof Class_LinkValueTree) {
-       return this.parent.unit_data_tag(this)
+      return this.parent.unit_data_tag(this)
     }
     return undefined
   }
@@ -525,7 +525,7 @@ export class Class_LinkValue {
 
   public unit_data_tag() : Class_DataTag | undefined{
     if (this.parent instanceof Class_LinkValueTree) {
-       return this.parent.unit_data_tag(this)
+      return this.parent.unit_data_tag(this)
     }
     return undefined
   }
@@ -555,9 +555,9 @@ export class Class_LinkValue {
       return null
     }
     if (this.value_option == 'unit_ratio') {
-      const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)!
+      const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)
       if (ratio_unit_tag_value == this) return this.data_value
-      return (ratio_unit_tag_value.valueResult??ratio_unit_tag_value.valueData??1) * this.data_value!
+      return (ratio_unit_tag_value?.valueResult??ratio_unit_tag_value?.valueData??1) * this.data_value!
     } else if (this.value_option == '%IS') {
       const multiplier = this.data_value / 100
       if (this.parent == this.link) {
@@ -615,12 +615,12 @@ export class Class_LinkValue {
       const multiplier = this.data_value / 100
       const parent_source = this.link!.source.dimensions_as_child_pure[0].parent!
       const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
-      return parent_link?.valueCurrent!*multiplier
+      return parent_link?parent_link.valueCurrent!*multiplier : null
     } else if (this.value_option == '%PD') {
       const multiplier = this.data_value / 100
       const parent_target = this.link!.target.dimensions_as_child_pure[0].parent!
       const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
-      return parent_link?.valueCurrent!*multiplier
+      return parent_link? parent_link.valueCurrent!*multiplier: null
     }
     return null
   }
@@ -737,9 +737,7 @@ export class Class_LinkValue {
    * @return {*}
    * @memberof Class_LinkValue
    */
-  public toJSON(
-    kwargs?: Type_JSON
-  ) {
+  public toJSON() {
     // Init output JSON
     const json_object: Type_JSON = {}
     json_object['id'] = this._id

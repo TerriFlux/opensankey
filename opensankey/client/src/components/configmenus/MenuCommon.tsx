@@ -239,16 +239,16 @@ export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,childre
       {title}
     </Checkbox>
   </Box>
-    <Collapse in={isOpen} animateOpacity>
-      <Box
-        layerStyle='menuconfigpanel_grid'
-        marginLeft='1rem'
-        borderLeft='lightgray 1px solid'
-        paddingLeft='0.2rem'
-      >
-        {children}
-      </Box>
-    </Collapse>
+  <Collapse in={isOpen} animateOpacity>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      marginLeft='1rem'
+      borderLeft='lightgray 1px solid'
+      paddingLeft='0.2rem'
+    >
+      {children}
+    </Box>
+  </Collapse>
   </>
 }
 
@@ -409,8 +409,8 @@ export const BOX2COLS = ({ children }: React.PropsWithChildren<{ children: React
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       {children}
     </Box>
-  );
-};
+  )
+}
 
 export const BOX2COLSTITLEH4 = ({ title, children }: React.PropsWithChildren<{
   title: string
@@ -434,7 +434,7 @@ export const RowSetter2Cols = ({
   children: React.ReactNode
 }>) => {
   const label = t(`${attributePath}.${String(attributeKey)}`)
-  const tooltip = t(`${attributePath}.tooltips.${String(attributeKey)}`);
+  const tooltip = t(`${attributePath}.tooltips.${String(attributeKey)}`)
   return (
     <OSTooltip label={tooltip}>
       <span>
@@ -460,8 +460,8 @@ export const ElementAttrSetter2Cols = ({
   children: React.ReactNode; // Le composant enfant (Select, Input, etc.)
 }>) => {
 
-  const label = t(`${String(attributePath)}.${String(attributeKey)}`);
-  const tooltip = t(`${String(attributePath)}.tooltips.${String(attributeKey)}`);
+  const label = t(`${String(attributePath)}.${String(attributeKey)}`)
+  const tooltip = t(`${String(attributePath)}.tooltips.${String(attributeKey)}`)
 
   return (
     <OSTooltip label={tooltip}>
@@ -623,8 +623,8 @@ export const DataTagSelector = ({ data_tagg, value, onChange }: {
         {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
       </Select>
     </Box>
-  );
-};
+  )
+}
 // Tooltipe added to input in menu when add a local value (for nodes & links local attributes)
 
 
@@ -632,8 +632,8 @@ export const DataTagSelector = ({ data_tagg, value, onChange }: {
 export const TooltipValueSurcharge = (k: string, t: TFunction) => {
   return <OSTooltip label={t('Menu.overcharge_style_value')} placement='left'>
     <FontAwesomeIcon className='tooltip_overload' style={{ color: '#6cc3d5', height: '12', width: '12', float: 'right' }} icon={faCircleInfo} />
-  </OSTooltip>;
-};
+  </OSTooltip>
+}
 
 
 export const OSTooltip = ({label, delay = 500, placement = 'auto', isAlwaysOpen = false, children}:React.PropsWithChildren<{
@@ -670,14 +670,14 @@ export const OSTooltip = ({label, delay = 500, placement = 'auto', isAlwaysOpen 
       {children}
     </Tooltip>
   }
-};
+}
 
 export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
-  const { isChecked } = props;
+  const { isChecked } = props
   return isChecked
     ? <FontAwesomeIcon icon={faEye} />
-    : <FontAwesomeIcon icon={faEyeSlash} />;
-};
+    : <FontAwesomeIcon icon={faEyeSlash} />
+}
 /**
  * Check if given attribute is overloaded in at least one link
  * @export
@@ -796,7 +796,7 @@ export const ConditionalCheckboxWithInput = ({
         variant='menuconfigpanel_option_checkbox'
         isChecked={checkboxValue as boolean}
         onChange={(evt) => {
-          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent);
+          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent)
         }}
       >
         <OSTooltip label={t(`Flux.labels.tooltips.${String(checkboxAttributeKey)}`)}>
@@ -821,7 +821,7 @@ export const ConditionalCheckboxWithInput = ({
             minimum_value={minimum_value}
             stepper={stepper}
             function_on_blur={(value) => {
-              updateElements(app_data, elements, inputAttributeKey, value ?? undefined, refreshParentComponent);
+              updateElements(app_data, elements, inputAttributeKey, value ?? undefined, refreshParentComponent)
             }}
             multiValue={is_attribute_indetermined}
           />
@@ -846,7 +846,7 @@ export const CheckboxWithColorPicker = ({
 }) => {
   const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig(app_data, elements)
   const { attribute_value: checkboxValue } = useAttributeValue(elements, checkboxAttributeKey)
-  const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, inputAttributeKey)
+  const { attribute_value } = useAttributeValue(elements, inputAttributeKey)
 
   const layoutStyle = 'menuconfigpanel_row_2cols'
 
@@ -857,7 +857,7 @@ export const CheckboxWithColorPicker = ({
         variant='menuconfigpanel_option_checkbox'
         isChecked={checkboxValue as boolean}
         onChange={(evt) => {
-          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent);
+          updateElements(app_data, elements, checkboxAttributeKey, evt.target.checked, refreshParentComponent)
         }}
       >
         <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(checkboxAttributeKey)}`)}>
@@ -874,12 +874,12 @@ export const CheckboxWithColorPicker = ({
 
       {checkboxValue && (
         <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(inputAttributeKey)}`)}>
-        <MenuColorPicker
-          isDisabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
-          initialColor={attribute_value}
-          onColorChange={(new_color) => {
-            updateElements(app_data, elements, inputAttributeKey, new_color,refreshParentComponent)
-          }} />
+          <MenuColorPicker
+            isDisabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
+            initialColor={attribute_value}
+            onColorChange={(new_color) => {
+              updateElements(app_data, elements, inputAttributeKey, new_color,refreshParentComponent)
+            }} />
         </OSTooltip>
       )}
       {children}
@@ -950,7 +950,7 @@ export const TooltipEditor = ({app_data,elements,updaterRef}:{
 
   // Fonction pour définir le texte du tooltip selon le type d'élément
   const setTooltipText = (element: TooltipElement, text: string): void => {
-      element.tooltip_text = text
+    element.tooltip_text = text
   }
 
   // Fonction pour obtenir le texte initial
@@ -1100,7 +1100,7 @@ export const MenuConfigurationNodesTooltip = ({new_data}: {new_data: Class_Appli
     <>
       <SankeyNodeSelectionSimple new_data={new_data} />
       <NodeTooltipEditor 
-       app_data={new_data}
+        app_data={new_data}
         elements={selected_nodes}
         updaterRef={new_data.menu_configuration.ref_to_menu_config_nodes_tooltips_updater}
       />

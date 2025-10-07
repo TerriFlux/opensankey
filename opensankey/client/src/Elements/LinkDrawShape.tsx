@@ -504,7 +504,7 @@ export class LinkDrawShape {
       let y2 = this._link_control_points_internal.controlPoints.starting_bezier_point.position_y
       let x4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_x
       const y4 = this._link_control_points_internal.controlPoints.ending_bezier_point.position_y
-      let x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
+      const x5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_x
       let y5 = this._link_control_points_internal.controlPoints.ending_curve_point.position_y
       let x3 = (x2 + x4) / 2
       let y3 = (y2 + y4) / 2

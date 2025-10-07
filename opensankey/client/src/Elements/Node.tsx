@@ -36,9 +36,6 @@ import type {
   Class_TagGroup,
   Class_LevelTagGroup
 } from '../types/TagGroup'
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
 import {
   Class_LinkElement,
   sortLinksElementsByRelativeNodesPositions
@@ -189,7 +186,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   protected _master_node: Class_NodeElement | undefined = undefined
   protected _slave_nodes: Class_NodeElement[] = []
 
-  protected _display: {
+  public _display: {
     position: Type_ElementPosition,
     style: Class_NodeStyle[],
     attributes: Class_NodeAttribute
@@ -1188,29 +1185,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -1300,9 +1297,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     }
   }
 
-  public eventDoubleLMBCLick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
+  public eventDoubleLMBCLick() {
     if (this.hyperlink) {
       window.open(this.hyperlink, '_blank', 'noopener,noreferrer')
     }
@@ -1347,7 +1342,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseMove(event)
-    this._nodeEventsHandler.handleMouseMove(event)
+    this._nodeEventsHandler.handleMouseMove()
   }
 
   public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {

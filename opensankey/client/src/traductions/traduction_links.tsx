@@ -315,4 +315,4 @@ export const resources_flux = {
       }
     }
   }
-};
+}

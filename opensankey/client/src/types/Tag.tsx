@@ -486,7 +486,7 @@ export class Class_DataTag extends Class_ProtoTag {
   }
 
 
-protected _toJSON(
+  protected _toJSON(
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
