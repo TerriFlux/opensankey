@@ -458,8 +458,8 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     }
     // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
     requestAnimationFrame(() => {
-      this.updateDragZone()
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.updateDragZone();
+      //this.drawing_area.checkAndUpdateAreaSize();
     })
   }
 

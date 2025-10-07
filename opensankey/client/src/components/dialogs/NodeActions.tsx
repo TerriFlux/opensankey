@@ -83,17 +83,25 @@ export class NodeActions {
   aggregate = (dim_name: string) => {
     if (!this.contextualised_node) return
 
-    const parentDims = this.contextualised_node.master_node ?
+    const child_dims = this.contextualised_node.master_node ?
       this.contextualised_node.master_node.dimensions_as_child_pure :
       this.contextualised_node.dimensions_as_child_pure
 
-    if (parentDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
+    let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].related_level_tagg
+    if (!dim_name) {
+      if (child_dims.filter(dim => dim.force_show_children).length != 0) {
+        level_tagg = child_dims.filter(dim => dim.force_show_children)[0].related_level_tagg
+      }
+    }
+
+    if (child_dims.length > 0) {
       aggregate(this.app_data, this.contextualised_node, level_tagg)
+      this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
+      this.app_data.drawing_area.bypass_autofit = false
       this.drawing_area.purgeSelection()
       this.drawing_area.node_contextualised = undefined
-      this.drawing_area.areaAutoFit(false)
+      //this.drawing_area.areaAutoFit(false)
       this.refreshAndSave()
     }
   }
@@ -134,9 +142,11 @@ export class NodeActions {
     if (childDims.length > 0) {
       const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
       disaggregate(this.app_data, this.contextualised_node, level_tagg)
+      this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
+      this.app_data.drawing_area.bypass_autofit = false
       // this.drawing_area.purgeSelection()
-      this.drawing_area.areaAutoFit(false)
+      //this.drawing_area.areaAutoFit(false)
       this.refreshAndSave()
     }
   }
