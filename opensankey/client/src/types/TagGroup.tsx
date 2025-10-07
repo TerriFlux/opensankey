@@ -4,7 +4,7 @@ import { Class_LinkValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag } from './Tag'
-import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON } from './Utils'
+import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 
 // CLASS PROTO TAGGROUP *****************************************************************
 /**
@@ -724,6 +724,7 @@ export class Class_LevelTagGroup {
   private _antitagged_refs: Class_NodeElement[] = []
 
   // PROTECTED ATTRIBUTES ===============================================================
+  public linked_tag_group : Class_TagGroup | null = null
   protected _tags: { [_: string]: Class_LevelTag; } = {}
   protected _ref_sankey: Class_Sankey
 
@@ -839,7 +840,10 @@ export class Class_LevelTagGroup {
     this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
-    
+    const linked_tag_group_id = getStringOrUndefinedFromJSON(json_object, 'linked_tag_group')
+    if (linked_tag_group_id !== undefined)
+      this.linked_tag_group = this._ref_sankey.node_taggs_dict[linked_tag_group_id] ?? null
+
     // Create new tags & read their attributes
     const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
     Object.entries(json_object['tags']).forEach(([_, tag_json]) => {
@@ -1052,12 +1056,12 @@ export class Class_LevelTagGroup {
     // Avoid useless updates
     if (this._activated !== value) {
       this._activated = value
-      if (this._activated === true) {
+      if (value== true && this.linked_tag_group) this.linked_tag_group.use_colors = true
+      if (value== false && this.linked_tag_group) this.linked_tag_group.use_colors = false
         this._siblings.forEach(sib_tagg_id => {
           if (this._ref_sankey.level_taggs_dict[sib_tagg_id])
-            this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = false
+            this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = !this._activated
         })
-      }
       this._ref_sankey.draw()
     }
   }
