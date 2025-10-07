@@ -1,17 +1,17 @@
-import { getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils';
-import { Class_LinkElement } from './Link';
-import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes';
-import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig';
-import { Class_NodeElement } from './Node';
-import { Class_NodeAttribute, default_dx, default_dy } from './NodeAttributes';
-import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG, AttributeKey } from './NodeAttributesConfig';
+import { getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils'
+import { Class_LinkElement } from './Link'
+import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes'
+import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig'
+import { Class_NodeElement } from './Node'
+import { Class_NodeAttribute, default_dx, default_dy } from './NodeAttributes'
+import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG, AttributeKey } from './NodeAttributesConfig'
 
 
 export class Class_LinkStyle extends Class_LinkAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_LinkElement } = {};
+  private _references: { [_: string]: Class_LinkElement } = {}
   private _customisable_attribute: {
     [K in LinkAttributeKey]: boolean
   }
@@ -50,7 +50,7 @@ export class Class_LinkStyle extends Class_LinkAttribute {
 
   protected shouldSaveAttribute(
     key: LinkAttributeKey,
-    value: any,
+    value: number | string | boolean | undefined,
     link: Class_LinkElement | null,
     default_style: Class_LinkStyle | null
   ) {
@@ -121,11 +121,11 @@ export class Class_NodeStyle extends Class_NodeAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_NodeElement } = {};
+  private _references: { [_: string]: Class_NodeElement } = {}
   private _customisable_attribute: {
     [K in NodeAttributeKey]: boolean
   }
-  private _position: Type_ElementPositionOptionnal = {};
+  private _position: Type_ElementPositionOptionnal = {}
 
   constructor(id: string, name: string, is_deletable: boolean = true) {
     super()
@@ -178,7 +178,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
    */
   protected shouldSaveAttribute(
     key: NodeAttributeKey,
-    value: any,
+    value: string | number | boolean | undefined,
     node: Class_NodeElement | null,
     default_style: Class_NodeStyle | null
   ) {
@@ -378,13 +378,13 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   NodeUnitaryStyle: {
-    name: "Unitaire",
+    name: 'Unitaire',
     config: {
       'name_label_is_visible': false
     }
   },
   SankeyUnitaryNodeStyle: {    
-    name: "Unitaire",
+    name: 'Unitaire',
     config: {
       name_label_horiz: 'middle',
       name_label_vert: 'bottom',
@@ -400,7 +400,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   SankeyUnitaryNodeInputStyle: {
-    name: "Unitaire entrée",
+    name: 'Unitaire entrée',
     config: {
       name_label_horiz: 'left',
       name_label_vert: 'middle',
@@ -415,7 +415,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
     }
   },
   SankeyUnitaryNodeOutputStyle: {
-    name: "Unitaire sortie",
+    name: 'Unitaire sortie',
     config: {
       name_label_horiz: 'right',
       name_label_vert: 'middle',

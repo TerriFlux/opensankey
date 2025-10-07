@@ -136,7 +136,7 @@ export class Class_NodeDimension {
       this._child_level_tag.removeChildrenLevel(this)
       //this._child_level_tag = ''
       // Garbage collector will do the rest ...
-          // - Children list is empty
+      // - Children list is empty
       this.parent.sankey.removeNodeDimension(this)
     }
   }
@@ -265,7 +265,7 @@ export class Class_NodeDimension {
     this._force_show_parent = false
     this._updated()
     // Unset other dimensions
-    let nodes_to_redraw = new Set([
+    const nodes_to_redraw = new Set([
       this._parent,
       ...this._children
     ])

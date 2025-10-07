@@ -51,59 +51,59 @@ export const SankeyMenuLabelComponent = ({
   refreshParentComponent: () => void,
   prefix: 'name_' | 'value_'
 }) => {
-  const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration;
-  const { node_styles_dict, link_styles_dict } = new_data.drawing_area.sankey;
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle);
+  const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration
+  const { node_styles_dict, link_styles_dict } = new_data.drawing_area.sankey
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
 
 
-  const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle);
-  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement);
+  const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
+  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
 
-  const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict;
-  const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link;
+  const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
+  const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
 
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
   const disable_attr_props = menu_for_style ? 
     correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : 
-    correct_dict_style_to_use[default_style_id].customisable_attribute;
+    correct_dict_style_to_use[default_style_id].customisable_attribute
 
   const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
-    const ref_element = elements[0];
+    const ref_element = elements[0]
     if (curr instanceof Class_LinkElement && ref_element instanceof Class_LinkElement) {
-      return (ref_element.isEqual(curr));
+      return (ref_element.isEqual(curr))
     } else if (curr instanceof Class_NodeElement && ref_element instanceof Class_NodeElement) {
-      return (ref_element.isEqual(curr));
+      return (ref_element.isEqual(curr))
     } else {
-      return false;
+      return false
     }
-  };
-  const is_indeterminate = !(elements as (Class_NodeElement|Class_LinkElement)[]).every(check_indeterminate);
+  }
+  const is_indeterminate = !(elements as (Class_NodeElement|Class_LinkElement)[]).every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
-  let label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default;
-  let label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default;
-  let label_font_size = NODES_ATTRIBUTES_CONFIG.value_label_font_size.default;
-  let label_color = NODES_ATTRIBUTES_CONFIG.value_label_color.default;
-  let label_bold = NODES_ATTRIBUTES_CONFIG.value_label_bold.default;
-  let label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default;
-  let label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default;
-  let label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default;
+  let label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+  let label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+  let label_font_size = NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+  let label_color = NODES_ATTRIBUTES_CONFIG.value_label_color.default
+  let label_bold = NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+  let label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+  let label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
+  let label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
 
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
-    const element_ref = elements[0];
+    const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in prefix
-    label_horiz = Reflect.get(element_ref, prefix + 'label_horiz') ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default;
-    label_vert =  Reflect.get(element_ref, prefix + 'label_vert') ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default;
-    label_font_size = Reflect.get(element_ref, prefix + 'label_font_size') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default;
-    label_color = Reflect.get(element_ref, prefix + 'label_color') ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default;
-    label_font_family = Reflect.get(element_ref, prefix + 'label_font_family') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default;
-    label_bold = Reflect.get(element_ref, prefix + 'label_bold') ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default;
-    label_italic = Reflect.get(element_ref, prefix + 'label_italic') ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default;
-    label_uppercase = Reflect.get(element_ref, prefix + 'label_uppercase') ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default;
+    label_horiz = Reflect.get(element_ref, prefix + 'label_horiz') ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
+    label_vert =  Reflect.get(element_ref, prefix + 'label_vert') ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+    label_font_size = Reflect.get(element_ref, prefix + 'label_font_size') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
+    label_color = Reflect.get(element_ref, prefix + 'label_color') ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
+    label_font_family = Reflect.get(element_ref, prefix + 'label_font_family') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
+    label_bold = Reflect.get(element_ref, prefix + 'label_bold') ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
+    label_italic = Reflect.get(element_ref, prefix + 'label_italic') ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
+    label_uppercase = Reflect.get(element_ref, prefix + 'label_uppercase') ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
   }
 
-  const is_label_font_size_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_font_size') == Reflect.get(elements[0], prefix + 'label_font_size'));
+  const is_label_font_size_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_font_size') == Reflect.get(elements[0], prefix + 'label_font_size'))
 
   return <Box
     layerStyle='menuconfigpanel_grid'
@@ -118,7 +118,7 @@ export const SankeyMenuLabelComponent = ({
           variant='menuconfigpanel_option_select'
           value={label_font_family}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            updateElements(new_data, elements, prefix + 'label_font_family' as ValueKey, evt.target.value, refreshParentComponent);
+            updateElements(new_data, elements, prefix + 'label_font_family' as ValueKey, evt.target.value, refreshParentComponent)
           }}
         >
           {font_families
@@ -129,7 +129,7 @@ export const SankeyMenuLabelComponent = ({
                 value={d}
               >
                 {d}
-              </option>;
+              </option>
             })}
         </Select>
 
@@ -142,7 +142,7 @@ export const SankeyMenuLabelComponent = ({
           stepper={true}
           unit_text='pixels'
           function_on_blur={(value) => {
-            updateElements(new_data, elements, prefix + 'label_font_size' as ValueKey, value ?? undefined, refreshParentComponent);
+            updateElements(new_data, elements, prefix + 'label_font_size' as ValueKey, value ?? undefined, refreshParentComponent)
           }}
           multiValue={is_label_font_size_indetermined} />
       </Box>
@@ -160,7 +160,7 @@ export const SankeyMenuLabelComponent = ({
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_bold' as ValueKey, !label_bold, refreshParentComponent);
+              updateElements(new_data, elements, prefix + 'label_bold' as ValueKey, !label_bold, refreshParentComponent)
             }}
           >
             {new_data.icon_library.icon_text_bold}
@@ -176,7 +176,7 @@ export const SankeyMenuLabelComponent = ({
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_uppercase' as ValueKey, !label_uppercase, refreshParentComponent);
+              updateElements(new_data, elements, prefix + 'label_uppercase' as ValueKey, !label_uppercase, refreshParentComponent)
             }}
           >
             {svg_label_upper}
@@ -192,7 +192,7 @@ export const SankeyMenuLabelComponent = ({
             paddingEnd='0'
             minWidth='0'
             onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_italic' as ValueKey, !label_italic, refreshParentComponent);
+              updateElements(new_data, elements, prefix + 'label_italic' as ValueKey, !label_italic, refreshParentComponent)
             }}
           >
             {new_data.icon_library.icon_text_italic}
@@ -212,7 +212,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_left' :
                 'menuconfigpanel_option_button_left'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'left', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'left', refreshParentComponent)
               }}>
               {new_data.icon_library.icon_text_align_left}
             </Button>
@@ -229,7 +229,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_center' :
                 'menuconfigpanel_option_button_center'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'middle', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'middle', refreshParentComponent)
               }}>
               {new_data.icon_library.icon_text_align_center}
             </Button>
@@ -246,7 +246,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_right' :
                 'menuconfigpanel_option_button_right'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'right', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'right', refreshParentComponent)
               }}>
               {new_data.icon_library.icon_text_align_right}
             </Button>
@@ -269,7 +269,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_left' :
                 'menuconfigpanel_option_button_left'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'bottom', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'bottom', refreshParentComponent)
               }}
             >
               {new_data.icon_library.icon_text_vert_pos_bottom}
@@ -291,7 +291,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_center' :
                 'menuconfigpanel_option_button_center'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'middle', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'middle', refreshParentComponent)
               }}
             >
               {new_data.icon_library.icon_text_vert_pos_center}
@@ -312,7 +312,7 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_right' :
                 'menuconfigpanel_option_button_right'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'top', refreshParentComponent);
+                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'top', refreshParentComponent)
               }}>
               {new_data.icon_library.icon_text_vert_pos_top}
             </Button>
@@ -325,20 +325,20 @@ export const SankeyMenuLabelComponent = ({
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Flux.apparence.shape_color')}
           {!menu_for_style ? <TooltipElementOverloaded
-          elements={elements as (Class_NodeElement | Class_LinkElement)[]}
-          k={prefix + 'label_color' as ValueKey} 
-          t={t}
+            elements={elements as (Class_NodeElement | Class_LinkElement)[]}
+            k={prefix + 'label_color' as ValueKey} 
+            t={t}
           />:<></>}
         </Box>
         <MenuColorPicker
           isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_color')}
           initialColor={label_color}
           onColorChange={(new_color) => {
-            updateElements(new_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent);
+            updateElements(new_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent)
 
           }} />
       </Box>
     </Box>
 
-  </Box>;
-};
+  </Box>
+}

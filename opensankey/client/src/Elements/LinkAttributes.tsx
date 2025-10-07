@@ -214,7 +214,7 @@ export class Class_LinkAttribute extends LinkAttributeTypeScript {
   // Méthode protégée pour personnaliser la condition de sauvegarde
   protected shouldSaveAttribute(
     key: AttributeKey,
-    value: any,
+    value: string | number | boolean | undefined,
     link: Class_LinkElement | null,
     default_style: Class_LinkStyle | null
   ): boolean {

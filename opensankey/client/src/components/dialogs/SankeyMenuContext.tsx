@@ -25,32 +25,39 @@
 // ==================================================================================================
 
 import React, { useState, useMemo } from 'react'
-import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, MenuItem } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle } from './MenuContextWidgetFactory'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_LinkElement } from '../../Elements/Link'
 
 // ==================================================================================================
 // TYPES ET INTERFACES
 // ==================================================================================================
 
+export type MenuConditionOperator = '==' | '!=' | '>' | '<' | '>=' | '<=' | 'includes'
+export type MenuConditionType = 'nodeCount' | 'nodeProperty' | 'custom'
+
 export interface MenuCondition {
-  type: 'nodeCount' | 'nodeProperty' | 'custom'
-  operator?: '==' | '!=' | '>' | '<' | '>=' | '<=' | 'includes'
-  value?: any
+  type: MenuConditionType
+  operator?: MenuConditionOperator
+  value?: unknown
   property?: string
   customCheck?: (app_data: Class_ApplicationData) => boolean
 }
 
+export type MenuStructureItemType = 'button' | 'submenu' | 'widget' | 'separator'
+
 export interface MenuStructureItem {
-  type: 'button' | 'submenu' | 'widget' | 'separator'
+  type: MenuStructureItemType
   actionName?: string
   titleKey?: string
   titleName?: string
   widgetName?: string
-  widgetProps?: Record<string, any>
+  widgetProps?: Record<string, unknown>
 
   // Système de conditions pour la visibilité
   visibilityConditions?: MenuCondition[]
@@ -67,8 +74,10 @@ export interface MenuStructureItem {
   }
 }
 
+export type MenuActionType = 'action' | 'toggle' | 'widget' | 'submenu'
+
 export interface MenuAction {
-  type: 'action' | 'toggle' | 'widget' | 'submenu'
+  type: MenuActionType
   labels: Record<string, string>
   tooltips: Record<string, string>
 
@@ -81,7 +90,7 @@ export interface MenuAction {
 
   // Pour les widgets
   widgetName?: string
-  widgetProps?: Record<string, any>
+  widgetProps?: Record<string, unknown>
 
   // Configuration avancée
   showCheck?: boolean
@@ -100,6 +109,12 @@ export interface MenuConfig {
   maxDepth?: number
 }
 
+export interface MenuPosition {
+  x: number
+  y: number
+  isTop: boolean
+}
+
 // ==================================================================================================
 // ÉVALUATEUR DE CONDITIONS
 // ==================================================================================================
@@ -111,20 +126,20 @@ export class MenuConditionEvaluator {
     const selected_nodes = drawing_area.visible_and_selected_nodes_list
 
     switch (condition.type) {
-      case 'nodeCount':
-        const count = selected_nodes.length
-        return this.compareValues(count, condition.operator!, condition.value)
+    case 'nodeCount': {
+      const count = selected_nodes.length
+      return this.compareValues(count, condition.operator!, condition.value)
+    }
+    case 'nodeProperty': {
+      if (!contextualised_node || !condition.property) return false
+      const propValue = this.getNestedProperty(contextualised_node, condition.property)
+      return this.compareValues(propValue, condition.operator!, condition.value)
+    }
+    case 'custom':
+      return condition.customCheck ? condition.customCheck(app_data) : false
 
-      case 'nodeProperty':
-        if (!contextualised_node || !condition.property) return false
-        const propValue = this.getNestedProperty(contextualised_node, condition.property)
-        return this.compareValues(propValue, condition.operator!, condition.value)
-
-      case 'custom':
-        return condition.customCheck ? condition.customCheck(app_data) : false
-
-      default:
-        return true
+    default:
+      return true
     }
   }
 
@@ -132,21 +147,26 @@ export class MenuConditionEvaluator {
     return conditions.every(condition => this.evaluate(condition, app_data))
   }
 
-  private static compareValues(actual: any, operator: string, expected: any): boolean {
+  private static compareValues(actual: unknown, operator: MenuConditionOperator, expected: unknown): boolean {
     switch (operator) {
-      case '==': return actual === expected
-      case '!=': return actual !== expected
-      case '>': return actual > expected
-      case '<': return actual < expected
-      case '>=': return actual >= expected
-      case '<=': return actual <= expected
-      case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
-      default: return true
+    case '==': return actual === expected
+    case '!=': return actual !== expected
+    case '>': return (actual as number) > (expected as number)
+    case '<': return (actual as number) < (expected as number)
+    case '>=': return (actual as number) >= (expected as number)
+    case '<=': return (actual as number) <= (expected as number)
+    case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
+    default: return true
     }
   }
 
-  private static getNestedProperty(obj: any, path: string): any {
-    return path.split('.').reduce((o, p) => o?.[p], obj)
+  private static getNestedProperty(obj: Class_NodeElement | Class_LinkElement, path: string): unknown {
+    return path.split('.').reduce<unknown>((o, p) => {
+      if (o && typeof o === 'object') {
+        return (o as Record<string, unknown>)[p]
+      }
+      return undefined
+    }, obj)
   }
 }
 
@@ -154,7 +174,17 @@ export class MenuConditionEvaluator {
 // RENDERER PRINCIPAL
 // ==================================================================================================
 
-export const ContextMenuRenderer = ({
+interface ContextMenuRendererProps<T extends Record<string, unknown>> {
+  config: MenuConfig
+  modifier: T
+  app_data: Class_ApplicationData
+  isVisible: boolean
+  position: MenuPosition
+  path: string
+  refreshCallback?: () => void
+}
+
+export const ContextMenuRenderer = <T extends Record<string, unknown>>({
   config,
   modifier,
   app_data,
@@ -162,15 +192,7 @@ export const ContextMenuRenderer = ({
   position,
   path,
   refreshCallback
-}: {
-  config: MenuConfig
-  modifier: any
-  app_data: Class_ApplicationData
-  isVisible: boolean
-  position: { x: number, y: number, isTop: boolean }
-  path: string
-  refreshCallback?: () => void
-}) => {
+}: ContextMenuRendererProps<T>) => {
   const [, setForceUpdate] = useState(0)
   const { t } = app_data
 
@@ -198,7 +220,7 @@ export const ContextMenuRenderer = ({
 
     const getValue = modifier[actionConfig.getToggleValue]
     if (typeof getValue === 'function') {
-      const currentValue = getValue()
+      const currentValue = (getValue as () => unknown)()
       const lang = app_data.i18n?.language || 'en'
       return actionConfig.labelsToggle[lang]?.[String(currentValue)] || t(`${path}.${actionName}`)
     }
@@ -211,7 +233,7 @@ export const ContextMenuRenderer = ({
     // Génération des dimensions existantes pour setChild
     if (item.titleKey === 'setChild' && item.children) {
       const sankey = app_data.drawing_area.sankey
-      const dynamicDimensions = sankey.level_taggs_list.map((tagg, index) => ({
+      const dynamicDimensions = sankey.level_taggs_list.map((tagg) => ({
         type: 'button' as const,
         actionName: `setChild_${tagg.id}`,
         titleKey: tagg.name
@@ -226,7 +248,7 @@ export const ContextMenuRenderer = ({
     // Génération des dimensions existantes pour createParent
     if (item.titleKey === 'createParent' && item.children) {
       const sankey = app_data.drawing_area.sankey
-      const dynamicDimensions = sankey.level_taggs_list.map((tagg, index) => ({
+      const dynamicDimensions = sankey.level_taggs_list.map((tagg) => ({
         type: 'button' as const,
         actionName: `createParent_${tagg.id}`,
         titleKey: tagg.name
@@ -252,10 +274,10 @@ export const ContextMenuRenderer = ({
           child.type === 'button'  && child.actionName === 'contractLeft' ||
             child.actionName === 'contractRight')
         // Créer un sous-menu pour chaque dimension child
-        let dimensionSubmenusAgg = [] as MenuStructureItem[]
+        let dimensionSubmenusAgg: MenuStructureItem[] = []
         if (child_dims.length > 0) {
           if (!app_data.has_sankey_dev) {
-            if (child_dims.filter(dim => dim.force_show_children).length == 0) {
+            if (child_dims.filter(dim => dim.force_show_children).length === 0) {
               dimensionSubmenusAgg = child_dims.map(dim => ({
                 type: 'button' as const,
                 actionName: `aggregate_${dim.related_level_tagg.id}`,
@@ -310,7 +332,7 @@ export const ContextMenuRenderer = ({
           }
         }
         // Créer un sous-menu pour chaque dimension parent
-        let dimensionSubmenusDesagg = [] as MenuStructureItem[]
+        let dimensionSubmenusDesagg: MenuStructureItem[] = []
         if (parent_dims.length > 0) {
           if (!app_data.has_sankey_dev) {
             dimensionSubmenusDesagg = parent_dims.map((dim) => ({
@@ -363,31 +385,17 @@ export const ContextMenuRenderer = ({
       }
     }
 
-    // Génération des styles disponibles pour selectStyle
-    // if (item.actionName === 'selectStyle' && item.type === 'button') {
-    //   const sankey = app_data.drawing_area.sankey
-    //   const styleButtons = sankey.node_styles_list_sorted.map((style) => ({
-    //     type: 'button' as const,
-    //     actionName: `selectStyle_${style.id}`,
-    //     titleName: style.name
-    //   }))
-
-    //   return [{
-    //     type: 'submenu' as const,
-    //     titleKey: 'selectStyle',
-    //     children: styleButtons
-    //   }]
-    // }
     return [item]
   }
 
   // Composant pour rendre un bouton d'action
   const ActionButton = ({ actionName, titleName }: { actionName: string, titleName: string }) => {
-    let arg: string
+    let actionNameParsed = actionName
+    let arg: string | undefined
     if (actionName.includes('_')) {
-      [actionName, arg] = actionName.split('_')
+      [actionNameParsed, arg] = actionName.split('_')
     }
-    const actionConfig = config.actions[actionName]
+    const actionConfig = config.actions[actionNameParsed]
     if (!actionConfig) {
       // Action dynamique (ex: setChild_dimension1)
       const label = titleName
@@ -396,8 +404,9 @@ export const ContextMenuRenderer = ({
         <Button
           variant='contextmenu_button'
           onClick={() => {
-            if (modifier[actionName]) {
-              modifier[actionName]()
+            const modifierAction = modifier[actionName]
+            if (modifierAction && typeof modifierAction === 'function') {
+              (modifierAction as () => void)()
               handleRefresh()
             }
           }}
@@ -407,11 +416,13 @@ export const ContextMenuRenderer = ({
       )
     }
 
-    const action = modifier[actionName] as (arg?: string) => void
-    let label = titleName
-    if (actionConfig.type === 'toggle') label = getToggleLabel(actionName)
+    const action = modifier[actionNameParsed] as ((arg?: string) => void) | undefined
+    if (!action) return null
 
-    const tooltip = t(`${path}.tooltips.${actionName}`)
+    let label = titleName
+    if (actionConfig.type === 'toggle') label = getToggleLabel(actionNameParsed)
+
+    const tooltip = t(`${path}.tooltips.${actionNameParsed}`)
 
     const handleClick = () => {
       // Confirmation si nécessaire
@@ -428,7 +439,6 @@ export const ContextMenuRenderer = ({
       if (actionConfig.closeMenuAfter) {
         app_data.drawing_area.node_contextualised = undefined
         app_data.drawing_area.purgeSelection()
-        //app_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
       }
       handleRefresh()
     }
@@ -440,10 +450,15 @@ export const ContextMenuRenderer = ({
         title={tooltip}
       >
         {label}
-        {actionConfig.showCheck && actionConfig.getToggleValue &&
-          modifier[actionConfig.getToggleValue] &&
-          (modifier[actionConfig.getToggleValue]() ? ' ✓' : '')
-        }
+        {(() => {
+          if (!actionConfig.showCheck || !actionConfig.getToggleValue) return null
+      
+          const toggleValue = modifier[actionConfig.getToggleValue]
+          if (typeof toggleValue !== 'function') return null
+      
+          const isChecked = (toggleValue as () => boolean)()
+          return isChecked ? ' ✓' : ''
+        })()}
       </Button>
     )
   }
@@ -466,79 +481,79 @@ export const ContextMenuRenderer = ({
     }
 
     switch (item.type) {
-      case 'separator':
+    case 'separator':
+      return (
+        <hr
+          key={`sep-${index}`}
+          style={{
+            margin: '8px 0',
+            border: 'none',
+            borderTop: '1px solid #e2e8f0'
+          }}
+        />
+      )
+
+    case 'button':
+      if (item.actionName) {
+        let title_name = ''
+        if (item.titleName) title_name = item.titleName
+        else title_name = item.actionName.includes('_')
+          ? t(`${path}.${item.actionName.split('_')[0]}`)
+          : t(`${path}.${item.actionName}`)
+
         return (
-          <hr
-            key={`sep-${index}`}
-            style={{
-              margin: '8px 0',
-              border: 'none',
-              borderTop: '1px solid #e2e8f0'
-            }}
+          <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
+        )
+      }
+      return <React.Fragment key={`btn-empty-${index}`} />
+
+    case 'widget':
+      if (!item.widgetName) return null
+
+      return (
+        <Box key={`widget-${index}`} p={2}>
+          <WidgetRenderer
+            widgetName={item.widgetName}
+            widgetProps={item.widgetProps}
+            app_data={app_data}
+            refreshCallback={refreshCallback}
           />
-        )
+        </Box>
+      )
 
-      case 'button':
-        if (item.actionName) {
-          let title_name = ''
-          if (item.titleName) title_name = item.titleName
-          else title_name = item.actionName.includes('_')
-            ? t(`${path}.${item.actionName.split('_')[0]}`)
-            : t(`${path}.${item.actionName}`)
+    case 'submenu': {
+      if ((!item.titleName && !item.titleKey) || !item.children) return null
 
-          return (
-            <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
-          )
-        }
-        return <></>
+      // Filtrer les enfants visibles après génération dynamique
+      const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
+      const visibleChildren = processedChildren.filter(child => isItemVisible(child))
 
-      case 'widget':
-        if (!item.widgetName) return null
+      if (visibleChildren.length === 0) return null
 
-        return (
-          <Box key={`widget-${index}`} p={2}>
-            <WidgetRenderer
-              widgetName={item.widgetName}
-              widgetProps={item.widgetProps}
-              app_data={app_data}
-              refreshCallback={refreshCallback}
-            />
-          </Box>
-        )
+      const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
+        ? t(item.titleKey!)
+        : t(`${path}.${item.titleKey}`))
 
-      case 'submenu':
-        if ((!item.titleName && !item.titleKey) || !item.children) return null
-
-        // Filtrer les enfants visibles après génération dynamique
-        const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
-        const visibleChildren = processedChildren.filter(child => isItemVisible(child))
-
-        if (visibleChildren.length === 0) return null
-
-        const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
-          ? t(item.titleKey!)
-          : t(`${path}.${item.titleKey}`))
-
-        return (
-          <Menu key={`submenu-${index}`} placement='end'>
-            <MenuButton
-              variant='contextmenu_button'
-              as={Button}
-              rightIcon={<ChevronRightIcon />}
-              className="dropdown-basic"
-            >
-              {sectionTitle}
-            </MenuButton>
-            <MenuList as={Box} layerStyle='context_menu'>
-              {visibleChildren.map((child, childIndex) =>
-                renderStructureItem(child, childIndex, depth + 1)
-              )}
-            </MenuList>
-          </Menu>
-        )
-
-      default:
-        return null
+      return (
+        <Menu key={`submenu-${index}`} placement='end'>
+          <MenuButton
+            variant='contextmenu_button'
+            as={Button}
+            rightIcon={<ChevronRightIcon />}
+            className="dropdown-basic"
+          >
+            {sectionTitle}
+          </MenuButton>
+          <MenuList as={Box} layerStyle='context_menu'>
+            {visibleChildren.map((child, childIndex) =>
+              renderStructureItem(child, childIndex, depth + 1)
+            )}
+          </MenuList>
+        </Menu>
+      )
+    } 
+    default:
+      return null
     }
   }
 
@@ -594,44 +609,46 @@ export const ContextMenuRenderer = ({
 // COMPOSANT PRINCIPAL DE MENU CONTEXTUEL
 // ==================================================================================================
 
-type ModifierCreator<T> = (app_data: Class_ApplicationData) => T
+type ModifierCreator<T extends Record<string, unknown>> = (app_data: Class_ApplicationData) => T
 
-export const ContextMenu = <T extends Record<string, any>>({
+interface ContextMenuProps<T extends Record<string, unknown>> {
+  app_data: Class_ApplicationData
+  createModifier: ModifierCreator<T>
+  menuConfig: MenuConfig
+  attr_is_contextualised: keyof Class_DrawingArea
+  attr_updater: keyof Class_MenuConfig
+  path: string
+}
+
+export const ContextMenu = <T extends Record<string, unknown>>({
   app_data,
   createModifier,
   menuConfig,
   attr_is_contextualised,
   attr_updater,
   path
-}: {
-  app_data: Class_ApplicationData
-  createModifier: ModifierCreator<T>
-  menuConfig: MenuConfig,
-  attr_is_contextualised: keyof Class_DrawingArea
-  attr_updater: keyof Class_MenuConfig,
-  path: string
-}) => {
+}: ContextMenuProps<T>) => {
   const { drawing_area, menu_configuration } = app_data
   const [, setForceUpdate] = useState(0)
 
-  // @ts-expect-error xxx
+  // @ts-expect-error: Dynamic property assignment for updater
   menu_configuration[attr_updater].current = () => setForceUpdate(a => a + 1)
   const isVisible = drawing_area[attr_is_contextualised] as boolean
 
   // Mémoriser la position seulement quand le menu devient visible
-  const position = useMemo(() => {
+  const position = useMemo<MenuPosition | null>(() => {
     if (!isVisible) return null
 
-    const pos = {
+    const pos: MenuPosition = {
       x: drawing_area.pointer_pos[0],
       y: drawing_area.pointer_pos[1],
       isTop: drawing_area.pointer_pos[1] + 330 <= window.innerHeight
     }
     return pos
-  }, [isVisible])
+  }, [isVisible, drawing_area.pointer_pos])
 
   if (!isVisible || !position) {
-    return <></>
+    return <React.Fragment />
   }
 
   return (
@@ -666,15 +683,19 @@ export const ContextMenuButton = ({ children }: React.PropsWithChildren) => {
   )
 }
 
-// Ajoutez cette section après les interfaces et avant MenuConditionEvaluator :
-
 // ==================================================================================================
 // WIDGET REGISTRY SYSTEM
 // ==================================================================================================
 
+type WidgetComponent = React.ComponentType<{
+  app_data: Class_ApplicationData
+  refreshCallback?: () => void
+  [key: string]: unknown
+}>
+
 export class WidgetRegistry {
   private static instance: WidgetRegistry
-  private widgets = new Map<string, React.ComponentType<any>>()
+  private widgets = new Map<string, WidgetComponent>()
 
   static getInstance(): WidgetRegistry {
     if (!WidgetRegistry.instance) {
@@ -683,11 +704,11 @@ export class WidgetRegistry {
     return WidgetRegistry.instance
   }
 
-  register(name: string, component: React.ComponentType<any>): void {
+  register(name: string, component: WidgetComponent): void {
     this.widgets.set(name, component)
   }
 
-  get(name: string): React.ComponentType<any> | undefined {
+  get(name: string): WidgetComponent | undefined {
     return this.widgets.get(name)
   }
 
@@ -701,23 +722,25 @@ export class WidgetRegistry {
 }
 
 const widgetRegistry = WidgetRegistry.getInstance()
-widgetRegistry.register('MenuContextLinksData', MenuContextLinksData)
-widgetRegistry.register('ButtonNodeContextAssignStyle', ButtonNodeContextAssignStyle)
-widgetRegistry.register('ButtonLinkContextAssignStyle', ButtonLinkContextAssignStyle)
-widgetRegistry.register('ButtonLinkContextAssignTag', ButtonLinkContextAssignTag)
-widgetRegistry.register('ButtonNodeContextAssignTag', ButtonNodeContextAssignTag)
+widgetRegistry.register('MenuContextLinksData', MenuContextLinksData as WidgetComponent)
+widgetRegistry.register('ButtonNodeContextAssignStyle', ButtonNodeContextAssignStyle as WidgetComponent)
+widgetRegistry.register('ButtonLinkContextAssignStyle', ButtonLinkContextAssignStyle as WidgetComponent)
+widgetRegistry.register('ButtonLinkContextAssignTag', ButtonLinkContextAssignTag as WidgetComponent)
+widgetRegistry.register('ButtonNodeContextAssignTag', ButtonNodeContextAssignTag as WidgetComponent)
+
+interface WidgetRendererProps {
+  widgetName: string
+  widgetProps?: Record<string, unknown>
+  app_data: Class_ApplicationData
+  refreshCallback?: () => void
+}
 
 export const WidgetRenderer = ({
   widgetName,
   widgetProps = {},
   app_data,
   refreshCallback
-}: {
-  widgetName: string
-  widgetProps?: Record<string, any>
-  app_data: Class_ApplicationData
-  refreshCallback?: () => void
-}) => {
+}: WidgetRendererProps) => {
   const WidgetComponent = widgetRegistry.get(widgetName)
 
   if (!WidgetComponent) {
@@ -737,16 +760,14 @@ export const createWidgetAction = (
   widgetName: string,
   labels: Record<string, string>,
   tooltips: Record<string, string>,
-  widgetProps?: Record<string, any>
-) => ({
+  widgetProps?: Record<string, unknown>
+): MenuAction => ({
   type: 'widget',
   widgetName,
   widgetProps: widgetProps || {},
   showCheck: false,
-  toggle: false,
   labels,
   tooltips
 })
 
 export { widgetRegistry }
-

@@ -28,7 +28,6 @@
 //import React, { Dispatch, FC, MutableRefObject, SetStateAction, useRef } from 'react'
 import LZString from 'lz-string'
 import i18next, { TFunction, i18n } from 'i18next'
-import { useTranslation } from 'react-i18next'
 import * as d3 from 'd3'
 
 import FileSaver from 'file-saver'
@@ -37,12 +36,11 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { default_file_name, default_save_JSON_options, default_save_only_visible_elements, default_save_with_values, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { default_file_name, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
-import { MenuColorPicker } from '../components/configmenus/MenuColorPicker'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
@@ -649,7 +647,7 @@ export class Class_ApplicationData {
  * @param {string} url_data
  * @memberof Class_ApplicationData
  */
-public readUrlJSON(url_data: string) {
+  public readUrlJSON(url_data: string) {
     const root = window.location.origin
     const url = root + this.url_prefix + 'url/load_json'
    
@@ -657,45 +655,45 @@ public readUrlJSON(url_data: string) {
     form_data.append('url', url_data)
    
     fetch(url, {
-        method: 'POST',
-        body: form_data
+      method: 'POST',
+      body: form_data
     })
-    .then(response => {
+      .then(response => {
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`)
         }
         return response.arrayBuffer() // Utiliser arrayBuffer pour gérer binaire et texte
-    })
-    .then(arrayBuffer => {
+      })
+      .then(arrayBuffer => {
         // Convertir en text pour tester JSON
         const decoder = new TextDecoder()
         const text = decoder.decode(arrayBuffer)
         
         // Tester si c'est du JSON valide
         try {
-            const json_data = JSON.parse(text)
-            this.fromJSON(json_data)
+          const json_data = JSON.parse(text)
+          this.fromJSON(json_data)
         } catch (jsonError) {
-            console.log('Content is not valid JSON, attempting decompression...')
+          console.log('Content is not valid JSON, attempting decompression...')
             
-            // Créer un File à partir de l'ArrayBuffer pour la décompression
-            const filename = url_data.split('/').pop() || 'file'
-            const file = new File([arrayBuffer], filename)
+          // Créer un File à partir de l'ArrayBuffer pour la décompression
+          const filename = url_data.split('/').pop() || 'file'
+          const file = new File([arrayBuffer], filename)
             
-            decompressUploadedFileUniversal(file)
-                .then(json_data => {
-                    this.fromJSON(json_data as Type_JSON)
-                })
-                .catch(decompressError => {
-                    console.error('Error in decompression:', decompressError)
-                    throw new Error(`Content is neither valid JSON nor valid compressed file`)
-                })
+          decompressUploadedFileUniversal(file)
+            .then(json_data => {
+              this.fromJSON(json_data as Type_JSON)
+            })
+            .catch(decompressError => {
+              console.error('Error in decompression:', decompressError)
+              throw new Error('Content is neither valid JSON nor valid compressed file')
+            })
         }
-    })
-    .catch((error) => {
+      })
+      .catch((error) => {
         console.error('Error in readUrlJSON:', error)
-    })
-}
+      })
+  }
 
   /**
    * Postprocessing drawing area after JSON affectation
@@ -963,7 +961,6 @@ public readUrlJSON(url_data: string) {
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
-    const evtKeyF = ((evt.key === 'f') || (evt.key === 'F')) && evtOnDrawingArea
     const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
     const evtCtrlA = evtCtrl && evtKeyA

@@ -377,4 +377,4 @@ export const resources_nodes = {
       }
     }
   }
-};
+}

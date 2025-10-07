@@ -27,7 +27,7 @@
 import { Class_ApplicationData } from './types/ApplicationData'
 import type { MutableRefObject } from 'react'
 import { Type_AdditionalMenus } from './types/MenuConfig'
-import React, { Dispatch, SetStateAction } from 'react'
+import { Dispatch, SetStateAction } from 'react'
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,

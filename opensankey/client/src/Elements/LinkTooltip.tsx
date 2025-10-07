@@ -4,21 +4,21 @@ import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 
 export class LinkTooltip {
 
-  private _link: Class_LinkElement;
-  public behaviorManager?: TooltipBehaviorManager;
-    // ✅ AJOUT : Propriété pour stocker la position de la souris
-  public mousePosition: { x: number; y: number } = { x: 0, y: 0 };
+  private _link: Class_LinkElement
+  public behaviorManager?: TooltipBehaviorManager
+  // ✅ AJOUT : Propriété pour stocker la position de la souris
+  public mousePosition: { x: number; y: number } = { x: 0, y: 0 }
 
   constructor(link: Class_LinkElement) {
     this._link = link
   }
 
   private initTooltipBehavior() {
-    const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement;
-    if (!tooltip) return;
+    const tooltip = document.querySelector('.sankey-tooltip') as HTMLElement
+    if (!tooltip) return
 
-    this.behaviorManager = new TooltipBehaviorManager(tooltip, () => this.removeTooltip());
-    this.behaviorManager.initialize();
+    this.behaviorManager = new TooltipBehaviorManager(tooltip, () => this.removeTooltip())
+    this.behaviorManager.initialize()
   }
 
   public drawTooltip() {
@@ -26,16 +26,16 @@ export class LinkTooltip {
     d3.selectAll('.sankey-tooltip').remove()
 
     // ✅ CHANGEMENT : Utiliser la position de la souris sauvegardée
-    let x, y;
+    let x, y
     
     if (this.mousePosition.x && this.mousePosition.y) {
       // Utiliser la position de la souris si elle est définie
-      x = Math.min(this.mousePosition.x + 10, window.innerWidth - 400);
-      y = Math.min(this.mousePosition.y + 10, window.innerHeight - 300);
+      x = Math.min(this.mousePosition.x + 10, window.innerWidth - 400)
+      y = Math.min(this.mousePosition.y + 10, window.innerHeight - 300)
     } else {
       // Fallback sur la position entre source et target
-      x = Math.min((this._link.source.position_x + this._link.target.position_x) / 2, window.innerWidth - 400);
-      y = Math.min((this._link.source.position_y + this._link.target.position_y) / 2, window.innerHeight - 300);
+      x = Math.min((this._link.source.position_x + this._link.target.position_x) / 2, window.innerWidth - 400)
+      y = Math.min((this._link.source.position_y + this._link.target.position_y) / 2, window.innerHeight - 300)
     }
 
     const tooltip = d3.select('body')
@@ -57,11 +57,11 @@ export class LinkTooltip {
       })
   }
 
-  public moveTooltip(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  public moveTooltip() {
   }
 
   public removeTooltip() {
-      this.behaviorManager?.cleanup();
+    this.behaviorManager?.cleanup()
     d3.selectAll('.sankey-tooltip').remove()
   }
 

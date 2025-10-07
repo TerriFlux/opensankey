@@ -30,13 +30,13 @@ import './css/main.css'
 
 // External imports =================================================================================
 
-import React from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ChakraProvider } from '@chakra-ui/react'
 
-// Local imports ====================================================================================
-
 import './traductions/traduction'
+import { useTranslation } from 'react-i18next'
+import i18next from './traductions/traduction'
 
 import OpenSankeyApp from './App'
 import {
@@ -52,23 +52,107 @@ import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/Conte
 import { createNodeModifier } from './components/dialogs/NodeActions'
 import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 import { Class_ApplicationData } from './types/ApplicationData'
+import { Type_JSON } from './types/Utils'
+import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 
 // CONSTANTS =========================================================================================
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      publish?: boolean
+      diagram?: string
+    }
+  }
 
 // Link with React
 window.React = React
+i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
 
 // Application container
 const container = document.getElementById('react-container') as Element | DocumentFragment
 const root = createRoot(container)
+const App: FC = () => {
+  const [dataApp, setDataApp] = useState<Class_ApplicationData | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
-// RENDERING ==========================================================================================
-root.render(
-  <ChakraProvider theme={opensankey_theme}>
+  const translation = useTranslation('translation', { useSuspense: false })
+  useEffect(() => {
+    const initializeApp = async () => {
+      const newDataApp = new Class_ApplicationData(!!window.sankey?.publish)
+      newDataApp.t = translation.t
+      newDataApp.i18n = translation.i18n
+      if (window.sankey && window.sankey.diagram) {
+        setIsLoading(true)
+
+        // Afficher le toast d'attente
+        newDataApp.sendWaitingToast(() => {
+          console.log('Chargement du diagramme en cours...')
+        })
+
+        try {
+          console.log(window.sankey.diagram)
+          newDataApp.file_name = window.sankey.diagram
+
+          const data = await loadUniversalJSON(window.sankey.diagram as string)
+          newDataApp.fromJSON(data as Type_JSON)
+          newDataApp.file_name = window.sankey.diagram as string
+
+          setDataApp(newDataApp)
+        } catch (error) {
+          console.error('Erreur lors du chargement du JSON:', error)
+          // Gérer l'erreur si nécessaire
+          setDataApp(newDataApp) // Ou gérer différemment selon vos besoins
+        } finally {
+          setIsLoading(false)
+        }
+      } else {
+        // Pas de diagramme à charger, initialiser directement
+        setDataApp(newDataApp)
+      }
+    }
+
+    initializeApp()
+  }, [])
+
+  if (isLoading || !dataApp) {
+    return (
+      <>
+        <style>
+          {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+        </style>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              border: '4px solid #f3f3f3',
+              borderTop: '4px solid #3498db',
+              borderRadius: '50%',
+              width: '50px',
+              height: '50px',
+              animation: 'spin 1s linear infinite',
+              margin: '0 auto 20px'
+            }}></div>
+            <p>Chargement des données en cours...</p>
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Rendre SankeyApp une fois que tout est chargé
+  return   <ChakraProvider theme={opensankey_theme}>
     <OpenSankeyApp
-
-      //@ts-expect-error xxx
-      initializeApplicationData={()=>new Class_ApplicationData(window.sankey.publish)} // Data, displayed data, default data
+      initializeApplicationData={()=>dataApp} // Data, displayed data, default data
 
       // Ref to some key ui element in the application
       initializeAdditionalMenus={initializeAdditionalMenus}
@@ -87,5 +171,9 @@ root.render(
       createNodeModifier={(app_data) => createNodeModifier(app_data)}
     />
   </ChakraProvider>
-)
+}
+const renderPage = () => {
+  root.render(<App />)
+}
 
+renderPage()

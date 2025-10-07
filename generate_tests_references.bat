@@ -10,12 +10,12 @@ chcp 65001 >nul
 
 
 rem === Install deps ===
-for %%S in (SankeyExcelParser) do (
-    echo %%S generate_tests_references.bat
-    pushd submodules\%%S
-    call generate_tests_references.bat
-    popd
-)
+@REM for %%S in (SankeyExcelParser) do (
+@REM     echo %%S generate_tests_references.bat
+@REM     pushd submodules\%%S
+@REM     call generate_tests_references.bat
+@REM     popd
+@REM )
 
 echo Generate Tests references in OpenSankey
 REM === Lancer le script Python avec les arguments transmis au .bat ===

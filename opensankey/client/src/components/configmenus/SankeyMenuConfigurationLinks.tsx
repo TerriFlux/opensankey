@@ -96,38 +96,38 @@ export const SankeyLinkSelection = ({ app_data }: { app_data: Class_ApplicationD
         width= '11vw'
       >
         {/* Position custom pour MultiSelect */}
-          <MultiSelect
-            options={INITIAL_OPTIONS_LINKS}
-            value={selected_for_multiselect}
-            labelledBy={t('Flux.TS') || 'Sélection des flux'}
-            onChange={(selected: [{ label: string, value: string }]) => {
-              const new_sel = selected.map(d => d.value)
+        <MultiSelect
+          options={INITIAL_OPTIONS_LINKS}
+          value={selected_for_multiselect}
+          labelledBy={t('Flux.TS') || 'Sélection des flux'}
+          onChange={(selected: [{ label: string, value: string }]) => {
+            const new_sel = selected.map(d => d.value)
 
-              // Mise à jour de la sélection
-              links.forEach(link => {
-                if (new_sel.includes(link.id)) {
-                  drawing_area.addLinkToSelection(link)
-                } else {
-                  drawing_area.removeLinkFromSelection(link)
-                }
-              })
+            // Mise à jour de la sélection
+            links.forEach(link => {
+              if (new_sel.includes(link.id)) {
+                drawing_area.addLinkToSelection(link)
+              } else {
+                drawing_area.removeLinkFromSelection(link)
+              }
+            })
 
-              // Update all menus
-              refreshThisAndUpdateRelatedComponents()
-            }}
-            valueRenderer={(selected: { label: string, value: string }[]) => {
-              return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
-            }}
-            overrideStrings={{
-              'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
-              'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
-              'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
-              'noOptions': t('Flux.noOptions') || 'Aucune option',
-              'search': t('Flux.search') || 'Rechercher',
-              'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
-            }}
-          />
-        </Box>
+            // Update all menus
+            refreshThisAndUpdateRelatedComponents()
+          }}
+          valueRenderer={(selected: { label: string, value: string }[]) => {
+            return selected.length ? selected.map(({ label }) => label + ', ') : t('Flux.NS') || 'Aucun flux sélectionné'
+          }}
+          overrideStrings={{
+            'selectAll': t('Flux.selectAll') || 'Tout sélectionner',
+            'allItemsAreSelected': t('Flux.allSelected') || 'Tous les éléments sont sélectionnés',
+            'clearSearch': t('Flux.clearSearch') || 'Effacer la recherche',
+            'noOptions': t('Flux.noOptions') || 'Aucune option',
+            'search': t('Flux.search') || 'Rechercher',
+            'selectSomeItems': t('Flux.selectSomeItems') || 'Sélectionner des éléments'
+          }}
+        />
+      </Box>
     )
   }
 

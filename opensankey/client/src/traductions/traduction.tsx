@@ -16,101 +16,135 @@ import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 
-const use_excel_config = (resources: any) => {
-  resources.en.translation['Menu']['saveExcel'] = { tooltips: {} }
-  resources.fr.translation['Menu']['saveExcel'] = { tooltips: {} }
-  Object.entries(EXCEL_ATTRIBUTES_CONFIG).forEach(([attributeKey, config]) => {
-    const { labels, tooltips } = config
-    resources.en.translation['Menu']['saveExcel'][attributeKey] = labels.en
-    resources.fr.translation['Menu']['saveExcel'][attributeKey] = labels.fr
+interface TranslationSection {
+  tooltips?: Record<string, string>
+  [key: string]: string | TranslationSection | Record<string, string> | undefined
+}
 
+interface LanguageResource {
+  translation: Record<string, TranslationSection | string>
+}
+
+interface I18nResources {
+  en: LanguageResource
+  fr: LanguageResource
+}
+
+interface LanguageLabels {
+  en: string
+  fr: string
+}
+
+interface LanguageTooltips {
+  en: string
+  fr: string
+}
+
+interface ToggleLabels {
+  en: { true: string; false: string }
+  fr: { true: string; false: string }
+}
+
+interface AttributeConfig {
+  labels: LanguageLabels
+  tooltips: LanguageTooltips
+  category?: string
+}
+
+interface ExcelAttributeConfig {
+  labels: LanguageLabels
+  tooltips: LanguageTooltips
+}
+
+interface ActionConfig {
+  labels: LanguageLabels
+  labelsToggle?: ToggleLabels
+  tooltips: LanguageTooltips
+}
+
+interface MenuConfig {
+  sectionTitles: Record<string, LanguageLabels>
+  actions: Record<string, ActionConfig>
+}
+
+type SectionType = 'labels' | 'apparence'
+type TargetType = 'Flux' | 'Noeud'
+
+const use_excel_config = (resources: I18nResources): void => {
+  // Initialiser avec le bon type
+  const menuEn = resources.en.translation['Menu'] as TranslationSection
+  const menuFr = resources.fr.translation['Menu'] as TranslationSection
+  
+  menuEn['saveExcel'] = { tooltips: {} }
+  menuFr['saveExcel'] = { tooltips: {} }
+  
+  const excelConfig = EXCEL_ATTRIBUTES_CONFIG as Record<string, ExcelAttributeConfig>
+  
+  Object.entries(excelConfig).forEach(([attributeKey, config]) => {
+    const { labels, tooltips } = config
+    const saveExcelEn = menuEn['saveExcel'] as TranslationSection
+    const saveExcelFr = menuFr['saveExcel'] as TranslationSection
+    
+    saveExcelEn[attributeKey] = labels.en
+    saveExcelFr[attributeKey] = labels.fr
+    
     // Ajouter les tooltips
-    resources.en.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.en
-    resources.fr.translation['Menu']['saveExcel'].tooltips[attributeKey] = tooltips.fr
+    saveExcelEn.tooltips![attributeKey] = tooltips.en
+    saveExcelFr.tooltips![attributeKey] = tooltips.fr
   })
 }
 
 // Version mise à jour pour MenuConfig
-export const use_context_config = (resources: any, menu_config: any, path: string) => {
+export const use_context_config = (
+  resources: I18nResources,
+  menu_config: MenuConfig,
+  path: string
+): void => {
   // Initialiser les structures de traduction
   resources.en.translation[path] = { tooltips: {} }
   resources.fr.translation[path] = { tooltips: {} }
+  
+  const contextEn = resources.en.translation[path] as TranslationSection
+  const contextFr = resources.fr.translation[path] as TranslationSection
 
   // Traitement des titres de section
-  Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]: [string, any]) => {
-    resources.en.translation[path][attributeKey] = attributeValue.en
-    resources.fr.translation[path][attributeKey] = attributeValue.fr
+  Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]) => {
+    contextEn[attributeKey] = attributeValue.en
+    contextFr[attributeKey] = attributeValue.fr
   })
 
   // Traitement des actions
-  Object.entries(menu_config.actions).forEach(([actionKey, actionConfig]: [string, any]) => {
+  Object.entries(menu_config.actions).forEach(([actionKey, actionConfig]) => {
     const { labels, labelsToggle, tooltips } = actionConfig
 
     // Labels principaux
-    resources.en.translation[path][actionKey] = labels.en
-    resources.fr.translation[path][actionKey] = labels.fr
+    contextEn[actionKey] = labels.en
+    contextFr[actionKey] = labels.fr
 
     // Labels pour les toggles
     if (labelsToggle) {
-      resources.en.translation[path][actionKey + 'True'] = labelsToggle.en.true
-      resources.en.translation[path][actionKey + 'False'] = labelsToggle.en.false
-      resources.fr.translation[path][actionKey + 'True'] = labelsToggle.fr.true
-      resources.fr.translation[path][actionKey + 'False'] = labelsToggle.fr.false
+      contextEn[actionKey + 'True'] = labelsToggle.en.true
+      contextEn[actionKey + 'False'] = labelsToggle.en.false
+      contextFr[actionKey + 'True'] = labelsToggle.fr.true
+      contextFr[actionKey + 'False'] = labelsToggle.fr.false
     }
 
     // Tooltips
-    resources.en.translation[path].tooltips[actionKey] = tooltips.en
-    resources.fr.translation[path].tooltips[actionKey] = tooltips.fr
+    contextEn.tooltips![actionKey] = tooltips.en
+    contextFr.tooltips![actionKey] = tooltips.fr
   })
 }
 
-// // Fonction de compatibilité pour l'ancien système (à garder temporairement)
-// export const use_context_config = (resources: any, menu_config: any, path: string) => {
-//   // Vérifier si c'est le nouveau système ou l'ancien
-//   if (menu_config.structure && menu_config.structure[0]?.children) {
-//     // Nouveau système MenuConfig
-//     use_enhanced_context_config(resources, menu_config as MenuConfig, path)
-//   } else {
-//     // Ancien système (compatibilité)
-//     resources.en.translation[path] = { tooltips: {} }
-//     resources.fr.translation[path] = { tooltips: {} }
-
-//     if (menu_config.sectionTitles) {
-//       Object.entries(menu_config.sectionTitles).forEach(([attributeKey, attributeValue]: [string, any]) => {
-//         resources.en.translation[path][attributeKey] = attributeValue.en
-//         resources.fr.translation[path][attributeKey] = attributeValue.fr
-//       })
-//     }
-
-//     if (menu_config.actions) {
-//       Object.entries(menu_config.actions).forEach(([actionKey, actionConfig]: [string, any]) => {
-//         const { labels, labelsToggle, tooltips } = actionConfig
-
-//         resources.en.translation[path][actionKey] = labels.en
-//         resources.fr.translation[path][actionKey] = labels.fr
-
-//         if (labelsToggle) {
-//           resources.en.translation[path][actionKey + 'True'] = labelsToggle.en.true
-//           resources.en.translation[path][actionKey + 'False'] = labelsToggle.en.false
-//           resources.fr.translation[path][actionKey + 'True'] = labelsToggle.fr.true
-//           resources.fr.translation[path][actionKey + 'False'] = labelsToggle.fr.false
-//         }
-
-//         resources.en.translation[path].tooltips[actionKey] = tooltips.en
-//         resources.fr.translation[path].tooltips[actionKey] = tooltips.fr
-//       })
-//     }
-//   }
-// }
-
-const use_link_config = (resources: any) => {
+const use_link_config = (resources: I18nResources): void => {
+  const linksConfig = LINKS_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  
   // Génération automatique des traductions pour chaque attribut
-  Object.entries(LINKS_ATTRIBUTES_CONFIG).forEach(([attributeKey, config]) => {
+  Object.entries(linksConfig).forEach(([attributeKey, config]) => {
     const { category, labels, tooltips } = config
 
     // Déterminer la section et sous-section
-    let section //: 'labels' | 'apparence'
-    let target //: 'Flux' | 'Noeud'
+    let section: SectionType
+    let target: TargetType
 
     if (category === 'shape') {
       section = 'apparence'
@@ -120,24 +154,40 @@ const use_link_config = (resources: any) => {
       target = 'Flux' // Les labels peuvent être pour flux ou noeuds
     }
 
+    // Assurer que les structures existent
+    const targetEn = resources.en.translation[target] as TranslationSection
+    const targetFr = resources.fr.translation[target] as TranslationSection
+    
+    if (!targetEn[section]) {
+      targetEn[section] = { tooltips: {} }
+    }
+    if (!targetFr[section]) {
+      targetFr[section] = { tooltips: {} }
+    }
+    
+    const sectionEn = targetEn[section] as TranslationSection
+    const sectionFr = targetFr[section] as TranslationSection
+
     // Ajouter les labels
-    resources.en.translation[target][section][attributeKey] = labels.en
-    resources.fr.translation[target][section][attributeKey] = labels.fr
+    sectionEn[attributeKey] = labels.en
+    sectionFr[attributeKey] = labels.fr
 
     // Ajouter les tooltips
-    resources.en.translation[target][section].tooltips[attributeKey] = tooltips.en
-    resources.fr.translation[target][section].tooltips[attributeKey] = tooltips.fr
+    sectionEn.tooltips![attributeKey] = tooltips.en
+    sectionFr.tooltips![attributeKey] = tooltips.fr
   })
 }
 
-const use_node_config = (resources: any) => {
+const use_node_config = (resources: I18nResources): void => {
+  const nodesConfig = NODES_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  
   // Génération automatique des traductions pour chaque attribut
-  Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([attributeKey, config]) => {
+  Object.entries(nodesConfig).forEach(([attributeKey, config]) => {
     const { category, labels, tooltips } = config
 
     // Déterminer la section et sous-section
-    let section //: 'labels' | 'apparence'
-    let target //: 'Flux' | 'Noeud'
+    let section: SectionType
+    let target: TargetType
 
     if (category === 'shape') {
       section = 'apparence'
@@ -147,53 +197,83 @@ const use_node_config = (resources: any) => {
       target = 'Noeud' // Les labels peuvent être pour flux ou noeuds
     }
 
+    // Assurer que les structures existent
+    const targetEn = resources.en.translation[target] as TranslationSection
+    const targetFr = resources.fr.translation[target] as TranslationSection
+    
+    if (!targetEn[section]) {
+      targetEn[section] = { tooltips: {} }
+    }
+    if (!targetFr[section]) {
+      targetFr[section] = { tooltips: {} }
+    }
+    
+    const sectionEn = targetEn[section] as TranslationSection
+    const sectionFr = targetFr[section] as TranslationSection
+
     // Ajouter les labels
-    resources.en.translation[target][section][attributeKey] = labels.en
-    resources.fr.translation[target][section][attributeKey] = labels.fr
+    sectionEn[attributeKey] = labels.en
+    sectionFr[attributeKey] = labels.fr
 
     // Ajouter les tooltips
-    resources.en.translation[target][section].tooltips[attributeKey] = tooltips.en
-    resources.fr.translation[target][section].tooltips[attributeKey] = tooltips.fr
+    sectionEn.tooltips![attributeKey] = tooltips.en
+    sectionFr.tooltips![attributeKey] = tooltips.fr
   })
 }
 
 /**
  * Concat s into t
- * @param {*} s
- * @param {*} t
  */
-export const deep_assign_resources = (s: any, t: any) => {
-  Object.entries(s).forEach(k => {
-    if (typeof (k[1]) == 'object') {
-      if (Object.keys(t).includes(k[0])) {
-        deep_assign_resources(s[k[0]], t[k[0]])
+export const deep_assign_resources = (
+  s: Record<string, unknown>,
+  t: Record<string, unknown>
+): void => {
+  Object.entries(s).forEach(([key, value]) => {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (Object.keys(t).includes(key)) {
+        deep_assign_resources(
+          value as Record<string, unknown>,
+          t[key] as Record<string, unknown>
+        )
       } else {
-        t[k[0]] = s[k[0]]
+        t[key] = value
       }
-    } else if (typeof (k[1]) == 'string') {
-      t[k[0]] = s[k[0]]
+    } else if (typeof value === 'string') {
+      t[key] = value
     }
   })
 }
 
 // Application des configurations de traduction
-use_link_config(resources_flux)
-use_node_config(resources_nodes)
-use_excel_config(resources_app_elements)
-use_context_config(resources_app_elements, ZDD_MENU_CONFIG, 'ContextMenuZDD')
-use_context_config(resources_app_elements, LINK_MENU_CONFIG, 'ContextMenuLinks')
-use_context_config(resources_app_elements, NODE_MENU_CONFIG, 'ContextMenuNodes')
+use_link_config(resources_flux as unknown as I18nResources)
+use_node_config(resources_nodes as unknown as I18nResources)
+use_excel_config(resources_app_elements as unknown as I18nResources)
+use_context_config(
+  resources_app_elements as unknown as I18nResources,
+  ZDD_MENU_CONFIG as unknown as MenuConfig,
+  'ContextMenuZDD'
+)
+use_context_config(
+  resources_app_elements as unknown as  I18nResources,
+  LINK_MENU_CONFIG as unknown as MenuConfig,
+  'ContextMenuLinks'
+)
+use_context_config(
+  resources_app_elements as unknown as  I18nResources,
+  NODE_MENU_CONFIG as unknown as MenuConfig,
+  'ContextMenuNodes'
+)
 
 // Concat traductions resources
-export const resources_opensankey = {}
-deep_assign_resources(rcc_shortcuts, resources_opensankey)
-deep_assign_resources(resources_app_elements, resources_opensankey)
-deep_assign_resources(resources_nodes, resources_opensankey)
-deep_assign_resources(resources_flux, resources_opensankey)
-deep_assign_resources(resources_welcome, resources_opensankey)
-deep_assign_resources(resources_guided_tour, resources_opensankey)
-deep_assign_resources(resources_loading_toasts, resources_opensankey)
-deep_assign_resources(resources_template, resources_opensankey)
+export const resources_opensankey: Record<string, unknown> = {}
+deep_assign_resources(rcc_shortcuts as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_app_elements as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_nodes as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_flux as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_welcome as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_guided_tour as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
+deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
 
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"
@@ -201,6 +281,7 @@ i18next
   .use(LanguageDetector)
   .use(initReactI18next) // passes i18n down to react-i18next
   .init({
+    //@ts-expect-error xxx
     resources,
     // lng:'en', // language to use, more information here: https://www.i18next.com/overview/configuration-options#languages-namespaces-resources
     // you can use the i18n.changeLanguage function to change the language manually: https://www.i18next.com/overview/api#changelanguage

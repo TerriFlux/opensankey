@@ -27,12 +27,6 @@
 // External imports
 import * as d3 from 'd3'
 
-// Local types imports
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
-
-// Local modules imports
 import {
   ClassTemplate_Element,
   ClassTemplate_ProtoElement

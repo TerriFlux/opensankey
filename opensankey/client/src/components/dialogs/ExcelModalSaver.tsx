@@ -1,13 +1,8 @@
 import {
   Box,
   Checkbox,
-  Button, ButtonGroup,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Select
-} from '@chakra-ui/react';
+  Button
+} from '@chakra-ui/react'
 // ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
@@ -33,13 +28,11 @@ import {
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React, { useState } from 'react';
-import type { TFunction } from 'i18next';
-import { Class_ApplicationData } from '../../types/ApplicationData';
-import { WrapperCheckBoxSubSectionMenu, OSMultiSelect, typeElementSelectable, OSTooltip } from '../configmenus/MenuCommon';
-import { MenuDraggable } from '../topmenus/SankeyMenus';
-import { checked } from './MenuContextWidgetFactory';
-import { Class_LevelTagGroup, Class_ProtoTagGroup } from '../../types/TagGroup';
+import React, { useState } from 'react'
+import type { TFunction } from 'i18next'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { WrapperCheckBoxSubSectionMenu, OSTooltip } from '../configmenus/MenuCommon'
+import { MenuDraggable } from '../topmenus/SankeyMenus'
 
 // Interface pour la configuration d'un attribut Excel
 interface ExcelAttributeConfig<T> {
@@ -392,8 +385,6 @@ export const ConfigurableCheckbox = ({ t, onChange, propertyName, options }: Con
 
 export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t } = app_data
-  const { sankey } = app_data.drawing_area
-  const { node_taggs_list: nodetaggroups, flux_taggs_list: fluxtaggroups } = sankey
   const [option_open, setOptionOpen] = useState(false)
   const [options, setOptions] = useState<ExcelOptionType>(DEFAULT_EXCEL_OPTIONS)
 
@@ -403,7 +394,7 @@ export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData 
       setOptions(prevOptions => ({
         ...prevOptions,
         [propertyName]: evt.target.checked
-      }));
+      }))
     }
     return (
       <ConfigurableCheckbox
@@ -414,167 +405,131 @@ export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData 
       />
     )
   }
-  interface ConfigurableMultiSelectProps {
-    elements: typeElementSelectable;
-    propertyName: string;
-  }
-  const ConfigurableMultiSelect = ({ elements, propertyName }: ConfigurableMultiSelectProps) => {
-    const handleClick = (entries: typeElementSelectable) => {
-      // @ts-expect-error xxx
-      options[propertyName] = [];
-      entries.forEach(sel => {
-        // @ts-expect-error xxx
-        options[propertyName]!.push(sel.value);
-      });
-      setOptions(options);
-    };
 
-    return (
-      <Box layerStyle='menuconfigpanel_row_2cols'>
-        <Box>{t(`Menu.saveExcel.${propertyName}`)}</Box>
-        <OSMultiSelect
-          t={app_data.t}
-          elements={elements}
-          onClick={handleClick}
-        />
-      </Box>
-    );
-  };
+  // const generateOptionsTaggList = (
+  //   taggsList: Class_ProtoTagGroup[] | Class_LevelTagGroup[],
+  //   optionsProperty: string
+  // ) => {
+  //   return taggsList.map((tag) => {
+  //     return {
+  //       'label': tag.name,
+  //       'value': tag.id,
+  //       // @ts-expect-error xxx
+  //       selected: options[optionsProperty]?.includes(tag.id) ?? false
+  //     }
+  //   })
+  // }
 
-  // ----------------Options for ignored taggs----------------
-  const optionsDataTaggList = app_data.drawing_area.sankey.data_taggs_list
-    .map((tag) => {
-      return {
-        'label': tag.name,
-        'value': tag.id,
-        selected: options['ignore_datataggroups']?.map(val => val[0])?.includes(tag.id) ?? false
-      };
-    });
+  // const content_node = <Box >
+  //   {/* Select criteria for node split sheets */}
+  //   <Box layerStyle='menuconfigpanel_option_name'>
+  //     {t('Menu.saveExcel.nodeSheetsCriteria')}
+  //   </Box>
+  //   <ButtonGroup isAttached>
+  //     <Button variant={options.separated_nodes_sheets === 'dimensions' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'} onClick={() => {
+  //       if (options.separated_nodes_sheets === 'dimensions') options['separated_nodes_sheets'] = 'none'
+  //       else options['separated_nodes_sheets'] = 'dimensions'
+  //       setOptions(options)
+  //     }}>
+  //       {t('Menu.saveExcel.dim')}
+  //     </Button>
+  //     <Button variant={options.separated_nodes_sheets === 'families' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'} onClick={() => {
+  //       if (options.separated_nodes_sheets === 'families') options['separated_nodes_sheets'] = 'none'
+  //       else options['separated_nodes_sheets'] = 'families'
+  //       setOptions(options)
+  //     }}>
+  //       {t('Menu.saveExcel.fam')}
+  //     </Button>
+  //   </ButtonGroup>
+  // </Box>
 
-  const generateOptionsTaggList = (
-    taggsList: Class_ProtoTagGroup[] | Class_LevelTagGroup[],
-    optionsProperty: string
-  ) => {
-    return taggsList.map((tag) => {
-      return {
-        'label': tag.name,
-        'value': tag.id,
-        // @ts-expect-error xxx
-        selected: options[optionsProperty]?.includes(tag.id) ?? false
-      }
-    })
-  }
+  // const dim = <AutoConfigCheckbox propertyName='dimensions_to_ignore' />
 
-  const content_node = <Box >
-    {/* Select criteria for node split sheets */}
-    <Box layerStyle='menuconfigpanel_option_name'>
-      {t('Menu.saveExcel.nodeSheetsCriteria')}
-    </Box>
-    <ButtonGroup isAttached>
-      <Button variant={options.separated_nodes_sheets === 'dimensions' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'} onClick={() => {
-        if (options.separated_nodes_sheets === 'dimensions') options['separated_nodes_sheets'] = 'none'
-        else options['separated_nodes_sheets'] = 'dimensions'
-        setOptions(options);
-      }}>
-        {t('Menu.saveExcel.dim')}
-      </Button>
-      <Button variant={options.separated_nodes_sheets === 'families' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'} onClick={() => {
-        if (options.separated_nodes_sheets === 'families') options['separated_nodes_sheets'] = 'none'
-        else options['separated_nodes_sheets'] = 'families';
-        setOptions(options);
-      }}>
-        {t('Menu.saveExcel.fam')}
-      </Button>
-    </ButtonGroup>
-  </Box>
+  // {/* Select level tag group to ignore */ }
+  // const level_tgg_group = <Box layerStyle='menuconfigpanel_row_2cols'>
+  //   <Box>{t('Menu.saveExcel.ignDimTagg')}</Box>
+  //   <OSMultiSelect
+  //     t={app_data.t}
+  //     elements={generateOptionsTaggList(sankey.level_taggs_list, 'dimensions_to_ignore')}
+  //     onClick={(entries: typeElementSelectable) => {
+  //       options['dimensions_to_ignore'] = []
+  //       entries.forEach(sel => {
+  //         options['dimensions_to_ignore']!.push(sel.value)
+  //         delete (options?.dimensions_max_levels ?? {})[sel.value] //delete entrie in dimensions_max_levels
+  //       })
+  //       setOptions(options)
+  //     }} />
+  // </Box>
 
-  const dim = <AutoConfigCheckbox propertyName='dimensions_to_ignore' />
+  // const dimensions_to_ignore = <Box layerStyle='menuconfigpanel_option_name'>
+  //   {t('Menu.saveExcel.dimMaxLevel')}
+  // </Box>
+  // {/* For each level tag group select max level saved */ }
+  // {
+  //   app_data.drawing_area.sankey.level_taggs_list.map(lvl => {
+  //     // If dimensions is ignored don't create a list to select max level
+  //     if (options.dimensions_to_ignore?.includes(lvl.id))
+  //       return <></>
 
-  {/* Select level tag group to ignore */ }
-  const level_tgg_group = <Box layerStyle='menuconfigpanel_row_2cols'>
-    <Box>{t('Menu.saveExcel.ignDimTagg')}</Box>
-    <OSMultiSelect
-      t={app_data.t}
-      elements={generateOptionsTaggList(sankey.level_taggs_list, 'dimensions_to_ignore')}
-      onClick={(entries: typeElementSelectable) => {
-        options['dimensions_to_ignore'] = [];
-        entries.forEach(sel => {
-          options['dimensions_to_ignore']!.push(sel.value);
-          delete (options?.dimensions_max_levels ?? {})[sel.value]; //delete entrie in dimensions_max_levels
-        });
-        setOptions(options);
-      }} />
-  </Box>
+  //     const dim_lvl_max_selected = ((options?.dimensions_max_levels ?? {})[lvl.id] ?? undefined)
 
-  const dimensions_to_ignore = <Box layerStyle='menuconfigpanel_option_name'>
-    {t('Menu.saveExcel.dimMaxLevel')}
-  </Box>
-  {/* For each level tag group select max level saved */ }
-  {
-    app_data.drawing_area.sankey.level_taggs_list.map(lvl => {
-      // If dimensions is ignored don't create a list to select max level
-      if (options.dimensions_to_ignore?.includes(lvl.id))
-        return <></>;
+  //     return <Box layerStyle='menuconfigpanel_row_2cols'>
+  //       <Box layerStyle='menuconfigpanel_option_name'>
+  //         {lvl.name}
+  //       </Box>
+  //       <Menu key={lvl.id}>
+  //         <MenuButton
+  //           as={Button}
+  //           variant='menuconfigpanel_option_button'
+  //           rightIcon={app_data.icon_library.icon_open_selector}
+  //         >
+  //           {dim_lvl_max_selected !== undefined ? lvl.tags_list[dim_lvl_max_selected].name : t('Menu.saveExcel.noMaxLevel')}
+  //         </MenuButton>
+  //         <MenuList>
+  //           {lvl.tags_list.map((lvlTag, idx) => {
+  //             return <MenuItem key={lvlTag.name}
+  //               display='flex'
+  //               onClick={() => {
+  //                 if (!options['dimensions_max_levels'])
+  //                   return
+  //                 if (options['dimensions_max_levels'][lvl.id] == idx) delete options['dimensions_max_levels'][lvl.id]
+  //                 else options['dimensions_max_levels'][lvl.id] = idx
+  //                 setOptions(options)
+  //               }}>
+  //               {lvlTag.name}{checked((options?.dimensions_max_levels ?? {})[lvl.id] == idx)}
+  //             </MenuItem>
+  //           })}
+  //         </MenuList>
+  //       </Menu>
+  //     </Box>
+  //   })
+  // }
 
-      const dim_lvl_max_selected = ((options?.dimensions_max_levels ?? {})[lvl.id] ?? undefined);
-
-      return <Box layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {lvl.name}
-        </Box>
-        <Menu key={lvl.id}>
-          <MenuButton
-            as={Button}
-            variant='menuconfigpanel_option_button'
-            rightIcon={app_data.icon_library.icon_open_selector}
-          >
-            {dim_lvl_max_selected !== undefined ? lvl.tags_list[dim_lvl_max_selected].name : t('Menu.saveExcel.noMaxLevel')}
-          </MenuButton>
-          <MenuList>
-            {lvl.tags_list.map((lvlTag, idx) => {
-              return <MenuItem key={lvlTag.name}
-                display='flex'
-                onClick={() => {
-                  if (!options['dimensions_max_levels'])
-                    return;
-                  if (options['dimensions_max_levels'][lvl.id] == idx) delete options['dimensions_max_levels'][lvl.id];
-                  else options['dimensions_max_levels'][lvl.id] = idx;
-                  setOptions(options);
-                }}>
-                {lvlTag.name}{checked((options?.dimensions_max_levels ?? {})[lvl.id] == idx)}
-              </MenuItem>;
-            })}
-          </MenuList>
-        </Menu>
-      </Box>;
-    })
-  }
-
-  const data_tag = <Box as='span' layerStyle='menuconfigpanel_part_title_2'>
-    {t('Menu.saveExcel.PreferenceTag')}
-  </Box>
-  {
-    options['ignore_datataggroups']?.map(ent => {
-      const taggs_dict = app_data.drawing_area.sankey.data_taggs_dict;
-      return <Box layerStyle='menuconfigpanel_row_2cols'>
-        <Box>{taggs_dict[ent[0]].name}</Box>
-        <Select
-          value={ent[1]}
-          onChange={(evt) => {
-            options['ignore_datataggroups']?.forEach(val => {
-              if (val[0] == ent[0]) {
-                val[1] = evt.target.value;
-              }
-              setOptions(options);
-            });
-          }}>
-          {taggs_dict[ent[0]].tags_list.map((tag, idx) => {
-            return <option key={'val_' + idx} value={tag.id}>{tag.name}</option>;
-          })}
-        </Select>
-      </Box>;
-    })
-  }
+  // const data_tag = <Box as='span' layerStyle='menuconfigpanel_part_title_2'>
+  //   {t('Menu.saveExcel.PreferenceTag')}
+  // </Box>
+  // {
+  //   options['ignore_datataggroups']?.map(ent => {
+  //     const taggs_dict = app_data.drawing_area.sankey.data_taggs_dict
+  //     return <Box layerStyle='menuconfigpanel_row_2cols'>
+  //       <Box>{taggs_dict[ent[0]].name}</Box>
+  //       <Select
+  //         value={ent[1]}
+  //         onChange={(evt) => {
+  //           options['ignore_datataggroups']?.forEach(val => {
+  //             if (val[0] == ent[0]) {
+  //               val[1] = evt.target.value
+  //             }
+  //             setOptions(options)
+  //           })
+  //         }}>
+  //         {taggs_dict[ent[0]].tags_list.map((tag, idx) => {
+  //           return <option key={'val_' + idx} value={tag.id}>{tag.name}</option>
+  //         })}
+  //       </Select>
+  //     </Box>
+  //   })
+  // }
 
   const content = <>
     <WrapperCheckBoxSubSectionMenu
@@ -613,7 +568,7 @@ export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData 
         isActive
         size='sizeButtonDialog'
         onClick={() => {
-          app_data.saveToExcel('/opensankey/', options);
+          app_data.saveToExcel('/opensankey/', options)
         }}
       >{t('Menu.enregistrer')}</Button>
     </Box>
@@ -624,6 +579,6 @@ export const ExcelModalSaver = ({ app_data }: { app_data: Class_ApplicationData 
     dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_excel_saver'}
     content={content}
-    title={t('Menu.save_excel_file')} />;
+    title={t('Menu.save_excel_file')} />
 
-};
+}

@@ -28,8 +28,8 @@
 import React, { useState } from 'react'
 import { Checkbox } from '@chakra-ui/react'
 import {
-  ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption, SelectionMode,
-  Cell, Compatible, CellLocation, DefaultCellTypes
+  ReactGrid, Column, Row, CellChange, TextCell, NumberCell, Id, MenuOption,
+  Cell, Compatible, DefaultCellTypes
 } from '@silevis/reactgrid'
 import '@silevis/reactgrid/styles.css'
 
@@ -54,14 +54,14 @@ export const SpreadSheet = (
   const { menu_configuration, drawing_area } = app_data
   const { sankey } = drawing_area
 
-  const [freeze, set_freeze] = useState(menu_configuration.spreadsheet_freeze)
+  const [, set_freeze] = useState(menu_configuration.spreadsheet_freeze)
   // // Fonction pour déterminer si on doit afficher la colonne "Valeurs calculées"
   // const shouldShowCalculatedValues = (): boolean => {
   //   return links_list.some(l => l.valueResult !== null && l.valueResult !== undefined)
   // }
 
   // Extract flux data from the Sankey diagram and prepare it for the spreadsheet
-  const getFluxFromSankey = (app_data: Class_ApplicationData): IType_SpreadSheetFlux[] => {
+  const getFluxFromSankey = (): IType_SpreadSheetFlux[] => {
     const { links_list } = sankey
     const a: IType_SpreadSheetFlux[] = links_list
       .map((l) => {
@@ -69,8 +69,8 @@ export const SpreadSheet = (
           id: l.id, //Link id
           source: l.source.name,
           target: l.target.name,
-          value_data: l.value?.valueData!,
-          value_result: l.value?.valueResult!
+          value_data: l.value ? l.value.valueData! : undefined,
+          value_result: l.value?l.value.valueResult! : undefined
         }
       })
     // Add an empty row for new flux input
@@ -139,7 +139,7 @@ export const SpreadSheet = (
     return [headerRow as Row, ...dataRows]
   }
   // Define the spreadsheet rows and columns
-  const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey(app_data))
+  const [spreadSheetFlux, setSpreadSheetFlux] = useState<IType_SpreadSheetFlux[]>(getFluxFromSankey())
   const rows = getRows(spreadSheetFlux)
   const [columns, setColumns] = useState<Column[]>(getColumns())
 
@@ -155,7 +155,7 @@ export const SpreadSheet = (
 
   // Function to synchronize spreadsheet data with Sankey data
   const synchronizeSpreadSheetWithSankey = () => {
-    setSpreadSheetFlux(getFluxFromSankey(app_data))
+    setSpreadSheetFlux(getFluxFromSankey())
     updateColumns() // Mettre à jour les colonnes aussi
   }
 
@@ -627,13 +627,7 @@ export const SpreadSheet = (
         return [...prevColumns]
       })
     }}
-    onContextMenu={(
-      selectedRowIds: Id[],
-      selectedColIds: Id[],
-      selectionMode: SelectionMode,
-      menuOptions: MenuOption[],
-      selectedRanges: Array<CellLocation[]>
-    ): MenuOption[] => {
+    onContextMenu={(): MenuOption[] => {
       return [
         {
           id: 'paste',
@@ -737,15 +731,15 @@ export const SpreadSheet = (
       ]
     }}
   />
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={menu_configuration.spreadsheet_freeze}
-      onChange={(evt) => {
-        set_freeze(evt.target.checked)
-        menu_configuration.spreadsheet_freeze = evt.target.checked
-      }}
-    >
-      {'Freeze'}
-    </Checkbox>
+  <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={menu_configuration.spreadsheet_freeze}
+    onChange={(evt) => {
+      set_freeze(evt.target.checked)
+      menu_configuration.spreadsheet_freeze = evt.target.checked
+    }}
+  >
+    {'Freeze'}
+  </Checkbox>
   </>
 }

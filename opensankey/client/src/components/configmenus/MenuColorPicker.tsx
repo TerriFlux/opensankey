@@ -24,7 +24,6 @@ export const MenuColorPicker = ({
   isDisabled = false,
   disabledTooltip = '',
   showLabel = true,
-  size = 'md',
   showEyeDropper = true
 }: {
   initialColor: string
@@ -33,7 +32,6 @@ export const MenuColorPicker = ({
   isDisabled?: boolean
   disabledTooltip?: string
   showLabel?: boolean
-  size?: 'sm' | 'md' | 'lg'
   showEyeDropper?: boolean
 }) => {
   const [displayColorPicker, setDisplayColorPicker] = useState(false)
@@ -64,7 +62,7 @@ export const MenuColorPicker = ({
       setColor(newColor)
       onColorChange(newColor)
     } catch (error) {
-
+      console.error('EyeDropper error:', error)
     }
   }
 
@@ -138,17 +136,17 @@ export const MenuColorPicker = ({
 
 
       <Box style={styles.swatch} >
-        <OSTooltip label={isDisabled ? disabledTooltip : `Cliquer pour changer la couleur`}>
+        <OSTooltip label={isDisabled ? disabledTooltip : 'Cliquer pour changer la couleur'}>
           <Box style={styles.colorPreview} onClick={handleClick} />
         </OSTooltip>
         {/* Bouton EyeDropper */}
         {showEyeDropper && (
           <OSTooltip label={
             !isEyeDropperSupported
-              ? "Pipette non supportée dans ce navigateur"
+              ? 'Pipette non supportée dans ce navigateur'
               : isDisabled
                 ? disabledTooltip
-                : "Sélectionner une couleur à l'écran"
+                : 'Sélectionner une couleur à l\'écran'
           }>
             <Box
               onClick={useEyeDropper}

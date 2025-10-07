@@ -56,7 +56,7 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
     ref_to_save_in_cache_indicator
   } = menu_configuration
 
-  let selected_links = menu_configuration.is_selector_only_for_visible_links ?
+  const selected_links = menu_configuration.is_selector_only_for_visible_links ?
     visible_and_selected_links_list_sorted :
     selected_links_list_sorted
   const first_link = selected_links[0]
@@ -109,58 +109,58 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          drawing_area.sankey.flux_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_link.hasGivenTag(tag)
-                        return <MenuItem
-                          display='flex'
-                          closeOnSelect={false}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            event.preventDefault()
-                            drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
-                            menu_configuration.ref_to_menu_context_links_updater.current()
-                            setUpdate(a => a + 1)
-                          }}
-                        >
-                          {tag.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+        <MenuList>
+          {
+            drawing_area.sankey.flux_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_link.hasGivenTag(tag)
+                          return <MenuItem
+                            display='flex'
+                            closeOnSelect={false}
+                            onClick={(event) => {
+                              event.stopPropagation()
+                              event.preventDefault()
+                              drawing_area.updateSelectedLinksTagAssignation(!has_tag, tag)
+                              menu_configuration.ref_to_menu_context_links_updater.current()
+                              setUpdate(a => a + 1)
+                            }}
+                          >
+                            {tag.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }
 
@@ -173,63 +173,63 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_node !== undefined) &&
     (has_node_tags)
   ) ? <>
-    {sep}
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {t('Menu.Transformation.tagFlux_assign')}
-      </MenuButton>
+      {sep}
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {t('Menu.Transformation.tagFlux_assign')}
+        </MenuButton>
 
-      <MenuList>
-        {
-          drawing_area.sankey.node_taggs_list
-            .filter(tagg => tagg.has_tags)
-            .map((tagg, i) => {
-              return <Menu key={i} placement='end'>
-                <MenuButton
-                  variant='contextmenu_button'
-                  as={Button}
-                  rightIcon={<ChevronRightIcon />}
-                  className="dropdown-basic"
-                >
-                  {tagg.name}
-                </MenuButton>
-                <MenuList>
-                  {
-                    tagg.tags_list
-                      .map(tag => {
-                        const has_tag = contextualised_node.hasGivenTag(tag)
-                        return <MenuItem
-                          display='flex'
-                          closeOnSelect={false}
-                          onClick={() => {
+        <MenuList>
+          {
+            drawing_area.sankey.node_taggs_list
+              .filter(tagg => tagg.has_tags)
+              .map((tagg, i) => {
+                return <Menu key={i} placement='end'>
+                  <MenuButton
+                    variant='contextmenu_button'
+                    as={Button}
+                    rightIcon={<ChevronRightIcon />}
+                    className="dropdown-basic"
+                  >
+                    {tagg.name}
+                  </MenuButton>
+                  <MenuList>
+                    {
+                      tagg.tags_list
+                        .map(tag => {
+                          const has_tag = contextualised_node.hasGivenTag(tag)
+                          return <MenuItem
+                            display='flex'
+                            closeOnSelect={false}
+                            onClick={() => {
                             // event.stopPropagation()
                             // event.preventDefault()
-                            drawing_area.updateSelectedNodesTagAssignation(!has_tag, tag)
-                            menu_configuration.ref_to_menu_context_nodes_updater.current()
-                            setUpdate(a => a + 1)
-                          }}
-                        >
-                          {tag.name}
-                          {checked(has_tag)}
-                        </MenuItem>
-                      })
-                  }
-                </MenuList>
-              </Menu>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+                              drawing_area.updateSelectedNodesTagAssignation(!has_tag, tag)
+                              menu_configuration.ref_to_menu_context_nodes_updater.current()
+                              setUpdate(a => a + 1)
+                            }}
+                          >
+                            {tag.name}
+                            {checked(has_tag)}
+                          </MenuItem>
+                        })
+                    }
+                  </MenuList>
+                </Menu>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }
 
 export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { t, drawing_area } = app_data
+  const { drawing_area } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_node = drawing_area.node_contextualised
   const has_node_style = drawing_area.sankey.node_styles_list.length > 0
@@ -237,45 +237,45 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
     (contextualised_node !== undefined) &&
     (has_node_style)
   ) ? <>
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {'Assigner styles'}
-      </MenuButton>
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {'Assigner styles'}
+        </MenuButton>
 
-      <MenuList>
-        {
-          drawing_area.sankey.node_styles_list
-            .map((_, i) => {
-              const has_style = contextualised_node.style.includes(_)
-              return <MenuItem
-                display='flex'
-                closeOnSelect={false}
-                onClick={() => {
-                  if (!has_style) {
-                    contextualised_node.style.push(_)
-                  } else {
-                    contextualised_node.style = contextualised_node.style.filter(style => style !== _)
-                  }
-                  setUpdate(a => a + 1)
-                }}
-              >
-                {_.name}
-                {checked(has_style)}
-              </MenuItem>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+        <MenuList>
+          {
+            drawing_area.sankey.node_styles_list
+              .map((_) => {
+                const has_style = contextualised_node.style.includes(_)
+                return <MenuItem
+                  display='flex'
+                  closeOnSelect={false}
+                  onClick={() => {
+                    if (!has_style) {
+                      contextualised_node.style.push(_)
+                    } else {
+                      contextualised_node.style = contextualised_node.style.filter(style => style !== _)
+                    }
+                    setUpdate(a => a + 1)
+                  }}
+                >
+                  {_.name}
+                  {checked(has_style)}
+                </MenuItem>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }
 
 export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { t, drawing_area } = app_data
+  const { drawing_area } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_link = drawing_area.link_contextualised
   const has_node_style = drawing_area.sankey.link_styles_list.length > 0
@@ -283,39 +283,39 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
     (contextualised_link !== undefined) &&
     (has_node_style)
   ) ? <>
-    <Menu placement='end'>
-      <MenuButton
-        variant='contextmenu_button'
-        as={Button}
-        rightIcon={<ChevronRightIcon />}
-        className="dropdown-basic"
-      >
-        {'Assigner styles'}
-      </MenuButton>
+      <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {'Assigner styles'}
+        </MenuButton>
 
-      <MenuList>
-        {
-          drawing_area.sankey.link_styles_list
-            .map((_, i) => {
-              const has_style = contextualised_link.style.includes(_)
-              return <MenuItem
-                display='flex'
-                closeOnSelect={false}
-                onClick={() => {
-                  if (!has_style) {
-                    contextualised_link.style.push(_)
-                  } else {
-                    contextualised_link.style = contextualised_link.style.filter(style => style !== _)
-                  }
-                  setUpdate(a => a + 1)
-                }}
-              >
-                {_.name}
-                {checked(has_style)}
-              </MenuItem>
-            })
-        }
-      </MenuList>
-    </Menu></> :
+        <MenuList>
+          {
+            drawing_area.sankey.link_styles_list
+              .map((_) => {
+                const has_style = contextualised_link.style.includes(_)
+                return <MenuItem
+                  display='flex'
+                  closeOnSelect={false}
+                  onClick={() => {
+                    if (!has_style) {
+                      contextualised_link.style.push(_)
+                    } else {
+                      contextualised_link.style = contextualised_link.style.filter(style => style !== _)
+                    }
+                    setUpdate(a => a + 1)
+                  }}
+                >
+                  {_.name}
+                  {checked(has_style)}
+                </MenuItem>
+              })
+          }
+        </MenuList>
+      </Menu></> :
     <></>
 }

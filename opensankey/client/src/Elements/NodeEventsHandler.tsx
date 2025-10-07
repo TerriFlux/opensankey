@@ -261,7 +261,7 @@ export class NodeEventsHandler {
         this._node,
         target,
         this._node.drawing_area,
-        )
+      )
     }
   }
 
@@ -294,15 +294,15 @@ export class NodeEventsHandler {
     const show_tooltip = this._node.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
-      const existingTooltip = document.querySelector('.sankey-tooltip');
+      const existingTooltip = document.querySelector('.sankey-tooltip')
       if (!existingTooltip || !this._node.d3_selection?.classed('tooltip_shown')) {
         // Stocker la position de la souris pour l'ouverture
-        this.tooltipMouseX = event.pageX;
-        this.tooltipMouseY = event.pageY;
+        this.tooltipMouseX = event.pageX
+        this.tooltipMouseY = event.pageY
 
         // Utiliser le système intégré
-        const tooltipManager = TooltipEventManager.getInstance();
-        tooltipManager.showTooltip(this._node, event.pageX, event.pageY);
+        const tooltipManager = TooltipEventManager.getInstance()
+        tooltipManager.showTooltip(this._node, event.pageX, event.pageY)
       }
     }
   }
@@ -310,15 +310,15 @@ export class NodeEventsHandler {
   /**
    * Define event when mouse moves in the element
    */
-  public handleMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    return;
+  public handleMouseMove() {
+    return
   }
 
   /**
    * Define event when mouse leaves element
    */
   public handleMouseOut() {
-    return;
+    return
   }
 
   /**

@@ -198,7 +198,8 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
    */
   protected shouldSaveAttribute(
     key: AttributeKey, 
-    value: any,node:Class_NodeElement|null,
+    value: string|number|boolean|undefined,
+    node:Class_NodeElement|null,
     default_style:Class_NodeStyle| null
   ): boolean {
     if (node) return value !== undefined && value !== node.getStyleProperty(key)

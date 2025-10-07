@@ -3,7 +3,7 @@ import {
   numberInputAnatomy, accordionAnatomy, cardAnatomy, checkboxAnatomy, breadcrumbAnatomy, inputAnatomy, editableAnatomy,
   menuAnatomy, modalAnatomy, stepperAnatomy
 } from '@chakra-ui/anatomy'
-import { createMultiStyleConfigHelpers, defineStyle, extendTheme } from '@chakra-ui/react'
+import { createMultiStyleConfigHelpers, defineStyle, extendTheme, SystemStyleObject } from '@chakra-ui/react'
 
 const createHelpers = () => ({
   tag: createMultiStyleConfigHelpers(tagAnatomy.keys),
@@ -47,6 +47,9 @@ const COLORS = {
   }
 }
 
+type ColorLevel = 1 | 2 | 3 | 4 | 5 | 6
+type ColorScheme = 'primaire' | 'secondaire' | 'tertiaire' | 'openSankey'
+
 export const default_font_size = '0.7rem'
 
 // Styles de base communs
@@ -86,7 +89,7 @@ const BASE_STYLES = {
 // ===============================
 
 // Générateur de styles pour les boutons avec couleurs
-export const createButtonStyle = (colorScheme: keyof typeof COLORS, level: number) => defineStyle({
+export const createButtonStyle = (colorScheme: ColorScheme, level: ColorLevel) : SystemStyleObject => defineStyle({
   ...BASE_STYLES.buttonBase,
   borderColor: `${colorScheme}.${level}`,
   bg: `${colorScheme}.${level}`,
@@ -109,7 +112,7 @@ export const createButtonStyle = (colorScheme: keyof typeof COLORS, level: numbe
 })
 
 // Générateur de styles pour les tailles
-export const createSizeStyle = (width: string, height: string, padding = '0.2rem') => defineStyle({
+export const createSizeStyle = (width: string, height: string, padding = '0.2rem') : SystemStyleObject => defineStyle({
   width,
   height,
   minW: 'unset',
@@ -117,7 +120,7 @@ export const createSizeStyle = (width: string, height: string, padding = '0.2rem
 })
 
 // Factory pour boutons avec position (left, center, right)
-export const createPositionedButtonStyle = (baseStyle: any, position: 'left' | 'center' | 'right') => {
+export const createPositionedButtonStyle = (baseStyle: SystemStyleObject, position: 'left' | 'center' | 'right') => {
   const borderRadiusMap = {
     left: '6px 0px 0px 6px',
     center: '0px',
@@ -513,7 +516,7 @@ export const buttonStyles = {
     })
 
     return acc
-  }, {} as Record<string, any>),
+  }, {} as Record<string, SystemStyleObject>),
 
   // Boutons avec positions (left, center, right) - factory
   ...(['left', 'center', 'right'] as const).reduce((acc, position) => {
@@ -528,7 +531,7 @@ export const buttonStyles = {
     }, position)
 
     return acc
-  }, {} as Record<string, any>),
+  }, {} as Record<string, SystemStyleObject>),
 
   // Base menu config panel buttons
   menuconfigpanel_option_button: defineStyle(menuconfigBaseButton),
@@ -624,13 +627,13 @@ export const buttonStyles = {
 
   // Boutons toolbar avec factory pour les niveaux 2-6
   ...[2, 3, 5, 6].reduce((acc, level) => {
-    acc[`toolbar_button_${level}`] = createButtonStyle('primaire', level)
+    acc[`toolbar_button_${level}`] = createButtonStyle('primaire', level as ColorLevel)
     if (level == 3) {
       acc[`toolbar_button_${level}`].width = 'unset'
       acc[`toolbar_button_${level}`].height = 'unset'
     }
     return acc
-  }, {} as Record<string, any>),
+  }, {} as Record<string, SystemStyleObject>),
 
   // Toolbar undo/redo buttons
   toolbar_button_undo_redo: defineStyle({
@@ -2492,7 +2495,7 @@ const layerStyles = {
       gridColumnGap: '0.12rem',
     }
     return acc
-  }, {} as Record<string, any>),
+  }, {} as Record<string, SystemStyleObject>),
 
   options_cards: {
     display: 'grid',

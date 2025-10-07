@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
+import React, { useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
@@ -85,9 +85,9 @@ export const setDiagram = (
 ) => {
   const diagrams = window.sankey.sous_filieres
   loadUniversalJSON(diagrams[diagram_url]+'.json.gz').then(data=>{
-      app_data.fromJSON(data as Type_JSON)
-      app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
-    }).catch(e=>console.log(e))
+    app_data.fromJSON(data as Type_JSON)
+    app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
+  }).catch(e=>console.log(e))
 
 }
 
@@ -728,13 +728,13 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
       // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
       // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
 
-      const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
-      const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
-      const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
-      const url = 'https://dev.open-sankey.fr/?url=' + fileUrl
+        const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
+        const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
+        const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
+        const url = 'https://dev.open-sankey.fr/?url=' + fileUrl
 
-      window.open(url, '_blank')
-    }}
+        window.open(url, '_blank')
+      }}
     >
       <Box
         layerStyle='menutop_button_style'
@@ -786,7 +786,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
               marginRight='1rem'
               marginLeft='1rem'
             >
-                    {c}
+              {c}
             </ButtonGroup>
             {
               (i < (Object.values(dict_components_menu_top).length)) ?
