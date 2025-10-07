@@ -28,12 +28,6 @@
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
 
-// Local types imports
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
-
-// LOcal constants
 import {
   getBooleanFromJSON,
   Type_JSON,
@@ -318,11 +312,11 @@ export abstract class ClassTemplate_ProtoElement {
       'contextmenu',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
         this.eventSimpleRMBCLick(event))
-      // Right mouse button clicks
-      this.d3_selection?.on(
-        'click',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBCLick(event))
+    // Right mouse button clicks
+    this.d3_selection?.on(
+      'click',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventSimpleLMBCLick(event))
     if (!this._drawing_area.static) {
 
       this.d3_selection?.on(

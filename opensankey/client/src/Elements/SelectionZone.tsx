@@ -24,12 +24,6 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Local types definitions
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
-
-// Local modules imports
 import {
   ClassTemplate_Element
 } from '../Elements/Element'

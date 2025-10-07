@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Fragment, useRef, useState, MutableRefObject } from 'react'
+import React, { useRef, useState } from 'react'
 
 import {
   Box,
@@ -47,7 +47,6 @@ import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { MenuColorPicker } from './MenuColorPicker'
 
 export type keyStyle = keyof Class_LinkStyle
@@ -119,17 +118,16 @@ export const MenuConfLinkApparenceDashed = ({ app_data, menu_for_style }: {
     onChange={(evt) => {
       updateDashedLinks(evt.target.checked)
     }}>
-      <OSTooltip label={t('Flux.apparence.tooltips.shape_is_dashed')}>
-        {t('Flux.apparence.shape_is_dashed')}
-        <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_is_dashed'} />
-      </OSTooltip>
+    <OSTooltip label={t('Flux.apparence.tooltips.shape_is_dashed')}>
+      {t('Flux.apparence.shape_is_dashed')}
+      <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_is_dashed'} />
+    </OSTooltip>
   </Checkbox>
 }
 
-export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_style }: {
+export const MenuConfigurationLinkShape = ({ new_data, menu_for_style }: {
   new_data: Class_ApplicationData
   menu_for_style: boolean
-  additionMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
 
   // Datas ------------------------------------------------------------------------------
@@ -239,8 +237,6 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
   const shape_orientation = (element_ref?.shape_orientation ?? LINKS_ATTRIBUTES_CONFIG.shape_orientation.default)
   const shape_starting_curve = (element_ref?.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default)
   const shape_ending_curve = (element_ref?.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default)
-  const shape_starting_tangeant = (element_ref?.shape_starting_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_tangeant.default)
-  const shape_ending_tangeant = (element_ref?.shape_ending_tangeant ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_tangeant.default)
   const shape_is_curved = (element_ref?.shape_is_curved ?? LINKS_ATTRIBUTES_CONFIG.shape_is_curved.default)
   const shape_shape = (element_ref?.shape_shape ?? LINKS_ATTRIBUTES_CONFIG.shape_shape.default)
   const shape_is_recycling = (element_ref?.shape_is_recycling ?? LINKS_ATTRIBUTES_CONFIG.shape_is_recycling.default)
@@ -355,10 +351,10 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
           </OSTooltip>
         </InputGroup>
       </Box>
-     <MenuConfLinkApparenceDashed
-      app_data={new_data}
-      menu_for_style={menu_for_style}
-    />
+      <MenuConfLinkApparenceDashed
+        app_data={new_data}
+        menu_for_style={menu_for_style}
+      />
     </>
   </WrapperBoxSubSectionMenu>
 
@@ -470,19 +466,19 @@ export const MenuConfigurationLinkShape = ({ new_data, additionMenus, menu_for_s
           {t('Flux.apparence.shape_shape')}
           <TooltipElementOverloaded elements={selected_links} t={t} k={'shape_shape'} />
         </Box>
-          <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
-            <Select
-              //isDisabled={!disable_attr_props['shape_shape']}
-              value={shape_shape}
-              onChange={(evt) => {
-                updateElements('shape_shape', evt.target.value)
-              }}
-            >
-              {new_data.menu_configuration.shape_shape.map(el => {
-                return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-              })}
-            </Select>
-          </OSTooltip></> : <></>}
+        <OSTooltip label={t('Flux.apparence.tooltips.shape_shape')}>
+          <Select
+            //isDisabled={!disable_attr_props['shape_shape']}
+            value={shape_shape}
+            onChange={(evt) => {
+              updateElements('shape_shape', evt.target.value)
+            }}
+          >
+            {new_data.menu_configuration.shape_shape.map(el => {
+              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+            })}
+          </Select>
+        </OSTooltip></> : <></>}
       </Box>
 
       <Box layerStyle='menuconfigpanel_row_2cols'>

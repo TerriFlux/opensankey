@@ -374,7 +374,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
+        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1685,19 +1685,19 @@ export class NodePositioning {
   }
 
   // Fonction qui applique le V pour un level tag donné
-  private applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: any) {
-      Object.values(columns).forEach(column => {
-        column.sort((n1, n2) => n1.position_y - n2.position_y)
-        let current_v = 0
+  private applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: Class_LevelTagGroup) {
+    Object.values(columns).forEach(column => {
+      column.sort((n1, n2) => n1.position_y - n2.position_y)
+      let current_v = 0
       column.forEach(n => {
-         n.position_v = -1 
-         current_v = this.applyVDesagregate(n, current_v, tagGroup)
+        n.position_v = -1 
+        current_v = this.applyVDesagregate(n, current_v, tagGroup)
       }) 
     })
     Object.values(columns).forEach(column => {
       column.forEach(n => this.applyVAgregate(n, tagGroup))
-      })
-    }
+    })
+  }
 
   // Fonction principale refactorisée
   public computeParametricV() {
@@ -1719,7 +1719,7 @@ export class NodePositioning {
   }
 
   // Fonction qui compute le V paramétrique pour un tag spécifique
-  public computeParametricVForTagg(tagGroup: any) {
+  public computeParametricVForTagg(tagGroup: Class_LevelTagGroup) {
     const columns = this.computeColumns()
     this.applyVForLevelTag(columns, tagGroup)
     this.drawingArea.sankey.sortNodes()
@@ -1785,103 +1785,103 @@ export class NodePositioning {
    * Auto-compute sankey with waiting toast
    */
   public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean) {
-      this.drawingArea.application_data.sendWaitingToast(
-        () => {
-          // If it's not launched_from_process then we assume it's user input so we save it undoing
-          if (!launched_from_process) {
-            const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-            const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
+    this.drawingArea.application_data.sendWaitingToast(
+      () => {
+        // If it's not launched_from_process then we assume it's user input so we save it undoing
+        if (!launched_from_process) {
+          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
-            const inv_computeAutoSankey = () => {
-              this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-              // Reposition node to old pos
-              this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-                n.display.position.x = node_pos[n.id].x
-                n.display.position.y = node_pos[n.id].y
-                // Reset old node IO order
-                n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-                n.draw()
-              })
-              this.drawingArea.areaAutoFit(true)
-            }
-            this.drawingArea.saveUndo(inv_computeAutoSankey)
-          }
-
-          // Compute auto pos of nodes
-          this.computeAutoSankey(launched_from_process, optimize_crossing)
-          this.computeParametrization(true)
-
-          if (launched_from_process) {
-            // Split trade nodes
-            // this.splitTrade()
-            // Computes u v,x and initial y for trade nodes
-            this.arrangeTrade(true)
-          }
-
-          // Default color + auto reorg of links
-          this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-            //n.resetPositionAttribute('dy')
-            n.reorganizeIOLinks()
-          })
-
-          if (launched_from_process) {
-            // Update default data on recycling mode
-            this.drawingArea.sankey.links_list.forEach(l => {
-              if (l.shape_is_recycling) {
-                l.shape_starting_tangeant = 0.01
-                l.shape_ending_tangeant = 0.01
-              }
+          const inv_computeAutoSankey = () => {
+            this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+            // Reposition node to old pos
+            this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+              n.display.position.x = node_pos[n.id].x
+              n.display.position.y = node_pos[n.id].y
+              // Reset old node IO order
+              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+              n.draw()
             })
+            this.drawingArea.areaAutoFit(true)
           }
-
-          this.drawingArea.draw()
-          // Update area
-          this.drawingArea.areaAutoFit(true)
-          // Toggle saving indicator
-          this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-          // If it's not launched_from_process then we assume it's user input so we save it undoing
-          if (!launched_from_process) {
-            const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
-            const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
-
-            const _computeAutoSankey = () => {
-              this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-
-              // Reposition node to old pos
-              this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-                n.display.position.x = node_pos[n.id].x
-                n.display.position.y = node_pos[n.id].y
-                // Reset old node IO order
-                n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-                n.draw()
-              })
-              this.drawingArea.areaAutoFit(true)
-            }
-            this.drawingArea.saveRedo(_computeAutoSankey)
-          }
-        },
-        {
-          success: {
-            title: this.drawingArea.application_data.t('toast.compute_auto_sankey.success.title')
-          },
-          loading: {
-            title: this.drawingArea.application_data.t('toast.compute_auto_sankey.loading.title')
-          }
+          this.drawingArea.saveUndo(inv_computeAutoSankey)
         }
-      )
-    }
+
+        // Compute auto pos of nodes
+        this.computeAutoSankey(launched_from_process, optimize_crossing)
+        this.computeParametrization(true)
+
+        if (launched_from_process) {
+          // Split trade nodes
+          // this.splitTrade()
+          // Computes u v,x and initial y for trade nodes
+          this.arrangeTrade(true)
+        }
+
+        // Default color + auto reorg of links
+        this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+          //n.resetPositionAttribute('dy')
+          n.reorganizeIOLinks()
+        })
+
+        if (launched_from_process) {
+          // Update default data on recycling mode
+          this.drawingArea.sankey.links_list.forEach(l => {
+            if (l.shape_is_recycling) {
+              l.shape_starting_tangeant = 0.01
+              l.shape_ending_tangeant = 0.01
+            }
+          })
+        }
+
+        this.drawingArea.draw()
+        // Update area
+        this.drawingArea.areaAutoFit(true)
+        // Toggle saving indicator
+        this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+        // If it's not launched_from_process then we assume it's user input so we save it undoing
+        if (!launched_from_process) {
+          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
+
+          const _computeAutoSankey = () => {
+            this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+
+            // Reposition node to old pos
+            this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+              n.display.position.x = node_pos[n.id].x
+              n.display.position.y = node_pos[n.id].y
+              // Reset old node IO order
+              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+              n.draw()
+            })
+            this.drawingArea.areaAutoFit(true)
+          }
+          this.drawingArea.saveRedo(_computeAutoSankey)
+        }
+      },
+      {
+        success: {
+          title: this.drawingArea.application_data.t('toast.compute_auto_sankey.success.title')
+        },
+        loading: {
+          title: this.drawingArea.application_data.t('toast.compute_auto_sankey.loading.title')
+        }
+      }
+    )
+  }
 
   /**
    * Reposition visible nodes so that their left/top side is close to a grid line
    */
   protected _arrangeNodesToGrid() {
-      this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-        const shift_x = node.position_x - (node.position_x % this.drawingArea.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-        const shift_y = node.position_y - (node.position_y % this.drawingArea.grid_size)// get position so that the node position_y is set to previous vertical grid line
-        node.setPosXY(shift_x, shift_y)
-      })
-    }
+    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
+      const shift_x = node.position_x - (node.position_x % this.drawingArea.grid_size)// get position so that the node position_x is set to previous horizontal grid line
+      const shift_y = node.position_y - (node.position_y % this.drawingArea.grid_size)// get position so that the node position_y is set to previous vertical grid line
+      node.setPosXY(shift_x, shift_y)
+    })
+  }
 
   /**
    * Calcule automatiquement la valeur de shape_middle_recycling pour que le flux 
@@ -1889,103 +1889,103 @@ export class NodePositioning {
    * sont dessous et non connectés)
    */
   private computeRecyclingMiddleShape(
-      recycling_links_ids: string[]
-    ) {
-      console.log('🔄 Calcul automatique du shape_middle_recycling...')
+    recycling_links_ids: string[]
+  ) {
+    console.log('🔄 Calcul automatique du shape_middle_recycling...')
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
-        this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
 
     recycling_links_ids.forEach(link_id => {
-          const link = this.drawingArea.sankey.links_dict[link_id]
-          const source_node = link.source
-          const target_node = link.target
+      const link = this.drawingArea.sankey.links_dict[link_id]
+      const source_node = link.source
+      const target_node = link.target
 
-          console.log(`🔧 Traitement du lien de recyclage: ${link_id} (${source_node.id} → ${target_node.id})`)
+      console.log(`🔧 Traitement du lien de recyclage: ${link_id} (${source_node.id} → ${target_node.id})`)
 
-          // 1. Identifier les nœuds à gauche du nœud source
-          const nodes_to_avoid: Class_NodeElement[] = []
+      // 1. Identifier les nœuds à gauche du nœud source
+      const nodes_to_avoid: Class_NodeElement[] = []
 
-          // 2. Calculer la position Y minimale pour passer sous ces nœuds
-          let min_y_to_avoid = source_node.position_y // Position par défaut
+      // 2. Calculer la position Y minimale pour passer sous ces nœuds
+      let min_y_to_avoid = source_node.position_y // Position par défaut
 
-          this.drawingArea.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag!)).forEach(node => {
-            const node_bottom = node.position_y + node.getShapeHeightToUse()
-            if (node_bottom > min_y_to_avoid) {
-              min_y_to_avoid = node_bottom
-            }
-          })
+      this.drawingArea.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag!)).forEach(node => {
+        const node_bottom = node.position_y + node.getShapeHeightToUse()
+        if (node_bottom > min_y_to_avoid) {
+          min_y_to_avoid = node_bottom
+        }
+      })
 
-          // 3. Ajouter une marge de sécurité
-          const safety_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
-          //min_y_to_avoid += safety_margin
+      // 3. Ajouter une marge de sécurité
+      const safety_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+      //min_y_to_avoid += safety_margin
 
-          // 4. Calculer shape_middle_recycling en fonction de l'orientation du lien
-          const source_x = source_node.position_x
-          const source_y = source_node.position_y
-          const target_x = target_node.position_x
-          const target_y = target_node.position_y
+      // 4. Calculer shape_middle_recycling en fonction de l'orientation du lien
+      const source_x = source_node.position_x
+      const source_y = source_node.position_y
+      const target_x = target_node.position_x
+      const target_y = target_node.position_y
 
-          // Point de référence (centre du segment source-target)
-          const ref_x = (source_x + target_x) / 2
-          const ref_y = (source_y + target_y) / 2
+      // Point de référence (centre du segment source-target)
+      const ref_x = (source_x + target_x) / 2
+      const ref_y = (source_y + target_y) / 2
 
-          let calculated_middle_recycling: number
+      let calculated_middle_recycling: number
 
-          if (link.is_horizontal) {
-            // Pour un flux horizontal, shape_middle_recycling affecte Y
-            calculated_middle_recycling = min_y_to_avoid - ref_y
-          } else if (link.is_vertical) {
-            // Pour un flux vertical, shape_middle_recycling affecte X
-            // On décale vers la gauche pour éviter les nœuds
-            const min_x_to_avoid = Math.min(...nodes_to_avoid.map(n => n.position_x)) - safety_margin
-            calculated_middle_recycling = min_x_to_avoid - ref_x
-          } else {
-            // Pour un flux diagonal, calculer le décalage perpendiculaire
-            const dx = target_x - source_x
-            const dy = target_y - source_y
-            const length = Math.sqrt(dx * dx + dy * dy)
+      if (link.is_horizontal) {
+        // Pour un flux horizontal, shape_middle_recycling affecte Y
+        calculated_middle_recycling = min_y_to_avoid - ref_y
+      } else if (link.is_vertical) {
+        // Pour un flux vertical, shape_middle_recycling affecte X
+        // On décale vers la gauche pour éviter les nœuds
+        const min_x_to_avoid = Math.min(...nodes_to_avoid.map(n => n.position_x)) - safety_margin
+        calculated_middle_recycling = min_x_to_avoid - ref_x
+      } else {
+        // Pour un flux diagonal, calculer le décalage perpendiculaire
+        const dx = target_x - source_x
+        const dy = target_y - source_y
+        const length = Math.sqrt(dx * dx + dy * dy)
 
-            if (length > 0) {
-              // Vecteur perpendiculaire normalisé
-              // const perp_x = -dy / length
-              // const perp_y = dx / length
+        if (length > 0) {
+          // Vecteur perpendiculaire normalisé
+          // const perp_x = -dy / length
+          // const perp_y = dx / length
 
-              // Distance nécessaire pour éviter les nœuds
-              const distance_to_avoid = min_y_to_avoid - ref_y
-              calculated_middle_recycling = distance_to_avoid / Math.sqrt(2)
-            } else {
-              calculated_middle_recycling = safety_margin
-            }
-          }
+          // Distance nécessaire pour éviter les nœuds
+          const distance_to_avoid = min_y_to_avoid - ref_y
+          calculated_middle_recycling = distance_to_avoid / Math.sqrt(2)
+        } else {
+          calculated_middle_recycling = safety_margin
+        }
+      }
 
-          // 5. Appliquer la valeur calculée
-          link.shape_middle_recycling = calculated_middle_recycling
+      // 5. Appliquer la valeur calculée
+      link.shape_middle_recycling = calculated_middle_recycling
 
-          console.log(`✅ shape_middle_recycling calculé pour ${link_id}: ${calculated_middle_recycling}`)
-        })
-    }
+      console.log(`✅ shape_middle_recycling calculé pour ${link_id}: ${calculated_middle_recycling}`)
+    })
+  }
   /**
    * Align node pos with grid lines & save it's undo
    *
    */
   public arrangeNodesToGrid = () => {
-      const app_data = this.drawingArea.application_data
-      const { sankey } = this.drawingArea
-      const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
+    const app_data = this.drawingArea.application_data
+    const { sankey } = this.drawingArea
+    const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
 
-      const _arrangeNodesToGrid = () => {
-        this._arrangeNodesToGrid()
-        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-      }
-
-      const inv_arrangeNodesToGrid = () => {
-        sankey.visible_nodes_list.forEach(n => {
-          n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
-        })
-      }
-
-      app_data.history.saveUndo(inv_arrangeNodesToGrid)
-      app_data.history.saveRedo(_arrangeNodesToGrid)
-      _arrangeNodesToGrid()
+    const _arrangeNodesToGrid = () => {
+      this._arrangeNodesToGrid()
+      app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
+
+    const inv_arrangeNodesToGrid = () => {
+      sankey.visible_nodes_list.forEach(n => {
+        n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
+      })
+    }
+
+    app_data.history.saveUndo(inv_arrangeNodesToGrid)
+    app_data.history.saveRedo(_arrangeNodesToGrid)
+    _arrangeNodesToGrid()
+  }
 }
