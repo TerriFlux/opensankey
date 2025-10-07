@@ -1,7 +1,6 @@
-import { MenuConfig } from "./SankeyMenuContext";
-import { Class_ApplicationData } from "../../types/ApplicationData";
-import { Class_LinkStyle } from "../../Elements/ElementStyle";
-import { Class_LinkAttribute } from "../../Elements/LinkAttributes";
+import { MenuConfig } from './SankeyMenuContext'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
 
 export const LINK_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -162,30 +161,6 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
   const { drawing_area, menu_configuration, history } = app_data
   const contextualised_link = drawing_area.link_contextualised
   const selected_links = drawing_area.visible_and_selected_links_list
-
-  const updateStyle = (sl: Class_LinkStyle) => {
-    const dict_old_value: { [x: string]: Class_LinkStyle[] } = {}
-    selected_links.forEach(l => {
-      dict_old_value[l.id] = l.style
-    })
-    const _updateStyle = () => {
-      selected_links.forEach(_ => {
-        const flow_ref_has_style = selected_links[0].style.includes(sl) ?? false
-        drawing_area.sankey.switchLinkStyle(sl, flow_ref_has_style)
-      })
-      refreshThisAndToggleSaving()
-    }
-
-    const inv_updateStyle = () => {
-      selected_links.forEach(l => {
-        l.style = dict_old_value[l.id]
-      })
-      refreshThisAndToggleSaving()
-    }
-    history.saveUndo(inv_updateStyle)
-    history.saveRedo(_updateStyle)
-    _updateStyle()
-  }
 
   const refreshThisAndToggleSaving = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)

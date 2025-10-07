@@ -147,7 +147,7 @@ export const SankeyModalStyleNode = ({
         {
           Object.entries(style_select.customisable_attribute).map(ent => {
             // Early return to not show props for shape
-              if (ent[0].includes('shape_'))
+            if (ent[0].includes('shape_'))
               return <></>
 
             const labelOrValue = ent[0].includes('name_') ? 'name_label_is_visible' : 'value_label_is_visible'
@@ -189,14 +189,14 @@ export const SankeyModalStyleNode = ({
     maxW='20%'
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_nodes_labels'}
-      content={content_node_style_context}
-      title={t('Menu.esn_labels')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
-    />
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_nodes_labels'}
+    content={content_node_style_context}
+    title={t('Menu.esn_labels')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  />
   </>
 }
 
@@ -399,7 +399,6 @@ export const SankeyModalStyleLink = ({
       {content_node_customisable_attribute_style}
       <MenuConfigurationLinkShape
         new_data={new_data}
-        additionMenus={additionalMenus}
         menu_for_style={true}
       />
     </>
@@ -461,15 +460,15 @@ export const SankeyModalStyleLink = ({
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_links_labels'}
-      content={content_apparence_contenxt}
-      title={t('Menu.esf_labels')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_links_labels'}
+    content={content_apparence_contenxt}
+    title={t('Menu.esf_labels')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
-    />
+  />
   </>
 }
 
@@ -617,10 +616,10 @@ export const ConfigMenuStyleElement = ({ app_data, selected_elements, config, ca
 
   const element_ref = selected_elements[0]
 
-  const dict_overwritted_attr: { [_: string]: { overloaded: boolean, name: string } } = {};
+  const dict_overwritted_attr: { [_: string]: { overloaded: boolean, name: string } } = {}
   Object.entries(config).forEach(([key, config]) => {
     if (categories.some(_ => _ === config.category)) {
-      let label_text = config.labels[(app_data.language ?? 'fr') as 'fr' | 'en']
+      const label_text = config.labels[(app_data.language ?? 'fr') as 'fr' | 'en']
       dict_overwritted_attr[key] = {
         overloaded: isElementAttributeOverloaded(selected_elements, key as (keyof Class_LinkAttribute | keyof Class_NodeAttribute)),
         name: label_text

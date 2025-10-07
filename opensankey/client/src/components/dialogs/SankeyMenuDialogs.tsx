@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, FC, useState, } from 'react'
+import React, { ChangeEvent, useState, } from 'react'
 
 import {
   Box,

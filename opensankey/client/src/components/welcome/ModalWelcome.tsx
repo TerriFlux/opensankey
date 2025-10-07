@@ -27,7 +27,7 @@
 import React, { useState, useEffect } from 'react'
 import { Carousel } from 'react-bootstrap'
 import {
-  Box, Heading, Modal, ModalBody, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader,
+  Box, Modal, ModalBody, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader,
   Tab, Tabs, Table, TabList, TabPanel, TabPanels, Tbody, Td, Text, Th, Thead, Tr,
 } from '@chakra-ui/react'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -37,7 +37,7 @@ export const ModalWelcome = ({ app_data, external_pagination, external_content }
   external_pagination: { [x: string]: JSX.Element; };
   external_content: { [x: string]: JSX.Element; };
 }) => {
-  const { t, menu_configuration, is_static } = app_data
+  const { t, menu_configuration } = app_data
   const [show_welcome, set_show_welcome] = useState(false)
   const [current_header, setCurrentHeader] = useState<string>(Object.keys(external_pagination)[0] as string)
 
@@ -247,59 +247,59 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
   if (!is_static) {
     page_links['rc'] = <>{t('welcome.breadcrumbs.rc')}</>
     page_content['rc'] = <Box
-    display="block"
-    overflowY='scroll'
-    overflowX='hidden'
-    height='100%'
-    width='100%'
-  >
-    <Box
-      display='grid'
-      gridTemplateColumns='50% 50%'
-      gridColumnGap='0.25rem'
-      width='100%'
+      display="block"
+      overflowY='scroll'
+      overflowX='hidden'
       height='100%'
-      justifySelf='center'
+      width='100%'
     >
-      <Table
-        variant='table_welcome_buttons'
+      <Box
+        display='grid'
+        gridTemplateColumns='50% 50%'
+        gridColumnGap='0.25rem'
+        width='100%'
+        height='100%'
+        justifySelf='center'
       >
-        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_select')}</Th></Thead>
-        <Tbody>
-          <Tr><Td>{t('Menu.rcc_cn_bold')}</Td><Td>{t('Menu.rcc_cn')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_shift_cn_bold')}</Td><Td>{t('Menu.rcc_shift_cn')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ctrl_cn_bold')}</Td><Td>{t('Menu.rcc_ctrl_cn')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_cf_bold')}</Td><Td>{t('Menu.rcc_cf')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_shift_cf_bold')}</Td><Td>{t('Menu.rcc_shift_cf')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ctrl_cf_bold')}</Td><Td>{t('Menu.rcc_ctrl_cf')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_cdn_bold')}</Td><Td>{t('Menu.rcc_cdn')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
-        </Tbody>
-      </Table>
-      <Table
-        variant='table_welcome_buttons'
-      >
-        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_edi')}</Th></Thead>
-        <Tbody>
-          <Tr><Td>{t('Menu.rcc_e_cn_bold')}</Td><Td>{t('Menu.rcc_e_cn')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_e_ds_bold')}</Td><Td>{t('Menu.rcc_e_ds')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_e_dn_bold')}</Td><Td>{t('Menu.rcc_e_dn')}</Td></Tr>
-        </Tbody>
-        <Thead><Th colSpan={2}>{t('Menu.rcc_titre_autre')}</Th></Thead>
-        <Tbody>
-          <Tr><Td>{t('Menu.rcc_a_s_bold')}</Td><Td>{t('Menu.rcc_a_s')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_a_fc_bold')}</Td><Td>{t('Menu.rcc_a_fc')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_a_dbm_bold')}</Td><Td>{t('Menu.rcc_a_dbm')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_a_ech_bold')}</Td><Td>{t('Menu.rcc_a_ech')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ctrl_scrll_bold')}</Td><Td>{t('Menu.rcc_ctrl_scrll')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ctrl_z_bold')}</Td><Td>{t('Menu.rcc_ctrl_z')}</Td></Tr>
-          <Tr><Td>{t('Menu.rcc_ctrl_y_bold')}</Td><Td>{t('Menu.rcc_ctrl_y')}</Td></Tr>
-        </Tbody>
-      </Table>
+        <Table
+          variant='table_welcome_buttons'
+        >
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_select')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_cn_bold')}</Td><Td>{t('Menu.rcc_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_shift_cn_bold')}</Td><Td>{t('Menu.rcc_shift_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_cn_bold')}</Td><Td>{t('Menu.rcc_ctrl_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cf_bold')}</Td><Td>{t('Menu.rcc_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_shift_cf_bold')}</Td><Td>{t('Menu.rcc_shift_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_cf_bold')}</Td><Td>{t('Menu.rcc_ctrl_cf')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_cdn_bold')}</Td><Td>{t('Menu.rcc_cdn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
+          </Tbody>
+        </Table>
+        <Table
+          variant='table_welcome_buttons'
+        >
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_edi')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_e_cn_bold')}</Td><Td>{t('Menu.rcc_e_cn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_e_ds_bold')}</Td><Td>{t('Menu.rcc_e_ds')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_e_dn_bold')}</Td><Td>{t('Menu.rcc_e_dn')}</Td></Tr>
+          </Tbody>
+          <Thead><Th colSpan={2}>{t('Menu.rcc_titre_autre')}</Th></Thead>
+          <Tbody>
+            <Tr><Td>{t('Menu.rcc_a_s_bold')}</Td><Td>{t('Menu.rcc_a_s')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_fc_bold')}</Td><Td>{t('Menu.rcc_a_fc')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_dbm_bold')}</Td><Td>{t('Menu.rcc_a_dbm')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_a_ech_bold')}</Td><Td>{t('Menu.rcc_a_ech')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_scrll_bold')}</Td><Td>{t('Menu.rcc_ctrl_scrll')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_z_bold')}</Td><Td>{t('Menu.rcc_ctrl_z')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_ctrl_y_bold')}</Td><Td>{t('Menu.rcc_ctrl_y')}</Td></Tr>
+          </Tbody>
+        </Table>
+      </Box>
     </Box>
-  </Box>
   }
 
   return [

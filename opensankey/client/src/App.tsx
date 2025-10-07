@@ -43,6 +43,9 @@ import { ModalDocumentation } from './components/welcome/SplashScreen'
 import { Class_ApplicationData } from './types/ApplicationData'
 import { FType_InitializeAdditionalMenus, FType_ModuleDialogs } from './Modules'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
+import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
+import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
+import { NodeModifierType } from './components/dialogs/NodeActions'
 
 declare const window: Window &
   typeof globalThis & {
@@ -72,12 +75,12 @@ export const OpenSankeyApp = ({
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
   moduleDialogs: FType_ModuleDialogs,
   ModalWelcome: React.ComponentType<{ app_data: Class_ApplicationData }>
-  createZDDModifier: (app_data: Class_ApplicationData) => any,
+  createZDDModifier: (app_data: Class_ApplicationData) => ZDDModifierType,
   ZDD_MENU_CONFIG: MenuConfig,
-  createLinkModifier: (app_data: Class_ApplicationData) => any,
+  createLinkModifier: (app_data: Class_ApplicationData) => LinkModifierType,
   LINK_MENU_CONFIG: MenuConfig,
   NODE_MENU_CONFIG: MenuConfig,
-  createNodeModifier: (app_data: Class_ApplicationData) => any,
+  createNodeModifier: (app_data: Class_ApplicationData) => NodeModifierType,
 }) => {
 
   // Datas init -------------------------------------------------------------------------

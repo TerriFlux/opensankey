@@ -1,19 +1,18 @@
-import React, { useState, Fragment, MutableRefObject } from 'react';
+import React, { useState, Fragment, MutableRefObject } from 'react'
 import {
   SimpleElementCheckbox, ValueKey, MenuSectionCheckbox
 } from './MenuCommon'
 
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkStyle } from '../../Elements/ElementStyle';
+import { Class_LinkStyle } from '../../Elements/ElementStyle'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { SankeyMenuLabelComponent } from './MenuLabel'
 import { MenuUnit } from './MenuUnit'
 import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
-import { Class_NodeAttribute } from '../../Elements/NodeAttributes';
-import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle';
-import { Class_ApplicationData } from '../../types/ApplicationData';
-import { Type_AdditionalMenus } from '../../types/MenuConfig';
+import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_AdditionalMenus } from '../../types/MenuConfig'
 
 
 export const MenuConfigurationLinkLabel = ({ new_data, menu_for_style, additionMenus }:{
@@ -21,10 +20,9 @@ export const MenuConfigurationLinkLabel = ({ new_data, menu_for_style, additionM
   menu_for_style: boolean
   additionMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
-  const { t, icon_library, drawing_area } = new_data
+  const { drawing_area } = new_data
   const { sankey } = drawing_area
-  const { ref_selected_style_link, dict_setter_show_dialog } = new_data.menu_configuration
-  const { ref_setter_show_modal_styles_links_labels } = dict_setter_show_dialog
+  const { ref_selected_style_link } = new_data.menu_configuration
 
   // Elements on which this menu applies ------------------------------------------------
   // State variable to trigger this menu refreshing
@@ -80,16 +78,6 @@ export const MenuConfigurationLinkLabel = ({ new_data, menu_for_style, additionM
   const value_label_is_visible = (element_ref?.value_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.value_label_is_visible.default)
   const name_label_is_visible = (element_ref?.name_label_is_visible ?? LINKS_ATTRIBUTES_CONFIG.name_label_is_visible.default)
 
-  /**
-   * function that go throught all links of an array & check if they're all equals
-   * (to the first )
-   * @param {Class_LinkElement} curr
-   * @return {*}
-   */
-  const check_indeterminate = (curr: Class_LinkElement) => {
-    return (selected_links[0].isEqual(curr))
-  }
-  const is_indeterminate = !selected_links.every(check_indeterminate)
 
   const content_value_specific_flow = value_label_is_visible ? <>
     {/* Orienter le texte du label le long du flux  */}

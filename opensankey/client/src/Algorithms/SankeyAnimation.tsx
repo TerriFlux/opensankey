@@ -131,7 +131,6 @@ export class SankeyAnimation {
     nodeDisplay: Class_NodeElement[],
     nodeVisible: Class_NodeElement[]
   ): void {
-    const self = this // Capture de l'instance
 
     const glinks = this.drawingArea.d3_selection_elements_group?.selectAll('.gg_links')
       .filter((d) => {
@@ -145,7 +144,7 @@ export class SankeyAnimation {
       const element = nodes[i] as SVGGeometryElement
       const totalLength = element.getTotalLength()
       const linkId = d3.select(element).attr('id')
-      const linkClass = self.drawingArea?.sankey?.links_dict?.[linkId]
+      const linkClass = this.drawingArea?.sankey?.links_dict?.[linkId]
 
       d3.select(element)
         .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
@@ -155,11 +154,12 @@ export class SankeyAnimation {
       .transition()
       .duration(2000)
       .attr('stroke-dashoffset', 0)
-      .on('end', function (d) {
+      .on('end', (d, i, nodes) => {
         // 'this' = élément SVG, 'self' = instance SankeyAnimation
-        const linkId = d3.select(this).attr('id')?.replace('path_', '') || ''
+        const element = nodes[i] as SVGPathElement
+        const linkId = d3.select(element).attr('id')?.replace('path_', '') || ''
 
-        const animatedLink = self.drawingArea?.sankey?.links_dict?.[linkId]
+        const animatedLink = this.drawingArea?.sankey?.links_dict?.[linkId]
         if (!animatedLink) return
 
         const targetNode = animatedLink.target
@@ -197,10 +197,10 @@ export class SankeyAnimation {
         if (targetNode && !nodeDisplay.includes(targetNode)) {
           nodeDisplay.push(targetNode)
 
-          const delay = self.calculateSiblingDelay(targetNode, 0, [animatedLink], nodeVisible)
+          const delay = this.calculateSiblingDelay(targetNode, 0, [animatedLink], nodeVisible)
 
           setTimeout(() => {
-            const targetAnimation = new SankeyAnimation(self.drawingArea, targetNode)
+            const targetAnimation = new SankeyAnimation(this.drawingArea, targetNode)
             targetAnimation.branchAnimate(nodeDisplay, nodeVisible)
           }, delay * 2000)
         }

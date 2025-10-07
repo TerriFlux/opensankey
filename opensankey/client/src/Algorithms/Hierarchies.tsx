@@ -135,12 +135,11 @@ const finalizeOperation = (
   new_data.drawing_area.bypass_autoy = true
   new_data.drawing_area.draw()
   nodes.forEach(n => {
-    const v = n.is_visible
     n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
     n.output_links_list.forEach(l => l.target.reorganizeIOLinks())
     n.reorganizeIOLinks()
   })
-    new_data.drawing_area.bypass_autoy = false
+  new_data.drawing_area.bypass_autoy = false
 }
 
 // ============================================================================
@@ -495,7 +494,7 @@ const updateLinkValuesForDisaggregationExpansion = (
 
       if (expand_left) {
         if (!linkResult.is_extremity) {
-          let laggregate_child = laggregate.source.output_links_list.find(l =>
+          const laggregate_child = laggregate.source.output_links_list.find(l =>
             l.target === newNode.master_node || l.target === newNode
           )
 
@@ -507,7 +506,7 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          let laggregate_child = laggregate.target.input_links_list.find(l =>
+          const laggregate_child = laggregate.target.input_links_list.find(l =>
             l.source === newNode.master_node || l.source === newNode
           )
 
@@ -520,7 +519,7 @@ const updateLinkValuesForDisaggregationExpansion = (
         }
       } else {
         if (!linkResult.is_extremity) {
-          let laggregate_child = laggregate.target.input_links_list.find(l =>
+          const laggregate_child = laggregate.target.input_links_list.find(l =>
             l.source === newNode.master_node || l.source === newNode
           )
 
@@ -532,7 +531,7 @@ const updateLinkValuesForDisaggregationExpansion = (
           laggregate.setInvisible()
         } else {
           // Cas extrémité : les liens viennent de la direction opposée
-          let laggregate_child = laggregate.source.output_links_list.find(l =>
+          const laggregate_child = laggregate.source.output_links_list.find(l =>
             l.target === newNode.master_node || l.target === newNode
           )
 
@@ -750,46 +749,46 @@ export const create_parent = (
   })
   drawing_area.draw()
 }
-  const addNewLinks = (
-    n: Class_NodeElement, 
-    extremity_node: Class_NodeElement, 
-    tagg: Class_LevelTagGroup,
-    expand_left: boolean
-  ) => {
-    const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Class_NodeElement[]).forEach(c => {
-      const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
-      const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-      (child_link as Class_LinkElement).copyValues(link2copy)
-      addNewLinks(c, extremity_node, tagg,expand_left)
-    })
+const addNewLinks = (
+  n: Class_NodeElement, 
+  extremity_node: Class_NodeElement, 
+  tagg: Class_LevelTagGroup,
+  expand_left: boolean
+) => {
+  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  const pdim = n.nodeDimensionAsParent(tagg)
+  if (!pdim) {
+    return
   }
+  if (pdim.children.includes(pdim.parent)) {
+    return
+  }
+  (pdim.children as Class_NodeElement[]).forEach(c => {
+    const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
+    const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
+    (child_link as Class_LinkElement).copyValues(link2copy)
+    addNewLinks(c, extremity_node, tagg,expand_left)
+  })
+}
 
-  const removeLinks = (
-    n: Class_NodeElement, 
-    tagg: Class_LevelTagGroup,
-    expand_left:boolean
-  ) => {
-    const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-    const pdim = n.nodeDimensionAsParent(tagg)
-    if (!pdim) {
-      return
-    }
-    if (pdim.children.includes(pdim.parent)) {
-      return
-    }
-    (pdim.children as Class_NodeElement[]).forEach(c => {
-      n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
-      removeLinks(c, tagg,expand_left)
-    })
+const removeLinks = (
+  n: Class_NodeElement, 
+  tagg: Class_LevelTagGroup,
+  expand_left:boolean
+) => {
+  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  const pdim = n.nodeDimensionAsParent(tagg)
+  if (!pdim) {
+    return
   }
+  if (pdim.children.includes(pdim.parent)) {
+    return
+  }
+  (pdim.children as Class_NodeElement[]).forEach(c => {
+    n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
+    removeLinks(c, tagg,expand_left)
+  })
+}
 
 export const applyDimension = (
   new_data: Class_ApplicationData,
@@ -802,7 +801,7 @@ export const applyDimension = (
 ) => {
   const { drawing_area } = new_data
   const { sankey } = drawing_area
-    const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
   const source_or_target_attr = expand_left ? 'source' : 'target'
   selected_nodes.forEach(n => {
     (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)

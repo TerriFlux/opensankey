@@ -35,7 +35,6 @@ import React, {
 
 // Imported libs
 import {
-  Accordion,
   NumberDecrementStepper,
   NumberIncrementStepper,
   NumberInput,

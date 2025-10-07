@@ -391,7 +391,7 @@ export class Class_DrawingArea {
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
     this._selection_zone.delete()
-        // Properly delete containers
+    // Properly delete containers
     this.containers_list.forEach(container => container.delete())
     this._containers = {}
     // Clean drawing area
@@ -471,7 +471,7 @@ export class Class_DrawingArea {
     }
     // Transfert Sankey Attributes
     this.sankey.updateFrom(other_drawing_area.sankey, mode)
-      // Update Containers
+    // Update Containers
     const list_curr_container = this.containers_list
     const list_new_container = other_drawing_area.containers_list
     if (mode.includes('freeLabels') || all) {
@@ -1174,13 +1174,13 @@ export class Class_DrawingArea {
     if (bbox == undefined)
       return
     if (this.legend.stick_to_drawing) {
-      const legendBbox = this.d3_selection_legend?.node()?.getBBox();
+      const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
         // Calculer la bounding box englobante
-        const minX = Math.min(bbox.x, legendBbox.x);
-        const minY = Math.min(bbox.y, legendBbox.y);
-        const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width);
-        const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height);
+        const minX = Math.min(bbox.x, legendBbox.x)
+        const minY = Math.min(bbox.y, legendBbox.y)
+        const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
+        const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
 
         // Créer une nouvelle bbox combinée
         bbox = {
@@ -1188,7 +1188,7 @@ export class Class_DrawingArea {
           y: minY,
           width: maxX - minX,
           height: maxY - minY
-        } as DOMRect;
+        } as DOMRect
       }
     }
 
@@ -1715,7 +1715,7 @@ export class Class_DrawingArea {
         'click',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
           this.eventSimpleLMBCLick(event))
-      }
+    }
     if (
       !this.static &&
       (this.d3_selection !== null)
@@ -1776,8 +1776,8 @@ export class Class_DrawingArea {
     event.preventDefault()
     // Fermer les tooltips via le système intégré
     this.closeAllContextMenus()
-    const tooltipManager = TooltipEventManager.getInstance();
-    tooltipManager.closeTooltip();
+    const tooltipManager = TooltipEventManager.getInstance()
+    tooltipManager.closeTooltip()
     if (this.static) this.purgeSelection()
   }
 
@@ -2245,7 +2245,7 @@ export class Class_DrawingArea {
     // forcing are there are some issues sometimes it is not unset
     // this.sankey.links_list.forEach(l => l.unsetMouseOver())
     // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
-    this._mode = 'selection';
+    this._mode = 'selection'
     this.drawCursor()
   }
 
@@ -2254,7 +2254,7 @@ export class Class_DrawingArea {
     // forcing are there are some issues sometimes it is not unset
     // this.sankey.links_list.forEach(l => l.unsetMouseOver())
     // this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
-    this._mode = 'edition';
+    this._mode = 'edition'
     this.drawCursor()
   }
   public switchMode() {

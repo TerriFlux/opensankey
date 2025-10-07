@@ -1,9 +1,9 @@
 import * as d3 from 'd3'
 
-import { Class_LinkElement } from "../Elements/Link"
-import { Class_NodeElement } from "../Elements/Node"
-import { Class_ApplicationData } from "../types/ApplicationData"
-import { GetRandomInt, list_palette_color } from "../types/Utils"
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_NodeElement } from '../Elements/Node'
+import { Class_ApplicationData } from '../types/ApplicationData'
+import { GetRandomInt, list_palette_color } from '../types/Utils'
 
 /**
  * Fonction générique pour appliquer des couleurs aléatoires à une liste d'éléments
@@ -11,8 +11,8 @@ import { GetRandomInt, list_palette_color } from "../types/Utils"
  * @param elementType - Type d'élément pour les noms de fonctions ('node' ou 'link')
  */
 export const applyRandomColors = (
-    app_data: Class_ApplicationData,
-    elements: (Class_LinkElement | Class_NodeElement)[]
+  app_data: Class_ApplicationData,
+  elements: (Class_LinkElement | Class_NodeElement)[]
 ) => {
   const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
   const size_color = elements.length

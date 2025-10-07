@@ -31,7 +31,7 @@ import { RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip, updateElem
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
 
-import { value_option_constants, value_option_percent_constants, value_option_percent_constants_source, value_option_percent_constants_target, ValueOptionType } from '../../Elements/LinkValues'
+import { value_option_percent_constants, value_option_percent_constants_source, value_option_percent_constants_target, ValueOptionType } from '../../Elements/LinkValues'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /*************************************************************************************************/
@@ -49,7 +49,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
 
-  let selected_links = is_selector_only_for_visible_links ?
+  const selected_links = is_selector_only_for_visible_links ?
     drawing_area.visible_and_selected_links_list_sorted :
     drawing_area.selected_links_list_sorted
   const first_link = selected_links[0]
@@ -124,7 +124,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   ref_to_menu_config_links_data_updater.current = refreshThis
 
   data_taggs_list.map(data_tagg => {
-    let selected_data_tags = data_tagg.selected_tags_list
+    const selected_data_tags = data_tagg.selected_tags_list
     if (selected_data_tags.length === 0) {
       data_tagg.tags_list[0].setSelected()
     } else if (selected_data_tags.length > 1 && data_tagg.banner == 'one') {

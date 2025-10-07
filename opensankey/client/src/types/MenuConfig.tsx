@@ -134,7 +134,7 @@ export class Class_MenuConfig {
   /* ========================================
     Configuration menu
     ========================================*/
-    // Timeout between steps in sequence (in ms)
+  // Timeout between steps in sequence (in ms)
   private _timeout_sequence: number = 2000
 
   /**
@@ -1019,7 +1019,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksData()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
-        this._ref_to_drawer_sequence_data_tag_updater.current()
+    this._ref_to_drawer_sequence_data_tag_updater.current()
   }
 
   public updateAllComponentsRelatedToTagsType(type: Type_MacroTagGroup) {

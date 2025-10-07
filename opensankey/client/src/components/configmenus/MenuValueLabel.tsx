@@ -23,13 +23,13 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React from 'react';
+import React from 'react'
 import {Box} from '@chakra-ui/react'
 import { ConditionalCheckboxWithInput, SimpleElementCheckbox, ValueKey } from './MenuCommon'
-import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/ElementStyle';
-import { Class_LinkElement } from '../../Elements/Link';
-import { Class_NodeElement } from '../../Elements/Node';
-import { Class_ApplicationData } from '../../types/ApplicationData';
+import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/ElementStyle'
+import { Class_LinkElement } from '../../Elements/Link'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /**
  * Component with inputs to set value for label_value attribute of node & flow
@@ -44,11 +44,11 @@ export const SankeyMenuValueLabelComponent = ({
   prefix: 'name_' | 'value_'
 }) => {
   // Construction des clés d'attributs avec le préfixe
-  const customDigitKey = `${prefix}label_custom_digit` as ValueKey;
-  const nbDigitKey = `${prefix}label_nb_digit` as ValueKey;
-  const significantDigitsKey = `${prefix}label_significant_digits` as ValueKey;
-  const nbSignificantDigitsKey = `${prefix}label_nb_significant_digits` as ValueKey;
-  const scientificNotationKey = `${prefix}label_scientific_notation` as ValueKey;
+  const customDigitKey = `${prefix}label_custom_digit` as ValueKey
+  const nbDigitKey = `${prefix}label_nb_digit` as ValueKey
+  const significantDigitsKey = `${prefix}label_significant_digits` as ValueKey
+  const nbSignificantDigitsKey = `${prefix}label_nb_significant_digits` as ValueKey
+  const scientificNotationKey = `${prefix}label_scientific_notation` as ValueKey
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
@@ -82,5 +82,5 @@ export const SankeyMenuValueLabelComponent = ({
         refreshParentComponent={refreshParentComponent}
       />
     </Box>
-  );
-};
+  )
+}

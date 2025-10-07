@@ -27,10 +27,6 @@
 // External imports
 import * as d3 from 'd3'
 
-// Local types
-import type {
-  Class_MenuConfig
-} from '../types/MenuConfig'
 import type {
   Class_DataTag,
   Class_ProtoTag,
@@ -182,23 +178,23 @@ export function sortLinksElementsByRelativeNodesPositions(
 type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
 
 export const link_data_label = (type_data:Type_Structure,link:Class_LinkElement) => {
-    if (type_data == 'data' || type_data == 'data_label') {
-      if (!link.value?.valueData) return ''
-      return link.formatValueWithOption(format_value(type_data,link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+  if (type_data == 'data' || type_data == 'data_label') {
+    if (!link.value?.valueData) return ''
+    return link.formatValueWithOption(format_value(type_data,link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
         return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
       }*/
+  }
+  if (link.value?.result_min !== null) {
+    if (type_data === 'free_interval') {
+      return '[' + format_value(type_data,link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data,link.value!.result_max, link, link.unit_name) + ']'
     }
-    if (link.value?.result_min !== null) {
-      if (type_data === 'free_interval') {
-        return '[' + format_value(type_data,link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data,link.value!.result_max, link, link.unit_name) + ']'
-      }
-      if (type_data === 'free_value') {
-        return format_value(type_data,link.valueCurrent!, link, link.unit_name)
-      }
-      return ''
+    if (type_data === 'free_value') {
+      return format_value(type_data,link.valueCurrent!, link, link.unit_name)
     }
+    return ''
+  }
 
-    return format_value(type_data,link.valueCurrent!, link, link.unit_name)  
+  return format_value(type_data,link.valueCurrent!, link, link.unit_name)  
 }
 
 export const format_value = (
@@ -362,7 +358,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   *   }}
   * @memberof Class_LinkElement
   */
-  protected _display: {
+  public _display: {
     position_starting: Type_ElementPosition,
     position_ending: Type_ElementPosition,
 
@@ -1412,7 +1408,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   protected scaleValueToPx(_: number) {
-    let current_value = this.value
+    const current_value = this.value
     const unit_tag = current_value?.unit_data_tag()
     if (unit_tag) {
       this.setDomainLocalScale(unit_tag.scale)
@@ -1876,7 +1872,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    */
   public get thickness() {
     // Get link value for current dataTaggs selected
-    let data_value = this.valueCurrent
+    const data_value = this.valueCurrent
     // Scale this value for the drawing area
     const linkValueInPx = (data_value !== null && (!this.linkIsStructure())) ? this.scaleValueToPx(data_value) : 2
 
@@ -1930,7 +1926,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   //   this.redrawNodesSourceTarget()
   // }
 
-  private getLinkProperty(propertyName: StyleProperty) {
+  public getLinkProperty(propertyName: StyleProperty) {
     // Vérifier d'abord dans les attributs
     if (this._display.attributes[propertyName] !== undefined) {
       return this._display.attributes[propertyName]
@@ -2116,7 +2112,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * Setter personnalisé pour name_label_horiz avec logique spéciale
    */
   customNameLabelHoriz(value: Type_PathLabelHPosition) {
-    if (value !== 'dragged') this.deleteDraggedLabelPos();
+    if (value !== 'dragged') this.deleteDraggedLabelPos()
     this._display.attributes.name_label_horiz = value
   }
 

@@ -1,4 +1,4 @@
-import { MenuConfig } from "./SankeyMenuContext";
+import { MenuConfig } from './SankeyMenuContext'
 
 
 export const STATIC_NODE_MENU_CONFIG: MenuConfig = {

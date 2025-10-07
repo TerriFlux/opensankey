@@ -7,6 +7,7 @@ import {
   default_font,
 } from '../types/Utils'
 import { UnitType } from './LinkValues'
+import { Class_NodeElement } from './Node'
 
 // Types spécifiques
 export type Type_Shape = 'ellipse' | 'rect' | 'arrow'
@@ -1027,13 +1028,13 @@ export class NodeSetterGenerator {
    * GénÃ¨re automatiquement les setters pour une classe NodeElement
    * Override les propriétés héritées de NodeAttributeTypeScript
    */
-  static generateSetters(instance: any) {
+  static generateSetters(instance: Class_NodeElement) {
     (Object.keys(NODES_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       const config = NODES_ATTRIBUTES_CONFIG[key]
       
       Object.defineProperty(instance, key, {
         get: () => instance.getNodeProperty(key),
-        set: (value: any) => {
+        set: (value: AttributeTypes[typeof key]) => {
           // 1. Setter personnalisé si défini
           //@ts-expect-error xxx
           if (config.setter && typeof instance[config.setter] === 'function') {
@@ -1041,6 +1042,7 @@ export class NodeSetterGenerator {
             instance[config.setter](value)
           } else {
             // 2. Setter standard
+            //@ts-expect-error xxx
             instance._display.attributes[key] = value
           }
 
@@ -1059,12 +1061,7 @@ export class NodeSetterGenerator {
                 instance[action]()
               }
             })
-          } else {
-            // 5. Action par défaut si aucune action spécifiée
-            if (typeof instance.update === 'function') {
-              instance.update()
-            }
-          }
+          } 
         },
         enumerable: true,
         configurable: true  // 🆕 Important pour pouvoir override !

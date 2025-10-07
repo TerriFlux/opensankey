@@ -2,11 +2,10 @@
 // Actions spécifiques aux nœuds - Logique métier séparée
 // ==================================================================================================
 
-import { Class_ApplicationData } from "../../types/ApplicationData";
-import { Class_NodeElement } from "../../Elements/Node";
-import { Class_NodeStyle } from "../../Elements/ElementStyle";
-import { Class_NodeAttribute } from "../../Elements/NodeAttributes";
-import { Class_LevelTagGroup } from "../../types/TagGroup";
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
+import { Class_LevelTagGroup } from '../../types/TagGroup'
 import {
   aggregate,
   disaggregate,
@@ -17,8 +16,9 @@ import {
   set_child,
   applyDimension,
   EXPANSION_SUFFIXES
-} from "../../Algorithms/Hierarchies";
-import { Class_DrawingArea } from "../../types/DrawingArea";
+} from '../../Algorithms/Hierarchies'
+import { Class_DrawingArea } from '../../types/DrawingArea'
+import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -27,7 +27,7 @@ import { Class_DrawingArea } from "../../types/DrawingArea";
 export class NodeActions {
   private app_data: Class_ApplicationData
   private drawing_area: Class_DrawingArea
-  private history: any
+  private history: Class_ApplicationHistory
   private contextualised_node: Class_NodeElement | undefined
   private selected_nodes: Class_NodeElement[]
 
@@ -88,7 +88,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_child_pure
 
     if (parentDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
       aggregate(this.app_data, this.contextualised_node, level_tagg)
       this.drawing_area.draw()
       this.drawing_area.purgeSelection()
@@ -106,7 +106,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_child_pure
 
     if (parentDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
       aggregationExpansion(this.app_data, this.contextualised_node, true, level_tagg)
     }
   }
@@ -119,7 +119,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_child_pure
 
     if (parentDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
       aggregationExpansion(this.app_data, this.contextualised_node, false, level_tagg)
     }
   }
@@ -132,7 +132,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
 
     if (childDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
       disaggregate(this.app_data, this.contextualised_node, level_tagg)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
@@ -149,7 +149,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
     this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
       disaggregationExpansion(this.app_data, this.contextualised_node, true, level_tagg)
     }
   }
@@ -162,7 +162,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
     this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
-      let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
+      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
       disaggregationExpansion(this.app_data, this.contextualised_node, false, level_tagg)
     }
   }

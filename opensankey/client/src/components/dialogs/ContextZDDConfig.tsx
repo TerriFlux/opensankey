@@ -1,6 +1,6 @@
-import { applyRandomColors } from "../../Algorithms/Colors";
-import { Class_ApplicationData } from "../../types/ApplicationData";
-import { MenuConfig } from "./SankeyMenuContext";
+import { applyRandomColors } from '../../Algorithms/Colors'
+import { Class_ApplicationData } from '../../types/ApplicationData'
+import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -91,12 +91,12 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     {
       type: 'button',
       actionName: 'toggleZDTActivated',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.containers_list.length > 0
-            }
-          }]
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          return app_data.drawing_area.containers_list.length > 0
+        }
+      }]
     }
   ],
 
@@ -447,3 +447,4 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     toggleZDTActivatedValue: () => app_data.drawing_area.container_activated
   }
 }
+export type ZDDModifierType = ReturnType<typeof createZDDModifier>
