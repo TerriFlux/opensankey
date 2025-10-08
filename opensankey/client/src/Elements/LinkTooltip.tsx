@@ -85,10 +85,13 @@ export class LinkTooltip {
     const data_label_visible = this._link.value_label_is_visible
     this._link.value_label_is_visible = true
     // Valeur du lien
-    //const prev_type = this._link.drawing_area.type_data
+   let has_results = false
+    this._link.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
     //this._link.drawing_area.type_data = 'reconciled'
     html += '<tr>'
-    html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.result_value')}</th>`
+    // if (has_results)
+    // html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.result_value')}</th>`
+    html += `<th>Valeur</th>`
     html += `<td>${link_data_label('reconciled',this._link)}</td>`
     html += '</tr>'
 
