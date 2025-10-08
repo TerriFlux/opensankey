@@ -3,7 +3,6 @@ import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfigSA } from './MenuConfigSA'
 import { Class_ApplicationDataLoginComponent} from './deps/LoginComponent/ApplicationDataLoginComponent'
 import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationHistory'
-import { useTranslation } from 'react-i18next'
 
 declare const window: Window &
   typeof globalThis & {
