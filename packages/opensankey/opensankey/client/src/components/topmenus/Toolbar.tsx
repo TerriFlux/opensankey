@@ -5,7 +5,6 @@ import {
 } from '@chakra-ui/react'
 
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
-import { Class_ApplicationDataOSP } from '../../../../types/ApplicationDataOSP'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
@@ -21,8 +20,7 @@ const width_fitler_drawer = 270
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
-  //@ts-expect-error xxx
-  app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
+  app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
   return <>
     <Button
       id='buttonOpenFilterDrawer'
