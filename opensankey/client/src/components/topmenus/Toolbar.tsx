@@ -32,7 +32,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
       }}
       onClick={() => setDrawerOpen(!drawerOpen)}
     >
-      {  //@ts-expect-error xxx
+      {
         app_data.icon_library.icon_filter_tags
       }
     </Button>
@@ -621,7 +621,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     )
   })
 
-  const title_filter_column = (app_data: Class_ApplicationDataOSP) => <Box layerStyle='filter_grid_row'>
+  const title_filter_column = (app_data: Class_ApplicationData) => <Box layerStyle='filter_grid_row'>
     <Box></Box>
     <Box justifySelf='end' alignSelf='center'>{app_data.t('Menu.color')}</Box>
   </Box>
@@ -639,7 +639,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
-      {config.show_title_column ? title_filter_column(app_data as unknown as Class_ApplicationDataOSP) : null}
+      {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
     </FilterWrapperBox>
