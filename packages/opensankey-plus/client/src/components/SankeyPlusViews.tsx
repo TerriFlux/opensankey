@@ -43,12 +43,12 @@ import {
 } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
 import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { FilterWrapperBox } from './Toolbar'
+import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { LevelTagFilter } from './Toolbar'
+import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 
 interface BaseComponentPropsPlus {

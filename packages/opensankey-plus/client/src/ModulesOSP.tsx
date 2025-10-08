@@ -80,14 +80,12 @@ import {
 import {
   ImportImageAsSvgBg,
 } from './components/UtilsOSP'
-import { ToolbarFilter } from './components/Toolbar'
 import { SankeyMenuConfigurationLevelTags } from './components/SankeyPlusMenuConfigurationLevlTags'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { SupplyUseModelisationProd } from './components/SankeyReconciliation'
 import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
-import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -306,9 +304,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
     />,
-    <ToolbarFilter
-      app_data={new_data_plus as unknown as Class_ApplicationData}
-    />,
+
     <SupplyUseModelisationProd
       application_data_mfa={new_data_plus}
       launch={processFunctions.launch}
