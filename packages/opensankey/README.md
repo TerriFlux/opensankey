@@ -48,3 +48,7 @@ Run docker image with server : `sudo docker run -p 8080:5000 -t opensankey:lates
 Run with docker compose : `sudo docker compose up -d`
 
 Stop docker compose : `sudo docker compose down`
+
+## Format
+- python -m black .
+- python -m autopep8 --in-place --aggressive --aggressive -r .
