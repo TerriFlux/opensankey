@@ -1146,25 +1146,8 @@ export class Class_Sankey {
     }
 
     // Then read tag groups
-    let json_entry: string = 'levelTags'
-    if (json_object[json_entry] !== undefined) {
-      // Set level tag & tag group from json data
-      Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => {
-          // Get or create a level tag group
-          const tagg_id = matching_taggs_id[json_entry][_] ?? _
-          const tagg = this._level_taggs[tagg_id] ?? this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
-          // Set level tag group value from JSON
-          tagg.fromJSON(
-            tagg_json as Type_JSON,
-            matching_tags_id[json_entry][_] ?? {})
-        })
-    }
 
-    if (Object.keys(this._level_taggs).length > 1) {
-      this.removeTagGroupWithId('level_taggs', 'Primaire')
-    }
-    json_entry = 'nodeTags'
+    let json_entry = 'nodeTags'
     if (json_object[json_entry] !== undefined) {
       // Set node tag & tag group from json data
       Object.entries(json_object[json_entry])
@@ -1213,7 +1196,24 @@ export class Class_Sankey {
             matching_tags_id[json_entry][_] ?? {})
         })
     }
+    json_entry = 'levelTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set level tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a level tag group
+          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg = this._level_taggs[tagg_id] ?? this.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
+          // Set level tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            matching_tags_id[json_entry][_] ?? {})
+        })
+    }
 
+    if (Object.keys(this._level_taggs).length > 1) {
+      this.removeTagGroupWithId('level_taggs', 'Primaire')
+    }
     // Then read links
     const json_link_object = getJSONFromJSON(json_object, 'links', {})
     Object.entries(json_link_object)
