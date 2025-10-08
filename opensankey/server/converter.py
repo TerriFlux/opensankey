@@ -50,6 +50,8 @@ JSON_TO_IO_XL__TAGG_TYPES = {
 }
 
 # Private Functions -----------------------------------------------------------
+
+
 def _get_value_if_in_dict(dict, key):
     try:
         return dict[key]
@@ -298,7 +300,6 @@ class SankeyToJson(object):
                 "banner": "one",
                 "activated": True
             }
-
 
     def _parse_node_tags(self, taggs_type, taggs, node_tags_json):
         """
@@ -602,7 +603,7 @@ class SankeyToJson(object):
         # if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
         #     color = flux.dest.color_in_hex
         # Then create link struct
-        result  = {"idSource": flux.orig.id, "idTarget": flux.dest.id}
+        result = {"idSource": flux.orig.id, "idTarget": flux.dest.id}
         if datas_json:
             result["value"] = datas_json
         return result
