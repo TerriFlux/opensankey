@@ -33,7 +33,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
   FaAlignCenter, FaAlignLeft, FaAlignRight, FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp, 
   FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold, 
-  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus 
+  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaFilter, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus 
 } from 'react-icons/fa'
 import { FaPause, FaPlay} from 'react-icons/fa'
 // Hand made icon ===========================================================================
@@ -434,7 +434,8 @@ export class Class_IconLibrary {
   protected _icon_repeat_sequence = <FontAwesomeIcon icon={faRepeat} />
   protected _icon_play = <FaPlay />
   protected _icon_pause = <FaPause />
-
+  protected _icon_filter_tags = <FaFilter />
+  
   // Constructor ===================================
   constructor() {
   }
@@ -521,4 +522,5 @@ export class Class_IconLibrary {
 
   public get icon_to_the_left() { return this._icon_to_the_left }
   public get icon_to_the_right() { return this._icon_to_the_right }
+  public get icon_filter_tags() { return this._icon_filter_tags }
 }

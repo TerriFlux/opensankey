@@ -49,9 +49,6 @@ JSON_TO_IO_XL__TAGG_TYPES = {
     "levelTags": CONST_IO_XL.TAG_TYPE_LEVEL,
 }
 
-DEFAULT_LEVEL_TAGGS = ["Primaire"]
-
-
 # Private Functions -----------------------------------------------------------
 def _get_value_if_in_dict(dict, key):
     try:
@@ -95,17 +92,22 @@ def extract_json_from_sankey(sankey: Sankey):
     # Parser all links -> data struct
     links = {}
     sankeyToJson.parse_links(sankey, links)
-    # Return data struct
-    return {
-        "version": "1.0",
-        "dataTags": dataTags,
-        "nodeTags": nodeTags,
-        "levelTags": levelTags,
-        "fluxTags": fluxTags,
-        "nodes": nodes,
-        "links": links,
-        "labels": {},
+    result = {
+        "version": "1.0"
     }
+    if dataTags:
+        result["dataTags"] = dataTags
+    if nodeTags:
+        result["nodeTags"] = nodeTags
+    if levelTags:
+        result["levelTags"] = levelTags
+    if fluxTags:
+        result["fluxTags"] = fluxTags
+    if nodes:
+        result["nodes"] = nodes
+    if links:
+        result["links"] = links
+    return result
 
 
 def extract_sankey_from_json(sankey_json: dict):
@@ -294,9 +296,9 @@ class SankeyToJson(object):
                 "is_unit": tagg.is_unit,
                 "tags": tags,
                 "banner": "one",
-                "activated": True,
-                "siblings": [],
+                "activated": True
             }
+
 
     def _parse_node_tags(self, taggs_type, taggs, node_tags_json):
         """
@@ -414,23 +416,20 @@ class SankeyToJson(object):
         """
         unactivated_dimensions = []
         for i, dimension in enumerate(sankey.dimensions.values()):
-            # Dimension infos
             tags = {
-                str(level): {"name": str(level), "selected": level == 1, "color": ""}
+                str(level): {"name": str(level), "selected": level == 1}
                 for level in range(1, dimension.depth + 1)
             }
-            # Siblings
             siblings = dimension.siblings.values()
             unactivated_dimensions += siblings
-            # Dimension dict
             level_tags_json[dimension.id] = {
                 "name": dimension.name,
-                "show_legend": False,
                 "tags": tags,
                 "banner": "one",
-                "activated": dimension not in unactivated_dimensions,
-                "siblings": [_.id for _ in siblings],
+                "activated": dimension not in unactivated_dimensions
             }
+            if siblings:
+                level_tags_json[dimension.id][siblings] = [_.id for _ in siblings]
 
     def _parse_flux_tags(self, taggs, flux_tags_json):
         """
@@ -516,13 +515,7 @@ class SankeyToJson(object):
         :type links_with_datas_json: dict (modified)
         """
         # First create default datas struct
-        default_data_strct = {
-            "data_value": "",
-            "value_option": None,
-            "text_value": "",
-            "tags": {},
-            "extension": {},
-        }
+        default_data_strct = {}
         # Add flux tag groups to default data structure
         for tagg in sankey.taggs[CONST_IO_XL.TAG_TYPE_FLUX].values():
             # Replace specific names
@@ -530,6 +523,8 @@ class SankeyToJson(object):
             if tagg_name == CONST_IO_XL.DATA_TYPE_LABEL:
                 tagg_name = "flux_types"
             # Update fluxtags struct
+            if "tags" not in default_data_strct.keys():
+                default_data_strct["tags"] = {}
             default_data_strct["tags"][tagg_name] = []  # tag_name
         # Create the links json struct
         self._create_links_with_datas_json(sankey, default_data_strct, links_with_datas_json)
@@ -607,7 +602,10 @@ class SankeyToJson(object):
         # if flux.dest.has_specific_tag(CONST_IO_XL.NODE_TYPE, CONST_IO_XL.NODE_TYPE_PRODUCT):
         #     color = flux.dest.color_in_hex
         # Then create link struct
-        return {"idSource": flux.orig.id, "idTarget": flux.dest.id, "value": datas_json}
+        result  = {"idSource": flux.orig.id, "idTarget": flux.dest.id}
+        if datas_json:
+            result["value"] = datas_json
+        return result
 
     def _parse_datas_or_results(self, sankey: Sankey, flux, default_data_strct: dict, datas_json: dict):
         """
@@ -826,7 +824,7 @@ class SankeyToJson(object):
         result,
         raw_data,
         default_data_strct: dict,
-        datas_strct: dict,
+        datas_strct: dict
     ):
         """
         Extract datas from link struct for json data format.
@@ -938,21 +936,21 @@ class SankeyToJson(object):
         # Update nodes json struct
         self._create_nodes_json(sankey, nodes)
         # Create primary level tag if necessary
-        if sankey.max_nodes_level > 1:
-            if len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) == 0:
-                levelTags["Primaire"] = {
-                    "name": "Primaire",
-                    "show_legend": False,
-                    "tags": {},
-                    "banner": "one",
-                    "activated": True,
-                }
-                for tag in range(1, sankey.max_nodes_level + 1):
-                    levelTags["Primaire"]["tags"][str(tag)] = {
-                        "name": str(tag),
-                        "selected": (tag == 1),
-                        "color": "",
-                    }
+        # if sankey.max_nodes_level > 1:
+        #     if len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) == 0:
+        #         levelTags["Primaire"] = {
+        #             "name": "Primaire",
+        #             "show_legend": False,
+        #             "tags": {},
+        #             "banner": "one",
+        #             "activated": True,
+        #         }
+        #         for tag in range(1, sankey.max_nodes_level + 1):
+        #             levelTags["Primaire"]["tags"][str(tag)] = {
+        #                 "name": str(tag),
+        #                 "selected": (tag == 1),
+        #                 "color": "",
+        #             }
 
     def _create_nodes_json(self, sankey: Sankey, nodes_json: dict):
         """
@@ -982,7 +980,6 @@ class SankeyToJson(object):
 
         Struct for *node_json* :
         {
-            'idNode': str,
             'name': str,
             'definition': str,
             'display': bool,
@@ -1018,40 +1015,33 @@ class SankeyToJson(object):
         :type nodes: dict (modified)
         """
         # Check if we must create 'Primaire' or not
-        if len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) > 1:
-            create_primary = False
-        else:
-            create_primary = True
+        # if len(sankey.taggs[CONST_IO_XL.TAG_TYPE_LEVEL].values()) > 1:
+        #     create_primary = False
+        # else:
+        #     create_primary = True
         # Create node struct
         node_json = {
-            "idNode": node.id,
-            "name": node.name,
-            "definition": node.definition,
-            "display": True,
-            "node_visible": True,
-            "label_visible": True,
-            "shape_visible": True,
-            "tags": {},
-            "dimensions": {},
+            "name": node.name
         }
-        if create_primary:
-            node_json["dimensions"]["Primaire"] = {}
 
         # Update tags
         for tag in node.tags:
             tag_group_name = tag.group.name
             # Create group entry if not already the case
+            if "tags" not in node_json.keys():
+                node_json["tags"] = {}
             if tag_group_name not in node_json["tags"].keys():
                 node_json["tags"][tag_group_name] = []
             # Add the tag
             node_json["tags"][tag_group_name].append(tag.name)
         # Parents relations -> TODO duplicate node for each parent
         for dimension in sankey.dimensions.values():
-            id = "Primaire" if dimension.id == self.primary_level_id else dimension.id
+            id = dimension.id
             parent = dimension.get_parent_of(node)
             children = dimension.get_children_of(node)
             if parent is not None:
-                # Node has parent in given dim
+                if "dimensions" not in node_json.keys():
+                    node_json["dimensions"] = {}
                 node_json["dimensions"][id] = {}
                 node_json["dimensions"][id]["parent_name"] = parent.id
                 level = dimension.get_level_of(node)
@@ -1184,7 +1174,7 @@ class JsonToSankey(object):
             tagg_type = JSON_TO_IO_XL__TAGG_TYPES[tagg_type_json]
             # For node tag, check if it's not a level tag instead
             if (tagg_type == CONST_IO_XL.TAG_TYPE_NODE) and (
-                (tagg_json["banner"] == "level") or (tagg_id in DEFAULT_LEVEL_TAGGS)
+                (tagg_json["banner"] == "level")
             ):
                 tagg_type = CONST_IO_XL.TAG_TYPE_LEVEL
             # Leveltag are no more - create dimension instead
@@ -1238,13 +1228,7 @@ class JsonToSankey(object):
 
         Struct for node_json :
         {
-            'idNode': str,
             'name': str,
-            'definition': str, (Optional)
-            'display': bool,
-            'node_visible': bool,
-            'label_visible': bool,
-            'shape_visible': bool,
             'color': 'str', (Optional)
             'tags': {
                 '<tag group name 1>': ['<tag name 1>', ...],
