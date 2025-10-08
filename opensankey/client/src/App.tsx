@@ -46,6 +46,7 @@ import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
+import { ToolbarFilter } from './components/topmenus/Toolbar'
 
 declare const window: Window &
   typeof globalThis & {
@@ -181,6 +182,9 @@ export const OpenSankeyApp = ({
         }
         <ModalWelcome
           app_data={app_data}
+        />
+        <ToolbarFilter
+          app_data={app_data as unknown as Class_ApplicationData}
         />
         <>
           <Menu
