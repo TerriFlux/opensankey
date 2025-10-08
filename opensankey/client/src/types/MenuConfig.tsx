@@ -207,7 +207,7 @@ export class Class_MenuConfig {
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
 
-  // PRIVATE ATTRIBUTES =================================================================
+  private _ref_close_filter_drawer: MutableRefObject<((_: boolean) => void)>
 
   private _ref_rerender_submodules_menus: MutableRefObject<() => void>
 
@@ -544,6 +544,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_node_icon_updater = useRef(() => null)
 
     this._ref_to_updater_modal_apply_layout_plus = useRef(() => null)
+    this._ref_close_filter_drawer = useRef(() => null)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -572,6 +573,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
+    this._ref_close_filter_drawer.current(false)
   }
 
   public openConfigMenuElementsContainers() {
@@ -1431,6 +1433,7 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public get ref_to_menu_context_container_updater() { return this._ref_to_menu_context_container_updater }
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
+  public get ref_close_filter_drawer(): MutableRefObject<((_:boolean) => void)> { return this._ref_close_filter_drawer }
   /**
    * Order of buttons in top menu
    *
