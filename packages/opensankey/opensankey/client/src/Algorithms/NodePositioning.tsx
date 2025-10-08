@@ -1111,107 +1111,107 @@ export class NodePositioning {
         continue
       }
 
-      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && true
+      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && false
       const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
       let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift)
 
       console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}`)
 
-      if (center_biggest_nodes === true) {
-        // LOGIQUE ALTERNÉE : Du bas vers le haut, puis du haut vers le bas
-        let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
-        let col_max_w_col = 0
-        for (let index = last_index; index >= 0; index -= 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
+      // if (center_biggest_nodes === true) {
+      //   // LOGIQUE ALTERNÉE : Du bas vers le haut, puis du haut vers le bas
+      //   let last_index = (node_id_per_hxv_indexes[horizontal_index].length - 1)
+      //   let col_max_w_col = 0
+      //   for (let index = last_index; index >= 0; index -= 2) {
+      //     const node_id = node_id_per_hxv_indexes[horizontal_index][index]
 
-          this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+      //     this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
+      //     this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
+      //     const node_height = height_per_nodes_ids[node_id]
+      //     upper_node_height_and_margin += node_height + v_margin
 
-          const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > col_max_w_col) col_max_w_col = node_w
+      //     const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
+      //     if (node_w > col_max_w_col) col_max_w_col = node_w
 
-          last_index = index
-        }
+      //     last_index = index
+      //   }
 
-        if (last_index == 0) {
-          last_index = 1
+      //   if (last_index == 0) {
+      //     last_index = 1
+      //   } else {
+      //     last_index = 0
+      //   }
+
+      //   for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
+      //     const node_id = node_id_per_hxv_indexes[horizontal_index][index]
+
+      //     this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
+      //     this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+
+      //     const node_height = height_per_nodes_ids[node_id]
+      //     upper_node_height_and_margin += node_height + v_margin
+      //   }
+      //   if (col_max_w_col > 50) prev_col_width += col_max_w_col
+      // } else {
+      // LOGIQUE SIMPLE : Positionnement séquentiel avec alignements spéciaux
+      let col_max_w_col = 0
+      node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
+        this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
+        this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
+
+        // Logique d'alignement pour les liens spéciaux
+        const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+          echangeTag && l.source.hasGivenTag(echangeTag)
+        )
+
+        if (import_link.length > 0) {
+          this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
+          if (idx == 0) {
+            shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
+          }
         } else {
-          last_index = 0
-        }
-
-        for (let index = last_index; index < node_id_per_hxv_indexes[horizontal_index].length; index += 2) {
-          const node_id = node_id_per_hxv_indexes[horizontal_index][index]
-
-          this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
-        }
-        if (col_max_w_col > 50) prev_col_width += col_max_w_col
-      } else {
-        // LOGIQUE SIMPLE : Positionnement séquentiel avec alignements spéciaux
-        let col_max_w_col = 0
-        node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
-          this.drawingArea.sankey.nodes_dict[node_id].position_x = h_position_for_index
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
-
-          // Logique d'alignement pour les liens spéciaux
-          const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
-            echangeTag && l.source.hasGivenTag(echangeTag)
+          const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+            l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
           )
 
-          if (import_link.length > 0) {
-            this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
-            if (idx == 0) {
-              shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-            }
-          } else {
-            const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
-              l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
+          if (non_recycling_input_links.length > 0) {
+            const recycling_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
+              l.is_visible && l.shape_is_recycling
             )
 
-            if (non_recycling_input_links.length > 0) {
-              const recycling_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
-                l.is_visible && l.shape_is_recycling
-              )
+            if (recycling_links.length > 0) {
+              this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
+              if (idx == 0) {
+                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
+              }
+            } else if (non_recycling_input_links.filter(l =>
+              l.source.output_links_list.filter(ol => ol.is_visible).length == 1
+            ).length == 1 && idx == 0) {
+              // Alignement des centres
+              const source_node = non_recycling_input_links[0].source
+              const current_node = this.drawingArea.sankey.nodes_dict[node_id]
+              const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
+              const current_node_half_height = current_node.getShapeHeightToUse() / 2
+              const aligned_position_y = source_center_y - current_node_half_height
 
-              if (recycling_links.length > 0) {
-                this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
-                if (idx == 0) {
-                  shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-                }
-              } else if (non_recycling_input_links.filter(l =>
-                l.source.output_links_list.filter(ol => ol.is_visible).length == 1
-              ).length == 1 && idx == 0) {
-                // Alignement des centres
-                const source_node = non_recycling_input_links[0].source
-                const current_node = this.drawingArea.sankey.nodes_dict[node_id]
-                const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
-                const current_node_half_height = current_node.getShapeHeightToUse() / 2
-                const aligned_position_y = source_center_y - current_node_half_height
+              this.drawingArea.sankey.nodes_dict[node_id].position_y = aligned_position_y
 
-                this.drawingArea.sankey.nodes_dict[node_id].position_y = aligned_position_y
-
-                if (idx == 0) {
-                  shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-                }
+              if (idx == 0) {
+                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
               }
             }
           }
+        }
 
-          const node_height = height_per_nodes_ids[node_id]
-          upper_node_height_and_margin += node_height + v_margin
+        const node_height = height_per_nodes_ids[node_id]
+        upper_node_height_and_margin += node_height + v_margin
 
-          const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
-          if (node_w > col_max_w_col) col_max_w_col = node_w
-        })
-        if (col_max_w_col > 50) prev_col_width = col_max_w_col
-      }
+        const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
+        if (node_w > col_max_w_col) col_max_w_col = node_w
+      })
+      if (col_max_w_col > 50) prev_col_width = col_max_w_col
+      //}
 
     }
 
@@ -1584,7 +1584,7 @@ export class NodePositioning {
     } else {
       nodes_to_process.forEach(node => {
         node.display.position.u = Math.round(node.display.position.x / this.drawingArea.sankey.node_styles_dict['default'].position.dx!)
-      })      
+      })
     }
 
     this.computeParametricV()
@@ -1759,23 +1759,28 @@ export class NodePositioning {
     }
     let new_current_v = current_v
     // let desagregated_nodes: Class_NodeElement[] = []
-    node.dimensions_as_parent_pure.forEach(d => {
-      const desagregated_nodes = d.children
-      const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
-      if (desagregated_nodes.length > 0) {
-        let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-        desagregated_nodes.forEach(nn => {
-          if (nn.master_node) {
-            return
-          }
-          nn.display.position.x = node.position_x
-          nn.display.position.u = node.position_u
-          nn.display.position.y = current_y
-          current_y += nn.getShapeHeightToUse() + nn.position_dy
-          new_current_v = this.applyVDesagregate(nn, new_current_v, tagGroup)
-        })
-      }
-    })
+    //node.dimensions_as_parent_pure.forEach(d => {
+    const d = node.nodeDimensionAsParent(tagGroup)
+    if (!d) return new_current_v + 1
+    if (d.children.includes(node)) return new_current_v + 1
+    const desagregated_nodes = d.children
+
+    const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
+    if (desagregated_nodes.length > 0) {
+      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+      desagregated_nodes.forEach(nn => {
+        if (nn.master_node) {
+          return
+        }
+        nn.display.position.v = -1
+        nn.display.position.x = node.position_x
+        nn.display.position.u = node.position_u
+        nn.display.position.y = current_y
+        current_y += nn.getShapeHeightToUse() + nn.position_dy
+        new_current_v = this.applyVDesagregate(nn, new_current_v, tagGroup)
+      })
+    }
+    //})
     return new_current_v + 1
   }
 

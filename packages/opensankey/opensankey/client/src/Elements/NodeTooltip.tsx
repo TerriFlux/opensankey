@@ -101,6 +101,7 @@ export class NodeTooltip {
     let html = `<style>${TOOLTIP_STYLES}${this.getTabStyles()}</style>`
 
     // Header avec bouton de fermeture
+    //html += `<p class="tooltip-subtitle">u:${this._node.position_u } | v:${this._node.position_v } | x:${this._node.position_x } | y:${this._node.position_y }</p>`;
     html += '<div class="tooltip-header">'
     html += '<button class="tooltip-close" type="button" aria-label="Fermer">&times;</button>'
     html += `<h4 class="tooltip-title">${this._node.name.split('\\n').join(' ')}</h4>`

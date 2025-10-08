@@ -895,7 +895,30 @@ export const disaggregate = (
     return
   }
   const child_node = parent_dim.children[0] as Class_NodeElement
+  const column: Class_NodeElement[] = [aggregateNode]
+  const echangeTag = new_data.drawing_area.sankey.node_taggs_dict['type de noeud'] ? new_data.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+  new_data.drawing_area.sankey.visible_nodes_list.forEach(n => {
+    if (n.id == aggregateNode.id) {
+      return
+    }
+    if (n.hasGivenTag(echangeTag!)) {
+      return
+    }
+    if (n.position_u == aggregateNode.position_u ) {
+      column.push(n)
+    } 
+  })
+  column.sort((n1, n2) => n1.position_y - n2.position_y)
+
+
   const Do = () => {
+    let current_v = aggregateNode.position_v
+    column.forEach(n => {
+      n.position_v = -1
+      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v, tagg)
+      new_data.drawing_area.sankey.sortNodes()
+    })
+
     const vertical_spacing = aggregateNode.position_dy!
     const current_height = aggregateNode.getShapeHeightToUse()
     parent_dim.setForceToShowChildren()
