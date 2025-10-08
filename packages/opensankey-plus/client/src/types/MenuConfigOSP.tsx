@@ -45,7 +45,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
    * @memberof Class_MenuConfigOSP
    */
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
-  private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
 
   private _ref_to_node_hyperlink_updater: MutableRefObject<(() => void)>
 
@@ -56,13 +55,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
 
 
-  /* ========================================
-    Updater of component for toolbar tags related menus
-    ========================================*/
-  private _ref_to_toolbar_level_tag_filter_updater: MutableRefObject<() => void>
-  private _ref_to_toolbar_node_tag_updater: MutableRefObject<(() => void)>
-  private _ref_to_toolbar_link_tag_updater: MutableRefObject<(() => void)>
-  private _ref_to_toolbar_data_tag_updater: MutableRefObject<(() => void)>
+
 
 
   /* ========================================
@@ -99,13 +92,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
     this._ref_update_modal_unitary_view = useRef(() => null)
 
-    this._ref_to_toolbar_node_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_link_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_data_tag_updater = useRef(() => null)
-    this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
-    this._ref_to_btn_top_pref_updater = useRef(() => null)
 
-    this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
+    this._ref_to_btn_top_pref_updater = useRef(() => null)
     this._ref_to_node_hyperlink_updater = useRef(() => null)
     this._ref_to_config_DA_bg_image_updater = useRef(() => null)
 
@@ -150,14 +138,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this.ref_to_save_diagram_only_view_updater.current()
   }
 
-  public override updateAllComponentsRelatedToToolbar(): void {
-    super.updateAllComponentsRelatedToToolbar()
-    this._ref_to_toolbar_link_visual_filter_updater.current()
-    this.ref_to_toolbar_node_tag_updater.current()
-    this.ref_to_toolbar_link_tag_updater.current()
-    this.ref_to_toolbar_data_tag_updater.current()
-    this.ref_to_toolbar_level_tag_filter_updater.current()
-  }
+
 
 
 
@@ -223,34 +204,13 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     )
   }
 
-  public override updateAllComponentsRelatedToTags() {
-    super.updateAllComponentsRelatedToTags()
-    this.ref_to_toolbar_node_tag_updater.current()
-    this.ref_to_toolbar_link_tag_updater.current()
-    this.ref_to_toolbar_data_tag_updater.current()
-    this.ref_to_toolbar_level_tag_filter_updater.current()
-  }
-
   public override updateAllComponentsRelatedToNodeTags() {
     super.updateAllComponentsRelatedToNodeTags()
-    this._ref_to_toolbar_node_tag_updater.current()
-    this._ref_to_toolbar_level_tag_filter_updater.current()
     this._ref_update_modal_unitary_view.current()
-  }
-
-  public override updateAllComponentsRelatedToFluxTags() {
-    super.updateAllComponentsRelatedToFluxTags()
-    this._ref_to_toolbar_link_tag_updater.current()
-  }
-
-  public override updateAllComponentsRelatedToDataTags() {
-    super.updateAllComponentsRelatedToDataTags()
-    this._ref_to_toolbar_data_tag_updater.current()
   }
 
   public override updateAllComponentsRelatedToLevelTags() {
     super.updateAllComponentsRelatedToLevelTags()
-    this._ref_to_toolbar_level_tag_filter_updater.current()
     this._ref_update_modal_unitary_view.current()
   }
 
@@ -287,12 +247,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
 
   public get ref_to_save_diagram_only_view_updater(): MutableRefObject<(() => void)> { return this._ref_to_save_diagram_only_view_updater }
-  public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
-  public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
-  public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
-  public get ref_to_toolbar_level_tag_filter_updater(): MutableRefObject<() => void> { return this._ref_to_toolbar_level_tag_filter_updater }
-
-  public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_visual_filter_updater }
   public get ref_to_node_hyperlink_updater(): MutableRefObject<(() => void)> { return this._ref_to_node_hyperlink_updater }
 
   public get ref_to_config_DA_bg_image_updater() { return this._ref_to_config_DA_bg_image_updater }

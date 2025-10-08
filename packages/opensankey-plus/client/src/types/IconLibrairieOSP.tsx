@@ -706,7 +706,7 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
 
   protected _icon_delete = <FontAwesomeIcon icon={faDeleteLeft} />
 
-  protected _icon_filter_tags = <FaFilter />
+
 
   protected _icon_palette_color = <FaPalette />
   protected _icon_random = <FaRandom />
@@ -743,7 +743,7 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
   public get icon_attr_view() { return this._icon_attr_view }
   public get icon_copy() { return this._icon_copy }
   public get icon_delete() { return this._icon_delete }
-  public get icon_filter_tags() { return this._icon_filter_tags }
+
   public get icon_palette_color() { return this._icon_palette_color }
   public get icon_random() { return this._icon_random }
   public get icon_object() { return this._icon_object }
