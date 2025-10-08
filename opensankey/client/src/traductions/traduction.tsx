@@ -25,7 +25,7 @@ interface LanguageResource {
   translation: Record<string, TranslationSection | string>
 }
 
-interface I18nResources {
+export interface I18nResources {
   en: LanguageResource
   fr: LanguageResource
 }
