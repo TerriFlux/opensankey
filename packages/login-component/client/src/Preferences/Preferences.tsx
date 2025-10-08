@@ -358,7 +358,6 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_visual')} collapse={false}>
               <MenuConfigurationLinkShape
                 new_data={user_data}
-                additionMenus={additionalMenus}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
