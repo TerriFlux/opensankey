@@ -197,7 +197,7 @@ export class Class_DrawingArea {
   public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
-  public bypass_autofit: boolean = false
+  private _bypass_autofit: boolean = false
   public bypass_autoy: boolean = false
   // PROTECTED ATTRIBUTES ===============================================================
 
@@ -1226,23 +1226,26 @@ export class Class_DrawingArea {
 
     // Recenter elements
     if (recenter && window.sankey?.recenter !== false) {
-      this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
-      this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
+      if (!this.bypass_autofit) {
+        this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
+        this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
+      }
       this.d3_selection_elements_group?.attr(
         'transform',
         'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
     }
 
-    // Save new dimensions
-    this._width = width
-    this._height = height
-    this._background_d3_groups_shift_x = x0
-    this._background_d3_groups_shift_y = y0
-
-    // And redraw
-    this.d3_selection_bg_group?.attr(
-      'transform',
-      'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
+    if (!this.bypass_autofit) {
+      // Save new dimensions
+      this._width = width
+      this._height = height
+      this._background_d3_groups_shift_x = x0
+      this._background_d3_groups_shift_y = y0
+      // And redraw
+      this.d3_selection_bg_group?.attr(
+        'transform',
+        'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
+    }
     this.drawBackground()
     this.drawGrid()
   }
@@ -2896,7 +2899,7 @@ export class Class_DrawingArea {
     if (default_style.position_type == 'parametric')
       this.nodePositioning.computeParametrization(false)
   }
-  
+
   public setAbsoluteMode() {
     const default_style = this.sankey.node_styles_dict['default']
     default_style.position_type = 'absolute'
@@ -2950,4 +2953,14 @@ export class Class_DrawingArea {
 
   public get container_activated() { return this._container_activated }
   public set container_activated(_) { this._container_activated = _ }
+  public get bypass_autofit() {
+    if (window.sankey?.publish && this._bypass_autofit) {
+      return true;
+    }
+    return false;
+  }
+
+  public set bypass_autofit(value) {
+    this._bypass_autofit = value;
+  }
 }
