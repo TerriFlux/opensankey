@@ -95,7 +95,7 @@ import { Class_ApplicationData } from './deps/OpenSankey/types/ApplicationData'
  * so that when original functionType change linter should trigger in submodule too
  */
 type RecastReturnTypeOfFunction<T extends any[], R extends any> = (...args: T) => R  // eslint-disable-line
-  /**
+/**
  * Special parameter for additionalMenu
  * It takes original AdditionalMenusType parameters but also its return object that contains array of additional JSX.Element
  */
@@ -224,9 +224,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='flux_taggs'
       />
-        <MenuConfigurationLinksTags
-          new_data={new_data_plus}
-        />
+      <MenuConfigurationLinksTags
+        new_data={new_data_plus}
+      />
       </>
     </WrapperContentConfig>,
 
@@ -251,9 +251,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
       />
-        <SankeyMenuConfigurationLevelTags
-          new_data={new_data_plus}
-        />
+      <SankeyMenuConfigurationLevelTags
+        new_data={new_data_plus}
+      />
       </>
     </WrapperContentConfig>
   }

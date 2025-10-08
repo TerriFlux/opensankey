@@ -1,7 +1,6 @@
 // External libs
 import React, {
   ChangeEvent,
-  FC,
   useRef,
   useState
 } from 'react'
@@ -23,15 +22,12 @@ import {
   Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 
-import { ConfigMenuNumberInput } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-
 import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
 
 import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const ImportImageAsSvgBg = ({

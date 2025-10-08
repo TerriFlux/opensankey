@@ -2,7 +2,7 @@
 // import React, { FC, MutableRefObject, useState } from 'react'
 // import { Box, Button, Input, Select } from '@chakra-ui/react'
 
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 
 import { Box, Button } from '@chakra-ui/react'
 

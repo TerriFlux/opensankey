@@ -2,12 +2,12 @@
 // MenuConfigExtensions.tsx - Extension propre des configurations de menu ( Version)
 // ==================================================================================================
 
-import { LINK_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextLinkConfig"
-import { NODE_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextNodeConfig"
-import { createZDDModifier, ZDD_MENU_CONFIG } from "../deps/OpenSankey/components/dialogs/ContextZDDConfig"
-import { createNodeModifier } from "../deps/OpenSankey/components/dialogs/NodeActions"
-import { MenuConfig } from "../deps/OpenSankey/components/dialogs/SankeyMenuContext"
-import { Class_ApplicationDataOSP } from "../types/ApplicationDataOSP"
+import { LINK_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextLinkConfig'
+import { NODE_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextNodeConfig'
+import { createZDDModifier, ZDD_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextZDDConfig'
+import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeActions'
+import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -88,7 +88,7 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
     },
     sectionTitles: {
       ...NODE_MENU_CONFIG.sectionTitles,
-      createUnitarySankey: { fr: "Créer sankey unitaire", en: "Creates unitary sankey" }
+      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey' }
     }
   }
 }
@@ -114,7 +114,6 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
 }
 
 export const createNodeModifierPlus = (app_data: Class_ApplicationDataOSP) => {
-  const { menu_configuration_osp } = app_data
   const baseModifiers = createNodeModifier(app_data)
 
   return {

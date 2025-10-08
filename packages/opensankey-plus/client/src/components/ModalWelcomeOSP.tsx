@@ -1,5 +1,5 @@
 // Standard libs
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 
 // OpenSankey libs
 import { ModalWelcome, ModalWelcomeContent } from '../deps/OpenSankey/components/welcome/ModalWelcome'

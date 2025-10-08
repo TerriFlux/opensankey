@@ -16,9 +16,6 @@ import { CustomFaEyeCheckIcon, OSTooltip, WrapperBoxSubSectionMenu } from '../de
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 
-interface BaseComponentProps {
-  new_data: Class_ApplicationDataOSP
-}
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
 }

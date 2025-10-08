@@ -1,6 +1,5 @@
 // Standard libs
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
-import { Properties } from 'csstype'
 import {
   Box,
   Checkbox,
@@ -479,7 +478,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     }}
   />
 
-  const style = is_static ? {} : {
+  const style : React.CSSProperties = is_static ? {} : {
     position: 'fixed',
     top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
     zIndex: '1',
@@ -489,7 +488,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     width: 'fit-content',
     left: '50%',
     transform: 'translate(-50%)'
-  } as Properties<string | number, string & {}>
+  }
 
   // ButtonsGrooup doesn't have variant so we set style here
   const buttonGroupView = <ButtonGroup
@@ -576,18 +575,10 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 export const SelecteurView = (
   { new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }
 ) => {
-
-  // Data -------------------------------------------------------------------------------
-
   const { t } = new_data_plus
   const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
-  // Components updaters ----------------------------------------------------------------
 
   const [s_select_or_edit, sSelectOrEdit] = useState<'edit' | 'select'>('select')
-
-  const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
-
-  // Local variables --------------------------------------------------------------------
 
   const cur_view = drawing_area_plus
   const has_sankey_plus = new_data_plus.has_sankey_plus
@@ -623,8 +614,8 @@ export const SelecteurView = (
       {t('view.actual')}
     </option>
     {
-      Object.entries(new_data_plus.views_dict).filter(([key, value]) => key !== default_main_sankey_id)
-        .map(([key, view]) => {
+      Object.entries(new_data_plus.views_dict).filter(([key]) => key !== default_main_sankey_id)
+        .map(([, view]) => {
           return <option
             key={view.id}
             value={view.id}

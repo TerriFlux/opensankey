@@ -1,5 +1,5 @@
 // External libs
-import React, {useEffect,useState,useRef,ChangeEvent,FC} from 'react'
+import React, {useEffect,useState,useRef,ChangeEvent} from 'react'
 import FileSaver from 'file-saver'
 
 import {Alert,AlertIcon,Box,Button,Collapse,Divider,Input,Modal,
@@ -37,8 +37,8 @@ export const SupplyUseModelisationProd = ({
   const [not_started, setNotStarted] = useState(true)
   const [value, setValue] = useState([1, 2])
   // const [, setRegions] = useState(false)
-  const [uncertainty, setUncertainty] = useState(false)
-  const [nb_realizations, setNbRealizations] = useState(100)
+  const [uncertainty] = useState(false)
+  const [nb_realizations] = useState(100)
   const [input_file_name, setInputFileName] = useState('sankey.xlsx')
   // const [layout_file, set_layout_file] = useState<Blob | undefined>(undefined)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
@@ -53,7 +53,7 @@ export const SupplyUseModelisationProd = ({
       setOptions(prevOptions => ({
         ...prevOptions,
         [propertyName]: evt.target.checked
-      }));
+      }))
     }
     return (
       <ConfigurableCheckbox
@@ -70,13 +70,13 @@ export const SupplyUseModelisationProd = ({
 
   const upper_level_file_ = useRef<HTMLInputElement>(null)
 
-  const setNbRealisations = (e: ChangeEvent) => {
-    setNbRealizations((e.target as HTMLFormElement).value)
-  }
+  // const setNbRealisations = (e: ChangeEvent) => {
+  //   setNbRealizations((e.target as HTMLFormElement).value)
+  // }
 
-  const uncertaintyChange = (e: ChangeEvent) => {
-    setUncertainty((e.target as HTMLFormElement).checked)
-  }
+  // const uncertaintyChange = (e: ChangeEvent) => {
+  //   setUncertainty((e.target as HTMLFormElement).checked)
+  // }
 
   const handleChange = (evt: MouseEvent) => {
     const value_selected = +(evt.target as HTMLFormElement).value
@@ -562,14 +562,14 @@ export const SupplyUseModelisationProd = ({
             </>
             ) : (<></>)} */}
 
-              <WrapperCheckBoxSubSectionMenu
-                open={option_open}
-                onClick={() => { setOptionOpen(!option_open) }}
-                title={t('ModalAFM.writing_option')}>
-                <>
-                  <AutoConfigCheckbox propertyName='with_sheet_formating' />
-                </>
-              </WrapperCheckBoxSubSectionMenu>
+            <WrapperCheckBoxSubSectionMenu
+              open={option_open}
+              onClick={() => { setOptionOpen(!option_open) }}
+              title={t('ModalAFM.writing_option')}>
+              <>
+                <AutoConfigCheckbox propertyName='with_sheet_formating' />
+              </>
+            </WrapperCheckBoxSubSectionMenu>
             <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
 
             <Box

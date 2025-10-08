@@ -1,4 +1,4 @@
-import React, { FC, useState, RefObject, useRef, ReactNode, useEffect } from 'react'
+import React, { useState, RefObject, useRef, ReactNode } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
@@ -21,7 +21,7 @@ const width_fitler_drawer = 270
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
-  //@ts-ignore xxx
+  //@ts-expect-error xxx
   app_data.menu_configuration_osp.ref_close_filter_drawer.current = setDrawerOpen
   return <>
     <Button
@@ -34,7 +34,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
       }}
       onClick={() => setDrawerOpen(!drawerOpen)}
     >
-      {//@ts-ignore xxx
+      {  //@ts-expect-error xxx
         app_data.icon_library.icon_filter_tags
       }
     </Button>
@@ -73,7 +73,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
           <Box layerStyle='drawerFilterBox'>
             {
             //@ts-expect-error xxx
-            window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
+              window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
             }
             <FlowValueFilter app_data={app_data} />
             <LevelTagFilter app_data={app_data} />
@@ -347,10 +347,9 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
  * Composant unifié pour filtrer tous les types de tags
  */
 
-export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
+export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   app_data: Class_ApplicationData
   mode: TagFilterMode
-  level?: boolean // Pour compatibilité avec l'ancien code
 }) => {
   const config = TAG_FILTER_CONFIGS[mode]
   const { t, drawing_area } = app_data
@@ -367,20 +366,21 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
   // Récupération des tags selon le mode
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
-      case 'element':
-        return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
-          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      case 'level':
-        const level_taggs = sankey.level_taggs_dict
-        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      case 'data':
-        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
-          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+    case 'element':
+      return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+    case 'level': {
+      const level_taggs = sankey.level_taggs_dict
+      return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+    }
+    case 'data':
+      return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       // case 'flow':
       //   return Object.values(app_data.drawing_area.sankey.flux_taggs_dict)
       //     .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-      default:
-        return [] as unknown as Class_TagGroup[]
+    default:
+      return [] as unknown as Class_TagGroup[]
     }
   }
   const updateComponents = () => {
@@ -431,6 +431,8 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
 
   // Gestion des actions spécifiques selon le mode
   const handleTagSelection = (tagg: Class_TagGroup, values: string[]) => {
+    //app_data.drawing_area.bypass_redraws = true
+    app_data.drawing_area.bypass_autofit = true
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
@@ -439,17 +441,19 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-      case 'level':
-        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-        app_data.drawing_area.draw()
-        break
-      case 'data':
-        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-        break
-      case 'element':
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-        break
+    case 'level':
+      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+      app_data.drawing_area.draw()
+      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+      break
+    case 'data':
+      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+      break
+    case 'element':
+      app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+      break
     }
+    app_data.drawing_area.bypass_autofit = false
     updateComponents()
   }
 
@@ -546,11 +550,20 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, level = false }: {
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
             level_tagg.activated = evt.target.checked
+            const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
+            level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
+            // level_tagg.siblings.forEach(sibling => {
+            //   app_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !level_tagg.activated
+            // })
+            app_data.drawing_area.bypass_autofit = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg(level_tagg)
-            app_data.drawing_area.resetAllVerticalIntervals()         
+            app_data.drawing_area.resetAllVerticalIntervals()  
+            level_tagg.selectTagsFromId(selected_tag ?? '')    
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
             app_data.drawing_area.draw()
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+            app_data.drawing_area.bypass_autofit = false
             updateComponents()
           }} />
       ) : <></>
@@ -644,7 +657,7 @@ export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
 
-  let nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
+  const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
     return <></>
   }

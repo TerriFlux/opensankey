@@ -518,7 +518,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       evt.preventDefault()
       const view_id = makeId('view')
       this.createNewView(view_id, true)
-      this._views[view_id].name = "Copie de " + this.drawing_area.name
+      this._views[view_id].name = 'Copie de ' + this.drawing_area.name
       this.setCurrentView(view_id)
     }
 
@@ -634,8 +634,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.containers_list.forEach(cont => {
       new_drawing_area.deleteContainer(cont)
     })
-
-    const visible_links = new_drawing_area.sankey.visible_links_list.map(l => l.id)
 
     //let link_value = 1
     new_drawing_area.sankey.links_list

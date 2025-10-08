@@ -7,17 +7,9 @@
 // All rights reserved for TerriFlux
 // ==================================================================================================
 
-// External imports
 import { MutableRefObject, useRef, Dispatch, SetStateAction } from 'react'
-
-// OpenSankey imports
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../deps/OpenSankey/types/MenuConfig'
-
-// Local imports
 import { OSPShowMenuComponentsVarType } from './LegacyTypes'
-import { Class_DataTag } from '../deps/OpenSankey/types/Tag'
-import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
-
 
 
 export type keyTypeConfigOSP = keyTypeConfig | 'presentation'

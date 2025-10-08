@@ -1,5 +1,5 @@
 // External imports
-import React, { FC, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Box,
   Checkbox,

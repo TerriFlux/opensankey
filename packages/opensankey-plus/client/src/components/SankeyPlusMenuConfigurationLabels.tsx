@@ -1,5 +1,5 @@
 // Standard libs
-import React, { useState, ChangeEvent, FC, useRef, MutableRefObject } from 'react'
+import React, { useState, ChangeEvent, FC, useRef } from 'react'
 import ReactQuill from 'react-quill'
 // 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
 // to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
@@ -1065,7 +1065,6 @@ export const ContextZDTOSP = (
 
   // Select nodes 'inside' zdt
   const btn_select_node_inside = <Button onClick={() => {
-    const sankey = new_data_plus.drawing_area.sankey
     zdt_to_contextualise.tied_to_nodes = true
     new_data_plus.drawing_area.purgeSelection()
     getNodeInsideContextZDT()
