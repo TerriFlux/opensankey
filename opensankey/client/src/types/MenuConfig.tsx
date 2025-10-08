@@ -220,7 +220,11 @@ export class Class_MenuConfig {
 
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<[boolean, (b: boolean) => void]>
-
+  private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
+  private _ref_to_toolbar_level_tag_filter_updater: MutableRefObject<() => void>
+  private _ref_to_toolbar_node_tag_updater: MutableRefObject<(() => void)>
+  private _ref_to_toolbar_link_tag_updater: MutableRefObject<(() => void)>
+  private _ref_to_toolbar_data_tag_updater: MutableRefObject<(() => void)>
   /* ========================================
    Ref to button on the top menu in the app
    ========================================*/
@@ -473,7 +477,11 @@ export class Class_MenuConfig {
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._ref_to_save_in_cache_indicator_value = useRef(true)
     this._ref_to_toolbar_updater = useRef(() => null)
-
+    this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
+    this._ref_to_toolbar_node_tag_updater = useRef(() => null)
+    this._ref_to_toolbar_link_tag_updater = useRef(() => null)
+    this._ref_to_toolbar_data_tag_updater = useRef(() => null)
+    this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
     // Init context menu components updater ---------------------------------------------
 
     this._ref_to_menu_context_nodes_updater = useRef(() => null)
@@ -1001,17 +1009,21 @@ export class Class_MenuConfig {
     this._ref_to_leveltag_filter_updater.current()
     this.updateComponentRelatedToNodesDimTags()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
+    this._ref_to_toolbar_level_tag_filter_updater.current()
   }
 
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
     this._ref_to_leveltag_filter_updater.current()
+    this._ref_to_toolbar_node_tag_updater.current()
+    this._ref_to_toolbar_level_tag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
 
   public updateAllComponentsRelatedToFluxTags() {
     this._ref_to_nodetag_filter_updater.current()
+    this._ref_to_toolbar_link_tag_updater.current()
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['flux_taggs'].current()
   }
@@ -1022,6 +1034,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksTags()
     this._ref_to_menu_config_tags_updater['data_taggs'].current()
     this._ref_to_drawer_sequence_data_tag_updater.current()
+    this._ref_to_toolbar_data_tag_updater.current()
   }
 
   public updateAllComponentsRelatedToTagsType(type: Type_MacroTagGroup) {
@@ -1039,6 +1052,11 @@ export class Class_MenuConfig {
 
   public updateAllComponentsRelatedToToolbar() {
     this._ref_to_toolbar_updater.current()
+    this._ref_to_toolbar_link_visual_filter_updater.current()
+    this._ref_to_toolbar_node_tag_updater.current()
+    this._ref_to_toolbar_link_tag_updater.current()
+    this._ref_to_toolbar_data_tag_updater.current()
+    this._ref_to_toolbar_level_tag_filter_updater.current()
   }
 
   public toggle_selector_on_visible_nodes() {
@@ -1433,7 +1451,13 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public get ref_to_menu_context_container_updater() { return this._ref_to_menu_context_container_updater }
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
-  public get ref_close_filter_drawer(): MutableRefObject<((_:boolean) => void)> { return this._ref_close_filter_drawer }
+  public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
+  public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
+  public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
+  public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
+  public get ref_to_toolbar_level_tag_filter_updater(): MutableRefObject<() => void> { return this._ref_to_toolbar_level_tag_filter_updater }
+  public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_visual_filter_updater }
+
   /**
    * Order of buttons in top menu
    *

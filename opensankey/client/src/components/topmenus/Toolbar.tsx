@@ -89,7 +89,6 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
   const max_link_value = Math.max(0, ...app_data.drawing_area.sankey.links_list.map(l => Number(l.getMaxValue()) / (l.shape_local_link_scale ?? 1))) + 1
   const [, setCount] = useState(0)
-  //@ts-expect-error xxx
   app_data.menu_configuration.ref_to_toolbar_link_visual_filter_updater.current = () => setCount(a => a + 1)
 
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
