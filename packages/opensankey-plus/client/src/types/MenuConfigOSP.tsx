@@ -77,16 +77,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _ref_show_modal_unitary_view: MutableRefObject<(_: boolean) => void>
   private _ref_update_modal_unitary_view: MutableRefObject<() => void>
 
-  /* ========================================
-  Updater of component for node plus related menus
-  ========================================*/
 
-
-
-  /* ========================================
-    Ref to filter drawer opening
-  ========================================*/
-  private _ref_close_filter_drawer: MutableRefObject<((_:boolean) => void)> 
 
   // CONSTRUCTOR ========================================================================
 
@@ -117,8 +108,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
     this._ref_to_node_hyperlink_updater = useRef(() => null)
     this._ref_to_config_DA_bg_image_updater = useRef(() => null)
-
-    this._ref_close_filter_drawer = useRef(() => null)
 
     this._dict_setter_show_dialog_plus = {
       ref_setter_show_menu_view_not_saved: useRef(() => null)
@@ -215,7 +204,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   // Override closeAllMenus so it take into account filter drawer
   public override closeAllMenus(): void {
     super.closeAllMenus()
-    this._ref_close_filter_drawer.current(false)
+
   }
 
   public override updateAllComponentsRelatedToNodesConfig() {
@@ -307,8 +296,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_node_hyperlink_updater(): MutableRefObject<(() => void)> { return this._ref_to_node_hyperlink_updater }
 
   public get ref_to_config_DA_bg_image_updater() { return this._ref_to_config_DA_bg_image_updater }
-
-  public get ref_close_filter_drawer(): MutableRefObject<((_:boolean) => void)> { return this._ref_close_filter_drawer }
 
   public get ref_to_btn_top_pref_updater() { return this._ref_to_btn_top_pref_updater }
   
