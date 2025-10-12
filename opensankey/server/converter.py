@@ -1059,6 +1059,8 @@ class SankeyToJson(object):
                 pass
             elif dimension.is_antagonist(node):
                 # Node does not exist in given dim
+                if "dimensions" not in node_json:
+                    node_json["dimensions"] = {}
                 node_json["dimensions"][id] = {}
                 # if node._dimensions_as_child or node._dimensions_as_parent:
                 node_json["dimensions"][id]["antitag"] = True
