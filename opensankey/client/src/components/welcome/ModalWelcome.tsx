@@ -134,12 +134,25 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
     const loadResources = async () => {
       try {
         const response = await fetch('./resources.json')
+        // Vérifier si le fichier existe (status 200)
+        if (!response.ok) {
+          if (response.status === 404) {
+            console.log('ℹ️ resources.json non trouvé, skip')
+            return // Skip silencieusement
+          }
+          throw new Error(`HTTP ${response.status}`)
+        }
+      
         const data = await response.json()
         setResources(data)
+        console.log('✅ resources.json chargé')
       } catch (error) {
-        console.error('Erreur lors du chargement de resources.json:', error)
+        // Si erreur réseau (pas CORS, pas de serveur, etc.)
+        console.log('ℹ️ resources.json non disponible, skip')
+        // Ne pas setResources, laisser à null
       }
     }
+    
     loadResources()
   }, [])
 
