@@ -53,10 +53,9 @@ declare const window: Window &
     sankey: {
       diagram?: string,
       header?: string,
-      has_header?: boolean,
-      logo_width?: number,
       publish?: boolean
-      logo?: string
+      logo?: string,
+      toolbar?: boolean
     }
   }
 
@@ -183,9 +182,10 @@ export const OpenSankeyApp = ({
         <ModalWelcome
           app_data={app_data}
         />
+        { window.sankey.toolbar != false ?
         <ToolbarFilter
-          app_data={app_data as unknown as Class_ApplicationData}
-        />
+          app_data={app_data}
+        />:<></>}
         <>
           <Menu
             app_data={app_data}
