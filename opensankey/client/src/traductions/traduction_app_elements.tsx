@@ -370,6 +370,7 @@ export const resources_app_elements = {
         }
       },
       Banner: {
+        title_data_type: 'Data displayed',
         data: 'Data',
         filter: 'Filter',
         fdf: 'Link filtering',
@@ -849,7 +850,8 @@ export const resources_app_elements = {
         unit_name: 'Nom de l\'unité',
         unit_factor: 'Facteur d\'unité'
       },
-      Banner: {
+      Banner: {        
+        title_data_type: 'Données affichées',
         data: 'Données',
         filter: 'Filtres',
         fdf: 'Filtrage des flux',
