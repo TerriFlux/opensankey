@@ -1415,6 +1415,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale) {
+      this.setDomainLocalScale(this.shape_local_link_scale)
       return this._scaleValueToPx(_)
     } else {
       return this.drawing_area.scaleValueToPx(_)

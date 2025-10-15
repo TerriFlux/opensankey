@@ -182,7 +182,7 @@ export const OpenSankeyApp = ({
         <ModalWelcome
           app_data={app_data}
         />
-        { window.sankey.toolbar != false ?
+        { window.sankey?.toolbar !== false ?
         <ToolbarFilter
           app_data={app_data}
         />:<></>}
