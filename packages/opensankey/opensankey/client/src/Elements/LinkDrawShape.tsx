@@ -116,15 +116,16 @@ export class LinkDrawShape {
           .classed('link', true)
           .classed('link_path', true)
           .attr('d', path)
+        const is_stroke = this._link.shape_shape == 'bezier_path' || !this._link.shape_is_curved
         // Apply properties
         this._link.d3_selection?.selectAll('.link_path')
           .attr('id', this._link.id)
-          .attr('fill', this._link.shape_shape == 'bezier_outline' ? shape_color : 'none')
-          .attr('stroke', this._link.shape_shape == 'bezier_path' ? shape_color : 'none')
-          .attr('stroke-opacity', this._link.shape_shape == 'bezier_path' ? shape_opacity : '0')
-          .attr('stroke-width', this._link.shape_shape == 'bezier_path' ? thickness : '0')
+          .attr('fill', !is_stroke ? shape_color : 'none')
+          .attr('stroke', is_stroke ? shape_color : 'none')
+          .attr('stroke-opacity', is_stroke ? shape_opacity : '0')
+          .attr('stroke-width', is_stroke ? thickness : '0')
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
-        if (this._link.shape_shape == 'bezier_outline') {
+        if (!is_stroke) {
           this._link.d3_selection?.selectAll('.link_path')
             .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : shape_opacity)
             .attr('dasharray', show_as_dash ? '10,2' : '')
