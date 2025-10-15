@@ -50,7 +50,7 @@ export const resources_app_elements = {
         trade_close: 'Close to node',
         flow_associated_tag: 'Flow associated to tag',
         node_associated_tag: 'Nodes associated to tag',
-        ElOrder:'Order overlaps of elements',
+
 
         Config: {
           presentation: 'Presentation',
