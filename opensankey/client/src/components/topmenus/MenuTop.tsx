@@ -572,7 +572,6 @@ export const MenuTopButtons = ({ new_data, processFunction,additionalMenus }: {
     'export_sankey': button_export_sankey,
     // Display related buttons
     'mep': button_mep,
-    'views': <BannerViewsOSP app_data={new_data} />
     // Help buttons
     // 'welcome': button_welcome,
     'tour': button_tour,
