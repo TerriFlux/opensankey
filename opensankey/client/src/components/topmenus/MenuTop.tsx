@@ -67,7 +67,6 @@ import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { FType_ProcessFunctions } from '../../Modules'
-import { BannerViewsOSP } from '../views/SankeyPlusViews'
 
 /*************************************************************************************************/
 
