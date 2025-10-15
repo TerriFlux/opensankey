@@ -235,6 +235,9 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
     app_data.drawing_area.legend.draw()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
+  let has_results = false
+  app_data.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
+
 
   const content = <>
     <Box
@@ -257,9 +260,11 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           redrawNodeLinkLegend()
         }}>
         <option key='structure' value='structure' >{t('Banner.structure')}</option>
+        { has_results ? <>
         <option key='data' value='data' >{t('Banner.collected_data')}</option>
         <option key='data_label' value='data_label' >{t('Banner.collected_data_label')}</option>
-        <option key='reconciled' value='reconciled' >{t('Banner.reconciled')}</option> : <></>
+        <option key='reconciled' value='reconciled' >{t('Banner.reconciled')}</option>
+        </> : <option key='reconciled' value='reconciled' >{t('Banner.only_data')}</option>}
       </Select>
     </Box>
 
