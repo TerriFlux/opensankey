@@ -184,14 +184,6 @@ const Register = ({
       >
         {t('Register.presentation.choose_plan')}
       </Text>
-      <Text
-        textAlign="center"
-        mb={2}
-        fontSize="md" // ou "2xl", "3xl" pour plus gros
-        fontWeight="bold"
-      >
-        {t('Register.presentation.trial_month')}
-      </Text>
       {/* Boutons avec espace entre eux - centrés */}
       <ButtonGroup spacing={30} justifyContent="center">
         <Button
