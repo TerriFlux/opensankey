@@ -130,7 +130,7 @@ export class Class_LinkValueTree {
 
   public set_only_data() {
     Object.values(this.children)
-      .forEach(child => child.set_only_data)
+      .forEach(child => child.set_only_data())
   }
 
   public addFrom(element: Class_LinkValueTree) {
