@@ -17,7 +17,13 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
       ...ZDD_MENU_CONFIG.structure,
       {
         type: 'button',
-        actionName: 'afmReconciliation'
+        actionName: 'afmReconciliation',
+        visibilityConditions: [{
+          type: 'custom',
+          customCheck: (app_data) => {
+            return (app_data as Class_ApplicationDataOSP).has_sankey_afm
+          }
+        }]
       }
     ],
     actions: {
