@@ -50,7 +50,7 @@ import { opensankey_theme } from './css/Theme'
 import { createZDDModifier, ZDD_MENU_CONFIG } from './components/dialogs/ContextZDDConfig'
 import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/ContextLinkConfig'
 import { createNodeModifier } from './components/dialogs/NodeActions'
-import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
+import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_JSON } from './types/Utils'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
@@ -167,7 +167,7 @@ const App: FC = () => {
       ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
       createLinkModifier={createLinkModifier}
       LINK_MENU_CONFIG={LINK_MENU_CONFIG}
-      NODE_MENU_CONFIG={NODE_MENU_CONFIG}
+      NODE_MENU_CONFIG={dataApp.is_static ? STATIC_NODE_MENU_CONFIG :NODE_MENU_CONFIG}
       createNodeModifier={(app_data) => createNodeModifier(app_data)}
     />
   </ChakraProvider>
