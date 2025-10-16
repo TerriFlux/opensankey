@@ -753,7 +753,7 @@ export class Class_DrawingArea {
     this.drawGrid()
     // for parametric mode nodes need to be draw in a certain order
     // so that the nodes at the top of the columns are drawn first
-    this._sankey.sortNodes()
+    //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
     // Draw legend
