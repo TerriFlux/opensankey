@@ -34,6 +34,7 @@ import { AttributeKey, AttributeTypes, NodeAttributeTypeScript, NODES_ATTRIBUTES
 // SPECIFIC CONSTANTS *******************************************************************
 export const default_position_type = 'absolute'
 export const default_auto_x = false
+export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 

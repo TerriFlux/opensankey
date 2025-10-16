@@ -783,5 +783,7 @@ export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
   public set position_dy(_) { this._display.position.dy = _ }
   public get position_auto_x() { return this._display.position.auto_x }
   public set position_auto_x(_) { this._display.position.auto_x = _ }
+  public get position_auto_y() { return this._display.position.auto_y }
+  public set position_auto_y(_) { this._display.position.auto_y = _ }
   public get display() { return this._display }
 }
