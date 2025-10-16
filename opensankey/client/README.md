@@ -6,9 +6,9 @@ OpenSankey is available as:
 
 
 Some examples of its use can be run online:
-- From React code
-    - OpenSankey Full: https://codesandbox.io/p/sandbox/opensankeyidentical-88kg2v
-    - OpenSankey Viewer: https://codesandbox.io/p/sandbox/opensankeyviewer-5z2zp3
 - Directly from HTML
-    - OpenSankey Full: https://codesandbox.io/p/sandbox/opensankeyhtml-g6yc6c
-    - OpenSankey Viewer: https://codesandbox.io/p/sandbox/r32382?file=%2Findex.html%3A14%2C29
+    - https://codesandbox.io/p/sandbox/jolly-frost-hj74g3
+- From React code :
+    - OpenSankey Viewer: https://codesandbox.io/p/sandbox/sweet-gauss-25qp9k
+    - OpenSankey Editor: https://codesandbox.io/p/sandbox/nostalgic-nash-7y3fth
+

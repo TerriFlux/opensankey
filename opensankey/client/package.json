@@ -8,7 +8,7 @@
     "url": "https://gitlab.com/terriflux-public/OpenSankey"
   },
   "author": "TerriFlux",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
