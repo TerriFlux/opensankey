@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { ChakraProvider } from '@chakra-ui/react'
 import { opensankey_theme } from './css/Theme'
 import { initializeAdditionalMenus, moduleDialogs } from './Modules'
@@ -35,30 +35,45 @@ import { createLinkModifier, LINK_MENU_CONFIG } from './components/dialogs/Conte
 import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 import { createNodeModifier } from './components/dialogs/NodeActions'
 import { Class_ApplicationData } from './types/ApplicationData'
-/*************************************************************************************************/
-export const DefaultOpenSankeyApp = <ChakraProvider theme={opensankey_theme}>
-  <OpenSankeyApp
+import { useTranslation } from 'react-i18next'
 
-    //@ts-expect-error xxx
-    initializeApplicationData={()=>new Class_ApplicationData(window.sankey?.publish ?? false)} // Data, displayed data, default data
 
-    // Ref to some key ui element in the application
-    initializeAdditionalMenus={initializeAdditionalMenus}
+export const DefaultOpenSankeyApp = () => {
+  const [dataApp, setDataApp] = useState<Class_ApplicationData | null>(null)
+  const translation = useTranslation('translation', { useSuspense: false })
+  useEffect(() => {
+    const initializeApp = async () => {
+      const newDataApp = new Class_ApplicationData(false)
+      newDataApp.t = translation.t
+      newDataApp.i18n = translation.i18n
+      setDataApp(newDataApp)
+    }
 
-    // Submenus to add in the application
-    moduleDialogs={moduleDialogs}
+    initializeApp()
+  }, [])
 
-    // Welcome modal
-    ModalWelcome={ModalWelcomeBuilder}
+  // Rendre SankeyApp une fois que tout est chargé
+  return <ChakraProvider theme={opensankey_theme}>
+    <OpenSankeyApp
+      initializeApplicationData={() => dataApp!} // Data, displayed data, default data
 
-    // BackEnd
-    createZDDModifier={(app_data) => createZDDModifier(app_data)}
-    ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
-    createLinkModifier={(app_data) => createLinkModifier(app_data)}
-    LINK_MENU_CONFIG={LINK_MENU_CONFIG}
-    NODE_MENU_CONFIG={NODE_MENU_CONFIG}
-    createNodeModifier={(app_data) => createNodeModifier(app_data)}
-  />
-</ChakraProvider>
+      // Ref to some key ui element in the application
+      initializeAdditionalMenus={initializeAdditionalMenus}
 
+      // Submenus to add in the application
+      moduleDialogs={moduleDialogs}
+
+      // Welcome modal
+      ModalWelcome={ModalWelcomeBuilder}
+
+      // BackEnd
+      createZDDModifier={(app_data) => createZDDModifier(app_data)}
+      ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
+      createLinkModifier={(app_data) => createLinkModifier(app_data)}
+      LINK_MENU_CONFIG={LINK_MENU_CONFIG}
+      NODE_MENU_CONFIG={NODE_MENU_CONFIG}
+      createNodeModifier={(app_data) => createNodeModifier(app_data)}
+    />
+  </ChakraProvider>
+}
 
