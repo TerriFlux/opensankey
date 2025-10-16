@@ -34,6 +34,15 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           }]
         },
         {
+          type: 'button', actionName: 'toggleAutoY',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+            }
+          }]
+        },
+        {
           type: 'button', actionName: 'toggleTradeMode',
           visibilityConditions: [{
             type: 'custom',
@@ -430,6 +439,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
     toggleAutoX: () => { getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
     toggleAutoXValue: () => getNodeStyle().position.auto_x,
+    toggleAutoY: () => { getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
+    toggleAutoYValue: () => getNodeStyle().position.auto_y,
     toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },

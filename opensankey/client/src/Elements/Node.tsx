@@ -55,7 +55,8 @@ import {
 import {
   Class_NodeAttribute, default_dx, default_dy, Type_TextHPos, Type_TextVPos,
   default_position_type,
-  default_auto_x
+  default_auto_x,
+  default_auto_y
 } from './NodeAttributes'
 import { Class_NodeStyle } from './ElementStyle'
 import { Class_NodeDimension } from './NodeDimension'
@@ -1112,11 +1113,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
               this._display.position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
-            } /*else {
-              if (!this.sankey.drawing_area.bypass_autoy) {
+            } else {
+              if (this.position_auto_y) {
                 this._display.position.y = 0
               }
-            }*/
+            }
             if (this.position_auto_x) {
               this._display.position.x = this._display.position.u * this.position_dx
             }
@@ -1797,6 +1798,22 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public set position_auto_x(_: boolean) {
     this._display.position.auto_x = _
+    this.applyPosition()
+  }
+
+  public get position_auto_y() {
+    if (this._display.position.auto_y !== undefined) {
+      return this._display.position.auto_y
+    }
+    const valueOfStyle = this.getStyleWithPositionAttr('auto_y')
+    if (valueOfStyle.position.auto_y !== undefined) {
+      return valueOfStyle.position.auto_y
+    }
+    return default_auto_y
+  }
+
+  public set position_auto_y(_: boolean) {
+    this._display.position.auto_y = _
     this.applyPosition()
   }
 

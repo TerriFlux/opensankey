@@ -198,10 +198,6 @@ export class Class_DrawingArea {
 
   public bypass_redraws: boolean = false
   private _bypass_autofit: boolean = false
-  public bypass_autoy: boolean = false
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  // Attributes that describe drawing area ----------------------------------------------
 
   /**
    * Height in px of drawing area in application

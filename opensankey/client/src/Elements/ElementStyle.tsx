@@ -223,6 +223,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     if (this.position.dx != undefined) json_object['dx'] = this.position.dx
     if (this.position.dy != undefined ) json_object['dy'] = this.position.dy
     if (this.position.auto_x != undefined) json_object['auto_x'] = this.position.auto_x
+    if (this.position.auto_y != undefined) json_object['auto_y'] = this.position.auto_y
 
     return json_object
   }

@@ -64,12 +64,8 @@ export const ApplyLayoutDialog = ({
 
   const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
-  const [auto_x, set_auto_x] = useState(node_styles_dict[default_style_id].position.auto_x)
 
   ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
-  if (auto_x !== (node_styles_dict[default_style_id].position.auto_x)) {
-    set_auto_x(node_styles_dict[default_style_id].position.auto_x)
-  }
 
   const simple_element_to_transform = [
     'posNode', 'posFlux',
