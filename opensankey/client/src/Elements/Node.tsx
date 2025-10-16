@@ -376,7 +376,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
 
 
-    if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
+    if (this.style.length > 0 && this.style[0].id != default_style_id) json_object['style'] = this.style.map(s => s.id)
     json_object['local'] = this._display.attributes.toJSON(this, null)
     if (this._display.position.dx) json_object['local']['dx'] = this._display.position.dx
     if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
@@ -389,13 +389,25 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     // 🔄 LINKS JSON - RÉINTÉGRÉ DIRECTEMENT  
     if (kwargs && kwargs['only_visible_elements']) {
-      json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
-      json_object['outputLinksId'] = this.output_links_list.filter(l => l.is_visible).map(l => l.id)
-      json_object['links_order'] = this._links_order.filter(l => l.is_visible).map(link => link.id)
+      if (this.input_links_list.length > 0) {
+        json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
+      }
+      if (this.output_links_list.length > 0) {
+        json_object['outputLinksId'] = this.output_links_list.filter(l => l.is_visible).map(l => l.id)
+      }
+      if (this.links_order.length > 0) {
+        json_object['links_order'] = this._links_order.filter(l => l.is_visible).map(link => link.id)
+      }
     } else {
-      json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-      json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-      json_object['links_order'] = this._links_order.map(link => link.id)
+      if (this.input_links_list.length > 0) {
+        json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
+      }
+      if (this.output_links_list.length > 0) {
+        json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
+      }
+      if (this.links_order.length > 0) {
+        json_object['links_order'] = this._links_order.map(link => link.id)
+      }
     }
   }
 
@@ -1185,29 +1197,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
