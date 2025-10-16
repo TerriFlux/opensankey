@@ -2123,7 +2123,8 @@ export class Class_DrawingArea {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Save pointer pos for external access
-    this.pointer_pos = [event.pageX, event.pageY]
+    if (!this.is_drawing_area_contextualised)
+      this.pointer_pos = [event.pageX, event.pageY]
     // EDITION MODE =============================================================
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
