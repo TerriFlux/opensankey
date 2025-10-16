@@ -1,4 +1,4 @@
-import { getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils'
+import { default_style_id, getNumberFromJSON, getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils'
 import { Class_LinkElement } from './Link'
 import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes'
 import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig'
@@ -201,8 +201,13 @@ export class Class_NodeStyle extends Class_NodeAttribute {
 
     // 2. Gestion spécifique des positions
     this._position.type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
-    this._position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
-    this._position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
+    if (this.id == default_style_id) {
+      this._position.dx = getNumberFromJSON(json_local_object, 'dx',default_dx)
+      this._position.dy = getNumberFromJSON(json_local_object, 'dy',default_dy)
+    } else {
+      this._position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
+      this._position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
+    }
 
     // 3. Marquer comme customisables les attributs chargés
     Object.keys(this._attributes).forEach(key => {
