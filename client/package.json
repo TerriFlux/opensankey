@@ -84,7 +84,8 @@
     "shx": "^0.3.4",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
-    "web-vitals": "^4.2.4"
+    "web-vitals": "^4.2.4",
+    "@types/pako": "^2.0.3"
   },
   "devDependencies": {
     "@babel/core": "^7.26.8",
@@ -97,7 +98,6 @@
     "@types/colormap": "^2.3.4",
     "@types/file-saver": "^2.0.7",
     "@types/jszip": "^3.4.1",
-    "@types/pako": "^2.0.3",
     "@types/react-router-dom": "^5.3.3",
     "@types/react-test-renderer": "^18.3.1",
     "babel-loader": "^9.2.1",
