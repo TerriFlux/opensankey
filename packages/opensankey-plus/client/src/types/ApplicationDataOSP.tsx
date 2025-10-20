@@ -810,6 +810,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Reset to Edition mode
         this._drawing_area.setToModeEdition(false)
         // Draw new-sankey
+        this._drawing_area.sankey.sortNodes()
         this._drawing_area.draw()
         this._drawing_area.draw()
 
