@@ -147,6 +147,21 @@ INSERT INTO user_licenses (user_id, license_id, creation, expiry, activated)
 VALUES (last_insert_rowid(), 2, datetime('now'), 'never', 1);
 
 COMMIT;
+
+SELECT 
+    u.id,
+    u.email,
+    u.firstname,
+    u.name,
+    l.name AS license_name,
+    ul.creation AS license_creation,
+    ul.expiry AS license_expiry,
+    ul.activated
+FROM user u
+JOIN user_licenses ul ON u.id = ul.user_id
+JOIN license l ON ul.license_id = l.id
+WHERE ul.activated = 1
+ORDER BY u.name, u.firstname, l.name;
 ```
 ### Utilisation d'alembic
 
