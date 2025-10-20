@@ -619,6 +619,7 @@ export class Class_ApplicationData {
         this._afterFromJSON()
         // Then draw if asked
         if (draw) {
+          this._drawing_area.sankey.sortNodes()
           this._drawing_area.draw()
           this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
         }
