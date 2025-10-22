@@ -70,7 +70,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         >
           <Box layerStyle='drawerFilterBox'>
             {
-            //@ts-expect-error xxx
+              //@ts-expect-error xxx
               window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
             }
             <FlowValueFilter app_data={app_data} />
@@ -237,7 +237,8 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
   }
   let has_results = false
   app_data.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
-
+  let has_intervals = false
+  app_data.drawing_area.sankey.links_list.forEach(l => has_intervals = has_intervals || l.has_intervals)
 
   const content = <>
     <Box
@@ -260,33 +261,34 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           redrawNodeLinkLegend()
         }}>
         <option key='structure' value='structure' >{t('Banner.structure')}</option>
-        { has_results ? <>
-        <option key='data' value='data' >{t('Banner.collected_data')}</option>
-        <option key='data_label' value='data_label' >{t('Banner.collected_data_label')}</option>
-        <option key='reconciled' value='reconciled' >{t('Banner.reconciled')}</option>
+        {has_results ? <>
+          <option key='data' value='data' >{t('Banner.collected_data')}</option>
+          <option key='data_label' value='data_label' >{t('Banner.collected_data_label')}</option>
+          <option key='reconciled' value='reconciled' >{t('Banner.reconciled')}</option>
         </> : <option key='reconciled' value='reconciled' >{t('Banner.only_data')}</option>}
       </Select>
     </Box>
-
-    <Box
-      layerStyle='menuconfig_grid'
-      display={s_is_data_type_reconcilied && app_data.is_reconcilied ? '' : 'none'}
-    >
-      <Box fontStyle='h3' >
-        {t('Banner.indetermined_value')}
-      </Box>
-      <Select
-        value={app_data.drawing_area.type_data}
-        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          app_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
-          setCount(a => a + 1)
-          redrawNodeLinkLegend()
-        }}>
-        <option key='none' value='reconciled' >{t('Banner.structure')}</option>
-        <option key='free_interval' value='free_interval' >{t('Banner.free_interval')}</option>
-        <option key='free_value' value='free_value' >{t('Banner.free_value')}</option>
-      </Select>
-    </Box></>
+    {has_intervals ?
+      <Box
+        layerStyle='menuconfig_grid'
+      //display={s_is_data_type_reconcilied && app_data.is_reconcilied ? '' : 'none'}
+      >
+        <Box fontStyle='h3' >
+          {t('Banner.indetermined_value')}
+        </Box>
+        <Select
+          value={app_data.drawing_area.type_data}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            app_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+            setCount(a => a + 1)
+            redrawNodeLinkLegend()
+          }}>
+          <option key='none' value='reconciled' >{t('Banner.structure')}</option>
+          <option key='free_interval' value='free_interval' >{t('Banner.free_interval')}</option>
+          <option key='free_value' value='free_value' >{t('Banner.free_value')}</option>
+        </Select>
+      </Box> : <></>}
+  </>
 
   return <FilterWrapperBox
     app_data={app_data}
@@ -368,21 +370,21 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Récupération des tags selon le mode
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
-    case 'element':
-      return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
-    case 'level': {
-      const level_taggs = sankey.level_taggs_dict
-      return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
-    }
-    case 'data':
-      return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
-        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+      case 'element':
+        return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+      case 'level': {
+        const level_taggs = sankey.level_taggs_dict
+        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+      }
+      case 'data':
+        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       // case 'flow':
       //   return Object.values(app_data.drawing_area.sankey.flux_taggs_dict)
       //     .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-    default:
-      return [] as unknown as Class_TagGroup[]
+      default:
+        return [] as unknown as Class_TagGroup[]
     }
   }
   const updateComponents = () => {
@@ -443,17 +445,17 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-    case 'level':
-      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-      app_data.drawing_area.draw()
-      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
-      break
-    case 'data':
-      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-      break
-    case 'element':
-      app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-      break
+      case 'level':
+        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+        app_data.drawing_area.draw()
+        app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+        break
+      case 'data':
+        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        break
+      case 'element':
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+        break
     }
     app_data.drawing_area.bypass_autofit = false
     updateComponents()
@@ -560,8 +562,8 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             app_data.drawing_area.bypass_autofit = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg(level_tagg)
-            app_data.drawing_area.resetAllVerticalIntervals()  
-            level_tagg.selectTagsFromId(selected_tag ?? '')    
+            app_data.drawing_area.resetAllVerticalIntervals()
+            level_tagg.selectTagsFromId(selected_tag ?? '')
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
             app_data.drawing_area.draw()
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
@@ -638,7 +640,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   ) : null
 
   let title_key = config.title_key
-  if (mode === 'level' && taggs_in_banner.length>0 && taggs_in_banner[0].name === 'Primaire') title_key = 'ndd_one'
+  if (mode === 'level' && taggs_in_banner.length > 0 && taggs_in_banner[0].name === 'Primaire') title_key = 'ndd_one'
 
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (

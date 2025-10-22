@@ -119,6 +119,15 @@ export class Class_LinkValueTree {
     return has_result
   }
 
+  public get has_intervals() {
+    let has_intervals = false
+    Object.values(this.children)
+      .forEach(child => {
+        has_intervals = has_intervals || child.has_intervals
+      })
+    return has_intervals
+  }
+
   public get has_data() {
     let has_data = false
     Object.values(this.children)
@@ -537,6 +546,10 @@ export class Class_LinkValue {
 
   public get has_result() {
     return this.result_value !== null || this.value_option != 'value'
+  }
+
+  public get has_intervals() {
+    return this.result_max !== null || this.result_min!== null
   }
 
   public get has_data() {

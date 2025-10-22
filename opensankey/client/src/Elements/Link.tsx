@@ -1238,7 +1238,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
           .attr('class', 'link_arrow')
           .attr('d', this._arrow_shape)
           .attr('fill', arrow_color)
-          .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : this.shape_opacity)
+          .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
           .attr('stroke', arrow_color)
           .attr('stroke-width', 0.1)
       }
@@ -1484,6 +1484,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public get has_result() {
     return this._values.has_result
+  }
+  public get has_intervals() {
+    return this._values.has_intervals
   }
   public get has_data() {
     return this._values.has_data
@@ -1883,7 +1886,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Get link value for current dataTaggs selected
     const data_value = this.valueCurrent
     // Scale this value for the drawing area
-    const linkValueInPx = (data_value !== null && (!this.linkIsStructure())) ? this.scaleValueToPx(data_value) : 2
+    const linkValueInPx = (data_value !== null /*&& (!this.linkIsStructure())*/) ? this.scaleValueToPx(data_value) : 2
 
     // If link processed size is inferior to min. limit return min. limit
     if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {

@@ -71,7 +71,7 @@ export class LinkDrawLabel {
     const link_val = this._link.valueCurrent
     // =======================DRAW TEXT LABEL ============================
     if (
-      (this._link.drawing_area.type_data !== 'structure') &&
+      /*(this._link.drawing_area.type_data !== 'structure') &&*/
       (this._link.name_label_is_visible) &&
       ((link_text ?? '') !== '')
     ) {
@@ -171,6 +171,8 @@ export class LinkDrawLabel {
     let label_ortho_position = 0
     let label_dominant_baseline = 'text-after-edge'
 
+    const thickness = this._link.sankey.drawing_area.type_data !== 'structure' ? this._link.thickness :2
+
     if (this._link.display.position_offset_name !== undefined) {
       const offset = this._link.display.position_offset_name
       label_position = offset
@@ -188,7 +190,7 @@ export class LinkDrawLabel {
     }
 
     if (this._link.name_label_vert === 'top' || (this._link.name_label_pos_auto && this._link.name_label_font_size > this._link.thickness)) {
-      label_ortho_position = -this._link.thickness / 2
+      label_ortho_position = -thickness / 2
     }
     // orthogonal attributes
     else if (this._link.name_label_vert === 'middle') {
