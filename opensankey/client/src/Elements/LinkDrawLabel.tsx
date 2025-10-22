@@ -75,7 +75,7 @@ export class LinkDrawLabel {
       (this._link.name_label_is_visible) &&
       ((link_text ?? '') !== '')
     ) {
-      if ((link_val ?? 0) <= this._link.drawing_area.filter_label)  return
+      if (link_val !== undefined && link_val !== null && link_val <= this._link.drawing_area.filter_label)  return
       if (this._link.source && this._link.target) {
         // Compute label to display
         const label_to_display = link_text
