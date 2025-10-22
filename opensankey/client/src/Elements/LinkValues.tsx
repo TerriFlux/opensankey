@@ -635,6 +635,7 @@ export class Class_LinkValue {
 
   public set valueData(_) {
     this.data_value = _
+    this.result_value = null
   }
 
   public value_option: ValueOptionType = 'value'

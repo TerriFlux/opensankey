@@ -103,8 +103,8 @@ export const SpreadSheet = (
       { type: 'header', text: app_data.t('Flux.trgt') },
       { type: 'header', text: app_data.t('Flux.value') }
     ]
-
-    if (app_data.has_sankey_dev) {
+    //@ts-expect-error xxx
+    if (app_data.has_sankey_afm) {
       baseCells.push({ type: 'header', text: app_data.t('Flux.calculated_value') })
     }
 
