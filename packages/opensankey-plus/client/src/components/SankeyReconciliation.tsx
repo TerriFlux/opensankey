@@ -393,7 +393,7 @@ export const SupplyUseModelisationProd = ({
     if (menu_configuration_osp.action_type === 'optim_sankey') {
       const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
       new_sankey_json_obj.icon_catalog = {}
-      data_server.append('sankey_data', JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
+      data_server.append('sankey_data', JSON.stringify(new_sankey_json_obj))
     }
 
     // POST request for optimisation
