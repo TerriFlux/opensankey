@@ -878,7 +878,7 @@ export const resources_app_elements = {
         only_data: 'Valeurs',
         free_interval: 'Intervalles',
         free_value: 'Valeurs possible',
-        indetermined_value: 'Type de valeur des flux indeterminés',
+        indetermined_value: 'Type de valeur des flux indéterminés',
         filtre: 'Seuil pour l\'affichage des flux',
         fl: 'Seuil pour l\'affichage des labels',
         fn: 'Flux nuls visibles',

@@ -75,9 +75,9 @@ export class LinkDrawShape {
     // Failsafe
     if (this._link.source && this._link.target) {
       // Avoid recomputations
-      const thickness = this._link.thickness
+      const thickness = !this._link.linkIsStructure() ? this._link.thickness : 2
       const shape_color = this._link.getPathColorToUse()
-      const shape_opacity = this._link.shape_opacity
+      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && ! this._link.has_data ? 0.2 : this._link.shape_opacity
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
       const x0 = this._link.position_x_start
