@@ -98,13 +98,6 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
           elements={elements}
           refreshParentComponent={refreshThisAndUpdateRelatedComponents}
           prefix={'name_'} />
-        <CheckboxWithColorPicker
-          app_data={app_data}
-          elements={elements}
-          attributePath={'Noeud.labels'}
-          checkboxAttributeKey={'name_label_background' as ValueKey}
-          inputAttributeKey={'name_label_background_color' as ValueKey}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents} />
         <ElementAttrSetterNumberInput2Cols
           app_data={app_data}
           elements={elements}
@@ -182,14 +175,6 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
         elements={elements}
         refreshParentComponent={refreshThisAndUpdateRelatedComponents}
         prefix={'value_'} />
-      <CheckboxWithColorPicker
-        app_data={app_data}
-        elements={elements}
-        attributePath={'Noeud.labels'}
-        checkboxAttributeKey={'value_label_background' as ValueKey}
-        inputAttributeKey={'value_label_background_color' as ValueKey}
-        refreshParentComponent={refreshThisAndUpdateRelatedComponents} />
-
       {/* Position horizontal du label par rapport à l'ancre*/}
       <ElementAttrSetterNumberInput2Cols
         app_data={app_data}

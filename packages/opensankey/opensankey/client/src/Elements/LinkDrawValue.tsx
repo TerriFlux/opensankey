@@ -137,6 +137,7 @@ export class LinkDrawValue {
       return
     // Clean previous label
     this._link.d3_selection?.selectAll('.link_value').remove()
+    this._link.d3_selection?.select('#g_name_label').remove()
     // Add value label
     const link_val = this._link.valueCurrent
 
@@ -164,8 +165,10 @@ export class LinkDrawValue {
 
         // If label is undefined or null, do nothing
         if (label_to_display) {
+            const d3_selection_g_name_label = this._link.d3_selection?.append('g')
+        .attr('id', 'g_name_label').classed('link_value', true)
           // Create text object
-          const d3_text_selection = this._link.d3_selection?.append('text')
+          const d3_text_selection = d3_selection_g_name_label.append('text')
             .classed('link', true)
             .classed('link_value', true)
             .classed('link_value_text', true)
@@ -220,12 +223,51 @@ export class LinkDrawValue {
               )
             }
           }
+          this.drawValueLabelBackground(d3_selection_g_name_label)
         }
       }
+
     }
 
 
   }
+
+  /**
+   * Draw name label background
+   */
+  private drawValueLabelBackground(d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined) {
+    d3_selection_g_name_label?.select('.value_label_background').remove()
+    
+    if (this._link.value_label_is_visible && this._link.value_label_background && d3_selection_g_name_label) {
+      // Get bounding box
+      const value_label_bounding_box = (d3_selection_g_name_label.select('.link_value_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
+      const width = value_label_bounding_box.width + 10
+      const height = value_label_bounding_box.height
+      // Create svg element
+      const tmp = d3_selection_g_name_label?.append(this._link.value_label_background_shape)
+        .attr('class', 'value_label_bg')
+        .classed('value_label', true)
+        .classed('value_label_background', true)
+        .attr('id', 'value_label_background_' + this._link.id)
+        .attr('fill', this._link.value_label_background_color)
+        .attr('fill-opacity', this._link.value_label_background_opacity)
+        .style('stroke', 'black')
+      if (this._link.value_label_background_shape=='ellipse')
+      tmp.attr('cx', (value_label_bounding_box.x - 5 + width / 2) + 'px')
+        .attr('cy', (value_label_bounding_box.y + height / 2) + 'px')
+        .attr('rx', width / 2)
+        .attr('ry', height / 2)
+      else
+        tmp.attr('x', (value_label_bounding_box.x - 5) + 'px')
+        .attr('y', value_label_bounding_box.y + 'px')
+        .attr('width', width + 'px')
+        .attr('height', height + 'px')
+        .attr('rx', 4)        
+      // Lower label to have it on background
+      d3_selection_g_name_label?.select('.value_label_background').lower()
+    }
+  }
+
   private updateValueXYPosition() {
     const [label_pos, label_ortho_pos, label_anchor] = this.getValueXYPos()
     this._link.d3_selection?.select('.link_value_text').attr('y', label_ortho_pos)
