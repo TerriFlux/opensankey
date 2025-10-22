@@ -26,7 +26,7 @@
 import React from 'react'
 import {
   Box,
-  Button, Select
+  Button, Select, InputGroup
 } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -34,7 +34,7 @@ import { Class_LinkStyle } from '../../Elements/ElementStyle'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeStyle } from '../../Elements/ElementStyle'
 import { default_style_id, font_families } from '../../types/Utils'
-import { updateElements, ValueKey } from './MenuCommon'
+import { CheckboxWithColorPicker, updateElements, ValueElementsType, ValueKey, WrapperBoxSubSectionMenu } from './MenuCommon'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesShape'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
@@ -42,10 +42,9 @@ import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { MenuColorPicker } from './MenuColorPicker'
 
-
 export const SankeyMenuLabelComponent = ({
   new_data, elements, refreshParentComponent, prefix
-}:{
+}: {
   new_data: Class_ApplicationData
   elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
   refreshParentComponent: () => void,
@@ -63,8 +62,8 @@ export const SankeyMenuLabelComponent = ({
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
 
   // By combining the different variable correct_ref_style_to_use can only be used when MenuUnit is used with style element (instead of normal element)
-  const disable_attr_props = menu_for_style ? 
-    correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute : 
+  const disable_attr_props = menu_for_style ?
+    correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
     correct_dict_style_to_use[default_style_id].customisable_attribute
 
   const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
@@ -77,7 +76,7 @@ export const SankeyMenuLabelComponent = ({
       return false
     }
   }
-  const is_indeterminate = !(elements as (Class_NodeElement|Class_LinkElement)[]).every(check_indeterminate)
+  const is_indeterminate = !(elements as (Class_NodeElement | Class_LinkElement)[]).every(check_indeterminate)
   // Declare var used to set default attribute value in inputs 
   let label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
   let label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default
@@ -87,24 +86,29 @@ export const SankeyMenuLabelComponent = ({
   let label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default
   let label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
   let label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
-
+  let label_background = NODES_ATTRIBUTES_CONFIG.value_label_background.default
+  let label_background_shape = NODES_ATTRIBUTES_CONFIG.value_label_background_shape.default
+  let label_background_opacity = NODES_ATTRIBUTES_CONFIG.value_label_background_opacity.default
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
     const element_ref = elements[0]
     // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
     // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in prefix
     label_horiz = Reflect.get(element_ref, prefix + 'label_horiz') ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
-    label_vert =  Reflect.get(element_ref, prefix + 'label_vert') ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
+    label_vert = Reflect.get(element_ref, prefix + 'label_vert') ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
     label_font_size = Reflect.get(element_ref, prefix + 'label_font_size') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
     label_color = Reflect.get(element_ref, prefix + 'label_color') ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
     label_font_family = Reflect.get(element_ref, prefix + 'label_font_family') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
     label_bold = Reflect.get(element_ref, prefix + 'label_bold') ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
     label_italic = Reflect.get(element_ref, prefix + 'label_italic') ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
     label_uppercase = Reflect.get(element_ref, prefix + 'label_uppercase') ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
+    label_background = Reflect.get(element_ref, prefix + 'label_background') ?? NODES_ATTRIBUTES_CONFIG.value_label_background.default
+    label_background_shape = Reflect.get(element_ref, prefix + 'label_background_shape') ?? NODES_ATTRIBUTES_CONFIG.value_label_background_shape.default
+    label_background_opacity = Reflect.get(element_ref, prefix + 'label_background_opacity') ?? NODES_ATTRIBUTES_CONFIG.value_label_background_opacity.default
   }
 
   const is_label_font_size_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_font_size') == Reflect.get(elements[0], prefix + 'label_font_size'))
-
+  const is_label_background_opacity_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_background_opacity') == Reflect.get(elements[0], prefix + 'label_background_opacity'))
   return <Box
     layerStyle='menuconfigpanel_grid'
   >
@@ -114,7 +118,7 @@ export const SankeyMenuLabelComponent = ({
       {/* Police et taille du texte de label */}
       <Box layerStyle='options_2cols'>
         <Select
-          isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_font_family')}
+          isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_font_family')}
           variant='menuconfigpanel_option_select'
           value={label_font_family}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -134,7 +138,7 @@ export const SankeyMenuLabelComponent = ({
         </Select>
 
         <ConfigMenuNumberInput
-          disabled={!Reflect.get(disable_attr_props,prefix + 'label_font_size')}
+          disabled={!Reflect.get(disable_attr_props, prefix + 'label_font_size')}
           t={new_data.t}
           default_value={label_font_size}
           menu_for_style={menu_for_style}
@@ -152,7 +156,7 @@ export const SankeyMenuLabelComponent = ({
         <Box layerStyle='options_3cols'>
           {/* Gras */}
           <Button
-            isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_bold')}
+            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_bold')}
             variant={label_bold ?
               'menuconfigpanel_option_button_activated_left' :
               'menuconfigpanel_option_button_left'}
@@ -168,7 +172,7 @@ export const SankeyMenuLabelComponent = ({
 
           {/* en majuscule */}
           <Button
-            isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_uppercase')}
+            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_uppercase')}
             variant={label_uppercase ?
               'menuconfigpanel_option_button_activated_center' :
               'menuconfigpanel_option_button_center'}
@@ -184,7 +188,7 @@ export const SankeyMenuLabelComponent = ({
 
           {/* En italique */}
           <Button
-            isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_italic')}
+            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_italic')}
             variant={label_italic ?
               'menuconfigpanel_option_button_activated_right' :
               'menuconfigpanel_option_button_right'}
@@ -204,7 +208,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Vers le début  */}
           <OSTooltip label={t('Flux.labels.tooltips.deb')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_horiz')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -221,7 +225,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Vers le milieu  */}
           <OSTooltip label={t('Flux.labels.tooltips.milieu_h')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_horiz')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -238,7 +242,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Vers la fin du flux  */}
           <OSTooltip label={t('Flux.labels.tooltips.fin')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_horiz')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -258,7 +262,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Positionnement au dessous  */}
           <OSTooltip label={t('Flux.labels.tooltips.dessous')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_vert')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -279,7 +283,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Positionnement au milieu  */}
           <OSTooltip label={t('Flux.labels.tooltips.milieu_v')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_vert')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -301,7 +305,7 @@ export const SankeyMenuLabelComponent = ({
           {/* Positionnement au dessus  */}
           <OSTooltip label={t('Flux.labels.tooltips.dessus')}>
             <Button
-              isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_vert')}
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
               paddingEnd='0'
               minWidth='0'
@@ -326,18 +330,107 @@ export const SankeyMenuLabelComponent = ({
           {t('Flux.apparence.shape_color')}
           {!menu_for_style ? <TooltipElementOverloaded
             elements={elements as (Class_NodeElement | Class_LinkElement)[]}
-            k={prefix + 'label_color' as ValueKey} 
+            k={prefix + 'label_color' as ValueKey}
             t={t}
-          />:<></>}
+          /> : <></>}
         </Box>
         <MenuColorPicker
-          isDisabled={!Reflect.get(disable_attr_props,prefix + 'label_color')}
+          isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_color')}
           initialColor={label_color}
           onColorChange={(new_color) => {
             updateElements(new_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent)
 
           }} />
       </Box>
+      <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.labels.'+prefix+'label_background')}>
+              <>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <CheckboxWithColorPicker
+            app_data={new_data}
+            elements={elements}
+            attributePath={'Noeud.labels'}
+            checkboxAttributeKey={prefix + 'label_background' as ValueKey}
+            inputAttributeKey={prefix + 'label_background_color' as ValueKey}
+            refreshParentComponent={refreshParentComponent} />
+          {/* Forme du noeud */}
+          <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
+            <Box layerStyle='options_3cols' >
+              <Button
+                isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
+                value="ellipse"
+                variant={
+                  label_background_shape === 'ellipse' ?
+                    'menuconfigpanel_option_button_activated' :
+                    'menuconfigpanel_option_button'}
+                onClick={() => {
+                  updateElements(new_data, elements, prefix + 'label_background_shape' as ValueKey, 'ellipse', refreshParentComponent)
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill='#78C2AD'
+                  stroke='currentColor'
+                  viewBox='0 0 17 17'
+                  width="1rem"
+                  height="1rem"
+                >
+                  <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
+                </svg>
+              </Button>
+
+              <Button
+                isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
+                variant={
+                  label_background_shape === 'rect' ?
+                    'menuconfigpanel_option_button_activated' :
+                    'menuconfigpanel_option_button'}
+                onClick={() => {
+                  updateElements(new_data, elements, prefix + 'label_background_' + 'shape' as ValueKey, 'rect', refreshParentComponent)
+                }}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill='#78C2AD'
+                  stroke='currentColor'
+                  viewBox='0 0 17 17'
+                  width="1rem"
+                  height="1rem"
+                >
+                  <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
+                </svg>
+                {/* {t('Noeud.apparence.Rectangle')} */}
+              </Button>
+            </Box>
+          </OSTooltip>
+        </Box>
+        {label_background ?
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Flux.apparence.shape_opacity')}
+              {!menu_for_style ? <TooltipElementOverloaded
+                elements={elements as (Class_NodeElement | Class_LinkElement)[]}
+                t={t}
+                k={'shape_opacity'} /> : <></>}
+            </Box>
+            <InputGroup variant='menuconfigpanel_option_input' >
+              <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
+                <ConfigMenuNumberInput
+                  disabled={!Reflect.get(disable_attr_props, prefix + 'label_background_opacity')}
+                  t={new_data.t}
+                  default_value={label_background_opacity}
+                  menu_for_style={menu_for_style}
+                  minimum_value={0}
+                  maximum_value={1}
+                  step={0.1}
+                  stepper={true}
+                  function_on_blur={(v: number | null) => { updateElements(new_data, elements, prefix + 'label_background_opacity' as ValueKey, v as ValueElementsType, refreshParentComponent) }}
+                  multiValue={is_label_background_opacity_indetermined}
+                />
+
+              </OSTooltip>
+            </InputGroup>
+          </Box> : <></>}
+      </></WrapperBoxSubSectionMenu>
     </Box>
 
   </Box>

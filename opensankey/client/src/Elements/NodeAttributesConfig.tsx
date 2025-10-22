@@ -381,12 +381,42 @@ export const NODES_ATTRIBUTES_CONFIG = {
       fr: 'Choisir la couleur de fond pour le libellé nom'
     }
   } satisfies AttributeConfig<string>,
+  name_label_background_opacity: {
+    default: 0.55,
+    type: (() => 0.55) as (() => number),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background opacity',
+      fr: 'Opacité fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir l\'opacité du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<number>,
+  name_label_background_shape: {
+    default: 'rect' as Type_Shape,
+    type: (() => 'rect') as (() => Type_Shape),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as ActionType[],
+    
+    labels: {
+      en: 'Background shape',
+      fr: 'Forme du fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir l\'opacité du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<string>,
 
   name_label_horiz_shift: {
     default: 0,
     type: (() => 0) as (() => number),
     category: 'name_label' as const,
-    actions: ['drawNameLabel'] as ActionType[],  // 🆕
+    actions: ['drawNameLabel'] as ActionType[],
     
     labels: {
       en: 'Horizontal shift',
@@ -642,7 +672,36 @@ export const NODES_ATTRIBUTES_CONFIG = {
       fr: 'Choisir la couleur de fond pour le label de valeur'
     }
   } satisfies AttributeConfig<string>,
-
+  value_label_background_opacity: {
+    default: 0.55,
+    type: (() => 0.55) as (() => number),
+    category: 'name_label' as const,
+    actions: ['drawValueLabel'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background opacity',
+      fr: 'Opacité fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir l\'opacité du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<number>,
+  value_label_background_shape: {
+    default: 'rect' as Type_Shape,
+    type: (() => 'rect') as (() => Type_Shape),
+    category: 'name_label' as const,
+    actions: ['drawValueLabel'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background shape',
+      fr: 'Forme du fond'
+    },
+    tooltips: {
+      en: 'Choose the background shape for the value label',
+      fr: 'Choisir la forme du fond pour le libellé valeur'
+    }
+  } satisfies AttributeConfig<string>,
   value_label_horiz_shift: {
     default: 0,
     type: (() => 0) as (() => number),
@@ -1143,6 +1202,8 @@ export abstract class NodeAttributeTypeScript implements INodeAttributesBase {
   name_label_vert!: AttributeTypes['name_label_vert']
   name_label_background!: AttributeTypes['name_label_background']
   name_label_background_color!: AttributeTypes['name_label_background_color']
+  name_label_background_opacity!: AttributeTypes['name_label_background_opacity']
+  name_label_background_shape!: AttributeTypes['name_label_background_shape']
   name_label_horiz_shift!: AttributeTypes['name_label_horiz_shift']
   name_label_vert_shift!: AttributeTypes['name_label_vert_shift']
   name_label_box_width!: AttributeTypes['name_label_box_width']
@@ -1161,6 +1222,8 @@ export abstract class NodeAttributeTypeScript implements INodeAttributesBase {
   value_label_vert!: AttributeTypes['value_label_vert']
   value_label_background!: AttributeTypes['value_label_background']
   value_label_background_color!: AttributeTypes['value_label_background_color']
+  value_label_background_opacity!: AttributeTypes['value_label_background_opacity']
+  value_label_background_shape!: AttributeTypes['value_label_background_shape']
   value_label_horiz_shift!: AttributeTypes['value_label_horiz_shift']
   value_label_vert_shift!: AttributeTypes['value_label_vert_shift']
   value_label_box_width!: AttributeTypes['value_label_box_width']

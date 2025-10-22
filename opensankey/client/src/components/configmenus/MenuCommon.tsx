@@ -42,6 +42,7 @@ import {
   PlacementWithLogical,
   Textarea
 } from '@chakra-ui/react'
+import {FaCaretDown, FaCaretUp } from 'react-icons/fa'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
 import { Class_LinkStyle } from '../../Elements/ElementStyle'
@@ -207,7 +208,8 @@ export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
     </Collapse>
   </Box>
 }
-
+const icon_collapse_up = <FaCaretUp />
+const icon_collapse_down = <FaCaretDown />
 /**
  * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
  *
@@ -238,6 +240,7 @@ export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,childre
     >
       {title}
     </Checkbox>
+
   </Box>
   <Collapse in={isOpen} animateOpacity>
     <Box
@@ -739,10 +742,15 @@ export const MenuSectionCheckbox = ({
 
   const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
   const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)
-
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
   return (
     <Box layerStyle='menu_sub_section'>
-      <Box layerStyle='menu_sub_section_title'>
+      <Box layerStyle='menu_sub_section_head'>
+        <Button variant='menu_sub_section_collapse_button'
+        size='sizeCollapseButton'
+        onClick={onToggle}>
+        {isOpen ? icon_collapse_up : icon_collapse_down}
+      </Button>
         <Checkbox
           isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
           isIndeterminate={is_attribute_indetermined}
@@ -765,7 +773,13 @@ export const MenuSectionCheckbox = ({
           )}
         </Checkbox>
       </Box>
-      {children}
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        {children}
+      </Box>
+    </Collapse>
     </Box>
   )
 }

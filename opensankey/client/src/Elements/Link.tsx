@@ -325,6 +325,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   value_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']>
   value_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
   value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
+  value_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_opacity']['type']>
+  value_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_shape']['type']>
+  value_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_color']['type']>
+  value_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background']['type']>
   value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
   value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
   value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
@@ -345,6 +349,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   name_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']>
   name_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
   name_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']>
+  name_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background']['type']>
+  name_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_color']['type']>
+  name_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_opacity']['type']>
+  name_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_shape']['type']>
   name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
   name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
   /**
@@ -653,7 +661,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     const attr_json = this._display.attributes.toJSON(this, null)
     if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON(this, null)
     // Fill positions attributes
-    if (this._display.position_offset_value !== undefined) json_object['position_offset_label'] = this._display.position_offset_value
+    if (this._display.position_offset_value !== undefined) json_object['position_offset_value'] = this._display.position_offset_value
     if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
     if (this._display.position_x_value !== undefined) json_object['position_x_label'] = this._display.position_x_value
     if (this._display.position_y_value !== undefined) json_object['position_y_label'] = this._display.position_y_value
@@ -701,8 +709,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       }
     }
     // Get positions infos
-    this._display.position_offset_value = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
-    this._display.position_offset_name = getNumberOrUndefinedFromJSON(json_object, 'position_offset_name')
+    this._display.position_offset_value = getNumberOrUndefinedFromJSON(json_object, 'position_offset_value')
+    this._display.position_offset_name = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
     this._display.position_x_value = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
     this._display.position_y_value = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
     this._display.position_x_name = getNumberOrUndefinedFromJSON(json_object, 'position_x_name')

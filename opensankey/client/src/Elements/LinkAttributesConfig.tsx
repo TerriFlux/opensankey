@@ -9,6 +9,7 @@ import {
 } from '../types/Utils'
 import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
+import { Type_Shape } from './NodeAttributesConfig'
 
 // Types spécifiques
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
@@ -356,6 +357,67 @@ export const LINKS_ATTRIBUTES_CONFIG = {
       fr: 'Permet d\'afficher ou non le label (donnée / texte) associé au(x) flux sélectionné(s)'
     }
   } satisfies AttributeConfig<boolean>,
+  value_label_background: {
+    default: false,
+    type: (() => true) as (() => boolean),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background',
+      fr: 'Fond'
+    },
+    tooltips: {
+      en: 'Add a background to the label for a better visibility in case the label is in front of a link',
+      fr: 'Permet d\'ajouter un fond au label pour qu\'il soit plus visible quand il est par-dessus un flux'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  value_label_background_color: {
+    default: '#ffffff',
+    type: (() => '#ffffff') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background color',
+      fr: 'Couleur fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir la couleur de fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<string>,
+  value_label_background_opacity: {
+    default: 0.55,
+    type: (() => 0.55) as (() => number),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background opacity',
+      fr: 'Opacité fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir l\'opacité du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<number>,
+  value_label_background_shape: {
+    default: 'rect' as Type_Shape,
+    type: (() => 'rect') as (() => Type_Shape),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background shape',
+      fr: 'Forme du fond'
+    },
+    tooltips: {
+      en: 'Choose the background shape for the value label',
+      fr: 'Choisir la forme du fond pour le libellé valeur'
+    }
+  } satisfies AttributeConfig<string>,
 
   // =================== VALUE LABEL FONT ===================
   value_label_font_family: {
@@ -850,7 +912,67 @@ export const LINKS_ATTRIBUTES_CONFIG = {
       fr: 'Ajuster automatiquement la position verticale du libellé nom'
     }
   } satisfies AttributeConfig<boolean>,
+  name_label_background: {
+    default: false,
+    type: (() => true) as (() => boolean),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background',
+      fr: 'Fond'
+    },
+    tooltips: {
+      en: 'Add a background to the label for a better visibility in case the label is in front of a link',
+      fr: 'Permet d\'ajouter un fond au label pour qu\'il soit plus visible quand il est par-dessus un flux'
+    }
+  } satisfies AttributeConfig<boolean>,
 
+  name_label_background_color: {
+    default: '#ffffff',
+    type: (() => '#ffffff') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background color',
+      fr: 'Couleur fond'
+    },
+    tooltips: {
+      en: 'Choose the background color for the name label',
+      fr: 'Choisir la couleur de fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<string>,
+  name_label_background_opacity: {
+    default: 0.55,
+    type: (() => 0.55) as (() => number),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background opacity',
+      fr: 'Opacité fond'
+    },
+    tooltips: {
+      en: 'Choose the background opacity for the name label',
+      fr: 'Choisir l\'opacité du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<number>,
+  name_label_background_shape: {
+    default: 'rect' as Type_Shape,
+    type: (() => 'rect') as (() => Type_Shape),
+    category: 'name_label' as const,
+    actions: ['drawValue'] as ActionType[],  // 🆕
+    
+    labels: {
+      en: 'Background opacity',
+      fr: 'Opacité fond'
+    },
+    tooltips: {
+      en: 'Choose the background shape for the name label',
+      fr: 'Choisir la forme du fond pour le libellé nom'
+    }
+  } satisfies AttributeConfig<string>
 } as const
 
 // ==================================================================================================
@@ -945,6 +1067,10 @@ export abstract class LinkAttributeTypeScript implements ILinkAttributesBase {
   value_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']>
   value_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
   value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
+  value_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background']['type']>
+  value_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_color']['type']>
+  value_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_opacity']['type']>
+  value_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_shape']['type']>
   value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
   value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
   value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
@@ -966,6 +1092,10 @@ export abstract class LinkAttributeTypeScript implements ILinkAttributesBase {
   name_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']>
   name_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
   name_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']>
+  name_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background']['type']>
+  name_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_color']['type']>
+  name_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_opacity']['type']>
+  name_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_shape']['type']>
   name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
   name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
 }
