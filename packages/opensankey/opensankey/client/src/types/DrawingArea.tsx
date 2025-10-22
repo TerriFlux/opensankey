@@ -463,7 +463,8 @@ export class Class_DrawingArea {
     // Transfer DA attributs
     if (mode.includes('attrDrawingArea') || all) {
       this._copyAttrFrom(other_drawing_area)
-      this._legend.copyFrom(other_drawing_area._legend)
+      if (other_drawing_area._legend)
+        this._legend.copyFrom(other_drawing_area._legend)
     }
     // Transfert Sankey Attributes
     this.sankey.updateFrom(other_drawing_area.sankey, mode)

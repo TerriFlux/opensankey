@@ -813,7 +813,7 @@ export class Class_LinkValue {
       this.result_max = getNumberOrNullFromJSON(json_object, 'result_max')
       this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
 
-      this.text_value = getStringOrNullFromJSON(json_object, 'text_value')
+      this.text_value = getStringFromJSON(json_object, 'text_value',this.text_value!)
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
       const { data_taggs_list } = this.link?.sankey ?? { data_taggs_list: [] }
       const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)

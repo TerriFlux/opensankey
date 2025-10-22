@@ -40,10 +40,10 @@ import {
   Type_JSON,
   getJSONFromJSON,
   getJSONOrUndefinedFromJSON,
-  getNumberOrUndefinedFromJSON,
   getStringListFromJSON,
   getStringFromJSON,
-  Type_Structure
+  Type_Structure,
+  getNumberFromJSON
 } from '../types/Utils'
 import {
   Class_LinkAttribute,
@@ -709,12 +709,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       }
     }
     // Get positions infos
-    this._display.position_offset_value = getNumberOrUndefinedFromJSON(json_object, 'position_offset_value')
-    this._display.position_offset_name = getNumberOrUndefinedFromJSON(json_object, 'position_offset_label')
-    this._display.position_x_value = getNumberOrUndefinedFromJSON(json_object, 'position_x_label')
-    this._display.position_y_value = getNumberOrUndefinedFromJSON(json_object, 'position_y_label')
-    this._display.position_x_name = getNumberOrUndefinedFromJSON(json_object, 'position_x_name')
-    this._display.position_y_name = getNumberOrUndefinedFromJSON(json_object, 'position_y_name')
+    this._display.position_offset_value = getNumberFromJSON(json_object, 'position_offset_value',this._display.position_offset_value!)
+    this._display.position_offset_name = getNumberFromJSON(json_object, 'position_offset_label',  this._display.position_offset_name!)
+    this._display.position_x_value = getNumberFromJSON(json_object, 'position_x_label', this._display.position_x_value!)
+    this._display.position_y_value = getNumberFromJSON(json_object, 'position_y_label',this._display.position_y_value!)
+    this._display.position_x_name = getNumberFromJSON(json_object, 'position_x_name',this._display.position_x_name!)
+    this._display.position_y_name = getNumberFromJSON(json_object, 'position_y_name',this._display.position_y_name!)
     // Get value
     this._values.fromJSON(
       getJSONFromJSON(json_object, 'value', {}),
