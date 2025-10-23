@@ -1064,11 +1064,17 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       // }
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
-    } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
-      if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
+    } else if (
+      this.shape_color_rule == 'auto' && 
+      this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0 &&
+      this.flux_taggs_list.length == 0
+    ) {
+      if (this.source.input_links_list.length == 0) {
         return this.source.getShapeColorToUse()
-      } else if (this.target.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
+      } else if (this.target.output_links_list.length == 0) {
         return this.target.getShapeColorToUse()
+      } else {
+        return this.source.getShapeColorToUse()
       }
     }
     const type_source = this.shape_color_rule

@@ -585,7 +585,7 @@ export class NodePositioning {
 
     // ÉTAPE 3: Construction des structures de données (logique existante)
     let max_horizontal_index = 0
-    const nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
+    let nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
 
     this.drawingArea.sankey.visible_nodes_list.forEach(node => {
       const node_index = horizontal_indexes_per_nodes_ids[node.id]
@@ -619,6 +619,9 @@ export class NodePositioning {
       nodes_per_horizontal_indexes,
       horizontal_indexes_per_nodes_ids,
       max_horizontal_index
+    )
+    nodes_per_horizontal_indexes = Object.fromEntries(
+      Object.entries(nodes_per_horizontal_indexes).filter(([key, value]) => value.length > 0)
     )
 
     // ÉTAPE 5: Calcul des positions finales (logique existante)
