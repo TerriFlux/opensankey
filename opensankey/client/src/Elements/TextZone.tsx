@@ -589,8 +589,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
 
         const node_topiest_pos = node.position_y + bbox.y
         const node_leftiest_pos = node.position_x + bbox.x
-        const node_righiest_pos = node.position_x + bbox.width
-        const node_bottomiest_pos = node.position_y + bbox.height
+        const node_righiest_pos = node_leftiest_pos + bbox.width
+        const node_bottomiest_pos = node_topiest_pos + bbox.height
 
         min_x = (node_leftiest_pos < min_x) ? node_leftiest_pos : min_x
         min_y = (node_topiest_pos < min_y) ? node_topiest_pos : min_y
