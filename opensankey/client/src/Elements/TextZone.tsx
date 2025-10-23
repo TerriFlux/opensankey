@@ -38,6 +38,8 @@ export const default_container_opacity = 100
 export const default_container_transparent_border = false
 export const default_container_is_image = false
 export const default_container_image_src = ''
+export const default_container_thickness = 1
+export const default_container_dashed = false
 
 export class Class_ContainerElement extends ClassTemplate_Element{
   protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -71,6 +73,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
   private _image_src: string
   private _label_width: number
   private _label_height: number
+  private _thickness:number
+  private _dashed:boolean
 
   private _tied_to_nodes: boolean
   private _attached_node: Class_NodeElement[]
@@ -112,6 +116,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     this._transparent_border = default_container_transparent_border
     this._is_image = default_container_is_image
     this._image_src = default_container_image_src
+    this._thickness = default_container_thickness
+    this._dashed = default_container_dashed
 
     this._tied_to_nodes = false
     this._attached_node = []
@@ -308,6 +314,8 @@ export class Class_ContainerElement extends ClassTemplate_Element{
       .attr('fill-opacity', this._color_visible ? this._opacity / 100 : 0)
       .attr('fill', this._color)
       .attr('stroke', this._color_border)
+      .attr('stroke-width', this._thickness)
+      .attr('stroke-dasharray', this._dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._transparent_border) ? 0 : 1)
   }
 
@@ -909,6 +917,12 @@ export class Class_ContainerElement extends ClassTemplate_Element{
 
   public get color_border(): string { return this._color_border }
   public set color_border(value: string) { this._color_border = value }
+
+  public get thickness() { return this._thickness }
+  public set thickness(value) { this._thickness = value }
+
+  public get dashed() { return this._dashed }
+  public set dashed(value) { this._dashed = value }
 
   public get transparent_border(): boolean { return this._transparent_border }
   public set transparent_border(value: boolean) { this._transparent_border = value }
