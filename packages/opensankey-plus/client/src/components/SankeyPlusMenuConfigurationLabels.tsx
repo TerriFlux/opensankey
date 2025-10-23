@@ -43,7 +43,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   new_data_plus,
 }) => {
   const { t, icon_library } = new_data_plus
-  const { icon_add_element, icon_remove_element,  icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
+  const { icon_add_element, icon_remove_element, icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
   const selected_zdt = new_data_plus.drawing_area.selected_containers_list
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
@@ -68,7 +68,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     const DD = (
       <Box
         layerStyle='submenuconfig_droplist'
-        width= '11vw'
+        width='11vw'
       >
         {/* Position custom pour MultiSelect */}
 
@@ -132,6 +132,30 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
       display_size = (d.opacity === opa) ? display_size : false
     })
     return (display_size) ? opa : 0
+  }
+
+  const allLabelThickness = () => {
+    let display_size = true
+    let opa = 100
+    if (selected_zdt.length !== 0) {
+      opa = selected_zdt[0].thickness
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.thickness === opa) ? display_size : false
+    })
+    return (display_size) ? opa : 0
+  }
+
+  const allLabelDashed = () => {
+    let display_size = true
+    let opa = false
+    if (selected_zdt.length !== 0) {
+      opa = selected_zdt[0].dashed
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.dashed === opa) ? display_size : false
+    })
+    return (display_size) ? opa : false
   }
 
   const allLabelBgVisible = () => {
@@ -205,8 +229,10 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   const is_all_node_tied_to_extremity = allLabelTiedToNodesAtExtremity()
   const options_selector_node_tied = new_data_plus.drawing_area.sankey.nodes_list_sorted.map((node) => { return { 'label': node.name, 'value': node.id, selected: list_node_tied.includes(node) } })
   const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
+  const valAllLabelDashed = selected_zdt[0]?.dashed ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
   const valAllLabelBorderTransparentIndeterminate = !selected_zdt.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
+  const valAllLabelDashedIndeterminate = !selected_zdt.every(zdt => zdt.dashed == valAllLabelDashed)
 
   const valAllLabelBgVisible = selected_zdt[0]?.color_visible ?? false
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
@@ -405,6 +431,54 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     _updateTransparent()
   }
 
+  const updateThickness = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.thickness]))
+    const _updateThickness = () => {
+      selected_zdt.map(d => d.thickness = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateThickness = () => {
+      selected_zdt.map(d => d.thickness = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateThickness)
+    new_data_plus.history.saveRedo(_updateThickness)
+    // Execute original attr mutation
+    _updateThickness()
+  }
+
+  const updateDashed = (_: boolean | null | undefined) => {
+    if (_ == undefined || _ == null) //Failsafe
+      return
+
+    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.dashed]))
+    const _updateDashed = () => {
+      selected_zdt.map(d => d.dashed = _)
+      // Update all menus
+      redrawAndRefresh()
+    }
+
+    const inv_updateDashed = () => {
+      selected_zdt.map(d => d.dashed = dict_old_title[d.id])
+      // Update menus
+      redrawAndRefresh()
+    }
+
+    // Save undo/redo in data history
+    new_data_plus.history.saveUndo(inv_updateDashed)
+    new_data_plus.history.saveRedo(_updateDashed)
+    // Execute original attr mutation
+    _updateDashed()
+  }
+
   const updateTypeLabelToText = () => {
     const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.is_image]))
     const old_type = button_text_or_image
@@ -457,7 +531,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
   const updateLabelBorderTransparent = (_: boolean) => {
     const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.transparent_border]))
     const _updateLabelBorderTransparent = () => {
-      selected_zdt.map(d => d.transparent_border = _)
+      selected_zdt.map(d => d.transparent_border = !_)
       // Update all menus
       redrawAndRefresh()
     }
@@ -898,32 +972,51 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.cbl')}
-        </Box>
-        <Box
-          as='span'
-          layerStyle='menuconfigpanel_row_2cols'
-        >
-          <MenuColorPicker
-            isDisabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
-            initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
-            onColorChange={(new_color) => {
-              selected_zdt.map(d => d.color_border = new_color)
-              redrawAndRefresh()
-            }}
-          />
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'}
+          isDisabled={disable_options}
+          isIndeterminate={valAllLabelBorderTransparentIndeterminate}
+          isChecked={!valAllLabelBorderTransparent}
+          onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
+          {t('LL.bt')}
+        </Checkbox>
 
-          <Checkbox
-            variant='menuconfigpanel_part_title_1_checkbox'
-            iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'}
-            isDisabled={disable_options}
-            isIndeterminate={valAllLabelBorderTransparentIndeterminate}
-            isChecked={valAllLabelBorderTransparent}
-            onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
-            {t('LL.bt')}
-          </Checkbox>
+
+        <MenuColorPicker
+          isDisabled={!new_data_plus.has_sankey_plus && !valAllLabelBorderTransparent}
+          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color_border : '#ffffff'}
+          onColorChange={(new_color) => {
+            selected_zdt.map(d => d.color_border = new_color)
+            redrawAndRefresh()
+          }}
+        />
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_3cols'
+      >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('LL.thickness')}
         </Box>
+
+        <ConfigMenuNumberInput
+          t={new_data_plus.t}
+          disabled={disable_options}
+          default_value={allLabelThickness()}
+          function_on_blur={updateThickness}
+          minimum_value={0}
+          stepper={true}
+        />
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          iconColor={valAllLabelDashedIndeterminate ? '#78C2AD' : 'white'}
+          isDisabled={disable_options}
+          isIndeterminate={valAllLabelDashedIndeterminate}
+          isChecked={allLabelDashed()}
+          onChange={(evt) => updateDashed(evt.target.checked)}>
+          {t('LL.dashed')}
+        </Checkbox>
       </Box>
     </Box>
   </OSTooltip>
@@ -933,7 +1026,7 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
 
 
 export const ContextZDTOSP = (
-  { new_data_plus }:{new_data_plus:Class_ApplicationDataOSP}
+  { new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }
 ) => {
   const { t, drawing_area } = new_data_plus
 
@@ -1045,8 +1138,8 @@ export const ContextZDTOSP = (
     new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_zdt.current(true)
     closeContextMenu()
   }}
-  variant='contextmenu_button'
-  rightIcon={new_data_plus.icon_library.icon_popup_menu}
+    variant='contextmenu_button'
+    rightIcon={new_data_plus.icon_library.icon_popup_menu}
   >{t('Menu.LL')} </Button>
 
 
@@ -1060,7 +1153,7 @@ export const ContextZDTOSP = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -1073,12 +1166,12 @@ export const ContextZDTOSP = (
           new_data_plus.drawing_area.attachNodeToCont(node, zdt_to_contextualise)
           //new_data_plus.drawing_area.addNodeToSelection(node)
         })
-        new_data_plus.drawing_area.attachNodeToCont(n,zdt_to_contextualise)
+        new_data_plus.drawing_area.attachNodeToCont(n, zdt_to_contextualise)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 
@@ -1105,7 +1198,7 @@ export const ContextZDTOSP = (
 
     }}>
     <ButtonGroup orientation='vertical' isAttached>
-      {zdt_to_contextualise.tied_to_nodes ?  button_detach_all_tied_nodes : btn_select_node_inside }
+      {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       {sep}
       {btn_mask_border}
       {btn_change_color}
