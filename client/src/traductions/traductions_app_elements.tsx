@@ -219,18 +219,6 @@ export const resources_app_elements = {
         },
 
       },
-      LL: {
-        'hl': 'Height',
-        'll': 'Width',
-        'ft': 'Opacity',
-        'cfl': 'Background Color',
-        'bt': 'Border',
-        'hide_border': 'Hide border',
-        'display_border': 'Display border',
-        'cbl': 'Border Color',
-        'labels': 'Labels',
-        'title': 'Title'
-      },
       UserNav: {
         'to_con': 'Sign in',
         'to_reg': 'Sign up',
@@ -803,19 +791,6 @@ export const resources_app_elements = {
           'fla': 'Flux nuls indéterminés visibles',
           'astr': 'Affichage structure',
         },
-      },
-      LL: {
-        'hl': 'Hauteur',
-        'll': 'Largeur',
-        'ft': 'Opacité',
-        'cfl': 'Couleur fond',
-        'bt': 'Bordure',
-        'hide_border': 'Masquer la bordure',
-        'display_border': 'Afficher la bordure',
-        'cbl': 'Couleur bordure',
-        'labels': 'Style police',
-
-        'title': 'Nom'
       },
       UserNav: {
         'to_con': 'Connectez vous',
