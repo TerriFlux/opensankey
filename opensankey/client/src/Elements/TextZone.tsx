@@ -40,8 +40,14 @@ export const default_container_is_image = false
 export const default_container_image_src = ''
 export const default_container_thickness = 1
 export const default_container_dashed = false
+export const default_container_vertical_text = true
+export const default_container_vertical_alignment: 'left' | 'right' = 'left'
+export const default_container_margin_left = 50
+export const default_container_margin_right = 50
+export const default_container_margin_top = 50
+export const default_container_margin_bottom = 50
 
-export class Class_ContainerElement extends ClassTemplate_Element{
+export class Class_ContainerElement extends ClassTemplate_Element {
   protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   /**
@@ -73,14 +79,20 @@ export class Class_ContainerElement extends ClassTemplate_Element{
   private _image_src: string
   private _label_width: number
   private _label_height: number
-  private _thickness:number
-  private _dashed:boolean
+  private _thickness: number
+  private _dashed: boolean
+  private _vertical_text: boolean
+  private _vertical_alignment: 'left' | 'right'
 
   private _tied_to_nodes: boolean
   private _attached_node: Class_NodeElement[]
-  private _margin_from_attached_nodes: number
+  private _margin_left: number
+  private _margin_right: number
+  private _margin_top: number
+  private _margin_bottom: number
   private _at_extremity_of_attached_nodes: boolean
   private _extremity_position: 'top' | 'bottom' | 'left' | 'right'
+
 
   private _drag_handler: {
     top: ClassTemplate_Handler,
@@ -100,7 +112,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     menu_config: Class_MenuConfig,
     drawing_area: Class_DrawingArea,
   ) {
-    super(id,drawing_area,drawing_area.sankey, 'g_elements_sankey')
+    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
     this._display = {
       position: structuredClone(default_element_position as Type_ElementPosition),
     }
@@ -118,10 +130,15 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     this._image_src = default_container_image_src
     this._thickness = default_container_thickness
     this._dashed = default_container_dashed
+    this._vertical_text = default_container_vertical_text
+    this._vertical_alignment = default_container_vertical_alignment
 
     this._tied_to_nodes = false
     this._attached_node = []
-    this._margin_from_attached_nodes = 50
+    this._margin_left = default_container_margin_left
+    this._margin_right = default_container_margin_right
+    this._margin_top = default_container_margin_top
+    this._margin_bottom = default_container_margin_bottom
     this._at_extremity_of_attached_nodes = false
     this._extremity_position = 'top'
 
@@ -196,12 +213,20 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     this._color_visible = container_to_copy._color_visible
     this._color_border = container_to_copy._color_border
     this._transparent_border = container_to_copy._transparent_border
+    this._thickness = container_to_copy._thickness
+    this._dashed = container_to_copy._dashed
+    this._vertical_text = container_to_copy._vertical_text
+    this._vertical_alignment = container_to_copy._vertical_alignment
+
     this._is_image = container_to_copy._is_image
     this._image_src = container_to_copy._image_src
     this._label_width = container_to_copy._label_width
     this._label_height = container_to_copy._label_height
     this._tied_to_nodes = container_to_copy._tied_to_nodes
-    this._margin_from_attached_nodes = container_to_copy._margin_from_attached_nodes
+    this._margin_left = container_to_copy._margin_left
+    this._margin_right = container_to_copy._margin_right
+    this._margin_top = container_to_copy._margin_top
+    this._margin_bottom = container_to_copy._margin_bottom
     this._at_extremity_of_attached_nodes = container_to_copy._at_extremity_of_attached_nodes
     this._extremity_position = container_to_copy._extremity_position
   }
@@ -224,15 +249,23 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     json_object['color_visible'] = this._color_visible
     json_object['color_border'] = this._color_border
     json_object['transparent_border'] = this._transparent_border
+    json_object['border_thickness'] = this._thickness
+    json_object['border_dashed'] = this._dashed
+    json_object['vertical_text'] = this._vertical_text
+    json_object['vertical_alignment'] = this._vertical_alignment
     json_object['is_image'] = this._is_image
     json_object['image_src'] = this._image_src
     json_object['label_width'] = this._label_width
     json_object['label_height'] = this._label_height
     json_object['tiedToNode'] = this._tied_to_nodes
-    json_object['margin'] = this._margin_from_attached_nodes
+    json_object['margin_left'] = this._margin_left
+    json_object['margin_right'] = this._margin_right
+    json_object['margin_top'] = this._margin_top
+    json_object['margin_bottom'] = this._margin_bottom
     json_object['attachedNodes'] = this._attached_node.map(n => n.id)
     json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
     json_object['extremityPos'] = this._extremity_position
+
   }
 
   /**
@@ -253,12 +286,29 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     this._color_visible = getBooleanFromJSON(json_object, 'color_visible', this._color_visible)
     this._color_border = getStringFromJSON(json_object, 'color_border', this.color_border)
     this._transparent_border = getBooleanFromJSON(json_object, 'transparent_border', this.transparent_border)
+    this._thickness = getNumberFromJSON(json_object, 'border_thickness', this._thickness)
+    this._dashed = getBooleanFromJSON(json_object, 'border_dashed', this._dashed)
+    this._vertical_text = getBooleanFromJSON(json_object, 'vertical_text', default_container_vertical_text)
+    this._vertical_alignment = getStringFromJSON(json_object, 'vertical_alignment', default_container_vertical_alignment) as 'left' | 'right'
     this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
     this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._label_width = getNumberFromJSON(json_object, 'label_width', this.label_width)
     this._label_height = getNumberFromJSON(json_object, 'label_height', this.label_height)
     this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
-    this._margin_from_attached_nodes = getNumberFromJSON(json_object, 'margin', this._margin_from_attached_nodes)
+    // Dans la méthode _fromJSON, ajoutez après le chargement des autres attributs:
+    this._margin_left = getNumberFromJSON(json_object, 'margin_left', default_container_margin_left)
+    this._margin_right = getNumberFromJSON(json_object, 'margin_right', default_container_margin_right)
+    this._margin_top = getNumberFromJSON(json_object, 'margin_top', default_container_margin_top)
+    this._margin_bottom = getNumberFromJSON(json_object, 'margin_bottom', default_container_margin_bottom)
+
+    // Pour la rétrocompatibilité, si l'ancien 'margin' existe:
+    if (json_object['margin'] !== undefined) {
+      const old_margin = getNumberFromJSON(json_object, 'margin', 50)
+      this._margin_left = old_margin
+      this._margin_right = old_margin
+      this._margin_top = old_margin
+      this._margin_bottom = old_margin
+    }
     const list_id_nodes = getStringListFromJSON(json_object, 'attachedNodes', [])
     const present_node_id = this.drawing_area.sankey.nodes_dict
     list_id_nodes.forEach(id_n => {
@@ -380,17 +430,36 @@ export class Class_ContainerElement extends ClassTemplate_Element{
    * @memberof Class_ContainerElement
    */
   private drawContentText() {
-    this.d3_selection?.append('foreignObject')
+    if (!this.d3_selection) return
+    const foreignObject = this.d3_selection.append('foreignObject')
       .classed('content', true)
-      .attr('width', this._label_width + 'px')
-      .attr('height', this._label_height + 'px')
       .attr('id', this.id + '_text')
+    if (this._vertical_text) {
+      // Mode vertical: inverser width et height
+      foreignObject
+        .attr('width', this._label_height + 'px')
+        .attr('height', this._label_width + 'px')
+
+      // Calculer la position et rotation selon l'alignement
+      if (this._vertical_alignment === 'left') {
+        // Texte vertical à gauche
+        foreignObject.attr('transform', `rotate(-90) translate(${-this._label_width}, 0)`)
+      } else {
+        // Texte vertical à droite
+        foreignObject.attr('transform', `rotate(-90) translate(${-this._label_width}, ${this._label_height - this._label_height})`)
+      }
+    } else {
+      // Mode horizontal normal
+      foreignObject
+        .attr('width', this._label_width + 'px')
+        .attr('height', this._label_height + 'px')
+    }
+
+    foreignObject
       .append('xhtml:div')
       .attr('class', 'ql-editor')
       .html(this._content)
-      //.html(this.unescapeHtml(this._content))
   }
-
   /**
    * Draw the content of the zdt when it is an image
    *
@@ -584,46 +653,52 @@ export class Class_ContainerElement extends ClassTemplate_Element{
 
     this._attached_node.forEach(node => {
       if (node.is_visible) {
-        // Use bbox to take into account he label of the node
         const bbox = node.d3_selection?.node()?.getBBox() ?? { x: 0, y: 0, width: 0, height: 0 }
-
         const node_topiest_pos = node.position_y + bbox.y
         const node_leftiest_pos = node.position_x + bbox.x
-        const node_righiest_pos = node_leftiest_pos + bbox.width
-        const node_bottomiest_pos = node_topiest_pos + bbox.height
+        const node_rightest_pos = node.position_x + bbox.x + bbox.width
+        const node_bottomiest_pos = node.position_y + bbox.y + bbox.height
 
         min_x = (node_leftiest_pos < min_x) ? node_leftiest_pos : min_x
         min_y = (node_topiest_pos < min_y) ? node_topiest_pos : min_y
-        max_x = (node_righiest_pos > max_x) ? node_righiest_pos : max_x
+        max_x = (node_rightest_pos > max_x) ? node_rightest_pos : max_x
         max_y = (node_bottomiest_pos > max_y) ? node_bottomiest_pos : max_y
       }
     })
 
+    // Appliquer les marges selon la position
     if (this._at_extremity_of_attached_nodes) {
-      // compute position of container so that it center is aligned with the center of the group of nodes attached 
-      if (this._extremity_position == 'top') {
-        this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-        const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
-        this.setPosXY(center_pox_x, min_y - this._label_height - this._margin_from_attached_nodes)
-      } else if (this._extremity_position == 'bottom') {
-        this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-        const center_pox_x = ((min_x + max_x) / 2) - this._label_width / 2
-        this.setPosXY(center_pox_x, max_y + this._margin_from_attached_nodes)
-      } else if (this._extremity_position == 'left') {
-        this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-        const center_pox_y = ((min_y + max_y) / 2) - this._label_height / 2
-        this.setPosXY(min_x - this._label_width - this._margin_from_attached_nodes, center_pox_y)
-      } else if (this._extremity_position == 'right') {
-        this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-        const center_pox_y = ((min_y + max_y) / 2) - this._label_height / 2
-        this.setPosXY(max_x + this._margin_from_attached_nodes, center_pox_y)
+      switch (this._extremity_position) {
+        case 'top':
+          this._display.position.y = min_y - this._label_height - this._margin_bottom
+          this._display.position.x = min_x - this._margin_left
+          this._label_width = max_x - min_x + this._margin_left + this._margin_right
+          break
+        case 'bottom':
+          this._display.position.y = max_y + this._margin_top
+          this._display.position.x = min_x - this._margin_left
+          this._label_width = max_x - min_x + this._margin_left + this._margin_right
+          break
+        case 'left':
+          this._display.position.x = min_x - this._label_width - this._margin_right
+          this._display.position.y = min_y - this._margin_top
+          this._label_height = max_y - min_y + this._margin_top + this._margin_bottom
+          break
+        case 'right':
+          this._display.position.x = max_x + this._margin_left
+          this._display.position.y = min_y - this._margin_top
+          this._label_height = max_y - min_y + this._margin_top + this._margin_bottom
+          break
       }
     } else {
-      this.setPosXY(min_x - this._margin_from_attached_nodes, min_y - this._margin_from_attached_nodes)
-      this._label_width = (max_x - min_x) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
-      this._label_height = (max_y - min_y) + (this._margin_from_attached_nodes * 2) // margin * 2 to compensate margin reduction in setPosXY
+      // Mode englobant : appliquer les marges sur tous les côtés
+      this._display.position.x = min_x - this._margin_left
+      this._display.position.y = min_y - this._margin_top
+      this._label_width = max_x - min_x + this._margin_left + this._margin_right
+      this._label_height = max_y - min_y + this._margin_top + this._margin_bottom
     }
   }
+
 
   // PROTECTED METHODS ==================================================================
 
@@ -645,7 +720,7 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     const drawing_area = this.drawing_area
     if (drawing_area.application_data.is_static) {
       drawing_area.purgeSelection()
-      return      
+      return
     }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
@@ -831,9 +906,12 @@ export class Class_ContainerElement extends ClassTemplate_Element{
     if (zdt_selected.length == 0) {
       if (drawing_area.isInSelectionMode()) {
         this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
-        this._attached_node.forEach(n => {
+        this._attached_node.forEach((n,i) => {
           n.position_x = n.position_x + event.dx
           n.position_y = n.position_y + event.dy
+              if (i==0) {
+                n.position_dy = n.position_dy + event.dy
+              }
           n.applyPosition()
         })
         this.drawing_area.checkAndUpdateAreaSize()
@@ -851,9 +929,12 @@ export class Class_ContainerElement extends ClassTemplate_Element{
         zdt_selected
           .forEach(zdt => {
             zdt.setPosXY(zdt.position_x + event.dx, zdt.position_y + event.dy)
-            zdt._attached_node.forEach(n => {
+            zdt._attached_node.forEach((n,i) => {
               n.position_x = n.position_x + event.dx
               n.position_y = n.position_y + event.dy
+              if (i==0) {
+                n.position_dy = n.position_dy + event.dy
+              }
               n.applyPosition()
             })
           })
@@ -927,6 +1008,12 @@ export class Class_ContainerElement extends ClassTemplate_Element{
   public get transparent_border(): boolean { return this._transparent_border }
   public set transparent_border(value: boolean) { this._transparent_border = value }
 
+  public get vertical_text(): boolean { return this._vertical_text }
+  public set vertical_text(value: boolean) { this._vertical_text = value }
+
+  public get vertical_alignment(): 'left' | 'right' { return this._vertical_alignment }
+  public set vertical_alignment(value: 'left' | 'right') { this._vertical_alignment = value }
+
   public get is_image(): boolean { return this._is_image }
   public set is_image(value: boolean) { this._is_image = value }
 
@@ -944,8 +1031,18 @@ export class Class_ContainerElement extends ClassTemplate_Element{
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
   public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
 
-  public get margin_from_attached_nodes(): number { return this._margin_from_attached_nodes }
-  public set margin_from_attached_nodes(value: number) { this._margin_from_attached_nodes = value }
+
+  public get margin_left(): number { return this._margin_left }
+  public set margin_left(value: number) { this._margin_left = value }
+
+  public get margin_right(): number { return this._margin_right }
+  public set margin_right(value: number) { this._margin_right = value }
+
+  public get margin_top(): number { return this._margin_top }
+  public set margin_top(value: number) { this._margin_top = value }
+
+  public get margin_bottom(): number { return this._margin_bottom }
+  public set margin_bottom(value: number) { this._margin_bottom = value }
 
   public get at_extremity_of_attached_nodes(): boolean { return this._at_extremity_of_attached_nodes }
   public set at_extremity_of_attached_nodes(value: boolean) { this._at_extremity_of_attached_nodes = value }

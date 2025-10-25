@@ -102,7 +102,7 @@ export const Menu = (
     additionalMenus
   }: {
     app_data: Class_ApplicationData,
-    processFunction:FType_ProcessFunctions,
+    processFunction: FType_ProcessFunctions,
     external_modal: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
@@ -175,7 +175,7 @@ export const Menu = (
     <>
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
-      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ? 
+      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ?
         <MenuTopNavBar new_data={app_data} processFunction={processFunction} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
@@ -190,41 +190,41 @@ export const Menu = (
           <DrawerSequenceDataTagg new_data={app_data} />
           {(
             (!app_data.is_static) ||
-          (window.sankey && window.sankey.footer)
-          ) ?<Box
-              display='grid'
-              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-              margin='0.2rem'
+            (window.sankey && window.sankey.footer)
+          ) ? <Box
+            display='grid'
+            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+            margin='0.2rem'
+          >
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='start'
             >
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='start'
-              >
               ©
-                <img
-                  width={75}
-                  src={logo_terriflux}
-                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-                />
+              <img
+                width={75}
+                src={logo_terriflux}
+                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+              />
               - {t('tdr')}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                {app_name}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-              </Box>
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='end'
-                paddingRight='1.5rem'
-              >
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              {app_name}
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+            </Box>
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='end'
+              paddingRight='1.5rem'
+            >
               12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-              </Box>
-            </Box>:
+            </Box>
+          </Box> :
             <></>
           }
         </Box>
@@ -338,11 +338,23 @@ const ConfigMenu = ({ app_data, additional_menus }: {
   const sizeBtn = document.getElementsByClassName('buttonGroupTypeConfig')[0]?.getBoundingClientRect().height ?? 30
   const maxHConfig = window.innerHeight - (app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.getBottomBarHeight() + sizeBtn + (app_data.drawing_area.fit_margin * 2))
 
-  return <Box layerStyle='config_menu_layout' style={{ background: (style_config[type_menu_configuration_selected].theme) }}>
-    <Box layerStyle='type_config_box' >
+  return <Box layerStyle='config_menu_layout' style={{
+    background: (style_config[type_menu_configuration_selected].theme),
+    height: '100%',
+    gridTemplateRows: 'auto 1fr auto',
+    alignContent: 'start'
+  }}>
+    <Box layerStyle='type_config_box'>
       <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
     </Box>
-    <Box layerStyle='config_box' style={{ maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)' }}>
+    <Box
+      layerStyle='config_box'
+      style={{
+        maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)',
+        overflowY: 'auto',
+        overflowX: 'hidden'
+      }}
+    >
       <ConfigContent app_data={app_data} additional_menus={additional_menus} />
     </Box>
     <Box layerStyle='element_box'>
@@ -620,4 +632,3 @@ export const MenuDraggable = ({
     </Box>
   </Draggable>
 }
-
