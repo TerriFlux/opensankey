@@ -731,7 +731,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const cont = new_drawing_area.addNewFreeLabel('unitary_container_')
 
     cont.tied_to_nodes = true
-    cont.margin_from_attached_nodes = 100
+    //cont.margin_from_attached_nodes = 100
     new_drawing_area.sankey.nodes_list.forEach(node => {
       new_drawing_area.attachNodeToCont(node, cont)
     })

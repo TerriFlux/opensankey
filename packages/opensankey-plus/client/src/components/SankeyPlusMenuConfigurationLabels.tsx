@@ -212,16 +212,76 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
       return []
   }
 
-  const allLabelMargin = () => {
+  const allLabelMarginLeft = () => {
     let display_size = true
     let margin = 0
     if (selected_zdt.length !== 0) {
-      margin = selected_zdt[0].margin_from_attached_nodes
+      margin = selected_zdt[0].margin_left
     }
     selected_zdt.map((d) => {
-      display_size = (d.margin_from_attached_nodes === margin) ? display_size : false
+      display_size = (d.margin_left === margin) ? display_size : false
     })
     return (display_size) ? margin : 0
+  }
+
+  const allLabelMarginRight = () => {
+    let display_size = true
+    let margin = 0
+    if (selected_zdt.length !== 0) {
+      margin = selected_zdt[0].margin_right
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.margin_right === margin) ? display_size : false
+    })
+    return (display_size) ? margin : 0
+  }
+
+  const allLabelMarginTop = () => {
+    let display_size = true
+    let margin = 0
+    if (selected_zdt.length !== 0) {
+      margin = selected_zdt[0].margin_top
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.margin_top === margin) ? display_size : false
+    })
+    return (display_size) ? margin : 0
+  }
+
+  const allLabelMarginBottom = () => {
+    let display_size = true
+    let margin = 0
+    if (selected_zdt.length !== 0) {
+      margin = selected_zdt[0].margin_bottom
+    }
+    selected_zdt.map((d) => {
+      display_size = (d.margin_bottom === margin) ? display_size : false
+    })
+    return (display_size) ? margin : 0
+  }
+
+  const allLabelVerticalText = () => {
+    let display_value = true
+    let vertical = false
+    if (selected_zdt.length !== 0) {
+      vertical = selected_zdt[0].vertical_text
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.vertical_text === vertical) ? display_value : false
+    })
+    return (display_value) ? vertical : false
+  }
+
+  const allLabelVerticalAlignment = (_: 'left' | 'right') => {
+    let display_value = false
+    const alignment = _
+    if (selected_zdt.length !== 0) {
+      display_value = true
+    }
+    selected_zdt.map((d) => {
+      display_value = (d.vertical_alignment === alignment) ? display_value : false
+    })
+    return display_value
   }
 
   const list_node_tied = allNodesTiedToZDTRef()
@@ -654,28 +714,98 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
     _updateLabelTiedToNodes()
   }
 
-  const updateMargin = (_: number | null | undefined) => {
-    if (_ == undefined || _ == null) //Failsafe
-      return
-
-    const dict_old_title = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_from_attached_nodes]))
-    const _updateMargin = () => {
-      selected_zdt.map(d => d.margin_from_attached_nodes = _)
-      // Update all menus
+  const updateMarginLeft = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) return
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_left]))
+    const _updateMarginLeft = () => {
+      selected_zdt.map(d => d.margin_left = _)
       redrawAndRefresh()
     }
-
-    const inv_updateMargin = () => {
-      selected_zdt.map(d => d.margin_from_attached_nodes = dict_old_title[d.id])
-      // Update menus
+    const inv_updateMarginLeft = () => {
+      selected_zdt.map(d => d.margin_left = dict_old_val[d.id])
       redrawAndRefresh()
     }
+    new_data_plus.history.saveUndo(inv_updateMarginLeft)
+    new_data_plus.history.saveRedo(_updateMarginLeft)
+    _updateMarginLeft()
+  }
 
-    // Save undo/redo in data history
-    new_data_plus.history.saveUndo(inv_updateMargin)
-    new_data_plus.history.saveRedo(_updateMargin)
-    // Execute original attr mutation
-    _updateMargin()
+  const updateMarginRight = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) return
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_right]))
+    const _updateMarginRight = () => {
+      selected_zdt.map(d => d.margin_right = _)
+      redrawAndRefresh()
+    }
+    const inv_updateMarginRight = () => {
+      selected_zdt.map(d => d.margin_right = dict_old_val[d.id])
+      redrawAndRefresh()
+    }
+    new_data_plus.history.saveUndo(inv_updateMarginRight)
+    new_data_plus.history.saveRedo(_updateMarginRight)
+    _updateMarginRight()
+  }
+
+  const updateMarginTop = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) return
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_top]))
+    const _updateMarginTop = () => {
+      selected_zdt.map(d => d.margin_top = _)
+      redrawAndRefresh()
+    }
+    const inv_updateMarginTop = () => {
+      selected_zdt.map(d => d.margin_top = dict_old_val[d.id])
+      redrawAndRefresh()
+    }
+    new_data_plus.history.saveUndo(inv_updateMarginTop)
+    new_data_plus.history.saveRedo(_updateMarginTop)
+    _updateMarginTop()
+  }
+
+  const updateMarginBottom = (_: number | null | undefined) => {
+    if (_ == undefined || _ == null) return
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.margin_bottom]))
+    const _updateMarginBottom = () => {
+      selected_zdt.map(d => d.margin_bottom = _)
+      redrawAndRefresh()
+    }
+    const inv_updateMarginBottom = () => {
+      selected_zdt.map(d => d.margin_bottom = dict_old_val[d.id])
+      redrawAndRefresh()
+    }
+    new_data_plus.history.saveUndo(inv_updateMarginBottom)
+    new_data_plus.history.saveRedo(_updateMarginBottom)
+    _updateMarginBottom()
+  }
+
+  const updateVerticalText = (_: boolean) => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.vertical_text]))
+    const _updateVerticalText = () => {
+      selected_zdt.map(d => d.vertical_text = _)
+      redrawAndRefresh()
+    }
+    const inv_updateVerticalText = () => {
+      selected_zdt.map(d => d.vertical_text = dict_old_val[d.id])
+      redrawAndRefresh()
+    }
+    new_data_plus.history.saveUndo(inv_updateVerticalText)
+    new_data_plus.history.saveRedo(_updateVerticalText)
+    _updateVerticalText()
+  }
+
+  const updateVerticalAlignment = (_: 'left' | 'right') => {
+    const dict_old_val = Object.fromEntries(selected_zdt.map(d => [d.id, d.vertical_alignment]))
+    const _updateVerticalAlignment = () => {
+      selected_zdt.map(d => d.vertical_alignment = _)
+      redrawAndRefresh()
+    }
+    const inv_updateVerticalAlignment = () => {
+      selected_zdt.map(d => d.vertical_alignment = dict_old_val[d.id])
+      redrawAndRefresh()
+    }
+    new_data_plus.history.saveUndo(inv_updateVerticalAlignment)
+    new_data_plus.history.saveRedo(_updateVerticalAlignment)
+    _updateVerticalAlignment()
   }
 
   const is_zdt_at_extremity_top = allLabelTiedToNodesAtExtremityPos('top')
@@ -774,23 +904,96 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
         redrawAndRefresh()
       }}
     />
-
+    <Box layerStyle='menuconfigpanel_option_name'>
+      {t('LL.margin')}
+    </Box>
     <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
       <Box
         as='span'
         layerStyle='menuconfigpanel_row_2cols'
       >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('LL.margin')}
+
+
+        {/* Margin Left */}
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('LL.marginLeft') || 'Left'}
+          </Box>
+          <ConfigMenuNumberInput
+            t={new_data_plus.t}
+            disabled={disable_options}
+            default_value={allLabelMarginLeft()}
+            function_on_blur={updateMarginLeft}
+            minimum_value={0}
+            stepper={true}
+          />
         </Box>
-        <ConfigMenuNumberInput
-          t={new_data_plus.t}
-          disabled={disable_options}
-          default_value={allLabelMargin()}
-          function_on_blur={updateMargin}
-          minimum_value={1}
-          stepper={true}
-        />
+
+        {/* Margin Right */}
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('LL.marginRight') || 'Right'}
+          </Box>
+          <ConfigMenuNumberInput
+            t={new_data_plus.t}
+            disabled={disable_options}
+            default_value={allLabelMarginRight()}
+            function_on_blur={updateMarginRight}
+            minimum_value={0}
+            stepper={true}
+          />
+        </Box>
+      </Box>
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      ></Box>
+      {/* Margin Left */}
+      <Box
+        as='span'
+        layerStyle='menuconfigpanel_row_2cols'
+      >
+        {/* Margin Top */}
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('LL.marginTop') || 'Top'}
+          </Box>
+          <ConfigMenuNumberInput
+            t={new_data_plus.t}
+            disabled={disable_options}
+            default_value={allLabelMarginTop()}
+            function_on_blur={updateMarginTop}
+            minimum_value={0}
+            stepper={true}
+          />
+        </Box>
+
+        {/* Margin Bottom */}
+        <Box
+          as='span'
+          layerStyle='menuconfigpanel_row_2cols'
+        >
+          <Box layerStyle='menuconfigpanel_option_name' >
+            {t('LL.marginBottom') || 'Bottom'}
+          </Box>
+          <ConfigMenuNumberInput
+            t={new_data_plus.t}
+            disabled={disable_options}
+            default_value={allLabelMarginBottom()}
+            function_on_blur={updateMarginBottom}
+            minimum_value={0}
+            stepper={true}
+          />
+        </Box>
       </Box>
     </OSTooltip>
 
@@ -889,6 +1092,52 @@ export const MenuConfigurationFreeLabelsOSP: FC<BaseComponentPropsPlus> = ({
             variant='menuconfigpanel_option_button'
             onClick={updateTypeLabelToImage}>Image</Button></Box>
       </Box>
+
+      {/* Vertical Text Options */}
+      {button_text_or_image === 'text' ? (
+        <>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isDisabled={disable_options}
+            isChecked={allLabelVerticalText()}
+            onChange={(evt) => updateVerticalText(evt.target.checked)}>
+            <OSTooltip label={t('LL.tooltips.verticalText') || 'Orient text vertically'} placement='left'>
+              {t('LL.verticalText') || 'Vertical Text'}
+            </OSTooltip>
+          </Checkbox>
+
+          {allLabelVerticalText() && (
+            <Box
+              as='span'
+              layerStyle='menuconfigpanel_row_2cols'
+            >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('LL.verticalAlignment') || 'Alignment'}
+              </Box>
+              <Box
+                as='span'
+                layerStyle='menuconfigpanel_row_2cols'
+              >
+                <Button
+                  isDisabled={disable_options}
+                  variant='menuconfigpanel_option_button'
+                  colorScheme={allLabelVerticalAlignment('left') ? 'blue' : 'gray'}
+                  onClick={() => updateVerticalAlignment('left')}>
+                  {t('LL.alignLeft') || 'Left'}
+                </Button>
+
+                <Button
+                  isDisabled={disable_options}
+                  variant='menuconfigpanel_option_button'
+                  colorScheme={allLabelVerticalAlignment('right') ? 'blue' : 'gray'}
+                  onClick={() => updateVerticalAlignment('right')}>
+                  {t('LL.alignRight') || 'Right'}
+                </Button>
+              </Box>
+            </Box>
+          )}
+        </>
+      ) : null}
 
       {button_text_or_image === 'text' ? <Box style={{ 'height': '300px' }}><ReactQuill
         className='quill_editor'
