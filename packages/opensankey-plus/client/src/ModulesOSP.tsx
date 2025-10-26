@@ -45,8 +45,8 @@ import {
 
 import {
   MenuConfigurationFreeLabelsOSP,
-  ContextZDTOSP,
 } from './components/SankeyPlusMenuConfigurationLabels'
+import { ContextZDT } from './components/ContextZDTOSP'
 import {
   ButtonNodeContextCreateUnitaryView,
   NodeHyperLinkOSP,
@@ -195,7 +195,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Add menu for new menu type 'Présentation'
   additionalMenus.current.additional_new_menu_config_content['presentation'] = {
     'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP new_data_plus={new_data_plus} />
+      <MenuConfigurationFreeLabelsOSP app_data={new_data_plus} />
     </WrapperContentConfig>,
 
     'node': <WrapperContentConfig title={t('Flux.IS')}><>
@@ -279,7 +279,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   const { t } = new_data_plus
   // Add new_menus
   const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
-    new_data_plus={new_data_plus}
+    app_data={new_data_plus}
   />
   const modules_dialogs_OSP = [
     <MenuDraggable
@@ -289,8 +289,8 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       title={t('Menu.LL')}
       maxW='20%'
     />,
-    <ContextZDTOSP
-      new_data_plus={new_data_plus}
+    <ContextZDT
+      app_data={new_data_plus}
     />,
     <ModalTransparentViewAttrOSP
       new_data_plus={new_data_plus}
