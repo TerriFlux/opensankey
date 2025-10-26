@@ -1,18 +1,20 @@
 import * as d3 from 'd3'
 
 import { ClassTemplate_Handler } from './Handler'
-import { Type_ElementPosition, Type_JSON, default_element_position, getBooleanFromJSON, getStringFromJSON, } from '../types/Utils'
+import { Type_ElementPosition, Type_JSON, default_element_position, default_style_id, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, } from '../types/Utils'
 import { Class_MenuConfig } from '../types/MenuConfig'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { ClassTemplate_Element } from './Element'
-import { AttributeKey, ContainerAttributeTypes } from './ContainerAttributes'
+import { Class_ContainerAttribute } from './ContainerAttributes'
 import { CONTAINERS_ATTRIBUTES_CONFIG, ContainerSetterGenerator } from './ContainerAttributesConfig'
-import { Class_ContainerStyle } from './ContainerStyle'
+import { Class_ContainerStyle } from './ElementStyle'
 
 export const default_container_content = 'Text Label ...'
 export const default_container_is_image = false
 export const default_container_image_src = ''
+
+// 🆕 TextZone hérite de ClassTemplate_Element et utilise Class_ContainerAttribute en composition
 export class Class_ContainerElement extends ClassTemplate_Element {
   protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
@@ -20,9 +22,9 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     position: Type_ElementPosition,
   }
 
-  // 🆕 Store attributes directly (no intermediate object)
-  private _attributes: { [K in AttributeKey]?: ContainerAttributeTypes[K] } = {}
-  private _style: Class_ContainerStyle | null = null
+  // 🆕 Utiliser Class_ContainerAttribute en composition au lieu de _attributes brut
+  private _container_attributes: Class_ContainerAttribute
+  private _style: Class_ContainerStyle[]
 
   private _title: string
   private _content: string
@@ -40,6 +42,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     right: ClassTemplate_Handler,
   }
 
+  // Déclarations pour les propriétés générées automatiquement
   vertical_text!: boolean
   vertical_alignment!: 'left' | 'right'
   label_width!: number
@@ -62,9 +65,12 @@ export class Class_ContainerElement extends ClassTemplate_Element {
   ) {
     super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
 
-    this._display = {
-      position: structuredClone(default_element_position as Type_ElementPosition),
-    }
+    // 🆕 Créer l'instance de Class_ContainerAttribute
+    this._container_attributes = new Class_ContainerAttribute()
+    this._style = [drawing_area.sankey.default_container_style],
+      this._display = {
+        position: structuredClone(default_element_position as Type_ElementPosition),
+      }
     this._title = 'Zone de texte ' + this.id
     this._content = default_container_content
     this._is_image = default_container_is_image
@@ -74,8 +80,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this._at_extremity_of_attached_nodes = false
     this._extremity_position = 'top'
 
-    // 🆕 AUTOMATIC GENERATION OF SETTERS/GETTERS with configured actions
-    ContainerSetterGenerator.generateSetters(this, this._attributes)
+    ContainerSetterGenerator.generateSetters(this)
 
     // Initialize title AFTER setters are generated
     this.title = 'Zone de texte ' + this.id
@@ -162,7 +167,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
 
     // Remove from style references
     if (this._style) {
-      this._style.removeReference(this)
+      this._style.forEach(_ => _.removeReference(this))
     }
   }
 
@@ -176,11 +181,10 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this._tied_to_nodes = container_to_copy._tied_to_nodes
     this._at_extremity_of_attached_nodes = container_to_copy._at_extremity_of_attached_nodes
     this._extremity_position = container_to_copy._extremity_position
-    // Copy all attributes
-    Object.keys(container_to_copy._attributes).forEach(key => {
-      //@ts-expect-error xxx
-      this._attributes[key as AttributeKey] = container_to_copy._attributes[key as AttributeKey]
-    })
+
+    // 🆕 Utiliser la méthode copyFrom de Class_ContainerAttribute
+    this._container_attributes.copyFrom(container_to_copy._container_attributes)
+
     this._attached_node = [...container_to_copy._attached_node]
   }
 
@@ -195,24 +199,12 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     json_object['image_src'] = this._image_src
     json_object['tiedToNode'] = this._tied_to_nodes
 
-    // Save all attributes
-    Object.keys(this._attributes).forEach(key => {
-      const typedKey = key as AttributeKey
-      const value = this._attributes[typedKey]
-      if (value !== undefined) {
-        json_object[key] = value
-      }
-    })
+    if (this.style!.length > 0) json_object['style'] = this.style.map(s => s.id)
 
     // Save attached nodes
     json_object['attachedNodes'] = this._attached_node.map(n => n.id)
     json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
     json_object['extremityPos'] = this._extremity_position
-
-    // Save style if not default
-    if (this._style && this._style.id !== 'default') {
-      json_object['style_id'] = this._style.id
-    }
   }
 
   protected _fromJSON(
@@ -226,7 +218,8 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
 
-
+    const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
+    this._style = style_id.map(s_id => this.sankey.container_styles_dict[s_id]) as Class_ContainerStyle[]
     // Load all attributes by setting them (triggers setters)
     Object.keys(CONTAINERS_ATTRIBUTES_CONFIG).forEach(key => {
       //@ts-expect-error - Properties added dynamically
@@ -243,21 +236,20 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     })
     this._at_extremity_of_attached_nodes = getBooleanFromJSON(json_object, 'attachedNodesExtremity', this._at_extremity_of_attached_nodes)
     this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom' | 'left' | 'right'
+  }
 
-    // Load style
-    const style_id = json_object['style_id'] as string | undefined
-    if (style_id) {
-      const style_manager = (this.drawing_area as any).container_style_manager
-      const style = style_manager?.getStyle(style_id)
-      if (style) {
-        this.useStyle(style)
-      }
-    }
+  public getStyleWithAttr(k: keyof Class_ContainerStyle) {
+    return this.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_container_style as Class_ContainerStyle
+  }
+
+  public isAttributeOverloaded(attr: keyof Class_ContainerAttribute) {
+    if (this.attributes[attr] === undefined) return false
+    if (this.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false
+    return true
   }
 
   protected _draw() {
     super._draw()
-    // Update class attributes
     this.d3_selection?.attr('class', 'gg_labels').datum(this)
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
     this._drawShape()
@@ -608,30 +600,30 @@ export class Class_ContainerElement extends ClassTemplate_Element {
         case 'top':
           this._display.position.y = min_y - this.label_height - this.margin_bottom
           this._display.position.x = min_x - this.margin_left
-          this._attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+          this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
           break
         case 'bottom':
           this._display.position.y = max_y + this.margin_top
           this._display.position.x = min_x - this.margin_left
-          this._attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+          this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
           break
         case 'left':
           this._display.position.x = min_x - this.label_width - this.margin_right
           this._display.position.y = min_y - this.margin_top
-          this._attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+          this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
           break
         case 'right':
           this._display.position.x = max_x + this.margin_left
           this._display.position.y = min_y - this.margin_top
-          this._attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+          this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
           break
       }
     } else {
       // Mode englobant : appliquer les marges sur tous les côtés
       this._display.position.x = min_x - this.margin_left
       this._display.position.y = min_y - this.margin_top
-      this._attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
-      this._attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+      this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+      this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
     }
   }
 
@@ -837,7 +829,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     const drawing_area = this.drawing_area
     if (drawing_area.isInSelectionMode()) {
       this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
-      this._attached_node.filter(n=>n.is_visible).sort((n1, n2) => n1.position_y - n2.position_y).forEach((n, i) => {
+      this._attached_node.filter(n => n.is_visible).sort((n1, n2) => n1.position_y - n2.position_y).forEach((n, i) => {
         n.position_x = n.position_x + event.dx
         n.position_y = n.position_y + event.dy
         if (i == 0) {
@@ -885,38 +877,24 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this.drawDragHandlers()
   }
 
-  // STYLE MANAGEMENT ===================================================================
-
-  /**
-   * Use a style for this container
-   */
-  public useStyle(style: Class_ContainerStyle) {
-    if (this._style) {
-      this._style.removeReference(this)
+  public getContainerProperty(propertyName: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG) {
+    if (this.attributes[propertyName] !== undefined) {
+      return this.attributes[propertyName]
     }
-    this._style = style
-    style.addReference(this)
-    this.draw()
+    return this.getStyleProperty(propertyName)
   }
 
-  /**
-   * Return to default style
-   */
-  public useDefaultStyle() {
-    const style_manager = (this.drawing_area as any).container_style_manager
-    if (style_manager && style_manager.default_style) {
-      this.useStyle(style_manager.default_style)
+  public getStyleProperty(propertyName: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG) {
+    const valueOfStyle = this.getStyleWithAttr(propertyName as keyof Class_ContainerStyle)
+    if (valueOfStyle[propertyName] !== undefined) {
+      return valueOfStyle[propertyName]
     }
+    return CONTAINERS_ATTRIBUTES_CONFIG[propertyName].default
   }
 
-  /**
-   * Get current style
-   */
-  public get current_style(): Class_ContainerStyle | null {
-    return this._style
-  }
+  public get style() { return this._style }
+  public set style(_) { this._style = _ }
 
-  // Keep only non-attribute getters
   public get is_visible() { return super.is_visible }
   public get title(): string { return this._title }
   public set title(value: string) { this._title = value }
@@ -939,4 +917,6 @@ export class Class_ContainerElement extends ClassTemplate_Element {
 
   public get extremity_position(): 'top' | 'bottom' | 'left' | 'right' { return this._extremity_position }
   public set extremity_position(value: 'top' | 'bottom' | 'left' | 'right') { this._extremity_position = value }
+
+  public get attributes() { return this._container_attributes }
 }

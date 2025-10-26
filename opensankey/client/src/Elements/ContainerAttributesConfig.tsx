@@ -3,6 +3,8 @@
 // Source unique de vérité pour types, valeurs par défaut, setters, labels, tooltips ET actions
 // ==================================================================================================
 
+import { Class_ContainerElement } from "./TextZone"
+
 // Types spécifiques
 export type Type_VerticalAlignment = 'left' | 'right'
 export type Type_ExtremityPosition = 'top' | 'bottom' | 'left' | 'right'
@@ -319,34 +321,24 @@ export class ContainerSetterGenerator {
    * @param attributes - Objet contenant les valeurs des attributs
    * @param getMethod - Méthode pour récupérer un attribut (ex: instance._attributes)
    */
-  static generateSetters<T extends { [key: string]: any }>(
-    instance: T,
-    attributes: { [K in AttributeKey]?: ContainerAttributeTypes[K] },
-    getMethod?: (key: AttributeKey) => any
-  ) {
+  static generateSetters(instance: Class_ContainerElement) {
     (Object.keys(CONTAINERS_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
       const config = CONTAINERS_ATTRIBUTES_CONFIG[key]
-     
+      
       Object.defineProperty(instance, key, {
-        get: () => {
-          if (getMethod) {
-            return getMethod(key)
-          }
-          return attributes[key]
-        },
+        get: () => instance.getContainerProperty(key),
         set: (value: ContainerAttributeTypes[typeof key]) => {
           // 1. Setter personnalisé si défini
           //@ts-expect-error xxx
           if (config.setter && typeof instance[config.setter] === 'function') {
             //@ts-expect-error xxx
             instance[config.setter](value)
-            return
+          } else {
+            // 2. Setter standard
+            //@ts-expect-error xxx
+            instance.attributes[key] = value
           }
-          
-          // 2. Sauvegarder la valeur
-          //@ts-expect-error xxx
-          attributes[key] = value
-          
+
           // 3. Callback spécifique si défini
           //@ts-expect-error xxx
           if (config.callback && typeof instance[config.callback] === 'function') {
@@ -354,18 +346,18 @@ export class ContainerSetterGenerator {
             instance[config.callback]()
             return
           }
-          
+
           // 4. Actions automatiques basées sur la configuration
-          if (config.actions && config.actions.length > 0) {
+          if (config.actions) {
             config.actions.forEach(action => {
               if (typeof instance[action] === 'function') {
                 instance[action]()
               }
             })
-          }
+          } 
         },
         enumerable: true,
-        configurable: true  // Important pour pouvoir override !
+        configurable: true  // 🆕 Important pour pouvoir override !
       })
     })
   }

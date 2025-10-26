@@ -739,6 +739,7 @@ export class Class_ApplicationData {
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
+      drawing_area_from_layout.sankey.nodes_list.forEach(n=>n.setVisible())
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
