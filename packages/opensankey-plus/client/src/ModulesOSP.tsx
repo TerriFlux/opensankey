@@ -280,6 +280,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   // Add new_menus
   const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
     app_data={new_data_plus}
+    menu_for_style={true}
   />
   const modules_dialogs_OSP = [
     <MenuDraggable
