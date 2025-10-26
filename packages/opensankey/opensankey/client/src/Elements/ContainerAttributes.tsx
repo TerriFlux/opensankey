@@ -39,7 +39,7 @@ import {
   Type_ExtremityPosition
 } from './ContainerAttributesConfig'
 import { Class_ContainerElement } from './TextZone'
-import { Class_ContainerStyle } from './ContainerStyle'
+import { Class_ContainerStyle } from './ElementStyle'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -57,9 +57,37 @@ export class Class_ContainerAttribute extends ContainerAttributeTypeScript {
 
   constructor() {
     super()
-    // Utiliser le générateur automatique au lieu de createDynamicProperties
-    ContainerSetterGenerator.generateSetters(this, this._attributes)
+    this.createDynamicProperties()
   }
+
+  private createDynamicProperties() {
+    // Création automatique de TOUTES les propriétés en une seule boucle
+    (Object.keys(CONTAINERS_ATTRIBUTES_CONFIG) as AttributeKey[]).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: () => this._attributes[key],
+        //@ts-expect-error xxx
+        set: (value: AttributeTypes[key]) => {
+          //@ts-expect-error xxx
+          const config = CONTAINERS_ATTRIBUTES_CONFIG[key] as AttributeTypes[key]
+          if (config.setter && typeof this[config.setter as keyof this] === 'function') {
+            //@ts-expect-error xxx
+            (this[config.setter as keyof this]).call(this, value)
+          } else {
+            this._attributes[key] = value
+            if (config.callback) {
+              //@ts-expect-error xxx
+              (this[config.callback as keyof this]).call(this)
+            } /*else {
+              this.update()
+            }*/
+          }
+        },
+        enumerable: true,
+        configurable: true
+      })
+    })
+  }
+
 
   public delete_attribute(k: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG) {
     delete this._attributes[k]
