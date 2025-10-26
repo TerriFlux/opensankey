@@ -34,9 +34,9 @@ import {
   moduleDialogsOSP,
 } from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
 import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
-import { 
+import {
   createZDDModifierPlus, createNodeModifierPlus,
-  createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus 
+  createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus
 } from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
@@ -58,6 +58,7 @@ import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/component
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
 import { STATIC_NODE_MENU_CONFIG } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextNodeConfig'
+import { SankeyModalStyleContainer } from './deps/LoginComponent/deps/OpenSankey+/components/SankeyPlusStyle'
 
 
 // Specific methods ==================================================================================
@@ -160,7 +161,8 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
       <ModalSankeyTheque new_data={new_data_SA} processFunction={processFunctions} />,
-      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
+      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />,
+      <SankeyModalStyleContainer new_data={new_data_SA} />
     )
   }
 
@@ -170,7 +172,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   ]
 }
 
-export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDataSA}) => {
+export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDataSA }) => {
 
   const setLicenses = useRef(() => {
     console.log('=== setLicenses function called ===')
@@ -215,7 +217,7 @@ export const SankeyApp = ({ new_data_app } : {new_data_app: Class_ApplicationDat
       ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
-      NODE_MENU_CONFIG={new_data_app.is_static ? STATIC_NODE_MENU_CONFIG :createNodeMenuConfigPlus()}
+      NODE_MENU_CONFIG={new_data_app.is_static ? STATIC_NODE_MENU_CONFIG : createNodeMenuConfigPlus()}
       createNodeModifier={(app_data) => createNodeModifierPlus(app_data as Class_ApplicationDataSA)}
     />
 
