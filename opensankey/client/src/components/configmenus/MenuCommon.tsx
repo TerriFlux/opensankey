@@ -65,6 +65,9 @@ import { MenuColorPicker } from './MenuColorPicker'
 import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
+import { Class_ContainerElement } from '../../Elements/TextZone'
+import { Class_ContainerAttribute } from '../../Elements/ContainerAttributes'
+import { CONTAINERS_ATTRIBUTES_CONFIG } from '../../Elements/ContainerAttributesConfig'
 
 
 // ✅ Union de tous vos éléments
@@ -287,7 +290,8 @@ export const MenuResetAttrLocal = (
     nodesOrLinks,
     dict_overwritted_attr
   }: {
-    new_data: Class_ApplicationData, nodesOrLinks: 'nodes' | 'links',
+    new_data: Class_ApplicationData, 
+    nodesOrLinks: 'nodes' | 'links' | 'zdt',
     dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
   }) => {
   const { t, icon_library,drawing_area } = new_data
@@ -299,8 +303,9 @@ export const MenuResetAttrLocal = (
   // Delete local attributes 'k' of selected elements
   const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? 
     sankey.deleteLocalAttrSelectedNodes(k as (keyof typeof  NODES_ATTRIBUTES_CONFIG),drawing_area.selected_nodes_list) : 
-    sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG),drawing_area.selected_links_list)
-
+    nodesOrLinks == 'links' ? 
+      sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG),drawing_area.selected_links_list) :
+      sankey.deleteLocalAttrSelectedContainers(k as (keyof typeof CONTAINERS_ATTRIBUTES_CONFIG),drawing_area.selected_containers_list)
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
       {icon_undo}
@@ -690,14 +695,16 @@ export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
  */
 
 export const isElementAttributeOverloaded = (
-  elements: (Class_LinkElement | Class_NodeElement)[],
-  attr: keyof Class_LinkAttribute | keyof Class_NodeAttribute
+  elements: (Class_LinkElement | Class_NodeElement | Class_ContainerElement)[],
+  attr: keyof Class_LinkAttribute | keyof Class_NodeAttribute | keyof Class_ContainerAttribute
 ) => {
   return elements.some(element => {
     if (element instanceof Class_LinkElement) {
       return element.isAttributeOverloaded(attr as unknown as keyof Class_LinkAttribute)
     } else if (element instanceof Class_NodeElement) {
       return element.isAttributeOverloaded(attr as unknown as keyof Class_NodeAttribute)
+    } else if (element instanceof Class_ContainerElement) {
+      return element.isAttributeOverloaded(attr as unknown as keyof Class_ContainerAttribute)
     }
     return false
   })

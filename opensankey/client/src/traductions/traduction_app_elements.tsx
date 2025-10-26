@@ -504,6 +504,7 @@ export const resources_app_elements = {
         esf: 'Fonds et formes des flux',
         esn_labels: 'Libellés des noeuds',
         esf_labels: 'Libellés des flux',
+        container_style: 'Style des zones de textes',
 
         rc: 'Raccourcis clavier',
         as: 'Aide Supplémentaire',

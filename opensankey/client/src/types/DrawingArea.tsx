@@ -56,7 +56,7 @@ import { ClassTemplate_GhostLinkElement } from '../Elements/LinkGhostElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
 import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { Class_NodeStyle } from '../Elements/ElementStyle'
+import { Class_ContainerStyle, Class_NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkStyle } from '../Elements/ElementStyle'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { Class_Sankey } from './Sankey'
@@ -1579,6 +1579,53 @@ export class Class_DrawingArea {
         n.draw()
       })
       this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+    }
+    // Save undo/redo
+    this.application_data.history.saveUndo(inv_changeStyleOrder)
+    this.application_data.history.saveRedo(_changeStyleOrder)
+    // Execute original function
+    _changeStyleOrder()
+  }
+
+  /**
+   * Swaps node style order for selected nodes
+   *
+   * @param {number} idx_src
+   * @param {number} idx_trgt
+   * @memberof Class_DrawingArea
+   */
+  public moveOrderStyleInSelectedContainers = (style_src: Class_ContainerStyle, style_trgt: Class_ContainerStyle) => {
+    // Save old value that can be used in undo
+    const list_old_style: { [x: string]: Class_ContainerStyle[] } = {}
+    this.selected_containers_list.forEach(n => list_old_style[n.id] = n.style)
+
+    // Function undo
+    const inv_changeStyleOrder = () => {
+      this.selected_containers_list.forEach(n => {
+        n.style = list_old_style[n.id]
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToContainers()
+    }
+
+    // Function original
+    const _changeStyleOrder = () => {
+      this.selected_containers_list.forEach(n => {
+        const idx_src = n.style.indexOf(style_src)
+        const idx_trgt = n.style.indexOf(style_trgt)
+
+        // if node doesn't have both style, don't continue this iterations
+        if (idx_src == -1 || idx_trgt == -1)
+          return
+
+        // Remove element to move from the array of element order
+        const el_to_move = n.style.splice(idx_src, 1)
+        // Add the element  the element target in the order array
+        n.style.splice(idx_trgt, 0, el_to_move[0])
+
+        n.draw()
+      })
+      this.application_data.menu_configuration.updateComponentRelatedToContainers()
     }
     // Save undo/redo
     this.application_data.history.saveUndo(inv_changeStyleOrder)

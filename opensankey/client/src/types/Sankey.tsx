@@ -25,17 +25,19 @@
 // ==================================================================================================
 
 import { Class_DrawingArea } from './DrawingArea'
-import { 
-  Class_LinkStyle, nodeStyleConfigs, Class_NodeStyle, linkStyleConfigs, NodeStyleConfigsDict, 
-  product_sector_styles, NodeStyleKey, node_exchanges_style, LinkStyleConfigsDict, LinkStyleKey, 
-  link_exchanges_style
+import {
+  Class_LinkStyle, nodeStyleConfigs, Class_NodeStyle, linkStyleConfigs, NodeStyleConfigsDict,
+  product_sector_styles, NodeStyleKey, node_exchanges_style, LinkStyleConfigsDict, LinkStyleKey,
+  link_exchanges_style, Class_ContainerStyle  // ← AJOUTER ICI
 } from '../Elements/ElementStyle'
 import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
 import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
+import { CONTAINERS_ATTRIBUTES_CONFIG } from '../Elements/ContainerAttributesConfig'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../Elements/LinkAttributes'
 import { Class_NodeElement, sortNodesElements } from '../Elements/Node'
 import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../Elements/NodeAttributes'
+import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag, Class_Tag, } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup } from './TagGroup'
@@ -72,21 +74,22 @@ export class Class_Sankey {
 
   protected _link_styles: { [_: string]: Class_LinkStyle } = {}
   protected _node_styles: { [_: string]: Class_NodeStyle } = {}
+  protected _container_styles: { [_: string]: Class_ContainerStyle } = {}
 
-  protected _nodes_dimensions: {[_:string]:Class_NodeDimension} = {}
+  protected _nodes_dimensions: { [_: string]: Class_NodeDimension } = {}
 
   public name: string
 
   public normalised_link?: Class_LinkElement
 
-  public addNodeDimension(dim:Class_NodeDimension) {
+  public addNodeDimension(dim: Class_NodeDimension) {
     if (this._nodes_dimensions[dim.id]) {
       return
     }
     this._nodes_dimensions[dim.id] = dim
   }
-  
-  public removeNodeDimension(dim:Class_NodeDimension) {
+
+  public removeNodeDimension(dim: Class_NodeDimension) {
     if (!this._nodes_dimensions[dim.id]) {
       return
     }
@@ -94,7 +97,7 @@ export class Class_Sankey {
   }
 
   public showAccordingToLevelTags() {
-    Object.values(this._nodes_dimensions).forEach(dim=>{
+    Object.values(this._nodes_dimensions).forEach(dim => {
       dim.unsetForcingToShow()
     })
   }
@@ -113,9 +116,16 @@ export class Class_Sankey {
     const style = new Class_LinkStyle(id, name, is_deletable)
     return style
   }
+  protected createNewContainerStyle(id: string, name: string, is_deletable?: boolean): Class_ContainerStyle {
+    const style = new Class_ContainerStyle(id, name, is_deletable)
+    return style
+  }
 
   public get default_link_style() {
     return this._link_styles[default_style_id]
+  }
+  public get default_container_style() {
+    return this._container_styles[default_style_id]
   }
   // Sankey visibility - for views
   public setVisible() { this._is_visible = true }
@@ -202,7 +212,7 @@ export class Class_Sankey {
 
     this._link_styles[default_style_id] = this.createNewLinkStyle(default_style_id, default_style_name, false)
     this._node_styles[default_style_id] = this.createNewNodeStyle(default_style_id, default_style_name, false)
-
+    this._container_styles[default_style_id] = this.createNewContainerStyle(default_style_id, default_style_name, false)
   }
 
   private static get_sync_lists(
@@ -265,6 +275,18 @@ export class Class_Sankey {
     })
     this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
+  public deleteLocalAttrSelectedContainers(
+    k: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG,
+    selected_containers_list: Class_ContainerElement[]
+  ) {
+    selected_containers_list.forEach(container => {
+      if (k in CONTAINERS_ATTRIBUTES_CONFIG) {
+        container.attributes.delete_attribute(k)
+        container.draw()
+      }
+    })
+    this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToContainers()
+  }
 
   public tradeOption() {
     if (!this.node_taggs_dict['type de noeud']) {
@@ -279,11 +301,11 @@ export class Class_Sankey {
     if (import_nodes.length > 0) {
       if (import_nodes[0].style.includes(this.node_styles_dict['NodeImportExportCloseStyle'])) {
         return 'close'
-      } else { 
+      } else {
         return 'above_below'
       }
     }
-    return 'none'    
+    return 'none'
   }
 
   public setTrade = (close: boolean) => {
@@ -397,7 +419,7 @@ export class Class_Sankey {
     this._nodes = {}
     this._links = {}
   }
-  
+
   // COPY METHODS =======================================================================
 
   /**
@@ -1012,6 +1034,7 @@ export class Class_Sankey {
     const json_object_dataTags = {} as Type_JSON
     const json_object_styles_nodes = {} as Type_JSON
     const json_object_styles_links = {} as Type_JSON
+    const json_object_styles_containers = {} as Type_JSON
     const json_object_nodes = {} as Type_JSON
     const json_object_links = {} as Type_JSON
     // Id
@@ -1044,14 +1067,18 @@ export class Class_Sankey {
     // Add Styles
     json_object['style_node'] = json_object_styles_nodes
     this.node_styles_list.forEach(style => {
-      json_object_styles_nodes[style.id] = style.toJSON(null,style.id != 'default' ? this._node_styles['default']:null);
+      json_object_styles_nodes[style.id] = style.toJSON(null, style.id != 'default' ? this._node_styles['default'] : null);
       (json_object_styles_nodes[style.id] as Type_JSON)['name'] = style.name
     })
     json_object['style_link'] = json_object_styles_links
     this.link_styles_list.forEach(style => {
-      json_object_styles_links[style.id] = style.toJSON(null,style.id != 'default' ? this._link_styles['default']:null);
+      json_object_styles_links[style.id] = style.toJSON(null, style.id != 'default' ? this._link_styles['default'] : null);
       (json_object_styles_links[style.id] as Type_JSON)['name'] = style.name
-
+    })
+    json_object['style_zdt'] = json_object_styles_containers
+    this.container_styles_list.forEach(style => {
+      json_object_styles_containers[style.id] = style.toJSON(null, style.id != 'default' ? this._container_styles['default'] : null);
+      (json_object_styles_containers[style.id] as Type_JSON)['name'] = style.name
     })
     // Add nodes
     json_object['nodes'] = json_object_nodes
@@ -1063,10 +1090,10 @@ export class Class_Sankey {
     nodes_list
       .forEach(node => {
         if (!keep_sibling && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
-          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON({ 'only_visible_elements': only_visible_elements})
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON({ 'only_visible_elements': only_visible_elements })
           return
         }
-        json_object_nodes[node.id] = node.toJSON({ 'only_visible_elements': only_visible_elements})
+        json_object_nodes[node.id] = node.toJSON({ 'only_visible_elements': only_visible_elements })
       })
     // Add links
     json_object['links'] = json_object_links
@@ -1125,7 +1152,7 @@ export class Class_Sankey {
           // Create a node style
           const new_style = this._node_styles[style_id] ?? this.createNewNodeStyle(style_id, style_id, true)
           // Set node style value to node from JSON
-          new_style.fromJSON(style_json as Type_JSON,null,style_id!='default'?this._node_styles['default']:null)
+          new_style.fromJSON(style_json as Type_JSON, null, style_id != 'default' ? this._node_styles['default'] : null)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add node style to sankey
           this._node_styles[style_id] = new_style
@@ -1138,10 +1165,23 @@ export class Class_Sankey {
           // Create a link style
           const new_style = this._link_styles[style_id] ?? this.createNewLinkStyle(style_id, style_id, true)
           // Set link style value to link style from JSON
-          new_style.fromJSON(style_json as Type_JSON,null,style_id!='default'?this._link_styles['default']:null)
+          new_style.fromJSON(style_json as Type_JSON, null, style_id != 'default' ? this._link_styles['default'] : null)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add link style to sankey
           this._link_styles[style_id] = new_style
+        })
+    }
+    if (json_object['style_zdt'] !== undefined) {
+      // Set link styles from json data
+      Object.entries(json_object['style_zdt'])
+        .forEach(([style_id, style_json]) => {
+          // Create a link style
+          const new_style = this._container_styles[style_id] ?? this.createNewContainerStyle(style_id, style_id, true)
+          // Set link style value to link style from JSON
+          new_style.fromJSON(style_json as Type_JSON, null, style_id != 'default' ? this._container_styles['default'] : null)
+          new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+          // Add link style to sankey
+          this._container_styles[style_id] = new_style
         })
     }
 
@@ -1243,7 +1283,7 @@ export class Class_Sankey {
     let has_data = false
     this.links_list.forEach(l => has_data = has_data || l.has_data)
     if (!has_data) {
-      this.links_list.forEach(l=> l.set_only_data())
+      this.links_list.forEach(l => l.set_only_data())
     }
     // Then read nodes
     const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
@@ -1652,6 +1692,19 @@ export class Class_Sankey {
       return this.addNewNodeStyle(id + ' (dup)', name)
     }
   }
+  public addNewContainerStyle(
+    id: string,
+    name: string
+  ): Class_ContainerStyle {
+    if (!this._node_styles[id]) {
+      const style = new Class_ContainerStyle(id, name, true)
+      this._container_styles[id] = style
+      return style
+    }
+    else {
+      return this.addNewContainerStyle(id + ' (dup)', name)
+    }
+  }
 
   /**
    * Delete a given style
@@ -1674,6 +1727,14 @@ export class Class_Sankey {
     const _ = String(this.link_styles_list.length)
     const id = makeId('id')
     return this.addNewLinkStyle(
+      'style_link_' + id,
+      'Style ' + _)
+  }
+
+  public addNewDefaultContainerStyle() {
+    const _ = String(this.container_styles_list.length)
+    const id = makeId('id')
+    return this.addNewContainerStyle(
       'style_link_' + id,
       'Style ' + _)
   }
@@ -1711,6 +1772,12 @@ export class Class_Sankey {
     }
   }
 
+  public deleteContainerStyle(style: Class_ContainerStyle) {
+    if (this._container_styles[style.id] !== undefined) {
+      this._container_styles[style.id].delete()
+      delete this._container_styles[style.id]
+    }
+  }
 
   /**
  * Return style of selected nodes
@@ -1771,6 +1838,49 @@ export class Class_Sankey {
         }
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_switchToStyle)
+    this.drawing_area.application_data.history.saveRedo(_switchToStyle)
+
+    _switchToStyle()
+  }
+
+    /**
+  * Function that change selected nodes style and save undo
+  *
+  * @param {Class_NodeStyle} n_style
+  */
+  public switchContainerStyle(n_style: Class_ContainerStyle, add: boolean) {
+    const selected_zdt = this.drawing_area.selected_containers_list
+    const { ref_selected_style_container } = this.drawing_area.application_data.menu_configuration
+    const curr_style: { [x: string]: Class_ContainerStyle[] } = {}
+    selected_zdt.map(node => {
+      curr_style[node.id] = node.style
+    })
+    // Method to get old style via undo
+    const inv_switchToStyle = () => {
+      selected_zdt.map(node => {
+        node.style = curr_style[node.id]
+      })
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToContainers()
+    }
+
+    // Method to get new style via redo
+    const _switchToStyle = () => {
+      ref_selected_style_container.current = n_style.id
+      selected_zdt.map(node => {
+        const list_id_style_node = node.style.map(s => s.id)
+        if (list_id_style_node.includes(n_style.id) && !add) {
+          const idx = node.style.findIndex(style => style.id == n_style.id)
+          node.style.splice(idx, 1)
+        }
+        if (!list_id_style_node.includes(n_style.id) && add) {
+          node.style.push(n_style)
+        }
+      })
+      selected_zdt.forEach(zdt => zdt.draw())
+      this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToContainers()
     }
 
     this.drawing_area.application_data.history.saveUndo(inv_switchToStyle)
@@ -2306,7 +2416,14 @@ export class Class_Sankey {
     return this._link_styles
   }
 
-
+/**
+ * Return the object containing all the container styles
+ * @readonly
+ * @memberof Class_Sankey
+ */
+public get container_styles_dict() {
+  return this._container_styles
+}
 
   /**
    * Return all the style as a list
@@ -2317,6 +2434,15 @@ export class Class_Sankey {
     return Object.values(this._link_styles)
   }
 
+/**
+ * Return all the container styles as a list
+ * @readonly
+ * @memberof Class_Sankey
+ */
+public get container_styles_list() {
+  return Object.values(this._container_styles)
+}
+
   /**
    * Return all the style as a sorted list
    * @readonly
@@ -2326,7 +2452,20 @@ export class Class_Sankey {
     return this.link_styles_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
-
+/**
+ * Return all the container styles as a sorted list
+ * @readonly
+ * @memberof Class_Sankey
+ */
+public get container_styles_list_sorted() {
+  return this.container_styles_list
+    .sort((a, b) => {
+      // Tri par nom
+      if (a.name < b.name) return -1
+      if (a.name > b.name) return 1
+      return 0
+    })
+}
   // Tags related -----------------------------------------------------------------------
 
   public get node_taggs_dict() {

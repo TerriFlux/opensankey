@@ -111,6 +111,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_styles_links_visual: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_styles_links_labels: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
+  ref_setter_show_modal_styles_containers: MutableRefObject<Dispatch<SetStateAction<boolean>>>  
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -289,6 +291,8 @@ export class Class_MenuConfig {
   private _ref_to_menu_config_links_styles_updater: MutableRefObject<() => void>
   private _ref_to_menu_config_links_styles_editor_updater: MutableRefObject<() => void>
 
+  private _ref_to_menu_config_container_styles_updater: MutableRefObject<() => void>
+  private _ref_to_menu_config_container_styles_editor_updater: MutableRefObject<() => void>
   // Update MenuConfigurationLinksTags
   private _ref_to_menu_config_links_tags_updater: MutableRefObject<() => void>
 
@@ -357,11 +361,10 @@ export class Class_MenuConfig {
   private _selector_only_visible_nodes: boolean = false
   private _selector_only_visible_links: boolean = false
 
-  // Ref to style of currently selected node(s)
+  // Ref to style of currently selected elements(s)
   private _ref_selected_style_node: MutableRefObject<string> = useRef('default')
-
-  // Ref to style of currently selected link(s)
   private _ref_selected_style_link: MutableRefObject<string> = useRef('default')
+  private _ref_selected_style_container: MutableRefObject<string> = useRef('default')
 
   // Ref to updater show modal multi aggregate/disaggregate
   private _ref_to_updater_node_disagregate: MutableRefObject<(b: boolean) => void> = useRef(() => null)
@@ -467,6 +470,8 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_links_tags_updater = useRef(() => null)
     this._ref_to_menu_config_links_tooltips_updater = useRef(() => null)
 
+    this._ref_to_menu_config_container_styles_updater = useRef(() => null)
+    this._ref_to_menu_config_container_styles_editor_updater = useRef(() => null)
     // Tags
     this._ref_to_menu_config_tags_updater['level_taggs'] = useRef(() => null)
     this._ref_to_menu_config_tags_updater['node_taggs'] = useRef(() => null)
@@ -531,6 +536,8 @@ export class Class_MenuConfig {
       ref_setter_show_modal_styles_links_visual: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_styles_links_labels: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_apply_layout: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+
+      ref_setter_show_modal_styles_containers: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Other modals
       ref_setter_show_modal_preference: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_templates_lib: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -577,6 +584,8 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_visual.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_links_labels.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
+
+    this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
     // -- Other modals
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
@@ -907,6 +916,7 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToNodeTags()
     this.updateAllComponentsRelatedToFluxTags()
     this.updateAllComponentsRelatedToLevelTags()
+    this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
   }
@@ -967,6 +977,13 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToLinksStyles()
   }
 
+  public updateAllComponentsRelatedToContainers() {
+    this._ref_to_menu_config_container_updater.current()
+  }
+  public updateAllComponentsRelatedToContainersStyles() {
+    this._ref_to_menu_config_container_styles_updater.current()
+    this.ref_to_menu_config_container_styles_editor_updater.current()
+  }
   /**
    * Re-render all submenus for link config
    * - MenuConfigurationLinksData
@@ -1344,6 +1361,12 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_links_styles_editor_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_links_styles_editor_updater
   }
+  public get ref_to_menu_config_container_styles_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_links_styles_updater
+  }
+  public get ref_to_menu_config_container_styles_editor_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_container_styles_editor_updater
+  }
 
   public get ref_to_menu_config_links_tags_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_links_tags_updater
@@ -1419,6 +1442,9 @@ export class Class_MenuConfig {
   public get ref_selected_style_link(): MutableRefObject<string> {
     return this._ref_selected_style_link
   }
+  public get ref_selected_style_container(): MutableRefObject<string> {
+    return this._ref_selected_style_container
+  }
 
   // Get ref updater of save diagram JSON
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
@@ -1448,8 +1474,10 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
   public get ref_to_menu_config_link_scientific_precision_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_link_scientific_precision_updater }
+
   public get ref_to_menu_config_containers_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_container_updater }
   public get ref_to_menu_context_container_updater() { return this._ref_to_menu_context_container_updater }
+
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
