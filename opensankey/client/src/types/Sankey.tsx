@@ -292,7 +292,7 @@ export class Class_Sankey {
     if (!this.node_taggs_dict['type de noeud']) {
       return
     }
-    this.drawing_area.bypass_redraws = true
+    //this.drawing_area.bypass_redraws = true
     const process_nodes = this.nodes_list
     const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
     const import_nodes = process_nodes.filter(n =>
