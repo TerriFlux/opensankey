@@ -199,6 +199,9 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     json_object['image_src'] = this._image_src
     json_object['tiedToNode'] = this._tied_to_nodes
 
+    // Save all attributes
+    this.attributes.toJSON(json_object,this.style[0])
+
     if (this.style!.length > 0) json_object['style'] = this.style.map(s => s.id)
 
     // Save attached nodes
@@ -220,11 +223,8 @@ export class Class_ContainerElement extends ClassTemplate_Element {
 
     const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
     this._style = style_id.map(s_id => this.sankey.container_styles_dict[s_id]) as Class_ContainerStyle[]
-    // Load all attributes by setting them (triggers setters)
-    Object.keys(CONTAINERS_ATTRIBUTES_CONFIG).forEach(key => {
-      //@ts-expect-error - Properties added dynamically
-      this[key] = json_object[key] ?? CONTAINERS_ATTRIBUTES_CONFIG[key].default
-    })
+
+    this.attributes.fromJSON(json_object,this,this._style[0])
 
     // Load attached nodes
     const list_id_nodes = (json_object['attachedNodes'] as string[]) || []

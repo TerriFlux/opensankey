@@ -731,7 +731,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
         const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
         const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
-        const url = 'https://dev.open-sankey.fr/?url=' + fileUrl
+        const url = 'https://open-sankey.fr/?url=' + fileUrl
 
         window.open(url, '_blank')
       }}
@@ -770,7 +770,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
   if (new_data.is_static && sous_filieres) dict_components_menu_top['diagrams'] = diagrams_element
   dict_components_menu_top={...dict_components_menu_top,...additionalMenus.current.external_top_buttons_item}
-  if (!new_data.is_static) dict_components_menu_top['edit'] = edit_button
+  if (new_data.is_static) dict_components_menu_top['edit'] = edit_button
   dict_components_menu_top['help'] = help_button
 
   return <Box

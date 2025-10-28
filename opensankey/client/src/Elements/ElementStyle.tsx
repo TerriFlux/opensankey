@@ -582,7 +582,6 @@ export class Class_ContainerStyle extends Class_ContainerAttribute {
   protected shouldSaveAttribute(
     key: ZDTAttributeKey,
     value: number | string | boolean | undefined,
-    container: Class_ContainerElement | null,
     default_style: Class_ContainerStyle | null
   ): boolean {
     if (default_style) {

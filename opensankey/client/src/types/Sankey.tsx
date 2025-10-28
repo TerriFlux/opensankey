@@ -1077,7 +1077,11 @@ export class Class_Sankey {
     })
     json_object['style_zdt'] = json_object_styles_containers
     this.container_styles_list.forEach(style => {
-      json_object_styles_containers[style.id] = style.toJSON(null, style.id != 'default' ? this._container_styles['default'] : null);
+      json_object_styles_containers[style.id] = {}
+      Object.entries(style.toJSON({})).forEach(([key, value]) => {
+        //@ts-expect-error xxx
+        json_object_styles_containers[style.id][key] = value
+      });
       (json_object_styles_containers[style.id] as Type_JSON)['name'] = style.name
     })
     // Add nodes

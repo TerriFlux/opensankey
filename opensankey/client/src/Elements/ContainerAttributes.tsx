@@ -96,7 +96,6 @@ export class Class_ContainerAttribute extends ContainerAttributeTypeScript {
   protected shouldSaveAttribute(
     key: AttributeKey,
     value: number | string | boolean | undefined,
-    container: Class_ContainerElement | null,
     default_style: Class_ContainerStyle | null
   ): boolean {
     if (default_style) {
@@ -106,16 +105,14 @@ export class Class_ContainerAttribute extends ContainerAttributeTypeScript {
   }
 
   public toJSON(
-    container: Class_ContainerElement | null = null,
+    json_object: Type_JSON,
     default_style: Class_ContainerStyle | null = null
   ): Type_JSON {
-    const json_object: Type_JSON = {}
-    
     Object.keys(this._attributes).forEach(key => {
       const typedKey = key as AttributeKey
       const value = this._attributes[typedKey]
       
-      if (this.shouldSaveAttribute(typedKey, value, container, default_style)) {
+      if (this.shouldSaveAttribute(typedKey, value, default_style)) {
         //@ts-expect-error xxx
         json_object[key] = value
       }
@@ -129,22 +126,18 @@ export class Class_ContainerAttribute extends ContainerAttributeTypeScript {
     container: Class_ContainerElement | null = null,
     default_style: Class_ContainerStyle | null = null
   ) {
-    Object.keys(CONTAINERS_ATTRIBUTES_CONFIG).forEach(key => {
-      const typedKey = key as AttributeKey
-      const config = CONTAINERS_ATTRIBUTES_CONFIG[typedKey]
-      
+    // Traitement des attributs directs (même nom)
+    (Object.keys(CONTAINERS_ATTRIBUTES_CONFIG) as [AttributeKey]).forEach(key => {
       if (json_local_object[key] !== undefined) {
-        const type = typeof config.default
-        
-        if (type === 'boolean') {
-          //@ts-expect-error xxx
-          this._attributes[typedKey] = getBooleanFromJSON(json_local_object, key, config.default)
-        } else if (type === 'number') {
-          //@ts-expect-error xxx
-          this._attributes[typedKey] = getNumberFromJSON(json_local_object, key, config.default)
-        } else if (type === 'string') {
-          //@ts-expect-error xxx
-          this._attributes[typedKey] = getStringFromJSON(json_local_object, key, config.default)
+        if ((container != null && json_local_object[key] !== container.getStyleProperty(key))) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[key] = json_local_object[key]
+        } else if (container == null && default_style && json_local_object[key] !== default_style[key]) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[key] = json_local_object[key]
+        } else if (container == null && json_local_object[key] !== CONTAINERS_ATTRIBUTES_CONFIG[key].default) {
+          //@ts-expect-error JSON assignment    
+          this._attributes[key] = json_local_object[key]
         }
       }
     })
