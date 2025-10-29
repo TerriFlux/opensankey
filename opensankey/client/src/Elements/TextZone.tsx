@@ -185,7 +185,10 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     // 🆕 Utiliser la méthode copyFrom de Class_ContainerAttribute
     this._container_attributes.copyFrom(container_to_copy._container_attributes)
 
-    this._attached_node = [...container_to_copy._attached_node]
+    container_to_copy._attached_node.forEach(n => {
+      const node = this.drawing_area.sankey.nodes_dict[n.id]
+      this.drawing_area.attachContToNode(this, node)
+    })
   }
 
   protected _toJSON(
