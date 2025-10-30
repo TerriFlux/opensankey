@@ -270,6 +270,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
     drawing_area.list_g_element.unshift(this.id)
   }
 
+  public resetLinkVisibilitiesMemorization() {
+    this._are_links_visibilities_ok = undefined
+  }
   // CLEANING METHODS ===================================================================
 
   /**
