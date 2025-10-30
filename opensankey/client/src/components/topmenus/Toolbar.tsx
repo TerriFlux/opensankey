@@ -231,6 +231,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
   app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
 
   const redrawNodeLinkLegend = () => {
+    app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
     app_data.drawing_area.sankey.draw()
     app_data.drawing_area.legend.draw()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)

@@ -1494,6 +1494,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   public set_only_data() {
     return this._values.set_only_data()
   }
+  public get is_zero() {
+    return this.valueCurrent === 0
+  }
 
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
@@ -2198,6 +2201,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @memberof Class_LinkElement
    */
   public get is_not_zero(): boolean {
+    if (this.sankey.drawing_area.type_data === 'structure') {
+      return true
+    }
     if (
       (this._is_not_zero === undefined) ||
       (this._datatags_fingerprint !== this.sankey.data_tags_fingerprint)

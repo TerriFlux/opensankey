@@ -508,6 +508,10 @@ export class NodePositioning {
     })
     linksMaxValue += 1
 
+    let is_zero = true
+    this.drawingArea.sankey.links_list.forEach(l => is_zero = is_zero && l.is_zero)
+    if (is_zero) {  this.drawingArea.type_data = 'structure' }
+
     if (launched_from_process) {
       this.drawingArea.scale = this.drawingArea.maximum_flux ?
         Math.max(this.drawingArea.maximum_flux, linksMaxValue) : linksMaxValue
@@ -1089,7 +1093,9 @@ export class NodePositioning {
     max_horizontal_index: number,
     echangeTag?: Class_Tag
   ) {
-
+    if (node_id_per_hxv_indexes.length === 0) {
+      return
+    }
     const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
 
     let shift = 0
