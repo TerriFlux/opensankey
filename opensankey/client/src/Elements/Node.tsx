@@ -1113,8 +1113,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
           else {
             const nodeAbove = same_u_other[same_u_other.indexOf(this) - 1]
             if (nodeAbove) {
-              const same_container = this._attached_container != undefined && nodeAbove._attached_container === this._attached_container
-              if (!same_container) {
+              const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item => 
+                this._attached_container.includes(item)
+              )
+              if (same_container) {
                 this._display.position.y = nodeAbove.position_y
                   + nodeAbove.getShapeHeightToUse()
                   + this.position_dy
