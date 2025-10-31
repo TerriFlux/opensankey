@@ -1778,9 +1778,9 @@ export class NodePositioning {
     if (d.children.includes(node)) return new_current_v + 1
     const desagregated_nodes = d.children
 
-    const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
+    //const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
     if (desagregated_nodes.length > 0) {
-      let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+      //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
       desagregated_nodes.forEach(nn => {
         if (nn.master_node) {
           return
@@ -1788,8 +1788,8 @@ export class NodePositioning {
         nn.display.position.v = -1
         nn.display.position.x = node.position_x
         nn.display.position.u = node.position_u
-        nn.display.position.y = current_y
-        current_y += nn.getShapeHeightToUse() + nn.position_dy
+        // nn.display.position.y = current_y
+        // current_y += nn.getShapeHeightToUse() + nn.position_dy
         new_current_v = this.applyVDesagregate(nn, new_current_v, tagGroup)
       })
     }
