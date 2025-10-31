@@ -467,7 +467,11 @@ export const retrieveExcelResults = (
     })
   // Case 1 : Apply extracted layout if present -> contains positions
   if (data_as_json['layout']) {
-    app_data.updateFromJSON(data_as_json)
+    app_data.sendWaitingToast(
+      () => {
+        app_data.drawing_area.nodePositioning.computeScale()
+        app_data.updateFromJSON(data_as_json)
+      })
   }
   // Case 2 :: No layout -> compute default positions & characteristics
   else {
