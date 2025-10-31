@@ -462,7 +462,10 @@ export class Class_DrawingArea {
     const all = mode.includes('*')
     // Transfer DA attributs
     if (mode.includes('attrDrawingArea') || all) {
+      const scale_to_keep = this._scale
       this._copyAttrFrom(other_drawing_area)
+      this._scale = scale_to_keep
+      this._scaleValueToPx.domain([0, this._scale])
       if (other_drawing_area._legend)
         this._legend.copyFrom(other_drawing_area._legend)
     }
