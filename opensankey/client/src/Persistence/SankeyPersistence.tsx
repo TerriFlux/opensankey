@@ -456,7 +456,7 @@ export const retrieveExcelResults = (
       app_data.drawing_area.legend.masked = false
       if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
         app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-      } else if (app_data.drawing_area.sankey.node_taggs_list.length == 0) {
+      } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg=>tagg.id != 'type de noeud').length == 0) {
         applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
       }
       const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
