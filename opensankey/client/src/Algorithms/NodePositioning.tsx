@@ -374,7 +374,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
+      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -498,24 +498,13 @@ export class NodePositioning {
       unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
       selectedTag.setSelected()
     }
-    let linksMaxValue = 0
-    this.drawingArea.sankey.links_list.forEach(link => {
-      const linkMaxValue = link.getMaxValue()
-      linksMaxValue = Math.max(
-        linksMaxValue,
-        linkMaxValue ? linkMaxValue : 0
-      )
-    })
-    linksMaxValue += 1
+    if (launched_from_process) {
+      this.computeScale()
+    }
 
     let is_zero = true
     this.drawingArea.sankey.links_list.forEach(l => is_zero = is_zero && l.is_zero)
-    if (is_zero) {  this.drawingArea.type_data = 'structure' }
-
-    if (launched_from_process) {
-      this.drawingArea.scale = this.drawingArea.maximum_flux ?
-        Math.max(this.drawingArea.maximum_flux, linksMaxValue) : linksMaxValue
-    }
+    if (is_zero) { this.drawingArea.type_data = 'structure' }
 
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
@@ -639,6 +628,21 @@ export class NodePositioning {
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
     tmp.forEach(n => this.setNodeLabelPositioning(n))
+  }
+
+  public computeScale() {
+    let linksMaxValue = 0
+    this.drawingArea.sankey.links_list.forEach(link => {
+      const linkMaxValue = link.getMaxValue()
+      linksMaxValue = Math.max(
+        linksMaxValue,
+        linkMaxValue ? linkMaxValue : 0
+      )
+    })
+    linksMaxValue += 1
+
+    this.drawingArea.scale = this.drawingArea.maximum_flux ?
+      Math.max(this.drawingArea.maximum_flux, linksMaxValue) : linksMaxValue
   }
 
   /**
@@ -1699,9 +1703,9 @@ export class NodePositioning {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
       column.forEach(n => {
-        n.position_v = -1 
+        n.position_v = -1
         current_v = this.applyVDesagregate(n, current_v, tagGroup)
-      }) 
+      })
     })
     Object.values(columns).forEach(column => {
       column.forEach(n => this.applyVAgregate(n, tagGroup))
