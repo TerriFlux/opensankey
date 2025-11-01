@@ -374,10 +374,10 @@ export class Class_ContainerElement extends ClassTemplate_Element {
       // Calculer la position et rotation selon l'alignement
       if (this.vertical_alignment === 'left') {
         // Texte vertical à gauche
-        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_width}, 0)`)
+        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_height}, 0)`)
       } else {
         // Texte vertical à droite
-        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_width}, ${this.label_height - this.label_height})`)
+        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_height}, ${this.label_width - this.label_width})`)
       }
     } else {
       // Mode horizontal normal
