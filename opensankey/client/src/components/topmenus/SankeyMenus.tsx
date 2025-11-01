@@ -495,8 +495,9 @@ const ConfigContent = ({ app_data, additional_menus }:
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
     },
-    ...additional_menus.current.additional_new_menu_config_content
-
+    presentation: { 
+      ...additional_menus.current.additional_new_menu_config_content.presentation
+    }
   }
   const content_empty_config = elements_in_menu_configuration.length == 0 ?
     <>

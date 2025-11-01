@@ -191,12 +191,14 @@ export class Class_MenuConfig {
     'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'DA', 'flow', 'node'] },
     'context': { 'theme': '#786960', elements_configurable: ['DA', 'flow', 'node', 'tag_flow', 'tag_node'] },
     'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'flow', 'node'] },
+    'presentation' : { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
   }
 
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
     'data': [],
     'context': [],
     'style': [],
+    'presentation': []
   }
 
   public get elements_configurable_selected() { return this._elements_configurable_selected }
