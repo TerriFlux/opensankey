@@ -785,7 +785,43 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
     return "ok", True
 
 
-# Remplacez votre fonction set_licence_invoice_paid par celle-ci :
+def set_license_invoice_created(user_email, user_stripe_id, license_stripe_id, user_license_stripe_id):
+    # Get user
+    # - Matching email & stripe id
+    user = User.query.filter(
+        func.lower(User.email) == func.lower(user_email),
+        User.stripe_id == user_stripe_id,
+    ).first()
+    # - Then priority on matching stripe id
+    if user is None:
+        user = User.query.filter_by(stripe_id=user_stripe_id).first()
+    # - Or get user via email and set stripe id
+    if user is None:
+        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
+        if user is not None:
+            user.stripe_id = user_stripe_id
+    if user is None:
+        return "Could not find related user", False
+
+    # Get license
+    license = License.query.filter_by(stripe_id=license_stripe_id).first()
+    if license is None:
+        return "Could not find related license", False
+
+    # Get subcription license
+    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
+    if user_license is None:
+        user_license = UserLicences(creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id)
+        db.session.add(user_license)
+
+    # Update infos
+    user_license.user = user
+    user_license.license = license
+
+    # Apply modification to database
+    db.session.commit()
+    return "ok", True
+
 
 def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str):
     """
