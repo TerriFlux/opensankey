@@ -785,43 +785,107 @@ def set_licence_checkout_completed(user_id, user_email, user_stripe_id, user_lic
     return "ok", True
 
 
-def set_license_invoice_created(user_email, user_stripe_id, license_stripe_id, user_license_stripe_id):
-    # Get user
-    # - Matching email & stripe id
-    user = User.query.filter(
-        func.lower(User.email) == func.lower(user_email),
-        User.stripe_id == user_stripe_id,
-    ).first()
-    # - Then priority on matching stripe id
-    if user is None:
-        user = User.query.filter_by(stripe_id=user_stripe_id).first()
-    # - Or get user via email and set stripe id
-    if user is None:
-        user = User.query.filter(func.lower(User.email) == func.lower(user_email)).first()
-        if user is not None:
-            user.stripe_id = user_stripe_id
-    if user is None:
-        return "Could not find related user", False
+# Remplacez votre fonction set_licence_invoice_paid par celle-ci :
 
-    # Get license
+def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str):
+    """
+    Create a license at checkout for given user
+
+    Parameters
+    ----------
+    :param user_stripe_id: Stripe customer ID
+    :type user_stripe_id: str
+
+    :param license_stripe_id: Stripe product ID
+    :type license_stripe_id: str
+
+    :param user_license_stripe_id: Stripe subscription ID
+    :type user_license_stripe_id: str
+
+    Returns
+    -------
+    :return: (message, success)
+    :rtype: (str, bool)
+    """
+    print(f"DEBUG set_licence_invoice_paid:")
+    print(f"  user_stripe_id: {user_stripe_id}")
+    print(f"  license_stripe_id: {license_stripe_id}")
+    print(f"  user_license_stripe_id: {user_license_stripe_id}")
+    
+    # Get user
+    user = User.query.filter_by(stripe_id=user_stripe_id).first()
+    if user is None:
+        print(f"ERROR: No user found with stripe_id={user_stripe_id}")
+        return "No user found for invoice", False
+    print(f"  Found user: {user.email} (id={user.id})")
+
+    # Get related license
     license = License.query.filter_by(stripe_id=license_stripe_id).first()
     if license is None:
-        return "Could not find related license", False
+        print(f"ERROR: No license found with stripe_id={license_stripe_id}")
+        return "No license found for invoice", False
+    print(f"  Found license: {license.name} (id={license.id})")
 
-    # Get subcription license
-    user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-    if user_license is None:
-        user_license = UserLicences(creation=datetime.now().isoformat(), stripe_id=user_license_stripe_id)
-        db.session.add(user_license)
+    # Try to find user_license with all 3 criteria (ideal case)
+    user_license = UserLicences.query.filter_by(
+        user=user, 
+        license=license, 
+        stripe_id=user_license_stripe_id
+    ).first()
+    
+    if user_license is not None:
+        print(f"  Found user_license with all 3 criteria (id={user_license.id})")
+    else:
+        print(f"  No user_license found with all 3 criteria, trying alternatives...")
+        
+        # Alternative 1: Search by stripe_id only (maybe user/license not yet set)
+        user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
+        
+        if user_license is not None:
+            print(f"  Found user_license by stripe_id only (id={user_license.id})")
+            # Update the user and license links
+            user_license.user = user
+            user_license.license = license
+        else:
+            # Alternative 2: Search by user and license (maybe stripe_id not yet set)
+            user_license = UserLicences.query.filter_by(
+                user=user, 
+                license=license
+            ).order_by(UserLicences.id.desc()).first()
+            
+            if user_license is not None:
+                print(f"  Found user_license by user+license (id={user_license.id})")
+                # Update the stripe_id
+                user_license.stripe_id = user_license_stripe_id
+            else:
+                # Alternative 3: Create new entry if nothing found
+                print(f"  No user_license found, creating new entry")
+                user_license = UserLicences(
+                    user=user,
+                    license=license,
+                    stripe_id=user_license_stripe_id,
+                    creation=datetime.now().isoformat(),
+                    expiry="never",
+                    activated=False
+                )
+                db.session.add(user_license)
 
-    # Update infos
-    user_license.user = user
-    user_license.license = license
+    # Update infos - mark as activated and paid
+    user_license.activated = True
+    if user_license.expiry is None:
+        user_license.expiry = "never"
+
+    print(f"  Setting user_license.activated=True (id={user_license.id})")
 
     # Apply modification to database
-    db.session.commit()
-    return "ok", True
-
+    try:
+        db.session.commit()
+        print(f"  SUCCESS: License activated for user {user.email}")
+        return "ok", True
+    except Exception as e:
+        db.session.rollback()
+        print(f"  ERROR during commit: {str(e)}")
+        return f"Database error: {str(e)}", False
 
 def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str):
     """
