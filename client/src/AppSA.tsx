@@ -459,7 +459,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
                       }
                     />
                     <Route
-                      path='checkout/:license'
+                      path='checkout'
                       element={
                         <PrivateRoute
                           component={
