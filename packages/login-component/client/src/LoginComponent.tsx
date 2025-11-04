@@ -74,7 +74,7 @@ public async checkTokens(
                   console.log('checkTokens: License data received:', license)
                   // Mettre à jour les états des licences spécifiques
                   this._has_licence_sankeyplus = license.licenses['OpenSankey+'] == true
-                  this._has_licence_sankeysuite = license.licenses['terriflux'] == true
+                  this._has_licence_sankeysuite = license.licenses['SankeySuite'] == true
                   this._has_licence_dev = license.licenses['dev'] == true
                   console.log('checkTokens: SankeyPlus license:', this._has_licence_sankeyplus)
                   console.log('checkTokens: SankeySuite license:', this._has_licence_sankeysuite)
