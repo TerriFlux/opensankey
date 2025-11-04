@@ -5,12 +5,10 @@
 
 # ---------------------------------------------------------------
 # System imports
-import requests
 from datetime import datetime
 
 # Flask imports
 from flask import Blueprint
-from flask import current_app
 from flask import jsonify
 from flask import request
 from flask import Response
@@ -27,12 +25,6 @@ from werkzeug.security import check_password_hash
 # SQLAlchemy
 from sqlalchemy import func
 
-# Itsdangerous - serialize URLs for secured API transactions
-from itsdangerous import URLSafeTimedSerializer as Serializer
-
-# ---------------------------------------------------------------
-# Local imports
-from .mailing import send_account_confirm_mail
 from .mailing import send_welcome_mail
 from .mailing import send_pw_reset_email
 from .mailing import is_email_valid
@@ -97,7 +89,6 @@ def signup_post():
     """
     # Read request
     user_infos = request.get_json()
-    license = user_infos.pop('license', None)
 
     # Prepare response
     response = {"message": "ok"}
