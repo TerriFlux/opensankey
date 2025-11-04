@@ -58,14 +58,9 @@ interface IType_UserData {
   email: string,
   firstname: string,
   name: string,
-  // // Legacy license
-  // loading_legacy_opensankeyplus: boolean,
-  // license_legacy_opensankeyplus_id: string,
-  // license_legacy_opensankeyplus_active: string,
-  // license_legacy_opensankeyplus_validity: string,
-  // New license
   license_opensankeyplus_active: boolean,
-  license_opensankeyplus_expiry: string,
+  license_expiry: string,
+  license_sankeysuite_active: boolean,
 }
 
 // Constants ---------------------------------------------------------------------------
@@ -81,12 +76,9 @@ const user_data_default: IType_UserData = {
   email: '-',
   firstname: '-',
   name: '-',
-  // loading_legacy_opensankeyplus: true,
-  // license_legacy_opensankeyplus_id: '',
-  // license_legacy_opensankeyplus_active: '',
-  // license_legacy_opensankeyplus_validity: '',
   license_opensankeyplus_active: false,
-  license_opensankeyplus_expiry: '',
+  license_expiry: '',
+  license_sankeysuite_active: false,
 }
 
 const possible_feedback: string[] = [
@@ -647,7 +639,8 @@ const Account = ({
           userData_.firstname = data.firstname
           // User OpenSankey+ license
           userData_.license_opensankeyplus_active = data.license_opensankeyplus_validity
-          userData_.license_opensankeyplus_expiry = data.license_opensankeyplus_expiry
+          userData_.license_sankeysuite_active = data.license_sankeysuite_validity
+          userData_.license_expiry = data.license_expiry
           // Loding indicator - for spinner
           userData_.loading = false
           setUserData(userData_)
@@ -831,15 +824,15 @@ const Account = ({
                           justifySelf='left'
                           margin='0'
                         >
-                          {user_data.license_opensankeyplus_active ? 'Active' : 'Non-Active'}
+                          {user_data.license_sankeysuite_active ? 'SankeySuite Active' : (user_data.license_opensankeyplus_active ? 'OpenSankey+ Active' : 'No Licence Active')}
                         </Text>
                         {
-                          user_data.license_opensankeyplus_active ?
+                          user_data.license_opensankeyplus_active || user_data.license_sankeysuite_active ?
                             <>
                               <Text
                                 margin='0'
                               >
-                                {t('UserPages.license.exp_until') + user_data.license_opensankeyplus_expiry}
+                                {t('UserPages.license.exp_until') + user_data.license_expiry}
                               </Text>
                               <Button
                                 variant='btn_accountpage'

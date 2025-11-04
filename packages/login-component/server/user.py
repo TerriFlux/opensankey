@@ -46,9 +46,7 @@ from .stripe import cancel_subscription
 
 # ---------------------------------------------------------------
 # Shared variables
-
 connected_user = Blueprint("connected_user", __name__)
-
 
 # ---------------------------------------------------------------
 # Routes
@@ -64,10 +62,9 @@ def user_infos():
     - 'email' (String) : User's email
     - 'firstname' (String) : User's firstname
     - 'name' (String) : User's name
-    - 'license_legacy_opensankeyplus' (String) : License number for OpenSankey+
-    - 'license_legacy_sankeysuite' (String) : License number for SankeySuite
     - 'license_opensankeyplus_validity' (boolean): Is license valid ?
-    - 'license_opensankeyplus_expiry' (String): Expiration date for license
+    - 'license_sankeysuite_validity' (boolean): Is license valid ?
+    - 'license_expiry' (String): Expiration date for license
     """
     # Parse expiration date
     license_exp = current_user.get_license_expiry()
@@ -76,14 +73,14 @@ def user_infos():
     except Exception:
         pass
     # Prepare response
+
     response = {
         "email": current_user.email,
         "name": current_user.name,
         "firstname": current_user.firstname,
         "license_opensankeyplus_validity": current_user.has_valid_license("OpenSankey+"),
-        "license_opensankeyplus_expiry": license_exp,
-        "license_sankeysuite_validity": current_user.has_valid_license("terriflux"),
-        "license_sankeysuite_expiry": "",
+        "license_expiry": license_exp,
+        "license_sankeysuite_validity": current_user.has_valid_license("SankeySuite")
     }
     # Send back response
     return jsonify(response)
