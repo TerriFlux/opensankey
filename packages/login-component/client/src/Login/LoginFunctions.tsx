@@ -1,7 +1,6 @@
 import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import {
-  activateLicenseToken,
   app_name_opensankeyplus,
 } from '../Register/RegisterFunctions'
 import { LoginComponent } from '../LoginComponent'
@@ -20,12 +19,12 @@ export const logError = (err: string) => {
 }
 
 // Activate license Tokens if licenses are valid
-export function activateLicensesTokens(
-  loginComponent:LoginComponent,
-  setUpdate:React.MutableRefObject<() => void>,
+// export function activateLicensesTokens(
+//   loginComponent:LoginComponent,
+//   setUpdate:React.MutableRefObject<() => void>,
   // update: boolean,
   // set_update: (_: boolean) => void
-) {
+//) {
   // // Check AFM license
   // activateLicenseToken(
   //   app_name_sankeysuite,
@@ -35,11 +34,11 @@ export function activateLicensesTokens(
   //   }
   // )
   // Check OpenSankey+ licence
-  activateLicenseToken(
-    app_name_opensankeyplus,
-    '/user/infos/legacy/license_opensankeyplus',
-    () => { loginComponent.checkTokens(setUpdate) }
-  )
+  // activateLicenseToken(
+  //   app_name_opensankeyplus,
+  //   '/user/infos/legacy/license_opensankeyplus',
+  //   () => { loginComponent.checkTokens(setUpdate) }
+  // )
   // // Check if has dev acc
   // fetch('/user/infos/legacy/is_developer',)
   //   .then(response => {
@@ -54,7 +53,7 @@ export function activateLicensesTokens(
   //     }
   //     //set_update(!update)
   //   })
-}
+//}
 
 // Check if login if valid
 export async function loginUser(

@@ -33,14 +33,14 @@ import {
   useDisclosure
 } from '@chakra-ui/react'
 
-import {
-  checkLicenseOpenOSP,
-  registerNewLicenseOpenOSP,
-  // registerNewLicenseSankeySuite
-} from '../Register/RegisterFunctions'
-import {
-  activateLicensesTokens,
-} from '../Login/LoginFunctions'
+// import {
+//   checkLicenseOpenOSP,
+//   registerNewLicenseOpenOSP,
+//   // registerNewLicenseSankeySuite
+// } from '../Register/RegisterFunctions'
+// import {
+//   activateLicensesTokens,
+// } from '../Login/LoginFunctions'
 import { LoginOutButton } from '../Login/Login'
 import { email_regex_str, name_regex_str, pwd_regex_str } from '../Register/Register'
 import { LoginComponent } from '../LoginComponent'

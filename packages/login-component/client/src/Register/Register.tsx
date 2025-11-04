@@ -1,14 +1,12 @@
 
 import React, { useState } from 'react'
 
-//import ReCAPTCHA from 'react-google-recaptcha'
-import { useNavigate, NavigateFunction, useSearchParams } from 'react-router-dom'
+import { useNavigate, NavigateFunction } from 'react-router-dom'
 import { TFunction } from 'i18next'
 
 import {
   Box,
   Button,
-  ButtonGroup,
   Card,
   CardBody,
   CardHeader,
@@ -20,18 +18,12 @@ import {
   InputGroup,
   InputLeftAddon,
   InputRightElement,
-  Spinner,
-  Text
+  Spinner
 } from '@chakra-ui/react'
 
-// import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
-// import { returnToApp } from '../../AppSA'
-//import { Theme_SankeyApplication } from '../../chakra/Theme'
-import { logError, userSignUp, userValidate } from './RegisterFunctions'
-import TermsOfUse from './TermsOfUse'
-import { Presentation } from './Presentation'
+
+import { logError, userSignUp } from './RegisterFunctions'
 import { LoginComponent } from '../LoginComponent'
-import { LicenseType } from '../Paiement/PaiementFunctions'
 
 
 export const email_regex_str = '(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\\.[a-zA-Z0-9-]+)*\\.[a-zA-Z]{2,})$'
@@ -59,7 +51,7 @@ const Register = ({
 }) => {
   // Step to register
   const [on_wait, setOnWait] = useState(false)
-  const [registerStep, setRegisterStep] = useState(0)
+  //const [registerStep, setRegisterStep] = useState(0)
 
 
   // License registrering informations
@@ -68,7 +60,7 @@ const Register = ({
   const [firstname, setUserFirstName] = useState('')
   const [lastname, setUserLastName] = useState('')
   //const captchaRef = useRef<ReCAPTCHA>(null)
-  const [license, setLicense] = useState<LicenseType>('osplusmensuel')
+  //const [license, setLicense] = useState<LicenseType>('osplusmensuel')
 
   // Initialise navigation function
   const navigate = useNavigate()
@@ -97,11 +89,11 @@ const Register = ({
   // Handler : License registrering
   const handleSubmit = async () => {
     // step 0 : License presentation
-    if (registerStep === 0) {
-      setRegisterStep(1)
-    }
-    // step 1 : Get user infos
-    else if (registerStep === 1) {
+    // if (registerStep === 0) {
+    //   setRegisterStep(1)
+    // }
+    // // step 1 : Get user infos
+    // else if (registerStep === 1) {
       if (okAccountInfos) {
         // backend SignUp
         setOnWait(true)
@@ -113,7 +105,7 @@ const Register = ({
           (ok: boolean) => {
             setOkAccountCreated(ok)
           },
-          license
+          navigate
         )
           .then(() =>
             setOnWait(false)
@@ -123,24 +115,7 @@ const Register = ({
         logError(t('Register.account.msg.err_captcha'))
       }
     }
-  }
 
-  // Token validation
-  const [searchParams,] = useSearchParams()
-  const token = searchParams.get('t')
-  const the_license = searchParams.get('license') as LicenseType | null
-  if (token && registerStep !== 2) {
-    setRegisterStep(2)
-    userValidate(
-      token,
-      loginComponent,
-      navigate,
-      setLicenses,
-      the_license
-    )
-  }
-
-  // Loging message
   const log = <>
     <div
       className='LogError'
@@ -160,54 +135,6 @@ const Register = ({
       }}>
     </div>
   </>
-
-  const osplus_presentation = [
-    <Presentation
-      t={t}
-      logo_sankey_plus={logo_sankey_plus}
-    />,
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center" // Centre horizontalement
-      gap={4}
-    >
-      {/* Texte avant les boutons - plus gros et gras */}
-      <Text
-        textAlign="center"
-        mb={2}
-        fontSize="lg" // ou "2xl", "3xl" pour plus gros
-        fontWeight="bold"
-      >
-        {t('Register.presentation.choose_plan')}
-      </Text>
-      {/* Boutons avec espace entre eux - centrés */}
-      <ButtonGroup spacing={30} justifyContent="center">
-        <Button
-          variant='btn_lone_navigation_tertiary'
-          maxWidth='inherit'
-          width='fit-content'
-          type='submit'
-          onClick={() => {
-            setLicense('osplusmensuel')
-            handleSubmit()
-          }}>
-          {t('Register.presentation.buy_opensankeyplus_monthly')}
-        </Button>
-        <Button
-          variant='btn_lone_navigation_tertiary'
-          maxWidth='inherit'
-          width='fit-content'
-          type='submit'
-          onClick={() => {
-            setLicense('osplusannuel')
-            handleSubmit()
-          }}>
-          {t('Register.presentation.buy_opensankeyplus_annual')}
-        </Button>
-      </ButtonGroup>
-    </Box>
-  ]
 
   const register_form = [
     // {/* User e-mail*/}
@@ -406,19 +333,19 @@ const Register = ({
   let header = '404 not found'
   let content = [<></>]
   let width = '33vw'
-  if (registerStep === 0) {
-    header = t('Register.presentation.title')
-    content = osplus_presentation
-    width = '50vw'
-  }
-  else if (registerStep === 1) {
+  // if (registerStep === 0) {
+  //   header = t('Register.presentation.title')
+  //   content = osplus_presentation
+  //   width = '50vw'
+  // }
+  //else if (registerStep === 1) {
     header = t('Register.account.title')
     content = register_form
-  }
-  else if (registerStep === 2) {
-    header = t('Register.validation.title')
-    content = [log]
-  }
+  // }
+  // else if (registerStep === 2) {
+  //   header = t('Register.validation.title')
+  //   content = [log]
+  // }
 
   let template = 'minmax(7vw, 150px) auto 11rem 11rem'
 

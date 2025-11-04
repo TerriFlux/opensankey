@@ -108,58 +108,6 @@ def signup_post():
         return jsonify(response), 200
 
     # if this returns a user, then the email already exists in database
-    user = User.query.filter(func.lower(User.email) == func.lower(user_infos["email"])).first()
-    if user:
-        # if a user is found, we want to redirect back to signup page
-        # so user can try again
-        response["message"] = "err_email_exists"
-        return jsonify(response), 200
-
-    # Create validation token
-    serializer = Serializer(current_app.config["SECRET_KEY"])
-    token = serializer.dumps(user_infos)
-    if license:
-        url = f"register?t={token}&license={license}"
-    else:
-        url = f"register?t={token}"
-    # Send confirm mail
-    try:
-        send_account_confirm_mail(user_infos, url)
-    except Exception as e:
-        return "Error on send confirm mail : {}".format(e), 500
-
-    # Return response
-    return jsonify(response), 200
-
-
-@auth_blueprint.route("/auth/signup/check_captcha", methods=["POST"])
-def check_captcha():
-    token = request.json.get("token")
-    res = requests.post(
-        "https://www.google.com/recaptcha/api/siteverify?secret=6Les5JwmAAAAAK2qIlZsNkiEKsvHLmPoK1JiQcOD&response="
-        + token
-    )  # noqa
-    return res.json(), res.status_code
-
-
-@auth_blueprint.route("/auth/signup/confirm", methods=["POST"])
-def signup_confirm():
-    # Prepare response
-    response = {"message": "ok"}
-
-    # Retrieve user infos
-    try:
-        token = request.json.get("token")
-        serializer = Serializer(current_app.config["SECRET_KEY"])
-        user_infos = serializer.loads(token, max_age=900)  # valid for 15min
-    except Exception:
-        response["message"] = "token_invalid"
-        return "token_invalid", 400
-
-    # Check if email is valid
-    if not is_email_valid(user_infos["email"]):
-        return jsonify(response), 400
-
     # if this returns a user, then the email already exists in database
     existing_user = User.query.filter_by(email=user_infos["email"]).first()
     if existing_user:
@@ -188,6 +136,64 @@ def signup_confirm():
 
     # Return response
     return jsonify(response), 200
+
+
+# @auth_blueprint.route("/auth/signup/check_captcha", methods=["POST"])
+# def check_captcha():
+#     token = request.json.get("token")
+#     res = requests.post(
+#         "https://www.google.com/recaptcha/api/siteverify?secret=6Les5JwmAAAAAK2qIlZsNkiEKsvHLmPoK1JiQcOD&response="
+#         + token
+#     )  # noqa
+#     return res.json(), res.status_code
+
+
+# @auth_blueprint.route("/auth/signup/confirm", methods=["POST"])
+# def signup_confirm():
+#     # Prepare response
+#     response = {"message": "ok"}
+
+#     # Retrieve user infos
+#     try:
+#         token = request.json.get("token")
+#         serializer = Serializer(current_app.config["SECRET_KEY"])
+#         user_infos = serializer.loads(token, max_age=900)  # valid for 15min
+#     except Exception:
+#         response["message"] = "token_invalid"
+#         return "token_invalid", 400
+
+#     # Check if email is valid
+#     if not is_email_valid(user_infos["email"]):
+#         return jsonify(response), 400
+
+#     # if this returns a user, then the email already exists in database
+#     existing_user = User.query.filter_by(email=user_infos["email"]).first()
+#     if existing_user:
+#         response["message"] = "account_already_created"
+#         return jsonify(response), 200
+
+#     # create a new user with the form data. Hash the password so the plaintext
+#     # version isn't saved.
+#     new_user = User(
+#         email=user_infos["email"].lower(),
+#         password=generate_password_hash(user_infos["password"], method="sha256"),
+#         firstname=user_infos["firstname"],
+#         name=user_infos["lastname"],
+#         creation=datetime.now().isoformat(),
+#     )
+
+#     # add the new user to the database
+#     db.session.add(new_user)
+#     db.session.commit()
+
+#     # Send welcome mail
+#     send_welcome_mail(new_user, user_infos["lang"])
+
+#     # Log new_user in order to pursuit checkout
+#     login_user(new_user)
+
+#     # Return response
+#     return jsonify(response), 200
 
 
 @auth_blueprint.route("/auth/login", methods=["POST"])
