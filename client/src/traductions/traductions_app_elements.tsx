@@ -416,11 +416,11 @@ export const resources_app_elements = {
           },
         },
         license: {
-          'title': 'OpenSankey+ license information',
+          'title': 'License information',
           'exp_until': 'Next renewal: ',
           btns: {
             'mng_sub': 'Manage subscription',
-            'add_sub': 'Switch to OpenSankey+',
+            'add_sub': 'Subscribe a licence',
           },
         },
         'OS+_lic': 'OpenSankey+ license',
@@ -978,11 +978,11 @@ export const resources_app_elements = {
           },
         },
         license: {
-          'title': 'Votre licence OpenSankey+',
+          'title': 'Votre licence',
           'exp_until': 'Prochain renouvellement : ',
           btns: {
             'mng_sub': 'Gérer l\'abonnement',
-            'add_sub': 'Passer à OpenSankey+',
+            'add_sub': 'Prendre une licence',
           },
         },
         'OS+_lic': 'Licence OpenSankey+',

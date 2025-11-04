@@ -52,7 +52,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
     }
     return this.logo_opensankey
   }
-
+  public get logo_osp(): string { return this._logo_mfa }
   // GETTERS / SETTERS ==================================================================
 
   // Override getter & setter so we can get new type

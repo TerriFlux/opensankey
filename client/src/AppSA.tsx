@@ -490,6 +490,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
                             t={new_data_app.t}
                             logo={new_data_app.logo}
                             logo_sankey_plus={new_data_app.logo_sankey_plus}
+                            logo_osp={new_data_app.logo_osp}
                             returnToApp={returnToApp}
                             loginComponent={new_data_app.login_component}
                             setLicenses={setLicenses}
