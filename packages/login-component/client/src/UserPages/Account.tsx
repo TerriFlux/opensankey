@@ -611,7 +611,7 @@ const Account = ({
   }
 
   const openCheckoutPage = () => {
-    navigate('/license/checkout')
+    navigate('/license/checkout/osplusmensuel')
   }
 
   // Hooks

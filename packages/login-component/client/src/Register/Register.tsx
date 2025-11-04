@@ -1,10 +1,8 @@
 
-import React, { FC, useState, useRef } from 'react'
+import React, { useState } from 'react'
 
-import ReCAPTCHA from 'react-google-recaptcha'
+//import ReCAPTCHA from 'react-google-recaptcha'
 import { useNavigate, NavigateFunction, useSearchParams } from 'react-router-dom'
-import { FaCheck } from 'react-icons/fa'
-import { LuBadgeAlert } from 'react-icons/lu'
 import { TFunction } from 'i18next'
 
 import {
@@ -23,8 +21,7 @@ import {
   InputLeftAddon,
   InputRightElement,
   Spinner,
-  Text,
-  useDisclosure,
+  Text
 } from '@chakra-ui/react'
 
 // import { Class_ApplicationDataSA } from '../../types/ApplicationDataSA'
@@ -70,14 +67,14 @@ const Register = ({
   const [password, setPassword] = useState('')
   const [firstname, setUserFirstName] = useState('')
   const [lastname, setUserLastName] = useState('')
-  const captchaRef = useRef<ReCAPTCHA>(null)
+  //const captchaRef = useRef<ReCAPTCHA>(null)
   const [license, setLicense] = useState<LicenseType>('osplusmensuel')
 
   // Initialise navigation function
   const navigate = useNavigate()
 
   // Terms of use modal
-  const { isOpen, onOpen, onClose } = useDisclosure()
+  //const { isOpen, onClose } = useDisclosure()
 
   // Ok for account creation
   const [ok_email, setOkEmail] = useState(0)
@@ -85,16 +82,16 @@ const Register = ({
   const [show_password, setShowPassword] = useState(false)
   const [ok_firstname, setOkFirstName] = useState(0)
   const [ok_lastname, setOkLastName] = useState(0)
-  const [ok_terms_of_uses, setOkTermsOfUses] = useState(false)
-  const [ok_captcha, setOkCaptcha] = useState(false)
+  //const [ok_terms_of_uses, setOkTermsOfUses] = useState(false)
+  //const [ok_captcha, setOkCaptcha] = useState(false)
   const [ok_account_created, setOkAccountCreated] = useState(false)
   const okAccountInfos =
     (ok_email > 1) &&
     (ok_password > 1) &&
     (ok_firstname > 1) &&
     (ok_lastname > 1) &&
-    ok_terms_of_uses &&
-    ok_captcha &&
+    //ok_terms_of_uses &&
+    // ok_captcha &&
     (!ok_account_created)
 
   // Handler : License registrering
@@ -342,46 +339,46 @@ const Register = ({
     </FormControl>,
 
     // {/* Acceptance of terms of uses */}
-    <Button
-      onClick={onOpen}
-      leftIcon={(ok_terms_of_uses === true) ? <FaCheck /> : <LuBadgeAlert />}>
-      {t('Register.account.btn_terms')}
-    </Button>,
+    // <Button
+    //   onClick={onOpen}
+    //   leftIcon={(ok_terms_of_uses === true) ? <FaCheck /> : <LuBadgeAlert />}>
+    //   {t('Register.account.btn_terms')}
+    // </Button>,
 
     // {/* Captcha */}
-    <div
-      className='form_group_recaptcha'>
-      <ReCAPTCHA
-        sitekey="6Les5JwmAAAAAOi3F8DLW4Z1aoqVMDBC9WpN1KFe"
-        ref={captchaRef}
-        onChange={() => {
-          const token_captcha = captchaRef.current?.getValue()
-          const fetchData = {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              'token': token_captcha
-            })
-          }
+    // <div
+    //   className='form_group_recaptcha'>
+    //   <ReCAPTCHA
+    //     sitekey="6Les5JwmAAAAAOi3F8DLW4Z1aoqVMDBC9WpN1KFe"
+    //     ref={captchaRef}
+    //     onChange={() => {
+    //       const token_captcha = captchaRef.current?.getValue()
+    //       const fetchData = {
+    //         method: 'POST',
+    //         headers: {
+    //           'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({
+    //           'token': token_captcha
+    //         })
+    //       }
 
-          const path = window.location.origin
-          const url = path + '/auth/signup/check_captcha'
-          fetch(url, fetchData)
-            .then(r => {
-              r.json()
-                .then(t => {
-                  setOkCaptcha(t['success'])
-                })
-            })
-            .catch(error => {
-              console.error('Error in checkCaptcha - ' + error.toString())
-              setOkCaptcha(false)
-            })
-        }}
-      />
-    </div>,
+    //       const path = window.location.origin
+    //       const url = path + '/auth/signup/check_captcha'
+    //       fetch(url, fetchData)
+    //         .then(r => {
+    //           r.json()
+    //             .then(t => {
+    //               setOkCaptcha(t['success'])
+    //             })
+    //         })
+    //         .catch(error => {
+    //           console.error('Error in checkCaptcha - ' + error.toString())
+    //           setOkCaptcha(false)
+    //         })
+    //     }}
+    //   />
+    // </div>,
 
     // Info / Error logs
     log,
@@ -481,11 +478,6 @@ const Register = ({
       </div>
 
       {/* Pop up modal for terms of use  */}
-      <TermsOfUse
-        isOpen={isOpen}
-        onClose={onClose}
-        setOk={setOkTermsOfUses}
-      />
     </ChakraProvider>
   )
 }
