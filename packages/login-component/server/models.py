@@ -807,11 +807,11 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
     :return: (message, success)
     :rtype: (str, bool)
     """
-    print(f"DEBUG set_licence_invoice_paid:")
+    print("DEBUG set_licence_invoice_paid:")
     print(f"  user_stripe_id: {user_stripe_id}")
     print(f"  license_stripe_id: {license_stripe_id}")
     print(f"  user_license_stripe_id: {user_license_stripe_id}")
-    
+
     # Get user
     user = User.query.filter_by(stripe_id=user_stripe_id).first()
     if user is None:
@@ -828,19 +828,19 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
 
     # Try to find user_license with all 3 criteria (ideal case)
     user_license = UserLicences.query.filter_by(
-        user=user, 
-        license=license, 
+        user=user,
+        license=license,
         stripe_id=user_license_stripe_id
     ).first()
-    
+
     if user_license is not None:
         print(f"  Found user_license with all 3 criteria (id={user_license.id})")
     else:
-        print(f"  No user_license found with all 3 criteria, trying alternatives...")
-        
+        print("  No user_license found with all 3 criteria, trying alternatives...")
+
         # Alternative 1: Search by stripe_id only (maybe user/license not yet set)
         user_license = UserLicences.query.filter_by(stripe_id=user_license_stripe_id).first()
-        
+
         if user_license is not None:
             print(f"  Found user_license by stripe_id only (id={user_license.id})")
             # Update the user and license links
@@ -849,17 +849,17 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
         else:
             # Alternative 2: Search by user and license (maybe stripe_id not yet set)
             user_license = UserLicences.query.filter_by(
-                user=user, 
+                user=user,
                 license=license
             ).order_by(UserLicences.id.desc()).first()
-            
+
             if user_license is not None:
                 print(f"  Found user_license by user+license (id={user_license.id})")
                 # Update the stripe_id
                 user_license.stripe_id = user_license_stripe_id
             else:
                 # Alternative 3: Create new entry if nothing found
-                print(f"  No user_license found, creating new entry")
+                print("  No user_license found, creating new entry")
                 user_license = UserLicences(
                     user=user,
                     license=license,
@@ -886,52 +886,3 @@ def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_l
         db.session.rollback()
         print(f"  ERROR during commit: {str(e)}")
         return f"Database error: {str(e)}", False
-
-def set_licence_invoice_paid(user_stripe_id: str, license_stripe_id: str, user_license_stripe_id: str):
-    """
-    Create a license at checkout for given user
-
-    Parameters
-    ----------
-    :param user_stripe_id: _description_
-    :type user_stripe_id: str
-
-    :param license_stripe_id: _description_
-    :type license_stripe_id: str
-
-    :param user_license_stripe_id: _description_
-    :type user_license_stripe_id: str
-
-    Optional parameters
-    -------------------
-    :param user_license_expiry: _description_
-    :type user_license_expiry: str, optional (defaults to 'never')
-
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
-    """
-    # Get user
-    user = User.query.filter_by(stripe_id=user_stripe_id).first()
-    if user is None:
-        return "No user found for invoice", False
-
-    # Get related license
-    license = License.query.filter_by(stripe_id=license_stripe_id).first()
-    if license is None:
-        return "No license found for invoice", False
-
-    # Get subcription license
-    user_license = UserLicences.query.filter_by(user=user, license=license, stripe_id=user_license_stripe_id).first()
-    if user_license is None:
-        return "Invalid invoice id for user and license", False
-
-    # Update infos
-    user_license.activated = True
-    if user_license.expiry is None:
-        user_license.expiry = "never"
-
-    # Apply modification to database
-    db.session.commit()
-    return "ok", True
