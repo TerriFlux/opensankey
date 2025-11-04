@@ -268,8 +268,8 @@ export const resources_app_elements = {
                       </td>\
                     </tr>\
                   </table>',
-          'buy_opensankeyplus_monthly': 'For 300 euros a year, I want OpenSankey+ !',
-          'buy_opensankeyplus_annual': 'For 50 euros a year, I want OpenSankey+ !',
+          'buy_opensankeyplus_monthly': 'For 50 euros a year, I want OpenSankey+ !',
+          'buy_opensankeyplus_annual': 'For 300 euros a year, I want OpenSankey+ !',
           'choose_plan': 'Choose an OpenSankey+ license.'
         },
         account: {
@@ -858,7 +858,7 @@ export const resources_app_elements = {
         validation: {
           'title': 'Validation du compte',
           msg: {
-            'ok': 'Ce compte a été validé avec succes.',
+            'ok': 'Ce compte a été validé avec succés.',
             'nok': 'Erreur, lien corrompu',
             'account_already_created': 'Ce compte a déjà été validé.',
             'redirect': 'Vous allez être redirigé vers la page de souscription.',
