@@ -1,12 +1,6 @@
-
-import React, { FC, useState, useEffect, useMemo } from 'react'
-import { Navigate, NavigateFunction, useNavigate, useSearchParams,useParams } from 'react-router-dom'
+import React, { FC, useState, useEffect } from 'react'
+import { Navigate, NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
 import { TFunction } from 'i18next'
-import { loadStripe } from '@stripe/stripe-js'
-import {
-  EmbeddedCheckoutProvider,
-  EmbeddedCheckout
-} from '@stripe/react-stripe-js'
 
 import {
   Box,
@@ -18,126 +12,126 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 
-import {
-  createSubscription,
-  getStripePublishableKey,
-  LicenseType
-} from './PaiementFunctions'
+import { getStripePublishableKey } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
 
+// Déclarer le type pour le custom element Stripe
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'stripe-pricing-table': any;
+    }
+  }
+}
+
 /**
- * Component that embed stripe paiement page.
- * @return {*}
+ * Component avec Pricing Table Stripe.
+ * L'utilisateur choisit entre mensuel et annuel directement dans la table Stripe.
  */
 export const PaiementCheckout = () => {
-  const { license } = useParams<{ license: LicenseType }>()
-  
-  // States
   const [publishableKey, setPublishableKey] = useState('')
-  const [clientSecret, setClientSecret] = useState('')
-  
-  // Créer stripePromise de manière stable
-  const stripePromise = useMemo(() => {
-    return publishableKey ? loadStripe(publishableKey) : undefined
-  }, [publishableKey])
-
-  // Effects
-  const fetchPublishableKey = async () => {
-    const key = await getStripePublishableKey()
-    setPublishableKey(key)
-  }
-
-  const fetchClientSecret = async () => {
-    if (license) {
-      try {
-        const secret = await createSubscription(license)
-        setClientSecret(secret)
-      } catch (error) {
-        console.error('Erreur lors de la création de la souscription:', error)
-      }
-    }
-  }
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    fetchPublishableKey()
+    const loadStripeAndKey = async () => {
+      try {
+        // Récupérer la clé publique
+        const key = await getStripePublishableKey()
+        setPublishableKey(key)
+        
+        // Charger le script Stripe Pricing Table
+        const script = document.createElement('script')
+        script.src = 'https://js.stripe.com/v3/pricing-table.js'
+        script.async = true
+        script.onload = () => setIsLoading(false)
+        script.onerror = () => {
+          console.error('Erreur lors du chargement du script Stripe')
+          setIsLoading(false)
+        }
+        document.body.appendChild(script)
+
+        // Cleanup: retirer le script quand le composant est démonté
+        return () => {
+          document.body.removeChild(script)
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement de Stripe:', error)
+        setIsLoading(false)
+      }
+    }
+    
+    loadStripeAndKey()
   }, [])
 
-  useEffect(() => {
-    if (license) {
-      fetchClientSecret()
-    }
-  }, [license]) // Se déclenche quand 'license' change
-
-  const options = { clientSecret  }
+  if (isLoading || !publishableKey) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+        <Spinner size="xl" />
+      </Box>
+    )
+  }
 
   return (
-    <div id="checkout">
-      {
-        (stripePromise === undefined || !clientSecret) ?
-          <Spinner /> :
-          <EmbeddedCheckoutProvider
-            stripe={stripePromise}
-            options={options}
-          >
-            <EmbeddedCheckout />
-          </EmbeddedCheckoutProvider>
-      }
-    </div>
+    <Box id="checkout" padding="2rem">
+      {/* IMPORTANT: Remplacez prctbl_XXXXXXXXXXXXX par votre pricing-table-id */}
+      <stripe-pricing-table 
+        pricing-table-id="prctbl_1SPlTDQOfq6v5jMC58EwiQx7"
+        publishable-key={publishableKey}
+      >
+      </stripe-pricing-table>
+    </Box>
   )
 }
 
 /**
  * Create the right redirection after paiement.
  * Ie. if paiement succeeded or not.
- *
- * @return {*}
  */
 export const PaiementReturn = () => {
   const [status, setStatus] = useState(null)
   const [searchParams,] = useSearchParams()
 
-
   useEffect(() => {
     const sessionId = searchParams.get('session_id')
 
-    fetch(`/stripe/session-status?session_id=${sessionId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setStatus(data.status)
-      })
-  }, [])
+    if (sessionId) {
+      fetch(`/stripe/session-status?session_id=${sessionId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          setStatus(data.status)
+        })
+        .catch((error) => {
+          console.error('Erreur lors de la vérification du statut:', error)
+        })
+    }
+  }, [searchParams])
 
   if (status === 'open') {
-    return (
-      <Navigate to="/checkout" />
-    )
+    return <Navigate to="/license/checkout" />
   }
 
   if (status === 'complete') {
-    return (
-      <Navigate to="/license?p=success" />
-    )
+    return <Navigate to="/license?p=success" />
   }
 
-  return null
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+      <Spinner size="xl" />
+    </Box>
+  )
 }
 
 /**
  * Component that displayed paiement pages :
- * Trigger buy, succes paiement or error on paiement
- *
- * @param {*} {
- *   new_data_app
- * }
- * @return {*}
+ * Trigger buy, success paiement or error on paiement
  */
 export const PaiementPage: FC<{
   t: TFunction,
   logo: string,
-  logo_sankey_plus:string,
+  logo_sankey_plus: string,
   returnToApp: (navigate: NavigateFunction) => void,
 }> = ({
-  t,logo,logo_sankey_plus, returnToApp
+  t, logo, logo_sankey_plus, returnToApp
 }) => {
   // App data
   const [searchParams,] = useSearchParams()
@@ -149,6 +143,7 @@ export const PaiementPage: FC<{
   // Init what is displayed
   const status = searchParams.get('p')
   let content, header
+  
   if (status === 'buy') {
     header = t('Paiement.win_header_buy')
     content = <>
@@ -158,10 +153,8 @@ export const PaiementPage: FC<{
       <Presentation
         t={t}
         logo_sankey_plus={logo_sankey_plus}
-      />,
-      <Box
-        display="inline-grid"
-      >
+      />
+      <Box display="inline-grid">
         <Button
           variant='btn_lone_navigation_tertiary'
           type="submit"

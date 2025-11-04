@@ -110,7 +110,7 @@ export async function userValidate(
       let next_page
       if (loginComponent.has_account) {
         logInfo(i18next.t('Register.validation.msg.redirect'))
-        next_page = `/license/checkout/${license}`
+        next_page = `/license/checkout`
       }
       else {
         next_page = '/login'

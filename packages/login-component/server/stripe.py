@@ -80,53 +80,53 @@ def get_publishable_key():
     return jsonify(stripe_config)
 
 
-@stripe_blueprint.route("/stripe/create-checkout-session/<license_type>", methods=["POST"])
-def create_checkout_session(license_type):
-    """
-    Create and return a checkout object for stripe client.
+# @stripe_blueprint.route("/stripe/create-checkout-session/<license_type>", methods=["POST"])
+# def create_checkout_session(license_type):
+#     """
+#     Create and return a checkout object for stripe client.
 
-    Parameters
-    ----------
-    license_type : str
-        Type de licence (osplusmensuel ou osplusannuel)
+#     Parameters
+#     ----------
+#     license_type : str
+#         Type de licence (osplusmensuel ou osplusannuel)
 
-    Returns
-    -------
-    :return: JSON avec clientSecret ou erreur
-    :rtype: dict
-    """
-    # Mapping des types de licences vers les price_id
-    price_mapping = {
-        "osplusmensuel": STRIPE_KEYS["price_id_osplusmensuel"],
-        "osplusannuel": STRIPE_KEYS["price_id_osplusannuel"]
-    }
+#     Returns
+#     -------
+#     :return: JSON avec clientSecret ou erreur
+#     :rtype: dict
+#     """
+#     # Mapping des types de licences vers les price_id
+#     price_mapping = {
+#         "osplusmensuel": STRIPE_KEYS["price_id_osplusmensuel"],
+#         "osplusannuel": STRIPE_KEYS["price_id_osplusannuel"]
+#     }
 
-    # Vérifier que le type de licence est valide
-    if license_type not in price_mapping:
-        return jsonify(error="Type de licence invalide"), 400
+#     # Vérifier que le type de licence est valide
+#     if license_type not in price_mapping:
+#         return jsonify(error="Type de licence invalide"), 400
 
-    stripe.api_key = STRIPE_KEYS["secret_key"]
+#     stripe.api_key = STRIPE_KEYS["secret_key"]
 
-    try:
-        checkout_session = stripe.checkout.Session.create(
-            ui_mode="embedded",
-            client_reference_id=current_user.id,
-            customer_email=current_user.email,
-            billing_address_collection="required",
-            return_url=(CLIENT_ROOT_URL + "license/return?session_id={CHECKOUT_SESSION_ID}"),
-            payment_method_types=["card"],
-            mode="subscription",
-            allow_promotion_codes=True,
-            line_items=[
-                {
-                    "price": price_mapping[license_type],
-                    "quantity": 1,
-                }
-            ],
-        )
-        return jsonify(clientSecret=checkout_session.client_secret)
-    except Exception as e:
-        return jsonify(error=str(e)), 500
+#     try:
+#         checkout_session = stripe.checkout.Session.create(
+#             ui_mode="embedded",
+#             client_reference_id=current_user.id,
+#             customer_email=current_user.email,
+#             billing_address_collection="required",
+#             return_url=(CLIENT_ROOT_URL + "license/return?session_id={CHECKOUT_SESSION_ID}"),
+#             payment_method_types=["card"],
+#             mode="subscription",
+#             allow_promotion_codes=True,
+#             line_items=[
+#                 {
+#                     "price": price_mapping[license_type],
+#                     "quantity": 1,
+#                 }
+#             ],
+#         )
+#         return jsonify(clientSecret=checkout_session.client_secret)
+#     except Exception as e:
+#         return jsonify(error=str(e)), 500
 
 
 @stripe_blueprint.route("/stripe/create-customer-portal", methods=["GET"])
