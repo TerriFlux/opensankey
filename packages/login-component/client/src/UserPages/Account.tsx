@@ -104,6 +104,7 @@ const Account = ({
   t,
   logo,
   logo_sankey_plus,
+  logo_osp,
   returnToApp,
   loginComponent,
   blocker_suite_sankey,
@@ -112,6 +113,7 @@ const Account = ({
   t:TFunction,
   logo:string,
   logo_sankey_plus:string,
+  logo_osp:string,
   returnToApp: (navigate: NavigateFunction) => void,
   loginComponent:LoginComponent,
   blocker_suite_sankey: { [_: string]: JSX.Element },
@@ -813,12 +815,12 @@ const Account = ({
                       layerStyle='account_card_subcontent'
                       gridAutoFlow='row'
                     >
-                      <Text
+                      {/* <Text
                         textStyle='h3'
                         margin='0px 0px 0px 3px'
                       >
                         {t('UserPages.OS+_lic')}
-                      </Text>
+                      </Text> */}
                       <Box
                         layerStyle='account_card_subcontent'
                         gridAutoFlow='column'
@@ -871,6 +873,12 @@ const Account = ({
                                   justifySelf='left'
                                   width='70px'
                                   src={logo_sankey_plus}
+                                  alt='logo_osp'
+                                />
+                                <Image
+                                  justifySelf='left'
+                                  width='70px'
+                                  src={logo_osp}
                                   alt='logo_osp'
                                 />
                                 <Text
