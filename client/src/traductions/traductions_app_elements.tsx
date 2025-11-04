@@ -222,14 +222,14 @@ export const resources_app_elements = {
       UserNav: {
         'to_con': 'Sign in',
         'to_reg': 'Sign up',
-        'to_buy': 'Try OpenSankey+',
+        'to_buy': 'Sign up',
         'to_app': 'Back to the application',
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
         tooltip: {
           'to_con': 'Log in or create an account',
           'to_reg': 'Sign up',
-          'to_buy': 'Access advanced features, including the use of icons, text areas, and view editing.',
+          'to_buy': 'Sign up',
           'to_app': 'Back to the application',
           'to_acc': 'My account',
           'to_dbd': 'Dashboard'
@@ -795,14 +795,14 @@ export const resources_app_elements = {
       UserNav: {
         'to_con': 'Connectez vous',
         'to_reg': 'Créez un compte',
-        'to_buy': 'Essayez OpenSankey+',
+        'to_buy': 'Créez un compte',
         'to_app': 'Retour à l\'application',
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
         tooltip: {
           'to_con': 'Connectez vous',
           'to_reg': 'Créez un compte',
-          'to_buy': 'Accédez à des fonctionnalités avancés parmis lesquelles: utilisation d\'icônes, de zone de textes, et édition de vues.',
+          'to_buy': 'Créez un compte',
           'to_app': 'Retour à l\'application',
           'to_acc': 'Mon compte',
           'to_dbd': 'Dashboard'
