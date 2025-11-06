@@ -166,7 +166,7 @@ export const WrapperContainerStyleSelector = ({
             new_data.menu_configuration.updateAllComponentsRelatedToContainers()
             new_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
             // Need to save
-            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
             setUpdate.toggle()
           }}
         >
@@ -219,7 +219,7 @@ export const WrapperContainerStyleSelector = ({
             new_data.menu_configuration.updateAllComponentsRelatedToContainers()
             new_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
             // Need to save
-            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
             setUpdate.toggle()
           }}
         >
@@ -251,7 +251,7 @@ export const WrapperContainerStyleSelector = ({
                 new_data.menu_configuration.updateAllComponentsRelatedToContainers()
                 new_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
                 // Need to save
-                new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+                new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
               }}
             />
           </InputGroup>
