@@ -399,6 +399,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   ) {
     this.draw()
     this.drawDragHandlers()
+    this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
   protected override _initDraw() {
