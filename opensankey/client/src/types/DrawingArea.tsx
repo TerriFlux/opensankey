@@ -573,6 +573,10 @@ export class Class_DrawingArea {
       console.log('convert_data_legacy')
       convert_data_legacy(json_object)
       this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
+
+      Object.values(json_object.style_node).forEach(s=>{
+        if (s.position == 'parametric') s.position = 'absolute'
+      })
       console.log(json_object.version)
     }
 

@@ -232,7 +232,7 @@ export const WrapperNodeStyleSelector = ({ new_data, children }: {
           new_data.menu_configuration.updateAllComponentsRelatedToNodes()
           new_data.menu_configuration.updateComponentRelatedToNodesStyles()
           // Need to save
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         }}>
         {icon_add_element}
       </Button>
@@ -283,7 +283,7 @@ export const WrapperNodeStyleSelector = ({ new_data, children }: {
           new_data.menu_configuration.updateAllComponentsRelatedToNodes()
           new_data.menu_configuration.updateComponentRelatedToNodesStyles()
           // Need to save
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
         }}
       >
@@ -318,7 +318,7 @@ export const WrapperNodeStyleSelector = ({ new_data, children }: {
               new_data.menu_configuration.updateAllComponentsRelatedToNodes()
               new_data.menu_configuration.updateComponentRelatedToNodesStyles()
               // Need to save
-              new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+              new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
             }}
           />
         </InputGroup>
@@ -504,7 +504,7 @@ export const WrapperLinkStyleSelector = ({ new_data, children }: {
           new_data.menu_configuration.updateComponentRelatedToLinksStyles()
 
           // Need to save
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         }}>
         {icon_add_element}
       </Button>
@@ -555,7 +555,7 @@ export const WrapperLinkStyleSelector = ({ new_data, children }: {
           new_data.menu_configuration.updateComponentRelatedToLinksApparence()
           new_data.menu_configuration.updateComponentRelatedToLinksStyles()
 
-          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+          new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
         }}
       >
         {icon_remove_element}
@@ -587,7 +587,7 @@ export const WrapperLinkStyleSelector = ({ new_data, children }: {
               link_styles_dict[ref_selected_style_link.current].name = evt.target.value
               new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current()
               // Need to save
-              new_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+              new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
             }}
           />
         </InputGroup>
