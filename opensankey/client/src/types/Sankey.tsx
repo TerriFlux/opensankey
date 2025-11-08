@@ -2233,7 +2233,7 @@ export class Class_Sankey {
     this._links[link.id] = link
   }
   public get id(): string { return this._id }
-
+  public set id(_) {this._id = _}
   // Nodes related ----------------------------------------------------------------------
 
   /**
