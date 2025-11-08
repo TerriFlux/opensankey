@@ -2352,7 +2352,9 @@ const convert_links: convert_linksFuncType = (
     if (l.local) {
       if (!l.local.recycling) {
         if (l.local.right_horiz_shift !== undefined)
-          AssignLinkLocalAttribute(l, 'right_horiz_shift', (1.0 - l.local.right_horiz_shift)) // We have inversed that
+          if (l.local.right_horiz_shift >= 0 && l.local.right_horiz_shift <= 1) {
+            AssignLinkLocalAttribute(l, 'right_horiz_shift', (1.0 - l.local.right_horiz_shift)) // We have inversed that
+          }
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
             // I made an approx. here because we can't have a direct transform from old behavior (Cubic / Bezier) to new (Quadratic) for path drawing
