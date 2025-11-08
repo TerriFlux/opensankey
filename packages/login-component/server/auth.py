@@ -120,7 +120,10 @@ def signup_post():
     db.session.commit()
 
     # Send welcome mail
-    send_welcome_mail(new_user, user_infos["lang"])
+    try:
+        send_welcome_mail(new_user, user_infos["lang"])
+    except Exception as excpt:  # noqa
+        print("send_welcome_mail error : " + str(excpt))
 
     # Log new_user in order to pursuit checkout
     login_user(new_user)
