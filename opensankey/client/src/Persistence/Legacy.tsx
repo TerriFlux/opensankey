@@ -1748,7 +1748,7 @@ const convert_nodes: convert_nodesFuncType = (
           const tag_visible = data.levelTags[dim[0]].activated && node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0
           if (!tag_visible && local_aggregation) {
             // Force to show this node
-            if ( (!data.levelTags[dim[0]].activated || +node_tags_attr[0] > +tags_from_grp_to_display[0]) &&
+            if ( (data.levelTags[dim[0]].activated || +node_tags_attr[0] > +tags_from_grp_to_display[0]) &&
               dim[1].parent_name &&
               data.nodes[dim[1].parent_name!].local &&
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
@@ -2354,6 +2354,8 @@ const convert_links: convert_linksFuncType = (
         if (l.local.right_horiz_shift !== undefined)
           if (l.local.right_horiz_shift >= 0 && l.local.right_horiz_shift <= 1) {
             AssignLinkLocalAttribute(l, 'right_horiz_shift', (1.0 - l.local.right_horiz_shift)) // We have inversed that
+          } else {
+            delete l.local.right_horiz_shift
           }
         if (l.local.curvature) {
           if (l.local.orientation && ((l.local.orientation == 'vh') || (l.local.orientation == 'hv'))) {
