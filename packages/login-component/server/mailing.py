@@ -64,7 +64,7 @@ def is_email_valid(mail_to_check):
     """
     # regex : https://emailregex.com/
     regex_mail = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$)"
-    return re.fullmatch(regex_mail, mail_to_check) is not None
+    return re.match(regex_mail, mail_to_check) is not None
 
 
 def init_mailing(app):
