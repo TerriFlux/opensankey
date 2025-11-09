@@ -24,6 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+import * as d3 from 'd3'
 import { makeId, Type_JSON } from '../types/Utils'
 import {
   SankeyNode,
@@ -510,7 +511,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   }
 
   // Convert name variable for data version>0.9
-  if (data_to_convert.display_style ) {
+  if (data_to_convert.display_style) {
     data_to_convert.filter_link_value = data_to_convert.display_style.filter
     data_to_convert.filter_label = data_to_convert.display_style.filter_label
   }
@@ -550,7 +551,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
   clean_data_local(data_to_convert)
   delete data_to_convert.style_link['LinkExportStyle']
   delete data_to_convert.style_link['LinkImportStyle']
-  
+
   Object.values(data_to_convert.nodes).forEach(n => {
     // Change style if node has default style & 'Type de noeud' tags
     if (n.tags['type de noeud']) {
@@ -744,7 +745,7 @@ export const ReturnValueLink = (data: SankeyData, l: SankeyLink, k: keyof Sankey
   let value = ReturnLocalLinkValue(l, k as keyof SankeyLinkAttrLocal)
   if (value === undefined || value === null) {
     const ks = k as keyof SankeyLinkStyle
-    value = l.style in data.style_link ? data.style_link[l.style][ks] : (data.style_link['default'] ? data.style_link['default'][ks] :null)
+    value = l.style in data.style_link ? data.style_link[l.style][ks] : (data.style_link['default'] ? data.style_link['default'][ks] : null)
   }
   //@ts-expect-error xxx
   return value
@@ -1633,14 +1634,7 @@ const convert_nodes: convert_nodesFuncType = (
       delete nn.image
     }
 
-    //remove tags which are not in data.NodeTags
-    const tags_to_remove: string[] = []
-    for (const tag in n.tags) {
-      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
-        tags_to_remove.push(tag)
-      }
-    }
-    tags_to_remove.forEach(tag => { delete n.tags[tag] })
+
 
     data.nodes[n.idNode] = n
 
@@ -1748,7 +1742,7 @@ const convert_nodes: convert_nodesFuncType = (
           const tag_visible = data.levelTags[dim[0]].activated && node_tags_attr.filter(t => tags_from_grp_to_display.includes(t)).length > 0
           if (!tag_visible && local_aggregation) {
             // Force to show this node
-            if ( (data.levelTags[dim[0]].activated || +node_tags_attr[0] > +tags_from_grp_to_display[0]) &&
+            if ((data.levelTags[dim[0]].activated || +node_tags_attr[0] > +tags_from_grp_to_display[0]) &&
               dim[1].parent_name &&
               data.nodes[dim[1].parent_name!].local &&
               data.nodes[dim[1].parent_name!].local!.local_aggregation == false
@@ -1829,14 +1823,14 @@ const convert_nodes: convert_nodesFuncType = (
                 children_tags: children_tags
               }
             }
-          } /*else {
-              n.dimensions[leveltagg_id] = {}
-              n.dimensions[leveltagg_id].antitag = true
-            }*/
+          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (! n.dimensions['Primaire'] || !n.dimensions['Primaire'].parent_name)) {
+            n.dimensions[leveltagg_id] = {}
+            n.dimensions[leveltagg_id].antitag = true
+          }
         }
       }
 
-      delete n.tags[leveltagg_id]
+
       // Code below is to correct bad parentship relation coming from legacy
       // Get lists of parents
       // const node_parents_id = (node: SankeyNode) => {
@@ -1879,7 +1873,20 @@ const convert_nodes: convert_nodesFuncType = (
       })
 
     })
-
+    tmp.forEach(nt => {
+      const leveltagg_tags_ids = nt[1]
+      const leveltagg_id = nt[0]
+      delete n.tags[leveltagg_id]
+    })
+    //remove tags which are not in data.NodeTags
+    const tags_to_remove: string[] = []
+    for (const tag in n.tags) {
+      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
+        tags_to_remove.push(tag)
+      }
+    }
+    tags_to_remove.forEach(tag => { delete n.tags[tag] })
+    
     // Convert name of some local variables
     if (n.local) {
       if (n.local.label_vert_shift !== undefined) {
@@ -2374,6 +2381,9 @@ const convert_links: convert_linksFuncType = (
         }
       }
       else {
+        const scale = d3.scaleLinear()
+          .range([0, 100])
+          .domain([0, data.user_scale])
         // In old file, for recycling only, shift are not relative but are absolute distances between source & target nodes
         // So we need to get dist between source & target node to recompute relative parameters for recyling link
         let dist: number
@@ -2388,22 +2398,23 @@ const convert_links: convert_linksFuncType = (
           dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(20, Math.abs(target_node.x - source_node.x)) // Avoid div per 0
+          dist = Math.max(20, Math.abs(target_node.x - (source_node.x+ +ReturnValueNode(data,source_node,"node_width")))) // Avoid div per 0
         }
 
-        const shift_dist_min = 200
-        const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift-50 : -50
-        let original_dist = Math.abs(left_horiz_shift)
-        let shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
-        AssignLinkLocalAttribute(l, 'right_horiz_shift',shift_dist / dist) // value in [0; +oo]
-        AssignLinkLocalAttribute(l, 'ending_tangeant', 0.01) // value in [0; +oo]
+        //const shift_dist_max = 200
+        const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift - 50 : -50
+        const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift + 50 : 50
+        let original_dist = Math.abs(left_horiz_shift)+scale(+GetLinkValue(data,l.idLink).value)
+        //let shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
+        AssignLinkLocalAttribute(l, 'right_horiz_shift', original_dist / dist) // value in [0; +oo]
+        AssignLinkLocalAttribute(l, 'ending_tangeant', 0.001) // value in [0; +oo]
         // }
-        const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift+50 : 50
-        original_dist = Math.abs(right_horiz_shift)
+
+        original_dist = Math.abs(right_horiz_shift)+scale(+GetLinkValue(data,l.idLink).value)
         //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
-        shift_dist = Math.max(shift_dist_min, original_dist) // Approx to keep general shape
-        AssignLinkLocalAttribute(l, 'left_horiz_shift', shift_dist / dist) // value in [0; +oo]
-        AssignLinkLocalAttribute(l, 'starting_tangeant', 0.01) // value in [0; +oo]
+        //shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
+        AssignLinkLocalAttribute(l, 'left_horiz_shift', original_dist / dist) // value in [0; +oo]
+        AssignLinkLocalAttribute(l, 'starting_tangeant', 0.001) // value in [0; +oo]
       }
     }
 
@@ -2414,14 +2425,14 @@ const convert_links: convert_linksFuncType = (
     if (l.drag_label_offset) {
       l.position_offset_label = l.drag_label_offset
     }
-    if (l.local.label_position  == 'frozen') {
+    if (l.local.label_position == 'frozen') {
       //@ts-expect-error xxx
       l.local.name_label_pos_auto = true
     }
     if (l.x_label) {
       //@ts-expect-error xxx
       l.position_x_label = l.x_label
-    }    
+    }
     if (l.y_label) {
       //@ts-expect-error xxx
       l.position_y_label = l.y_label
