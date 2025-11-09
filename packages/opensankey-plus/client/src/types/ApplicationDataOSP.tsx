@@ -669,7 +669,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Delete nodes without IO links
         if (node.links_order.length == 0) {
           new_drawing_area.deleteNode(node)
-          return 
+          return
         }
         if (node.input_links_list.length == 0) {
           node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
@@ -687,7 +687,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     })
     new_drawing_area.nodePositioning.computeAutoSankey(false, false)
     new_drawing_area.sankey.nodes_list
-      .forEach(node => {node.position_v = -1})
+      .forEach(node => { node.position_v = -1 })
 
     new_drawing_area.nodePositioning.computeParametrization(true)
     new_drawing_area.container_activated = false
@@ -797,7 +797,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         if (id !== default_main_sankey_id) {
           // Update view with attr heredited from master
           this._drawing_area.bypass_redraws = true
-          this._drawing_area.updateFrom(this._views[default_main_sankey_id], drawing_area_plus.heredited_attr)
+          this._drawing_area.updateFrom(this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+          //this._drawing_area.bypass_redraws = false
           this.options_save_json = default_save_JSON_options
           // Create a clone of current view's DA
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))

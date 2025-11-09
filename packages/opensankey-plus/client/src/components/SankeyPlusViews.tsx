@@ -910,6 +910,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   new_data_plus.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = switchThis
 
   const updateComponent = () => {
+    new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setUpdater(a => a + 1)
   }
 
