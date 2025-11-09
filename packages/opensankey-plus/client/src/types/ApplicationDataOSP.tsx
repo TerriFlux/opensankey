@@ -206,6 +206,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_ApplicationDataOSP
    */
   protected _reset(): void {
+    delete this._master_drawing_area
     this._views = {}
     this._views_order = []
     super._reset()
@@ -424,6 +425,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       evt.preventDefault()
       const view_id = makeId('view')
       this.createNewView(view_id, 'Copie de ' + this.drawing_area.name,true)
+      this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       //this._views[view_id].name = 'Copie de ' + this.drawing_area.name
       this.setCurrentView(view_id)
     }
