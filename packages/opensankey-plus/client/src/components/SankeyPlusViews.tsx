@@ -462,7 +462,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           app_data.sendWaitingToast(
             () => {
               drawing_area_plus.bypass_redraws = true
-              const v = app_data.createNewView(files[i].name, false)
+              const v = app_data.createNewView(files[i].name,files[i].name, false)
               // const drawing_area_view = app_data.createNewDrawingArea(files[i].name)
               // drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
               v.fromJSON(JSON_data as Type_JSON)
@@ -607,18 +607,12 @@ export const SelecteurView = (
     }
     value={cur_view.id}
   >
-    <option
-      hidden
-      value={default_main_sankey_id}
-    >
-      {t('view.actual')}
-    </option>
     {
       Object.entries(new_data_plus.views_dict).filter(([key]) => key !== default_main_sankey_id)
-        .map(([, view]) => {
+        .map(([key, view]) => {
           return <option
-            key={view.id}
-            value={view.id}
+            key={key}
+            value={key}
           >
             {view.name}
           </option>
@@ -1501,8 +1495,8 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
                 local_app_data.current.createUnitaryNewView(element)
               })
               const obj_view: Type_JSON = {}
-              Object.values(local_app_data.current.views_dict).forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
-              new_data_plus.extractViewsFromJSON({ views: obj_view })
+              //Object.values(local_app_data.current.views_dict).forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
+              //new_data_plus.extractViewsFromJSON({ views: obj_view })
               new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
             },
             {
