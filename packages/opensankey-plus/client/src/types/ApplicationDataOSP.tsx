@@ -236,7 +236,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_ApplicationDataOSP
    */
   protected _reset(): void {
-    if (this.options_open_json.only_current_view && this.has_views && this._master_drawing_area != undefined) {
+    if (this.options_open_json.only_current_view && this.has_views && this._master_drawing_area != undefined && this._drawing_area.id != default_main_sankey_id) {
       this.drawing_area.purgeSelection()
       this.drawing_area.unDraw()
       this._drawing_area = this.createNewDrawingArea(this._drawing_area.id)
