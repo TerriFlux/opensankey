@@ -565,25 +565,33 @@ export class Class_Sankey {
 
     // Update level_tag_dict ------------------------------------------------------------
 
-    if (mode.includes('tagLevel') || all) {
-      // Finds the corresponding tag group by ids
-      const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._level_taggs, other_sankey._level_taggs, matching_taggs_id['levelTags'])
+    //if (mode.includes('tagLevel') || all) {
+    // Finds the corresponding tag group by ids
+    // const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(this._level_taggs, other_sankey._level_taggs, matching_taggs_id['levelTags'])
 
-      // Update taggs
-      to_remove
-        .forEach(id => {
-          this.removeTagGroupWithId('level_taggs', id)
+    // // Update taggs
+    // to_remove
+    //   .forEach(id => {
+    //     this.removeTagGroupWithId('level_taggs', id)
+    //   })
+    // to_add
+    //   .forEach(id => {
+    //     const ltagg = other_sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
+    //     this.addLevelTagGroup(ltagg.id, ltagg.name)
+    //     this._level_taggs[id].copyFrom(ltagg)
+    //   })
+    // to_update
+    //   .forEach(id => {
+    //     this._level_taggs[id].copyFrom(other_sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
+    //   })
+    if (mode.includes('tagLevel') || all) {
+      matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
+      Object.values(this._level_taggs).forEach(tagg =>
+        tagg.tags_list.forEach(tag => {
+          const sourceTag = other_sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]]?.tags_dict?.[tag.id]
+          if (sourceTag) tag.is_selected = sourceTag.is_selected
         })
-      to_add
-        .forEach(id => {
-          const ltagg = other_sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
-          this.addLevelTagGroup(ltagg.id, ltagg.name)
-          this._level_taggs[id].copyFrom(ltagg)
-        })
-      to_update
-        .forEach(id => {
-          this._level_taggs[id].copyFrom(other_sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
-        })
+      )
     }
 
     // Update node_tag_dict ------------------------------------------------------------
@@ -1850,11 +1858,11 @@ export class Class_Sankey {
     _switchToStyle()
   }
 
-    /**
-  * Function that change selected nodes style and save undo
-  *
-  * @param {Class_NodeStyle} n_style
-  */
+  /**
+* Function that change selected nodes style and save undo
+*
+* @param {Class_NodeStyle} n_style
+*/
   public switchContainerStyle(n_style: Class_ContainerStyle, add: boolean) {
     const selected_zdt = this.drawing_area.selected_containers_list
     const { ref_selected_style_container } = this.drawing_area.application_data.menu_configuration
@@ -2233,7 +2241,7 @@ export class Class_Sankey {
     this._links[link.id] = link
   }
   public get id(): string { return this._id }
-  public set id(_) {this._id = _}
+  public set id(_) { this._id = _ }
   // Nodes related ----------------------------------------------------------------------
 
   /**
@@ -2420,14 +2428,14 @@ export class Class_Sankey {
     return this._link_styles
   }
 
-/**
- * Return the object containing all the container styles
- * @readonly
- * @memberof Class_Sankey
- */
-public get container_styles_dict() {
-  return this._container_styles
-}
+  /**
+   * Return the object containing all the container styles
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get container_styles_dict() {
+    return this._container_styles
+  }
 
   /**
    * Return all the style as a list
@@ -2438,14 +2446,14 @@ public get container_styles_dict() {
     return Object.values(this._link_styles)
   }
 
-/**
- * Return all the container styles as a list
- * @readonly
- * @memberof Class_Sankey
- */
-public get container_styles_list() {
-  return Object.values(this._container_styles)
-}
+  /**
+   * Return all the container styles as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get container_styles_list() {
+    return Object.values(this._container_styles)
+  }
 
   /**
    * Return all the style as a sorted list
@@ -2456,20 +2464,20 @@ public get container_styles_list() {
     return this.link_styles_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
-/**
- * Return all the container styles as a sorted list
- * @readonly
- * @memberof Class_Sankey
- */
-public get container_styles_list_sorted() {
-  return this.container_styles_list
-    .sort((a, b) => {
-      // Tri par nom
-      if (a.name < b.name) return -1
-      if (a.name > b.name) return 1
-      return 0
-    })
-}
+  /**
+   * Return all the container styles as a sorted list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get container_styles_list_sorted() {
+    return this.container_styles_list
+      .sort((a, b) => {
+        // Tri par nom
+        if (a.name < b.name) return -1
+        if (a.name > b.name) return 1
+        return 0
+      })
+  }
   // Tags related -----------------------------------------------------------------------
 
   public get node_taggs_dict() {
