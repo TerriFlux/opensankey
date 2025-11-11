@@ -361,6 +361,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         }
       })
     const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    if (active_view_id == default_main_sankey_id) {
+      this._drawing_area.sankey.setVisible()
+      return
+    }
     this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
   }
 
