@@ -614,6 +614,7 @@ export class Class_ApplicationData {
         this._drawing_area.bypass_redraws = true
         // Reset everything
         this._reset()
+        this._drawing_area.bypass_redraws = true
         // Read json file
         this._fromJSON(json_object)
         // Post processing & menu updating
@@ -744,7 +745,7 @@ export class Class_ApplicationData {
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
-        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux',/*'tagLevel',*/'icon_catalog']
+        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux','tagLevel','icon_catalog']
       )
     }
   }
