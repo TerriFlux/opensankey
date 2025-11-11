@@ -585,13 +585,15 @@ export class Class_Sankey {
     //     this._level_taggs[id].copyFrom(other_sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
     //   })
     if (mode.includes('tagLevel') || all) {
-      matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
-      Object.values(this._level_taggs).forEach(tagg =>
-        tagg.tags_list.forEach(tag => {
-          const sourceTag = other_sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]]?.tags_dict?.[tag.id]
-          if (sourceTag) tag.is_selected = sourceTag.is_selected
-        })
-      )
+      if (matching_taggs_id?.['levelTags']) {
+        matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
+        Object.values(this._level_taggs).forEach(tagg =>
+          tagg.tags_list.forEach(tag => {
+            const sourceTag = other_sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]]?.tags_dict?.[tag.id]
+            if (sourceTag) tag.is_selected = sourceTag.is_selected
+          })
+        )
+      }
     }
 
     // Update node_tag_dict ------------------------------------------------------------
