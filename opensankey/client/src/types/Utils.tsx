@@ -29,7 +29,7 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
-import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
+import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -45,6 +45,8 @@ export const default_save_JSON_options: Type_SaveDiagramOptions = {
   mode_save: default_save_with_values,
   mode_visible_element: false,
   mode_compressed:true 
+}
+export const default_open_JSON_options: Type_OpenDiagramOptions = { 
 }
 export const default_file_name = 'Diagramme de Sankey'
 

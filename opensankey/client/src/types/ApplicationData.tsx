@@ -36,8 +36,8 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { default_file_name, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
-import { Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
+import { default_file_name, default_open_JSON_options, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 import { JSONtoExcel } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -132,6 +132,7 @@ export class Class_ApplicationData {
 
   // Save JSON options
   public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
+  public options_open_json: Type_OpenDiagramOptions = default_open_JSON_options
 
   // Attributes to transfer between sankeys
   public data_var_to_update: string[] = []
