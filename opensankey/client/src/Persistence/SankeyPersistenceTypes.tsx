@@ -6,3 +6,7 @@ export type Type_SaveDiagramOptions = {
   mode_compressed: boolean
 }
 
+
+export type Type_OpenDiagramOptions = {
+}
+
