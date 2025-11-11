@@ -21,6 +21,8 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { ExcelOptionType } from '../deps/OpenSankey/components/dialogs/ExcelModalSaver'
+import { JSONtoExcel } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 
 declare const window: Window &
   typeof globalThis & {
@@ -179,6 +181,28 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           })
       })
     }
+  }
+
+  /**
+   * Save to Excel format
+   * @protected
+   * @param {string} url_prefix
+   * @param {string} [file_name='sankey']
+   * @memberof Class_ApplicationData
+   */
+  protected _saveToExcel(
+    url_prefix: string,
+    save_options:ExcelOptionType
+  ) {
+    const cur_option = this.options_save_json.only_current_view
+    this.options_save_json.only_current_view = true
+    JSONtoExcel(
+      this._toJSON(),
+      url_prefix,
+      this._file_name,
+      save_options
+    )
+    this.options_save_json.only_current_view = cur_option
   }
 
   public createNewMenuConfiguration() {
