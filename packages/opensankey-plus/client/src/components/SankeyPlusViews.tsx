@@ -462,7 +462,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           app_data.sendWaitingToast(
             () => {
               drawing_area_plus.bypass_redraws = true
-              const v = app_data.createNewView(files[i].name,files[i].name, false)
+              const v = app_data.createNewView(files[i].name, files[i].name, false)
               // const drawing_area_view = app_data.createNewDrawingArea(files[i].name)
               // drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
               v.fromJSON(JSON_data as Type_JSON)
@@ -478,7 +478,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     }}
   />
 
-  const style : React.CSSProperties = is_static ? {} : {
+  const style: React.CSSProperties = is_static ? {} : {
     position: 'fixed',
     top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
     zIndex: '1',
@@ -497,7 +497,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   >
     {/* Load + Save  */}
     {is_static || !app_data.has_sankey_plus ? <></> : input_loader_json_catalog}
-    {is_static || !app_data.has_sankey_plus? <></> : create_data_catalog}
+    {is_static || !app_data.has_sankey_plus ? <></> : create_data_catalog}
 
     {/* Return to Sankey master button */}
     {is_static ? <></> : button_to_return_to_master}
@@ -524,7 +524,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           {button_to_show_modal_create_unitary_view}
         </>
     }
-    {app_data.is_static ? <></>:<Button
+    {app_data.is_static ? <></> : <Button
       variant='button_collapse_banner_view'
       size='sizeMenuTopButton'
       onClick={onToggle}>
@@ -605,8 +605,13 @@ export const SelecteurView = (
         new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
       }
     }
-    value={cur_view.id}
+    value={
+      Object.keys(new_data_plus.views_dict).includes(cur_view.id) && cur_view.id !== default_main_sankey_id
+        ? cur_view.id
+        : ''
+    }
   >
+    <option value="" disabled hidden></option>
     {
       Object.entries(new_data_plus.views_dict).filter(([key]) => key !== default_main_sankey_id)
         .map(([key, view]) => {

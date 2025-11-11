@@ -577,9 +577,11 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const base_drawing_area = this._drawing_area
     base_drawing_area.purgeSelection()
     // If no view existed previously, we add the active sankey as master sankey
-    if (!this.has_views) {
-      this._views[default_main_sankey_id].json = compressJSONToGzip(this._drawing_area.toJSON(false, false, true))
-      this.pushViewIdInViewOrder(default_main_sankey_id)
+    if (!this.has_views && !this._master_drawing_area) {
+      this._master_drawing_area = this._drawing_area
+      this._drawing_area.sankey.setInvisible()
+      this._drawing_area.purgeSelection()
+      this._drawing_area.unDraw()
     }
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(makeId('unitary_view'))
@@ -710,8 +712,12 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
     // Add new sankey to views
-    this._views[new_drawing_area.id].json = compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
+    this._views[new_drawing_area.id] = {
+      'name' : new_drawing_area.name,
+      'json' : compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
+    }
     this.pushViewIdInViewOrder(new_drawing_area.id)
+    this.setCurrentView(new_drawing_area.id)
     this.menu_configuration_osp.updateComponentRelatedToViews()
   }
 
