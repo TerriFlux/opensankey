@@ -9,13 +9,13 @@
 import { useToast } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
-import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON, default_save_JSON_options } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON, default_save_JSON_options, default_open_JSON_options } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 import { nodeStyleConfigs, linkStyleConfigs, node_unitary_styles, link_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 
-import { Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
+import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
@@ -33,6 +33,9 @@ declare const window: Window &
 export interface Type_SaveDiagramOptionsOSP extends Type_SaveDiagramOptions {
   only_current_view?: boolean
 }
+export interface Type_OpenDiagramOptionsOSP extends Type_OpenDiagramOptions {
+  only_current_view?: boolean
+}
 
 // CLASS APPLICATION DATA PLUS **********************************************************
 
@@ -48,6 +51,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   // Save JSON options
   public override options_save_json: Type_SaveDiagramOptionsOSP = default_save_JSON_options
+  public override options_open_json: Type_OpenDiagramOptionsOSP = {
+    only_current_view: true
+  }
 
   // Static path
   public override static_path: string = 'static/sankeyanimation'
@@ -192,7 +198,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    */
   protected _saveToExcel(
     url_prefix: string,
-    save_options:ExcelOptionType
+    save_options: ExcelOptionType
   ) {
     const cur_option = this.options_save_json.only_current_view
     this.options_save_json.only_current_view = true
@@ -230,10 +236,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_ApplicationDataOSP
    */
   protected _reset(): void {
-    delete this._master_drawing_area
-    this._views = {}
-    this._views_order = []
-    super._reset()
+    if (this.options_open_json.only_current_view && this.has_views && this._master_drawing_area != undefined) {
+      this.drawing_area.purgeSelection()
+      this.drawing_area.unDraw()
+      this._drawing_area = this.createNewDrawingArea(this._drawing_area.id)
+    } else {
+      delete this._master_drawing_area
+      this._views = {}
+      this._views_order = []
+      super._reset()
+    }
   }
 
   private deleteCurrentOriginalView() {
@@ -310,13 +322,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         this._views_order.forEach(id => {
           json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }))
           if (this.options_save_json.mode_visible_element) {
-            this.extractViewFromJSON(this._views[id].json,id)
-            json_entry_views[id] =  this._drawing_area.toJSON(false,true,false)
+            this.extractViewFromJSON(this._views[id].json, id)
+            json_entry_views[id] = this._drawing_area.toJSON(false, true, false)
           }
         })
         // Set current DA to active view before toJSON
         if (current_view == default_main_sankey_id) this._drawing_area = this._master_drawing_area!
-        else this.extractViewFromJSON(this._views[current_view].json,current_view)
+        else this.extractViewFromJSON(this._views[current_view].json, current_view)
       }
     }
 
@@ -326,8 +338,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   protected _fromJSON(json_object: Type_JSON) {
-    // Read main json
+
     super._fromJSON(json_object)
+    // Read main json
+
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       return
@@ -341,15 +355,26 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       .forEach(([view_id, view_json]) => {
         this.pushViewIdInViewOrder(view_id)
         if (view_id == default_main_sankey_id) return
-        this._views[view_id] = { 
+        this._views[view_id] = {
           name: (view_json as Type_JSON)['name'] as string,
-          'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array 
+          'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array
         }
       })
     const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
   }
 
+  /**
+   * Update current drawing area data from a json_object
+   * @param {Type_JSON} json_object
+   * @memberof Class_ApplicationData
+   */
+  protected _updateFromJSON(json_object: Type_JSON) {
+    super._updateFromJSON(json_object)
+    if (this.drawing_area.id != default_main_sankey_id && this.options_open_json.only_current_view) {
+      this._views[this.drawing_area.id].json = compressJSONToGzip(this.drawing_area.toJSON(false, false, true))
+    }
+  }
 
   /**
    * Function to add views from a JSON file to current application data
@@ -367,6 +392,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     //this._views[view_id].json = compressJSONToGzip(visible_json)
     //drawing_area_view.fromJSON(visible_json)
     drawing_area_view.nodePositioning.arrangeTrade(false)
+    if (this._drawing_area.d3_selection_zoom_area != null) {
+      this._drawing_area.unDraw()
+    }
     this._drawing_area = drawing_area_view
   }
 
@@ -448,7 +476,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
       const view_id = makeId('view')
-      this.createNewView(view_id, 'Copie de ' + this.drawing_area.name,true)
+      this.createNewView(view_id, 'Copie de ' + this.drawing_area.name, true)
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
       //this._views[view_id].name = 'Copie de ' + this.drawing_area.name
       this.setCurrentView(view_id)
@@ -506,27 +534,27 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    */
   public createNewView(
     view_id: string,
-    view_name: string, 
+    view_name: string,
     copy: boolean
   ) {
     // If no view existed previously, we add the active sankey as master sankey
     if (!this.has_views && !this._master_drawing_area) {
-    this._master_drawing_area = this._drawing_area//this.createNewDrawingArea(makeId(this._drawing_area.id))
-    // this._master_drawing_area.bypass_redraws = true
-    // this._master_drawing_area.copyFrom(this._drawing_area)
+      this._master_drawing_area = this._drawing_area//this.createNewDrawingArea(makeId(this._drawing_area.id))
+      // this._master_drawing_area.bypass_redraws = true
+      // this._master_drawing_area.copyFrom(this._drawing_area)
       // this._master_drawing_area = compressJSONToGzip(this._drawing_area.toJSON(false,false,true))
       // this.pushViewIdInViewOrder(default_main_sankey_id)
     }
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(view_id/*makeId('view')*/)
     new_drawing_area.bypass_redraws = true
-    if (copy) new_drawing_area.fromJSON(this.drawing_area.toJSON(false,false,true)) // /!\ CopyFrom overwrites drawing area's name
-    new_drawing_area.name = "Copie de "+this.drawing_area.name
+    if (copy) new_drawing_area.fromJSON(this.drawing_area.toJSON(false, false, true)) // /!\ CopyFrom overwrites drawing area's name
+    new_drawing_area.name = "Copie de " + this.drawing_area.name
     new_drawing_area.sankey.id = view_id
     // Add new sankey to views
     this._views[view_id] = {
-      'name':view_name,
-      'json' : compressJSONToGzip(new_drawing_area.toJSON(false,false,true))
+      'name': view_name,
+      'json': compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this._drawing_area.sankey.setInvisible()
@@ -550,7 +578,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     base_drawing_area.purgeSelection()
     // If no view existed previously, we add the active sankey as master sankey
     if (!this.has_views) {
-      this._views[default_main_sankey_id].json = compressJSONToGzip(this._drawing_area.toJSON(false,false,true))
+      this._views[default_main_sankey_id].json = compressJSONToGzip(this._drawing_area.toJSON(false, false, true))
       this.pushViewIdInViewOrder(default_main_sankey_id)
     }
     // Create the new sankey
@@ -682,7 +710,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
     // Add new sankey to views
-    this._views[new_drawing_area.id].json = compressJSONToGzip(new_drawing_area.toJSON(false,false,true))
+    this._views[new_drawing_area.id].json = compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this.menu_configuration_osp.updateComponentRelatedToViews()
   }
@@ -709,62 +737,62 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   protected _setCurrentView(id: string) {
     //if (id in this._views) {
-      // Case 1 :
-      // Trigger saving view pop-up if changes have been made on a view
-      // that is not master view
-      if (
-        !this.is_view_master &&
-        (this._original_current_view !== undefined) &&
-        !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
-      ) {
-        // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
-        this._waiting_to_set_view = id
-        this.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
-      }
-      // Case 2 : Otherwise, just set new view
-      else {
-        this._drawing_area.sankey.setInvisible()
-        this._drawing_area.purgeSelection()
-        this._drawing_area.unDraw()
-        // Set-up new sankey
-        if (id == default_main_sankey_id) this._drawing_area = this._master_drawing_area!
-        else this.extractViewFromJSON(this._views[id].json, id)
-        //this._drawing_area = this._views[id].drawing_area!
-        this._drawing_area.sankey.setVisible()
-        // Set original view in temporary var so it can be used when
-        // we change view and don't want to save current modification
-        if (id !== default_main_sankey_id) {
-          // Update view with attr heredited from master
-          this._drawing_area.bypass_redraws = true
-          this._drawing_area.updateFrom(this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
-          //this._drawing_area.bypass_redraws = false
-          this.options_save_json = default_save_JSON_options
-          // Create a clone of current view's DA
-          if (!this.is_static) {
-            const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
-            clone_drawing_area.bypass_redraws = true
-            clone_drawing_area.copyFrom(this._drawing_area)
-            this.deleteCurrentOriginalView()
-            this._original_current_view = clone_drawing_area
-          }
+    // Case 1 :
+    // Trigger saving view pop-up if changes have been made on a view
+    // that is not master view
+    if (
+      !this.is_view_master &&
+      (this._original_current_view !== undefined) &&
+      !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
+    ) {
+      // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
+      this._waiting_to_set_view = id
+      this.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
+    }
+    // Case 2 : Otherwise, just set new view
+    else {
+      this._drawing_area.sankey.setInvisible()
+      this._drawing_area.purgeSelection()
+      this._drawing_area.unDraw()
+      // Set-up new sankey
+      if (id == default_main_sankey_id) this._drawing_area = this._master_drawing_area!
+      else this.extractViewFromJSON(this._views[id].json, id)
+      //this._drawing_area = this._views[id].drawing_area!
+      this._drawing_area.sankey.setVisible()
+      // Set original view in temporary var so it can be used when
+      // we change view and don't want to save current modification
+      if (id !== default_main_sankey_id) {
+        // Update view with attr heredited from master
+        this._drawing_area.bypass_redraws = true
+        this._drawing_area.updateFrom(this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+        //this._drawing_area.bypass_redraws = false
+        this.options_save_json = default_save_JSON_options
+        // Create a clone of current view's DA
+        if (!this.is_static) {
+          const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
+          clone_drawing_area.bypass_redraws = true
+          clone_drawing_area.copyFrom(this._drawing_area)
+          this.deleteCurrentOriginalView()
+          this._original_current_view = clone_drawing_area
         }
-        // Reset to Edition mode
-        this._drawing_area.setToModeEdition(false)
-        // Draw new-sankey
-        this._drawing_area.sankey.sortNodes()
-        this._drawing_area.draw()
-        //this._drawing_area.draw()
-
-        this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
-        this._drawing_area.orderElementOnDA()
-        this._history = new Class_ApplicationHistory(this._menu_configuration!)
-
-        // Update components related to viewss
-        this.menu_configuration.updateAllMenuComponents()
-        this.menu_configuration_osp.updateComponentRelatedToViews()
-        // Update menu save diagram JSON
-        this.menu_configuration.updateComponentSaveDiagramJSON()
       }
+      // Reset to Edition mode
+      this._drawing_area.setToModeEdition(false)
+      // Draw new-sankey
+      this._drawing_area.sankey.sortNodes()
+      this._drawing_area.draw()
+      //this._drawing_area.draw()
+
+      this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+      this._drawing_area.orderElementOnDA()
+      this._history = new Class_ApplicationHistory(this._menu_configuration!)
+
+      // Update components related to viewss
+      this.menu_configuration.updateAllMenuComponents()
+      this.menu_configuration_osp.updateComponentRelatedToViews()
+      // Update menu save diagram JSON
+      this.menu_configuration.updateComponentSaveDiagramJSON()
+    }
     //}
   }
 
@@ -884,7 +912,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // if (ev.onkeydown) {
     //   ev.onkeydown(tmp)
     // }
-    this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON(false,false,true))
+    this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON(false, false, true))
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
