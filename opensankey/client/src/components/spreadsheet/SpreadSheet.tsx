@@ -37,6 +37,7 @@ import { parseLocaleNumber, Type_JSON } from '../../types/Utils'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
+import { applyRandomColors } from '../../Algorithms/Colors'
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
@@ -692,6 +693,7 @@ export const SpreadSheet = (
               // Post-paste functions ====================================
               if (redraw) {
                 drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+                applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
                 app_data.draw()
                 drawing_area.setToModeEdition(false)
                 menu_configuration.updateComponentRelatedToLinksData()
