@@ -604,7 +604,8 @@ export const UploadExemple = (
       const isCompressedFile = (
         contentType === 'application/octet-stream'
       )
-
+      //@ts-expect-error xxx
+      applicationData.options_open_json.only_current_view = false
       if (isCompressedFile) {
         console.log('📦 Fichier compressé détecté (nouveaux headers)')
         await handleCompressedFile(response, file_name, applicationData)
@@ -623,7 +624,6 @@ export const UploadExemple = (
           applicationData.fromJSON(JSON_data as Type_JSON)
         }
       }
-
     } catch (error) {
       console.error('❌ Erreur lors du traitement de la réponse:', error)
       alert('Erreur lors du chargement du fichier: ' + getErrorMessage(error))
