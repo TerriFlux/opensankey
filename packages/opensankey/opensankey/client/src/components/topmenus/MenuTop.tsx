@@ -276,6 +276,8 @@ export const MenuTopButtons = ({ new_data, processFunction,additionalMenus }: {
 
           try {
             const JSON_data = await decompressUploadedFileUniversal(files[0])
+            //@ts-expect-error xxx
+            new_data.options_open_json.only_current_view = false
             new_data.fromJSON(JSON_data as Type_JSON)
 
           } catch (error) {
