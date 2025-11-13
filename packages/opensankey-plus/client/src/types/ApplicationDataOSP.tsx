@@ -246,6 +246,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._views_order = []
       super._reset()
     }
+    this.options_open_json.only_current_view = true
   }
 
   private deleteCurrentOriginalView() {
