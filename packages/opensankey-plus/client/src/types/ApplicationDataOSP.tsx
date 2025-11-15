@@ -856,8 +856,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Clean
       delete this._views[id] // Remove for view dict
       this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
-      // Got to master
-      if (!this.is_view_master) {
+      // Go to master
+      if (id == this.drawing_area.id) {
         this.deleteCurrentOriginalView()
         this._drawing_area.delete() // Delete view
         this.setCurrentViewToMaster()
