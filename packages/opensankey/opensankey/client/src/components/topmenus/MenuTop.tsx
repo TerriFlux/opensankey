@@ -78,16 +78,16 @@ declare const window: Window &
       diagram: string
     }
   }
-  
+
 export const setDiagram = (
   diagram_url: string,
   app_data: Class_ApplicationData
 ) => {
   const diagrams = window.sankey.sous_filieres
-  loadUniversalJSON(diagrams[diagram_url]+'.json.gz').then(data=>{
+  loadUniversalJSON(diagrams[diagram_url] + '.json.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
     app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
-  }).catch(e=>console.log(e))
+  }).catch(e => console.log(e))
 
 }
 
@@ -174,14 +174,18 @@ export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
  * }
  * @return {*}
  */
-export const MenuTopButtons = ({ new_data, processFunction,additionalMenus }: {
+export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
   new_data: Class_ApplicationData,
-  processFunction:FType_ProcessFunctions,
+  processFunction: FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
   const {
-    ref_setter_show_modal_templates_lib, ref_setter_show_modal_excel_loader, ref_setter_show_modal_excel_saver, ref_setter_show_modal_json_saver, ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver, ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_templates_lib,
+    ref_setter_show_modal_excel_loader, ref_setter_show_modal_excel_saver,
+    ref_setter_show_modal_json_saver, ref_setter_show_modal_json_loader,
+    ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
+    ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)
@@ -253,37 +257,10 @@ export const MenuTopButtons = ({ new_data, processFunction,additionalMenus }: {
       </MenuButton>
     </OSTooltip>
     <MenuList>
-      <MenuItem
-        onClick={() => {
-          if (_load_json.current) {
-            _load_json.current.value = ''
-            _load_json.current.click()
-          }
-        }}>
+      <MenuItem onClick={() => ref_setter_show_modal_json_loader.current!(true)}>
         {new_data.icon_library.icon_open_sankey_json}
-
         {t('Menu.open_json')}
       </MenuItem>
-      <Input
-        accept='.json,.gz,.zip,.br,.brotli'
-        type='file'
-        ref={_load_json}
-        style={{ display: 'none' }}
-        onChange={async (evt: ChangeEvent) => {
-          const files = (evt.target as HTMLFormElement).files
-
-          if (!files || files.length === 0) return
-
-          try {
-            const JSON_data = await decompressUploadedFileUniversal(files[0])
-            //@ts-expect-error xxx
-            new_data.options_open_json.only_current_view = false
-            new_data.fromJSON(JSON_data as Type_JSON)
-
-          } catch (error) {
-            console.error('Erreur lors du chargement:', error)
-          }
-        }} />
       <MenuItem
         onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
       >
@@ -727,8 +704,8 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
       variant='menutop_button'
       size='sizeMenuTopButton'
       onClick={() => {
-      // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
-      // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
+        // Si vous êtes sur: https://terriflux.com/portfolios/SOCLE/Cereales/diagrams.html
+        // Et que new_data.file_name = "SOCLE_FR_Cereales_Ble_tendre."
 
         const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
         const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
@@ -744,7 +721,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         <Box
           gridRow='1'
         >
-          <Image src='logo_opensankey.png'/>
+          <Image src='logo_opensankey.png' />
         </Box>
         <Box
           gridRow='2'
@@ -771,7 +748,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
 
   let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
   if (new_data.is_static && sous_filieres) dict_components_menu_top['diagrams'] = diagrams_element
-  dict_components_menu_top={...dict_components_menu_top,...additionalMenus.current.external_top_buttons_item}
+  dict_components_menu_top = { ...dict_components_menu_top, ...additionalMenus.current.external_top_buttons_item }
   if (new_data.is_static) dict_components_menu_top['edit'] = edit_button
   dict_components_menu_top['help'] = help_button
 
@@ -811,7 +788,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar = ({ new_data, processFunction,additionalMenus }: {
+export const MenuTopNavBar = ({ new_data, processFunction, additionalMenus }: {
   new_data: Class_ApplicationData,
   processFunction: FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
@@ -896,7 +873,7 @@ export const MenuTopNavBar = ({ new_data, processFunction,additionalMenus }: {
       {
         // Top menu buttons to access general appliaction functionnalities
         new_data.is_static ?
-          <MenuTopButtonsStatic new_data={new_data}  additionalMenus={additionalMenus} /> :
+          <MenuTopButtonsStatic new_data={new_data} additionalMenus={additionalMenus} /> :
           <MenuTopButtons new_data={new_data} processFunction={processFunction} additionalMenus={additionalMenus} />}
       <Box
         margin='0.25rem'
@@ -934,7 +911,7 @@ export const MenuTopNavBar = ({ new_data, processFunction,additionalMenus }: {
  * @param {Class_ApplicationData} new_data
  * @return {*}  {JSX.Element}
  */
-export const ButtonLaunchGuide = ({ new_data }:{ new_data: Class_ApplicationData }) => {
+export const ButtonLaunchGuide = ({ new_data }: { new_data: Class_ApplicationData }) => {
   const { setIsOpen } = useTour()
   return <OSTooltip
     label={new_data.t('guide.tooltip.guide')}
