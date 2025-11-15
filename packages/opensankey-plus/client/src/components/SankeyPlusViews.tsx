@@ -49,7 +49,7 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
-import { decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { compressJSONToGzip, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -451,30 +451,27 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const input_loader_json_catalog = <Input
     type="file"
     multiple
-    accept='.json'
+    accept='.json,.json.gz'
     ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
-      for (let i = 0; i < files.length; i++) {
-        decompressUploadedFileUniversal(files[i]).then(JSON_data => {
-          // Extract view of files
-          app_data.sendWaitingToast(
-            () => {
-              drawing_area_plus.bypass_redraws = true
-              const v = app_data.createNewView(files[i].name, files[i].name, false)
-              // const drawing_area_view = app_data.createNewDrawingArea(files[i].name)
-              // drawing_area_view.bypass_redraws = true //this.drawing_area.bypass_redraws
-              v.fromJSON(JSON_data as Type_JSON)
-              // drawing_area_view.nodePositioning.arrangeTrade(false)
-              // app_data.views[files[i].name] = drawing_area_view
-              // app_data.pushViewIdInViewOrder(files[i].name)
-              app_data.menu_configuration.updateAllMenuComponents()
-              app_data.menu_configuration_osp.updateComponentRelatedToViews()
-              app_data.menu_configuration.updateComponentSaveDiagramJSON()
+      app_data.sendWaitingToast(
+        () => {
+          for (let i = 0; i < files.length; i++) {
+            drawing_area_plus.bypass_redraws = true
+            const view_id = makeId('view')
+            app_data.createNewView(view_id, files[i].name.split('.')[0], false)
+            decompressUploadedFileUniversal(files[i]).then(JSON_data => {
+              app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
             })
+            app_data.menu_configuration.updateAllMenuComponents()
+            app_data.menu_configuration_osp.updateComponentRelatedToViews()
+            app_data.menu_configuration.updateComponentSaveDiagramJSON()
+            if (i == 0) app_data.setCurrentView(view_id)
+          }
+
         })
-      }
     }}
   />
 
@@ -608,10 +605,10 @@ export const SelecteurView = (
     value={
       Object.keys(new_data_plus.views_dict).includes(cur_view.id) && cur_view.id !== default_main_sankey_id
         ? cur_view.id
-        : ''
+        : 'master'
     }
   >
-    <option value="" disabled hidden></option>
+    <option value="master" disabled hidden>Sankey Maître</option>
     {
       Object.entries(new_data_plus.views_dict).filter(([key]) => key !== default_main_sankey_id)
         .map(([key, view]) => {
