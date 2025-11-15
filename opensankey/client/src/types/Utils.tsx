@@ -446,6 +446,7 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
 
 
     additional_file_save_json_option: [],
+    additional_file_load_json_option: [],
     additional_file_export_item: [],
 
     additional_nav_item: [],

@@ -47,10 +47,7 @@ import {
 /*************************************************************************************************/
 
 import SankeyLoad from '../../Persistence/SankeyPersistence'
-import {
-  ExcelModal,
-  ApplyLayoutDialog
-} from '../dialogs/SankeyMenuDialogs'
+import {ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
 import { ExcelModalSaver } from '../dialogs/ExcelModalSaver'
 import { DownloadExamples } from '../../Persistence/SankeyPersistence'
 
@@ -70,6 +67,8 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { FType_ProcessFunctions } from '../../Modules'
+import { ExcelModalLoader } from '../dialogs/ExcelModalLoader'
+import { LoadJSONDialog } from '../dialogs/JSONModalLoader'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -306,12 +305,12 @@ export const Menu = (
         new_data={app_data}
       />
 
-      <ExcelModal
+      <ExcelModalLoader
         new_data={app_data}
         launch={processFunction.launch}
       />
       <ExcelModalSaver app_data={app_data} />
-
+      <LoadJSONDialog app_data={app_data}/>
       <SankeyLoad
         new_data={app_data}
         successAction={() => DownloadExamples(
