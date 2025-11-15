@@ -27,6 +27,7 @@
 import React, { useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
 import { ChevronDownIcon } from '@chakra-ui/icons'
+import parse from 'html-react-parser'
 import {
   Box,
   Button,
@@ -866,7 +867,7 @@ export const MenuTopNavBar = ({ new_data, processFunction, additionalMenus }: {
               fontWeight='bold'
               fontSize='24px'
             >
-              {window.sankey.header}
+              {parse(window.sankey.header)}
             </Text>
           </Box> :
           <></>}
