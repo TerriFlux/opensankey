@@ -60,6 +60,7 @@ import {
   BannerViewsOSP,
   ViewsConfig,
   ModalCreateUnitaryViewOSP,
+  MenuLoadViewOSP,
 } from './components/SankeyPlusViews'
 
 import {
@@ -174,6 +175,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Addition chackbox for dialog save JSON dagram
   additionalMenus.current.additional_file_save_json_option.push(
     <MenuEnregistrerViewOSP
+      new_data_plus={new_data_plus}
+    />
+  )
+  additionalMenus.current.additional_file_load_json_option.push(
+    <MenuLoadViewOSP
       new_data_plus={new_data_plus}
     />
   )

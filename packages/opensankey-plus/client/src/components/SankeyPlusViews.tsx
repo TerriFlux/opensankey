@@ -468,6 +468,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
             app_data.menu_configuration.updateAllMenuComponents()
             app_data.menu_configuration_osp.updateComponentRelatedToViews()
             app_data.menu_configuration.updateComponentSaveDiagramJSON()
+            app_data.menu_configuration.updateComponentLoadDiagramJSON()
             if (i == 0) app_data.setCurrentView(view_id)
           }
 
@@ -1581,3 +1582,26 @@ export const MenuEnregistrerViewOSP: FC<BaseComponentPropsPlus> = ({
     </OSTooltip>
   </Checkbox> : <></>
 }
+
+export const MenuLoadViewOSP: FC<BaseComponentPropsPlus> = ({
+  new_data_plus
+}) => {
+  const [, setCount] = useState(0)
+  const { t } = new_data_plus
+  new_data_plus.menu_configuration_osp.ref_to_load_diagram_only_view_updater.current = () => setCount(a => a + 1)
+
+  return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
+    variant='menuconfigpanel_option_checkbox'
+    isChecked={
+      new_data_plus.options_open_json.only_current_view
+    }
+    onChange={(evt) => {
+      new_data_plus.options_open_json.only_current_view = evt.target.checked
+      new_data_plus.menu_configuration.updateComponentLoadDiagramJSON()
+    }}>
+    <OSTooltip label={t('view.tooltips.buttonImportViewOnly')}>
+      {t('view.view_import')}
+    </OSTooltip>
+  </Checkbox> : <></>
+}
+

@@ -119,7 +119,7 @@ export const resources_app_elements = {
         animate: 'Launch animation',
         create_tied_zdt: 'Create a container tied to selected nodes',
         SND: 'Select descendant nodes of selected nodes',
-        osp_context:'Actions',
+        osp_context: 'Actions',
 
         tabs: {
           'icon': 'Icon',
@@ -186,7 +186,7 @@ export const resources_app_elements = {
         verticalText: 'Vertical Text',
         verticalAlignment: 'Alignment',
         alignLeft: "Left",
-        alignRight: "Right",    
+        alignRight: "Right",
         tiedToNodesExtremity: 'Positionned at the extremity',
         extremityPos: 'Extremity hight/low',
         tiedToNodesExtremityTop: 'High',
@@ -194,7 +194,7 @@ export const resources_app_elements = {
         tooltips: {
           tiedToNodes: 'Associates nodes with the object so that it is positioned to encompass the selected nodes',
           margin: 'Margin between the border of the object & the nodes at extremities',
-          tiedToNodesExtremity:'The container is positionned above/below attached nodes instead of encompassing them',
+          tiedToNodesExtremity: 'The container is positionned above/below attached nodes instead of encompassing them',
         },
       },
       view: {
@@ -208,6 +208,7 @@ export const resources_app_elements = {
         'catalog': 'Catalog',
         'import': 'Import',
         'export': 'Download only the current view',
+        'view_import': 'Reload only the current view',
         'applyDisplayFromView': 'Apply the layout from another view',
         'ns': 'View not saved',
         'warn_ns': 'You are about to change your view before saving the current view, do you want to save the changes before changing your view ?',
@@ -269,6 +270,7 @@ export const resources_app_elements = {
           buttonCloneView: 'Copy the the current view to a new one ',
           buttonImportView: 'Import a data as a view',
           buttonExportView: 'Export a view as a data (without other view)',
+          buttonImportViewOnly: 'Change this view only, keep other views intact',
           buttonCloneMasterAttrView: 'Tranfer value from master data to the view elements',
           button_delete_actual_view: 'Delete actual view',
           unit_from_excel: 'Excel  Generate views from one or more excel files',
@@ -514,7 +516,7 @@ export const resources_app_elements = {
         flow_associated_tag: 'Flux associés',
         node_associated_tag: 'Noeuds associés',
 
-        ElOrder:'Ordonner la superposition des éléments',
+        ElOrder: 'Ordonner la superposition des éléments',
         Config: {
           element_object: 'Objet',
           element_view: 'Vues',
@@ -535,6 +537,7 @@ export const resources_app_elements = {
           'buttonCloneView': 'Copie la vue actuelle en une nouvelle vue indépendante de l\'original ',
           'buttonImportView': 'Importe un diagramme dans cette vue (remplace la vue diagramme actuelle)',
           'buttonExportView': 'Exporte la vue actuelle en tant que donnée de diagramme',
+          buttonImportViewOnly: 'Change uniquement la vue actuelle, les autres vues restent intacts',
           publish: 'Mettre en ligne',
           export: 'Exporter comme une image',
           reconcil: 'Réconcilier les données',
@@ -556,7 +559,7 @@ export const resources_app_elements = {
         animate: 'Lancer animation',
         create_tied_zdt: 'Créer un cadre géométrique',
         SND: 'Selectionne tous les descendants',
-        osp_context:'Actions',
+        osp_context: 'Actions',
         tabs: {
           'icon': 'Icône',
           'illustration': 'Illustration',
@@ -615,7 +618,7 @@ export const resources_app_elements = {
 
         'title': 'Name',
         tiedToNodes: 'Lie la position et taille aux noeuds',
-        margin:'Marges',
+        margin: 'Marges',
         marginLeft: 'Gauche',
         marginRight: 'Droite',
         marginTop: 'Haut',
@@ -623,7 +626,7 @@ export const resources_app_elements = {
         verticalText: 'Texte vertical',
         verticalAlignment: 'Alignement',
         alignLeft: "Gauche",
-        alignRight: "Droite",        
+        alignRight: "Droite",
         tiedToNodesExtremity: 'Positionné à l\'extrémité',
         extremityPos: 'Extrémité haute/basse',
         tiedToNodesExtremityTop: 'Haute',
@@ -646,6 +649,7 @@ export const resources_app_elements = {
         'catalog': 'Catalog.',
         'import': 'Importer',
         'export': 'Télécharger uniquement la vue actuelle',
+        'view_import': 'Recharger cette vue uniquement',
         'applyDisplayFromView': 'Appliquer la mise en page d\'une autre vue ',
         'ns': 'Vue non enregistrée',
         'warn_ns': 'Vous êtes sur le point de changer de vue avant d\'avoir sauvegardé la vue actuelle, voulez-vous sauvegarder les changements avant de changer de vue ?',
@@ -705,6 +709,7 @@ export const resources_app_elements = {
           buttonCreateView: 'Générer une vue à partir du diagramme actuel',
           buttonCloneView: 'Copie la vue actuelle en une nouvelle vue indépendante de l\'original ',
           buttonImportView: 'Importe un diagramme dans cette vue (remplace la vue diagramme actuelle)',
+          buttonImportViewOnly: 'Change uniquement la vue actuelle, les autres vues restent intacts',
           buttonExportView: 'Exporte la vue actuelle en tant que donnée de diagramme',
           buttonCloneMasterAttrView: 'Mettre à jour la vue actuelle en chargeant des éléments du Sankey Maître',
           buttonCreateViewUnitary: 'Générer une vue unitaire en choisissant un noeud du diagramme actuel',

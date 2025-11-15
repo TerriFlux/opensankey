@@ -52,7 +52,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   // Save JSON options
   public override options_save_json: Type_SaveDiagramOptionsOSP = default_save_JSON_options
   public override options_open_json: Type_OpenDiagramOptionsOSP = {
-    only_current_view: true
+    only_current_view: false
   }
 
   // Static path
@@ -246,7 +246,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._views_order = []
       super._reset()
     }
-    this.options_open_json.only_current_view = true
   }
 
   private deleteCurrentOriginalView() {
@@ -339,9 +338,17 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   protected _fromJSON(json_object: Type_JSON) {
-
+    if (this.options_open_json.only_current_view) {
+      if (!this.is_view_master) {
+        const current_view_id = this.drawing_area.id
+        json_object['id'] = current_view_id
+        this.views_dict[current_view_id ].json = compressJSONToGzip(json_object)
+      }
+    }
     super._fromJSON(json_object)
-    // Read main json
+    if (this.options_open_json.only_current_view) {
+      return
+    }
 
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
@@ -803,6 +810,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this.menu_configuration_osp.updateComponentRelatedToViews()
       // Update menu save diagram JSON
       this.menu_configuration.updateComponentSaveDiagramJSON()
+      this.menu_configuration.updateComponentLoadDiagramJSON()
     }
     //}
   }
