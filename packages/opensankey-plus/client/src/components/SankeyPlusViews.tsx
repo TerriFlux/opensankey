@@ -461,8 +461,11 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           for (let i = 0; i < files.length; i++) {
             drawing_area_plus.bypass_redraws = true
             const view_id = makeId('view')
-            app_data.createNewView(view_id, files[i].name.split('.')[0], false)
+            const name = files[i].name.split('.')[0]
+            app_data.createNewView(view_id, name, false)
             decompressUploadedFileUniversal(files[i]).then(JSON_data => {
+              //app_data.views_dict[view_id].name = name
+              JSON_data.id = view_id
               app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
             })
             app_data.menu_configuration.updateAllMenuComponents()
