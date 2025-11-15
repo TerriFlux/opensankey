@@ -24,27 +24,12 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, useState, } from 'react'
-
-import {
-  Box,
-  Checkbox,
-  Button,
-  Input,
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton
-} from '@chakra-ui/react'
-
-
-import { default_style_id, Type_JSON } from '../../types/Utils'
+import React, { useState, } from 'react'
+import {Box,Button,Input} from '@chakra-ui/react'
+import { Type_JSON } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { ClickSaveDiagram, uploadExcelImpl } from '../../Persistence/SankeyPersistence'
 import { DecompressedJSONData, decompressUploadedFileUniversal, detectCompressionType } from '../../Persistence/UniversalJSONCompression'
 
 
@@ -59,7 +44,6 @@ export const ApplyLayoutDialog = ({
   new_data: Class_ApplicationData
 }) => {
   const { data_var_to_update, t, menu_configuration } = new_data
-  const { node_styles_dict } = new_data.drawing_area.sankey
   const { ref_to_updater_modal_apply_layout } = menu_configuration
 
   const [, setForceUpdate] = useState(true)
@@ -77,8 +61,6 @@ export const ApplyLayoutDialog = ({
     'attrNode', 'attrFlux',
     'attrDrawingArea'
   ]
-
-
 
   const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
     {OpenSankeyDiagramSelector(new_data)}
@@ -400,137 +382,6 @@ export const ApplyLayoutDialog = ({
     title={t('Menu.Transformation.title')}
   />
   return dragLayout
-
-}
-
-/**
- *
- * @param {FCType_ApplySaveJSONDialog}
- * @returns {*}
- */
-export const ApplySaveJSONDialog = ({ new_data }: {
-  new_data: Class_ApplicationData
-}
-) => {
-  const { t } = new_data
-  const [show_save_json_modal, set_show_save_json_modal] = useState(false)
-  const [, setCount] = useState(0)
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_json_saver.current = set_show_save_json_modal
-
-  // Set ref of update of ApplySaveJSONDialog components
-  new_data.menu_configuration.ref_to_save_diagram_updater.current = () => setCount(a => a + 1)
-
-  return <Modal
-    isOpen={show_save_json_modal}
-    onClose={() => set_show_save_json_modal(false)}
-    variant='modal_dialog'
-  >
-    <ModalContent
-      maxWidth='inherit'
-    >
-      <ModalHeader>
-        {t('Menu.SaveJSON')}
-      </ModalHeader>
-      <ModalCloseButton />
-      <ModalBody>
-        <Box layerStyle='menuconfigpanel_grid' >
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isChecked={new_data.options_save_json.mode_save}
-            onChange={(evt) => { new_data.options_save_json.mode_save = evt.target.checked; setCount(a => a + 1) }}>
-            {t('Menu.SaveValue')}
-          </Checkbox>
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isChecked={new_data.options_save_json.mode_visible_element}
-            onChange={(evt) => { new_data.options_save_json.mode_visible_element = evt.target.checked; setCount(a => a + 1) }}>
-            {t('Menu.VisibleElement')}
-          </Checkbox>
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isChecked={new_data.options_save_json.mode_compressed}
-            onChange={(evt) => { new_data.options_save_json.mode_compressed = evt.target.checked; setCount(a => a + 1) }}>
-            {'ZIP file'}
-          </Checkbox>
-          {new_data.menu_configuration.additionalMenus.current.additional_file_save_json_option.map(el => <React.Fragment key={'add_save_'}>{el}</React.Fragment>)}
-        </Box>
-      </ModalBody>
-      <ModalFooter>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='options_2cols' >
-            <Button
-              onClick={
-                () => {
-                  ClickSaveDiagram(new_data)
-                }
-              }>{t('Menu.SaveJSON')}
-            </Button>
-            <Button
-              onClick={
-                () => {
-                  set_show_save_json_modal(false)
-                }
-              }>{t('Menu.close')}
-            </Button>
-          </Box>
-        </Box>
-      </ModalFooter>
-    </ModalContent>
-  </Modal>
-}
-
-/**
- * Return the modal when we try to open an excel file
- *
- * @param {{ uploadExcelImpl: any; handleCloseDialog: any; set_data: any; data: any; set_show_excel_dialog: any; url_prefix: any; postProcessLoadExcel: any; launch: any; }} { uploadExcelImpl, handleCloseDialog, set_data, data, set_show_excel_dialog,url_prefix,postProcessLoadExcel,launch }
- * @returns
- */
-export const ExcelModal = ({ new_data, launch }: {
-  new_data: Class_ApplicationData,
-  launch: (path: string) => void,
-}
-) => {
-  const { t, url_prefix } = new_data
-  const [input_file_name, set_input_file_name] = useState<Blob | undefined>(undefined)
-  const content = <Box
-    layerStyle='menuconfigpanel_grid'
-  >
-    <Box>
-      {t('Menu.input_file_excel')}
-      <Input
-        type="file"
-        accept='.xlsx'
-        onChange={(evt: ChangeEvent) => {
-          set_input_file_name((evt.target as HTMLFormElement).files[0])
-        }}
-      />
-    </Box>
-
-    <Box layerStyle='menuconfigpanel_row_2cols'>
-      <Box />
-      <Button
-        variant="menuconfigpanel_option_button_secondary"
-        isActive
-        size='sizeButtonDialog'
-        onClick={
-          () => {
-            // Reset navigator data without redrawing sankey (uploadExcelImpl will do it after downloading data from server)
-            new_data.reinitialization(false)
-            launch((input_file_name as unknown as { [name: string]: string }).name)
-            uploadExcelImpl(
-              new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current, input_file_name as Blob, url_prefix
-            )
-          }
-        }
-      >{t('Menu.ouvrir')}</Button>
-    </Box>
-  </Box>
-  return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-    dialog_name={'ref_setter_show_modal_excel_loader'}
-    content={content}
-    title={t('Menu.open_excel_file')}
-  />
 
 }
 

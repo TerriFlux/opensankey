@@ -76,6 +76,7 @@ export type Type_AdditionalMenus = {
 
   // Other menus
   additional_file_save_json_option: JSX.Element[],
+  additional_file_load_json_option: JSX.Element[],
   additional_file_export_item: JSX.Element[],
 
 
@@ -102,6 +103,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_excel_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_json_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -321,8 +324,8 @@ export class Class_MenuConfig {
   // Update component OpenSankeySaveButton
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
 
-  // Update component ToolbarBuilder
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
+  private _ref_to_load_diagram_updater: MutableRefObject<() => void>
 
   // Update component ApplyLayoutDialog
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
@@ -415,6 +418,7 @@ export class Class_MenuConfig {
 
 
     additional_file_save_json_option: [],
+    additional_file_load_json_option: [],
     additional_file_export_item: [],
 
     additional_nav_item: [],
@@ -504,6 +508,7 @@ export class Class_MenuConfig {
     // Init save diagram JSON components updater ------------------------------------------------
 
     this._ref_to_save_diagram_updater = useRef(() => null)
+    this._ref_to_load_diagram_updater = useRef(() => null)
 
     // Init ApplyLayoutDialog components updater ------------------------------------------------
 
@@ -529,6 +534,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_excel_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_excel_reading_process: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_json_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_json_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -579,6 +585,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_json_loader.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_visual.current(false)
@@ -1096,6 +1103,14 @@ export class Class_MenuConfig {
   public updateComponentSaveDiagramJSON() {
     this._ref_to_save_diagram_updater.current()
   }
+  /**
+   * Update modal Load diagram JSON
+   *
+   * @memberof Class_MenuConfig
+   */
+  public updateComponentLoadDiagramJSON() {
+    this._ref_to_load_diagram_updater.current()
+  }
 
   /**
    * Function to update ApplyLayoutDialog component,
@@ -1448,9 +1463,11 @@ export class Class_MenuConfig {
     return this._ref_selected_style_container
   }
 
-  // Get ref updater of save diagram JSON
   public get ref_to_save_diagram_updater(): MutableRefObject<() => void> {
     return this._ref_to_save_diagram_updater
+  }
+  public get ref_to_load_diagram_updater(): MutableRefObject<() => void> {
+    return this._ref_to_load_diagram_updater
   }
 
   // Getter ref updater ApplyLayoutDialog OS component

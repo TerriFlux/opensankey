@@ -1,8 +1,3 @@
-import {
-  Box,
-  Checkbox,
-  Button
-} from '@chakra-ui/react'
 // ==================================================================================================
 // The MIT License (MIT)
 // ==================================================================================================
@@ -28,6 +23,12 @@ import {
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
+import {
+  Box,
+  Checkbox,
+  Button
+} from '@chakra-ui/react'
+
 import React, { useState } from 'react'
 import type { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'

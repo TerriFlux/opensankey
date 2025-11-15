@@ -35,7 +35,6 @@ import { Menu } from './components/topmenus/SankeyMenus'
 
 import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
-import { ApplySaveJSONDialog } from './components/dialogs/SankeyMenuDialogs'
 import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
 
 import { checkForUrlToJSON, Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
@@ -47,6 +46,7 @@ import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
 import { ToolbarFilter } from './components/topmenus/Toolbar'
+import { SaveJSONDialog } from './components/dialogs/JSONModalSaver'
 
 declare const window: Window &
   typeof globalThis & {
@@ -198,8 +198,8 @@ export const OpenSankeyApp = ({
             }
           />
         </>
-        <ApplySaveJSONDialog
-          new_data={app_data}
+        <SaveJSONDialog
+          app_data={app_data}
         />
       </div>
       <ContextMenu
