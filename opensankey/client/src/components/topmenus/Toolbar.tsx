@@ -8,6 +8,7 @@ import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
+import { Class_ProtoTag } from '../../types/Tag'
 
 const width_fitler_drawer = 270
 
@@ -398,6 +399,23 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         return [] as unknown as Class_TagGroup[]
     }
   }
+  const getActiveTagsForMode = (): Set<Class_ProtoTag> => {
+    switch (mode) {
+      case 'element':
+        return new Set([...sankey.nodes_list.flatMap(node => node.tags_list), ...sankey.links_list.flatMap(link => link.flux_tags_list)]) as unknown as Set<Class_ProtoTag>
+      case 'level': {
+        const level_taggs = sankey.level_taggs_dict
+        return new Set(Object.values(level_taggs).filter(
+          tagg => tagg.has_tags && tagg.banner !== 'none' && active_level_taggs.has(tagg)
+        ).flatMap(tagg => tagg.tags_list)) as unknown as Set<Class_ProtoTag>
+      }
+      case 'data':
+        return new Set(Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi').flatMap(tagg => tagg.tags_list))
+      default:
+        return {} as Set<Class_ProtoTag>
+    }
+  }
   const updateComponents = () => {
     if (config.update_method == 'updateAllComponentsRelatedToNodeTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
@@ -465,7 +483,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
         break
       case 'element':
+        app_data.drawing_area.bypass_compute_positions = true
         app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+        app_data.drawing_area.bypass_compute_positions = false
         break
     }
     app_data.drawing_area.bypass_autofit = false
@@ -504,7 +524,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   }
 
   // Création du sélecteur selon le type de banner
-  const createSelector = (tagg: Class_TagGroup) => {
+  const createSelector = (tagg: Class_TagGroup, active_tags: Set<Class_ProtoTag>) => {
     if (tagg.banner === 'one') {
       const selected_value = tagg.selected_tags_list[0]?.id ?? ''
       return (
@@ -515,7 +535,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             handleTagSelection(tagg, [evt.target.value])
           }}
         >
-          {tagg.tags_list.map(tag => (
+          {tagg.tags_list.filter(tag => active_tags.has(tag)).map(tag => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
             </option>
@@ -523,7 +543,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         </Select>
       )
     } else if (tagg.banner === 'multi') {
-      const options = tagg.tags_list.map(tag => ({
+      const options = tagg.tags_list.filter(tag => active_tags.has(tag)).map(tag => ({
         label: tag.name,
         value: tag.id,
         selected: tag.is_selected,
@@ -556,7 +576,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       )
     } else if (mode === 'level' && tagg instanceof Class_LevelTagGroup && (tagg as Class_LevelTagGroup).has_tags) {
       const level_tagg = tagg as Class_LevelTagGroup
-      return (level_tagg.siblings !== undefined && level_tagg.siblings.filter(tagg=>app_data.drawing_area.sankey.level_taggs_dict[tagg].banner != 'none').length > 0) ? (
+      return (level_tagg.siblings !== undefined && level_tagg.siblings.filter(tagg => app_data.drawing_area.sankey.level_taggs_dict[tagg].banner != 'none').length > 0) ? (
         <Checkbox
           justifySelf='end'
           alignSelf='center'
@@ -614,8 +634,8 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     if (Object.keys(tagg.tags_dict || {}).length < 1) {
       return <></>
     }
+    const selector = createSelector(tagg, getActiveTagsForMode())
 
-    const selector = createSelector(tagg)
     const actionButton = createActionButton(tagg)
 
     return (
