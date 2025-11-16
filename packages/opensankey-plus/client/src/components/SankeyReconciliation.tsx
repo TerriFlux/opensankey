@@ -392,7 +392,7 @@ export const SupplyUseModelisationProd = ({
     data_server.append('upper_level_file', (upper_level_file_ as unknown as HTMLFormElement).name)
     data_server.append('with_sheet_formating', String(option.with_sheet_formating))
     if (menu_configuration_osp.action_type === 'optim_sankey') {
-      const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON(false,false,true)))
+      const new_sankey_json_obj = JSON.parse(JSON.stringify(application_data_mfa.drawing_area.toJSON()))
       new_sankey_json_obj.icon_catalog = {}
       data_server.append('sankey_data', JSON.stringify(new_sankey_json_obj))
     }

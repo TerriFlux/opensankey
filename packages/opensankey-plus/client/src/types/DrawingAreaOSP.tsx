@@ -9,9 +9,11 @@
 import { Class_ZoneSelectionOSP } from './SelectionZoneOSP'
 import {
   default_main_sankey_id,
+  default_save_JSON_options,
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
-  Type_JSON
+  Type_JSON,
+  Type_SaveDiagramOptions
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy, getArrayFromJSON } from '../components/UtilsOSP'
 import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
@@ -100,17 +102,15 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
   /**
    * Setting value of drawing area and substructur from JSON
    *
-   * @param {boolean} [only_visible_elements]
-   * @param {boolean} [with_values]
+   * @param {Type_SaveDiagramOptions} [options=default_save_JSON_options]
    * @return {*}
    * @memberof Class_DrawingAreaOSP
    */
-  public toJSON(save_siblings:boolean,only_visible_elements: boolean, with_values: boolean) {
-    // Herited toJSON
-    const json_entry: Type_JSON = super.toJSON(save_siblings,only_visible_elements, with_values)
+  public toJSON(options: Type_SaveDiagramOptions = default_save_JSON_options) {
+    const json_entry: Type_JSON = super.toJSON(options)
 
     if (this.name != default_main_sankey_id) json_entry['name'] = this.name
-    if (Object.keys(this._heredited_attr).length>0) json_entry['heredited_attr'] = this._heredited_attr
+    if (Object.keys(this._heredited_attr).length > 0) json_entry['heredited_attr'] = this._heredited_attr
     return json_entry
   }
 

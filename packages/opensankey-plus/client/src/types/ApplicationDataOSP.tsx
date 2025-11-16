@@ -15,7 +15,6 @@ import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHi
 import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 import { nodeStyleConfigs, linkStyleConfigs, node_unitary_styles, link_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 
-import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../deps/OpenSankey/Persistence/SankeyPersistenceTypes'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
@@ -23,6 +22,7 @@ import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { ExcelOptionType } from '../deps/OpenSankey/components/dialogs/ExcelModalSaver'
 import { JSONtoExcel } from '../deps/OpenSankey/Persistence/SankeyPersistence'
+import { Type_SaveDiagramOptions, Type_OpenDiagramOptions } from '../deps/OpenSankey/types/Utils'
 
 declare const window: Window &
   typeof globalThis & {
@@ -321,9 +321,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Go throught all view (except first since it's master data & already parsed in JSON)
         this._views_order.forEach(id => {
           json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }))
-          if (this.options_save_json.mode_visible_element) {
+          if (this.options_save_json.save_only_visible_elements) {
             this.extractViewFromJSON(this._views[id].json, id)
-            json_entry_views[id] = this._drawing_area.toJSON(false, true, false)
+            json_entry_views[id] = this._drawing_area.toJSON()
           }
         })
         // Set current DA to active view before toJSON
@@ -384,7 +384,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   protected _updateFromJSON(json_object: Type_JSON) {
     super._updateFromJSON(json_object)
     if (this.drawing_area.id != default_main_sankey_id && this.options_open_json.only_current_view) {
-      this._views[this.drawing_area.id].json = compressJSONToGzip(this.drawing_area.toJSON(false, false, true))
+      this._views[this.drawing_area.id].json = compressJSONToGzip(this.drawing_area.toJSON())
     }
   }
 
@@ -560,13 +560,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(view_id/*makeId('view')*/)
     new_drawing_area.bypass_redraws = true
-    if (copy) new_drawing_area.fromJSON(this.drawing_area.toJSON(false, false, true)) // /!\ CopyFrom overwrites drawing area's name
+    if (copy) new_drawing_area.fromJSON(this.drawing_area.toJSON()) // /!\ CopyFrom overwrites drawing area's name
     new_drawing_area.name = "Copie de " + this.drawing_area.name
     new_drawing_area.sankey.id = view_id
     // Add new sankey to views
     this._views[view_id] = {
       'name': view_name,
-      'json': compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
+      'json': compressJSONToGzip(new_drawing_area.toJSON())
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this._drawing_area.sankey.setInvisible()
@@ -601,8 +601,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
-    const keep_siblings = true
-    const copy = base_drawing_area.toJSON(keep_siblings, false, true)
+    const save_options = default_save_JSON_options
+    save_options.keep_siblings = true
+    const copy = base_drawing_area.toJSON(save_options)
     copy.id = id
     new_drawing_area.fromJSON(copy)
     new_drawing_area.name = name
@@ -726,7 +727,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Add new sankey to views
     this._views[new_drawing_area.id] = {
       'name' : new_drawing_area.name,
-      'json' : compressJSONToGzip(new_drawing_area.toJSON(false, false, true))
+      'json' : compressJSONToGzip(new_drawing_area.toJSON())
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this.setCurrentView(new_drawing_area.id)
@@ -931,7 +932,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // if (ev.onkeydown) {
     //   ev.onkeydown(tmp)
     // }
-    this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON(false, false, true))
+    this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON())
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
