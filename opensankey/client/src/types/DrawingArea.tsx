@@ -199,6 +199,7 @@ export class Class_DrawingArea {
   public static: boolean = !!window.sankey?.publish
 
   public bypass_redraws: boolean = false
+  public bypass_compute_positions: boolean = false
   private _bypass_autofit: boolean = false
 
   /**
