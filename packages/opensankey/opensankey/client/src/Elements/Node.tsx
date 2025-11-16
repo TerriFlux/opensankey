@@ -1158,7 +1158,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
    */
   private _drawLinks() {
     // Links positions are modified by nodes's position changes
-    this.updateLinksPositions()
+    if (!this.sankey.drawing_area.bypass_compute_positions)
+      this.updateLinksPositions()
+    else 
+      this.sankey.visible_links_list.forEach(l=>l.draw())
     // Node shape -> affected if links are added or removed, or if links values change
     this._nodeDrawShape.drawShape()
   }
