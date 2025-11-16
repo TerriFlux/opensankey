@@ -31,11 +31,13 @@ import { MouseEvent } from 'react'
 // Local types
 import {
   Type_JSON,
+  Type_SaveDiagramOptions,
   Type_Structure,
   default_background_color,
   default_black_color,
   default_grid_color,
   default_main_sankey_id,
+  default_save_JSON_options,
   getBooleanFromJSON,
   getJSONFromJSON,
   getNumberFromJSON,
@@ -500,15 +502,12 @@ export class Class_DrawingArea {
 
   /**
    * Convert current drawing area & all substructure as JSON data
-   * @param {boolean} [only_visible_elements=false]
-   * @param {boolean} [with_values=true]
+   * @param {Type_SaveDiagramOptions} [option=default_save_JSON_options]
    * @return {*}
    * @memberof Class_DrawingArea
    */
   public toJSON(
-    keep_siblings: boolean,
-    only_visible_elements: boolean,
-    with_values: boolean
+    option: Type_SaveDiagramOptions = default_save_JSON_options
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
@@ -543,11 +542,7 @@ export class Class_DrawingArea {
     const out = {
       ...json_object,
       ...this._legend.toJSON(),
-      ...this._sankey.toJSON(
-        keep_siblings,
-        only_visible_elements,
-        with_values
-      )
+      ...this._sankey.toJSON(option)
     }
 
     out['order_g_elements'] = this._list_g_element_id // Order elements by id 
