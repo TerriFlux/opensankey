@@ -651,7 +651,7 @@ export const SpreadSheet = (
               }
 
               //Snapshot of current sankey before update 
-              const prevSankey = drawing_area.toJSON(false, false, true)
+              const prevSankey = drawing_area.toJSON()
               drawing_area.sankey.delete_all_nodes_and_links() // Clear all nodes & links
 
               // AJOUT: Réinitialiser complètement le spreadsheet
@@ -688,7 +688,7 @@ export const SpreadSheet = (
                 synchronizeSpreadSheet = true
               })
               //Snapshot of current sankey after update 
-              const nextSankey = drawing_area.toJSON(false, false, true)
+              const nextSankey = drawing_area.toJSON()
 
               // Post-paste functions ====================================
               if (redraw) {

@@ -391,8 +391,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this._nodeTagsManager.toJSON(json_object)
     this._nodeDimensionsManager.toJSON(json_object)
 
-    // 🔄 LINKS JSON - RÉINTÉGRÉ DIRECTEMENT  
-    if (kwargs && kwargs['only_visible_elements']) {
+    if (kwargs && kwargs['save_only_elements_with_tags']) {
+      if (this.input_links_list.length > 0) {
+        json_object['inputLinksId'] = this.input_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+      }
+      if (this.output_links_list.length > 0) {
+        json_object['outputLinksId'] = this.output_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+      }
+      if (this.links_order.length > 0) {
+        json_object['links_order'] = this._links_order.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
+      }
+    }  else if (kwargs && kwargs['only_visible_elements']) {
       if (this.input_links_list.length > 0) {
         json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
       }
@@ -1691,6 +1700,14 @@ export class Class_NodeElement extends ClassTemplate_Element {
       this.orphan_visible
     )
   }
+  public get is_visible_without_orphan() {
+    return (
+      super.is_visible &&
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      this.are_links_visibilities_ok
+    )
+  }
 
   public get name() { return this._name }
   public set name(_: string) { this._name = _; this.drawNameLabel() }
@@ -1732,8 +1749,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public get input_links_dict() { return this._input_links }
   public get input_links_list() { return Object.values(this._input_links) }
+  public get visible_input_links_list() { return Object.values(this._input_links).filter(l=>l.is_visible) }
   public get output_links_dict() { return this._output_links }
   public get output_links_list() { return Object.values(this._output_links) }
+  public get visible_output_links_list() { return Object.values(this._output_links).filter(l=>l.is_visible) }
   public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
   public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
   public get style() { return this._display.style as Class_NodeStyle[] }
@@ -1954,7 +1973,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   private get orphan_visible() {
-    if (this.input_links_list.length + this.output_links_list.length == 0) {
+    if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
       if (this.orphan_node_visible) return true
       else return false
     }

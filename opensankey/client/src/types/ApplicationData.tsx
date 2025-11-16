@@ -36,8 +36,7 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { default_file_name, default_open_JSON_options, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
-import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
+import { default_file_name, default_open_JSON_options, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON, Type_OpenDiagramOptions, Type_SaveDiagramOptions } from './Utils'
 import { JSONtoExcel } from '../Persistence/SankeyPersistence'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -587,11 +586,7 @@ export class Class_ApplicationData {
     // Dump with drawing area & its content in json struct
     return {
       ...json_object,
-      ...this.drawing_area.toJSON(
-        false,
-        this.options_save_json.mode_visible_element,
-        this.options_save_json.mode_save
-      )
+      ...this.drawing_area.toJSON(this.options_save_json)
     }
   }
 

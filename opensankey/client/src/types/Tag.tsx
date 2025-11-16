@@ -721,7 +721,12 @@ export class Class_LevelTag {
   // PUBLIC METHODES ====================================================================
 
   public update() {
-    this._ref_sankey.showAccordingToLevelTags()
+    this.dimensions_list_as_tag_for_parent.forEach(dimension => {
+      dimension.unsetForcingToShow()
+    })
+    this.dimensions_list_as_tag_for_children.forEach(dimension => {
+      dimension.unsetForcingToShow()
+    })
   }
 
   public setSelected() {

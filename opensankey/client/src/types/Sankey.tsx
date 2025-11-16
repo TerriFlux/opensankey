@@ -53,8 +53,8 @@ import {
   CutName,
   makeId,
   default_style_name,
-  default_save_only_visible_elements,
-  default_save_with_values
+  Type_SaveDiagramOptions,
+  default_save_JSON_options
 } from '../types/Utils'
 
 /**
@@ -508,7 +508,7 @@ export class Class_Sankey {
     const matching_nodes_id: { [_: string]: string } = {}
     const matching_links_id: { [_: string]: string } = {}
     other_sankey.matchAndModifyJSONIds(
-      this.toJSON(),
+      this.toJSON(default_save_JSON_options),
       matching_taggs_id,
       matching_tags_id,
       matching_nodes_id,
@@ -1032,9 +1032,7 @@ export class Class_Sankey {
    * @memberof Class_Sankey
    */
   public toJSON(
-    keep_sibling: boolean = false,
-    only_visible_elements: boolean = default_save_only_visible_elements,
-    with_values: boolean = default_save_with_values,
+    option: Type_SaveDiagramOptions
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
@@ -1096,28 +1094,42 @@ export class Class_Sankey {
     })
     // Add nodes
     json_object['nodes'] = json_object_nodes
-    const nodes_list = (only_visible_elements ? this.visible_nodes_list : this.nodes_list)
+    const nodes_list = (
+      option.save_only_elements_with_tags ? 
+        this.selected_tags_nodes_list : 
+          (option.save_only_visible_elements ? this.visible_nodes_list : this.nodes_list)
+    )
     const echangeTag = this.node_taggs_dict['type de noeud'] ? this.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
 
     this.remove_child_links()
 
     nodes_list
       .forEach(node => {
-        if (!keep_sibling && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
-          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON({ 'only_visible_elements': only_visible_elements })
+        if (!option.keep_siblings && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node.sibling.toJSON(
+            { 'only_visible_elements': option.save_only_visible_elements,
+              'save_only_elements_with_tags' : option.save_only_elements_with_tags
+             })
           return
         }
-        json_object_nodes[node.id] = node.toJSON({ 'only_visible_elements': only_visible_elements })
+        json_object_nodes[node.id] = node.toJSON({ 
+          'only_visible_elements': option.save_only_visible_elements,
+          'save_only_elements_with_tags' : option.save_only_elements_with_tags
+         })
       })
     // Add links
     json_object['links'] = json_object_links
-    const links_list = (only_visible_elements ? this.visible_links_list : this.links_list)
+    const links_list = (      
+        option.save_only_elements_with_tags ? 
+        this.selected_node_tags_links_list : 
+          (option.save_only_visible_elements ? this.visible_links_list : this.links_list)
+    )
 
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
     links_list.filter(l => !l.is_multi_link)
       .forEach(link => {
-        json_object_links[link.id] = link.toJSON({ 'with_values': with_values, 'has_results': has_results })
+        json_object_links[link.id] = link.toJSON({ 'with_values': option.with_values, 'has_results': has_results })
       })
 
 
@@ -2323,6 +2335,16 @@ export class Class_Sankey {
   }
 
   /**
+   * Get all visible nodes as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get selected_tags_nodes_list(): Class_NodeElement[] {
+    return Object.values(this._nodes)
+      .filter(node => node.are_related_node_tags_selected)
+  }
+
+  /**
    * Get all nodes sorted by their names as a list
    * @readonly
    * @memberof Class_Sankey
@@ -2370,6 +2392,17 @@ export class Class_Sankey {
   public get visible_links_list(): Class_LinkElement[] {
     return Object.values(this._links)
       .filter(node => node.is_visible)
+  }
+  /**
+   * Get all visible links as a list
+   * @readonly
+   * @memberof Class_Sankey
+   */
+  public get selected_node_tags_links_list(): Class_LinkElement[] {
+    return Object.values(this._links)
+      .filter(link => 
+        link.source.are_related_node_tags_selected && link.target.are_related_node_tags_selected
+      )
   }
 
   /**

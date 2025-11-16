@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode } from 'react'
+import React, { useState, RefObject, useRef, ReactNode, useMemo } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
@@ -362,6 +362,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Component updater
   const [, setCount] = useState(0)
 
+  const active_level_taggs = useMemo(
+    () => new Set(
+      sankey.visible_nodes_list.flatMap(node => [
+        ...node.dimensions_as_parent,
+        ...node.dimensions_as_child
+      ].map(dimension => dimension.related_level_tagg))
+    ),
+    [sankey.visible_nodes_list]
+  )
+
   // Configuration du updater selon le mode
   if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
     //@ts-expect-error xxx
@@ -376,7 +386,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
       case 'level': {
         const level_taggs = sankey.level_taggs_dict
-        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' && active_level_taggs.has(tagg)) as unknown as Class_TagGroup[]
       }
       case 'data':
         return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
@@ -546,7 +556,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       )
     } else if (mode === 'level' && tagg instanceof Class_LevelTagGroup && (tagg as Class_LevelTagGroup).has_tags) {
       const level_tagg = tagg as Class_LevelTagGroup
-      return (level_tagg.siblings !== undefined && level_tagg.siblings.length > 0) ? (
+      return (level_tagg.siblings !== undefined && level_tagg.siblings.filter(tagg=>app_data.drawing_area.sankey.level_taggs_dict[tagg].banner != 'none').length > 0) ? (
         <Checkbox
           justifySelf='end'
           alignSelf='center'
@@ -561,7 +571,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             //   app_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !level_tagg.activated
             // })
             app_data.drawing_area.bypass_autofit = true
-            app_data.drawing_area.sankey.showAccordingToLevelTags()
+            // app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg(level_tagg)
             app_data.drawing_area.resetAllVerticalIntervals()
             level_tagg.selectTagsFromId(selected_tag ?? '')

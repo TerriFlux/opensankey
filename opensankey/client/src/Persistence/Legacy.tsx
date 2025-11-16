@@ -1823,7 +1823,7 @@ const convert_nodes: convert_nodesFuncType = (
                 children_tags: children_tags
               }
             }
-          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (! n.dimensions['Primaire'] || !n.dimensions['Primaire'].parent_name)) {
+          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (!n.dimensions['Primaire'] || !n.dimensions['Primaire'].parent_name)) {
             n.dimensions[leveltagg_id] = {}
             n.dimensions[leveltagg_id].antitag = true
           }
@@ -1886,7 +1886,7 @@ const convert_nodes: convert_nodesFuncType = (
       }
     }
     tags_to_remove.forEach(tag => { delete n.tags[tag] })
-    
+
     // Convert name of some local variables
     if (n.local) {
       if (n.local.label_vert_shift !== undefined) {
@@ -2354,6 +2354,87 @@ const convert_links: convert_linksFuncType = (
     const isEchange = (node: SankeyNode) => {
       return node.tags['type de noeud'] != undefined && node.tags['type de noeud'][0] == 'echange'
     }
+    /**
+     * Détermine la règle de couleur d'une liaison (link) en fonction des propriétés
+     * des nœuds source et cible.
+     * 
+     * Priorité des règles :
+     * 1. Nœud "produit" avec tag de couleur unique et valide
+     * 2. Nœud non-"produit" avec tag de couleur unique et valide
+     * 3. Nœud "produit" par défaut (sans condition sur les tags de couleur)
+     * 
+     * @param {Object} source_node - Le nœud source de la liaison
+     * @param {Object} target_node - Le nœud cible de la liaison
+     * @param {Object} l - L'objet liaison à modifier
+     * @param {Object} data - L'objet contenant les définitions de tags
+     */
+
+    // Fonctions utilitaires
+    const isProductNode = (node: SankeyNode) => {
+      return node.tags['type de noeud']?.length > 0
+        && node.tags['type de noeud'][0] === 'produit'
+    }
+
+    const hasValidColorTag = (node: SankeyNode, data: SankeyData) => {
+      // Vérifie si le nœud a un paramètre de couleur non-local
+      if (node.colorParameter === 'local') return false
+
+      // Vérifie si le tag de couleur existe sur le nœud
+      if (!(node.colorTag in node.tags)) return false
+
+      // Vérifie si le nœud a exactement un tag de couleur
+      if (node.tags[node.colorTag].length !== 1) return false
+
+      const selectedTag = node.tags[node.colorTag][0]
+
+      // Vérifie si le tag sélectionné existe dans les définitions de tags
+      return selectedTag in data.nodeTags[node.colorTag].tags
+    }
+
+    // Logique principale
+    const determineColorRule = (source_node: SankeyNode, target_node: SankeyNode, data: SankeyData, l: SankeyLink) => {
+      // Priorité 1 : Nœud "produit" avec tag de couleur valide
+      if (isProductNode(source_node) && hasValidColorTag(source_node, data)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'source';
+        return
+      }
+
+      if (isProductNode(target_node) && hasValidColorTag(target_node, data)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'target';
+        return
+      }
+
+      // Priorité 2 : Nœud NON-"produit" avec tag de couleur valide
+      if (!isProductNode(source_node) && hasValidColorTag(source_node, data)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'source'
+        return
+      }
+
+      if (!isProductNode(target_node) && hasValidColorTag(target_node, data)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'target'
+        return
+      }
+
+      // Priorité 3 : Nœud "produit" par défaut (fallback)
+      if (isProductNode(source_node)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'source'
+        return;
+      }
+
+      if (isProductNode(target_node)) {
+        if (!l.local) l.local = {}
+        l.local.color_rule = 'target'
+        return
+      }
+    }
+
+    // Utilisation
+    determineColorRule(source_node, target_node, data, l)
 
     // Convert legacy recycling position -> new positions
     if (l.local) {
@@ -2398,19 +2479,19 @@ const convert_links: convert_linksFuncType = (
           dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(20, Math.abs(target_node.x - (source_node.x+ +ReturnValueNode(data,source_node,"node_width")))) // Avoid div per 0
+          dist = Math.max(20, Math.abs(target_node.x - (source_node.x + +ReturnValueNode(data, source_node, "node_width")))) // Avoid div per 0
         }
 
         //const shift_dist_max = 200
         const left_horiz_shift = l.local.left_horiz_shift ? l.local.left_horiz_shift - 50 : -50
         const right_horiz_shift = l.local.right_horiz_shift ? l.local.right_horiz_shift + 50 : 50
-        let original_dist = Math.abs(left_horiz_shift)+scale(+GetLinkValue(data,l.idLink).value)
+        let original_dist = Math.abs(left_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
         //let shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'right_horiz_shift', original_dist / dist) // value in [0; +oo]
         AssignLinkLocalAttribute(l, 'ending_tangeant', 0.001) // value in [0; +oo]
         // }
 
-        original_dist = Math.abs(right_horiz_shift)+scale(+GetLinkValue(data,l.idLink).value)
+        original_dist = Math.abs(right_horiz_shift) + scale(+GetLinkValue(data, l.idLink).value)
         //curve_dist = Math.max(curve_dist_min, Math.min(curve_dist_max, original_dist * curve_coef)) // Approx to keep general shape
         //shift_dist = Math.min(shift_dist_max, original_dist) // Approx to keep general shape
         AssignLinkLocalAttribute(l, 'left_horiz_shift', original_dist / dist) // value in [0; +oo]
