@@ -11,7 +11,7 @@ import { MenuConfigurationLinkShape } from '../deps/OpenSankey+/deps/OpenSankey/
 import {MenuConfigurationLinkLabel} from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksLabel'
 
 import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
-import { getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { default_save_JSON_options, getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkStyle, Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/ElementStyle'
@@ -141,7 +141,7 @@ export const ModalPreference = ({new_data, additionalMenus}:{
       setOpeningRender(true)
       const path = window.location.origin
       const url = path + '/user/set_preference'
-      const sankey_user = ghost_data.current.drawing_area.sankey.toJSON()
+      const sankey_user = ghost_data.current.drawing_area.sankey.toJSON(default_save_JSON_options)
       const user_pref = {
         palette: list_palette.current,
         icon_catalog: ghost_data.current.drawing_area.sankey.icon_catalog,
