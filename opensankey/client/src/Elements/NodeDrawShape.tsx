@@ -58,18 +58,18 @@ export class NodeDrawShape {
     // Speed-up computing
     if (!this._node.d3_selection)
       return
-    
+
     const drawingElements = this._node.internalDrawingElements
-    
+
     // Clean previous shape
     drawingElements.d3_selection_g_shape?.selectAll('.node_shape').remove()
-    
+
     // Do the rest only if shape is visible
     // Compute shape attributes
     const width = this._node.getShapeWidthToUse()
     const height = this._node.getShapeHeightToUse()
     const color = this.getShapeColorToUse()
-    
+
     // Apply shape value
     if (this._node.shape_type === 'rect') {
       drawingElements.d3_selection_g_shape?.append('rect')
@@ -93,7 +93,7 @@ export class NodeDrawShape {
         .classed('node_shape', true)
         .attr('d', this.getArrowPath())
     }
-    
+
     // Apply common properties
     drawingElements.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
@@ -119,14 +119,19 @@ export class NodeDrawShape {
    */
   public getShapeColorToUse() {
     // Default color
-    let shape_color = this._node.shape_color
-    
+    let shape_color = default_element_color
+    if (
+      (this._node.shape_color_sustainable)
+    ) {
+      return this._node.shape_color
+    }
+    if (!this._node.sankey.node_taggs_list.some(tagg=>tagg.use_colors)) {
+      return this._node.shape_color
+    }
     // Is the color defined by tags
     const taggs_activated = this._node.taggs_list
       .filter(tagg => tagg.use_colors)
-    
     if (
-      (!this._node.shape_color_sustainable) &&
       (taggs_activated.length > 0)
     ) {
       const tagg_for_colormap = taggs_activated[0]
@@ -134,16 +139,12 @@ export class NodeDrawShape {
         .filter(tag => (tag.group === tagg_for_colormap))
       const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
-      
-      if (selected_tags_for_colormap.length > 0 ) {
+
+      if (selected_tags_for_colormap.length > 0) {
         shape_color = selected_tags_for_colormap[0].color
-      } else {
-        shape_color = default_element_color
       }
-    } else {
-      shape_color = default_element_color
     }
-    
+
     return shape_color
   }
 
@@ -156,7 +157,7 @@ export class NodeDrawShape {
     const height = this._node.getShapeHeightToUse()
     // Svg path to construct
     let path = ''
-    
+
     // Arrow toward the right side
     if (this._node.shape_arrow_angle_direction === 'right') {
       const opp = Math.tan(this._node.shape_arrow_angle_factor * Math.PI / 180) * (height / 2)
@@ -201,7 +202,7 @@ export class NodeDrawShape {
       const p5: string = '0,' + (height - opp)
       path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
     }
-    
+
     return path
   }
 }
@@ -304,7 +305,7 @@ export const draw_arrow_part: draw_arrow_partFType = (
 
   let d
   if (horizontal) {
-    d =  ' M ' + String(x0) + ',' + String(y0)
+    d = ' M ' + String(x0) + ',' + String(y0)
     d += ' L ' + String(x1) + ',' + String(y0)
     d += ' L ' + String(x3) + ',' + String(y1)
     d += ' L ' + String(x2) + ',' + String(y2)

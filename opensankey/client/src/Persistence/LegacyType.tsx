@@ -198,6 +198,7 @@ export type SankeyLinkAttrLocal = {
 
   //Attribute from newer version but needed to be defined here for converter purposes
   value_label_is_visible?:boolean
+    color_rule?: string
 }
 
 export type SankeyLinkStyle = {

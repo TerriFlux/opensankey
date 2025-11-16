@@ -29,7 +29,6 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
-import { Type_OpenDiagramOptions, Type_SaveDiagramOptions } from '../Persistence/SankeyPersistenceTypes'
 
 declare const window: Window &
   typeof globalThis & {
@@ -39,12 +38,29 @@ declare const window: Window &
     }
   }
 
-export const default_save_only_visible_elements = false
+export type Type_SaveDiagramOptions = {
+  keep_siblings: boolean,
+  with_values: boolean,
+  save_only_visible_elements: boolean,
+  save_only_elements_with_tags: boolean,
+  mode_compressed: boolean
+}
+
+export type Type_OpenDiagramOptions = {
+}
+
+export const default_keep_siblings = false
 export const default_save_with_values = true
-export const default_save_JSON_options: Type_SaveDiagramOptions = { 
-  mode_save: default_save_with_values,
-  mode_visible_element: false,
-  mode_compressed:true 
+export const default_save_only_visible_elements = false
+export const default_save_only_elements_with_tags = false
+export const default_save_compressed = false
+
+export const default_save_JSON_options: Type_SaveDiagramOptions = {
+  keep_siblings: default_keep_siblings,
+  with_values: default_save_with_values,
+  save_only_visible_elements: default_save_only_visible_elements,
+  save_only_elements_with_tags: default_save_only_elements_with_tags,
+  mode_compressed: default_save_compressed 
 }
 export const default_open_JSON_options: Type_OpenDiagramOptions = { 
 }

@@ -2242,8 +2242,8 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     ) {
       // Recompute visibility value
       const are_source_and_target_displayed = (
-        (this._source?.is_visible ?? false) &&
-        (this._target?.is_visible ?? false)
+        (this._source?.is_visible_without_orphan ?? false) &&
+        (this._target?.is_visible_without_orphan ?? false)
       )
       // Update  fingerprint if needed
       // -> This condition allows to avoid unecessary visibility recomputing on related elements

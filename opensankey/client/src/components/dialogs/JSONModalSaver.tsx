@@ -59,15 +59,21 @@ export const SaveJSONDialog = ({ app_data }: {app_data: Class_ApplicationData}) 
         <Box layerStyle='menuconfigpanel_grid' >
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
-            isChecked={app_data.options_save_json.mode_save}
-            onChange={(evt) => { app_data.options_save_json.mode_save = evt.target.checked; setCount(a => a + 1) }}>
+            isChecked={app_data.options_save_json.with_values}
+            onChange={(evt) => { app_data.options_save_json.with_values = evt.target.checked; setCount(a => a + 1) }}>
             {t('Menu.SaveValue')}
           </Checkbox>
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
-            isChecked={app_data.options_save_json.mode_visible_element}
-            onChange={(evt) => { app_data.options_save_json.mode_visible_element = evt.target.checked; setCount(a => a + 1) }}>
+            isChecked={app_data.options_save_json.save_only_visible_elements}
+            onChange={(evt) => { app_data.options_save_json.save_only_visible_elements = evt.target.checked; setCount(a => a + 1) }}>
             {t('Menu.VisibleElement')}
+          </Checkbox>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={app_data.options_save_json.save_only_elements_with_tags}
+            onChange={(evt) => { app_data.options_save_json.save_only_elements_with_tags = evt.target.checked; setCount(a => a + 1) }}>
+            {t('Menu.VisibleTagElement')}
           </Checkbox>
           <Checkbox
             variant='menuconfigpanel_option_checkbox'
