@@ -150,6 +150,7 @@ export const OpenSankeyApp = ({
   useEffect(() => {
     // Delete potential duplicat
     d3.select('#draw_zoom').remove()
+    app_data.menu_configuration.ref_toolbar.current()
     app_data.draw()
     app_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
   }, [app_data.language])

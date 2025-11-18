@@ -1,4 +1,4 @@
-import React, { useState, RefObject, useRef, ReactNode, useMemo } from 'react'
+import React, { useState, RefObject, useRef, ReactNode, useMemo,useReducer,useEffect } from 'react'
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
@@ -12,6 +12,14 @@ import { Class_ProtoTag } from '../../types/Tag'
 
 const width_fitler_drawer = 270
 
+declare const window: Window &
+  typeof globalThis & {
+    sankey: {
+      data_type: boolean
+      data_type_intervals: boolean
+    }
+  }
+
 /**
  * Component that show filters for for link value and tag group (node,flow &  data)
  *
@@ -19,9 +27,11 @@ const width_fitler_drawer = 270
  * @return {*} 
  */
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
+  const [, forceUpdate] = useReducer(x => x + 1, 0)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
+  app_data.menu_configuration.ref_toolbar.current = forceUpdate
   return <>
     <Button
       id='buttonOpenFilterDrawer'
@@ -71,7 +81,6 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         >
           <Box layerStyle='drawerFilterBox'>
             {
-              //@ts-expect-error xxx
               window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
             }
             <FlowValueFilter app_data={app_data} />
@@ -270,7 +279,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
         </> : <option key='reconciled' value='reconciled' >{t('Banner.only_data')}</option>}
       </Select>
     </Box>
-    {has_intervals ?
+    {has_intervals && window.sankey?.data_type_intervals !== false ?
       <Box
         layerStyle='menuconfig_grid'
       //display={s_is_data_type_reconcilied && app_data.is_reconcilied ? '' : 'none'}
@@ -475,9 +484,13 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     // Actions spécifiques selon le mode
     switch (mode) {
       case 'level':
+        if (app_data.drawing_area.sankey.default_node_style.position_type == 'parametric') {
+          app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg as unknown as Class_LevelTagGroup)
+        }
         app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
         app_data.drawing_area.draw()
         app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+        app_data.drawing_area.orderElementOnDA()
         break
       case 'data':
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
@@ -486,6 +499,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         app_data.drawing_area.bypass_compute_positions = true
         app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
         app_data.drawing_area.bypass_compute_positions = false
+        app_data.drawing_area.orderElementOnDA()
         break
     }
     app_data.drawing_area.bypass_autofit = false
