@@ -70,13 +70,24 @@ import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { FType_ProcessFunctions } from '../../Modules'
 
 /*************************************************************************************************/
+type DiagramConfig = {
+  data_type?: boolean
+  // Ajoutez d'autres propriétés du diagramme si nécessaire
+}
+
+type DataType = boolean | Record<string, boolean>
 
 declare const window: Window &
   typeof globalThis & {
     sankey: {
+      publish?: boolean
       header?: string
-      sous_filieres: { [key: string]: string }
-      diagram: string
+      sous_filieres: Record<string, string>
+      diagram?: string
+      toolbar?: boolean
+      data_type?: boolean
+      // Indexer pour accéder aux diagrammes dynamiquement
+      [key: string]: any // ou mieux : DiagramConfig | string | boolean | Record<string, string> | undefined
     }
   }
 
@@ -85,11 +96,27 @@ export const setDiagram = (
   app_data: Class_ApplicationData
 ) => {
   const diagrams = window.sankey.sous_filieres
+  // ✅ Récupérer le data_type depuis le diagramme spécifique
+  //const diagram_key = Object.keys(diagrams).find(key => diagrams[key] === diagram_url)
+  console.log('diagram_url: ' + diagram_url)
+  console.log('window.sankey keys:', Object.keys(window.sankey))
+  if (window.sankey[diagram_url]) {
+    const diagram_config = window.sankey[diagram_url]
+    console.log('diagram_config: ' + diagram_config)
+    if (diagram_config && typeof diagram_config === 'object' && 'data_type' in diagram_config) {
+      const data_type_value = diagram_config.data_type
+      console.log('diagram_url: ' + diagram_url)
+      console.log('data_type: ' + data_type_value)
+      
+      // Appliquer le data_type au sankey global
+      window.sankey.data_type = data_type_value
+    }
+  }
   loadUniversalJSON(diagrams[diagram_url] + '.json.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
     app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
   }).catch(e => console.log(e))
-
+  app_data.menu_configuration.ref_toolbar.current()
 }
 
 export const GoToUserDoc = () => {
