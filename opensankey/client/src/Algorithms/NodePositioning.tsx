@@ -1698,7 +1698,7 @@ export class NodePositioning {
   }
 
   // Fonction qui applique le V pour un level tag donné
-  private applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: Class_LevelTagGroup) {
+  public applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: Class_LevelTagGroup) {
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
@@ -1749,6 +1749,7 @@ export class NodePositioning {
       // v is computed at the first path
       return
     }
+    nodeDimParent.parent.display.position.x = node.position_x
     nodeDimParent.parent.display.position.y = node.position_y
     nodeDimParent.parent.display.position.u = node.position_u
     nodeDimParent.parent.display.position.v = node.position_v
