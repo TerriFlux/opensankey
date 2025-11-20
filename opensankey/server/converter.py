@@ -430,7 +430,7 @@ class SankeyToJson(object):
                 "activated": dimension not in unactivated_dimensions
             }
             if siblings:
-                level_tags_json[dimension.id][siblings] = [_.id for _ in siblings]
+                level_tags_json[dimension.id]["siblings"] = [_.id for _ in siblings]
 
     def _parse_flux_tags(self, taggs, flux_tags_json):
         """
