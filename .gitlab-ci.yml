@@ -217,6 +217,7 @@ prod_opensankey:
     - git clean -fdx -e env -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
+    - git config --global --add safe.directory /home/ubuntu/prod_opensankey/sankeyapplication/submodules/MFAProblem
     - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/LoginComponent
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
