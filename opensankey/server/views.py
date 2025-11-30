@@ -27,7 +27,7 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 """
 
 # coding: utf-8
-
+# flake8: noqa
 from . import views_export
 import tempfile
 import os
@@ -36,21 +36,12 @@ import json
 from SankeyExcelParser.io_base import conversion_thread
 
 from .views_utils import clean_file, handle_json_or_compressed, parse_folder
-
-import pandas as pd
 import requests
-
-try:
-    import pythoncom
-
-    pythoncom.CoInitialize()
-except Exception:
-    pass
 
 from threading import Thread, Lock
 
 # Flask modules imports
-from flask import abort, jsonify, make_response
+from flask import abort, make_response
 from flask import Blueprint
 from flask import current_app
 from flask import render_template
@@ -523,12 +514,9 @@ def launch_conversion():
             logname=log_filename
         )
 
-        # Determine conversion function
-        conversion_key = f"{input_format}_{output_format}"
-
         # Decide threading based on file size
-        file_stats = os.stat(input_file_name)
-        use_thread = file_stats.st_size > 500000  # 500KB threshold
+        # file_stats = os.stat(input_file_name)
+        # use_thread = file_stats.st_size > 500000  # 500KB threshold
 
         # if use_thread:
         # Use threading for large files

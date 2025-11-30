@@ -32,11 +32,12 @@ import os
 import re
 
 import imgkit
+from .views_utils import clean_file
 import pdfkit
 from .views import opensankey
 
 from PIL import Image
-from flask import abort, make_response
+from flask import abort
 from flask import current_app
 from flask import request
 from flask import send_file
