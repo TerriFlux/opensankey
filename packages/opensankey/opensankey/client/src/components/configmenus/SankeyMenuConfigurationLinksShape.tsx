@@ -555,7 +555,7 @@ export const MenuConfigurationLinkShape = ({ new_data, menu_for_style }: {
     </>
   </WrapperBoxSubSectionMenu>
 
-  const content_geometry_detail = <WrapperBoxSubSectionMenu collapse={false} new_data={new_data} title={t('Noeud.apparence.Geometry')}>
+  const content_geometry_detail = <WrapperBoxSubSectionMenu is_open={false} new_data={new_data} title={t('Noeud.apparence.Geometry')}>
     <>{[
       ['shape_starting_curve', 0, (1 - shape_ending_curve)],
       ['shape_ending_curve', shape_starting_curve * 100, 100],

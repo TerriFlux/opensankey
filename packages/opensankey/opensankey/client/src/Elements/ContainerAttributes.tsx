@@ -25,21 +25,14 @@
 // ==================================================================================================
 
 // Local imports
-import {
-  Type_JSON,
-  getBooleanFromJSON,
-  getNumberFromJSON,
-  getStringFromJSON
-} from '../types/Utils'
+
 import { 
   ContainerAttributeTypeScript, 
-  CONTAINERS_ATTRIBUTES_CONFIG,
-  ContainerSetterGenerator,
-  Type_VerticalAlignment,
-  Type_ExtremityPosition
+  CONTAINERS_ATTRIBUTES_CONFIG
 } from './ContainerAttributesConfig'
 import { Class_ContainerElement } from './TextZone'
 import { Class_ContainerStyle } from './ElementStyle'
+import { Type_JSON } from '../types/Utils'
 
 // SPECIFIC TYPES ***********************************************************************
 

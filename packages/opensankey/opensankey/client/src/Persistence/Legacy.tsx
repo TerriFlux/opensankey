@@ -1874,7 +1874,6 @@ const convert_nodes: convert_nodesFuncType = (
 
     })
     tmp.forEach(nt => {
-      const leveltagg_tags_ids = nt[1]
       const leveltagg_id = nt[0]
       delete n.tags[leveltagg_id]
     })
@@ -2396,13 +2395,13 @@ const convert_links: convert_linksFuncType = (
       // Priorité 1 : Nœud "produit" avec tag de couleur valide
       if (isProductNode(source_node) && hasValidColorTag(source_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'source';
+        l.local.color_rule = 'source'
         return
       }
 
       if (isProductNode(target_node) && hasValidColorTag(target_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'target';
+        l.local.color_rule = 'target'
         return
       }
 
@@ -2423,7 +2422,7 @@ const convert_links: convert_linksFuncType = (
       if (isProductNode(source_node)) {
         if (!l.local) l.local = {}
         l.local.color_rule = 'source'
-        return;
+        return
       }
 
       if (isProductNode(target_node)) {
@@ -2479,7 +2478,7 @@ const convert_links: convert_linksFuncType = (
           dist = Math.max(20, Math.abs(target_node.y - source_node.y)) // Avoid div per 0
         }
         else {  // eqv. if (!l.local.orientation || (l.local.orientation && l.local.orientation == 'hh')) {
-          dist = Math.max(20, Math.abs(target_node.x - (source_node.x + +ReturnValueNode(data, source_node, "node_width")))) // Avoid div per 0
+          dist = Math.max(20, Math.abs(target_node.x - (source_node.x + +ReturnValueNode(data, source_node, 'node_width')))) // Avoid div per 0
         }
 
         //const shift_dist_max = 200

@@ -374,7 +374,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
+        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -614,7 +614,7 @@ export class NodePositioning {
       max_horizontal_index
     )
     nodes_per_horizontal_indexes = Object.fromEntries(
-      Object.entries(nodes_per_horizontal_indexes).filter(([key, value]) => value.length > 0)
+      Object.entries(nodes_per_horizontal_indexes).filter(([_, value]) => value.length > 0)
     )
 
     // ÉTAPE 5: Calcul des positions finales (logique existante)

@@ -31,13 +31,11 @@ import { MouseEvent } from 'react'
 // Local types
 import {
   Type_JSON,
-  Type_SaveDiagramOptions,
   Type_Structure,
   default_background_color,
   default_black_color,
   default_grid_color,
   default_main_sankey_id,
-  default_save_JSON_options,
   getBooleanFromJSON,
   getJSONFromJSON,
   getNumberFromJSON,
@@ -503,12 +501,12 @@ export class Class_DrawingArea {
 
   /**
    * Convert current drawing area & all substructure as JSON data
-   * @param {Type_SaveDiagramOptions} [option=default_save_JSON_options]
+   * @param {Type_JSON} [kwargs]
    * @return {*}
    * @memberof Class_DrawingArea
    */
   public toJSON(
-    option: Type_SaveDiagramOptions = default_save_JSON_options
+    kwargs?: Type_JSON
   ) {
     // Create json struct
     const json_object = {} as Type_JSON
@@ -543,7 +541,7 @@ export class Class_DrawingArea {
     const out = {
       ...json_object,
       ...this._legend.toJSON(),
-      ...this._sankey.toJSON(option)
+      ...this._sankey.toJSON(kwargs)
     }
 
     out['order_g_elements'] = this._list_g_element_id // Order elements by id 
@@ -558,6 +556,7 @@ export class Class_DrawingArea {
    */
   public fromJSON(
     json_object: Type_JSON,
+    kwargs?: Type_JSON,
     match_and_update: boolean = true,
   ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
@@ -3003,12 +3002,12 @@ export class Class_DrawingArea {
   public set container_activated(_) { this._container_activated = _ }
   public get bypass_autofit() {
     if (window.sankey?.publish && this._bypass_autofit) {
-      return true;
+      return true
     }
-    return false;
+    return false
   }
 
   public set bypass_autofit(value) {
-    this._bypass_autofit = value;
+    this._bypass_autofit = value
   }
 }

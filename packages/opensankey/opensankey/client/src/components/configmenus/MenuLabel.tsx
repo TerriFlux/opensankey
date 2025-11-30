@@ -343,94 +343,94 @@ export const SankeyMenuLabelComponent = ({
           }} />
       </Box>
       <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.labels.'+prefix+'label_background')}>
-              <>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <CheckboxWithColorPicker
-            app_data={new_data}
-            elements={elements}
-            attributePath={'Noeud.labels'}
-            checkboxAttributeKey={prefix + 'label_background' as ValueKey}
-            inputAttributeKey={prefix + 'label_background_color' as ValueKey}
-            refreshParentComponent={refreshParentComponent} />
-          {/* Forme du noeud */}
-          <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
-            <Box layerStyle='options_3cols' >
-              <Button
-                isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
-                value="ellipse"
-                variant={
-                  label_background_shape === 'ellipse' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'}
-                onClick={() => {
-                  updateElements(new_data, elements, prefix + 'label_background_shape' as ValueKey, 'ellipse', refreshParentComponent)
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill='#78C2AD'
-                  stroke='currentColor'
-                  viewBox='0 0 17 17'
-                  width="1rem"
-                  height="1rem"
+        <>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <CheckboxWithColorPicker
+              app_data={new_data}
+              elements={elements}
+              attributePath={'Noeud.labels'}
+              checkboxAttributeKey={prefix + 'label_background' as ValueKey}
+              inputAttributeKey={prefix + 'label_background_color' as ValueKey}
+              refreshParentComponent={refreshParentComponent} />
+            {/* Forme du noeud */}
+            <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
+              <Box layerStyle='options_3cols' >
+                <Button
+                  isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
+                  value="ellipse"
+                  variant={
+                    label_background_shape === 'ellipse' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'}
+                  onClick={() => {
+                    updateElements(new_data, elements, prefix + 'label_background_shape' as ValueKey, 'ellipse', refreshParentComponent)
+                  }}
                 >
-                  <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
-                </svg>
-              </Button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill='#78C2AD'
+                    stroke='currentColor'
+                    viewBox='0 0 17 17'
+                    width="1rem"
+                    height="1rem"
+                  >
+                    <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
+                  </svg>
+                </Button>
 
-              <Button
-                isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
-                variant={
-                  label_background_shape === 'rect' ?
-                    'menuconfigpanel_option_button_activated' :
-                    'menuconfigpanel_option_button'}
-                onClick={() => {
-                  updateElements(new_data, elements, prefix + 'label_background_' + 'shape' as ValueKey, 'rect', refreshParentComponent)
-                }}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill='#78C2AD'
-                  stroke='currentColor'
-                  viewBox='0 0 17 17'
-                  width="1rem"
-                  height="1rem"
+                <Button
+                  isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
+                  variant={
+                    label_background_shape === 'rect' ?
+                      'menuconfigpanel_option_button_activated' :
+                      'menuconfigpanel_option_button'}
+                  onClick={() => {
+                    updateElements(new_data, elements, prefix + 'label_background_' + 'shape' as ValueKey, 'rect', refreshParentComponent)
+                  }}
                 >
-                  <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
-                </svg>
-                {/* {t('Noeud.apparence.Rectangle')} */}
-              </Button>
-            </Box>
-          </OSTooltip>
-        </Box>
-        {label_background ?
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name'>
-              {t('Flux.apparence.shape_opacity')}
-              {!menu_for_style ? <TooltipElementOverloaded
-                elements={elements as (Class_NodeElement | Class_LinkElement)[]}
-                t={t}
-                k={'shape_opacity'} /> : <></>}
-            </Box>
-            <InputGroup variant='menuconfigpanel_option_input' >
-              <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
-                <ConfigMenuNumberInput
-                  disabled={!Reflect.get(disable_attr_props, prefix + 'label_background_opacity')}
-                  t={new_data.t}
-                  default_value={label_background_opacity}
-                  menu_for_style={menu_for_style}
-                  minimum_value={0}
-                  maximum_value={1}
-                  step={0.1}
-                  stepper={true}
-                  function_on_blur={(v: number | null) => { updateElements(new_data, elements, prefix + 'label_background_opacity' as ValueKey, v as ValueElementsType, refreshParentComponent) }}
-                  multiValue={is_label_background_opacity_indetermined}
-                />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill='#78C2AD'
+                    stroke='currentColor'
+                    viewBox='0 0 17 17'
+                    width="1rem"
+                    height="1rem"
+                  >
+                    <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
+                  </svg>
+                  {/* {t('Noeud.apparence.Rectangle')} */}
+                </Button>
+              </Box>
+            </OSTooltip>
+          </Box>
+          {label_background ?
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.apparence.shape_opacity')}
+                {!menu_for_style ? <TooltipElementOverloaded
+                  elements={elements as (Class_NodeElement | Class_LinkElement)[]}
+                  t={t}
+                  k={'shape_opacity'} /> : <></>}
+              </Box>
+              <InputGroup variant='menuconfigpanel_option_input' >
+                <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
+                  <ConfigMenuNumberInput
+                    disabled={!Reflect.get(disable_attr_props, prefix + 'label_background_opacity')}
+                    t={new_data.t}
+                    default_value={label_background_opacity}
+                    menu_for_style={menu_for_style}
+                    minimum_value={0}
+                    maximum_value={1}
+                    step={0.1}
+                    stepper={true}
+                    function_on_blur={(v: number | null) => { updateElements(new_data, elements, prefix + 'label_background_opacity' as ValueKey, v as ValueElementsType, refreshParentComponent) }}
+                    multiValue={is_label_background_opacity_indetermined}
+                  />
 
-              </OSTooltip>
-            </InputGroup>
-          </Box> : <></>}
-      </></WrapperBoxSubSectionMenu>
+                </OSTooltip>
+              </InputGroup>
+            </Box> : <></>}
+        </></WrapperBoxSubSectionMenu>
     </Box>
 
   </Box>

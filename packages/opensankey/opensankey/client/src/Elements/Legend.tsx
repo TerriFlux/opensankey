@@ -53,7 +53,7 @@ import { Class_Sankey } from '../types/Sankey'
 import { Class_NodeElement } from './Node'
 
 const default_pos_from_legacy = false
-const default_stick_to_drawing = false
+const default_stick_to_drawing = true
 const default_masked = true
 const default_display_legend_scale = false
 const default_legend_police = 16
@@ -459,7 +459,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     }
     // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
     requestAnimationFrame(() => {
-      this.updateDragZone();
+      this.updateDragZone()
       //this.drawing_area.checkAndUpdateAreaSize();
     })
   }
