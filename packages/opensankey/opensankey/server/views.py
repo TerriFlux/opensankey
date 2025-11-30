@@ -28,7 +28,7 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 
 # coding: utf-8
 # flake8: noqa
-from . import views_export
+
 import tempfile
 import os
 import json
@@ -759,3 +759,5 @@ def url_load_json():
     except Exception as e:
         print(f"Erreur : {e}")
         return {"error": str(e)}, 500
+
+from . import views_export
