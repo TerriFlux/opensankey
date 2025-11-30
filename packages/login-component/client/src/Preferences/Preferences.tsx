@@ -11,7 +11,7 @@ import { MenuConfigurationLinkShape } from '../deps/OpenSankey+/deps/OpenSankey/
 import {MenuConfigurationLinkLabel} from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksLabel'
 
 import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
-import { default_save_JSON_options, getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkStyle, Class_NodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/ElementStyle'
@@ -141,7 +141,7 @@ export const ModalPreference = ({new_data, additionalMenus}:{
       setOpeningRender(true)
       const path = window.location.origin
       const url = path + '/user/set_preference'
-      const sankey_user = ghost_data.current.drawing_area.sankey.toJSON(default_save_JSON_options)
+      const sankey_user = ghost_data.current.drawing_area.sankey.toJSON()
       const user_pref = {
         palette: list_palette.current,
         icon_catalog: ghost_data.current.drawing_area.sankey.icon_catalog,
@@ -266,7 +266,7 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
     setTagsGroupEntryId(user_data.drawing_area.sankey.getTagGroupsAsList(elementTagNameProp)[0]?.id ?? '')
 
 
-  return <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.tag_head_insert')} collapse={false}>
+  return <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.tag_head_insert')} is_open={false}>
     <>
       <Box display={'flex'}>
         <Text>{t('Menu.preference_content.tag_insert_text')}</Text>
@@ -333,21 +333,21 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
           <Box layerStyle='menuconfigpanel_grid'>
             <WrapperNodeStyleSelector new_data={user_data}><></></WrapperNodeStyleSelector>
 
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_visual')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_visual')} is_open={false}>
               <MenuConfigurationNodeStyle
                 app_data={user_data}
                 menu_for_style={true}
                 additional_menus={additionalMenus}
               />
             </WrapperBoxSubSectionMenu>
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_context')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_context')} is_open={false}>
               <MenuConfigurationNodeContext
                 app_data={user_data}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
 
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_insert_head')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_insert_head')} is_open={false}>
               <TansferStyle user_data={user_data} app_data={app_data} elementStyleType='_node_styles' />
             </WrapperBoxSubSectionMenu>
           </Box>
@@ -355,13 +355,13 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
         <TabPanel>
           <Box layerStyle='menuconfigpanel_grid'>
             <WrapperLinkStyleSelector new_data={user_data}><></></WrapperLinkStyleSelector>
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_visual')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_visual')} is_open={false}>
               <MenuConfigurationLinkShape
                 new_data={user_data}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_context')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_context')} is_open={false}>
               <MenuConfigurationLinkLabel
                 new_data={user_data}
                 additionMenus={additionalMenus}
@@ -369,7 +369,7 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
               />
             </WrapperBoxSubSectionMenu>
 
-            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_insert_head')} collapse={false}>
+            <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_insert_head')} is_open={false}>
               <TansferStyle user_data={user_data} app_data={app_data} elementStyleType='_link_styles' />
             </WrapperBoxSubSectionMenu>
           </Box>

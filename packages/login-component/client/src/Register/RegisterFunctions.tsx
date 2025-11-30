@@ -189,33 +189,33 @@ export async function userSignUp(
 // }
 
 // Activate a new license
-async function activateLicense(
-  app_name: string,
-  license_id: string
-) {
-  // Get server api url
-  const path = window.location.origin
-  const url = path + '/api/edd_license'
-  // use server as proxy to fetch informations
-  // -> Avoid "Same-Origin" problem with CORS
-  const data = fetch(url,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        'action': 'activate_license',
-        'app_name': app_name,
-        'license_id': license_id
-      })
-    })
-    .then(response => response.json())
-    .then(response_json => {
-      return response_json
-    })
-  return data
-}
+// async function activateLicense(
+//   app_name: string,
+//   license_id: string
+// ) {
+//   // Get server api url
+//   const path = window.location.origin
+//   const url = path + '/api/edd_license'
+//   // use server as proxy to fetch informations
+//   // -> Avoid "Same-Origin" problem with CORS
+//   const data = fetch(url,
+//     {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json'
+//       },
+//       body: JSON.stringify({
+//         'action': 'activate_license',
+//         'app_name': app_name,
+//         'license_id': license_id
+//       })
+//     })
+//     .then(response => response.json())
+//     .then(response_json => {
+//       return response_json
+//     })
+//   return data
+// }
 
 // Register a new license
 // async function registerNewLicense(
