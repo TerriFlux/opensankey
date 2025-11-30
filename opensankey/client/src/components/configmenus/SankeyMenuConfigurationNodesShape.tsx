@@ -408,7 +408,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     </> : <></>}
   </MenuSectionCheckbox>
 
-  const content_geometry = <WrapperBoxSubSectionMenu collapse={false} new_data={app_data} title={t('Noeud.apparence.Geometry')}><>
+  const content_geometry = <WrapperBoxSubSectionMenu is_open={false} new_data={app_data} title={t('Noeud.apparence.Geometry')}><>
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
       {t('Noeud.size')}
     </Box>

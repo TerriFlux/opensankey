@@ -44,14 +44,21 @@ export const initializeAdditionalMenus: FType_InitializeAdditionalMenus = (
 ) => {
   //  No menu is added in OS via this function
 }
+export const default_actions_type ={
+  input_format: 'excel',
+  output_format: 'json'
+}
+export type actions_type = typeof default_actions_type
+
 export type FType_ProcessFunctions = {
   ref_processing: MutableRefObject<boolean>,
-  ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
+  //ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   failure: MutableRefObject<boolean>,
   not_started: MutableRefObject<boolean>,
   ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
   path: MutableRefObject<string>,
-  launch: (path: string) => void
+  actions: MutableRefObject<actions_type>
+  launch: (path: string,actions:actions_type) => void,
 }
 
 export type FType_ModuleDialogs = (

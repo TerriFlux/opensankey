@@ -1058,10 +1058,10 @@ export class Class_LevelTagGroup {
       this._activated = value
       if (value== true && this.linked_tag_group) this.linked_tag_group.use_colors = true
       if (value== false && this.linked_tag_group) this.linked_tag_group.use_colors = false
-        this._siblings.forEach(sib_tagg_id => {
-          if (this._ref_sankey.level_taggs_dict[sib_tagg_id])
-            this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = !this._activated
-        })
+      this._siblings.forEach(sib_tagg_id => {
+        if (this._ref_sankey.level_taggs_dict[sib_tagg_id])
+          this._ref_sankey.level_taggs_dict[sib_tagg_id].activated = !this._activated
+      })
       this._ref_sankey.draw()
     }
   }

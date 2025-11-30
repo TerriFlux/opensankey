@@ -78,7 +78,7 @@ export const SpreadSheet = (
     a.push({ id: 'empty', source: '', target: '' })
     return a
   }
-    //@ts-expect-error xxx
+  //@ts-expect-error xxx
   const col_sizes = app_data.has_sankey_afm ? [0.05, 0.05, 0.03, 0.03] : [0.055, 0.055, 0.045]
   // Générer les colonnes dynamiquement
   const getColumns = (): Column[] => {
@@ -128,7 +128,7 @@ export const SpreadSheet = (
       ]
 
       // Ajouter la cellule "Valeurs calculées" seulement si l'utilisateur est développeur
-          //@ts-expect-error xxx
+      //@ts-expect-error xxx
       if (app_data.has_sankey_afm) {
         baseCells.push({ type: 'number', value: flux.value_result as number })
       }
@@ -713,7 +713,7 @@ export const SpreadSheet = (
                     sankey.deleteNode(drawing_area.sankey.nodes_dict[node.id])
                   })
                 })
-                drawing_area.fromJSON(prevSankey, false)
+                drawing_area.fromJSON(prevSankey,{}, false)
 
                 // drawing_area.computeAutoSankey(true)
                 app_data.draw()
@@ -721,7 +721,7 @@ export const SpreadSheet = (
               }
 
               const redoPaste = () => {
-                drawing_area.fromJSON(nextSankey, false)
+                drawing_area.fromJSON(nextSankey,{}, false)
                 drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
                 app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()

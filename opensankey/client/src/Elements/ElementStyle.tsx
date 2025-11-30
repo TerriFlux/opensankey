@@ -548,7 +548,7 @@ export class Class_ContainerStyle extends Class_ContainerAttribute {
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_ContainerElement}  = {};
+  private _references: { [_: string]: Class_ContainerElement}  = {}
   private _customisable_attribute: {
     [K in ZDTAttributeKey]: boolean
   }
@@ -598,7 +598,7 @@ export class Class_ContainerStyle extends Class_ContainerAttribute {
   public delete() {
     if (this._is_deletable) {
       // Faire en sorte que tous les containers utilisant ce style reviennent au style par défaut
-      Object.values(this._references).forEach(ref => {
+      Object.values(this._references).forEach(_ => {
         // Implémenter useDefaultStyle dans Class_ContainerElement
         // ref.useDefaultStyle()
       })

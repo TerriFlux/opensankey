@@ -55,7 +55,7 @@ import {
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_ProcessFunctions } from '../../Modules'
+import { FType_ProcessFunctions, default_actions_type } from '../../Modules'
 
 
 // COMPONENTS ===========================================================================
@@ -177,7 +177,11 @@ export const ModalTuto = ({
                   variant='toolbar_button_6'
                   fontSize='1rem'
                   onClick={() => {
-                    processFunctions.launch('Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'))
+                    const action_type = default_actions_type
+                    processFunctions.launch(
+                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'),
+                      action_type
+                    )
                     UploadExemple(
                       'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'), new_data
                     )
@@ -194,7 +198,10 @@ export const ModalTuto = ({
                   variant='toolbar_button_6'
                   fontSize='1rem'
                   onClick={() => {
-                    processFunctions.launch('Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'))
+                    processFunctions.launch(
+                      'Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'),
+                      default_actions_type
+                    )
                     UploadExemple(
                       'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'), new_data
                     )

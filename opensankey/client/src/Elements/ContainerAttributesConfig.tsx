@@ -3,7 +3,7 @@
 // Source unique de vérité pour types, valeurs par défaut, setters, labels, tooltips ET actions
 // ==================================================================================================
 
-import { Class_ContainerElement } from "./TextZone"
+import { Class_ContainerElement } from './TextZone'
 
 // Types spécifiques
 export type Type_VerticalAlignment = 'left' | 'right'

@@ -36,6 +36,8 @@ import os
 import sys
 import json
 
+from submodules.SankeyExcelParser.SankeyExcelParser.io_base import IOJson
+
 # Local libs ------------------------------------------------------------------
 try:
     import SankeyExcelParser.io_excel_constants as io_const
@@ -47,9 +49,8 @@ from os import listdir
 from parameterized import parameterized
 
 # Local modules ---------------------------------------------------------------
-from SankeyExcelParser.io_excel import IOExcel
+from SankeyExcelParser.io_base import IOExcel
 from SankeyExcelParser import su_trace as su_trace
-from opensankey.server import converter
 
 
 # Constants -------------------------------------------------------------------
@@ -219,9 +220,10 @@ class DictResultTest(unittest.TestCase):
             return
         # Read sankey struct
         io_excel = IOExcel()
-        io_excel.load_sankey_from_excel_file(os.path.join(TESTS_DIR, file_name))
+        io_excel.load_sankey(os.path.join(TESTS_DIR, file_name))
         # Convert in json format
-        sankey_json = converter.extract_json_from_sankey(io_excel.sankey)
+        io_json = IOJson(io_excel.sankey)
+        sankey_json = io_json.get_dict()
         if not self.generate_results:
             self.check_dict(sankey_json, expected_results)
         else:

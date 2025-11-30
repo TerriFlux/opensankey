@@ -30,6 +30,7 @@ import { Box, Menu, MenuButton, MenuItem, MenuList } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { actions_type, default_actions_type } from '../../Modules'
 
 /**
  * Description placeholder
@@ -50,7 +51,7 @@ type ExempleItemTypes = {
   new_data: Class_ApplicationData,
   exemple_menu: JSX.Element | ExempleMenuTypes,
   current_path: string,
-  launch: (s: string) => void,
+  launch: (s: string,actions:actions_type) => void,
   initial_list: boolean
 }
 
@@ -166,7 +167,7 @@ const ExempleItem = (
             // Set app in selection mode
             new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
-              launch(path)
+              launch(path,default_actions_type)
             }
             UploadExemple(path, new_data)
           }

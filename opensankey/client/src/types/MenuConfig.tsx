@@ -60,11 +60,6 @@ export type Type_AdditionalMenus = {
   advanced_appearence_content: JSX.Element[],
   advanced_label_content: JSX.Element[],
 
-  context_node_order: string[],
-  additional_context_node_element: { [_: string]: JSX.Element },
-  // context_link_order: string[],
-  // additional_context_link_element: { [_: string]: JSX.Element }
-
   // Links
   additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
@@ -74,19 +69,12 @@ export type Type_AdditionalMenus = {
   // Preferences
   additional_preferences: JSX.Element[],
 
-  // Other menus
-  additional_file_save_json_option: JSX.Element[],
-  additional_file_load_json_option: JSX.Element[],
   additional_file_export_item: JSX.Element[],
-
 
   additional_nav_item: JSX.Element[],
 
   formations_menu: object,
   template_module_key: string[]
-
-
-
 }
 
 export type keyTypeConfig = 'data' | 'context' | 'style'
@@ -100,6 +88,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Modal - Saving & Loading
   ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_excel_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -410,16 +399,12 @@ export class Class_MenuConfig {
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
-    // context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'zIndex', 'mask_label', 'edit_value', 'sep_3', 'aasign_tag', 'sep_4', 'drag_link_data', 'drag_apparence', 'drag_tag'],
-    // additional_context_link_element: {},
-    context_node_order: [],
-    additional_context_node_element: {},
     // Preferences
     additional_preferences: [],
 
 
-    additional_file_save_json_option: [],
-    additional_file_load_json_option: [],
+    // additional_file_save_json_option: [],
+    // additional_file_load_json_option: [],
     additional_file_export_item: [],
 
     additional_nav_item: [],
@@ -532,6 +517,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Saving & Loading
       ref_setter_show_modal_excel_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_excel_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_excel_reading_process: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_json_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -584,6 +570,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
     // -- Saving & Loading
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)

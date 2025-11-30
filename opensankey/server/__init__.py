@@ -12,12 +12,6 @@ def create_app():
 
     # Blueprint for OpenSankey part of app
     from .views import opensankey
-    from .views import converter_funct
-    from .converter import extract_json_from_sankey
-    from .converter import extract_sankey_from_json
-
-    converter_funct["extract_json_from_sankey"] = extract_json_from_sankey
-    converter_funct["extract_sankey_from_json"] = extract_sankey_from_json
     app.register_blueprint(opensankey)
 
     # 404 handler

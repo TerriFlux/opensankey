@@ -24,7 +24,6 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
@@ -38,32 +37,6 @@ declare const window: Window &
     }
   }
 
-export type Type_SaveDiagramOptions = {
-  keep_siblings: boolean,
-  with_values: boolean,
-  save_only_visible_elements: boolean,
-  save_only_elements_with_tags: boolean,
-  mode_compressed: boolean
-}
-
-export type Type_OpenDiagramOptions = {
-}
-
-export const default_keep_siblings = false
-export const default_save_with_values = true
-export const default_save_only_visible_elements = false
-export const default_save_only_elements_with_tags = false
-export const default_save_compressed = false
-
-export const default_save_JSON_options: Type_SaveDiagramOptions = {
-  keep_siblings: default_keep_siblings,
-  with_values: default_save_with_values,
-  save_only_visible_elements: default_save_only_visible_elements,
-  save_only_elements_with_tags: default_save_only_elements_with_tags,
-  mode_compressed: default_save_compressed 
-}
-export const default_open_JSON_options: Type_OpenDiagramOptions = { 
-}
 export const default_file_name = 'Diagramme de Sankey'
 
 export const default_toast_duration: number = 1000 // 1sec
@@ -447,22 +420,13 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
     advanced_appearence_content: [],
     advanced_label_content: [],
 
-    // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
     additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
-    // context_link_order: ['inverse', 'sep_1', 'style', 'sep_2', 'changePlan', 'mask_attr', 'edit_value', 'sep_3', 'assign_tag', 'sep_4'],
-    // additional_context_link_element: {},
-    context_node_order: ['edition_hierarchy','nav_hierarchy', 'sep_1', 'align', 'edit_name', 'sep_2', 'style', 'mask_node_attr', 'sep_3', 'reorg', 'change_plan', 'select_link',],
-    additional_context_node_element: {},
 
-    // Preferences
     additional_preferences: [],
 
-
-    additional_file_save_json_option: [],
-    additional_file_load_json_option: [],
     additional_file_export_item: [],
 
     additional_nav_item: [],

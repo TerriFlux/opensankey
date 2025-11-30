@@ -186,12 +186,13 @@ export const updateElements = (
 export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
   new_data,
   title,
-  collapse = true,
+  is_open = true,
+  with_border = true,
   children
 }) => {
   // Hooks controlling collapse opening, initiallised at true
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: collapse })
-  return <Box layerStyle='menu_sub_section'>
+  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: is_open })
+  return <Box layerStyle={with_border?'menu_sub_section':'menu_sub_section_without_border'}>
     <Box layerStyle='menu_sub_section_head'>
       <Button variant='menu_sub_section_collapse_button'
         size='sizeCollapseButton'
@@ -754,10 +755,10 @@ export const MenuSectionCheckbox = ({
     <Box layerStyle='menu_sub_section'>
       <Box layerStyle='menu_sub_section_head'>
         <Button variant='menu_sub_section_collapse_button'
-        size='sizeCollapseButton'
-        onClick={onToggle}>
-        {isOpen ? icon_collapse_up : icon_collapse_down}
-      </Button>
+          size='sizeCollapseButton'
+          onClick={onToggle}>
+          {isOpen ? icon_collapse_up : icon_collapse_down}
+        </Button>
         <Checkbox
           isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
           isIndeterminate={is_attribute_indetermined}
@@ -780,13 +781,13 @@ export const MenuSectionCheckbox = ({
           )}
         </Checkbox>
       </Box>
-    <Collapse in={isOpen} animateOpacity>
-      <Box
-        layerStyle='menuconfigpanel_grid'
-      >
-        {children}
-      </Box>
-    </Collapse>
+      <Collapse in={isOpen} animateOpacity>
+        <Box
+          layerStyle='menuconfigpanel_grid'
+        >
+          {children}
+        </Box>
+      </Collapse>
     </Box>
   )
 }

@@ -60,7 +60,6 @@ import { clickSavePDF } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
 import {
-  decompressUploadedFileUniversal,
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -70,12 +69,6 @@ import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { FType_ProcessFunctions } from '../../Modules'
 
 /*************************************************************************************************/
-type DiagramConfig = {
-  data_type?: boolean
-  // Ajoutez d'autres propriétés du diagramme si nécessaire
-}
-
-type DataType = boolean | Record<string, boolean>
 
 declare const window: Window &
   typeof globalThis & {
@@ -87,7 +80,7 @@ declare const window: Window &
       toolbar?: boolean
       data_type?: boolean
       // Indexer pour accéder aux diagrammes dynamiquement
-      [key: string]: any // ou mieux : DiagramConfig | string | boolean | Record<string, string> | undefined
+      [key: string]: string | boolean | Record<string, string> | undefined
     }
   }
 
@@ -109,6 +102,7 @@ export const setDiagram = (
       console.log('data_type: ' + data_type_value)
       
       // Appliquer le data_type au sankey global
+      //@ts-expect-error xxx
       window.sankey.data_type = data_type_value
     }
   }
@@ -211,6 +205,7 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
   const {
     ref_setter_show_modal_templates_lib,
     ref_setter_show_modal_excel_loader, ref_setter_show_modal_excel_saver,
+    ref_setter_show_modal_file_converter,
     ref_setter_show_modal_json_saver, ref_setter_show_modal_json_loader,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
@@ -295,7 +290,6 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
-
       <MenuItem
         onClick={() => {
           if (_load_sankeymatic.current) {
@@ -347,6 +341,12 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
           })()
           reader.readAsText(files[0])
         }} />
+      <MenuItem
+        onClick={() => ref_setter_show_modal_file_converter.current!(true)}
+      >
+        {new_data.icon_library.icon_open_sankey_pickle}
+        {t('Menu.format_converter')}
+      </MenuItem>
     </MenuList>
   </ChakraMenu>
 

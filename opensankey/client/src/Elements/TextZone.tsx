@@ -68,9 +68,9 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     // 🆕 Créer l'instance de Class_ContainerAttribute
     this._container_attributes = new Class_ContainerAttribute()
     this._style = [drawing_area.sankey.default_container_style],
-      this._display = {
-        position: structuredClone(default_element_position as Type_ElementPosition),
-      }
+    this._display = {
+      position: structuredClone(default_element_position as Type_ElementPosition),
+    }
     this._title = 'Zone de texte ' + this.id
     this._content = default_container_content
     this._is_image = default_container_is_image
@@ -600,26 +600,26 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     // Appliquer les marges selon la position
     if (this.at_extremity_of_attached_nodes) {
       switch (this.extremity_position) {
-        case 'top':
-          this._display.position.y = min_y - this.label_height - this.margin_bottom
-          this._display.position.x = min_x - this.margin_left
-          this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
-          break
-        case 'bottom':
-          this._display.position.y = max_y + this.margin_top
-          this._display.position.x = min_x - this.margin_left
-          this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
-          break
-        case 'left':
-          this._display.position.x = min_x - this.label_width - this.margin_right
-          this._display.position.y = min_y - this.margin_top
-          this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
-          break
-        case 'right':
-          this._display.position.x = max_x + this.margin_left
-          this._display.position.y = min_y - this.margin_top
-          this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
-          break
+      case 'top':
+        this._display.position.y = min_y - this.label_height - this.margin_bottom
+        this._display.position.x = min_x - this.margin_left
+        this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+        break
+      case 'bottom':
+        this._display.position.y = max_y + this.margin_top
+        this._display.position.x = min_x - this.margin_left
+        this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+        break
+      case 'left':
+        this._display.position.x = min_x - this.label_width - this.margin_right
+        this._display.position.y = min_y - this.margin_top
+        this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+        break
+      case 'right':
+        this._display.position.x = max_x + this.margin_left
+        this._display.position.y = min_y - this.margin_top
+        this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+        break
       }
     } else {
       // Mode englobant : appliquer les marges sur tous les côtés

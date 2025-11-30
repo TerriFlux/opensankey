@@ -10,12 +10,61 @@ import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
 import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
 import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
-import { EXCEL_ATTRIBUTES_CONFIG } from '../components/dialogs/ExcelModalSaver'
 import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
 import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
+import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
 
+interface TranslationItem {
+  en: string
+  fr: string
+  [key: string]: unknown
+}
+
+interface TranslationConfig {
+  [key: string]: TranslationItem | TranslationConfig
+}
+
+/**
+ * Convertit le format { key: { en: '...', fr: '...' } }
+ * en format i18next { en: { translation: { key: '...' } }, fr: { translation: { key: '...' } } }
+ */
+const convertToI18nFormat = (
+  config: TranslationConfig,
+  path: string[] = []
+): { en: Record<string, unknown>; fr: Record<string, unknown> } => {
+  const result = {
+    en: {} as Record<string, unknown>,
+    fr: {} as Record<string, unknown>
+  }
+
+  Object.entries(config).forEach(([key, value]) => {
+    if (value && typeof value === 'object' && 'en' in value && 'fr' in value) {
+      // C'est une feuille avec traductions
+      result.en[key] = value.en
+      result.fr[key] = value.fr
+    } else if (value && typeof value === 'object') {
+      // C'est un objet imbriqué, récursion
+      const nested = convertToI18nFormat(value as TranslationConfig, [...path, key])
+      result.en[key] = nested.en
+      result.fr[key] = nested.fr
+    }
+  })
+
+  return result
+}
+
+// Convertir les traductions
+const converted = convertToI18nFormat(translations as unknown as TranslationConfig)
+export const resources_process_dialog = {
+  en: {
+    translation: converted.en
+  },
+  fr: {
+    translation: converted.fr
+  }
+}
 interface TranslationSection {
   tooltips?: Record<string, string>
   [key: string]: string | TranslationSection | Record<string, string> | undefined
@@ -51,10 +100,10 @@ interface AttributeConfig {
   category?: string
 }
 
-interface ExcelAttributeConfig {
-  labels: LanguageLabels
-  tooltips: LanguageTooltips
-}
+// interface ExcelAttributeConfig {
+//   labels: LanguageLabels
+//   tooltips: LanguageTooltips
+// }
 
 interface ActionConfig {
   labels: LanguageLabels
@@ -70,29 +119,29 @@ interface MenuConfig {
 type SectionType = 'labels' | 'apparence'
 type TargetType = 'Flux' | 'Noeud'
 
-const use_excel_config = (resources: I18nResources): void => {
-  // Initialiser avec le bon type
-  const menuEn = resources.en.translation['Menu'] as TranslationSection
-  const menuFr = resources.fr.translation['Menu'] as TranslationSection
+// const use_excel_config = (resources: I18nResources): void => {
+//   // Initialiser avec le bon type
+//   const menuEn = resources.en.translation['Menu'] as TranslationSection
+//   const menuFr = resources.fr.translation['Menu'] as TranslationSection
   
-  menuEn['saveExcel'] = { tooltips: {} }
-  menuFr['saveExcel'] = { tooltips: {} }
+//   menuEn['saveExcel'] = { tooltips: {} }
+//   menuFr['saveExcel'] = { tooltips: {} }
   
-  const excelConfig = EXCEL_ATTRIBUTES_CONFIG as Record<string, ExcelAttributeConfig>
+//   const excelConfig = EXCEL_ATTRIBUTES_CONFIG as Record<string, ExcelAttributeConfig>
   
-  Object.entries(excelConfig).forEach(([attributeKey, config]) => {
-    const { labels, tooltips } = config
-    const saveExcelEn = menuEn['saveExcel'] as TranslationSection
-    const saveExcelFr = menuFr['saveExcel'] as TranslationSection
+//   Object.entries(excelConfig).forEach(([attributeKey, config]) => {
+//     const { labels, tooltips } = config
+//     const saveExcelEn = menuEn['saveExcel'] as TranslationSection
+//     const saveExcelFr = menuFr['saveExcel'] as TranslationSection
     
-    saveExcelEn[attributeKey] = labels.en
-    saveExcelFr[attributeKey] = labels.fr
+//     saveExcelEn[attributeKey] = labels.en
+//     saveExcelFr[attributeKey] = labels.fr
     
-    // Ajouter les tooltips
-    saveExcelEn.tooltips![attributeKey] = tooltips.en
-    saveExcelFr.tooltips![attributeKey] = tooltips.fr
-  })
-}
+//     // Ajouter les tooltips
+//     saveExcelEn.tooltips![attributeKey] = tooltips.en
+//     saveExcelFr.tooltips![attributeKey] = tooltips.fr
+//   })
+// }
 
 // Version mise à jour pour MenuConfig
 export const use_context_config = (
@@ -247,7 +296,7 @@ export const deep_assign_resources = (
 // Application des configurations de traduction
 use_link_config(resources_flux as unknown as I18nResources)
 use_node_config(resources_nodes as unknown as I18nResources)
-use_excel_config(resources_app_elements as unknown as I18nResources)
+// use_excel_config(resources_app_elements as unknown as I18nResources)
 use_context_config(
   resources_app_elements as unknown as I18nResources,
   ZDD_MENU_CONFIG as unknown as MenuConfig,
@@ -274,7 +323,7 @@ deep_assign_resources(resources_welcome as Record<string, unknown>, resources_op
 deep_assign_resources(resources_guided_tour as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_loading_toasts as Record<string, unknown>, resources_opensankey)
 deep_assign_resources(resources_template as Record<string, unknown>, resources_opensankey)
-
+deep_assign_resources(resources_process_dialog as Record<string, unknown>, resources_opensankey)
 // Update traduction
 const resources = resources_opensankey // /!\ i18next accept only var with name "resources"
 i18next

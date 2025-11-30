@@ -2769,6 +2769,10 @@ const layerStyles = {
     gridRowGap: '0.2rem',
     padding: '0.2rem'
   },
+  menu_sub_section_without_border: {
+    display: 'grid',
+    padding: '0.2rem'
+  },
 
   menu_sub_section_head: {
     display: 'grid',

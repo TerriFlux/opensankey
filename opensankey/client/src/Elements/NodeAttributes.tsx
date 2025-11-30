@@ -203,7 +203,7 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
     node:Class_NodeElement|null,
     default_style:Class_NodeStyle| null
   ): boolean {
-    if (node) return value !== undefined && value !== "" && value !== node.getStyleProperty(key)
+    if (node) return value !== undefined && value !== '' && value !== node.getStyleProperty(key)
     else if (default_style) return value !== undefined && value !== default_style[key]
     else return value !== undefined && value !== NODES_ATTRIBUTES_CONFIG[key].default
   }

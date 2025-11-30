@@ -36,14 +36,12 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig } from '../types/MenuConfig'
-import { default_file_name, default_open_JSON_options, default_save_JSON_options, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON, Type_OpenDiagramOptions, Type_SaveDiagramOptions } from './Utils'
-import { JSONtoExcel } from '../Persistence/SankeyPersistence'
+import { default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
-import { ExcelOptionType } from '../components/dialogs/ExcelModalSaver'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -99,7 +97,7 @@ initializeTooltipSystem()
  * @class Class_ApplicationData
  */
 export class Class_ApplicationData {
-  
+
   protected _has_sankey_dev: boolean = false
   public get has_sankey_dev() { return this._has_sankey_dev }
   public set has_sankey_dev(_) { this._has_sankey_dev = _ }
@@ -128,10 +126,6 @@ export class Class_ApplicationData {
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
-
-  // Save JSON options
-  public options_save_json: Type_SaveDiagramOptions = default_save_JSON_options
-  public options_open_json: Type_OpenDiagramOptions = default_open_JSON_options
 
   // Attributes to transfer between sankeys
   public data_var_to_update: string[] = []
@@ -214,7 +208,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   //@ts-expect-error xxx
-  protected _t: TFunction = ()=>null//useTranslation('translation', { useSuspense: false }).t //traductor
+  protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
 
   /**
    * i18n saved
@@ -222,7 +216,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   //@ts-expect-error xxx
-  protected _i18n: i18n = ()=>null//useTranslation('translation', { useSuspense: false }).i18n //traductor
+  protected _i18n: i18n = () => null//useTranslation('translation', { useSuspense: false }).i18n //traductor
 
   /**
    * Path to OpenSankey logo
@@ -281,7 +275,7 @@ export class Class_ApplicationData {
    * @private
    * @memberof Class_ApplicationData
    */
-  protected _toast :CreateToastFnReturn | null  = null
+  protected _toast: CreateToastFnReturn | null = null
 
   /**
    * Queue of waiting processes for toast
@@ -306,6 +300,8 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   private _steps: StepType[] = []
+
+
 
   // CONSTRUCTOR ========================================================================
 
@@ -365,11 +361,11 @@ export class Class_ApplicationData {
    * Use a waiting spinner
    * @memberof Class_ApplicationData
    */
-  public reset() {
+  public reset(kwargs:Type_JSON) {
     this.sendWaitingToast(
       () => {
         // Reset
-        this._reset()
+        this._reset(kwargs)
       },
       {
         success: {
@@ -388,7 +384,7 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _reset() {
+  protected _reset(_?:Type_JSON) {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
@@ -418,7 +414,7 @@ export class Class_ApplicationData {
 
     // Reset Class_ApplicationData instance
     if (redraw) {
-      this.reset()
+      this.reset({})
       this.draw()
     }
 
@@ -474,10 +470,10 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveToJSON() {
+  public saveToJSON(kwargs?:Type_JSON) {
     this.sendWaitingToast(
       () => {
-        this._saveToJSON()
+        this._saveToJSON(kwargs)
       },
       {
         success: {
@@ -497,20 +493,20 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _saveToJSON() {
+  protected _saveToJSON(kwargs?:Type_JSON) {
     // Convert all datas as JSON
     this.drawing_area.bypass_redraws = true
-    const json_data = this._toJSON()
+    const json_data = this._toJSON(kwargs)
     this.drawing_area.draw()
-    if (this.options_save_json?.mode_compressed) {
+    if ((kwargs && kwargs['mode_compressed'])) {
       const compressed = compressJSONToGzip(json_data)
       const blob = new Blob([compressed as BlobPart], { type: 'application/gzip' })
-      const gzFilename = this._file_name.endsWith('.json') 
+      const gzFilename = this._file_name.endsWith('.json')
         ? this._file_name.replace('.json', '.json.gz')
         : this._file_name + '.json.gz'
-      
+
       console.log(`💾 Sauvegarde compressée: ${gzFilename} (${(blob.size / 1024).toFixed(1)}KB)`)
-      FileSaver.saveAs(blob, gzFilename)      
+      FileSaver.saveAs(blob, gzFilename)
     } else {
       const json_data_str = JSON.stringify(json_data, null, 2)
       const blob = new Blob([json_data_str], { type: 'text/plain;charset=utf-8' })
@@ -529,13 +525,13 @@ export class Class_ApplicationData {
    */
   public saveToExcel(
     url_prefix: string,
-    option:ExcelOptionType
+    kwargs?:Type_JSON
   ) {
     this.sendWaitingToast(
       () => {
         this._saveToExcel(
           url_prefix,
-          option
+          kwargs
         )
       },
       {
@@ -559,34 +555,27 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _saveToExcel(
-    url_prefix: string,
-    save_options:ExcelOptionType
+    name: string,
+    args?: Type_JSON
   ) {
-    JSONtoExcel(
-      this._toJSON(),
-      url_prefix,
-      this._file_name,
-      save_options
-    )
+  }
+
+  public toJSON(kwargs?: Type_JSON) {
+    return this._toJSON(kwargs)
   }
 
   /**
    * Create json file that contains all application datas
    * @memberof Class_ApplicationData
    */
-  protected _toJSON() {
-    // Create json struct
+  protected _toJSON(kwargs?:Type_JSON) {
     const json_object = {} as Type_JSON
-    // App language
     if (this._language !== undefined)
       json_object['language'] = this._language
-    //File name
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
-
-    // Dump with drawing area & its content in json struct
     return {
       ...json_object,
-      ...this.drawing_area.toJSON(this.options_save_json)
+      ...this.drawing_area.toJSON(kwargs)
     }
   }
 
@@ -601,6 +590,7 @@ export class Class_ApplicationData {
    */
   public fromJSON(
     json_object: Type_JSON,
+    kwargs?:Type_JSON,
     draw: boolean = true
   ) {
     this.sendWaitingToast(
@@ -608,10 +598,10 @@ export class Class_ApplicationData {
         // Always bypass redrawings
         this._drawing_area.bypass_redraws = true
         // Reset everything
-        this._reset()
+        this._reset(kwargs)
         this._drawing_area.bypass_redraws = true
         // Read json file
-        this._fromJSON(json_object)
+        this._fromJSON(json_object,kwargs)
         // Post processing & menu updating
         this._afterFromJSON()
         // Then draw if asked
@@ -630,10 +620,11 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _fromJSON(
-    json_object: Type_JSON
+    json_object: Type_JSON,
+    kwargs?:Type_JSON
   ) {
     // Update drawing area
-    this._drawing_area.fromJSON(json_object)
+    this._drawing_area.fromJSON(json_object,kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
   }
@@ -648,10 +639,10 @@ export class Class_ApplicationData {
   public readUrlJSON(url_data: string) {
     const root = window.location.origin
     const url = root + this.url_prefix + 'url/load_json'
-   
+
     const form_data = new FormData()
     form_data.append('url', url_data)
-   
+
     fetch(url, {
       method: 'POST',
       body: form_data
@@ -666,18 +657,18 @@ export class Class_ApplicationData {
         // Convertir en text pour tester JSON
         const decoder = new TextDecoder()
         const text = decoder.decode(arrayBuffer)
-        
+
         // Tester si c'est du JSON valide
         try {
           const json_data = JSON.parse(text)
           this.fromJSON(json_data)
         } catch (jsonError) {
           console.log('Content is not valid JSON, attempting decompression...')
-            
+
           // Créer un File à partir de l'ArrayBuffer pour la décompression
           const filename = url_data.split('/').pop() || 'file'
           const file = new File([arrayBuffer], filename)
-            
+
           decompressUploadedFileUniversal(file)
             .then(json_data => {
               this.fromJSON(json_data as Type_JSON)
@@ -716,13 +707,9 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public updateFromJSON(json_object: Type_JSON) {
-    this.sendWaitingToast(
-      () => {
-        // Processing
-        this._updateFromJSON(json_object)
-        this.drawing_area.draw()
-        this._menu_configuration!.updateAllMenuComponents()
-      })
+    this._updateFromJSON(json_object)
+    this.drawing_area.draw()
+    this._menu_configuration!.updateAllMenuComponents()
   }
 
   /**
@@ -730,17 +717,17 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _updateFromJSON(json_object: Type_JSON) {
+  protected _updateFromJSON(json_object: Type_JSON,_?:Type_JSON) {
     if (json_object['layout'] !== undefined) {
       const json_layout = json_object['layout'] as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       drawing_area_from_layout.fromJSON(json_layout)
-      drawing_area_from_layout.sankey.nodes_list.forEach(n=>n.setVisible())
+      drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
       this.drawing_area.updateFrom(
         drawing_area_from_layout,
-        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux','tagLevel','icon_catalog']
+        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
       )
     }
   }
@@ -761,29 +748,6 @@ export class Class_ApplicationData {
         loading: {
           title: this.t('toast.draw.loading.title'),
           desc: this.t('toast.draw.loading.desc')
-        }
-      }
-    )
-  }
-
-  /**
-   * Compute the position of everything that define the sankey diagram
-   *
-   * /!\ Add to waiting spinner queue
-   *
-   * @memberof Class_DrawingArea
-   */
-  public computeAutoFullSankey() {
-    this.sendWaitingToast(
-      () => {
-        this.drawing_area.nodePositioning.computeAutoSankeyWithToast(true,true)
-      },
-      {
-        success: {
-          title: this.t('toast.compute_auto_sankey.success.title')
-        },
-        loading: {
-          title: this.t('toast.compute_auto_sankey.loading.title')
         }
       }
     )
@@ -1055,7 +1019,6 @@ export class Class_ApplicationData {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via JSON saving button
-      app_ref.options_save_json = default_save_JSON_options
       app_ref.saveToJSON()
     }
     // event to download current sankey in Excel -------------------------------------
@@ -1063,7 +1026,7 @@ export class Class_ApplicationData {
       // Prevent default event on ctrl + shift + s
       evt.preventDefault()
       // Trigger saving via Excel saving button
-      this.saveToExcel('/opensankey/',{} as ExcelOptionType)
+      this.saveToExcel('/opensankey/', {})
     }
     // Fullscreen --------------------------------------------------------------------
     // else if (evtCtrlF) {
@@ -1218,11 +1181,11 @@ export class Class_ApplicationData {
 
   public get url_prefix(): string { return this._url_prefix }
 
-  public get logo(): string { 
-    if ( this.is_static && window.sankey && window.sankey.logo) {
+  public get logo(): string {
+    if (this.is_static && window.sankey && window.sankey.logo) {
       return window.sankey.logo
     }
-    return this._logo_opensankey 
+    return this._logo_opensankey
   }
 
   public get logo_opensankey(): string { return this._logo_opensankey }

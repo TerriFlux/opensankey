@@ -191,14 +191,14 @@ export const SankeyModalStyleNode = ({
     maxW='20%'
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_nodes_labels'}
-      content={content_node_style_context}
-      title={t('Menu.esn_labels')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
-    />
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_nodes_labels'}
+    content={content_node_style_context}
+    title={t('Menu.esn_labels')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  />
   </>
 }
 
@@ -462,15 +462,15 @@ export const SankeyModalStyleLink = ({
     customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
   />
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_modal_styles_links_labels'}
-      content={content_apparence_contenxt}
-      title={t('Menu.esf_labels')}
-      maxW='20%'
-      customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
+  <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_styles_links_labels'}
+    content={content_apparence_contenxt}
+    title={t('Menu.esf_labels')}
+    maxW='20%'
+    customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
 
-    />
+  />
   </>
 }
 
@@ -723,7 +723,7 @@ export const MenuOrderStylesOfSelectedElements = ({ app_data, nodesOrLinks }: {
   const elements = nodesOrLinks === 'nodes' ? drawing_area.selected_links_list : drawing_area.selected_nodes_list
   const style_list_to_use = elements[0]?.style.slice().reverse() ?? []
 
-  return <WrapperBoxSubSectionMenu collapse={false} new_data={app_data} title={t('Noeud.OrderStyle')} >
+  return <WrapperBoxSubSectionMenu is_open={false} new_data={app_data} title={t('Noeud.OrderStyle')} >
     <DragDropContext onDragEnd={(evt) => {
       if (evt.destination?.index == undefined)
         return //early return if problem
@@ -933,7 +933,7 @@ export const MenuOrderStylesOfSelectedContainers = ({
 
   return (
     <WrapperBoxSubSectionMenu
-      collapse={false}
+      is_open={false}
       new_data={app_data}
       title={t('Noeud.OrderStyle')}
     >

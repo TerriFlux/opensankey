@@ -40,7 +40,8 @@ export type BaseAdditionalMenusType = {
 export type FCType_WrapperBoxSubSectionMenu = {
   new_data: Class_ApplicationData
   title: string,
-  collapse?: boolean,
+  is_open?: boolean,
+  with_border?:boolean,
   children: JSX.Element
 }
 

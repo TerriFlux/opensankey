@@ -27,7 +27,7 @@ import React from 'react'
 import { 
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand, 
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat, 
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark 
+  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark,faBox,faFileExcel,faFileCode,faArrowRightArrowLeft
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { 
@@ -327,9 +327,11 @@ export class Class_IconLibrary {
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
-  protected _icon_open_sankey_json = <FontAwesomeIcon icon={faFile} />
-  protected _icon_open_sankey_excel = <FontAwesomeIcon icon={faTable} />
+  protected _icon_open_sankey_json = <FontAwesomeIcon icon={faFileCode} />
+  protected _icon_open_sankey_excel = <FontAwesomeIcon icon={faFileExcel} />
+  protected _icon_open_sankey_pickle = <FontAwesomeIcon icon={faBox} />
   protected _icon_open_sankey_sankeymatic = <FontAwesomeIcon icon={faChartSimple} />
+  protected _icon_file_converter = <FontAwesomeIcon icon={faArrowRightArrowLeft} />
 
   protected _icon_save_sankey = <FontAwesomeIcon icon={faDownload} />
   protected _icon_save_sankey_json = <FontAwesomeIcon icon={faFile} />
@@ -443,8 +445,10 @@ export class Class_IconLibrary {
   // Getters ===================================
   public get icon_new_da() { return this._icon_new_da }
   public get icon_open_sankey() { return this._icon_open_sankey }
+  public get icon_file_converter() { return this._icon_file_converter }
   public get icon_open_sankey_json() { return this._icon_open_sankey_json }
   public get icon_open_sankey_excel() { return this._icon_open_sankey_excel }
+  public get icon_open_sankey_pickle() { return this._icon_open_sankey_pickle }
   public get icon_open_sankey_sankeymatic() { return this._icon_open_sankey_sankeymatic }
   public get icon_save_sankey() { return this._icon_save_sankey }
   public get icon_save_sankey_json() { return this._icon_save_sankey_json }
