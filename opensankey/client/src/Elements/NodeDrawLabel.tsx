@@ -197,10 +197,10 @@ export class NodeDrawNameLabel {
         .on('end', ev => this.dragTextEnd(ev))
       )
       d3_selection_g_name_label?.on(
-            'mouseover',
-            (event: MouseEvent) =>
-              //@ts-expect-error xxx
-              this._node.eventMouseOver(event))
+        'mouseover',
+        (event: MouseEvent) =>
+        //@ts-expect-error xxx
+          this._node.eventMouseOver(event))
     }
   }
 

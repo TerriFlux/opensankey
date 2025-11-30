@@ -43,14 +43,7 @@ import {
   Toast,
 } from '@chakra-ui/react'
 
-
-/*************************************************************************************************/
-
-import SankeyLoad from '../../Persistence/SankeyPersistence'
 import {ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
-import { ExcelModalSaver } from '../dialogs/ExcelModalSaver'
-import { DownloadExamples } from '../../Persistence/SankeyPersistence'
-
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
@@ -67,8 +60,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { FType_ProcessFunctions } from '../../Modules'
-import { ExcelModalLoader } from '../dialogs/ExcelModalLoader'
-import { LoadJSONDialog } from '../dialogs/JSONModalLoader'
+import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -191,39 +183,39 @@ export const Menu = (
             (!app_data.is_static) ||
             (window.sankey && window.sankey.footer)
           ) ? <Box
-            display='grid'
-            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-            margin='0.2rem'
-          >
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='start'
+              display='grid'
+              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+              margin='0.2rem'
             >
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='start'
+              >
               ©
-              <img
-                width={75}
-                src={logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
+                <img
+                  width={75}
+                  src={logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
               - {t('tdr')}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              {app_name}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-            </Box>
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='end'
-              paddingRight='1.5rem'
-            >
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                {app_name}
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+              </Box>
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='end'
+                paddingRight='1.5rem'
+              >
               12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-            </Box>
-          </Box> :
+              </Box>
+            </Box> :
             <></>
           }
         </Box>
@@ -305,19 +297,35 @@ export const Menu = (
         new_data={app_data}
       />
 
-      <ExcelModalLoader
-        new_data={app_data}
-        launch={processFunction.launch}
-      />
-      <ExcelModalSaver app_data={app_data} />
-      <LoadJSONDialog app_data={app_data}/>
-      <SankeyLoad
-        new_data={app_data}
-        successAction={() => DownloadExamples(
-          processFunction.path.current,
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )}
+      <UniversalFileConverter
+        app_data={app_data}
         processFunctions={processFunction}
+        config_key={'load_json'}
+        dialog_name={'ref_setter_show_modal_json_loader'}
+      />
+      <UniversalFileConverter
+        app_data={app_data}
+        processFunctions={processFunction}
+        config_key={'load_excel'}
+        dialog_name={'ref_setter_show_modal_excel_loader'}
+      />
+      <UniversalFileConverter
+        app_data={app_data}
+        processFunctions={processFunction}
+        config_key={'universal'}
+        dialog_name={'ref_setter_show_modal_file_converter'}
+      />
+      <UniversalFileConverter
+        app_data={app_data}
+        processFunctions={processFunction}
+        config_key={'save_excel'}
+        dialog_name={'ref_setter_show_modal_excel_saver'}
+      />
+      <UniversalFileConverter
+        app_data={app_data}
+        processFunctions={processFunction}
+        config_key={'save_json'}
+        dialog_name={'ref_setter_show_modal_json_saver'}
       />
 
       {modal_support}
@@ -582,6 +590,7 @@ export const MenuDraggable = ({
   dialog_name,
   content,
   title,
+  minW = '10vw',
   maxW = '40vw',
   customPos,
 }: {
@@ -590,6 +599,7 @@ export const MenuDraggable = ({
   content: JSX.Element | JSX.Element[],
   title: string,
   maxW?: string,
+  minW?: string,
   customPos?: { x: number, y: number }
 }
 ) => {
@@ -607,6 +617,7 @@ export const MenuDraggable = ({
       layerStyle='menu_draggable_layout'
       hidden={!display_menu}
       position='absolute'
+      minW={minW}
       maxW={maxW}
       zIndex='2'
     >

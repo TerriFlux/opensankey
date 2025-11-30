@@ -841,7 +841,7 @@ export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ 
     // styles we need to apply on draggables
     ...draggableStyle
   })
-  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} collapse={false}>
+  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} is_open={false}>
     <DragDropContext onDragEnd={(evt) => {
       // Reorganise links order at drop event
       if (evt.destination && evt.destination.index !== undefined) {

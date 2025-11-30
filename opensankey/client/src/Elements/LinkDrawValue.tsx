@@ -165,8 +165,8 @@ export class LinkDrawValue {
 
         // If label is undefined or null, do nothing
         if (label_to_display) {
-            const d3_selection_g_name_label = this._link.d3_selection?.append('g')
-        .attr('id', 'g_name_label').classed('link_value', true)
+          const d3_selection_g_name_label = this._link.d3_selection?.append('g')
+            .attr('id', 'g_name_label').classed('link_value', true)
           // Create text object
           const d3_text_selection = d3_selection_g_name_label.append('text')
             .classed('link', true)
@@ -253,16 +253,16 @@ export class LinkDrawValue {
         .attr('fill-opacity', this._link.value_label_background_opacity)
         .style('stroke', 'black')
       if (this._link.value_label_background_shape=='ellipse')
-      tmp.attr('cx', (value_label_bounding_box.x - 5 + width / 2) + 'px')
-        .attr('cy', (value_label_bounding_box.y + height / 2) + 'px')
-        .attr('rx', width / 2)
-        .attr('ry', height / 2)
+        tmp.attr('cx', (value_label_bounding_box.x - 5 + width / 2) + 'px')
+          .attr('cy', (value_label_bounding_box.y + height / 2) + 'px')
+          .attr('rx', width / 2)
+          .attr('ry', height / 2)
       else
         tmp.attr('x', (value_label_bounding_box.x - 5) + 'px')
-        .attr('y', value_label_bounding_box.y + 'px')
-        .attr('width', width + 'px')
-        .attr('height', height + 'px')
-        .attr('rx', 4)        
+          .attr('y', value_label_bounding_box.y + 'px')
+          .attr('width', width + 'px')
+          .attr('height', height + 'px')
+          .attr('rx', 4)        
       // Lower label to have it on background
       d3_selection_g_name_label?.select('.value_label_background').lower()
     }

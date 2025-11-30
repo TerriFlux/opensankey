@@ -30,7 +30,7 @@ import { Box, Button } from '@chakra-ui/react'
 import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import {
-  CheckboxWithColorPicker, ElementAttrSetterNumberInput2Cols, ElementAttrSetterTextInput2Cols,
+  ElementAttrSetterNumberInput2Cols, ElementAttrSetterTextInput2Cols,
   MenuSectionCheckbox, OSTooltip, updateElements, ValueKey
 } from './MenuCommon'
 import { SankeyMenuLabelComponent } from './MenuLabel'
