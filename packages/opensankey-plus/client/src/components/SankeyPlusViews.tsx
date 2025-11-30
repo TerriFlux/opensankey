@@ -2,7 +2,6 @@
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import {
   Box,
-  Checkbox,
   Select,
   Input,
   InputGroup,
@@ -576,7 +575,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 export const SelecteurView = (
   { new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }
 ) => {
-  const { t } = new_data_plus
   const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
 
   const [s_select_or_edit, sSelectOrEdit] = useState<'edit' | 'select'>('select')
@@ -1346,7 +1344,8 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
  */
 const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }) => {
   const { t, url_prefix } = new_data_plus
-  const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
+  //const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
+  const ref_input_file = useRef<HTMLInputElement>(null)
   const [checkStatus, setCheckStatus] = useState(false)
   const [launchRetriveResult, setLaunchRetriveResult] = useState(false)
   const [file_name, set_file_name] = useState<string>('')
@@ -1372,7 +1371,7 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
   // Function to retrieve data from server & add it to data list 
   const localRetriveResust = () => {
     const root = window.location.origin
-    const url = root + url_prefix + 'excel/upload/retrieve_results'
+    const url = root + url_prefix + 'upload/retrieve_excel'
 
     const form_data = new FormData()
     const fetchData = {
@@ -1409,8 +1408,9 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
     const root = window.location.origin
     const url = root + url_prefix + 'excel/upload/launch'
     const form_data = new FormData()
+    const file = ref_input_file.current?.files?.[0]
     form_data.append(
-      'file', input_file_blob as Blob
+      'file', file as Blob
     )
     const fetchData = {
       method: 'POST',
@@ -1430,9 +1430,9 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
         type="file"
         accept='.xlsx'
         height='unset'
+        ref={ref_input_file}
         onChange={(evt: ChangeEvent) => {
           set_file_name((evt.target as HTMLFormElement).files[0].name)
-          set_input_file_blob((evt.target as HTMLFormElement).files[0])
         }}
       />
     </Box>
@@ -1500,7 +1500,7 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
               list_selected_nodes_for_unitary.current.forEach(element => {
                 local_app_data.current.createUnitaryNewView(element)
               })
-              const obj_view: Type_JSON = {}
+              //const obj_view: Type_JSON = {}
               //Object.values(local_app_data.current.views_dict).forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
               //new_data_plus.extractViewsFromJSON({ views: obj_view })
               new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
@@ -1537,7 +1537,7 @@ const CheckLoad: FC<{
   useEffect(() => {
     const interval = setInterval(() => {
       const root = window.location.origin
-      const url = root + url_prefix + 'excel/upload/check_process'
+      const url = root + url_prefix + 'upload/check_process'
       const fetchData = {
         method: 'POST',
         body: ''
@@ -1564,47 +1564,47 @@ const CheckLoad: FC<{
   return <></>
 }
 
-export const MenuEnregistrerViewOSP: FC<BaseComponentPropsPlus> = ({
-  new_data_plus
-}) => {
-  const [, setCount] = useState(0)
-  const { t } = new_data_plus
-  new_data_plus.menu_configuration_osp.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
+// export const MenuEnregistrerViewOSP: FC<BaseComponentPropsPlus> = ({
+//   new_data_plus
+// }) => {
+//   const [, setCount] = useState(0)
+//   const { t } = new_data_plus
+//   new_data_plus.menu_configuration_osp.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
 
-  return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isChecked={
-      new_data_plus.options_save_json.only_current_view
-    }
-    onChange={(evt) => {
-      new_data_plus.options_save_json.only_current_view = evt.target.checked
-      new_data_plus.menu_configuration.updateComponentSaveDiagramJSON()
-    }}>
-    <OSTooltip label={t('view.tooltips.buttonExportView')}>
-      {t('view.export')}
-    </OSTooltip>
-  </Checkbox> : <></>
-}
+//   return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
+//     variant='menuconfigpanel_option_checkbox'
+//     isChecked={
+//       new_data_plus.options_save_json.only_current_view
+//     }
+//     onChange={(evt) => {
+//       new_data_plus.options_save_json.only_current_view = evt.target.checked
+//       new_data_plus.menu_configuration.updateComponentSaveDiagramJSON()
+//     }}>
+//     <OSTooltip label={t('view.tooltips.buttonExportView')}>
+//       {t('view.export')}
+//     </OSTooltip>
+//   </Checkbox> : <></>
+// }
 
-export const MenuLoadViewOSP: FC<BaseComponentPropsPlus> = ({
-  new_data_plus
-}) => {
-  const [, setCount] = useState(0)
-  const { t } = new_data_plus
-  new_data_plus.menu_configuration_osp.ref_to_load_diagram_only_view_updater.current = () => setCount(a => a + 1)
+// export const MenuLoadViewOSP: FC<BaseComponentPropsPlus> = ({
+//   new_data_plus
+// }) => {
+//   const [, setCount] = useState(0)
+//   const { t } = new_data_plus
+//   new_data_plus.menu_configuration_osp.ref_to_load_diagram_only_view_updater.current = () => setCount(a => a + 1)
 
-  return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
-    variant='menuconfigpanel_option_checkbox'
-    isChecked={
-      new_data_plus.options_open_json.only_current_view
-    }
-    onChange={(evt) => {
-      new_data_plus.options_open_json.only_current_view = evt.target.checked
-      new_data_plus.menu_configuration.updateComponentLoadDiagramJSON()
-    }}>
-    <OSTooltip label={t('view.tooltips.buttonImportViewOnly')}>
-      {t('view.view_import')}
-    </OSTooltip>
-  </Checkbox> : <></>
-}
+//   return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
+//     variant='menuconfigpanel_option_checkbox'
+//     isChecked={
+//       new_data_plus.options_open_json.only_current_view
+//     }
+//     onChange={(evt) => {
+//       new_data_plus.options_open_json.only_current_view = evt.target.checked
+//       new_data_plus.menu_configuration.updateComponentLoadDiagramJSON()
+//     }}>
+//     <OSTooltip label={t('view.tooltips.buttonImportViewOnly')}>
+//       {t('view.view_import')}
+//     </OSTooltip>
+//   </Checkbox> : <></>
+// }
 

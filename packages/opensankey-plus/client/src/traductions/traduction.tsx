@@ -6,7 +6,6 @@ import { deep_assign_resources, resources_opensankey, use_context_config, I18nRe
 import { resources_app_elements } from './traduction_app_elements'
 import { resources_template } from './traduction_templates'
 import { createZDDMenuConfigPlus, createNodeMenuConfigPlus } from '../components/ContextMenuConfigs'
-import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 
 //@ts-expect-error xxx
 use_context_config(resources_opensankey as unknown as I18nResources, createZDDMenuConfigPlus(), 'ContextMenuZDD')

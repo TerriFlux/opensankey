@@ -48,19 +48,16 @@ import {
 } from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
 import {
-  ButtonNodeContextCreateUnitaryView,
   NodeHyperLinkOSP,
   NodeIconOSP
 } from './components/SankeyPlusNodes'
 
 import {
   ModalTransparentViewAttrOSP,
-  MenuEnregistrerViewOSP,
   ModalViewNotSavedOSP,
   BannerViewsOSP,
   ViewsConfig,
   ModalCreateUnitaryViewOSP,
-  MenuLoadViewOSP,
 } from './components/SankeyPlusViews'
 
 import {
@@ -83,10 +80,8 @@ import {
 } from './components/UtilsOSP'
 import { SankeyMenuConfigurationLevelTags } from './components/SankeyPlusMenuConfigurationLevlTags'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
-import { SupplyUseModelisationProd } from './components/SankeyReconciliation'
-import { Button, Menu, MenuButton, MenuList } from '@chakra-ui/react'
-import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
+import { UniversalFileConverter } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -150,39 +145,21 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   />
 
   //Context node
-  if (new_data_plus.has_sankey_plus) {
-    additionalMenus.current.additional_context_node_element['osp_context'] = <Menu placement='end'>
-      <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
-        {t('Noeud.osp_context')}
-      </MenuButton>
-      <MenuList>
-        <ButtonNodeContextCreateUnitaryView app_data={new_data_plus} />
-      </MenuList>
-    </Menu>
-  }
+  // if (new_data_plus.has_sankey_plus) {
+  //   additionalMenus.current.additional_context_node_element['osp_context'] = <Menu placement='end'>
+  //     <MenuButton variant='contextmenu_button' as={Button} rightIcon={<ChevronRightIcon />} className="dropdown-basic">
+  //       {t('Noeud.osp_context')}
+  //     </MenuButton>
+  //     <MenuList>
+  //       <ButtonNodeContextCreateUnitaryView app_data={new_data_plus} />
+  //     </MenuList>
+  //   </Menu>
+  // }
 
   // Get index of seprator in context node that come after masking node shape/label so we can then insert a button to mask value (OSP functionality)
-  const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
-  additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
+  // const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
+  // additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
 
-  //additionalMenus.current.additional_context_link_element['assign_tag'] = <ButtonLinkContextAssignTag new_data={new_data_plus} />
-
-  // Insert OSP Button at a specific place in the link context menu
-  // const idx_sep_4 = additionalMenus.current.context_link_order.indexOf('sep_4')
-  // additionalMenus.current.context_link_order.splice(idx_sep_4, 0, 'assign_tag')
-
-
-  // Addition chackbox for dialog save JSON dagram
-  additionalMenus.current.additional_file_save_json_option.push(
-    <MenuEnregistrerViewOSP
-      new_data_plus={new_data_plus}
-    />
-  )
-  additionalMenus.current.additional_file_load_json_option.push(
-    <MenuLoadViewOSP
-      new_data_plus={new_data_plus}
-    />
-  )
   additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
   additionalMenus.current.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
 
@@ -311,10 +288,11 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
     />,
-
-    <SupplyUseModelisationProd
-      application_data_mfa={new_data_plus}
-      launch={processFunctions.launch}
+    <UniversalFileConverter
+      app_data={new_data_plus}
+      processFunctions={processFunctions}
+      config_key={'reconciliation'}
+      dialog_name={'ref_setter_show_reconciliation'}
     />
   ]
 

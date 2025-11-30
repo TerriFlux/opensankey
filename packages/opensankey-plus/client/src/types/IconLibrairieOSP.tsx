@@ -29,7 +29,7 @@ import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngro
 import { Class_IconLibrary } from '../deps/OpenSankey/css/IconLibrairie'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaFilter, FaPalette, FaRandom } from 'react-icons/fa'
+import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom } from 'react-icons/fa'
 
 // Hand made icon ===========================================================================
 const logo_object = <svg

@@ -9,11 +9,9 @@
 import { Class_ZoneSelectionOSP } from './SelectionZoneOSP'
 import {
   default_main_sankey_id,
-  default_save_JSON_options,
   getStringFromJSON,
   getStringOrUndefinedFromJSON,
   Type_JSON,
-  Type_SaveDiagramOptions
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy, getArrayFromJSON } from '../components/UtilsOSP'
 import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
@@ -102,12 +100,12 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
   /**
    * Setting value of drawing area and substructur from JSON
    *
-   * @param {Type_SaveDiagramOptions} [options=default_save_JSON_options]
+   * @param {Type_JSON} [kwargs]
    * @return {*}
    * @memberof Class_DrawingAreaOSP
    */
-  public toJSON(options: Type_SaveDiagramOptions = default_save_JSON_options) {
-    const json_entry: Type_JSON = super.toJSON(options)
+  public toJSON(kwargs?:Type_JSON) {
+    const json_entry: Type_JSON = super.toJSON(kwargs)
 
     if (this.name != default_main_sankey_id) json_entry['name'] = this.name
     if (Object.keys(this._heredited_attr).length > 0) json_entry['heredited_attr'] = this._heredited_attr
@@ -122,7 +120,7 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
    * @param {boolean} [match_and_update]
    * @memberof Class_DrawingAreaOSP
    */
-  public fromJSON(json_object: Type_JSON, match_and_update?: boolean): void {
+  public fromJSON(json_object: Type_JSON, kwargs?:Type_JSON,match_and_update?: boolean): void {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     if (
       (version === undefined) ||
@@ -130,7 +128,7 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
     ) {
       convert_data_plus_legacy(json_object) // FIXME
     }
-    super.fromJSON(json_object, match_and_update)
+    super.fromJSON(json_object, {},match_and_update)
     // New attributes
     this.name = getStringFromJSON(json_object, 'name', this.name)
     this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]

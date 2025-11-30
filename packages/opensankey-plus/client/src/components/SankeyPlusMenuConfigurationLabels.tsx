@@ -183,10 +183,10 @@ export const MenuConfigurationFreeLabelsOSP = ({
   // Options selector only for direct mode (not for style editing)
   const options_selector = !menu_for_style 
     ? app_data.drawing_area.containers_list_sorted.map((d) => ({ 
-        'label': d.title, 
-        'value': d.id, 
-        selected: d.is_selected 
-      }))
+      'label': d.title, 
+      'value': d.id, 
+      selected: d.is_selected 
+    }))
     : []
 
   const [forceUpdate, setForceUpdate] = useState(false)
@@ -606,17 +606,17 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const is_all_node_tied_to_extremity = allLabelTiedToNodesAtExtremity()
   const options_selector_node_tied = !menu_for_style 
     ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({ 
-        'label': node.name, 
-        'value': node.id, 
-        selected: list_node_tied.includes(node) 
-      }))
+      'label': node.name, 
+      'value': node.id, 
+      selected: list_node_tied.includes(node) 
+    }))
     : []
     
   const valAllLabelBorderTransparent = elements[0]?.transparent_border ?? false
   const valAllLabelDashed = elements[0]?.dashed ?? false
   const valAllLabelBorderTransparentIndeterminate = !menu_for_style && !elements.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
-  const valAllLabelDashedIndeterminate = !menu_for_style && !elements.every(zdt => zdt.dashed == valAllLabelDashed)
-  const valAllLabelBgVisible = elements[0]?.color_visible ?? false
+  // const valAllLabelDashedIndeterminate = !menu_for_style && !elements.every(zdt => zdt.dashed == valAllLabelDashed)
+  // const valAllLabelBgVisible = elements[0]?.color_visible ?? false
   const valAllLabelBgVisibleIndeterminate = !menu_for_style && !elements.every(zdt => zdt.color_visible == elements[0]?.color_visible)
   
   const valAllLabeTiedToNode = elements[0] instanceof Class_ContainerElement ? elements[0].tied_to_nodes : false
@@ -788,11 +788,11 @@ export const MenuConfigurationFreeLabelsOSP = ({
           <ConfigMenuTextInput disabled={disable_options} default_value={allLabelTitle()} function_on_blur={updateTitle} />
         </Box>
       )}
-    {menu_for_style ? <></> : <ConfigMenuStyleElementContainer
-      app_data={app_data}
-      selected_elements={selected_containers}
-      config={CONTAINERS_ATTRIBUTES_CONFIG}
-    />}
+      {menu_for_style ? <></> : <ConfigMenuStyleElementContainer
+        app_data={app_data}
+        selected_elements={selected_containers}
+        config={CONTAINERS_ATTRIBUTES_CONFIG}
+      />}
       {/* Text/Image toggle only for direct mode */}
       {!menu_for_style && (
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>

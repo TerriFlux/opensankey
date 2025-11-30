@@ -11,7 +11,8 @@ export const AFMEditionMenu = ({ app_data }: {
 }) => {
 
   const { t } = app_data
-  const { ref_setter_show_reconciliation } = app_data.menu_configuration_osp.dict_setter_show_dialog_afm
+  //@ts-expect-error xxx
+  const { ref_setter_show_reconciliation } = app_data.menu_configuration_osp.dict_setter_show_dialog
 
   const svg_reconcile = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -63,7 +64,7 @@ export const AFMEditionMenu = ({ app_data }: {
         <MenuList>
           <MenuItem
             onClick={() => {
-              app_data.menu_configuration_osp.action_type = 'optim'
+              //app_data.menu_configuration_osp.action_type = 'optim'
               ref_setter_show_reconciliation.current(true)
             }}>
             <FontAwesomeIcon

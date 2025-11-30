@@ -105,14 +105,15 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
 
 export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   const { menu_configuration_osp } = app_data
-  const { dict_setter_show_dialog_afm } = menu_configuration_osp
+  const { dict_setter_show_dialog } = menu_configuration_osp
   const baseModifiers = createZDDModifier(app_data)
 
   return {
     ...baseModifiers,
     afmReconciliation: () => {
-      app_data.menu_configuration_osp.action_type = 'optim_sankey'
-      dict_setter_show_dialog_afm.ref_setter_show_reconciliation.current(true)
+      //app_data.menu_configuration_osp.action_type = 'optim_sankey'
+      //@ts-expect-error xxx
+      dict_setter_show_dialog.ref_setter_show_reconciliation.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
     }
