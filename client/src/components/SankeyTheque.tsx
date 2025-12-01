@@ -25,7 +25,7 @@ import {
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
 import { UploadExemple } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { Type_JSON } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { FType_ProcessFunctions } from '../deps/OpenSankey+/deps/OpenSankey/Modules'
+import { default_actions_type, FType_ProcessFunctions } from '../deps/OpenSankey+/deps/OpenSankey/Modules'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -326,7 +326,7 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
 
                 const file_name = cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel
-                processFunction.launch([...path, file_name].join('/'))
+                processFunction.launch([...path, file_name].join('/'),default_actions_type)
                 UploadExemple([...path, file_name].join('/'), new_data)
               }}>
               {new_data.t('useSankeyThequeEXCEL')}

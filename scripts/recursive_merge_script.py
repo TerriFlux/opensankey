@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Script pour merger récursivement main dans tous les modules et sous-modules
+Script pour merger récursivement une branche dans tous les modules et sous-modules
 sans commit et sans fast-forward
 
-Usage: python recursive_merge.py [chemin_du_repo]
+Usage: python recursive_merge.py [--branch BRANCH] [chemin_du_repo]
+       python recursive_merge.py --clean [chemin_du_repo]
 """
 
 import subprocess
 import sys
+import argparse
 from pathlib import Path
 from typing import List, Tuple, Optional
 
@@ -72,6 +74,8 @@ def get_current_branch(repo_path: Path) -> Optional[str]:
     """Récupère la branche actuelle"""
     success, branch = run_git_command(["branch", "--show-current"], repo_path)
     return branch if success else None
+
+
 def find_all_git_repos(root_path: Path) -> List[Path]:
     """Trouve tous les dépôts git dans l'arborescence"""
     git_repos = []
@@ -93,14 +97,15 @@ def find_all_git_repos(root_path: Path) -> List[Path]:
     return git_repos
 
 
-def remote_branch_exists(repo_path: Path, branch: str = 'origin/main') -> bool:
+def remote_branch_exists(repo_path: Path, branch: str) -> bool:
     """Vérifie si une branche distante existe"""
     success, _ = run_git_command(['show-ref', '--verify', '--quiet', f'refs/remotes/{branch}'], repo_path)
     return success
 
-def get_commits_behind_count(repo_path: Path) -> int:
-    """Récupère le nombre de commits en retard par rapport à origin/main"""
-    success, output = run_git_command(['rev-list', '--count', '--left-right', 'HEAD...origin/main'], repo_path)
+
+def get_commits_behind_count(repo_path: Path, branch: str) -> int:
+    """Récupère le nombre de commits en retard par rapport à la branche distante"""
+    success, output = run_git_command(['rev-list', '--count', '--left-right', f'HEAD...{branch}'], repo_path)
     if not success:
         return 0
     
@@ -110,6 +115,7 @@ def get_commits_behind_count(repo_path: Path) -> int:
         return behind_count
     except (IndexError, ValueError):
         return 0
+
 
 def has_uncommitted_changes(repo_path: Path) -> bool:
     """Vérifie s'il y a des modifications non committées en ignorant les sous-modules"""
@@ -121,6 +127,7 @@ def has_uncommitted_changes(repo_path: Path) -> bool:
     
     # S'il y a du contenu, cela signifie qu'il y a des changements
     return bool(output.strip())
+
 
 def show_detailed_status(repo_path: Path) -> None:
     """Affiche le statut détaillé pour debug"""
@@ -145,10 +152,12 @@ def show_detailed_status(repo_path: Path) -> None:
     else:
         print("  Aucun changement hors sous-modules")
 
+
 def check_if_merge_in_progress(repo_path: Path) -> bool:
     """Vérifie si un merge est en cours"""
     merge_head = repo_path / '.git' / 'MERGE_HEAD'
     return merge_head.exists()
+
 
 def abort_merge_if_needed(repo_path: Path) -> bool:
     """Annule un merge en cours si nécessaire"""
@@ -163,9 +172,10 @@ def abort_merge_if_needed(repo_path: Path) -> bool:
             return False
     return True
 
-def merge_main_in_repo(repo_path: Path) -> bool:
+
+def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
     """
-    Merge origin/main dans le dépôt sans commit et sans fast-forward
+    Merge une branche distante dans le dépôt sans commit et sans fast-forward
     Version améliorée pour gérer les sous-modules
     """
     repo_name = repo_path.name
@@ -202,21 +212,21 @@ def merge_main_in_repo(repo_path: Path) -> bool:
         log_error("Veuillez les committer ou les stasher avant de continuer.")
         return False
 
-    # Vérifier si origin/main existe
-    if not remote_branch_exists(repo_path):
-        log_warning(f"{repo_name} n'a pas de branche origin/main, ignoré")
+    # Vérifier si la branche distante existe
+    if not remote_branch_exists(repo_path, branch):
+        log_warning(f"{repo_name} n'a pas de branche {branch}, ignoré")
         return True
 
     # Vérifier s'il y a quelque chose à merger
-    behind_count = get_commits_behind_count(repo_path)
+    behind_count = get_commits_behind_count(repo_path, branch)
     if behind_count == 0:
-        log_success(f"{repo_name} est déjà à jour avec origin/main")
+        log_success(f"{repo_name} est déjà à jour avec {branch}")
         return True
     
     log_info(f"{repo_name} est en retard de {behind_count} commit(s)")
     
     # Effectuer le merge sans commit et sans fast-forward
-    log_info(f"Merge de origin/main dans {repo_name} (sans commit, sans fast-forward)...")
+    log_info(f"Merge de {branch} dans {repo_name} (sans commit, sans fast-forward)...")
     
     # Essayer d'abord avec la stratégie ours pour les sous-modules
     success, error = run_git_command([
@@ -224,7 +234,7 @@ def merge_main_in_repo(repo_path: Path) -> bool:
         '--no-commit', 
         '--no-ff', 
         '-X', 'ours',  # En cas de conflit sur sous-modules, garder nos versions
-        'origin/main'
+        branch
     ], repo_path, False)
     
     # Si ça échoue, essayer sans stratégie spéciale
@@ -234,7 +244,7 @@ def merge_main_in_repo(repo_path: Path) -> bool:
             'merge', 
             '--no-commit', 
             '--no-ff', 
-            'origin/main'
+            branch
         ], repo_path, False)
     
     # Si ça échoue encore et qu'il y a des conflits de sous-modules, les résoudre automatiquement
@@ -302,30 +312,42 @@ def merge_main_in_repo(repo_path: Path) -> bool:
 
 
 def main():
-    """Fonction principale avec option de nettoyage"""
-    # Déterminer le répertoire de travail
-    if len(sys.argv) > 1:
-        if sys.argv[1] == '--clean':
-            # Mode nettoyage : annuler tous les merges en cours
-            if len(sys.argv) > 2:
-                root_path = Path(sys.argv[2]).resolve()
-            else:
-                root_path = Path.cwd()
-            
-            log_info("Mode nettoyage : annulation de tous les merges en cours")
-            git_repos = find_all_git_repos(root_path)
-            
-            for repo_path in git_repos:
-                if check_if_merge_in_progress(repo_path):
-                    log_info(f"Annulation du merge en cours dans {repo_path.name}")
-                    abort_merge_if_needed(repo_path)
-            
-            log_success("Nettoyage terminé")
-            return
-        else:
-            root_path = Path(sys.argv[1]).resolve()
-    else:
-        root_path = Path.cwd()
+    """Fonction principale avec gestion des arguments"""
+    parser = argparse.ArgumentParser(
+        description='Merge récursivement une branche dans tous les modules et sous-modules',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Exemples:
+  %(prog)s                           # Merge origin/main dans le répertoire courant
+  %(prog)s --branch origin/dev       # Merge origin/dev dans le répertoire courant
+  %(prog)s --branch origin/dev /path # Merge origin/dev dans /path
+  %(prog)s --clean                   # Annule tous les merges en cours
+  %(prog)s --clean /path             # Annule tous les merges en cours dans /path
+        """
+    )
+    
+    parser.add_argument(
+        '--branch', '-b',
+        default='origin/main',
+        help='Branche à merger (défaut: origin/main)'
+    )
+    
+    parser.add_argument(
+        '--clean', '-c',
+        action='store_true',
+        help='Annuler tous les merges en cours'
+    )
+    
+    parser.add_argument(
+        'path',
+        nargs='?',
+        default='.',
+        help='Chemin du répertoire racine (défaut: répertoire courant)'
+    )
+    
+    args = parser.parse_args()
+    
+    root_path = Path(args.path).resolve()
 
     if not root_path.exists():
         log_error(f"Le chemin {root_path} n'existe pas")
@@ -335,7 +357,21 @@ def main():
         log_error(f"Le chemin {root_path} n'est pas un répertoire")
         sys.exit(1)
 
+    # Mode nettoyage
+    if args.clean:
+        log_info("Mode nettoyage : annulation de tous les merges en cours")
+        git_repos = find_all_git_repos(root_path)
+        
+        for repo_path in git_repos:
+            if check_if_merge_in_progress(repo_path):
+                log_info(f"Annulation du merge en cours dans {repo_path.name}")
+                abort_merge_if_needed(repo_path)
+        
+        log_success("Nettoyage terminé")
+        return
+
     log_info(f"Recherche des dépôts git dans: {root_path}")
+    log_info(f"Branche à merger: {args.branch}")
 
     # Trouver tous les dépôts git
     git_repos = find_all_git_repos(root_path)
@@ -350,7 +386,7 @@ def main():
     print()
 
     # Demander confirmation
-    response = input(f"Voulez-vous merger origin/main dans ces {len(git_repos)} dépôts ? (y/N): ")
+    response = input(f"Voulez-vous merger {args.branch} dans ces {len(git_repos)} dépôts ? (y/N): ")
     if response.lower() not in ["y", "yes", "oui", "o"]:
         log_info("Opération annulée")
         return
@@ -363,7 +399,7 @@ def main():
         print(f"{'='*60}")
         print(f"Dépôt {i+1}/{len(git_repos)}")
         
-        if merge_main_in_repo(repo_path):
+        if merge_branch_in_repo(repo_path, args.branch):
             success_count += 1
         else:
             failed_repos.append(repo_path)
