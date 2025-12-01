@@ -363,6 +363,7 @@ export const UniversalFileConverter = ({
       if (response.ok) {
         const text = await response.text()
         retrieveJSONResults(app_data, text, auto_layout, output_options_json)
+        setAutoLoad(false)
       }
     } catch (error) {
       console.error('Erreur chargement JSON:', error)

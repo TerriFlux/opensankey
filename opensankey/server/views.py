@@ -371,10 +371,13 @@ def retrieve_json():
 
     log_dir = tempfile.mkdtemp()
     log_filename = log_dir + os.path.sep + "rollover.log"
-    # session["logname"] = log_filename
     trace.logger_init(log_filename, "w")
     
-    set_process_state(session_id, process_started=True)
+    set_process_state(
+        session_id, 
+        process_started=True,
+        logname=log_filename
+    )
 
     try:
         input_file_name = state.get("output_file_name")

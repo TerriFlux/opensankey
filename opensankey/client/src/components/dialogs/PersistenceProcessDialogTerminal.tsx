@@ -15,9 +15,9 @@ interface ProcessTerminalProps {
   url_prefix: string
   app_data: Class_ApplicationData
   set_show_terminal: (show: boolean) => void
-  handleFinish: ()=>void,
-  downloadFileResult: ()=>void,
-  loadFileResult: ()=>void,
+  handleFinish: () => void,
+  downloadFileResult: () => void,
+  loadFileResult: () => void,
   auto_load: boolean
 }
 
@@ -29,7 +29,7 @@ export const ProcessTerminal = ({
   handleFinish,
   downloadFileResult,
   loadFileResult,
-  auto_load
+  auto_load  
 }: ProcessTerminalProps) => {
   const { t } = app_data
   const [value, setValue] = useState([1, 2])
@@ -231,12 +231,12 @@ const ActionButtons = ({
 }
 
 interface LogFiltersProps {
-  t:TFunction,
+  t: TFunction,
   value: number[]
   handleChange: (evt: MouseEvent) => void
 }
 
-const LogFilters = ({ t,value, handleChange }: LogFiltersProps) => {
+const LogFilters = ({ t, value, handleChange }: LogFiltersProps) => {
   return (
     <Box layerStyle='options_3cols'>
       <Button
@@ -331,7 +331,7 @@ const Counter = ({
   if (result && result.split('\n').length > 2) {
     if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('CONVERSION TERMINÉE')) {
       finishProcess(false)
-    } else if (result.includes('FAILED') || result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR') ) {
+    } else if (result.includes('FAILED') || result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR')) {
       finishProcess(true)
     }
   }
