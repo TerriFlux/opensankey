@@ -22,6 +22,7 @@ import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuC
 import { default_font_size } from '../deps/OpenSankey/css/Theme'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { CONTAINERS_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ContainerAttributesConfig'
+import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -83,7 +84,7 @@ const createUpdateFunction = <T,>(
   propertyName: string,
   propertyGetter: (element: Class_ContainerElement | Class_ContainerStyle) => T,
   propertySetter: (element: Class_ContainerElement | Class_ContainerStyle, value: T) => void,
-  history: any,
+  history:  Class_ApplicationHistory,
   redrawCallback: () => void
 ) => {
   return (newValue: T | null | undefined) => {
@@ -613,7 +614,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
     : []
     
   const valAllLabelBorderTransparent = elements[0]?.transparent_border ?? false
-  const valAllLabelDashed = elements[0]?.dashed ?? false
+  // const valAllLabelDashed = elements[0]?.dashed ?? false
   const valAllLabelBorderTransparentIndeterminate = !menu_for_style && !elements.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
   // const valAllLabelDashedIndeterminate = !menu_for_style && !elements.every(zdt => zdt.dashed == valAllLabelDashed)
   // const valAllLabelBgVisible = elements[0]?.color_visible ?? false
