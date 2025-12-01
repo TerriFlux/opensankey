@@ -127,7 +127,7 @@ export const translations = {
     },
     save_json_file: {
       en: 'Save JSON',
-      fr: 'Enregistrer JSON'      
+      fr: 'Enregistrer JSON'
     },
     save: {
       en: 'Save',
@@ -167,25 +167,25 @@ export const translations = {
       fr: 'Options d\'enregistrement'
     },
     load: {
-      fr:'Ouvrir',
-      en:'Open'
+      fr: 'Ouvrir',
+      en: 'Open'
     },
     file_converter: {
-      fr:'Convertisseur de fichiers',
-      en:'File convertor'
+      fr: 'Convertisseur de fichiers',
+      en: 'File convertor'
     },
-    log_infos:{
-      fr:'Infos',
-      en:'Infos'
+    log_infos: {
+      fr: 'Infos',
+      en: 'Infos'
     },
-    log_errors:{
-      fr:'Erreurs',
-      en:'Errors'
+    log_errors: {
+      fr: 'Erreurs',
+      en: 'Errors'
     },
-    log_debug:{
-      fr:'Debug',
-      en:'Debug'
-    }    
+    log_debug: {
+      fr: 'Debug',
+      en: 'Debug'
+    }
   }
 }
 
@@ -230,7 +230,7 @@ export const INPUT_ATTRIBUTES_CONFIG = {
       }
     } satisfies FormatAttributeConfig<boolean>
   },
-  
+
   blob: {
 
   }
@@ -238,6 +238,18 @@ export const INPUT_ATTRIBUTES_CONFIG = {
 
 // Définir base en dehors
 const BASE_OUTPUT_CONFIG = {
+  only_current_view: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    labels: {
+      en: 'Only current view',
+      fr: 'Seulement la vue courante'
+    },
+    tooltips: {
+      en: 'Load only the current view',
+      fr: 'Charger seulement la vue courante'
+    }
+  } satisfies FormatAttributeConfig<boolean>,
   with_values: {
     default: true,
     type: (() => true) as (() => boolean),
@@ -276,6 +288,7 @@ const BASE_OUTPUT_CONFIG = {
       fr: 'Exporter uniquement les éléments avec les étiquettes sélectionnées'
     }
   } satisfies FormatAttributeConfig<boolean>,
+
 } as const
 
 export const OUTPUT_ATTRIBUTES_CONFIG = {
@@ -394,7 +407,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
     } satisfies FormatAttributeConfig<boolean>,
   },
   json: {
-
+    ...BASE_OUTPUT_CONFIG,
     keep_siblings: {
       default: false,
       type: (() => false) as (() => boolean),
@@ -423,7 +436,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
       }
     } satisfies FormatAttributeConfig<boolean>
   },
-  
+
   blob: {}
 } as const
 
