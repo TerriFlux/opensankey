@@ -62,6 +62,7 @@ sankeyapp = Blueprint(
 
 # Sinon, redéfinissez-les ici (mais mieux vaut les importer pour éviter la duplication)
 
+
 @sankeyapp.route("/")
 def index():
     # Update website frequentation metrics
@@ -88,6 +89,7 @@ def goto(path):
             # Otherwise return index
             return redirect("/", 301)
 
+
 def solve_optimisation_problem_unified(
     input_source: dict,  # ← Dict avec toutes les infos nécessaires
     output_filename: str,
@@ -98,7 +100,7 @@ def solve_optimisation_problem_unified(
 ):
     """
     Fonction unifiée pour l'optimisation.
-    
+
     Parameters
     ----------
     input_source : dict
@@ -109,7 +111,7 @@ def solve_optimisation_problem_unified(
     trace.logger_init(logname, "a")
     trace.logger.info("-- Start optimisation")
     t_prev = time.time()
-    
+
     # ========== PARTIE 1: CHARGEMENT (dans le thread) ==========
     try:
         if input_source['type'] == 'json_string':
@@ -124,13 +126,13 @@ def solve_optimisation_problem_unified(
                 return
             io_input.sankey.autocompute_mat_balance()
             model_name = sankey_json.get("model_name", "model")
-            
+
         elif input_source['type'] == 'file':
             # Cas 2: Charger depuis un fichier
             input_filename = input_source['path']
             input_format = input_source['format']
             trace.logger.info(f"-- Loading sankey from file: {input_filename} (format: {input_format})")
-            
+
             if input_format == 'excel':
                 io_input = IOExcel()
             elif input_format == 'json':
@@ -139,20 +141,21 @@ def solve_optimisation_problem_unified(
                 trace.logger.error(f"-- Unknown input format: {input_format}")
                 trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
                 return
-            
+
             ok, msg = io_input.load_sankey(input_filename)
             if not ok:
                 trace.logger.error("ERROR in input file.")
                 for line in msg.split("\n"):
                     trace.logger.error(f"ERROR {line}")
-                trace.logger.info("{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
+                trace.logger.info(
+                    "{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
                 return
-            
+
             model_name = os.path.splitext(os.path.basename(input_filename))[0]
         else:
             trace.logger.error(f"-- Unknown input source type: {input_source['type']}")
             return
-            
+
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR when loading sankey")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
@@ -160,12 +163,12 @@ def solve_optimisation_problem_unified(
         trace.logger.debug(traceback.format_exc())
         trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
         return
-    
+
     t = time.time()
     trace.logger.info("{:-<{w}}".format("[OK] Loaded Datas succesfully ", w=MAX_LINE_LENGTH))
     trace.logger.debug("Took {} / {} sec".format(round((t - t_prev), 2), round((t - t_start), 2)))
     t_prev = t
-    
+
     # ========== PARTIE 2: OPTIMISATION (dans le thread) ==========
     try:
         ok = mfa_problem_main.optimisation(model_name, io_input.sankey, False, 0, False)
@@ -176,12 +179,12 @@ def solve_optimisation_problem_unified(
         trace.logger.debug(traceback.format_exc())
         trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
         return
-        
+
     if not ok:
         trace.logger.error("-- ERROR in optimisation process.")
         trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
         return
-        
+
     t = time.time()
     trace.logger.debug("-- Optimisation process completed")
     trace.logger.debug(
@@ -192,7 +195,7 @@ def solve_optimisation_problem_unified(
     try:
         io_excel = IOExcel(io_input.sankey)
         output_options["mode"] = "a"
-        io_excel.write_sankey(file_name=output_filename,**output_options)
+        io_excel.write_sankey(file_name=output_filename, **output_options)
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in output file writing.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
@@ -205,7 +208,7 @@ def solve_optimisation_problem_unified(
             )
         )
         return
-        
+
     t = time.time()
     trace.logger.info("-- Write results to json")
     trace.logger.debug("-- Write results took {0} / {1} sec --".format(round((t - t_prev), 2), round((t - t_start), 2)))
@@ -227,19 +230,19 @@ def launch_optim_sankey():
     try:
         # ========== PARTIE RAPIDE: Setup (pas threadé) ==========
         session_id = get_session_id()
-        
+
         # Créer les répertoires temporaires
         tmp_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp()
         log_filename = log_dir + os.path.sep + "rollover.log"
         trace.logger_init(log_filename, "w")
-        
+
         output_file_name = os.path.join(tmp_dir, "tutu.pkl")
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
         # Récupérer le JSON string (rapide, juste lecture)
         sankey_json_str = request.form["sankey_data"]
-        
+
         # Stocker l'état
         set_process_state(
             session_id,
@@ -249,26 +252,26 @@ def launch_optim_sankey():
             output_file_name=output_file_name,
             output_json_file_abspath=os.path.join(tmp_dir, "output.json")
         )
-        
+
     except Exception as e:
         trace.logger.error("UNEXPECTED ERROR when reading params.")
         trace.logger.error(f"UNEXPECTED ERROR {e}")
         trace.logger.error(traceback.format_exc())
-        
+
         err_msg = f"ERROR: launch_optim_sankey - erreur fatale. {e}"
         return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
-    
+
     # ========== LANCEMENT DU THREAD ==========
     t_start = time.time()
     trace.logger.info("{:-<{w}}".format("[STARTING] Optimisation process ", w=MAX_LINE_LENGTH))
     trace.logger.debug(f"Temporary datas are in {tmp_dir}")
-    
+
     # Préparer les données pour le thread
     input_source = {
         'type': 'json_string',
         'data': sankey_json_str
     }
-    
+
     # Lancer le thread
     thread = Thread(
         target=solve_optimisation_problem_unified,
@@ -284,7 +287,7 @@ def launch_optim_sankey():
     thread.daemon = True
     trace.logger.debug("Optimisation thread created")
     thread.start()
-    
+
     # Réponse immédiate
     return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")
 
@@ -298,13 +301,13 @@ def launch_optim():
     try:
         # ========== PARTIE RAPIDE: Setup (pas threadé) ==========
         session_id = get_session_id()
-        
+
         # Créer les répertoires temporaires
         tmp_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp()
         log_filename = log_dir + os.path.sep + "rollover.log"
         trace.logger_init(log_filename, "w")
-        
+
         # Sauvegarder le fichier uploadé (rapide)
         input_file = request.files["file"]
         input_filename = os.path.join(tmp_dir, input_file.filename)
@@ -315,7 +318,7 @@ def launch_optim():
         # Récupérer le format (rapide)
         input_format = request.form.get("input_format", "excel")
         input_options = json.loads(request.form.get('input_options', '{}'))
-        output_options = json.loads(request.form.get('output_options', '{}'))     
+        output_options = json.loads(request.form.get('output_options', '{}'))
         # Stocker l'état
         set_process_state(
             session_id,
@@ -327,12 +330,12 @@ def launch_optim():
             input_format=input_format,
             output_json_file_abspath=os.path.join(tmp_dir, "tutu.json")
         )
-        
+
     except Exception as e:
         trace.logger.error("UNEXPECTED ERROR when reading params.")
         trace.logger.error(f"UNEXPECTED ERROR {e}")
         trace.logger.error(traceback.format_exc())
-        
+
         err_msg = f"ERROR: launch_optim - erreur fatale. {e}"
         return Response(json.dumps({"output": err_msg}), status=500, mimetype="application/json")
 
@@ -340,14 +343,14 @@ def launch_optim():
     t_start = time.time()
     trace.logger.info("{:-<{w}}".format("[STARTING] Optimisation process ", w=MAX_LINE_LENGTH))
     trace.logger.debug(f"Temporary datas are in {tmp_dir}")
-    
+
     # Préparer les données pour le thread
     input_source = {
         'type': 'file',
         'path': input_filename,
         'format': input_format
     }
-    
+
     # Lancer le thread
     thread = Thread(
         target=solve_optimisation_problem_unified,
@@ -363,6 +366,6 @@ def launch_optim():
     thread.daemon = True
     trace.logger.debug("Optimisation thread created")
     thread.start()
-    
+
     # Réponse immédiate
     return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")

@@ -108,7 +108,7 @@ def get_commits_behind_count(repo_path: Path, branch: str) -> int:
     success, output = run_git_command(['rev-list', '--count', '--left-right', f'HEAD...{branch}'], repo_path)
     if not success:
         return 0
-    
+
     try:
         # Format: "ahead behind"
         behind_count = int(output.split()[1])
@@ -121,10 +121,10 @@ def has_uncommitted_changes(repo_path: Path) -> bool:
     """Vérifie s'il y a des modifications non committées en ignorant les sous-modules"""
     # Utiliser --ignore-submodules=all pour ignorer complètement les sous-modules
     success, output = run_git_command(['status', '--porcelain', '--ignore-submodules=all'], repo_path)
-    
+
     if not success:
         return True  # En cas d'erreur, considérer qu'il y a des changements
-    
+
     # S'il y a du contenu, cela signifie qu'il y a des changements
     return bool(output.strip())
 
@@ -133,7 +133,7 @@ def show_detailed_status(repo_path: Path) -> None:
     """Affiche le statut détaillé pour debug"""
     repo_name = repo_path.name
     print(f"\nStatus détaillé pour {repo_name}:")
-    
+
     # Status avec sous-modules
     success, output = run_git_command(['status', '--porcelain'], repo_path)
     if success and output:
@@ -141,7 +141,7 @@ def show_detailed_status(repo_path: Path) -> None:
         for line in output.split('\n'):
             if line.strip():
                 print(f"    {line}")
-    
+
     # Status sans sous-modules
     success, output = run_git_command(['status', '--porcelain', '--ignore-submodules=all'], repo_path)
     if success and output:
@@ -185,26 +185,27 @@ def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
     if not is_git_repo(repo_path):
         log_warning(f"{repo_name} n'est pas un dépôt git, ignoré")
         return True
-    
+
     # Annuler tout merge en cours
     if not abort_merge_if_needed(repo_path):
         return False
-    
+
     # Vérifier la branche actuelle
     current_branch = get_current_branch(repo_path)
     if not current_branch:
-        log_warning(f"Impossible de déterminer la branche actuelle pour {repo_name} (probablement detached HEAD), ignoré")
+        log_warning(
+            f"Impossible de déterminer la branche actuelle pour {repo_name} (probablement detached HEAD), ignoré")
         return True  # Changé de False à True pour ignorer au lieu d'échouer
-    
+
     log_info(f"Branche actuelle dans {repo_name}: {current_branch}")
-    
+
     # Fetch pour avoir les dernières modifications
     log_info(f"Fetch des dernières modifications pour {repo_name}...")
     success, error = run_git_command(["fetch", "origin"], repo_path)
     if not success:
         log_error(f"Échec du fetch pour {repo_name}: {error}")
         return False
-    
+
     # Vérifier s'il y a des modifications non committées (hors sous-modules)
     if has_uncommitted_changes(repo_path):
         log_error(f"{repo_name} a des modifications non committées (hors sous-modules).")
@@ -222,35 +223,35 @@ def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
     if behind_count == 0:
         log_success(f"{repo_name} est déjà à jour avec {branch}")
         return True
-    
+
     log_info(f"{repo_name} est en retard de {behind_count} commit(s)")
-    
+
     # Effectuer le merge sans commit et sans fast-forward
     log_info(f"Merge de {branch} dans {repo_name} (sans commit, sans fast-forward)...")
-    
+
     # Essayer d'abord avec la stratégie ours pour les sous-modules
     success, error = run_git_command([
-        'merge', 
-        '--no-commit', 
-        '--no-ff', 
+        'merge',
+        '--no-commit',
+        '--no-ff',
         '-X', 'ours',  # En cas de conflit sur sous-modules, garder nos versions
         branch
     ], repo_path, False)
-    
+
     # Si ça échoue, essayer sans stratégie spéciale
     if not success:
         log_warning(f"Merge avec stratégie 'ours' échoué, tentative standard...")
         success, error = run_git_command([
-            'merge', 
-            '--no-commit', 
-            '--no-ff', 
+            'merge',
+            '--no-commit',
+            '--no-ff',
             branch
         ], repo_path, False)
-    
+
     # Si ça échoue encore et qu'il y a des conflits de sous-modules, les résoudre automatiquement
     if not success and "submodule" in error.lower():
         log_warning(f"Conflit de sous-module détecté, tentative de résolution automatique...")
-        
+
         # Récupérer la liste des sous-modules en conflit
         conflict_success, conflict_output = run_git_command(['diff', '--name-only', '--diff-filter=U'], repo_path)
         if conflict_success and conflict_output:
@@ -267,14 +268,15 @@ def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
                             add_success, _ = run_git_command(['add', submodule_path.strip()], repo_path)
                             if add_success:
                                 log_success(f"Conflit résolu pour {submodule_path.strip()}")
-            
+
             # Vérifier s'il reste des conflits
-            remaining_conflicts_success, remaining_conflicts = run_git_command(['diff', '--name-only', '--diff-filter=U'], repo_path)
+            remaining_conflicts_success, remaining_conflicts = run_git_command(
+                ['diff', '--name-only', '--diff-filter=U'], repo_path)
             if remaining_conflicts_success and not remaining_conflicts.strip():
                 # Plus de conflits, le merge est réussi
                 success = True
                 log_success(f"Tous les conflits de sous-modules ont été résolus automatiquement")
-    
+
     if success:
         log_success(f"Merge préparé avec succès pour {repo_name}")
 
@@ -288,7 +290,7 @@ def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
         return True
     else:
         log_error(f"Conflit lors du merge dans {repo_name}")
-        
+
         # Vérifier si c'est un conflit de sous-module
         conflict_success, conflict_output = run_git_command(['diff', '--name-only', '--diff-filter=U'], repo_path)
         if conflict_success and conflict_output:
@@ -300,7 +302,7 @@ def merge_branch_in_repo(repo_path: Path, branch: str) -> bool:
                     file_path = repo_path / file.strip()
                     if file_path.is_dir() and (file_path / '.git').exists():
                         print(f"    ⚠️  {file.strip()} est un sous-module")
-        
+
         # Proposer des solutions
         print("\nSolutions possibles:")
         print("1. Résoudre manuellement avec 'git add' puis 'git commit'")
@@ -325,28 +327,28 @@ Exemples:
   %(prog)s --clean /path             # Annule tous les merges en cours dans /path
         """
     )
-    
+
     parser.add_argument(
         '--branch', '-b',
         default='origin/main',
         help='Branche à merger (défaut: origin/main)'
     )
-    
+
     parser.add_argument(
         '--clean', '-c',
         action='store_true',
         help='Annuler tous les merges en cours'
     )
-    
+
     parser.add_argument(
         'path',
         nargs='?',
         default='.',
         help='Chemin du répertoire racine (défaut: répertoire courant)'
     )
-    
+
     args = parser.parse_args()
-    
+
     root_path = Path(args.path).resolve()
 
     if not root_path.exists():
@@ -361,12 +363,12 @@ Exemples:
     if args.clean:
         log_info("Mode nettoyage : annulation de tous les merges en cours")
         git_repos = find_all_git_repos(root_path)
-        
+
         for repo_path in git_repos:
             if check_if_merge_in_progress(repo_path):
                 log_info(f"Annulation du merge en cours dans {repo_path.name}")
                 abort_merge_if_needed(repo_path)
-        
+
         log_success("Nettoyage terminé")
         return
 
@@ -390,22 +392,22 @@ Exemples:
     if response.lower() not in ["y", "yes", "oui", "o"]:
         log_info("Opération annulée")
         return
-    
+
     # Traiter chaque dépôt en ordre inverse (sous-modules d'abord)
     success_count = 0
     failed_repos = []
-    
+
     for i, repo_path in enumerate(reversed(git_repos)):
         print(f"{'='*60}")
         print(f"Dépôt {i+1}/{len(git_repos)}")
-        
+
         if merge_branch_in_repo(repo_path, args.branch):
             success_count += 1
         else:
             failed_repos.append(repo_path)
-        
+
         print()
-        
+
         # Pause sauf pour le dernier dépôt
         if i < len(git_repos) - 1:
             try:
@@ -416,7 +418,7 @@ Exemples:
             except KeyboardInterrupt:
                 log_info("\nInterruption demandée par l'utilisateur")
                 break
-    
+
     # Résumé final
     print(f"{'='*60}")
     log_info("RÉSUMÉ")
@@ -427,7 +429,7 @@ Exemples:
         for repo in failed_repos:
             print(f"  - {repo}")
         print(f"\nPour nettoyer les merges en cours: python {sys.argv[0]} --clean")
-    
+
     if failed_repos:
         sys.exit(1)
     else:
