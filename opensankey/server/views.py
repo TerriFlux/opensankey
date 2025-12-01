@@ -369,6 +369,11 @@ def retrieve_json():
     session_id = get_session_id()
     state = get_process_state(session_id)
 
+    log_dir = tempfile.mkdtemp()
+    log_filename = log_dir + os.path.sep + "rollover.log"
+    # session["logname"] = log_filename
+    trace.logger_init(log_filename, "w")
+    
     set_process_state(session_id, process_started=True)
 
     try:
@@ -390,7 +395,7 @@ def retrieve_json():
 
         output_file_name = os.path.join(os.path.dirname(input_file_name), "output.json")
 
-        input_format = state.get('output_format', 'json')
+        input_format = state.get('input_format', 'excel')
         logname = state.get('logname')
 
         # Mettre à jour l'état
