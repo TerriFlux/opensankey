@@ -32,6 +32,7 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 import tempfile
 import os
 import json
+import time
 
 from SankeyExcelParser.io_base import conversion_thread
 
@@ -83,86 +84,22 @@ image_template_folder = os.path.join(
     "images",
 )
 
-# Global registry for active threads with lock for thread-safety
-active_threads = {}
-threads_lock = Lock()
+def get_process_state():  # ← Plus de paramètre session_id
+    """Récupère l'état depuis Flask session"""
+    return session.get('process_state', {
+        'process_started': False,
+        'logname': None,
+        'output_file_name': None,
+        'input_format': None,
+        'output_format': None
+    })
 
-# Thread wrapper class to allow cancellation
-
-
-class CancellableThread:
-    def __init__(self, thread, session_id):
-        self.thread = thread
-        self.session_id = session_id
-        self.cancelled = False
-
-    def cancel(self):
-        """Mark thread as cancelled"""
-        self.cancelled = True
-        trace.logger.info(f"Thread {self.session_id} marked for cancellation")
-
-
-def unregister_thread(session_id):
-    """Remove a thread from active registry"""
-    with threads_lock:
-        if session_id in active_threads:
-            del active_threads[session_id]
-            trace.logger.debug(f"Unregistered thread for session {session_id}")
-
-# Wrapper for conversion_thread with cancellation support
-
-
-def cancellable_conversion_thread(cancellable, *args, **kwargs):
-    """Wrapper that checks for cancellation before processing"""
-    try:
-        if cancellable.cancelled:
-            trace.logger.info(f"Thread {cancellable.session_id} cancelled before start")
-            return
-
-        # Execute the actual conversion
-        conversion_thread(*args, **kwargs)
-
-    except Exception as e:
-        trace.logger.error(f"Error in cancellable_conversion_thread: {str(e)}")
-    finally:
-        # Always unregister when done
-        unregister_thread(cancellable.session_id)
-
-
-# Stockage global pour l'état des processus
-process_states = {}
-process_states_lock = Lock()
-
-
-def get_process_state(session_id):
-    """Récupère l'état d'un processus de manière thread-safe"""
-    with process_states_lock:
-        return process_states.get(session_id, {
-            'process_started': False,
-            'logname': None,
-            'output_file_name': None,
-            'input_format': None,
-            'output_format': None
-        })
-
-
-def set_process_state(session_id, **kwargs):
-    """Met à jour l'état d'un processus de manière thread-safe"""
-    with process_states_lock:
-        if session_id not in process_states:
-            process_states[session_id] = {}
-        process_states[session_id].update(kwargs)
-
-# Fonction pour obtenir/créer un session_id persistant
-
-
-def get_session_id():
-    """Obtient ou crée un ID de session persistant"""
-    if 'session_id' not in session:
-        import uuid
-        session['session_id'] = str(uuid.uuid4())
-    return session['session_id']
-
+def set_process_state(**kwargs):  # ← Plus de paramètre session_id
+    """Stocke l'état dans Flask session"""
+    if 'process_state' not in session:
+        session['process_state'] = {}
+    session['process_state'].update(kwargs)
+    session.modified = True  # ← IMPORTANT !
 
 @opensankey.route("/")
 def start():
@@ -234,8 +171,7 @@ def goto(adress):
 
 @opensankey.route("/upload/check_process", methods=["POST"])
 def check_process():
-    session_id = get_session_id()
-    state = get_process_state(session_id)
+    state = get_process_state()
     if not state['process_started']:
         if not state['logname']:
             return Response(json.dumps({}), status=200, mimetype="application/json")
@@ -243,7 +179,7 @@ def check_process():
         trace.logger.debug("not started")
         return Response(json.dumps({"not_started":True}), status=200, mimetype="application/json")
     try:
-        trace.logger.debug(session['logname'])
+        trace.logger.debug(state['logname'])
         trace.logger.debug('open')
         logname = state['logname']
         if os.path.isfile(logname):
@@ -283,11 +219,10 @@ def retrieve_result():
     - Conversions (Excel, Pickle, JSON)
     - Chargements Excel/Pickle → JSON
     """
-    session_id = get_session_id()
-    state = get_process_state(session_id)
+    state = get_process_state()
 
     # Marquer le processus comme terminé
-    set_process_state(session_id, process_started=False)
+    set_process_state(process_started=False)
 
     try:
         # Récupérer le chemin du fichier de sortie
@@ -369,15 +304,13 @@ def retrieve_json():
     """
     Route générique pour récupérer le fichier résultat d'un traitement.
     """
-    session_id = get_session_id()
-    state = get_process_state(session_id)
+    state = get_process_state()
 
     log_dir = tempfile.mkdtemp()
     log_filename = log_dir + os.path.sep + "rollover.log"
     trace.logger_init(log_filename, "w")
     
     set_process_state(
-        session_id, 
         process_started=True,
         logname=log_filename
     )
@@ -406,7 +339,6 @@ def retrieve_json():
 
         # Mettre à jour l'état
         set_process_state(
-            session_id,
             input_filename=input_file_name,
             output_file_name=output_file_name,
             input_format=input_format,
@@ -456,7 +388,6 @@ def retrieve_json():
             mimetype="application/json"
         )
 
-
 @opensankey.route("/convert/launch", methods=["POST"])
 def launch_conversion():
     """
@@ -467,19 +398,6 @@ def launch_conversion():
     - output_format : 'excel' ou 'json'
     """
     try:
-        session_id = get_session_id()
-
-        # Vérifier et annuler s'il y a déjà un thread actif pour cette session
-        with threads_lock:
-            if session_id in active_threads:
-                old_cancellable = active_threads[session_id]
-                if old_cancellable.thread and old_cancellable.thread.is_alive():
-                    # Thread encore actif, on l'annule
-                    trace.logger.info(f"Cancelling previous conversion for session {session_id}")
-                    old_cancellable.cancel()
-                # On le retire du registry (il se désenregistrera aussi dans le finally)
-                del active_threads[session_id]
-
         tmp_dir = tempfile.mkdtemp()  # diff
         log_dir = tempfile.mkdtemp()
         log_filename = log_dir + os.path.sep + "rollover.log"
@@ -515,7 +433,6 @@ def launch_conversion():
 
         # Stocker l'état dans le stockage global
         set_process_state(
-            session_id,
             process_started=True,
             input_filename=input_file_name,
             output_file_name=output_file_name,
@@ -530,11 +447,9 @@ def launch_conversion():
 
         # if use_thread:
         # Use threading for large files
-        cancellable = CancellableThread(None, session_id)
         thread = Thread(
-            target=cancellable_conversion_thread,
+            target=conversion_thread,
             args=(
-                cancellable,
                 input_file_name,
                 output_file_name,
                 input_format,
@@ -545,11 +460,6 @@ def launch_conversion():
             ),
         )
         thread.daemon = True
-        cancellable.thread = thread
-
-        # Enregistrer le thread AVANT de le démarrer
-        with threads_lock:
-            active_threads[session_id] = cancellable
 
         thread.start()
         trace.logger.debug("Conversion thread launched")
