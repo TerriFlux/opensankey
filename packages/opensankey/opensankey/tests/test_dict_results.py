@@ -36,7 +36,7 @@ import os
 import sys
 import json
 
-from submodules.SankeyExcelParser.SankeyExcelParser.io_base import IOJson
+from SankeyExcelParser.io_base import IOJson
 
 # Local libs ------------------------------------------------------------------
 try:
