@@ -225,8 +225,8 @@ export abstract class Class_ProtoTagGroup {
       this.updateTagsReferences()
       this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToTags()
     }
-
-    const old_selected = this.selected_tags_list[0].id
+    
+    const old_selected = this.selected_tags_list.length>0 ? this.selected_tags_list[0].id : ''
     this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
     this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
     _selectTagsFromId(id)
