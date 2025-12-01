@@ -20,7 +20,7 @@ from flask import request
 from flask import redirect
 from flask import send_from_directory
 from flask import Response
-from opensankey.server.views import get_process_state, set_process_state
+from opensankey.server.views import set_process_state
 from SankeyExcelParser.io_base import IOJson, IOExcel
 import SankeyExcelParser.su_trace as trace
 
@@ -55,6 +55,7 @@ sankeyapp = Blueprint(
     template_folder=template_folder,
     static_url_path="/static/sankeyapp",
 )
+
 
 @sankeyapp.route("/")
 def index():
@@ -220,7 +221,7 @@ def launch_optim_sankey():
     Tout le traitement lourd est threadé.
     """
     try:
- 
+
         # Créer les répertoires temporaires
         tmp_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp()
