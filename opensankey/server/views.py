@@ -304,7 +304,7 @@ def retrieve_result():
                 mimetype="application/json"
             )
         # Déterminer l'extension et le mimetype
-        _, ext = os.path.splitext(output_file_name)
+        root_file_name, ext = os.path.splitext(output_file_name)
         ext = ext.lower()
         output_format = request.form.get("output_format", "json")
         if output_format == 'excel' and ext == '.json':
@@ -334,15 +334,14 @@ def retrieve_result():
 
         # Mapping extensions → noms de téléchargement
         download_name_map = {
-            '.xlsx': 'converted.xlsx',
-            '.pkl': 'converted.pkl',
-            '.json': 'converted.json',
-            '.csv': 'converted.csv',
-            '.txt': 'converted.txt'
+            '.xlsx': root_file_name+'.xlsx',
+            '.json': root_file_name+'.json',
+            '.csv': root_file_name+'.csv',
+            '.txt': root_file_name+'.txt'
         }
 
         mimetype = mimetype_map.get(ext, 'application/octet-stream')
-        download_name = download_name_map.get(ext, 'converted' + ext)
+        download_name = download_name_map.get(ext, root_file_name + ext)
 
         trace.logger.info(f"Envoi du fichier: {output_file_name} ({mimetype})")
 
