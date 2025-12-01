@@ -612,13 +612,13 @@ export const SelecteurView = (
   >
     <option value="master" disabled hidden>Sankey Maître</option>
     {
-      Object.entries(new_data_plus.views_dict).filter(([key]) => key !== default_main_sankey_id)
-        .map(([key, view]) => {
+      new_data_plus.views_order
+        .map((view,i) => {
           return <option
-            key={key}
-            value={key}
+            key={i}
+            value={i}
           >
-            {view.name}
+            {new_data_plus.views_dict[view].name}
           </option>
         })
     }
