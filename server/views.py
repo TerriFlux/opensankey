@@ -141,8 +141,7 @@ def solve_optimisation_problem_unified(
                 trace.logger.error(f"-- Unknown input format: {input_format}")
                 trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
                 return
-
-            ok, msg = io_input.load_sankey(input_filename)
+            ok, msg = io_input.load_sankey(input_filename,do_coherence_checks=True)
             if not ok:
                 trace.logger.error("ERROR in input file.")
                 for line in msg.split("\n"):
