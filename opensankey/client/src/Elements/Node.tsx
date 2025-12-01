@@ -401,7 +401,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       if (this.links_order.length > 0) {
         json_object['links_order'] = this._links_order.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
       }
-    }  else if (kwargs && kwargs['only_visible_elements']) {
+    } else if (kwargs && kwargs['only_visible_elements']) {
       if (this.input_links_list.length > 0) {
         json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
       }
@@ -1122,7 +1122,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
           else {
             const nodeAbove = same_u_other[same_u_other.indexOf(this) - 1]
             if (nodeAbove) {
-              const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item => 
+              const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item =>
                 this._attached_container.includes(item)
               )
               if (same_container) {
@@ -1160,8 +1160,8 @@ export class Class_NodeElement extends ClassTemplate_Element {
     // Links positions are modified by nodes's position changes
     if (!this.sankey.drawing_area.bypass_compute_positions)
       this.updateLinksPositions()
-    else 
-      this.sankey.visible_links_list.forEach(l=>l.draw())
+    else
+      this.sankey.visible_links_list.forEach(l => l.draw())
     // Node shape -> affected if links are added or removed, or if links values change
     this._nodeDrawShape.drawShape()
   }
@@ -1218,29 +1218,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
+              case 'left':
+                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+                break
+              case 'top':
+                node_face_size = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size = sumLinkTop
+                break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
+              case 'left':
+                node_face_size2 = sumLinkRight
+                break
+              case 'top':
+                node_face_size2 = sumLinkBottom
+                break
+              case 'bottom':
+                node_face_size2 = sumLinkTop
+                break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -1752,10 +1752,10 @@ export class Class_NodeElement extends ClassTemplate_Element {
   public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public get input_links_dict() { return this._input_links }
   public get input_links_list() { return Object.values(this._input_links) }
-  public get visible_input_links_list() { return Object.values(this._input_links).filter(l=>l.is_visible) }
+  public get visible_input_links_list() { return Object.values(this._input_links).filter(l => l.is_visible) }
   public get output_links_dict() { return this._output_links }
   public get output_links_list() { return Object.values(this._output_links) }
-  public get visible_output_links_list() { return Object.values(this._output_links).filter(l=>l.is_visible) }
+  public get visible_output_links_list() { return Object.values(this._output_links).filter(l => l.is_visible) }
   public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
   public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
   public get style() { return this._display.style as Class_NodeStyle[] }

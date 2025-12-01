@@ -345,30 +345,11 @@ def retrieve_json():
             output_format='json'
         )
 
-        # Decide threading based on file size
-        file_stats = os.stat(input_file_name)
-        use_thread = file_stats.st_size > 500000  # 500KB threshold
 
-        if use_thread:
-            # Use threading for large files
-            thread = Thread(
-                target=conversion_thread,
-                args=(
-                    input_file_name,
-                    output_file_name,
-                    input_format,
-                    'json',
-                    {},
-                    {},
-                    logname
-                ),
-            )
-            thread.daemon = True
-            thread.start()
-            trace.logger.debug("Conversion thread launched")
-        else:
-            # Direct execution for small files
-            conversion_thread(
+        # Use threading for large files
+        thread = Thread(
+            target=conversion_thread,
+            args=(
                 input_file_name,
                 output_file_name,
                 input_format,
@@ -376,7 +357,12 @@ def retrieve_json():
                 {},
                 {},
                 logname
-            )
+            ),
+        )
+        thread.daemon = True
+        thread.start()
+        trace.logger.debug("Conversion thread launched")
+
 
         return Response(response="{}", status=200, mimetype="application/json")
 

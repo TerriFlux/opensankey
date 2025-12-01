@@ -338,6 +338,22 @@ export const UniversalFileConverter = ({
     case 'blob': return {}
     }
   }
+
+    const reset = () => {
+      // const form_data = new FormData()
+      // fetch(window.location.origin + url_prefix + '/upload/clean', {
+      //   method: 'POST',
+      //   body: form_data
+      // })
+      processFunctions.ref_processing.current = false
+      processFunctions.failure.current = false
+      //set_is_computing(false)
+      setAutoLoad(!config.output.required && !config.input.format.options!.includes('blob'))
+      processFunctions.not_started.current = true
+      set_show_terminal(false)
+      setUpdate(a => a + 1)
+    }
+
   const handleFinish = async () => {
     if (!auto_load) {
       console.log('🔄 Conversion terminée - en attente d\'action utilisateur')
@@ -596,7 +612,7 @@ export const UniversalFileConverter = ({
             processFunctions={processFunctions}
             url_prefix={app_data.url_prefix}
             app_data={app_data}
-            set_show_terminal={set_show_terminal}
+            reset={reset}
             handleFinish={handleFinish}
             downloadFileResult={downloadFileResult}
             loadFileResult={loadFileResult}

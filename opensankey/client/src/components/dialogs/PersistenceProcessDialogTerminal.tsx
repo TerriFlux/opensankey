@@ -14,7 +14,7 @@ interface ProcessTerminalProps {
   processFunctions: FType_ProcessFunctions
   url_prefix: string
   app_data: Class_ApplicationData
-  set_show_terminal: (show: boolean) => void
+  reset: () => void
   handleFinish: () => void,
   downloadFileResult: () => void,
   loadFileResult: () => void,
@@ -25,11 +25,11 @@ export const ProcessTerminal = ({
   processFunctions,
   url_prefix,
   app_data,
-  set_show_terminal,
+  reset,
   handleFinish,
   downloadFileResult,
   loadFileResult,
-  auto_load  
+  auto_load,
 }: ProcessTerminalProps) => {
   const { t } = app_data
   const [value, setValue] = useState([1, 2])
@@ -45,20 +45,6 @@ export const ProcessTerminal = ({
       value.push(+(evt.target as HTMLFormElement).value)
     }
     setValue([...value])
-  }
-
-  const reset = () => {
-    // const form_data = new FormData()
-    // fetch(window.location.origin + url_prefix + '/upload/clean', {
-    //   method: 'POST',
-    //   body: form_data
-    // })
-    ref_processing.current = false
-    failure.current = false
-    //set_is_computing(false)
-    not_started.current = true
-    set_show_terminal(false)
-    setUpdate(a => a + 1)
   }
 
   const failure_status = t('Menu.failure_file')
