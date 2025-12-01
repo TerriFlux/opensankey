@@ -20,7 +20,7 @@ from flask import request
 from flask import redirect
 from flask import send_from_directory
 from flask import Response
-from opensankey.server.views import get_session_id, set_process_state
+from opensankey.server.views import get_process_state, set_process_state
 from SankeyExcelParser.io_base import IOJson, IOExcel
 import SankeyExcelParser.su_trace as trace
 
@@ -55,13 +55,6 @@ sankeyapp = Blueprint(
     template_folder=template_folder,
     static_url_path="/static/sankeyapp",
 )
-
-# IMPORTANT: Importer les fonctions de gestion d'état depuis l'autre fichier
-# Si elles sont dans opensankey/views.py, ajoutez cet import :
-# from .views import get_session_id, get_process_state, set_process_state
-
-# Sinon, redéfinissez-les ici (mais mieux vaut les importer pour éviter la duplication)
-
 
 @sankeyapp.route("/")
 def index():
@@ -227,9 +220,7 @@ def launch_optim_sankey():
     Tout le traitement lourd est threadé.
     """
     try:
-        # ========== PARTIE RAPIDE: Setup (pas threadé) ==========
-        session_id = get_session_id()
-
+ 
         # Créer les répertoires temporaires
         tmp_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp()
@@ -244,7 +235,6 @@ def launch_optim_sankey():
 
         # Stocker l'état
         set_process_state(
-            session_id,
             process_started=True,
             tmp_dir=tmp_dir,
             logname=log_filename,
@@ -298,9 +288,6 @@ def launch_optim():
     Tout le traitement lourd est threadé.
     """
     try:
-        # ========== PARTIE RAPIDE: Setup (pas threadé) ==========
-        session_id = get_session_id()
-
         # Créer les répertoires temporaires
         tmp_dir = tempfile.mkdtemp()
         log_dir = tempfile.mkdtemp()
@@ -320,7 +307,6 @@ def launch_optim():
         output_options = json.loads(request.form.get('output_options', '{}'))
         # Stocker l'état
         set_process_state(
-            session_id,
             process_started=True,
             tmp_dir=tmp_dir,
             logname=log_filename,
