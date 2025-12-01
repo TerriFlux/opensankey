@@ -334,10 +334,10 @@ def retrieve_result():
 
         # Mapping extensions → noms de téléchargement
         download_name_map = {
-            '.xlsx': root_file_name+'.xlsx',
-            '.json': root_file_name+'.json',
-            '.csv': root_file_name+'.csv',
-            '.txt': root_file_name+'.txt'
+            '.xlsx': root_file_name + '.xlsx',
+            '.json': root_file_name + '.json',
+            '.csv': root_file_name + '.csv',
+            '.txt': root_file_name + '.txt'
         }
 
         mimetype = mimetype_map.get(ext, 'application/octet-stream')
@@ -759,4 +759,4 @@ def url_load_json():
         print(f"Erreur : {e}")
         return {"error": str(e)}, 500
 
-from . import views_export
+from . import views_export # noqa
