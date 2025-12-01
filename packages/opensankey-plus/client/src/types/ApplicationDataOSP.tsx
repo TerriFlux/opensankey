@@ -215,7 +215,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    *
    * @memberof Class_ApplicationDataOSP
    */
-  protected _reset(kwargs?:Type_JSON): void {
+  protected _reset(kwargs?: Type_JSON): void {
     if ((kwargs && kwargs['only_current_view']) && this.has_views && this._master_drawing_area != undefined && this._drawing_area.id != default_main_sankey_id) {
       this.drawing_area.purgeSelection()
       this.drawing_area.unDraw()
@@ -255,80 +255,54 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @return {*}
    * @memberof Class_ApplicationDataOSP
    */
-  protected _toJSON(kwargs:Type_JSON) {
-    let current_view = default_main_sankey_id
+  protected _toJSON(kwargs: Type_JSON) {
     let json_entry: Type_JSON = {}
+    if (!this.has_views) {
+      return super._toJSON(kwargs)
+    }
+    //save current view
+    if (!this.is_view_master) {
+      this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON())
+      this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    }
 
-    if (
-      this.has_views &&
-      kwargs && kwargs['only_current_view'] &&
+    // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
+    if (kwargs && kwargs['only_current_view'] &&
       !this.is_view_master
     ) {
-      // If we are in a view & the option only_current_view is at true then we export to JSON only the current view
       json_entry = super._toJSON()
       json_entry.id = default_main_sankey_id
+      return json_entry
     }
-    else {
-      // Else save master then views in a variable in JSON
-      if (this.has_views && !this.is_view_master) {
-        // Update _original_current_view
-        // Since we update the view in master data the view become the 'original_view'
-        this.deleteCurrentOriginalView()
-
-        // Create & save a clone of current view's DA
-        const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
-        clone_drawing_area.bypass_redraws = true
-        clone_drawing_area.copyFrom(this._drawing_area)
-        this._original_current_view = clone_drawing_area
-
-        // Save current view id so it we can reset active view as the current one before toJSON
-        // It is done so we save first the master then the views in a JSON
-        current_view = this._drawing_area.id
-        // Set current DA to master so master is save in first
-        this._drawing_area.sankey.setInvisible()
-        this._drawing_area.purgeSelection()
-        this._drawing_area.unDraw()
-        this._drawing_area = this._master_drawing_area!
+    // Herited toJSON to save master data
+    json_entry = super._toJSON(kwargs)
+    // If application_data has views then we save them in the JSON
+    json_entry['views'] = {}
+    const json_entry_views = json_entry['views']
+    // Go throught all view (except first since it's master data & already parsed in JSON)
+    this._views_order.forEach(id => {
+      json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }))
+      if (kwargs && kwargs['save_only_visible_elements']) {
+        this.extractViewFromJSON(this._views[id].json, id)
+        json_entry_views[id] = this._drawing_area.toJSON(kwargs)
       }
+    })
 
-      // Herited toJSON to save master data
-      json_entry = super._toJSON(kwargs)
-
-      if (this.has_views) {
-        // If application_data has views then we save them in the JSON
-        json_entry['views'] = {}
-        const json_entry_views = json_entry['views']
-        // Go throught all view (except first since it's master data & already parsed in JSON)
-        this._views_order.forEach(id => {
-          json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }))
-          if (kwargs && kwargs['save_only_visible_elements']) {
-            this.extractViewFromJSON(this._views[id].json, id)
-            json_entry_views[id] = this._drawing_area.toJSON()
-          }
-        })
-        // Set current DA to active view before toJSON
-        if (current_view == default_main_sankey_id) this._drawing_area = this._master_drawing_area!
-        else this.extractViewFromJSON(this._views[current_view].json, current_view)
-      }
-    }
-
-    // Add var to remember active view when saved
-    if (current_view !== default_main_sankey_id) json_entry['current_view'] = current_view
     return json_entry
   }
 
   protected _fromJSON(
     json_object: Type_JSON,
-    kwargs?:Type_JSON
+    kwargs?: Type_JSON
   ) {
     if (kwargs && kwargs['only_current_view']) {
       if (!this.is_view_master) {
         const current_view_id = this.drawing_area.id
         json_object['id'] = current_view_id
-        this.views_dict[current_view_id ].json = compressJSONToGzip(json_object)
+        this.views_dict[current_view_id].json = compressJSONToGzip(json_object)
       }
     }
-    super._fromJSON(json_object,kwargs)
+    super._fromJSON(json_object, kwargs)
     if (kwargs && kwargs['only_current_view']) {
       return
     }
@@ -364,7 +338,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _updateFromJSON(json_object: Type_JSON,kwargs?:Type_JSON) {
+  protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._updateFromJSON(json_object)
     if (this.drawing_area.id != default_main_sankey_id && (kwargs && kwargs['only_current_view'])) {
       this._views[this.drawing_area.id].json = compressJSONToGzip(this.drawing_area.toJSON())
@@ -584,7 +558,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
-    const copy = base_drawing_area.toJSON({keep_siblings:true})
+    const copy = base_drawing_area.toJSON({ keep_siblings: true })
     copy.id = id
     new_drawing_area.fromJSON(copy)
     new_drawing_area.name = name
@@ -707,8 +681,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     // Add new sankey to views
     this._views[new_drawing_area.id] = {
-      'name' : new_drawing_area.name,
-      'json' : compressJSONToGzip(new_drawing_area.toJSON())
+      'name': new_drawing_area.name,
+      'json': compressJSONToGzip(new_drawing_area.toJSON())
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this.setCurrentView(new_drawing_area.id)
