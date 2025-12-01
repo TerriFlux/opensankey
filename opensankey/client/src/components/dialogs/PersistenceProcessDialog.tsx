@@ -289,7 +289,7 @@ export const UniversalFileConverter = ({
   const lang = (app_data.i18n?.language === 'fr' ? 'fr' : 'en') as 'en' | 'fr'
   //const [layout_open, setLayoutOpen] = useState(false)
   const [auto_layout, setAutoLayout] = useState(false)
-  const [auto_load, _] = useState(!config.output.required && !config.input.format.options!.includes('blob'))
+  const [auto_load, setAutoLoad] = useState(!config.output.required && !config.input.format.options!.includes('blob'))
 
 
   // États de base - utiliser les helpers
@@ -414,6 +414,7 @@ export const UniversalFileConverter = ({
       })
   }
   const loadFileResult = () => {
+    setAutoLoad(true)
     launch('', default_actions_type)
     const form_data = new FormData()
     form_data.append('input_format', input_format)
