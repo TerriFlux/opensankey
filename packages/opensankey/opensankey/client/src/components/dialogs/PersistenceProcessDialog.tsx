@@ -402,7 +402,8 @@ export const UniversalFileConverter = ({
           excel: '.xlsx',
           json: '.json'
         }
-        const filename = `converted${extensions[output_format] || ''}`
+        const root_filename = (input_file as File).name.split('.')[0]
+        const filename = `${root_filename}${extensions[output_format] || ''}`
 
         FileSaver.saveAs(blob, filename)
         console.log(`✅ Fichier téléchargé: ${filename}`)
