@@ -241,21 +241,24 @@ def check_process():
             return Response(json.dumps({}), status=200, mimetype="application/json")
         trace.logger.debug(state["logname"])
         trace.logger.debug("not started")
-        return Response(json.dumps({}), status=200, mimetype="application/json")
+        return Response(json.dumps({"not_started":True}), status=200, mimetype="application/json")
     try:
-        # trace.logger.debug(session['logname'])
-        # trace.logger.debug('open')
+        trace.logger.debug(session['logname'])
+        trace.logger.debug('open')
         logname = state['logname']
         if os.path.isfile(logname):
-            # trace.logger.debug('is file')
+            trace.logger.debug('is file')
             f = open(logname, "r")
-            # trace.logger.debug('opened')
+            trace.logger.debug('opened')
             results = f.read()
             f.close()  # ← AJOUT: fermer le fichier
-            # trace.logger.debug('read')
-            results_dict = {"output": results}
+            trace.logger.debug('read')
+            results_dict = {
+                "log_name": logname,
+                "output": results
+            }
             json_data = json.dumps(results_dict)
-            # trace.logger.debug('dumps')
+            #trace.logger.debug('dumps')
             return Response(json_data, status=200, mimetype="application/json")
         else:
             return Response(
