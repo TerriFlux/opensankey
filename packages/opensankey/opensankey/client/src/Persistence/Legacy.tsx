@@ -2395,39 +2395,39 @@ const convert_links: convert_linksFuncType = (
       // Priorité 1 : Nœud "produit" avec tag de couleur valide
       if (isProductNode(source_node) && hasValidColorTag(source_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'source'
+        l.local.color_rule = 'auto'//'source'
         return
       }
 
       if (isProductNode(target_node) && hasValidColorTag(target_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'target'
+        l.local.color_rule = 'auto'//'target'
         return
       }
 
       // Priorité 2 : Nœud NON-"produit" avec tag de couleur valide
       if (!isProductNode(source_node) && hasValidColorTag(source_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'source'
+        l.local.color_rule = 'auto'//'source'
         return
       }
 
       if (!isProductNode(target_node) && hasValidColorTag(target_node, data)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'target'
+        l.local.color_rule = 'auto'//'target'
         return
       }
 
       // Priorité 3 : Nœud "produit" par défaut (fallback)
       if (isProductNode(source_node)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'source'
+        l.local.color_rule = 'auto'//source'
         return
       }
 
       if (isProductNode(target_node)) {
         if (!l.local) l.local = {}
-        l.local.color_rule = 'target'
+        l.local.color_rule = 'auto'//'target'
         return
       }
     }
