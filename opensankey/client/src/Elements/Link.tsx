@@ -671,7 +671,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Tooltips
     if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
     // Values
-    if (!kwargs || !kwargs['with_values'])
+    if (!kwargs || kwargs['with_values'] !== false)
       json_object['value'] = this._values.toJSON(kwargs)
     // Out
     return json_object
