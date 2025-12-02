@@ -396,7 +396,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
     case 'level': {
       const level_taggs = sankey.level_taggs_dict
-      return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' && active_level_taggs.has(tagg)) as unknown as Class_TagGroup[]
+      return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/) as unknown as Class_TagGroup[]
     }
     case 'data':
       return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
@@ -538,7 +538,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   }
 
   // Création du sélecteur selon le type de banner
-  const createSelector = (tagg: Class_TagGroup, active_tags: Set<Class_ProtoTag>) => {
+  const createSelector = (tagg: Class_TagGroup/*, active_tags: Set<Class_ProtoTag>*/) => {
     if (tagg.banner === 'one') {
       const selected_value = tagg.selected_tags_list[0]?.id ?? ''
       return (
@@ -549,7 +549,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             handleTagSelection(tagg, [evt.target.value])
           }}
         >
-          {tagg.tags_list.filter(tag => active_tags.has(tag)).map(tag => (
+          {tagg.tags_list/*.filter(tag => active_tags.has(tag))*/.map(tag => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
             </option>
@@ -557,7 +557,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         </Select>
       )
     } else if (tagg.banner === 'multi') {
-      const options = tagg.tags_list.filter(tag => active_tags.has(tag)).map(tag => ({
+      const options = tagg.tags_list/*.filter(tag => active_tags.has(tag))*/.map(tag => ({
         label: tag.name,
         value: tag.id,
         selected: tag.is_selected,
@@ -648,7 +648,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     if (Object.keys(tagg.tags_dict || {}).length < 1) {
       return <></>
     }
-    const selector = createSelector(tagg, getActiveTagsForMode())
+    const selector = createSelector(tagg/*, getActiveTagsForMode()*/)
 
     const actionButton = createActionButton(tagg)
 
