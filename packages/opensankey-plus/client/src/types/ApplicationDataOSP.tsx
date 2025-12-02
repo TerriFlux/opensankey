@@ -281,7 +281,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const json_entry_views = json_entry['views']
     // Go throught all view (except first since it's master data & already parsed in JSON)
     this._views_order.forEach(id => {
-      json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }))
+      json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }));
+      (json_entry_views[id] as Type_JSON)['name'] = this._views[id].name
       if (kwargs && kwargs['save_only_visible_elements']) {
         this.extractViewFromJSON(this._views[id].json, id)
         json_entry_views[id] = this._drawing_area.toJSON(kwargs)
