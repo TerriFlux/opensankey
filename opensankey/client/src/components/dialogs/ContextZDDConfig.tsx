@@ -1,5 +1,6 @@
 import { applyRandomColors } from '../../Algorithms/Colors'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_Tag } from '../../types/Tag'
 import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
@@ -66,6 +67,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
             }
           }]
         },
+        { type: 'button', actionName: 'resetTradeNode'},
         { type: 'button', actionName: 'arrangeNodesToGrid' }
       ]
     },
@@ -295,7 +297,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       },
       getToggleValue: 'toggleTradeValue'
     },
-
+    resetTradeNode: {
+      type: 'action',
+      labels: {
+        en: 'Transform trade nodes in sectors',
+        fr: 'Transforme les noeuds d\'échanges en secteurs'
+      },
+      tooltips: {
+        en: 'Transform trade nodes in sectors',
+        fr: 'Transforme les noeuds d\'échanges en secteurs'
+      }
+    },
     applyRandomNodeColors: {
       type: 'action',
       labels: {
@@ -424,7 +436,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   } = dict_setter_show_dialog
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.node_styles_dict['default']
-
+  const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   return {
     fromNew: () => app_data.reinitialization(),
     bgGrid: () => drawing_area.bgGrid(),
@@ -433,6 +445,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     maskLegendValue: () => drawing_area.legend.masked,
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
+    resetTradeNode:() => {sankey.nodes_list.filter(n=>n.hasGivenTag(echangeTag!)).forEach(n=>n.removeTag(echangeTag!))},
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => getNodeStyle().position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().position_type === 'parametric',
