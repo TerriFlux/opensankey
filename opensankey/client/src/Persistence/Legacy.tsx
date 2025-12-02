@@ -2437,6 +2437,10 @@ const convert_links: convert_linksFuncType = (
 
     // Convert legacy recycling position -> new positions
     if (l.local) {
+      if (l.local.user_scale) {
+        l.local.user_scale = l.local.user_scale/data.user_scale
+      }
+
       if (!l.local.recycling) {
         if (l.local.right_horiz_shift !== undefined)
           if (l.local.right_horiz_shift >= 0 && l.local.right_horiz_shift <= 1) {

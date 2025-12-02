@@ -157,6 +157,7 @@ export type SankeyLinkValueDict = {
 }
 
 export type SankeyLinkAttrLocal = {
+  user_scale?: number
   // Geometry link
   orientation?: string,
   left_horiz_shift?: number,

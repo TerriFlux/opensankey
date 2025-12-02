@@ -1418,12 +1418,16 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected scaleValueToPx(_: number) {
     const current_value = this.value
     const unit_tag = current_value?.unit_data_tag()
-    if (unit_tag) {
+    if (unit_tag && !this.shape_local_link_scale) {
       this.setDomainLocalScale(unit_tag.scale)
       return this._scaleValueToPx(_)
     }
     if (this.shape_local_link_scale) {
-      this.setDomainLocalScale(this.shape_local_link_scale)
+      if (unit_tag) {
+        this.setDomainLocalScale(unit_tag.scale * this.shape_local_link_scale)
+      } else {
+        this.setDomainLocalScale(this.sankey.drawing_area.scale * this.shape_local_link_scale)
+      }
       return this._scaleValueToPx(_)
     } else {
       return this.drawing_area.scaleValueToPx(_)
