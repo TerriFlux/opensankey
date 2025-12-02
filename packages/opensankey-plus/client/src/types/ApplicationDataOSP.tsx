@@ -275,7 +275,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return json_entry
     }
     // Herited toJSON to save master data
-    json_entry = super._toJSON(kwargs)
+    json_entry = this._master_drawing_area!.toJSON(kwargs)
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
