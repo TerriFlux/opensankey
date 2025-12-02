@@ -149,15 +149,10 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
    * @memberof Class_MenuConfigOSP
    */
   public updateComponentRelatedToViews() {
-    this._add_waiting_process(
-      'updateComponentRelatedToView',
-      (_this: Class_MenuConfigOSP) => {
-        _this._ref_to_banner_views_updater.current()
-        _this._ref_to_views_config_updater.current()
-        _this.updateComponentSaveDiagramJSON()
-        _this.updateComponentLoadDiagramJSON()
-      }
-    )
+        this._ref_to_banner_views_updater.current()
+        this._ref_to_views_config_updater.current()
+        this.updateComponentSaveDiagramJSON()
+        this.updateComponentLoadDiagramJSON()
   }
 
   /**

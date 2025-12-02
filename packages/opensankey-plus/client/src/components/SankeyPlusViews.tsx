@@ -616,7 +616,7 @@ export const SelecteurView = (
         .map((view,i) => {
           return <option
             key={i}
-            value={i}
+            value={view}
           >
             {new_data_plus.views_dict[view].name}
           </option>
@@ -625,11 +625,12 @@ export const SelecteurView = (
   </Select>
 
   const text_input = <ConfigMenuTextInput
-    default_value={cur_view.name}
+    default_value={new_data_plus.views_dict[cur_view.id]?.name}
     function_on_blur={(_) => {
       // Update text for links
       if ((_ !== undefined) && (_ !== null)) {
-        cur_view.name = _
+        new_data_plus.views_dict[cur_view.id].name = _
+        //cur_view.name = _
       }
       // Update this menu
       sSelectOrEdit('select')

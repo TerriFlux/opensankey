@@ -690,23 +690,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   public setCurrentView(id: string) {
-    // Embedded in waiting function
-    this.sendWaitingToast(
-      () => {
-        this._setCurrentView(id)
-      },
-      {
-        success: {
-          title: this.t('toast.set_view.success.title')
-        },
-        loading: {
-          title: this.t('toast.set_view.loading.title')
-        },
-        error: {
-          title: this.t('toast.set_view.error.title')
-        }
-      }
-    )
+    this._setCurrentView(id)
   }
 
   protected _setCurrentView(id: string) {
