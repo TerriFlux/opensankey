@@ -58,8 +58,8 @@ export const translations = {
       fr: 'Infos'
     },
     err: {
-      en: 'Errors',
-      fr: 'Erreurs'
+      en: 'Warnings',
+      fr: 'Avertissements'
     },
     debug: {
       en: 'Debug',

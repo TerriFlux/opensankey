@@ -49,12 +49,12 @@ export const LINKS_ATTRIBUTES_CONFIG = {
     actions: ['drawWithNodes'] as ActionType[],  // 🆕
     
     labels: {
-      en: 'Link scale',
-      fr: 'Échelle du flux'
+      en: 'Multiplier Link scale',
+      fr: 'Multiplicateur Échelle du flux'
     },
     tooltips: {
-      en: 'Define a local scale for this flow, which can break the coherence of flow thickness proportionality',
-      fr: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme'
+      en: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.',
+      fr: 'Définissez un facteur d’échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.'
     }
   } satisfies AttributeConfig<number | undefined>,
 
