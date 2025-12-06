@@ -5,16 +5,15 @@
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
-import { Class_LevelTagGroup } from '../../types/TagGroup'
 import {
   aggregate,
   disaggregate,
   aggregationExpansion,
   disaggregationExpansion,
   contract,
-  create_parent,
-  set_child,
-  applyDimension,
+  // create_parent,
+  // set_child,
+  // applyDimension,
   EXPANSION_SUFFIXES
 } from '../../Algorithms/Hierarchies'
 import { Class_DrawingArea } from '../../types/DrawingArea'
@@ -80,22 +79,22 @@ export class NodeActions {
   // ACTIONS DE HIÉRARCHIE
   // ==================================================================================================
 
-  aggregate = (dim_name: string) => {
+  aggregate = (parent: string) => {
     if (!this.contextualised_node) return
 
     const child_dims = this.contextualised_node.master_node ?
       this.contextualised_node.master_node.dimensions_as_child_pure :
       this.contextualised_node.dimensions_as_child_pure
 
-    let level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].related_level_tagg
-    if (!dim_name) {
-      if (child_dims.filter(dim => dim.force_show_children).length != 0) {
-        level_tagg = child_dims.filter(dim => dim.force_show_children)[0].related_level_tagg
-      }
-    }
+    //let parent = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].parent
+    // if (!dim_name) {
+    //   if (child_dims.filter(dim => dim.force_show_children).length != 0) {
+    //     level_tagg = child_dims.filter(dim => dim.force_show_children)[0].related_level_tagg
+    //   }
+    // }
 
     if (child_dims.length > 0) {
-      aggregate(this.app_data, this.contextualised_node, level_tagg)
+      aggregate(this.app_data, this.contextualised_node, parent)
       this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
       this.app_data.drawing_area.bypass_autofit = false
@@ -106,7 +105,7 @@ export class NodeActions {
     }
   }
 
-  aggregateLeft = (dim_name: string) => {
+  aggregateLeft = (_dim_name: string) => {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
@@ -114,12 +113,12 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_child_pure
 
     if (parentDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
-      aggregationExpansion(this.app_data, this.contextualised_node, true, level_tagg)
+      const parent = parentDims[0].parent
+      aggregationExpansion(this.app_data, this.contextualised_node, true, parent)
     }
   }
 
-  aggregateRight = (dim_name: string) => {
+  aggregateRight = (_dim_name: string) => {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
@@ -127,8 +126,8 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_child_pure
 
     if (parentDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : parentDims[0].related_level_tagg
-      aggregationExpansion(this.app_data, this.contextualised_node, false, level_tagg)
+      const parent = parentDims[0].parent
+      aggregationExpansion(this.app_data, this.contextualised_node, false, parent)
     }
   }
 
@@ -140,8 +139,8 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
 
     if (childDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
-      disaggregate(this.app_data, this.contextualised_node, level_tagg)
+      const child = childDims.filter(dim=>dim.children.filter(c=>c.id==dim_name).length>0)[0].children[0].id
+      disaggregate(this.app_data, this.contextualised_node, child)
       this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
       this.app_data.drawing_area.bypass_autofit = false
@@ -151,7 +150,7 @@ export class NodeActions {
     }
   }
 
-  expandLeft = (dim_name: string) => {
+  expandLeft = (_dim_name: string) => {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
@@ -159,8 +158,8 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
     this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
-      disaggregationExpansion(this.app_data, this.contextualised_node, true, level_tagg)
+      const child = childDims[0].children[0]
+      disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
     }
   }
 
@@ -172,8 +171,8 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent_pure
     this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
-      const level_tagg = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : childDims[0].related_level_tagg
-      disaggregationExpansion(this.app_data, this.contextualised_node, false, level_tagg)
+      const child = childDims[0].children[0]
+      disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
     }
   }
 
@@ -216,85 +215,85 @@ export class NodeActions {
   }
 
   // Actions dynamiques pour les dimensions
-  private createDimensionAction = (actionPrefix: string, isParent: boolean = false) => {
-    const sankey = this.drawing_area.sankey
-    const actions: Record<string, () => void> = {}
+  // private createDimensionAction = (actionPrefix: string, isParent: boolean = false) => {
+  //   const sankey = this.drawing_area.sankey
+  //   const actions: Record<string, () => void> = {}
 
-    // Génération dynamique des actions pour chaque dimension
-    sankey.level_taggs_list.forEach((tagg) => {
-      const actionName = `${actionPrefix}_${tagg.id}`
-      actions[actionName] = () => {
-        if (isParent) {
-          create_parent(this.app_data, this.selected_nodes, tagg as Class_LevelTagGroup)
-        } else {
-          const expand_left = this.selected_nodes.length > 0 ? this.selected_nodes[0].output_links_list.length == 0 : true
-          const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-          const source_or_target_attr = expand_left ? 'source' : 'target'
+  //   // Génération dynamique des actions pour chaque dimension
+  //   sankey.level_taggs_list.forEach((tagg) => {
+  //     const actionName = `${actionPrefix}_${tagg.id}`
+  //     actions[actionName] = () => {
+  //       if (isParent) {
+  //         create_parent(this.app_data, this.selected_nodes, tagg as Class_LevelTagGroup)
+  //       } else {
+  //         const expand_left = this.selected_nodes.length > 0 ? this.selected_nodes[0].output_links_list.length == 0 : true
+  //         const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  //         const source_or_target_attr = expand_left ? 'source' : 'target'
 
-          let possible_root_nodes: Set<string> = new Set()
-          this.selected_nodes.forEach(n => {
-            if (possible_root_nodes.size !== 0) {
-              possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-                .intersection(possible_root_nodes)
-            } else {
-              possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-            }
-          })
+  //         let possible_root_nodes: Set<string> = new Set()
+  //         this.selected_nodes.forEach(n => {
+  //           if (possible_root_nodes.size !== 0) {
+  //             possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
+  //               .intersection(possible_root_nodes)
+  //           } else {
+  //             possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
+  //           }
+  //         })
 
-          set_child(this.app_data, this.selected_nodes, possible_root_nodes, tagg as Class_LevelTagGroup, expand_left)
-        }
-      }
-    })
+  //         set_child(this.app_data, this.selected_nodes, possible_root_nodes, tagg as Class_LevelTagGroup, expand_left)
+  //       }
+  //     }
+  //   })
 
-    return actions
-  }
+  //   return actions
+  // }
 
-  createNewDimension = () => {
-    const sankey = this.drawing_area.sankey
-    const expand_left = this.selected_nodes.length > 0 ? this.selected_nodes[0].output_links_list.length == 0 : true
-    const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-    const source_or_target_attr = expand_left ? 'source' : 'target'
+  // createNewDimension = () => {
+  //   const sankey = this.drawing_area.sankey
+  //   const expand_left = this.selected_nodes.length > 0 ? this.selected_nodes[0].output_links_list.length == 0 : true
+  //   const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+  //   const source_or_target_attr = expand_left ? 'source' : 'target'
 
-    let possible_root_nodes: Set<string> = new Set()
-    this.selected_nodes.forEach(n => {
-      if (possible_root_nodes.size !== 0) {
-        possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-          .intersection(possible_root_nodes)
-      } else {
-        possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
-      }
-    })
+  //   let possible_root_nodes: Set<string> = new Set()
+  //   this.selected_nodes.forEach(n => {
+  //     if (possible_root_nodes.size !== 0) {
+  //       possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
+  //         .intersection(possible_root_nodes)
+  //     } else {
+  //       possible_root_nodes = new Set(n[input_or_output_attr].map(l => l[source_or_target_attr].id))
+  //     }
+  //   })
 
-    if (possible_root_nodes.size > 0) {
-      this.drawing_area.bypass_redraws = true
-      const tagg_idx = sankey.level_taggs_list.length + 1
-      const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
-      tagg.activated = true
-      tagg.addTag('1', '1')
-      tagg.addTag('2', '2')
-      const parent_level_tag = tagg.tags_list[0]
-      const child_level_tag = tagg.tags_list[1]
-      const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+  //   if (possible_root_nodes.size > 0) {
+  //     this.drawing_area.bypass_redraws = true
+  //     const tagg_idx = sankey.level_taggs_list.length + 1
+  //     const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
+  //     tagg.activated = true
+  //     tagg.addTag('1', '1')
+  //     tagg.addTag('2', '2')
+  //     const parent_level_tag = tagg.tags_list[0]
+  //     const child_level_tag = tagg.tags_list[1]
+  //     const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
 
-      applyDimension(this.app_data, this.selected_nodes, parent_level_tag, root_node, child_level_tag, tagg, expand_left)
-      tagg.tags_list[0].setSelected()
-      this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-      this.drawing_area.draw()
-    }
-  }
+  //     applyDimension(this.app_data, this.selected_nodes, parent_level_tag, root_node, child_level_tag, tagg, expand_left)
+  //     tagg.tags_list[0].setSelected()
+  //     this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+  //     this.drawing_area.draw()
+  //   }
+  // }
 
-  createNewDimensionForParent = () => {
-    const sankey = this.drawing_area.sankey
-    const tagg_idx = sankey.level_taggs_list.length + 1
-    const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
-    tagg.activated = true
-    tagg.addTag('1', '1')
-    tagg.addTag('2', '2')
+  // createNewDimensionForParent = () => {
+  //   const sankey = this.drawing_area.sankey
+  //   const tagg_idx = sankey.level_taggs_list.length + 1
+  //   const tagg = sankey.addLevelTagGroup('dimension_' + tagg_idx, 'Dimension ' + tagg_idx) as Class_LevelTagGroup
+  //   tagg.activated = true
+  //   tagg.addTag('1', '1')
+  //   tagg.addTag('2', '2')
 
-    create_parent(this.app_data, this.selected_nodes, tagg)
-    this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-    this.drawing_area.draw()
-  }
+  //   create_parent(this.app_data, this.selected_nodes, tagg)
+  //   this.drawing_area.application_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+  //   this.drawing_area.draw()
+  // }
 
   // ==================================================================================================
   // ACTIONS D'ALIGNEMENT
@@ -556,8 +555,8 @@ export class NodeActions {
     const nodeActions = new NodeActions(app_data)
 
     // Génération des actions dynamiques pour les dimensions
-    const setChildActions = nodeActions.createDimensionAction('setChild', false)
-    const createParentActions = nodeActions.createDimensionAction('createParent', true)
+    // const setChildActions = nodeActions.createDimensionAction('setChild', false)
+    // const createParentActions = nodeActions.createDimensionAction('createParent', true)
     //const styleActions = nodeActions.createStyleActions()
     return {
       // Méthodes de visibilité pour les toggles
@@ -574,9 +573,9 @@ export class NodeActions {
       expandRight: nodeActions.expandRight,
       contractLeft: nodeActions.contractLeft,
       contractRight: nodeActions.contractRight,
-      createFluxOnChildren: nodeActions.createFluxOnChildren,
-      createNewDimension: nodeActions.createNewDimension,
-      createNewDimensionForParent: nodeActions.createNewDimensionForParent,
+      // createFluxOnChildren: nodeActions.createFluxOnChildren,
+      // createNewDimension: nodeActions.createNewDimension,
+      // createNewDimensionForParent: nodeActions.createNewDimensionForParent,
 
       // Actions d'alignement
       alignHorizMinLeft: nodeActions.alignHorizMinLeft,
@@ -610,8 +609,8 @@ export class NodeActions {
       selectInputLinks: nodeActions.selectInputLinks,
 
       // Actions dynamiques générées pour les dimensions
-      ...setChildActions,
-      ...createParentActions,
+      // ...setChildActions,
+      // ...createParentActions,
       // ...styleActions
     }
   }

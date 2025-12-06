@@ -280,14 +280,14 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
             if (child_dims.filter(dim => dim.force_show_children).length === 0) {
               dimensionSubmenusAgg = child_dims.map(dim => ({
                 type: 'button' as const,
-                actionName: `aggregate_${dim.related_level_tagg.id}`,
+                actionName: `aggregate_${dim.parent.id}`,
                 titleName: `${dim.parent.name} <- `,
               })
               )
             } else {
               dimensionSubmenusAgg = child_dims.filter(dim => dim.force_show_children).map(dim => ({
                 type: 'button' as const,
-                actionName: `aggregate_${dim.related_level_tagg.id}`,
+                actionName: `aggregate_${dim.parent.id}`,
                 titleName: `${dim.parent.name} <- `,
               })
               )
@@ -300,12 +300,12 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
               children: [
                 {
                   type: 'button' as const,
-                  actionName: `aggregate_${dim.related_level_tagg.id}`,
+                  actionName: `aggregate_${dim.parent.id}`,
                   titleKey: 'Sans expansion'
                 },
                 {
                   type: 'button' as const,
-                  actionName: `aggregateLeft_${dim.related_level_tagg.id}`,
+                  actionName: `aggregateLeft_${dim.parent.id}`,
                   titleKey: 'Expansion à gauche',
                   visibilityConditions: [{
                     type: 'custom',
@@ -317,7 +317,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                 },
                 {
                   type: 'button' as const,
-                  actionName: `aggregateRight_${dim.related_level_tagg.id}`,
+                  actionName: `aggregateRight_${dim.parent.id}`,
                   titleKey: 'Expansion à droite',
                   visibilityConditions: [{
                     type: 'custom',
@@ -337,7 +337,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
           if (!app_data.has_sankey_dev) {
             dimensionSubmenusDesagg = parent_dims.map((dim) => ({
               type: 'button' as const,
-              actionName: `disaggregate_${dim.related_level_tagg.id}`,
+              actionName: `disaggregate_${dim.children[0].id}`,
               titleName: `${dim.short_name}`,
             }))
           } else {
@@ -347,12 +347,12 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
               children: [
                 {
                   type: 'button' as const,
-                  actionName: `disaggregate_${dim.related_level_tagg.id}`,
+                  actionName: `disaggregate_${dim.children[0].id}`,
                   titleKey: 'Sans expansion'
                 },
                 {
                   type: 'button' as const,
-                  actionName: `expandLeft_${dim.related_level_tagg.id}`,
+                  actionName: `expandLeft_${dim.children[0].id}`,
                   titleKey: 'Expansion à gauche',
                   visibilityConditions: [{
                     type: 'custom',
@@ -364,7 +364,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                 },
                 {
                   type: 'button' as const,
-                  actionName: `expandRight_${dim.related_level_tagg.id}`,
+                  actionName: `expandRight_${dim.children[0].id}`,
                   titleKey: 'Expansion à droite',
                   visibilityConditions: [{
                     type: 'custom',
