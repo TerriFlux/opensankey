@@ -6,37 +6,39 @@
 
 import React, { useEffect, useState } from 'react'
 import { Box, Button } from '@chakra-ui/react'
-import { FType_ProcessFunctions } from '../../Modules'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
 
 interface ProcessTerminalProps {
-  processFunctions: FType_ProcessFunctions
   url_prefix: string
   app_data: Class_ApplicationData
-  reset: () => void
   handleFinish: () => void,
   downloadFileResult: () => void,
   loadFileResult: () => void,
-  auto_load: boolean
+  auto_load: boolean,
+  failure: boolean,
+  setFailure: (_:boolean)=>void,
+  processing: boolean,
+  setProcessing: (_:boolean)=>void,
+  started: boolean,
+  result: string,
+  setResult: (_:string)=>void,
 }
 
 export const ProcessTerminal = ({
-  processFunctions,
   url_prefix,
   app_data,
-  reset,
   handleFinish,
-  downloadFileResult,
-  loadFileResult,
-  auto_load,
+  failure,
+  setFailure,
+  processing,
+  setProcessing,
+  started,
+  result,
+  setResult,
 }: ProcessTerminalProps) => {
   const { t } = app_data
   const [value, setValue] = useState([1, 2])
-  const { ref_processing, failure, ref_result, not_started } = processFunctions
-  const [result, set_result] = useState('')
-  ref_result.current = set_result
-  const [update, setUpdate] = useState(0)
 
   const handleChange = (evt: MouseEvent) => {
     if (value.includes(+(evt.target as HTMLFormElement).value)) {
@@ -47,49 +49,34 @@ export const ProcessTerminal = ({
     setValue([...value])
   }
 
-  const failure_status = t('Menu.failure_file')
-  const success_status = t('Menu.loaded_file')
   const infos = result !== undefined ? result.split('\n') : []
 
   // ========== GESTION DE LA FIN DU TRAITEMENT ==========
   useEffect(() => {
-    if (!not_started.current && !ref_processing.current) {
+    if (started && !processing && !failure) {
       handleFinish()
     }
-  }, [not_started.current, ref_processing.current])
+  }, [started, processing, failure])
 
 
   const terminalContent = (
     <>
-      {/* ========== BOUTONS D'ACTION ========== */}
-      <ActionButtons
-        processFunctions={processFunctions}
-        t={t}
-        failure_status={failure_status}
-        success_status={success_status}
-        reset={reset}
-        downloadFileResult={downloadFileResult}
-        loadFileResult={loadFileResult}
-        auto_load={auto_load}
-      />
+
 
       {/* ========== FILTRES DE LOG ========== */}
       <LogFilters t={t} value={value} handleChange={handleChange} />
 
       {/* ========== LOGS ========== */}
-      {!not_started.current && processFunctions.ref_processing.current ? (
+      {started && processing ? (
         <Counter
           url_prefix={url_prefix}
           finishProcess={(failed: boolean) => {
-            const to_update = processFunctions.ref_processing.current
-            processFunctions.ref_processing.current = false
-            //not_started.current = true
-            failure.current = failed
-            if (to_update) setUpdate(a => a + 1)
+            setProcessing(false)
+            setFailure(failed)
           }}
           value={value}
           result={result}
-          set_result={set_result}
+          set_result={setResult}
         />
       ) : (
         <LogDisplay infos={infos} value={value} />
@@ -102,27 +89,25 @@ export const ProcessTerminal = ({
 // ========== SOUS-COMPOSANTS ==========
 
 interface ActionButtonsProps {
-  processFunctions: FType_ProcessFunctions
   t: (key: string) => string
-  failure_status: string
-  success_status: string
   reset: () => void
   downloadFileResult: () => void
   loadFileResult: () => void
   auto_load: boolean
+  failure: boolean,
+  processing: boolean
 }
 
-const ActionButtons = ({
-  processFunctions,
+export const ActionButtons = ({
   t,
-  failure_status,
-  success_status,
   reset,
   downloadFileResult,
   loadFileResult,
-  auto_load
+  auto_load,
+  failure,
+  processing,
 }: ActionButtonsProps) => {
-  if (processFunctions.ref_processing.current) {
+  if (processing) {
     return (
       <Button variant="menuconfigpanel_option_button_tertiary_activated">
         <span className="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>
@@ -131,12 +116,11 @@ const ActionButtons = ({
     )
   }
 
-  if (processFunctions.failure.current) {
+  if (failure) {
     return (
       <Box layerStyle='options_3cols'>
-        <Button variant="menuconfigpanel_del_button" onClick={reset} size='sizeButtonDialog'>
-          {failure_status}
-        </Button>
+        <Box></Box>
+        <Box></Box>       
         <Button
           variant="menuconfigpanel_del_button"
           onClick={() => {
@@ -193,27 +177,27 @@ const ActionButtons = ({
     )
   }
 
-  return (
-    <Box layerStyle='options_3cols'>
-      <Button
-        variant="menuconfigpanel_option_button_primary_activated"
-        onClick={() => {
-          //successAction()
-        }}
-      >
-        {success_status}
-      </Button>
-      <Button
-        variant="menuconfigpanel_del_button"
-        onClick={() => {
-          reset()
-        }}
-        size='sizeButtonDialog'
-      >
-        {t('Menu.reinit')}
-      </Button>
-    </Box>
-  )
+  return <></>
+  //   <Box layerStyle='options_3cols'>
+  //     <Button
+  //       variant="menuconfigpanel_option_button_primary_activated"
+  //       onClick={() => {
+  //         //successAction()
+  //       }}
+  //     >
+  //       {success_status}
+  //     </Button>
+  //     <Button
+  //       variant="menuconfigpanel_del_button"
+  //       onClick={() => {
+  //         reset()
+  //       }}
+  //       size='sizeButtonDialog'
+  //     >
+  //       {t('Menu.reinit')}
+  //     </Button>
+  //   </Box>
+  // )
 }
 
 interface LogFiltersProps {

@@ -28,11 +28,10 @@ import React, { ChangeEvent, useState } from 'react'
 import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { actions_type, default_actions_type, FType_ProcessFunctions } from '../../Modules'
 import FileSaver from 'file-saver'
 import { decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
 import { Type_JSON } from '../../types/Utils'
-import { ProcessTerminal } from './PersistenceProcessDialogTerminal'
+import { ActionButtons, ProcessTerminal } from './PersistenceProcessDialogTerminal'
 import {
   CONVERTER_CONFIGS, ConverterConfig, ConverterConfigKey, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
   getInitialFormat, hasOptionsFormat, INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG
@@ -152,7 +151,9 @@ export const FileFormatSection = ({
             >
               {format_config.options.map((fmt: FormatType) => (
                 <option key={fmt} value={fmt}>
-                  {FORMAT_CONFIG[fmt].icon} {FORMAT_CONFIG[fmt].label}
+
+                  {//@ts-expect-error xxx
+                    FORMAT_CONFIG[fmt].icon} {FORMAT_CONFIG[fmt].label}
                 </option>
               ))}
             </Select></>
@@ -162,7 +163,8 @@ export const FileFormatSection = ({
           {current_format != 'blob' && is_input && (hasOptionsFormat(format_config)) && set_file && (
             <Input
               type="file"
-              accept={FORMAT_CONFIG[current_format].accept}
+              accept={//@ts-expect-error xxx
+                FORMAT_CONFIG[current_format].accept}
               onChange={(evt: ChangeEvent<HTMLInputElement>) => {
                 const files = (evt.target as HTMLInputElement).files
                 set_file(files?.[0])
@@ -229,45 +231,45 @@ export const retrieveJSONResults = (
   const current_json = app_data.toJSON()
   // Extract sankey datas from JSON
   app_data.fromJSON(data_as_json, kwargs, false)
-  app_data.sendWaitingToast(
-    () => {
-      app_data.drawing_area.sankey.nodes_list.forEach(n => {
-        const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-        if (!tagg) {
-          return
-        }
-        const product_tag = tagg.tags_dict['produit']
-        const sector_tag = tagg.tags_dict['secteur']
-        //const echange_tag = tagg.tags_dict['echange']
-        if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
-        } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
-        }
-      })
-      app_data.drawing_area.legend.masked = false
-      if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-        app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-      } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
-        applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
-      }
-      const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-      if (unit_taggs.length > 0) {
-        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
-        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
-      }
+  // app_data.sendWaitingToast(
+  //   () => {
+  app_data.drawing_area.sankey.nodes_list.forEach(n => {
+    const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+    if (!tagg) {
+      return
+    }
+    const product_tag = tagg.tags_dict['produit']
+    const sector_tag = tagg.tags_dict['secteur']
+    //const echange_tag = tagg.tags_dict['echange']
+    if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
+      n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
+    } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
+      n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
+    }
+  })
+  app_data.drawing_area.legend.masked = false
+  if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+    app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+  } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
+    applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+  }
+  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  if (unit_taggs.length > 0) {
+    app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
+    app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
+  }
 
-      // Case 1 : Apply extracted layout if present -> contains positions
-      if (apply_layout_current_sankey) {
-        app_data.drawing_area.nodePositioning.computeScale()
-        app_data.updateFromJSON(current_json)
-      } else if (data_as_json['layout']) {
-        app_data.drawing_area.nodePositioning.computeScale()
-        app_data.updateFromJSON(data_as_json)
-      } else {
-        app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
-      }
-    })
+  // Case 1 : Apply extracted layout if present -> contains positions
+  if (apply_layout_current_sankey) {
+    app_data.drawing_area.nodePositioning.computeScale()
+    app_data.updateFromJSON(current_json)
+  } else if (data_as_json['layout']) {
+    app_data.drawing_area.nodePositioning.computeScale()
+    app_data.updateFromJSON(data_as_json)
+  } else {
+    app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+  }
+  // })
 }
 
 /**
@@ -275,34 +277,22 @@ export const retrieveJSONResults = (
  */
 export const UniversalFileConverter = ({
   app_data,
-  processFunctions,
   config_key,
   dialog_name
 }: {
   app_data: Class_ApplicationData,
-  processFunctions: FType_ProcessFunctions,
   config_key: ConverterConfigKey,
   dialog_name: string
 }) => {
-  const config = CONVERTER_CONFIGS[config_key] as ConverterConfig
+  //const config = CONVERTER_CONFIGS[config_key] as ConverterConfig
   const { t, url_prefix } = app_data
   const lang = (app_data.i18n?.language === 'fr' ? 'fr' : 'en') as 'en' | 'fr'
   //const [layout_open, setLayoutOpen] = useState(false)
   const [auto_layout, setAutoLayout] = useState(false)
-  const [auto_load, setAutoLoad] = useState(!config.output.required && !config.input.format.options!.includes('blob'))
-
-
-  // États de base - utiliser les helpers
+  const [auto_load, setAutoLoad] = useState(false)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
-
-  const [input_format, set_input_format] = useState<FormatType>(
-    getInitialFormat(config.input.format, 'excel')
-  )
-
-  const [output_format, set_output_format] = useState<FormatType>(
-    getInitialFormat(config.output.format, 'json')
-  )
-
+  const [input_format, set_input_format] = useState<FormatType>('excel')
+  const [output_format, set_output_format] = useState<FormatType>('json')
   // Options pour chaque format de sortie
   const [output_options_excel, set_output_options_excel] = useState(getDefaultOutputOptions('excel'))
   const [output_options_json, set_output_options_json] = useState(getDefaultOutputOptions('json'))
@@ -310,24 +300,24 @@ export const UniversalFileConverter = ({
   const [input_options_excel, set_input_options_excel] = useState(getDefaultInputOptions('excel'))
   const [input_options_json, set_input_options_json] = useState(getDefaultInputOptions('json'))
   //const [input_options_blob, set_input_options_blob] = useState(getDefaultInputOptions('blob'))
+  const [launch_at_opening, setLaunchAtOpening] = useState(false)
+  const [show_terminal, set_show_terminal] = useState(true)
+  const [config, setConfig] = useState<ConverterConfig>(CONVERTER_CONFIGS['universal'])
+  const [failure_status,setFailureStatus] = useState(t('Menu.failure_file'))
+  const [_, setSuccessStatus] = useState(t('Menu.loaded_file'))
 
-  const [show_terminal, set_show_terminal] = useState(false)
-
-  const [update, setUpdate] = useState(0)
-
-  const launch = (cur_path: string, actions: actions_type) => {
-    processFunctions.path.current = cur_path
-    processFunctions.failure.current = true
-    processFunctions.ref_processing.current = true
-    processFunctions.not_started.current = false
-    processFunctions.ref_result.current('')
-    processFunctions.actions.current = actions
-  }
+  const [file_path, setFilePath] = useState('')
+  const [failure, setFailure] = useState(false)
+  const [processing, setProcessing] = useState(false)
+  const [started, setStarted] = useState(false)
+  const [result, setResult] = useState('')
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
     case 'excel': return output_options_excel
     case 'json': return output_options_json
+    case 'blob': return {}
+    case 'example': return {}
     }
   }
 
@@ -336,31 +326,63 @@ export const UniversalFileConverter = ({
     case 'excel': return input_options_excel
     case 'json': return input_options_json
     case 'blob': return {}
+    case 'example': return {}
     }
   }
 
-    const reset = () => {
-      // const form_data = new FormData()
-      // fetch(window.location.origin + url_prefix + '/upload/clean', {
-      //   method: 'POST',
-      //   body: form_data
-      // })
-      processFunctions.ref_processing.current = false
-      processFunctions.failure.current = false
-      //set_is_computing(false)
-      setAutoLoad(!config.output.required && !config.input.format.options!.includes('blob'))
-      processFunctions.not_started.current = true
-      set_show_terminal(false)
-      setUpdate(a => a + 1)
+  const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
+    setAutoLoad(!config.output.required)
+    setConfig(config)
+    const input_format = getInitialFormat(config.input.format, 'excel')
+    set_input_format(input_format)
+    set_output_format(getInitialFormat(config.output.format, 'json'))
+    setLaunchAtOpening(launch_at_opening)
+    set_show_terminal(false)
+    if (config.failure_status) {
+      setFailureStatus(config.failure_status)
     }
+    if (config.success_status) {
+      setSuccessStatus(config.success_status)
+    }
+    if (launch_at_opening) {
+      launch(file_path)
+    }
+  }
+
+  app_data.menu_configuration.ref_universal_converter_set_config.current = initialize
+
+  const reset = () => {
+    const form_data = new FormData()
+    fetch(window.location.origin + url_prefix + '/upload/clean', {
+      method: 'POST',
+      body: form_data
+    })
+    setStarted(false)
+    setProcessing(false)
+    setFailure(false)
+    setAutoLoad(!config.output.required /*&& !config.input.format.options!.includes('blob')*/)
+
+    set_show_terminal(false)
+    // if (input_format == 'example') {
+    //   setLaunchAtOpening(true)
+    // }
+  }
+
+  const launch = (file_path: string) => {
+    setFilePath(file_path)
+    setFailure(false)
+    setStarted(true)
+    setProcessing(true)
+    setResult('')
+    set_show_terminal(true)
+  }
 
   const handleFinish = async () => {
     if (!auto_load) {
       console.log('🔄 Conversion terminée - en attente d\'action utilisateur')
-      processFunctions.ref_processing.current = false
-      processFunctions.failure.current = false
-      processFunctions.not_started.current = true
-      setUpdate((a: number) => a + 1)
+      setStarted(false)
+      setProcessing(false)
+      setFailure(false)
       return
     }
 
@@ -379,15 +401,14 @@ export const UniversalFileConverter = ({
       if (response.ok) {
         const text = await response.text()
         retrieveJSONResults(app_data, text, auto_layout, output_options_json)
-        setAutoLoad(false)
+        //setAutoLoad(false)
       }
     } catch (error) {
       console.error('Erreur chargement JSON:', error)
     }
-    processFunctions.ref_processing.current = false
-    processFunctions.failure.current = false
-    processFunctions.not_started.current = true
-    setUpdate((a: number) => a + 1)
+    //setStarted(false)
+    setProcessing(false)
+    setFailure(false)
   }
 
   const downloadFileResult = () => {
@@ -414,12 +435,11 @@ export const UniversalFileConverter = ({
       })
       .then(blob => {
         // Déterminer le nom selon le format de sortie
-        const output_format = processFunctions.actions.current.output_format || 'converted'
         const extensions: Record<string, string> = {
           excel: '.xlsx',
           json: '.json'
         }
-        const root_filename = (input_file as File).name.split('.')[0]
+        const root_filename = 'output'
         const filename = `${root_filename}${extensions[output_format] || ''}`
 
         FileSaver.saveAs(blob, filename)
@@ -432,7 +452,7 @@ export const UniversalFileConverter = ({
   }
   const loadFileResult = () => {
     setAutoLoad(true)
-    launch('', default_actions_type)
+    launch('')
     const form_data = new FormData()
     form_data.append('input_format', input_format)
     form_data.append('output_format', output_format)
@@ -448,16 +468,12 @@ export const UniversalFileConverter = ({
   /**
    * Gère le clic sur le bouton Convertir
    */
-  const process = () => {
-    if (input_format != 'blob' && !input_file) {
+  const generic_process = () => {
+    if (input_format != 'blob' && input_format != 'example' && !input_file) {
       alert(t('ProcessDialog.select_file') || 'Veuillez sélectionner un fichier')
       return
     }
-    const the_actions_type: actions_type = {
-      input_format: input_format,
-      output_format: output_format
-    }
-    launch(''/*(input_file as unknown as { [name: string]: string }).name*/, the_actions_type)
+    launch('')
     // Préparer la requête
     const form_data = new FormData()
     const output_options = getCurrentOutputOptions()
@@ -466,6 +482,8 @@ export const UniversalFileConverter = ({
     form_data.append('input_options', JSON.stringify(input_options))
     if (input_format == 'blob') {
       form_data.append('data', JSON.stringify(app_data.toJSON(output_options)))
+    } else if (input_format == 'example') {
+      form_data.append('file_name', file_path)
     } else {
       form_data.append('file', input_file as Blob)
     }
@@ -474,17 +492,17 @@ export const UniversalFileConverter = ({
 
     if (input_format == 'blob' && output_format == 'json') {
       app_data.saveToJSON(output_options)
-      processFunctions.ref_processing.current = false
-      processFunctions.failure.current = false
-      processFunctions.not_started.current = true
+      setStarted(false)
+      setProcessing(false)
+      setFailure(false)
       return
     } else if (input_format == 'json' && output_format == 'blob') {
       decompressUploadedFileUniversal(input_file as File).then(JSON_data => {
         app_data.fromJSON(JSON_data as Type_JSON, input_options)
       })
-      processFunctions.ref_processing.current = false
-      processFunctions.failure.current = false
-      processFunctions.not_started.current = true
+      setStarted(false)
+      setProcessing(false)
+      setFailure(false)
       return
     }
     const url = window.location.origin + config.server_endpoint
@@ -495,32 +513,37 @@ export const UniversalFileConverter = ({
 
     set_show_terminal(true)
     fetch(url, { method: 'POST', body: form_data })
-      .then(response => {
-        if (!response.ok) {
-          console.error('❌ Erreur lancement conversion:')
+    // .then(response => {
+    //   if (!response.ok) {
+    //     console.error('❌ Erreur lancement conversion:')
 
-          // Mettre à jour les états pour indiquer l'échec
-          processFunctions.not_started.current = true
-          processFunctions.ref_processing.current = false
-          processFunctions.failure.current = true
-          processFunctions.ref_result.current('❌ Erreur lancement conversion:')
-          setUpdate(a => a + 1)
-        }
-        return response.json()
-      })
-      .then(data => {
-        console.log('✅ Conversion lancée avec succès:', data)
-      })
-      .catch(error => {
-        console.error('❌ Erreur lancement conversion:', error)
+    //     // Mettre à jour les états pour indiquer l'échec
+    //     setStarted(false)
+    //     setProcessing(false)
+    //     setFailure(true)
+    //     setResult('❌ Erreur lancement conversion:')
+    //   }
+    //   return response.json()
+    // })
+    // .then(data => {
+    //   console.log('✅ Conversion lancée avec succès:', data)
+    // })
+    // .catch(error => {
+    //   console.error('❌ Erreur lancement conversion:', error)
 
-        // Mettre à jour les états pour indiquer l'échec
-        processFunctions.not_started.current = true
-        processFunctions.ref_processing.current = false
-        processFunctions.failure.current = true
-        processFunctions.ref_result.current('❌ Erreur lancement conversion:')
-        setUpdate((a: number) => a + 1)
-      })
+    //   // Mettre à jour les états pour indiquer l'échec
+    //   setStarted(false)
+    //   setProcessing(false)
+    //   setFailure(true)
+    //   setResult('❌ Erreur lancement conversion:')
+    // })
+  }
+
+  if (launch_at_opening) {
+    if (processing && started) {
+      generic_process()
+      setLaunchAtOpening(false)
+    }
   }
 
   const content = (
@@ -574,49 +597,73 @@ export const UniversalFileConverter = ({
 
         </WrapperBoxSubSectionMenu></>
         : <></>}
-      <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
+
+
       {/* Bouton de lancement */}
-      <Box layerStyle='menuconfigpanel_row_3cols'>
-        <Box />
-        <Box />
-        <Button
-          variant="menuconfigpanel_option_button_secondary"
-          isActive
-          size='sizeButtonDialog'
-          isDisabled={input_format !== 'blob' && config.input.required && !input_file}
-          onClick={process}
-        >
-          {t(config.launch_button_label)}
-        </Button>
-      </Box>
+      {!launch_at_opening ? <>
+        <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
+        <Box layerStyle='menuconfigpanel_row_3cols'>
+          <Box />
+          <Box />
+          <Button
+            variant="menuconfigpanel_option_button_secondary"
+            isActive
+            size='sizeButtonDialog'
+            isDisabled={input_format !== 'blob' && config.input.required && !input_file}
+            onClick={generic_process}
+          >
+            {t(config.launch_button_label)}
+          </Button>
+        </Box></> : <></>}
       {config.input.required && !input_file ? <Alert status='warning'>
         <AlertIcon />
         {t('ProcessDialog.waiting_file')}
       </Alert> : <></>}
-      {!processFunctions.not_started && !processFunctions.ref_processing.current && !processFunctions.failure.current ? (
+      {started && !processing && !failure ? (
         <Alert status='success'>
           <AlertIcon />
           {t('ProcessDialog.success')}
         </Alert>
       ) : (<></>)}
+      {started && !processing && failure ? (
+        <Alert status='warning'>
+          <AlertIcon />
+          {failure_status}
+        </Alert>
+      ) : (<></>)}
       {/* Terminal inline si configuré */}
       {show_terminal && (
         <>
+          {/* ========== BOUTONS D'ACTION ========== */}
+          <ActionButtons
+            t={t}
+            reset={reset}
+            downloadFileResult={downloadFileResult}
+            loadFileResult={loadFileResult}
+            auto_load={auto_load}
+            processing={processing}
+            failure={failure}
+          />
           <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
           <Box
             as='span'
-            layerStyle='menuconfigpanel_part_title_1'>
-            Terminal
+            layerStyle='box_content_config'>
+            <center><span className='title_box2'>Terminal</span></center>
           </Box>
           <ProcessTerminal
-            processFunctions={processFunctions}
             url_prefix={app_data.url_prefix}
             app_data={app_data}
-            reset={reset}
             handleFinish={handleFinish}
             downloadFileResult={downloadFileResult}
             loadFileResult={loadFileResult}
             auto_load={auto_load}
+            failure={failure}
+            setFailure={setFailure}
+            processing={processing}
+            setProcessing={setProcessing}
+            started={started}
+            result={result}
+            setResult={setResult}
           />
         </>
       )}

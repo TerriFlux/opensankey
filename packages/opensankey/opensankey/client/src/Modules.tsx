@@ -27,7 +27,6 @@
 import { Class_ApplicationData } from './types/ApplicationData'
 import type { MutableRefObject } from 'react'
 import { Type_AdditionalMenus } from './types/MenuConfig'
-import { Dispatch, SetStateAction } from 'react'
 
 export type FType_InitializeAdditionalMenus = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
@@ -50,22 +49,10 @@ export const default_actions_type ={
 }
 export type actions_type = typeof default_actions_type
 
-export type FType_ProcessFunctions = {
-  ref_processing: MutableRefObject<boolean>,
-  //ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  failure: MutableRefObject<boolean>,
-  not_started: MutableRefObject<boolean>,
-  ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
-  path: MutableRefObject<string>,
-  actions: MutableRefObject<actions_type>
-  launch: (path: string,actions:actions_type) => void,
-}
-
 export type FType_ModuleDialogs = (
   new_data: Class_ApplicationData,
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
-  menu_configuration_nodes_attributes: JSX.Element,
-  processFunctions: FType_ProcessFunctions
+  menu_configuration_nodes_attributes: JSX.Element
 ) => JSX.Element[]
 
 // Modal Dialogs
