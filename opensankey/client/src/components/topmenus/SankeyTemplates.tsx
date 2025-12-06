@@ -53,6 +53,7 @@ import {
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 // CONSTANTS
 
@@ -298,7 +299,11 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                                 onClick={() => {
                                   // Draw template by downloading data from server
                                   //UploadExemple(templates[id].file_path, new_data)
-                                  new_data.menu_configuration.ref_menu_opened.current[1](true)
+                                  new_data.menu_configuration.ref_universal_converter_set_config.current(
+                                    CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
+                                  )
+                                  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+                                  //new_data.menu_configuration.ref_menu_opened.current[1](true)
                                   set_show_template(false)
                                 }}>
                                 {new_data.t('useTemplate')}

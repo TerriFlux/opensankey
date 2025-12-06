@@ -218,7 +218,7 @@ async function handleCompressedFile(
   }
 }
 
-async function decompressGzipDataFixed(compressedData: ArrayBuffer): Promise<string> {
+export async function decompressGzipDataFixed(compressedData: ArrayBuffer): Promise<string> {
   console.log('🗜️ Début décompression...')
 
   // S'assurer que pako est chargé

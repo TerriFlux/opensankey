@@ -162,8 +162,9 @@ export const ModalTuto = ({
                 onClick={() => {
                   const file_name = 'Formations/Tutoriels/' + (d[0]) + '/' + dd
                   new_data.menu_configuration.ref_universal_converter_set_config.current(
-                    CONVERTER_CONFIGS['load_example'], file_name, true
+                    CONVERTER_CONFIGS['load_example_json'], file_name, true
                   )
+                  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                   set_show_tuto(false)
                 }}
               >{t('useTutoJSON')}</Button>
@@ -176,7 +177,7 @@ export const ModalTuto = ({
                   onClick={() => {
                     const file_name = 'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx')
                     new_data.menu_configuration.ref_universal_converter_set_config.current(
-                      CONVERTER_CONFIGS['load_example'], file_name, true
+                      CONVERTER_CONFIGS['load_example_json'], file_name, true
                     )
                     new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                     set_show_tuto(false)
@@ -194,7 +195,7 @@ export const ModalTuto = ({
                   onClick={() => {
                     const file_name = 'Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx')
                     new_data.menu_configuration.ref_universal_converter_set_config.current(
-                      CONVERTER_CONFIGS['load_example'], file_name, true
+                      CONVERTER_CONFIGS['load_example_excel'], file_name, true
                     )
                     new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                     set_show_tuto(false)
