@@ -32,7 +32,7 @@ import {
   Class_LinkElement
 } from '../Elements/Link'
 import { Class_Tag } from '../types/Tag'
-import { Class_DataTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup,Class_LevelTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
 
