@@ -84,6 +84,7 @@ image_template_folder = os.path.join(
     "images",
 )
 
+
 def get_process_state():  # ← Plus de paramètre session_id
     """Récupère l'état depuis Flask session"""
     return session.get('process_state', {
@@ -94,12 +95,14 @@ def get_process_state():  # ← Plus de paramètre session_id
         'output_format': None
     })
 
+
 def set_process_state(**kwargs):  # ← Plus de paramètre session_id
     """Stocke l'état dans Flask session"""
     if 'process_state' not in session:
         session['process_state'] = {}
     session['process_state'].update(kwargs)
     session.modified = True  # ← IMPORTANT !
+
 
 @opensankey.route("/")
 def start():
@@ -177,7 +180,7 @@ def check_process():
             return Response(json.dumps({}), status=200, mimetype="application/json")
         trace.logger.debug(state["logname"])
         trace.logger.debug("not started")
-        return Response(json.dumps({"not_started":True}), status=200, mimetype="application/json")
+        return Response(json.dumps({"not_started": True}), status=200, mimetype="application/json")
     try:
         trace.logger.debug(state['logname'])
         trace.logger.debug('open')
@@ -194,7 +197,7 @@ def check_process():
                 "output": results
             }
             json_data = json.dumps(results_dict)
-            #trace.logger.debug('dumps')
+            # trace.logger.debug('dumps')
             return Response(json_data, status=200, mimetype="application/json")
         else:
             return Response(
@@ -311,7 +314,7 @@ def retrieve_json():
     log_dir = tempfile.mkdtemp()
     log_filename = log_dir + os.path.sep + "rollover.log"
     trace.logger_init(log_filename, "w")
-    
+
     set_process_state(
         process_started=True,
         logname=log_filename
@@ -347,7 +350,6 @@ def retrieve_json():
             output_format='json'
         )
 
-
         # Use threading for large files
         thread = Thread(
             target=conversion_thread,
@@ -365,7 +367,6 @@ def retrieve_json():
         thread.start()
         trace.logger.debug("Conversion thread launched")
 
-
         return Response(response="{}", status=200, mimetype="application/json")
 
     except Exception as excpt:
@@ -375,6 +376,7 @@ def retrieve_json():
             status=500,
             mimetype="application/json"
         )
+
 
 @opensankey.route("/convert/launch", methods=["POST"])
 def launch_conversion():
@@ -426,9 +428,9 @@ def launch_conversion():
                     logname=log_filename
                 )
                 trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=50))
-                return Response(response="{}", status=200, mimetype="application/json") 
-                #return handle_json_or_compressed(data_folder, exemple, input_file_name)
-                         
+                return Response(response="{}", status=200, mimetype="application/json")
+                # return handle_json_or_compressed(data_folder, exemple, input_file_name)
+
         elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
             input_file = request.files["file"]
             input_file.save(input_file_name)
@@ -492,10 +494,12 @@ def launch_conversion():
             mimetype="application/json"
         )
 
+
 @opensankey.route("/upload/clean", methods=["POST"])
 def clean():
     set_process_state(process_started=False)
     return Response(response="{}", status=200, mimetype="application/json")
+
 
 @opensankey.route("/example/download", methods=["POST"])
 def download_examples():
