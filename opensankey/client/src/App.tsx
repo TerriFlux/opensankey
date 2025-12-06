@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { Dispatch, useEffect, SetStateAction, useRef,useReducer } from 'react'
+import React, { useEffect } from 'react'
 import LZString from 'lz-string'
 import * as d3 from 'd3'
 import { TourProvider } from '@reactour/tour'
@@ -40,7 +40,7 @@ import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs
 import { checkForUrlToJSON, Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
 import { Class_ApplicationData } from './types/ApplicationData'
-import { actions_type, default_actions_type, FType_InitializeAdditionalMenus, FType_ModuleDialogs, FType_ProcessFunctions } from './Modules'
+import { FType_InitializeAdditionalMenus, FType_ModuleDialogs } from './Modules'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
@@ -127,30 +127,6 @@ export const OpenSankeyApp = ({
     if (!menu_config.never_see_again.current)
       menu_config.show_splashscreen = true
   }, [])
-  const [, forceUpdate] = useReducer(x => x + 1, 0)
-
-  /*************************************************************************************************/
-  const processFunction: FType_ProcessFunctions = {
-    ref_processing: useRef(false),
-    //ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-    failure: useRef(false),
-    not_started: useRef(true),
-    ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
-    path: useRef(''),
-    actions: useRef(default_actions_type),
-    launch: (cur_path: string, actions: actions_type) => {
-      processFunction.path.current = cur_path
-      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
-
-      processFunction.failure.current = true
-      processFunction.ref_processing.current = true
-      processFunction.not_started.current = false
-      processFunction.ref_result.current('')
-      processFunction.actions.current = actions
-
-      forceUpdate() // Force le re-render
-    }
-  }
 
   useEffect(() => {
     // Delete potential duplicat
@@ -174,8 +150,7 @@ export const OpenSankeyApp = ({
           moduleDialogs(
             app_data,
             app_data.menu_configuration.additionalMenus,
-            menu_configuration_nodes_attributes,
-            processFunction
+            menu_configuration_nodes_attributes
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
@@ -195,7 +170,6 @@ export const OpenSankeyApp = ({
         <>
           <Menu
             app_data={app_data}
-            processFunction={processFunction}
             external_modal={[
               <></>
             ]}

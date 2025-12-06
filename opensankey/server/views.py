@@ -173,7 +173,7 @@ def goto(adress):
 def check_process():
     state = get_process_state()
     if not state['process_started']:
-        if not state['logname']:
+        if 'logname' not in state:
             return Response(json.dumps({}), status=200, mimetype="application/json")
         trace.logger.debug(state["logname"])
         trace.logger.debug("not started")
@@ -401,19 +401,21 @@ def launch_conversion():
             'json': '.json',
             'blob': '.json'
         }
-
-        input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
+        if input_format != "example":
+            input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
         output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
 
-        if (input_format == "blob"):
-            data = request.form["data"]
-            sankey_as_data = data
-            sankey_as_json = json.loads(sankey_as_data)
-            io_json = IOJson()
-            ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
-            io_json.write_sankey(input_file_name)
-            input_format = "json"
-        else:
+        if input_format == "example":
+            data_folder = os.environ.get("MFAData")
+            exemple = request.form["file_name"]
+            input_file_name = os.path.join(data_folder, exemple)
+            extension = os.path.splitext(input_file_name)[1]
+            if extension == '.xlsx':
+                input_format = 'excel'
+            else:
+                input_format = 'json'   
+                return handle_json_or_compressed(data_folder, exemple, input_file_name)             
+        elif input_format != 'example' and input_format != 'blob':
             input_file = request.files["file"]
             input_file.save(input_file_name)
 
@@ -426,6 +428,22 @@ def launch_conversion():
             output_format=output_format,
             logname=log_filename
         )
+
+        if (input_format == "blob"):
+            data = request.form["data"]
+            sankey_as_data = data
+            sankey_as_json = json.loads(sankey_as_data)
+            io_json = IOJson()
+            ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
+            if not ok:
+                trace.logger.error(f"FAILED load_sankey_from_json failed: {log}")
+                return Response(
+                    json.dumps({"error": str(log)}),
+                    status=500,
+                    mimetype="application/json"
+                )
+            io_json.write_sankey(input_file_name)
+            input_format = "json"
 
         # Decide threading based on file size
         # file_stats = os.stat(input_file_name)
@@ -460,61 +478,10 @@ def launch_conversion():
             mimetype="application/json"
         )
 
-
-@opensankey.route("/example/upload", methods=["POST"])
-def upload_exemple():
-    session["process_started"] = True
-    tmp_dir = tempfile.mkdtemp()
-    logname = tmp_dir + os.path.sep + "rollover.log"
-    session["logname"] = logname
-    trace.logger_init(logname, "w")
-    data_folder = os.environ.get("MFAData")
-
-    exemple = request.get_data().decode("utf-8")
-    exemple_file_path = os.path.join(data_folder, exemple)
-    extension = os.path.splitext(exemple_file_path)[1]
-    output_directory = tempfile.mkdtemp()
-    session["output_file_name"] = os.path.join(output_directory, "tutu.json")
-
-    if extension == ".xlsx":
-        file_stats = os.stat(exemple_file_path)
-        if file_stats.st_size > 1000000:
-            thread = Thread(
-                target=upload_excel_thread,
-                args=(
-                    exemple_file_path,
-                    logname,
-                    session["output_file_name"],
-                    True,
-                ),
-            )
-            thread.daemon = True
-            thread.start()
-            trace.logger.debug("thread launched")
-            return Response(response="{}", status=200, mimetype="application/json")
-        else:
-            try:
-                upload_excel_thread(
-                    exemple_file_path,
-                    logname,
-                    session["output_file_name"],
-                    True,
-                )
-                return Response(response="{}", status=200, mimetype="application/json")
-            except Exception as excpt:
-                trace.logger.debug("upload_excel_thread failed: " + str(excpt))
-                return Response(response="{}", status=500, mimetype="application/json")
-
-    elif extension == ".json" or extension == ".gz":
-        return handle_json_or_compressed(data_folder, exemple, exemple_file_path)
-
-    else:
-        return Response(
-            response=json.dumps({"error": f"Extension {extension} non supportée"}),
-            status=400,
-            mimetype="application/json",
-        )
-
+@opensankey.route("/upload/clean", methods=["POST"])
+def clean():
+    set_process_state(process_started=False)
+    return Response(response="{}", status=200, mimetype="application/json")
 
 @opensankey.route("/example/download", methods=["POST"])
 def download_examples():

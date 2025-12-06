@@ -31,6 +31,9 @@ import { Type_MacroTagGroup } from '../types/Utils'
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
+import {
+  ConverterConfig
+} from '../components/dialogs/PersistenceProcessDialogConfigs'
 
 export type Type_AdditionalMenus = {
   // Top Menu
@@ -86,13 +89,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  // Modal - Saving & Loading
-  ref_setter_show_modal_excel_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
   ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_excel_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_excel_reading_process: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_json_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_json_loader: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -316,6 +314,7 @@ export class Class_MenuConfig {
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
+  private _ref_universal_converter_set_config : MutableRefObject<(_:ConverterConfig,file_path:string, launch_at_opening: boolean) => void>
 
   // Update component ApplyLayoutDialog
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
@@ -508,6 +507,9 @@ export class Class_MenuConfig {
     this._ref_to_toolbar_bottom_updater = useRef(() => null)
 
     // Init dict of setter show dialog -------------------------------------------------
+    this._ref_universal_converter_set_config = useRef(
+      (_:ConverterConfig,_file_path:string, _launch_at_opening: boolean) => null
+    )
 
     this._dict_setter_show_dialog = {
       // Modal - Welcome
@@ -515,13 +517,9 @@ export class Class_MenuConfig {
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      // Modal - Saving & Loading
-      ref_setter_show_modal_excel_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+
       ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_excel_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_excel_reading_process: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_json_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_json_loader: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -568,13 +566,9 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_tuto.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
-    // -- Saving & Loading
-    this._dict_setter_show_dialog.ref_setter_show_modal_excel_loader.current(false)
+
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_excel_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_json_saver.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_json_loader.current(false)
+
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_nodes_visual.current(false)
@@ -1265,6 +1259,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_updater
+  }
+
+  public get ref_universal_converter_set_config() {
+    return this._ref_universal_converter_set_config
   }
 
   // Layout  menus ----------------------------------------------------------------------

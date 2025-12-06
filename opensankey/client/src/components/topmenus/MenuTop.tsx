@@ -66,7 +66,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
-import { FType_ProcessFunctions } from '../../Modules'
+import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 /*************************************************************************************************/
 
@@ -100,7 +100,7 @@ export const setDiagram = (
       const data_type_value = diagram_config.data_type
       console.log('diagram_url: ' + diagram_url)
       console.log('data_type: ' + data_type_value)
-      
+
       // Appliquer le data_type au sankey global
       //@ts-expect-error xxx
       window.sankey.data_type = data_type_value
@@ -196,17 +196,14 @@ export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
  * }
  * @return {*}
  */
-export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
+export const MenuTopButtons = ({ new_data, additionalMenus }: {
   new_data: Class_ApplicationData,
-  processFunction: FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
   const {
     ref_setter_show_modal_templates_lib,
-    ref_setter_show_modal_excel_loader, ref_setter_show_modal_excel_saver,
     ref_setter_show_modal_file_converter,
-    ref_setter_show_modal_json_saver, ref_setter_show_modal_json_loader,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
@@ -280,12 +277,22 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
       </MenuButton>
     </OSTooltip>
     <MenuList>
-      <MenuItem onClick={() => ref_setter_show_modal_json_loader.current!(true)}>
+      <MenuItem onClick={() => {
+        new_data.menu_configuration.ref_universal_converter_set_config.current(
+          CONVERTER_CONFIGS['load_json'], '', false
+        )
+        ref_setter_show_modal_file_converter.current!(true)
+      }}>
         {new_data.icon_library.icon_open_sankey_json}
         {t('Menu.open_json')}
       </MenuItem>
       <MenuItem
-        onClick={() => ref_setter_show_modal_excel_loader.current!(true)}
+        onClick={() => {
+          new_data.menu_configuration.ref_universal_converter_set_config.current(
+            CONVERTER_CONFIGS['load_excel'], '', false
+          )
+          ref_setter_show_modal_file_converter.current!(true)
+        }}
       >
         {new_data.icon_library.icon_open_sankey_excel}
         {t('Menu.open_excel')}
@@ -342,8 +349,13 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
           reader.readAsText(files[0])
         }} />
       <MenuItem
-        onClick={() => ref_setter_show_modal_file_converter.current!(true)}
-      >
+        onClick={() => {
+          new_data.menu_configuration.ref_universal_converter_set_config.current(
+            CONVERTER_CONFIGS['universal'], '', false
+          )
+          ref_setter_show_modal_file_converter.current!(true)
+        }
+        }>
         {new_data.icon_library.icon_open_sankey_pickle}
         {t('Menu.format_converter')}
       </MenuItem>
@@ -385,13 +397,21 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
     </OSTooltip>
     <MenuList>
       <MenuItem onClick={() => {
-        ref_setter_show_modal_json_saver.current!(true)
+        new_data.menu_configuration.ref_universal_converter_set_config.current(
+          CONVERTER_CONFIGS['save_json'], '', false
+        )
+        ref_setter_show_modal_file_converter.current!(true)
       }}>
         {new_data.icon_library.icon_save_sankey_json}
         {t('Menu.open_json')}
       </MenuItem>
       <MenuItem
-        onClick={() => ref_setter_show_modal_excel_saver.current(true)}
+        onClick={() => {
+          new_data.menu_configuration.ref_universal_converter_set_config.current(
+            CONVERTER_CONFIGS['save_excel'], '', false
+          )
+          ref_setter_show_modal_file_converter.current(true)
+        }}
       >
         {new_data.icon_library.icon_save_sankey_excel}
         {t('Menu.open_excel')}
@@ -629,7 +649,6 @@ export const MenuTopButtons = ({ new_data, processFunction, additionalMenus }: {
     />
     <ModalTuto
       new_data={new_data}
-      processFunctions={processFunction}
       show_tuto={show_tuto}
       set_show_tuto={set_show_tuto}
     />
@@ -816,9 +835,8 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
  * @param {*} { new_data, additionalMenus }
  * @return {*}
  */
-export const MenuTopNavBar = ({ new_data, processFunction, additionalMenus }: {
+export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   new_data: Class_ApplicationData,
-  processFunction: FType_ProcessFunctions,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { logo } = new_data
@@ -902,7 +920,7 @@ export const MenuTopNavBar = ({ new_data, processFunction, additionalMenus }: {
         // Top menu buttons to access general appliaction functionnalities
         new_data.is_static ?
           <MenuTopButtonsStatic new_data={new_data} additionalMenus={additionalMenus} /> :
-          <MenuTopButtons new_data={new_data} processFunction={processFunction} additionalMenus={additionalMenus} />}
+          <MenuTopButtons new_data={new_data} additionalMenus={additionalMenus} />}
       <Box
         margin='0.25rem'
         alignSelf='center'

@@ -39,8 +39,7 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
-  Text,
-  Toast,
+  Text
 } from '@chakra-ui/react'
 
 import {ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
@@ -59,7 +58,6 @@ import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
-import { FType_ProcessFunctions } from '../../Modules'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 
 export declare const window: Window &
@@ -88,12 +86,10 @@ export const menu_config_width = 20
 export const Menu = (
   {
     app_data,
-    processFunction,
     external_modal,
     additionalMenus
   }: {
     app_data: Class_ApplicationData,
-    processFunction: FType_ProcessFunctions,
     external_modal: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
   }
@@ -167,7 +163,7 @@ export const Menu = (
       {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
       {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ?
-        <MenuTopNavBar new_data={app_data} processFunction={processFunction} additionalMenus={additionalMenus} /> : <></>}
+        <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
       {
@@ -286,46 +282,21 @@ export const Menu = (
         new_data={app_data}
       /> : <></>}
 
-      {
+      {/* {
         processFunction.ref_processing.current ? (
           <Toast >
             <Button className='btn btn-sm btn-warning col-md-12'>
               <span className='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span> Processing...
             </Button></Toast>) : (<></>)
-      }
+      } */}
       <ApplyLayoutDialog
         new_data={app_data}
       />
 
       <UniversalFileConverter
         app_data={app_data}
-        processFunctions={processFunction}
-        config_key={'load_json'}
-        dialog_name={'ref_setter_show_modal_json_loader'}
-      />
-      <UniversalFileConverter
-        app_data={app_data}
-        processFunctions={processFunction}
-        config_key={'load_excel'}
-        dialog_name={'ref_setter_show_modal_excel_loader'}
-      />
-      <UniversalFileConverter
-        app_data={app_data}
-        processFunctions={processFunction}
         config_key={'universal'}
         dialog_name={'ref_setter_show_modal_file_converter'}
-      />
-      <UniversalFileConverter
-        app_data={app_data}
-        processFunctions={processFunction}
-        config_key={'save_excel'}
-        dialog_name={'ref_setter_show_modal_excel_saver'}
-      />
-      <UniversalFileConverter
-        app_data={app_data}
-        processFunctions={processFunction}
-        config_key={'save_json'}
-        dialog_name={'ref_setter_show_modal_json_saver'}
       />
 
       {modal_support}

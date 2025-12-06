@@ -32,10 +32,8 @@ import {
   Class_LinkElement
 } from '../Elements/Link'
 import { Class_Tag } from '../types/Tag'
-import { Class_DataTagGroup, Class_LevelTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
-
-
 
 
 /**
@@ -474,7 +472,7 @@ export class NodePositioning {
     optimize_crossing: boolean
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
-
+    this.drawingArea.bypass_redraws = true
     // Calculate max value of flows (inchangé)
     const unit_taggs = this.drawingArea.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     if (unit_taggs.length > 0) {

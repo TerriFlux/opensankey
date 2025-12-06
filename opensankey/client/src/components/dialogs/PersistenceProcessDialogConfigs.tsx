@@ -53,6 +53,10 @@ export const translations = {
       en: 'Success',
       fr: 'Succès'
     },
+    fail: {
+      en: 'Failed',
+      fr: 'Echec'
+    },
     infos: {
       en: 'Infos',
       fr: 'Infos'
@@ -233,6 +237,9 @@ export const INPUT_ATTRIBUTES_CONFIG = {
 
   blob: {
 
+  },
+  example: {
+
   }
 } as const
 
@@ -288,7 +295,7 @@ const BASE_OUTPUT_CONFIG = {
       fr: 'Exporter uniquement les éléments avec les étiquettes sélectionnées'
     }
   } satisfies FormatAttributeConfig<boolean>,
-
+  example: {}
 } as const
 
 export const OUTPUT_ATTRIBUTES_CONFIG = {
@@ -437,10 +444,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
     } satisfies FormatAttributeConfig<boolean>
   },
 
-  blob: {}
+  blob: {},
+  example: {}
 } as const
 
-export type FormatType = 'excel' | 'json' | 'blob'
+export type FormatType = 'excel' | 'json' | 'blob' | 'example'
 
 export type OutputAttributeKey<F extends FormatType> = keyof typeof OUTPUT_ATTRIBUTES_CONFIG[F]
 export type InputAttributeKey<F extends FormatType> = keyof typeof INPUT_ATTRIBUTES_CONFIG[F]
@@ -490,7 +498,8 @@ export interface ConverterConfig {
   // Textes
   title: string
   launch_button_label: string
-
+  success_status?: string
+  failure_status?: string
   // Backend
   server_endpoint: string
 
@@ -596,6 +605,23 @@ export const CONVERTER_CONFIGS = {
       },
     }
   } satisfies ConverterConfig,
+  load_example: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
   save_excel: {
     title: 'ProcessDialog.save_excel_file',
     launch_button_label: 'ProcessDialog.save',
@@ -630,7 +656,24 @@ export const CONVERTER_CONFIGS = {
         options: ['excel', 'json']  // Format fixe
       },
     },
-  } satisfies ConverterConfig
+  } satisfies ConverterConfig,
+  reconciliation_sankey: {
+    title: 'ProcessDialog.reconciliation',
+    launch_button_label: 'ProcessDialog.launch',
+    server_endpoint: '/optimize/launch_optim',
+    input: {
+      required: false,
+      format: {
+        options: ['blob'] // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['blob']  // Format fixe
+      },
+    },
+  } satisfies ConverterConfig,
 } as const
 
 export type ConverterConfigKey = keyof typeof CONVERTER_CONFIGS
