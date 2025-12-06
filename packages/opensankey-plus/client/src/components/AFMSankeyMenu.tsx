@@ -5,14 +5,13 @@ import { Box, MenuList, MenuItem, Menu, MenuButton, } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 export const AFMEditionMenu = ({ app_data }: {
   app_data: Class_ApplicationDataOSP
 }) => {
 
   const { t } = app_data
-  //@ts-expect-error xxx
-  const { ref_setter_show_reconciliation } = app_data.menu_configuration_osp.dict_setter_show_dialog
 
   const svg_reconcile = <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -64,8 +63,10 @@ export const AFMEditionMenu = ({ app_data }: {
         <MenuList>
           <MenuItem
             onClick={() => {
-              //app_data.menu_configuration_osp.action_type = 'optim'
-              ref_setter_show_reconciliation.current(true)
+              app_data.menu_configuration.ref_universal_converter_set_config.current(
+                CONVERTER_CONFIGS['reconciliation'], '', false
+              )
+              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
             }}>
             <FontAwesomeIcon
               style={{ 'height': '1rem', 'width': '1rem' }}

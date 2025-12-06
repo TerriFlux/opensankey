@@ -6,6 +6,7 @@ import { LINK_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextL
 import { NODE_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextNodeConfig'
 import { createZDDModifier, ZDD_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeActions'
+import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
@@ -111,9 +112,10 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   return {
     ...baseModifiers,
     afmReconciliation: () => {
-      //app_data.menu_configuration_osp.action_type = 'optim_sankey'
-      //@ts-expect-error xxx
-      dict_setter_show_dialog.ref_setter_show_reconciliation.current(true)
+      app_data.menu_configuration.ref_universal_converter_set_config.current(
+        CONVERTER_CONFIGS['reconciliation_sankey'], '', true
+      )
+      dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
     }

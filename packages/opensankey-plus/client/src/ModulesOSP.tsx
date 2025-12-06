@@ -78,7 +78,6 @@ import {
 import {
   ImportImageAsSvgBg,
 } from './components/UtilsOSP'
-import { SankeyMenuConfigurationLevelTags } from './components/SankeyPlusMenuConfigurationLevlTags'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { UniversalFileConverter } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
@@ -232,9 +231,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
       />
-      <SankeyMenuConfigurationLevelTags
-        new_data={new_data_plus}
-      />
       </>
     </WrapperContentConfig>
   }
@@ -245,16 +241,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 export const moduleDialogsOSP: FType_ModuleDialogs = (
   new_data,
   additional_menus,
-  menu_configuration_nodes_attributes,
-  processFunctions
+  menu_configuration_nodes_attributes 
 ) => {
 
   // OpenSankey Menu
   const modules_dialogs = moduleDialogs(
     new_data,
     additional_menus,
-    menu_configuration_nodes_attributes,
-    processFunctions
+    menu_configuration_nodes_attributes
   )
 
   // Cast type
@@ -290,9 +284,8 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     />,
     <UniversalFileConverter
       app_data={new_data_plus}
-      processFunctions={processFunctions}
       config_key={'reconciliation'}
-      dialog_name={'ref_setter_show_reconciliation'}
+      dialog_name={'ref_setter_show_modal_file_converter'}
     />
   ]
 

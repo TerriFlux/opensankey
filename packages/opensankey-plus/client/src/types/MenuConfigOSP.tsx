@@ -29,9 +29,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   // Override order of top menu buttons to add OSP buttons components
   protected override _menu_top_order=[...super.menu_top_order,['diagrams','views','afm','edit']]
 
-  //private _dict_setter_show_dialog_afm: AFMSankeyShowMenuComponentsVarType
-  private _action_type: string
-
   /**
    * Dict containing ref to setter show draggable modale
    *
@@ -103,14 +100,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
     //    this._style_config['presentation']= { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
     //this._elements_configurable_selected['presentation']= []
-
-    // Init new attr
-    this._action_type = 'optim'
-    //@ts-expect-error xxx
-    this.dict_setter_show_dialog['ref_setter_show_reconciliation'] = useRef(() => null)
-    //   ref_setter_show_split_trade: useRef(() => null),
-    //   ref_setter_show_reconciliation: useRef(() => null)
-    // }
   }
 
   // PUBLIC METHODS ====================================================================
@@ -149,10 +138,10 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
    * @memberof Class_MenuConfigOSP
    */
   public updateComponentRelatedToViews() {
-        this._ref_to_banner_views_updater.current()
-        this._ref_to_views_config_updater.current()
-        this.updateComponentSaveDiagramJSON()
-        this.updateComponentLoadDiagramJSON()
+    this._ref_to_banner_views_updater.current()
+    this._ref_to_views_config_updater.current()
+    this.updateComponentSaveDiagramJSON()
+    this.updateComponentLoadDiagramJSON()
   }
 
   /**
