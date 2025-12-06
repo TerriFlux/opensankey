@@ -192,7 +192,7 @@ def solve_optimisation_problem_unified(
             io_excel.write_sankey(file_name=output_filename, **output_options)
         else:
             io_json = IOJson(io_input.sankey)
-            io_json.write_sankey(file_name=output_filename, **output_options)    
+            io_json.write_sankey(file_name=output_filename, **output_options)
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in output file writing.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
