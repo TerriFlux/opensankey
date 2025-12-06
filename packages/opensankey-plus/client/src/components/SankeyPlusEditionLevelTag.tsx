@@ -186,8 +186,7 @@ export const MenuConfigurationLevelTags: FC<FCType_SankeyPlusEditionLevelTag> = 
                         <Button
                           variant='menuconfigpanel_del_button_in_table'
                           value='-' onClick={() => {
-                            //@ts-expect-error xxx 
-                            handleDelTag(tag)
+                            handleDelTag(tag as Class_LevelTag)
                           }}>
                           <FaMinus />
                         </Button>
