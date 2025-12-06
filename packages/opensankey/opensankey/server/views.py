@@ -225,8 +225,10 @@ def retrieve_result():
     set_process_state(process_started=False)
 
     try:
-        # Récupérer le chemin du fichier de sortie
         output_file_name = state.get("output_file_name")
+        json_gz_path = output_file_name
+        if output_file_name.endswith(".json"):
+            json_gz_path = output_file_name + ".gz"
 
         if not output_file_name:
             return Response(
@@ -235,7 +237,7 @@ def retrieve_result():
                 mimetype="application/json"
             )
 
-        if not os.path.exists(output_file_name):
+        if not os.path.exists(output_file_name) and not os.path.exists(json_gz_path):
             return Response(
                 json.dumps({"error": "Output file not found"}),
                 status=404,
@@ -282,7 +284,7 @@ def retrieve_result():
         download_name = download_name_map.get(ext, root_file_name + ext)
 
         trace.logger.info(f"Envoi du fichier: {output_file_name} ({mimetype})")
-
+        output_file_name = handle_json_or_compressed(output_file_name)
         return send_file(
             output_file_name,
             as_attachment=True,
@@ -401,11 +403,11 @@ def launch_conversion():
             'json': '.json',
             'blob': '.json'
         }
-        if input_format != "example":
+        if input_format != "example_excel" and input_format != "example_json":
             input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
         output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
 
-        if input_format == "example":
+        if input_format == "example_excel" or input_format == "example_json":
             data_folder = os.environ.get("MFAData")
             exemple = request.form["file_name"]
             input_file_name = os.path.join(data_folder, exemple)
@@ -413,9 +415,21 @@ def launch_conversion():
             if extension == '.xlsx':
                 input_format = 'excel'
             else:
-                input_format = 'json'   
-                return handle_json_or_compressed(data_folder, exemple, input_file_name)             
-        elif input_format != 'example' and input_format != 'blob':
+                # input_format = 'json'
+                output_file_name = input_file_name
+                set_process_state(
+                    process_started=True,
+                    input_filename=input_file_name,
+                    output_file_name=output_file_name,
+                    input_format=input_format,
+                    output_format=output_format,
+                    logname=log_filename
+                )
+                trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=50))
+                return Response(response="{}", status=200, mimetype="application/json") 
+                #return handle_json_or_compressed(data_folder, exemple, input_file_name)
+                         
+        elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
             input_file = request.files["file"]
             input_file.save(input_file_name)
 
