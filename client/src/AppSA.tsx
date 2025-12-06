@@ -142,15 +142,13 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 export const moduleDialogsSA: FType_ModuleDialogs = (
   new_data,
   additional_menus,
-  menu_configuration_nodes_attributes,
-  processFunctions
+  menu_configuration_nodes_attributes
 ) => {
   // OpenSankey Menu
   const dialogDialogsOSP = moduleDialogsOSP(
     new_data,
     additional_menus,
-    menu_configuration_nodes_attributes,
-    processFunctions
+    menu_configuration_nodes_attributes
   )
 
   // Cast type
@@ -160,7 +158,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
-      <ModalSankeyTheque new_data={new_data_SA} processFunction={processFunctions} />,
+      <ModalSankeyTheque new_data={new_data_SA} />,
       <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />,
       <SankeyModalStyleContainer new_data={new_data_SA} />
     )

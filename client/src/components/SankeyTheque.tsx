@@ -23,9 +23,8 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react'
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
-import { UploadExemple } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 import { Type_JSON } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
-import { default_actions_type, FType_ProcessFunctions } from '../deps/OpenSankey+/deps/OpenSankey/Modules'
+import { CONVERTER_CONFIGS } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -40,8 +39,7 @@ const logo_sankeytheque = <svg
 
 
 type FCType_ModalSankeyTheque = {
-  new_data: Class_ApplicationDataSA,
-  processFunction: FType_ProcessFunctions
+  new_data: Class_ApplicationDataSA
 }
 
 type FCType_SankeyThequeAccordionGenerator = {
@@ -52,8 +50,7 @@ type FCType_SankeyThequeAccordionGenerator = {
 }
 
 type FCType_SankeyThequeCardsGenerator = {
-  new_data: Class_ApplicationDataSA,
-  processFunction:FType_ProcessFunctions,
+  new_data: Class_ApplicationDataSA
   theque_tree: object,
   path: string[],
 }
@@ -96,7 +93,7 @@ export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA
  * @param {*} { new_data, additionalMenu }
  * @return {*}
  */
-export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data,processFunction }) => {
+export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data }) => {
   const [show_sankeytheque, set_show_sankeytheque] = useState(false)
   const [firstRender, setFirstRender] = useState(true)
   const [sankeytheque, setSankeyTheque] = useState({})
@@ -156,7 +153,7 @@ export const ModalSankeyTheque: FC<FCType_ModalSankeyTheque> = ({ new_data,proce
           <SankeyThequeAccordionGenerator new_data={new_data} theque_tree={sankeytheque} path={[]} setPathToCard={setPathToCard} />
         </Box>
         <Box layerStyle='cards_sankeytheque'>
-          <SankeyThequeCardsGenerator new_data={new_data} processFunction={processFunction} theque_tree={sankeytheque} path={path_to_card} />
+          <SankeyThequeCardsGenerator new_data={new_data} theque_tree={sankeytheque} path={path_to_card} />
         </Box>
       </ModalBody>
     </ModalContent>
@@ -289,7 +286,7 @@ const FileToCardsStructur = (files: string[]) => {
  * @param {*} { new_data, theque_tree, path }
  * @return {*}
  */
-const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new_data, processFunction,theque_tree, path }) => {
+const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new_data, theque_tree, path }) => {
   const folder = getFilesFromkeys(theque_tree as Type_JSON, path)
   const files: string[] | undefined = folder.Files as string[] | undefined
   if (files !== undefined) {
@@ -313,21 +310,24 @@ const SankeyThequeCardsGenerator: FC<FCType_SankeyThequeCardsGenerator> = ({ new
               variant='button_sankey_open_json'
               onClick={() => {
                 // Button that open file in JSON version
+                const file_name = [...path, cardStruct[1].is_json].join('/')
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
-                UploadExemple([...path, cardStruct[1].is_json].join('/'), new_data)
+                new_data.menu_configuration.ref_universal_converter_set_config.current(
+                  CONVERTER_CONFIGS['load_example'], file_name!, true
+                )
+                new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(true)
               }}>
               {new_data.t('useSankeyThequeJSON')}
             </Button> : <></>}
-
             {(cardStruct[1].is_reconciled || cardStruct[1].is_excel) ? <Button
               variant='button_sankey_open_excel'
               onClick={() => {
-                // Button that open file in Excel version
+                const file_name = [...path, cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel].join('/')
                 new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(false)
-
-                const file_name = cardStruct[1].is_reconciled ? cardStruct[1].is_reconciled : cardStruct[1].is_excel
-                processFunction.launch([...path, file_name].join('/'),default_actions_type)
-                UploadExemple([...path, file_name].join('/'), new_data)
+                new_data.menu_configuration.ref_universal_converter_set_config.current(
+                  CONVERTER_CONFIGS['load_example'], file_name!, true
+                )
+                new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(true)
               }}>
               {new_data.t('useSankeyThequeEXCEL')}
             </Button> : <></>}
