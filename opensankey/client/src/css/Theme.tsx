@@ -2759,6 +2759,15 @@ const layerStyles = {
       color: 'white',
       fontWeight: 'bold',
       fontSize: '0.8rem',
+    },
+    '.title_box2': {
+      padding: '0.4rem',
+      width: '100%',
+      background: 'white',
+      borderRadius: '4px',
+      color: 'black',
+      fontWeight: 'bold',
+      fontSize: '1rem',
     }
   },
 

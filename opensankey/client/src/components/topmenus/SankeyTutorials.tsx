@@ -51,11 +51,9 @@ import {
   Tabs,
 } from '@chakra-ui/react'
 
-// Local libs
-import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { ExempleMenuTypes } from '../welcome/MenuExamples'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { FType_ProcessFunctions, default_actions_type } from '../../Modules'
+import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 
 // COMPONENTS ===========================================================================
@@ -67,7 +65,6 @@ export declare const window: Window & typeof globalThis
  *
  * @param {*} {
  *   new_data,
- *   processFunctions,
  *   show_tuto,
  *   set_show_tuto,
  * }
@@ -75,10 +72,9 @@ export declare const window: Window & typeof globalThis
  */
 
 export const ModalTuto = ({
-  new_data, processFunctions, show_tuto, set_show_tuto,
-}:{
+  new_data, show_tuto, set_show_tuto,
+}: {
   new_data: Class_ApplicationData
-  processFunctions: FType_ProcessFunctions
   show_tuto: boolean
   set_show_tuto: (b: boolean) => void
 }) => {
@@ -164,8 +160,9 @@ export const ModalTuto = ({
               <Button variant='toolbar_button_6'
                 fontSize='1rem'
                 onClick={() => {
-                  UploadExemple(
-                    ('Formations/Tutoriels/' + (d[0]) + '/' + dd), new_data
+                  const file_name = 'Formations/Tutoriels/' + (d[0]) + '/' + dd
+                  new_data.menu_configuration.ref_universal_converter_set_config.current(
+                    CONVERTER_CONFIGS['load_example'], file_name, true
                   )
                   set_show_tuto(false)
                 }}
@@ -177,14 +174,11 @@ export const ModalTuto = ({
                   variant='toolbar_button_6'
                   fontSize='1rem'
                   onClick={() => {
-                    const action_type = default_actions_type
-                    processFunctions.launch(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'),
-                      action_type
+                    const file_name = 'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx')
+                    new_data.menu_configuration.ref_universal_converter_set_config.current(
+                      CONVERTER_CONFIGS['load_example'], file_name, true
                     )
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '.xlsx').replace('.json', '.xlsx'), new_data
-                    )
+                    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                     set_show_tuto(false)
                   }}
                 >
@@ -198,13 +192,11 @@ export const ModalTuto = ({
                   variant='toolbar_button_6'
                   fontSize='1rem'
                   onClick={() => {
-                    processFunctions.launch(
-                      'Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'),
-                      default_actions_type
+                    const file_name = 'Formations/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx')
+                    new_data.menu_configuration.ref_universal_converter_set_config.current(
+                      CONVERTER_CONFIGS['load_example'], file_name, true
                     )
-                    UploadExemple(
-                      'Formations/Tutoriels/' + (d[0]) + '/' + dd.replace('.json.gz', '_reconciled.xlsx').replace('.json', '_reconciled.xlsx'), new_data
-                    )
+                    new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                     set_show_tuto(false)
                   }}
                 >

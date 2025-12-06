@@ -74,19 +74,6 @@ declare const window: Window &
       logo: string
     }
   }
-// SPECIFIC CONSTANTS ******************************************************************/
-
-
-
-// export type FType_ProcessFunctions = {
-//   ref_processing: MutableRefObject<boolean>,
-//   ref_setter_processing: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-//   failure: MutableRefObject<boolean>,
-//   not_started: MutableRefObject<boolean>,
-//   ref_result: MutableRefObject<Dispatch<SetStateAction<string>>>,
-//   path: MutableRefObject<string>,
-//   launch: (path: string) => void
-// }
 
 initializeTooltipSystem()
 // CLASS APPLICATION DATA **************************************************************/
@@ -266,10 +253,6 @@ export class Class_ApplicationData {
    */
   private _language?: string | undefined
 
-
-  // TODO ???
-  //private _processFunction: FType_ProcessFunctions
-
   /**
    * Ref to launch _function_on_wait & create a _toast with a spinner to show we have to wait
    * @private
@@ -331,23 +314,6 @@ export class Class_ApplicationData {
     if (published_mode) this._logo_terriflux = 'logo_terriflux.png'
     else this._logo_terriflux = 'logos/logo_terriflux.png'
 
-    // // Excel processing function
-    // this._processFunction = {
-    //   ref_processing: useRef(false),
-    //   ref_setter_processing: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-    //   failure: useRef(false),
-    //   not_started: useRef(true),
-    //   ref_result: useRef<Dispatch<SetStateAction<string>>>(() => null),
-    //   path: useRef(''),
-    //   launch: (cur_path: string) => {
-    //     this._processFunction.path.current = cur_path
-    //     this.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_excel_reading_process.current!(true)
-    //     this._processFunction.ref_setter_processing.current(true)
-    //     this._processFunction.failure.current = true
-    //     this._processFunction.not_started.current = false
-    //     this._processFunction.ref_result.current('')
-    //   }
-    // }
     if (this.options.no_key_event === true) {
       return
     }
@@ -361,7 +327,7 @@ export class Class_ApplicationData {
    * Use a waiting spinner
    * @memberof Class_ApplicationData
    */
-  public reset(kwargs:Type_JSON) {
+  public reset(kwargs: Type_JSON) {
     this.sendWaitingToast(
       () => {
         // Reset
@@ -384,7 +350,7 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _reset(_?:Type_JSON) {
+  protected _reset(_?: Type_JSON) {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
@@ -470,7 +436,7 @@ export class Class_ApplicationData {
    *
    * @memberof Class_ApplicationData
    */
-  public saveToJSON(kwargs?:Type_JSON) {
+  public saveToJSON(kwargs?: Type_JSON) {
     this.sendWaitingToast(
       () => {
         this._saveToJSON(kwargs)
@@ -493,7 +459,7 @@ export class Class_ApplicationData {
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _saveToJSON(kwargs?:Type_JSON) {
+  protected _saveToJSON(kwargs?: Type_JSON) {
     // Convert all datas as JSON
     this.drawing_area.bypass_redraws = true
     const json_data = this._toJSON(kwargs)
@@ -525,7 +491,7 @@ export class Class_ApplicationData {
    */
   public saveToExcel(
     url_prefix: string,
-    kwargs?:Type_JSON
+    kwargs?: Type_JSON
   ) {
     this.sendWaitingToast(
       () => {
@@ -555,8 +521,8 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _saveToExcel(
-    name: string,
-    args?: Type_JSON
+    _name: string,
+    _args?: Type_JSON
   ) {
   }
 
@@ -568,7 +534,7 @@ export class Class_ApplicationData {
    * Create json file that contains all application datas
    * @memberof Class_ApplicationData
    */
-  protected _toJSON(kwargs?:Type_JSON) {
+  protected _toJSON(kwargs?: Type_JSON) {
     const json_object = {} as Type_JSON
     if (this._language !== undefined)
       json_object['language'] = this._language
@@ -590,27 +556,23 @@ export class Class_ApplicationData {
    */
   public fromJSON(
     json_object: Type_JSON,
-    kwargs?:Type_JSON,
+    kwargs?: Type_JSON,
     draw: boolean = true
   ) {
-    this.sendWaitingToast(
-      () => {
-        // Always bypass redrawings
-        this._drawing_area.bypass_redraws = true
-        // Reset everything
-        this._reset(kwargs)
-        this._drawing_area.bypass_redraws = true
-        // Read json file
-        this._fromJSON(json_object,kwargs)
-        // Post processing & menu updating
-        this._afterFromJSON()
-        // Then draw if asked
-        if (draw) {
-          this._drawing_area.sankey.sortNodes()
-          this._drawing_area.draw()
-          this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
-        }
-      })
+    this._drawing_area.bypass_redraws = true
+    // Reset everything
+    this._reset(kwargs)
+    this._drawing_area.bypass_redraws = true
+    // Read json file
+    this._fromJSON(json_object, kwargs)
+    // Post processing & menu updating
+    this._afterFromJSON()
+    // Then draw if asked
+    if (draw) {
+      this._drawing_area.sankey.sortNodes()
+      this._drawing_area.draw()
+      this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+    }
   }
 
   /**
@@ -621,10 +583,10 @@ export class Class_ApplicationData {
    */
   protected _fromJSON(
     json_object: Type_JSON,
-    kwargs?:Type_JSON
+    kwargs?: Type_JSON
   ) {
     // Update drawing area
-    this._drawing_area.fromJSON(json_object,kwargs)
+    this._drawing_area.fromJSON(json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
   }
@@ -717,7 +679,7 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _updateFromJSON(json_object: Type_JSON,_?:Type_JSON) {
+  protected _updateFromJSON(json_object: Type_JSON, _?: Type_JSON) {
     if (json_object['layout'] !== undefined) {
       const json_layout = json_object['layout'] as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
@@ -1197,14 +1159,10 @@ export class Class_ApplicationData {
   public get app_name(): string { return this._app_name }
   public set app_name(value: string) { this._app_name = value }
 
-  //public get processFunction(): FType_ProcessFunctions { return this._processFunction }
-
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
 
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
-
-
 
   public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 

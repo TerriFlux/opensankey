@@ -50,8 +50,6 @@ import {
   Badge
 } from '@chakra-ui/react'
 
-// Local libs
-import { UploadExemple } from '../../Persistence/SankeyPersistence'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
@@ -244,7 +242,8 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                             // Draw template by downloading data from server
                             // Reset navigator data without redrawing sankey (UploadExemple will do it after downloading data from server)
                             new_data.reinitialization(false)
-                            UploadExemple(templates[id].file_path, new_data)
+                            
+                            //UploadExemple(templates[id].file_path, new_data)
                             set_show_template(false)
                           }}
                         >
@@ -298,7 +297,7 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                               <Button variant='menuconfigpanel_option_button'
                                 onClick={() => {
                                   // Draw template by downloading data from server
-                                  UploadExemple(templates[id].file_path, new_data)
+                                  //UploadExemple(templates[id].file_path, new_data)
                                   new_data.menu_configuration.ref_menu_opened.current[1](true)
                                   set_show_template(false)
                                 }}>
