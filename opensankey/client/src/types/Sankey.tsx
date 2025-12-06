@@ -80,18 +80,22 @@ export class Class_Sankey {
 
   public normalised_link?: Class_LinkElement
 
+  public get dimensions_list() {
+    return Object.values(this._nodes_dimensions)
+  }
+
   public addNodeDimension(dim: Class_NodeDimension) {
-    if (this._nodes_dimensions[dim.id]) {
+    if (this._nodes_dimensions[dim.id+dim.parent.id]) {
       return
     }
-    this._nodes_dimensions[dim.id] = dim
+    this._nodes_dimensions[dim.id+dim.parent.id] = dim
   }
 
   public removeNodeDimension(dim: Class_NodeDimension) {
-    if (!this._nodes_dimensions[dim.id]) {
+    if (!this._nodes_dimensions[dim.id+dim.parent.id]) {
       return
     }
-    delete this._nodes_dimensions[dim.id]
+    delete this._nodes_dimensions[dim.id+dim.parent.id]
   }
 
   public showAccordingToLevelTags() {
@@ -407,6 +411,7 @@ export class Class_Sankey {
     this._flux_taggs = {}
     this._data_taggs = {}
     this._level_taggs = {}
+    this.dimensions_list.forEach(dim => dim.delete())
   }
 
   public delete_all_nodes_and_links() {
@@ -416,6 +421,12 @@ export class Class_Sankey {
     })
     this._nodes = {}
     this._links = {}
+  }
+
+  public update() {
+    this.dimensions_list.forEach(dimension => {
+      dimension.unsetForcingToShow()
+    })
   }
 
   // COPY METHODS =======================================================================
@@ -2043,7 +2054,7 @@ export class Class_Sankey {
   ): Class_LevelTagGroup {
     if (!this._level_taggs[id]) {
       // Create
-      const tag_group = new Class_LevelTagGroup(id, name, this)
+      const tag_group = new Class_LevelTagGroup(id, name, this,false)
       tag_group.activated = true
       // Update
       this._level_taggs[id] = tag_group

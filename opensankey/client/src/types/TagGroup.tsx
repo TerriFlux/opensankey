@@ -705,18 +705,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
  * @export
  * @class Class_LevelTagGroup
  */
-export class Class_LevelTagGroup {
-
-  // PRIVATE ATTRIBUTES =================================================================
-  // Name
-  private _id: string
-  private _name: string
-
-  // List of tags
-  private _tag_count: number = 0
-
-  // Type of banner
-  private _banner: tag_banner_type = 'one'
+export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 
   // Display attributes
   private _activated: boolean = false
@@ -725,8 +714,6 @@ export class Class_LevelTagGroup {
 
   // PROTECTED ATTRIBUTES ===============================================================
   public linked_tag_group : Class_TagGroup | null = null
-  protected _tags: { [_: string]: Class_LevelTag; } = {}
-  protected _ref_sankey: Class_Sankey
 
   /**
    * True if tag is currently on a deletion process
@@ -734,7 +721,6 @@ export class Class_LevelTagGroup {
    * @private
    * @memberof Class_LevelTagGroup
    */
-  protected _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
   /**
@@ -744,10 +730,8 @@ export class Class_LevelTagGroup {
    * @param {Class_Sankey} sankey
    * @memberof Class_LevelTagGroup
    */
-  constructor(id: string, name: string, sankey: Class_Sankey) {
-    this._id = id
-    this._name = name
-    this._ref_sankey = sankey
+  constructor(id: string, name: string, sankey: Class_Sankey,with_a_tag: boolean = false) {
+    super(id,name,sankey,with_a_tag)
   }
 
   // CLEANING METHODS ====================================================================
@@ -756,22 +740,9 @@ export class Class_LevelTagGroup {
    * @memberof Class_LevelTagGroup
    */
   public delete() {
-    if (!this._is_currently_deleted) {
-      // Set as currently deleted
-      this._is_currently_deleted = true
-      
-      // Delete all tags properly
-      Object.values(this._tags).forEach(tag => {
-        tag.delete()
-      })
-      this._tags = {}
-      
-      // Unref antitags
-      this._antitagged_refs.forEach(ref => this.removeAntiTaggedRef(ref))
-      this._antitagged_refs = []
-      
-      // Garbage collection will do the rest ...
-    }
+    super.delete()
+    this._antitagged_refs.forEach(ref => this.removeAntiTaggedRef(ref))
+    this._antitagged_refs = []
   }
 
   // COPY METHODS ========================================================================
@@ -780,135 +751,27 @@ export class Class_LevelTagGroup {
   }
 
   protected _copyFrom(tagg_to_copy: Class_LevelTagGroup) {
-    // Common attributes
-    this._name = tagg_to_copy._name
-    this._banner = tagg_to_copy._banner
-    this._tag_count = tagg_to_copy._tag_count
+    super._copyFrom(tagg_to_copy)
     this._activated = tagg_to_copy._activated
-    this._siblings = tagg_to_copy._siblings
-
-    // Synchronize tags
-    // Synchronise current tag group's tag with tag group to copy
-    this.tags_list.forEach(tag => {
-      // Delete tags not present in new layout but present in curr
-      if (!(tag.id in tagg_to_copy.tags_dict))
-        this.removeTag(tag)
-      // Transfer tags attr present in new layout and in curr
-      else
-        tag.copyFrom(tagg_to_copy.tags_dict[tag.id])
-    })
-    
-    // Add tag present in tagg_to_copy but not this
-    tagg_to_copy.tags_list.forEach(tag => {
-      if (!(tag.id in this.tags_dict))
-        this.addTag(tag.name, tag.id).copyFrom(tag)
-    })
+    this._siblings = (tagg_to_copy as unknown as Class_LevelTagGroup)._siblings
   }
 
-  // JSON METHODS =======================================================================
-  public toJSON(kwargs?: Type_JSON) {
-    const json_object = {} as Type_JSON
-    this._toJSON(json_object, kwargs)
-    return json_object
-  }
 
   protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
-    // Fill group attributes
-    json_object['name'] = this._name
-    json_object['banner'] = this._banner
+    super._toJSON(json_object,_kwargs)
+
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
-    
-    // Update tags infos
-    const json_object_tags = {} as Type_JSON
-    this.tags_list.forEach(tag => {
-      json_object_tags[tag.id] = tag.toJSON()
-    })
-    json_object['tags'] = json_object_tags
-  }
-
-  public fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    this._fromJSON(json_object, kwargs)
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    // Read legacy JSON
-    this.fromLegacyJSON(json_object)
-    
-    // Read group attributes
-    this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._banner = getStringFromJSON(json_object, 'banner', this._banner) as tag_banner_type
+    super._fromJSON(json_object,kwargs)
+
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
     const linked_tag_group_id = getStringOrUndefinedFromJSON(json_object, 'linked_tag_group')
     if (linked_tag_group_id !== undefined)
       this.linked_tag_group = this._ref_sankey.node_taggs_dict[linked_tag_group_id] ?? null
-
-    // Create new tags & read their attributes
-    const matching_tags_id: { [_: string]: string; } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: string; } : {}
-    Object.entries(json_object['tags']).forEach(([_, tag_json]) => {
-      // Get or Create tag
-      const tag_id = matching_tags_id[_] ?? _
-      const tag = this._tags[_] ?? this.addTag(tag_id, tag_id) // Tag will be renamed in fromJSON method
-
-      // Update tag with json
-      tag.fromJSON(tag_json as Type_JSON)
-    })
-  }
-
-  private fromLegacyJSON(json_object: Type_JSON) {
-    this._name = getStringFromJSON(json_object, 'group_name', this._name)
-  }
-
-  // PUBLIC METHODS =====================================================================
-  public addTag(name: string, id: string | undefined = undefined): Class_LevelTag {
-    const tag = this.createTag(name, id)
-    this._tags[tag.id] = tag
-    this._tag_count = this._tag_count + 1
-    return tag
-  }
-
-  public addDefaultTag(): Class_LevelTag {
-    const n = String(this._tag_count)
-    const name = 'Etiquette ' + n
-    return this.addTag(name)
-  }
-
-  public removeTag(_: Class_LevelTag) {
-    if (this._tags[_.id] !== undefined) {
-      _.delete()
-      delete this._tags[_.id]
-    }
-  }
-
-  public selectTagsFromId(id: string) {
-    // Change selection but do not redraw
-    const _selectTagsFromId = (_: string) => {
-      this.tags_list.forEach(tag => {
-        if (tag.id === _) {
-          tag.setSelected()
-        } else {
-          tag.setUnSelected()
-        }
-      })
-      this._ref_sankey.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLevelTags()
-    }
-    
-    const old_selected = this.selected_tags_list[0].id
-    this._ref_sankey.drawing_area.application_data.history.saveUndo(() => _selectTagsFromId(old_selected))
-    this._ref_sankey.drawing_area.application_data.history.saveRedo(() => _selectTagsFromId(id))
-    _selectTagsFromId(id)
-  }
-
-  public selectTagsFromIds(ids: string[]) {
-    // Change selection but do not redraw
-    this.tags_list.forEach(tag => {
-      if (ids.includes(tag.id)) {
-        tag.setSelected()
-      } else {
-        tag.setUnSelected()
-      }
-    })
   }
 
   public sibling_activated() {
@@ -983,74 +846,10 @@ export class Class_LevelTagGroup {
     return tag
   }
 
-  // GETTERS ============================================================================
-  /**
-   * Id of tag group
-   * @readonly
-   * @type {string}
-   * @memberof Class_LevelTagGroup
-   */
-  public get id(): string { return this._id }
 
-  /**
-   * Name of tag group (!= id)
-   * @type {string}
-   * @memberof Class_LevelTagGroup
-   */
-  public get name(): string { return this._name }
-
-  /**
-   * Return dict tag from the current group
-   * @type {{ [_: string]: Class_LevelTag }}
-   * @memberof Class_LevelTagGroup
-   */
-  public get tags_dict() { return this._tags }
-
-  /**
-   * Return list tag from the current group
-   * @readonly
-   * @memberof Class_LevelTagGroup
-   */
-  public get tags_list() { return Object.values(this.tags_dict) }
-
-  /**
-   * Return list of selected tag from the current group
-   * @readonly
-   * @memberof Class_LevelTagGroup
-   */
-  public get selected_tags_list() { return this.tags_list.filter(t => t.is_selected) }
-
-  /**
-   * True if tag group has tags
-   * @readonly
-   * @memberof Class_LevelTagGroup
-   */
-  public get has_tags() { return this.tags_list.length > 0 }
-
-  /**
-   * True if tag group has tags selected
-   * @readonly
-   * @memberof Class_LevelTagGroup
-   */
-  public get has_selected_tags() { return this.selected_tags_list.length > 0 }
-
-  public get first_selected_tags() {
-    if (this.has_tags)
-      if (this.has_selected_tags)
-        return this.selected_tags_list[0]
-      else
-        return this.tags_list[0]
-    else
-      return undefined
-  }
-
-  public get banner(): tag_banner_type { return this._banner }
   public get activated(): boolean { return this._activated }
   public get siblings(): string[] { return this._siblings }
   public get antitagged_refs() { return this._antitagged_refs }
-
-  public set name(value: string) { this._name = value }
-  public set banner(value: tag_banner_type) { this._banner = value }
   
   public set activated(value: boolean) {
     // Avoid useless updates

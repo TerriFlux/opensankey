@@ -1,6 +1,5 @@
 import { applyRandomColors } from '../../Algorithms/Colors'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_Tag } from '../../types/Tag'
 import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {

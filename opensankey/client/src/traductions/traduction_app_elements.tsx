@@ -452,7 +452,6 @@ export const resources_app_elements = {
     translation: {
       Menu: {
         ElOrder:'Ordonner la superposition des éléments',
-        level_associated_tag: 'Association des hiérarchie de noeuds avec les dimensions',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',

@@ -28,6 +28,7 @@
 import { Class_NodeElement } from './Node'
 import { Class_Tag } from '../types/Tag'
 import { Type_JSON } from '../types/Utils'
+import { Class_LevelTagGroup } from '../types/TagGroup'
 
 /**
  * Class that handles all tag management operations for NodeElement
@@ -44,7 +45,8 @@ export class NodeTagsManager {
 
   public cleanForDeletion() {
     const tagsData = this._node.internalTagsData
-    
+    tagsData.leveltaggs_as_antitagged.forEach(tag => tag.removeAntiTaggedRef(this._node))
+    tagsData.leveltaggs_as_antitagged = []
     // Remove reference of self in related tags
     tagsData.tags.forEach(tag => tag.removeReference(this._node))
     tagsData.tags = []
@@ -94,6 +96,28 @@ export class NodeTagsManager {
   }
 
   // JSON METHODS =======================================================================
+  public addAsAntiTagged(_: Class_LevelTagGroup) {
+    if (typeof _.addAntiTaggedRef !== 'function') {
+      console.error('Object is not a proper Class_LevelTagGroup instance:', _)
+      console.log('Constructor:', _.constructor?.name)
+      console.log('Has prototype methods:', Object.getPrototypeOf(_))
+      //debugger // S'arrête ici automatiquement
+    }
+    const tagsData = this._node.internalTagsData
+    if (!tagsData.leveltaggs_as_antitagged.includes(_)) {
+      tagsData.leveltaggs_as_antitagged.push(_)
+      _.addAntiTaggedRef(this._node)
+    }
+  }
+
+  public removeAsAntiTagged(_: Class_LevelTagGroup) {
+    const tagsData = this._node.internalTagsData
+    if (tagsData.leveltaggs_as_antitagged.includes(_)) {
+      const idx = tagsData.leveltaggs_as_antitagged.indexOf(_)
+      tagsData.leveltaggs_as_antitagged.splice(idx, 1)
+      _.removeAntiTaggedRef(this._node)
+    }
+  }
 
   public toJSON(json_object: Type_JSON) {
     // Tags
@@ -108,6 +132,11 @@ export class NodeTagsManager {
           ])
       )
     }
+    const tagsData = this._node.internalTagsData
+    tagsData.leveltaggs_as_antitagged
+      .forEach(leveltagg => {
+        (json_object['tags'] as Type_JSON)[leveltagg.id] = [String(0)]
+      })
   }
 
   public fromJSON(
@@ -120,12 +149,17 @@ export class NodeTagsManager {
     //   tags:{key_grp_tag:string[] (key_tag_selected) }
     //   where 'key_grp_tag' represent the id of a node_taggs group
     //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
+    const level_taggs_dict = Object.fromEntries(Object.entries(this._node.sankey.level_taggs_dict))
+    const taggs_dict = { ...this._node.sankey.node_taggs_dict, ...level_taggs_dict }
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
-        const tagg = this._node.sankey.node_taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
+        const tagg = taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
         if (tagg !== undefined) {
           (tag_ids as string[])
             .forEach(tag_id => {
+              if (+tag_id == 0 && level_taggs_dict[tagg_id]) {
+                this._node._nodeTagsManager.addAsAntiTagged(tagg as Class_LevelTagGroup)
+              }
               const tag = tagg.tags_dict[matching_tags_id[tagg_id][tag_id] ?? tag_id]
               if (tag !== undefined)
                 this.addTag(tag as Class_Tag)
@@ -135,6 +169,59 @@ export class NodeTagsManager {
   }
 
   // TAG MANAGEMENT METHODS =============================================================
+  /**
+   * While adding a root level we must shift the previous level
+   * 1->2 2->3 ...
+   * @memberof Class_NodeDimension
+   */
+  // public shift_level_tags() {
+  //   const tagg = this.parent_level_tag.group as Class_LevelTagGroup
+  //   const idx = tagg.tags_list.indexOf(this.parent_level_tag as Class_LevelTag)
+  //   this._parent_level_tag = tagg.tags_list[idx + 1]
+  //   if (tagg.tags_list.length == idx + 2) {
+  //     const new_tags = String(+this._parent_level_tag.id + 1)
+  //     if (!tagg.tags_dict[new_tags]) {
+  //       tagg.addTag(new_tags, new_tags) as Class_LevelTag
+  //     }
+  //     this._child_level_tag = tagg.tags_list[idx + 2]
+  //   } else {
+  //     this._child_level_tag = tagg.tags_list[idx + 2]
+  //     this.children.forEach(c => c.dimensions_as_parent_pure.forEach(pdim => (pdim as Class_NodeDimension).shift_level_tags()))
+  //   }
+  //   this.parent.dimensionsUpdated()
+  //   this.children.forEach(c => c.dimensionsUpdated())
+  // }
+
+  /**
+   * For nodes wich are leaf for a given dimesion anf for which the level tag is not the lower
+   * it creates some additional parent child relation so that the node is displayed for several level 
+   * (2 and 3 for example)
+   * @memberof Class_NodeDimension
+   */
+  // public normalize() {
+  //   const group = this.parent_level_tag.group as Class_LevelTagGroup
+  //   const last_tag = group.tags_list[this.parent_level_tag.group.tags_list.length - 1]
+  //   this.children.forEach(c => {
+  //     let ok = false
+  //     const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+  //     child_dimensions.forEach(cdim => {
+  //       if (cdim.child_level_tag == last_tag) {
+  //         ok = true
+  //       }
+  //     })
+  //     if (ok) return
+  //     let parent_dimension = c.nodeDimensionAsParent(group)
+  //     if (!parent_dimension || parent_dimension.children.includes(parent_dimension.parent)) {
+  //       //const child_dimensions = c.dimensions_as_child.filter(c=>c.parent_level_tag.group.id == group.id)
+  //       const last_child_dimension = child_dimensions[child_dimensions.length-1]
+  //       const last_child_dimension_tag = last_child_dimension.child_level_tag as Class_LevelTag
+  //       const idx = group.tags_list.indexOf(last_child_dimension_tag)
+  //       const new_tag = group.tags_list[idx+1]
+  //       parent_dimension = (this.child_level_tag as Class_LevelTag).getOrCreateLowerDimension(c, c, new_tag)
+  //     }
+  //     parent_dimension.normalize()
+  //   })
+  // }
 
   /**
    * Check if given tag is referenced by node
