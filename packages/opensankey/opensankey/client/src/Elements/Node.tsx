@@ -29,8 +29,7 @@ import * as d3 from 'd3'
 import type { Type_Side } from './LinkAttributes'
 import type { Class_LinkStyle } from './ElementStyle'
 import type {
-  Class_Tag,
-  Class_LevelTag,
+  Class_Tag
 } from '../types/Tag'
 import type {
   Class_TagGroup,
@@ -705,11 +704,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this.draw()
   }
 
-  // DIMENSIONS METHODS =================================================================
-
-  public hasGivenLevelTag(tag: Class_LevelTag) {
-    return this._nodeDimensionsManager.hasGivenLevelTag(tag)
-  }
 
   public dimensionsUpdated() {
     this._are_related_dimensions_selected = undefined
@@ -727,7 +721,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   public addAsAntiTagged(_: Class_LevelTagGroup) {
-    this._nodeDimensionsManager.addAsAntiTagged(_)
+    this._nodeTagsManager.addAsAntiTagged(_)
     this.dimensionsUpdated()
   }
 
@@ -742,16 +736,16 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   public removeAsAntiTagged(_: Class_LevelTagGroup) {
-    this._nodeDimensionsManager.removeAsAntiTagged(_)
+    this._nodeTagsManager.removeAsAntiTagged(_)
     this.dimensionsUpdated()
   }
 
-  public nodeDimensionAsParent(tagGroup: Class_LevelTagGroup) {
-    return this._nodeDimensionsManager.nodeDimensionAsParent(tagGroup)
+  public nodeDimensionAsParent(child: Class_NodeElement) {
+    return this._nodeDimensionsManager.nodeDimensionAsParent(child)
   }
 
-  public nodeDimensionAsChild(tagGroup: Class_LevelTagGroup) {
-    return this._nodeDimensionsManager.nodeDimensionAsChild(tagGroup)
+  public nodeDimensionAsChild(parent: Class_NodeElement) {
+    return this._nodeDimensionsManager.nodeDimensionAsChild(parent)
   }
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================
@@ -1218,29 +1212,29 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
             let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-                break
-              case 'top':
-                node_face_size = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size = sumLinkTop
-                break
+            case 'left':
+              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
+              break
+            case 'top':
+              node_face_size = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size = sumLinkTop
+              break
             }
             node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
 
             let node_face_size2 = sumLinkLeft
             switch (node_angle_direction) {
-              case 'left':
-                node_face_size2 = sumLinkRight
-                break
-              case 'top':
-                node_face_size2 = sumLinkBottom
-                break
-              case 'bottom':
-                node_face_size2 = sumLinkTop
-                break
+            case 'left':
+              node_face_size2 = sumLinkRight
+              break
+            case 'top':
+              node_face_size2 = sumLinkBottom
+              break
+            case 'bottom':
+              node_face_size2 = sumLinkTop
+              break
             }
             arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
             arrows_adjustment = node_arrow_shift - arrows_adjustment
@@ -1738,9 +1732,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
     return taggs
   }
   public get taggs_list() { return Object.values(this.taggs_dict) }
-  public get level_tags_list() { return this._nodeDimensionsManager.level_tags_list }
-  public get level_taggs_dict() { return this._nodeDimensionsManager.level_taggs_dict }
-  public get level_taggs_list() { return this._nodeDimensionsManager.level_taggs_list }
   public get is_child() { return this._nodeDimensionsManager.is_child }
   public get is_parent() { return this._nodeDimensionsManager.is_parent }
   public get is_multi_parent() { return this._nodeDimensionsManager.is_multi_parent }
@@ -1918,7 +1909,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       const list_tag = this.tags_list
       if (list_tag.length > 0) {
         let display = true
-        Object.values(this._taggs_dict).forEach(tag_list => {
+        Object.entries(this._taggs_dict).filter(([key,_])=>this.sankey.node_taggs_dict[key]).forEach(([_,tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
         are_related_node_tags_selected = display
@@ -2025,11 +2016,11 @@ export class Class_NodeElement extends ClassTemplate_Element {
       Object.values(this.dimensions_as_child)
         .forEach(dim => {
           const node_parent = dim.parent
-          const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations');
-          (dim.parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(
+          const name = extremity_node.id + '-' + node_parent.id + (importation ? 'Importations' : 'Exportations')
+          this._nodeDimensionsManager.getOrCreateLowerDimension(
             this.sankey.nodes_dict[name],
             new_node,
-            dim.child_level_tag as Class_LevelTag
+            dim.id
           )
         })
 
@@ -2100,12 +2091,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   // REMAINING MANAGERS DATA ACCESS =====================================================
 
-  public get internalTagsData() { return { tags: this._tags, taggs_dict: this._taggs_dict } }
+  public get internalTagsData() { return { 
+    tags: this._tags, 
+    taggs_dict: this._taggs_dict,
+    leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
+  } }
+
   public get internalDimensionsData() {
     return {
       dimensions_as_parent: this._dimensions_as_parent,
       dimensions_as_child: this._dimensions_as_child,
-      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
+
     }
   }
   public get internalDrawingElements() {

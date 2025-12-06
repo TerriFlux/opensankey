@@ -25,8 +25,7 @@
 // ==================================================================================================
 
 import { Class_NodeDimension } from '../Elements/NodeDimension'
-import { Class_LevelTag, Class_Tag } from '../types/Tag'
-import { Class_LevelTagGroup } from '../types/TagGroup'
+import { Class_Tag } from '../types/Tag'
 import { default_style_id } from '../types/Utils'
 import { Class_NodeStyle } from '../Elements/ElementStyle'
 import { Class_NodeElement } from '../Elements/Node'
@@ -49,7 +48,6 @@ enum ContractContext {
 
 interface BaseOperationConfig {
   expand_left: boolean
-  tagg: Class_LevelTagGroup
   original_node: Class_NodeElement
   suffix: string
 }
@@ -89,11 +87,9 @@ const calculateOpacity = (currentOpacity: number): number => {
 
 const createOperationConfig = (
   contextualised_node: Class_NodeElement,
-  expand_left: boolean,
-  tagg: Class_LevelTagGroup
+  expand_left: boolean
 ): BaseOperationConfig => ({
   expand_left,
-  tagg,
   original_node: contextualised_node.master_node as Class_NodeElement ?? contextualised_node,
   suffix: expand_left ? EXPANSION_SUFFIXES.LEFT : EXPANSION_SUFFIXES.RIGHT
 })
@@ -147,90 +143,91 @@ const finalizeOperation = (
 const updateNodeDimensions = (
   newNode: Class_NodeElement,
   contextualised_node: Class_NodeElement,
-  tagg: Class_LevelTagGroup,
+  child_or_parent: Class_NodeElement,
   isDisaggregationExpansion: boolean = true
 ) => {
   if (isDisaggregationExpansion) {
-    updateDisaggregationExpansionDimensions(newNode, contextualised_node, tagg)
+    updateDisaggregationExpansionDimensions(newNode, contextualised_node, child_or_parent)
   } else {
-    updateAggregationExpansionDimensions(newNode, contextualised_node, tagg)
+    updateAggregationExpansionDimensions(newNode, contextualised_node, child_or_parent)
   }
 }
 
 const updateDisaggregationExpansionDimensions = (
   newNode: Class_NodeElement,
   contextualised_node: Class_NodeElement,
-  tagg: Class_LevelTagGroup
+  child: Class_NodeElement,
 ) => {
   // Dimensions as child
   if (contextualised_node.dimensions_as_child.length === 0) {
     newNode.dimensions_as_child.forEach(cdim => newNode.removeDimensionAsChild(cdim))
   } else {
-    const dim_as_child = contextualised_node.nodeDimensionAsChild(tagg)
-    const n_dim_as_child = newNode.nodeDimensionAsChild(tagg)
+    const dim_as_child = contextualised_node.nodeDimensionAsChild(child)
+    const n_dim_as_child = newNode.nodeDimensionAsChild(child)
 
     if (dim_as_child && n_dim_as_child) {
-      n_dim_as_child.force_child_level_tag(dim_as_child.child_level_tag)
-      n_dim_as_child.force_parent_level_tag(dim_as_child.parent_level_tag)
+      // n_dim_as_child.force_child_level_tag(dim_as_child.child_level_tag)
+      // n_dim_as_child.force_parent_level_tag(dim_as_child.parent_level_tag)
       n_dim_as_child.setForceToShowChildren(true)
     } else if (n_dim_as_child) {
       newNode.removeDimensionAsChild(n_dim_as_child)
     }
 
-    updateForcedDimensions(newNode, contextualised_node, 'child')
+    updateForcedDimensions(newNode, contextualised_node, 'child',child)
   }
 
   // Dimensions as parent
-  if (newNode.dimensions_as_parent.length !== 0) {
-    const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
-    const n_dim_as_parent = newNode.nodeDimensionAsParent(tagg)
+  // if (newNode.dimensions_as_parent.length !== 0) {
+  //   const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
+  //   const n_dim_as_parent = newNode.nodeDimensionAsParent(tagg)
 
-    if (n_dim_as_parent && dim_as_parent) {
-      n_dim_as_parent.force_parent_level_tag(dim_as_parent.parent_level_tag)
-      n_dim_as_parent.force_child_level_tag(dim_as_parent.child_level_tag)
-    }
-  }
+  //   if (n_dim_as_parent && dim_as_parent) {
+  //     n_dim_as_parent.force_parent_level_tag(dim_as_parent.parent_level_tag)
+  //     n_dim_as_parent.force_child_level_tag(dim_as_parent.child_level_tag)
+  //   }
+  // }
 }
 
 const updateAggregationExpansionDimensions = (
   newNode: Class_NodeElement,
   contextualised_node: Class_NodeElement,
-  tagg: Class_LevelTagGroup
+  parent: Class_NodeElement,
 ) => {
   // Dimensions as parent (devient child pour le nouveau nœud)
   if (contextualised_node.dimensions_as_parent.length === 0) {
     newNode.dimensions_as_parent.forEach(cdim => newNode.removeDimensionAsParent(cdim))
   } else {
-    const dim_as_parent = contextualised_node.nodeDimensionAsParent(tagg)
-    const n_dim_as_parent = newNode.nodeDimensionAsChild(tagg)
+    const dim_as_parent = contextualised_node.nodeDimensionAsParent(parent)
+    const n_dim_as_parent = newNode.nodeDimensionAsParent(parent)
 
     if (dim_as_parent && n_dim_as_parent) {
-      n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
-      n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
+      // n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
+      // n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
       n_dim_as_parent.setForceToShowChildren(true)
     } else if (n_dim_as_parent) {
       newNode.removeDimensionAsParent(n_dim_as_parent)
     }
 
-    updateForcedDimensions(newNode, contextualised_node, 'parent')
+    updateForcedDimensions(newNode, contextualised_node, 'parent',parent)
   }
 
-  // Dimensions as child
-  if (newNode.dimensions_as_child.length !== 0) {
-    const dim_as_parent = contextualised_node.nodeDimensionAsChild(tagg)
-    const n_dim_as_parent = newNode.nodeDimensionAsChild(tagg)
+  //Dimensions as child
+  // if (newNode.dimensions_as_child.length !== 0) {
+  //   const dim_as_parent = contextualised_node.nodeDimensionAsChild(tagg)
+  //   const n_dim_as_parent = newNode.nodeDimensionAsChild(tagg)
 
-    if (n_dim_as_parent && dim_as_parent) {
-      n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
-      n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
-    }
-  }
+  //   if (n_dim_as_parent && dim_as_parent) {
+  //     n_dim_as_parent.force_parent_level_tag(dim_as_parent.child_level_tag)
+  //     n_dim_as_parent.force_child_level_tag(dim_as_parent.parent_level_tag)
+  //   }
+  // }
 }
 
 const updateForcedDimensions = (
   newNode: Class_NodeElement,
   contextualised_node: Class_NodeElement,
-  dimensionType: 'child' | 'parent'
+  dimensionType: 'child' | 'parent',
+  child_or_parent:Class_NodeElement
 ) => {
   const dimensions = dimensionType === 'child'
     ? contextualised_node.dimensions_as_child
@@ -239,7 +236,7 @@ const updateForcedDimensions = (
   dimensions.forEach(dim => {
     if (dim.force_show_children) {
       const method = dimensionType === 'child' ? 'nodeDimensionAsChild' : 'nodeDimensionAsParent'
-      const ndim = newNode[method](dim.related_level_tagg as Class_LevelTagGroup)
+      const ndim = newNode[method](child_or_parent)
 
       if (ndim) {
         if (dimensionType === 'child') {
@@ -649,7 +646,7 @@ const createDisaggregationExpansionNodes = (
     newNode.tooltip_text = child.tooltip_text
     newNode._nodeTagsManager.copyTagsFrom(child)
 
-    updateNodeDimensions(newNode, config.contextualised_node, config.tagg, true)
+    updateNodeDimensions(newNode, config.contextualised_node, child)
     newNode.position_x = config.contextualised_node.position_x
     newNode.position_v = -1
 
@@ -669,7 +666,7 @@ const createAggregationExpansionNode = (
   newNode.master_node = config.parent
   newNode.copyFrom(config.parent)
   updateNodeAppearance(newNode, config.contextualised_node)
-  updateNodeDimensions(newNode, config.contextualised_node, config.tagg, false)
+  updateNodeDimensions(newNode, config.contextualised_node, newNode)
   newNode.position_v = -1
 
   return newNode
@@ -685,16 +682,17 @@ const createAggregationExpansionNode = (
 export const aggregate = (
   new_data: Class_ApplicationData,
   contextualised_node: Class_NodeElement,
-  tagg: Class_LevelTagGroup
+  parent: string
 ) => {
   if (!contextualised_node.is_child) {
     return
   }
-  const child_dim = contextualised_node.nodeDimensionAsChild(tagg)
+  const parent_node = contextualised_node.sankey.nodes_dict[parent]
+  const child_dim = contextualised_node.nodeDimensionAsChild(parent_node)
   if (!child_dim) {
     return
   }
-  const parent = child_dim.parent
+  // const parent = child_dim.parent
   const Do = () => {
     child_dim.setForceToShowParent()
     const aggregateNode = child_dim.parent
@@ -704,10 +702,10 @@ export const aggregate = (
     aggregateNode.position_u = contextualised_node.position_u
 
     // Gestion des nœuds d'échange
-    handleExchangeNodes(new_data, contextualised_node, tagg, 'aggregate')
+    // handleExchangeNodes(new_data, contextualised_node, aggregateNode, 'aggregate')
   }
   const undo = () => {
-    disaggregate(new_data,parent,tagg)
+    disaggregate(new_data,parent_node,contextualised_node.id)
   }
   new_data.history.saveUndo(undo)
   new_data.history.saveRedo(Do)
@@ -715,167 +713,167 @@ export const aggregate = (
 }
 
 
-export const create_parent = (
-  new_data: Class_ApplicationData,
-  selected_nodes: Class_NodeElement[],
-  tagg: Class_LevelTagGroup
-) => {
-  const { drawing_area } = new_data
-  const { sankey } = drawing_area
-  drawing_area.bypass_redraws = true
-  const parent_dim = selected_nodes[0].nodeDimensionAsParent(tagg)
-  const child_level_tag = parent_dim ? parent_dim.parent_level_tag : tagg.tags_list[1]
-  const parent_level_tag = tagg.tags_list[tagg.tags_list.indexOf(child_level_tag as Class_LevelTag) - 1]
-  const parent = sankey.addNewNode(selected_nodes.map(n => n.id).join('-'), selected_nodes.map(n => n.name).join('+'))
-  parent.position_x = selected_nodes[0].position_x
-  parent.position_u = selected_nodes[0].position_u
-  parent.position_v = selected_nodes[0].position_v
-  let y = 0
-  selected_nodes.forEach(n => y += n.position_y)
-  parent.position_y = y / selected_nodes.length
+// export const create_parent = (
+//   new_data: Class_ApplicationData,
+//   selected_nodes: Class_NodeElement[],
+//   tagg: Class_LevelTagGroup
+// ) => {
+//   const { drawing_area } = new_data
+//   const { sankey } = drawing_area
+//   drawing_area.bypass_redraws = true
+//   const parent_dim = selected_nodes[0].nodeDimensionAsParent(tagg)
+//   const child_level_tag = parent_dim ? parent_dim.parent_level_tag : tagg.tags_list[1]
+//   const parent_level_tag = tagg.tags_list[tagg.tags_list.indexOf(child_level_tag as Class_LevelTag) - 1]
+//   const parent = sankey.addNewNode(selected_nodes.map(n => n.id).join('-'), selected_nodes.map(n => n.name).join('+'))
+//   parent.position_x = selected_nodes[0].position_x
+//   parent.position_u = selected_nodes[0].position_u
+//   parent.position_v = selected_nodes[0].position_v
+//   let y = 0
+//   selected_nodes.forEach(n => y += n.position_y)
+//   parent.position_y = y / selected_nodes.length
 
-  selected_nodes.forEach(c => parent_level_tag.getOrCreateLowerDimension(parent, c, child_level_tag as Class_LevelTag))
-  tagg.tags_list[0].setSelected()
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-  const source_nodes = new Set<Class_NodeElement>()
-  selected_nodes.forEach(c => c.input_links_list.forEach(l => source_nodes.add(l.source)))
-  const target_nodes = new Set<Class_NodeElement>()
-  selected_nodes.forEach(c => c.output_links_list.forEach(l => target_nodes.add(l.target)));
-  [...source_nodes].forEach(source => {
-    const parent_link = sankey.addNewLink(source, parent)
-    selected_nodes.forEach(c => c.input_links_list.filter(l => l.source == source).forEach(l => parent_link.addValues(l)))
-  })
-  drawing_area.draw()
-}
-const addNewLinks = (
-  n: Class_NodeElement, 
-  extremity_node: Class_NodeElement, 
-  tagg: Class_LevelTagGroup,
-  expand_left: boolean
-) => {
-  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-  const pdim = n.nodeDimensionAsParent(tagg)
-  if (!pdim) {
-    return
-  }
-  if (pdim.children.includes(pdim.parent)) {
-    return
-  }
-  (pdim.children as Class_NodeElement[]).forEach(c => {
-    const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
-    const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
-    (child_link as Class_LinkElement).copyValues(link2copy)
-    addNewLinks(c, extremity_node, tagg,expand_left)
-  })
-}
+//   selected_nodes.forEach(c => parent_level_tag.getOrCreateLowerDimension(parent, c, child_level_tag as Class_LevelTag))
+//   tagg.tags_list[0].setSelected()
+//   new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+//   const source_nodes = new Set<Class_NodeElement>()
+//   selected_nodes.forEach(c => c.input_links_list.forEach(l => source_nodes.add(l.source)))
+//   const target_nodes = new Set<Class_NodeElement>()
+//   selected_nodes.forEach(c => c.output_links_list.forEach(l => target_nodes.add(l.target)));
+//   [...source_nodes].forEach(source => {
+//     const parent_link = sankey.addNewLink(source, parent)
+//     selected_nodes.forEach(c => c.input_links_list.filter(l => l.source == source).forEach(l => parent_link.addValues(l)))
+//   })
+//   drawing_area.draw()
+// }
+// const addNewLinks = (
+//   n: Class_NodeElement, 
+//   extremity_node: Class_NodeElement, 
+//   tagg: Class_LevelTagGroup,
+//   expand_left: boolean
+// ) => {
+//   const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+//   const pdim = n.nodeDimensionAsParent(tagg)
+//   if (!pdim) {
+//     return
+//   }
+//   if (pdim.children.includes(pdim.parent)) {
+//     return
+//   }
+//   (pdim.children as Class_NodeElement[]).forEach(c => {
+//     const link2copy = (c as Class_NodeElement)[input_or_output_attr][0]
+//     const child_link = n.sankey.addNewLink(expand_left ? extremity_node : c, expand_left ? c : extremity_node);
+//     (child_link as Class_LinkElement).copyValues(link2copy)
+//     addNewLinks(c, extremity_node, tagg,expand_left)
+//   })
+// }
 
-const removeLinks = (
-  n: Class_NodeElement, 
-  tagg: Class_LevelTagGroup,
-  expand_left:boolean
-) => {
-  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-  const pdim = n.nodeDimensionAsParent(tagg)
-  if (!pdim) {
-    return
-  }
-  if (pdim.children.includes(pdim.parent)) {
-    return
-  }
-  (pdim.children as Class_NodeElement[]).forEach(c => {
-    n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
-    removeLinks(c, tagg,expand_left)
-  })
-}
+// const removeLinks = (
+//   n: Class_NodeElement, 
+//   tagg: Class_LevelTagGroup,
+//   expand_left:boolean
+// ) => {
+//   const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+//   const pdim = n.nodeDimensionAsParent(tagg)
+//   if (!pdim) {
+//     return
+//   }
+//   if (pdim.children.includes(pdim.parent)) {
+//     return
+//   }
+//   (pdim.children as Class_NodeElement[]).forEach(c => {
+//     n.sankey.drawing_area.deleteLink((c as Class_NodeElement)[input_or_output_attr][0])
+//     removeLinks(c, tagg,expand_left)
+//   })
+// }
 
-export const applyDimension = (
-  new_data: Class_ApplicationData,
-  selected_nodes: Class_NodeElement[],
-  parent_level_tag: Class_LevelTag,
-  root_node: Class_NodeElement,
-  child_level_tag: Class_LevelTag,
-  tagg: Class_LevelTagGroup,
-  expand_left: boolean
-) => {
-  const { drawing_area } = new_data
-  const { sankey } = drawing_area
-  const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
-  const source_or_target_attr = expand_left ? 'source' : 'target'
-  selected_nodes.forEach(n => {
-    (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
-    n.dimensionsUpdated()
-    const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
-    if (desagregation_links.length > 1) {
-      return
-    }
-    const desagregation_link = desagregation_links[0]
-    if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
-      root_node[input_or_output_attr].forEach(supply_link => {
-        // if (!supply_link.valueCurrent) {
-        //   return
-        // }
-        const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
-        (new_link as Class_LinkElement).copyValues(desagregation_link)
-        addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg,expand_left)
-        supply_link[source_or_target_attr].reorganizeIOLinks()
-      })
-      removeLinks(n, tagg,expand_left)
-    }
-    root_node.dimensionsUpdated()
-    root_node.nodeDimensionAsParent(tagg)!.normalize()
-    sankey.drawing_area.deleteLink(desagregation_link)
-  })
-  sankey.nodes_list.forEach(n => {
-    n.dimensionsUpdated()
-    n.updateVisibilityFingerprint()
-    n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
-    n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
-  })
-}
+// export const applyDimension = (
+//   new_data: Class_ApplicationData,
+//   selected_nodes: Class_NodeElement[],
+//   parent_level_tag: Class_LevelTag,
+//   root_node: Class_NodeElement,
+//   child_level_tag: Class_LevelTag,
+//   tagg: Class_LevelTagGroup,
+//   expand_left: boolean
+// ) => {
+//   const { drawing_area } = new_data
+//   const { sankey } = drawing_area
+//   const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
+//   const source_or_target_attr = expand_left ? 'source' : 'target'
+//   selected_nodes.forEach(n => {
+//     (parent_level_tag as Class_LevelTag).getOrCreateLowerDimension(root_node, n, child_level_tag as Class_LevelTag)
+//     n.dimensionsUpdated()
+//     const desagregation_links = n[input_or_output_attr].filter(l => l[source_or_target_attr].id == root_node.id)
+//     if (desagregation_links.length > 1) {
+//       return
+//     }
+//     const desagregation_link = desagregation_links[0]
+//     if (n.input_links_list.length == 0 || n.output_links_list.length == 0) {
+//       root_node[input_or_output_attr].forEach(supply_link => {
+//         // if (!supply_link.valueCurrent) {
+//         //   return
+//         // }
+//         const new_link = n.sankey.addNewLink(expand_left ? supply_link.source : n, expand_left ? n : supply_link.target);
+//         (new_link as Class_LinkElement).copyValues(desagregation_link)
+//         addNewLinks(n, expand_left ? supply_link.source : supply_link.target, tagg,expand_left)
+//         supply_link[source_or_target_attr].reorganizeIOLinks()
+//       })
+//       removeLinks(n, tagg,expand_left)
+//     }
+//     root_node.dimensionsUpdated()
+//     root_node.nodeDimensionAsParent(tagg)!.normalize()
+//     sankey.drawing_area.deleteLink(desagregation_link)
+//   })
+//   sankey.nodes_list.forEach(n => {
+//     n.dimensionsUpdated()
+//     n.updateVisibilityFingerprint()
+//     n.input_links_list.forEach(l => l.updateVisibilityFingerprint())
+//     n.output_links_list.forEach(l => l.updateVisibilityFingerprint())
+//   })
+// }
 
-export const set_child = (
-  new_data: Class_ApplicationData,
-  selected_nodes: Class_NodeElement[],
-  possible_root_nodes: Set<string>,
-  tagg: Class_LevelTagGroup,
-  expand_left: boolean
-) => {
-  const { drawing_area } = new_data
-  const { sankey } = drawing_area
-  new_data.drawing_area.bypass_redraws = true
-  let this_parent_dim: Class_NodeDimension | null = null
-  const this_child_dim: Class_NodeDimension | null = null
+// export const set_child = (
+//   new_data: Class_ApplicationData,
+//   selected_nodes: Class_NodeElement[],
+//   possible_root_nodes: Set<string>,
+//   tagg: Class_LevelTagGroup,
+//   expand_left: boolean
+// ) => {
+//   const { drawing_area } = new_data
+//   const { sankey } = drawing_area
+//   new_data.drawing_area.bypass_redraws = true
+//   let this_parent_dim: Class_NodeDimension | null = null
+//   const this_child_dim: Class_NodeDimension | null = null
 
-  selected_nodes.forEach(n => {
-    this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
-    if (this_parent_dim) {
-      this_parent_dim.shift_level_tags()
-    }
-  })
-  const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
+//   selected_nodes.forEach(n => {
+//     this_parent_dim = n.nodeDimensionAsParent(tagg as Class_LevelTagGroup)
+//     if (this_parent_dim) {
+//       this_parent_dim.shift_level_tags()
+//     }
+//   })
+//   const root_node = sankey.nodes_dict[[...possible_root_nodes][0]]
 
-  const root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
-  let parent_level_tag: Class_LevelTag
-  let child_level_tag: Class_LevelTag
-  if (!root_has_parent && !this_child_dim) {
-    parent_level_tag = tagg.tags_list[0]
-    if (tagg.tags_list.length == 1) {
-      tagg.addTag(
-        String(+parent_level_tag.id + 1),
-        String(+parent_level_tag.id + 1)
-      )
-    }
-    child_level_tag = tagg.tags_list[1]
-  } else {
-    return
-  }
+//   const root_has_parent = root_node.dimensions_as_parent.filter(dim => dim.parent_level_tag.group.id == tagg.id).length !== 0
+//   let parent_level_tag: Class_LevelTag
+//   let child_level_tag: Class_LevelTag
+//   if (!root_has_parent && !this_child_dim) {
+//     parent_level_tag = tagg.tags_list[0]
+//     if (tagg.tags_list.length == 1) {
+//       tagg.addTag(
+//         String(+parent_level_tag.id + 1),
+//         String(+parent_level_tag.id + 1)
+//       )
+//     }
+//     child_level_tag = tagg.tags_list[1]
+//   } else {
+//     return
+//   }
 
-  applyDimension(new_data,selected_nodes,parent_level_tag, root_node, child_level_tag, tagg,expand_left)
+//   applyDimension(new_data,selected_nodes,parent_level_tag, root_node, child_level_tag, tagg,expand_left)
 
-  tagg.tags_list[0].setSelected()
-  new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
-  new_data.drawing_area.draw()
-}
+//   tagg.tags_list[0].setSelected()
+//   new_data.menu_configuration.ref_to_leveltag_filter_updater.current()
+//   new_data.drawing_area.draw()
+// }
 
 /**
  * Désagrégation simple - descend d'un niveau hiérarchique
@@ -883,16 +881,17 @@ export const set_child = (
 export const disaggregate = (
   new_data: Class_ApplicationData,
   aggregateNode: Class_NodeElement,
-  tagg: Class_LevelTagGroup
+  child: string
 ) => {
   if (!aggregateNode.is_parent) {
     return
   }
-  const parent_dim = aggregateNode.nodeDimensionAsParent(tagg)
+  const child_node = aggregateNode.sankey.nodes_dict[child]
+  const parent_dim = aggregateNode.nodeDimensionAsParent(child_node)
   if (!parent_dim) {
     return
   }
-  const child_node = parent_dim.children[0] as Class_NodeElement
+  //const child_node = parent_dim.children[0] as Class_NodeElement
   const column: Class_NodeElement[] = [aggregateNode]
   const echangeTag = new_data.drawing_area.sankey.node_taggs_dict['type de noeud'] ? new_data.drawing_area.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   new_data.drawing_area.sankey.visible_nodes_list.forEach(n => {
@@ -913,7 +912,7 @@ export const disaggregate = (
     let current_v = aggregateNode.position_v
     column.forEach(n => {
       n.position_v = -1
-      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v, tagg)
+      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v)
       new_data.drawing_area.sankey.sortNodes()
     })
 
@@ -930,13 +929,15 @@ export const disaggregate = (
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
     })
-
-    // Gestion des nœuds d'échange
-    handleExchangeNodes(new_data, aggregateNode, tagg, 'disaggregate')
+    const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
+    parent_dim.children.forEach(child=>{
+      child.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag)).forEach(l=>l.source.dimensions_as_child[0].setForceToShowChildren())
+      child.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag)).forEach(l=>l.target.dimensions_as_child[0].setForceToShowChildren())
+    })
   }
 
   const undo = () => {
-    aggregate(new_data,child_node,tagg)
+    aggregate(new_data,child_node,parent_dim.parent.id)
   }
   new_data.history.saveUndo(undo)
   new_data.history.saveRedo(Do)
@@ -950,17 +951,17 @@ export const disaggregationExpansion = (
   new_data: Class_ApplicationData,
   contextualised_node: Class_NodeElement,
   expand_left: boolean,
-  tagg: Class_LevelTagGroup
+  child: Class_NodeElement
 ) => {
   new_data.drawing_area.bypass_redraws = true
 
-  const parent_dim = contextualised_node.master_node ? contextualised_node.master_node.nodeDimensionAsParent(tagg) : contextualised_node.nodeDimensionAsParent(tagg)
+  const parent_dim = contextualised_node.master_node ? contextualised_node.master_node.nodeDimensionAsParent(child) : contextualised_node.nodeDimensionAsParent(child)
   if (!parent_dim) {
     return
   }
 
   const config: DisaggregationExpansionConfig = {
-    ...createOperationConfig(contextualised_node, expand_left, tagg),
+    ...createOperationConfig(contextualised_node, expand_left),
     parent_dim,
     children: parent_dim.children as Class_NodeElement[],
     contextualised_node
@@ -987,17 +988,17 @@ export const aggregationExpansion = (
   new_data: Class_ApplicationData,
   contextualised_node: Class_NodeElement,
   expand_left: boolean,
-  tagg: Class_LevelTagGroup
+  child: Class_NodeElement
 ) => {
   new_data.drawing_area.bypass_redraws = true
 
-  const child_dim = contextualised_node.master_node ? contextualised_node.master_node.nodeDimensionAsChild(tagg) : contextualised_node.nodeDimensionAsChild(tagg)
+  const child_dim = contextualised_node.master_node ? contextualised_node.master_node.nodeDimensionAsChild(child) : contextualised_node.nodeDimensionAsChild(child)
   if (!child_dim) {
     return
   }
 
   const config: AggregationExpansionConfig = {
-    ...createOperationConfig(contextualised_node, expand_left, tagg),
+    ...createOperationConfig(contextualised_node, expand_left),
     parent: child_dim.parent as Class_NodeElement,
     nodes_to_agregate: (contextualised_node.master_node ? child_dim.children.map(c => (c as Class_NodeElement).slave_nodes[0]) : child_dim.children) as Class_NodeElement[],
     child_dim,
@@ -1046,61 +1047,6 @@ export const contract = (
   new_data.drawing_area.nodePositioning.computeParametrization(false)
   new_data.drawing_area.draw()
 }
-
-// ============================================================================
-// UTILITAIRES POUR LES NŒUDS D'ÉCHANGE
-// ============================================================================
-
-const handleExchangeNodes = (
-  new_data: Class_ApplicationData,
-  contextualised_node: Class_NodeElement,
-  tagg: Class_LevelTagGroup,
-  operation: 'aggregate' | 'disaggregate'
-) => {
-  // Vérifier s'il y a des nœuds d'échange possibles
-  if (!contextualised_node.sankey.node_taggs_dict['type de noeud']) {
-    return
-  }
-  const echangeTag = contextualised_node.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-
-  if (operation === 'aggregate') {
-    // Tous les nœuds d'échange en entrée doivent aussi être agrégés
-    contextualised_node.input_links_list.forEach(input_link => {
-      const input_node = input_link.source
-      if (input_node.hasGivenTag(echangeTag)) {
-        aggregate(new_data, input_node, tagg)
-      }
-    })
-
-    // Tous les nœuds d'échange en sortie doivent aussi être agrégés
-    contextualised_node.output_links_list.forEach(output_link => {
-      const output_node = output_link.target
-      if (output_node.hasGivenTag(echangeTag)) {
-        aggregate(new_data, output_node, tagg)
-      }
-    })
-  } else {
-    const parent_dim = contextualised_node.nodeDimensionAsParent(tagg)
-    if (!parent_dim) return
-
-    // Tous les nœuds d'échange en entrée doivent aussi être désagrégés
-    contextualised_node.input_links_list.forEach(input_link => {
-      const input_node = input_link.source
-      if (input_node.hasGivenTag(echangeTag)) {
-        disaggregate(new_data, input_node, tagg)
-      }
-    })
-
-    // Tous les nœuds d'échange en sortie doivent aussi être désagrégés
-    contextualised_node.output_links_list.forEach(output_link => {
-      const output_node = output_link.target
-      if (output_node.hasGivenTag(echangeTag)) {
-        disaggregate(new_data, output_node, tagg)
-      }
-    })
-  }
-}
-
 // ============================================================================
 // DÉTECTION DU CONTEXTE DE CONTRACTION
 // ============================================================================

@@ -1696,17 +1696,17 @@ export class NodePositioning {
   }
 
   // Fonction qui applique le V pour un level tag donné
-  public applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tagGroup: Class_LevelTagGroup) {
+  public applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }) {
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
       column.forEach(n => {
         n.position_v = -1
-        current_v = this.applyVDesagregate(n, current_v, tagGroup)
+        current_v = this.applyVDesagregate(n, current_v)
       })
     })
     Object.values(columns).forEach(column => {
-      column.forEach(n => this.applyVAgregate(n, tagGroup))
+      column.forEach(n => this.applyVAgregate(n))
     })
   }
 
@@ -1722,36 +1722,38 @@ export class NodePositioning {
       })
     }
 
-    this.drawingArea.sankey.level_taggs_list.forEach(tagGroup => {
-      this.applyVForLevelTag(columns, tagGroup)
-    })
+    //this.drawingArea.sankey.level_taggs_list.forEach(tagGroup => {
+    this.applyVForLevelTag(columns)
+    //})
 
     this.drawingArea.sankey.sortNodes()
   }
 
   // Fonction qui compute le V paramétrique pour un tag spécifique
-  public computeParametricVForTagg(tagGroup: Class_LevelTagGroup) {
+  public computeParametricVForTagg() {
     const columns = this.computeColumns()
-    this.applyVForLevelTag(columns, tagGroup)
+    this.applyVForLevelTag(columns)
     this.drawingArea.sankey.sortNodes()
   }
   /**
    * Apply v aggregation for nodes
    */
-  public applyVAgregate(node: Class_NodeElement, tagGroup: Class_LevelTagGroup) {
-    const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
-    if (!nodeDimParent) {
-      return
-    }
-    if (nodeDimParent.parent.display.position.v != -1) {
-      // v is computed at the first path
-      return
-    }
-    nodeDimParent.parent.display.position.x = node.position_x
-    nodeDimParent.parent.display.position.y = node.position_y
-    nodeDimParent.parent.display.position.u = node.position_u
-    nodeDimParent.parent.display.position.v = node.position_v
-    this.applyVAgregate(nodeDimParent.parent as Class_NodeElement, tagGroup)
+  public applyVAgregate(node: Class_NodeElement) {
+    // const nodeDimParent = node.nodeDimensionAsChild(tagGroup)
+    // if (!nodeDimParent) {
+    //   return
+    // }
+    node.dimensions_as_child_pure.forEach(nodeDimParent => {
+      if (nodeDimParent.parent.display.position.v != -1) {
+        // v is computed at the first path
+        return
+      }
+      nodeDimParent.parent.display.position.x = node.position_x
+      nodeDimParent.parent.display.position.y = node.position_y
+      nodeDimParent.parent.display.position.u = node.position_u
+      nodeDimParent.parent.display.position.v = node.position_v
+      this.applyVAgregate(nodeDimParent.parent as Class_NodeElement)
+    })
   }
 
   /**
@@ -1760,7 +1762,6 @@ export class NodePositioning {
   public applyVDesagregate(
     node: Class_NodeElement,
     current_v: number,
-    tagGroup: Class_LevelTagGroup
   ) {
     // if (node.master_node) {
     //   return current_v
@@ -1771,28 +1772,28 @@ export class NodePositioning {
     }
     let new_current_v = current_v
     // let desagregated_nodes: Class_NodeElement[] = []
-    //node.dimensions_as_parent_pure.forEach(d => {
-    const d = node.nodeDimensionAsParent(tagGroup)
-    if (!d) return new_current_v + 1
-    if (d.children.includes(node)) return new_current_v + 1
-    const desagregated_nodes = d.children
+    node.dimensions_as_parent_pure.forEach(d => {
+      //const d = node.nodeDimensionAsParent(tagGroup)
+      if (!d) return new_current_v + 1
+      if (d.children.includes(node)) return new_current_v + 1
+      const desagregated_nodes = d.children
 
-    //const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
-    if (desagregated_nodes.length > 0) {
-      //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
-      desagregated_nodes.forEach(nn => {
-        if (nn.master_node) {
-          return
-        }
-        nn.display.position.v = -1
-        nn.display.position.x = node.position_x
-        nn.display.position.u = node.position_u
-        // nn.display.position.y = current_y
-        // current_y += nn.getShapeHeightToUse() + nn.position_dy
-        new_current_v = this.applyVDesagregate(nn, new_current_v, tagGroup)
-      })
-    }
-    //})
+      //const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
+      if (desagregated_nodes.length > 0) {
+        //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+        desagregated_nodes.forEach(nn => {
+          if (nn.master_node) {
+            return
+          }
+          nn.display.position.v = -1
+          nn.display.position.x = node.position_x
+          nn.display.position.u = node.position_u
+          // nn.display.position.y = current_y
+          // current_y += nn.getShapeHeightToUse() + nn.position_dy
+          new_current_v = this.applyVDesagregate(nn, new_current_v)
+        })
+      }
+    })
     return new_current_v + 1
   }
 
