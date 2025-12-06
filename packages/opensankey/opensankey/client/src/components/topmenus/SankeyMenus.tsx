@@ -295,7 +295,6 @@ export const Menu = (
 
       <UniversalFileConverter
         app_data={app_data}
-        config_key={'universal'}
         dialog_name={'ref_setter_show_modal_file_converter'}
       />
 

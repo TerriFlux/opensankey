@@ -221,7 +221,7 @@ export const retrieveJSONResults = (
   app_data: Class_ApplicationData,
   JSON_data: Type_JSON,
   apply_layout_current_sankey: ConstrainBoolean,
-  kwargs: Type_JSON
+  _kwargs: Type_JSON
 ) => {
   // // Failsafe
   // if (text === '{}')
@@ -282,11 +282,9 @@ export const retrieveJSONResults = (
  */
 export const UniversalFileConverter = ({
   app_data,
-  config_key,
   dialog_name
 }: {
   app_data: Class_ApplicationData,
-  config_key: ConverterConfigKey,
   dialog_name: string
 }) => {
   //const config = CONVERTER_CONFIGS[config_key] as ConverterConfig
@@ -319,21 +317,21 @@ export const UniversalFileConverter = ({
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
-      case 'excel': return output_options_excel
-      case 'json': return output_options_json
-      case 'blob': return {}
-      case 'example_excel': return {}
-      case 'example_json': return {}
+    case 'excel': return output_options_excel
+    case 'json': return output_options_json
+    case 'blob': return {}
+    case 'example_excel': return {}
+    case 'example_json': return {}
     }
   }
 
   const getCurrentInputOptions = () => {
     switch (input_format) {
-      case 'excel': return input_options_excel
-      case 'json': return input_options_json
-      case 'blob': return {}
-      case 'example_excel': return {}
-      case 'example_json': return {}
+    case 'excel': return input_options_excel
+    case 'json': return input_options_json
+    case 'blob': return {}
+    case 'example_excel': return {}
+    case 'example_json': return {}
     }
   }
 
