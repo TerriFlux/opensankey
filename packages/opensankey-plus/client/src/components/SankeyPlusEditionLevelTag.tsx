@@ -22,7 +22,7 @@ import {
 
 // Local types
 import { MultiSelect } from 'react-multi-select-component'
-import { Class_LevelTag} from '../deps/OpenSankey/types/Tag'
+import { Class_LevelTag } from '../deps/OpenSankey/types/Tag'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_LevelTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
@@ -185,8 +185,10 @@ export const MenuConfigurationLevelTags: FC<FCType_SankeyPlusEditionLevelTag> = 
                       <OSTooltip label={t('Tags.tooltips.rm')}>
                         <Button
                           variant='menuconfigpanel_del_button_in_table'
-                          //@ts-expect-error xxx
-                          value='-' onClick={() => { handleDelTag(tag) }}>
+                          value='-' onClick={() => {
+                            //@ts-expect-error xxx 
+                            handleDelTag(tag)
+                          }}>
                           <FaMinus />
                         </Button>
                       </OSTooltip>
