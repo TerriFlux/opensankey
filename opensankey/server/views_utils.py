@@ -181,6 +181,7 @@ def handle_json_or_compressed(exemple_file_path):
         trace.logger.error(f"Erreur lecture fichier compressé {json_gz_path}: {str(e)}")
         return False, None
 
+
 def compress_and_serve_json(json_path, json_gz_path):
     """
     Compresse un fichier JSON à la volée avec headers corrects
