@@ -284,7 +284,6 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     />,
     <UniversalFileConverter
       app_data={new_data_plus}
-      config_key={'reconciliation'}
       dialog_name={'ref_setter_show_modal_file_converter'}
     />
   ]
