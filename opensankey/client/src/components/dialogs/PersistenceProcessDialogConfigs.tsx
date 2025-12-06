@@ -238,9 +238,8 @@ export const INPUT_ATTRIBUTES_CONFIG = {
   blob: {
 
   },
-  example: {
-
-  }
+  example_excel: {},
+  example_json: {}
 } as const
 
 // Définir base en dehors
@@ -295,7 +294,8 @@ const BASE_OUTPUT_CONFIG = {
       fr: 'Exporter uniquement les éléments avec les étiquettes sélectionnées'
     }
   } satisfies FormatAttributeConfig<boolean>,
-  example: {}
+  example_excel: {},
+  example_json: {}
 } as const
 
 export const OUTPUT_ATTRIBUTES_CONFIG = {
@@ -445,10 +445,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
   },
 
   blob: {},
-  example: {}
+  example_excel: {},
+  example_json: {}
 } as const
 
-export type FormatType = 'excel' | 'json' | 'blob' | 'example'
+export type FormatType = 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
 
 export type OutputAttributeKey<F extends FormatType> = keyof typeof OUTPUT_ATTRIBUTES_CONFIG[F]
 export type InputAttributeKey<F extends FormatType> = keyof typeof INPUT_ATTRIBUTES_CONFIG[F]
@@ -605,14 +606,31 @@ export const CONVERTER_CONFIGS = {
       },
     }
   } satisfies ConverterConfig,
-  load_example: {
+  load_example_json: {
     title: 'ProcessDialog.load_example',
     launch_button_label: 'ProcessDialog.load',
     server_endpoint: '/opensankey/convert/launch',
     input: {
       required: false,
       format: {
-        options: ['example']  // Format fixe, pas de sélecteur
+        options: ['example_json']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  load_example_excel: {
+    title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example_excel']  // Format fixe, pas de sélecteur
       },
     },
     output: {

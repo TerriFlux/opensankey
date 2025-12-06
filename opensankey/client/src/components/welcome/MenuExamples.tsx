@@ -167,7 +167,7 @@ const ExempleItem = (
             new_data.drawing_area.purgeSelection()
             if (path.includes('xlsx')) {
               new_data.menu_configuration.ref_universal_converter_set_config.current(
-                CONVERTER_CONFIGS['load_example'], '', true
+                CONVERTER_CONFIGS['load_example_excel'], '', true
               )
               new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
             }

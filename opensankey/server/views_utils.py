@@ -111,12 +111,11 @@ def find_json_serialization_error(obj, path="root", max_depth=20, current_depth=
         }
 
 
-def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
+def handle_json_or_compressed(exemple_file_path):
     """
     Gère les fichiers JSON et JSON.GZ avec compression à la volée si nécessaire
 
     Args:
-        data_folder (str): Dossier racine des données
         exemple (str): Nom du fichier demandé
         exemple_file_path (str): Chemin complet vers le fichier
 
@@ -125,29 +124,25 @@ def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
     """
     try:
         # Déterminer les chemins des fichiers JSON et JSON.GZ
-        if exemple.endswith(".json.gz"):
+        if exemple_file_path.endswith(".json.gz"):
             # Cas 1: Fichier .json.gz demandé
             json_gz_path = exemple_file_path
             json_path = exemple_file_path.replace(".json.gz", ".json")
-        elif exemple.endswith(".json"):
+        elif exemple_file_path.endswith(".json"):
             # Cas 2: Fichier .json demandé, mais on veut retourner du .json.gz
             json_path = exemple_file_path
             json_gz_path = exemple_file_path + ".gz"
         else:
-            return Response(
-                response=json.dumps({"error": "Format de fichier non supporté"}),
-                status=400,
-                mimetype="application/json",
-            )
+            return False
 
-        trace.logger.debug(f"Demande: {exemple}")
+        trace.logger.debug(f"Demande: {exemple_file_path}")
         trace.logger.debug(f"JSON path: {json_path}")
         trace.logger.debug(f"JSON.GZ path: {json_gz_path}")
 
         # Vérifier si le fichier .json.gz existe déjà
         if os.path.exists(json_gz_path):
             trace.logger.debug(f"Fichier compressé trouvé: {json_gz_path}")
-            return serve_compressed_file(json_gz_path)
+            return json_gz_path
 
         # Si pas de .json.gz, vérifier si le .json existe
         elif os.path.exists(json_path):
@@ -156,7 +151,7 @@ def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
 
         else:
             # Aucun fichier trouvé
-            error_msg = f"Fichier non trouvé: {exemple} (ni {json_path} ni {json_gz_path})"
+            error_msg = f"Fichier non trouvé: {exemple_file_path} (ni {json_path} ni {json_gz_path})"
             trace.logger.error(error_msg)
             return Response(
                 response=json.dumps({"error": error_msg}),
@@ -166,46 +161,25 @@ def handle_json_or_compressed(data_folder, exemple, exemple_file_path):
 
     except Exception as e:
         trace.logger.error(f"Erreur dans handle_json_or_compressed: {str(e)}")
-        return Response(
-            response=json.dumps({"error": f"Erreur serveur: {str(e)}"}),
-            status=500,
-            mimetype="application/json",
-        )
+        return False
 
 
-def serve_compressed_file(json_gz_path):
-    """
-    Sert un fichier JSON.GZ avec headers corrects pour GZIP
-    """
-    try:
-        with open(json_gz_path, "rb") as f:
-            compressed_data = f.read()
+# def serve_compressed_file(json_gz_path):
+#     """
+#     Sert un fichier JSON.GZ avec headers corrects pour GZIP
+#     """
+#     try:
+#         with open(json_gz_path, "rb") as f:
+#             compressed_data = f.read()
 
-        file_size = len(compressed_data)
-        trace.logger.debug(f"Fichier compressé servi: {json_gz_path} ({file_size} bytes)")
+#         file_size = len(compressed_data)
+#         trace.logger.debug(f"Fichier compressé servi: {json_gz_path} ({file_size} bytes)")
 
-        return Response(
-            response=compressed_data,
-            status=200,
-            # ✅ CORRECTIONS :
-            headers={
-                # ESSAI 1: Dire que c'est du binaire, pas du JSON compressé
-                "Content-Type": "application/octet-stream",  # ← Changé !
-                # 'Content-Encoding': 'gzip',  # ← SUPPRIMÉ temporairement
-                "Content-Length": str(file_size),
-                "Cache-Control": "public, max-age=3600",
-                "Content-Disposition": "inline",  # ← Bonus: indique comment traiter
-            },
-        )
+#         return True, compressed_data
 
     except Exception as e:
         trace.logger.error(f"Erreur lecture fichier compressé {json_gz_path}: {str(e)}")
-        return Response(
-            response=json.dumps({"error": f"Erreur lecture fichier: {str(e)}"}),
-            status=500,
-            mimetype="application/json",
-        )
-
+        return False, None
 
 def compress_and_serve_json(json_path, json_gz_path):
     """
@@ -242,33 +216,14 @@ def compress_and_serve_json(json_path, json_gz_path):
             trace.logger.warning(f"Impossible de sauvegarder {json_gz_path}: {str(save_error)}")
 
         # ✅ HEADERS CORRIGÉS :
-        return Response(
-            response=compressed_data,
-            status=200,
-            headers={
-                "Content-Type": "application/json",  # ← Type décompressé
-                "Content-Encoding": "gzip",  # ← Compression
-                "Content-Length": str(compressed_size),
-                "X-Original-Size": str(original_size),
-                "X-Compression-Ratio": f"{ratio:.1f}%",
-            },
-            # PAS de mimetype='application/gzip' pour éviter la confusion
-        )
+        return json_gz_path
 
     except json.JSONDecodeError as json_error:
         trace.logger.error(f"Erreur JSON dans {json_path}: {str(json_error)}")
-        return Response(
-            response=json.dumps({"error": f"Fichier JSON invalide: {str(json_error)}"}),
-            status=400,
-            mimetype="application/json",
-        )
+        return False
     except Exception as e:
         trace.logger.error(f"Erreur compression {json_path}: {str(e)}")
-        return Response(
-            response=json.dumps({"error": f"Erreur compression: {str(e)}"}),
-            status=500,
-            mimetype="application/json",
-        )
+        return False
 
 
 def parse_folder(current_dir, menus, key=None):
