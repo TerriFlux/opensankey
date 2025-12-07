@@ -559,20 +559,24 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON,
     draw: boolean = true
   ) {
-    this._drawing_area.bypass_redraws = true
-    // Reset everything
-    this._reset(kwargs)
-    this._drawing_area.bypass_redraws = true
-    // Read json file
-    this._fromJSON(json_object, kwargs)
-    // Post processing & menu updating
-    this._afterFromJSON()
-    // Then draw if asked
-    if (draw) {
-      this._drawing_area.sankey.sortNodes()
-      this._drawing_area.draw()
-      this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
-    }
+    this.sendWaitingToast(
+      () => {
+        // Always bypass redrawings
+        this._drawing_area.bypass_redraws = true
+        // Reset everything
+        this._reset(kwargs)
+        this._drawing_area.bypass_redraws = true
+        // Read json file
+        this._fromJSON(json_object,kwargs)
+        // Post processing & menu updating
+        this._afterFromJSON()
+        // Then draw if asked
+        if (draw) {
+          this._drawing_area.sankey.sortNodes()
+          this._drawing_area.draw()
+          this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
+        }
+      })
   }
 
   /**
