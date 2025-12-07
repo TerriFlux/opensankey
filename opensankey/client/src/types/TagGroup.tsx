@@ -774,12 +774,6 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
       this.linked_tag_group = this._ref_sankey.node_taggs_dict[linked_tag_group_id] ?? null
   }
 
-  public sibling_activated() {
-    return this._siblings.filter(tagg => {
-      return this._ref_sankey.level_taggs_dict[tagg].activated
-    }).map(tagg => this._ref_sankey.level_taggs_dict[tagg])
-  }
-
   public addAntiTaggedRef(_: Class_NodeElement) {
     if (!this._antitagged_refs.includes(_)) {
       this._antitagged_refs.push(_)
@@ -852,17 +846,7 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
   public get antitagged_refs() { return this._antitagged_refs }
   
   public set activated(value: boolean) {
-    // Avoid useless updates
-    if (this._activated !== value) {
-      this._activated = value
-      if (value== true && this.linked_tag_group) this.linked_tag_group.use_colors = true
-      if (value== false && this.linked_tag_group) this.linked_tag_group.use_colors = false
-      this._siblings.forEach(sib_tagg_id => {
-        if (this._ref_sankey.level_taggs_dict[sib_tagg_id])
-          this._ref_sankey.level_taggs_dict[sib_tagg_id]._activated = !this._activated
-      })
-      this._ref_sankey.draw()
-    }
+    this._activated = value
   }
 
   public set siblings(value: string[]) {

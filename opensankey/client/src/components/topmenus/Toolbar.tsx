@@ -598,10 +598,18 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           alignSelf='center'
           variant='activate_antagonist_checkbox'
           isChecked={level_tagg.activated}
+          isDisabled={level_tagg.activated}
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
-
+            const sankey = app_data.drawing_area.sankey
             level_tagg.activated = evt.target.checked
+            if (evt.target.checked == true && level_tagg.linked_tag_group) level_tagg.linked_tag_group.use_colors = true
+            if (evt.target.checked == false && level_tagg.linked_tag_group) level_tagg.linked_tag_group.use_colors = false
+            app_data.drawing_area.sankey.level_taggs_list.forEach(tagg => tagg.activated = evt.target.checked)
+            level_tagg.siblings.forEach(sib_tagg_id => {
+              if (sankey.level_taggs_dict[sib_tagg_id])
+                sankey.level_taggs_dict[sib_tagg_id].activated = !level_tagg.activated
+            })
             const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
             level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
             // level_tagg.siblings.forEach(sibling => {
