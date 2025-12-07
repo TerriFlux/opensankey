@@ -478,7 +478,9 @@ export class NodeDimensionsManager {
     const activated_tags = available_view_tags.filter(tag => (tag.group as Class_LevelTagGroup).activated)
     if (activated_tags.length == 0) return true
     let display = true
-    Object.entries(this._node.grouped_taggs_dict).filter(([key,_])=>this._node.sankey.level_taggs_dict[key]).forEach(([_,tag_list]) => {
+    Object.entries(this._node.grouped_taggs_dict).filter(([key,_])=>
+      this._node.sankey.level_taggs_dict[key] && this._node.sankey.level_taggs_dict[key].activated
+    ).forEach(([_,tag_list]) => {
       display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
     })
     //let view_tag_display = activated_tags.every(view_tag => view_tag.is_selected)
