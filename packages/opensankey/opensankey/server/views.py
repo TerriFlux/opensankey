@@ -29,9 +29,11 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 # coding: utf-8
 # flake8: noqa
 
+from pathlib import Path
 import tempfile
 import os
 import json
+from time import perf_counter
 
 from .views_utils import clean_file, handle_json_or_compressed, parse_folder
 import requests
@@ -491,6 +493,7 @@ def launch_conversion():
             mimetype="application/json"
         )
 
+
 def conversion_thread(
     input_file_name,
     output_file_name,
@@ -525,42 +528,77 @@ def conversion_thread(
     trace.logger_init(log_filename, "a")
     max_line_length = 50
 
-    # conversion_key = f"{input_format}_{output_format}"
-
     trace.logger.info("=" * 80)
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
+    trace.logger.info(f"Input:  {Path(input_file_name).name}")
+    trace.logger.info(f"Output: {Path(output_file_name).name}")
     trace.logger.info(f"Input options: {input_options}")
     trace.logger.info(f"Output options: {output_options}")
     trace.logger.info("=" * 80)
 
-    # try:
-    # Choisir le bon IO selon le format
-    if input_format == 'excel':
-        io_input = IOExcel()
-    elif input_format == 'json':
-        io_input = IOJson()
-    else:
-        raise ValueError(f"Format d'entrée '{input_format}' non supporté")
+    t_total_start = perf_counter()
 
-    # Charger avec les options d'entrée
-    trace.logger.info("📖 Lecture du fichier source...")
-    ok, msg = io_input.load_sankey(input_file_name, **input_options)
-    if not ok:
-        raise Exception(f"Erreur de chargement: {msg}")
+    try:
+        # Choisir le bon IO selon le format
+        if input_format == 'excel':
+            io_input = IOExcel()
+        elif input_format == 'json':
+            io_input = IOJson()
+        else:
+            raise ValueError(f"Format d'entrée '{input_format}' non supporté")
 
-    # Choisir le bon IO pour l'écriture
-    if output_format == 'excel':
-        io_output = IOExcel(io_input.sankey)
-    elif output_format == 'json':
-        io_output = IOJson(io_input.sankey)
-    else:
-        raise ValueError(f"Format de sortie '{output_format}' non supporté")
+        # Charger avec les options d'entrée
+        trace.logger.info("📖 Lecture du fichier source...")
+        t_read_start = perf_counter()
+        ok, msg = io_input.load_sankey(input_file_name, **input_options)
+        t_read = perf_counter() - t_read_start
 
-    # Écrire avec les options de sortie
-    trace.logger.info("📝 Écriture du fichier de sortie...")
-    io_output.write_sankey(output_file_name, **output_options)
+        if not ok:
+            raise Exception(f"Erreur de chargement: {msg}")
 
-    trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=max_line_length))
+        # Taille du fichier d'entrée
+        input_size = Path(input_file_name).stat().st_size / (1024 * 1024)
+        trace.logger.info(f"✓ Lecture terminée: {input_size:.2f} MB en {t_read:.3f}s")
+
+        # Choisir le bon IO pour l'écriture
+        if output_format == 'excel':
+            io_output = IOExcel(io_input.sankey)
+        elif output_format == 'json':
+            io_output = IOJson(io_input.sankey)
+        else:
+            raise ValueError(f"Format de sortie '{output_format}' non supporté")
+
+        # Écrire avec les options de sortie
+        trace.logger.info("📝 Écriture du fichier de sortie...")
+        t_write_start = perf_counter()
+        io_output.write_sankey(output_file_name, **output_options)
+        t_write = perf_counter() - t_write_start
+
+        # Taille du fichier de sortie
+        output_size = Path(output_file_name).stat().st_size / (1024 * 1024)
+        trace.logger.info(f"✓ Écriture terminée: {output_size:.2f} MB en {t_write:.3f}s")
+
+        # Temps total
+        t_total = perf_counter() - t_total_start
+
+        trace.logger.info("=" * 80)
+        trace.logger.info(
+            f"✓ CONVERSION TERMINÉE en {t_total:.3f}s "
+            f"(lecture: {t_read:.3f}s, écriture: {t_write:.3f}s)"
+        )
+        trace.logger.info(
+            f"  Taille: {input_size:.2f} MB → {output_size:.2f} MB "
+            f"(ratio: {output_size/input_size:.2f}x)" if input_size > 0 else ""
+        )
+        trace.logger.info("=" * 80)
+
+    except Exception as e:
+        t_total = perf_counter() - t_total_start
+        trace.logger.error("=" * 80)
+        trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
+        trace.logger.error(f"Erreur: {str(e)}")
+        trace.logger.error("=" * 80)
+        raise
 
 
 @opensankey.route("/upload/clean", methods=["POST"])
