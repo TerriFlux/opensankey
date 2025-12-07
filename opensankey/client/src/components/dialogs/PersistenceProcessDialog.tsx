@@ -229,52 +229,48 @@ export const retrieveJSONResults = (
   const current_json = app_data.toJSON()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
-  app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/)
 
+  app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/, false)
+  app_data.sendWaitingToast(
+    () => {
 
+      app_data.drawing_area.sankey.nodes_list.forEach(n => {
+        const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+        if (!tagg) {
+          return
+        }
+        const product_tag = tagg.tags_dict['produit']
+        const sector_tag = tagg.tags_dict['secteur']
+        //const echange_tag = tagg.tags_dict['echange']
+        if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
+          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
+        } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
+          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
+        }
+      })
+      app_data.drawing_area.legend.masked = false
+      if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+        app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+      } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
+        applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+      }
+      const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (unit_taggs.length > 0) {
+        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
+        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
+      }
 
-  // // Extract sankey datas from JSON
-  // app_data.fromJSON(data_as_json, kwargs, false)
-  // // app_data.sendWaitingToast(
-  // //   () => {
-  app_data.drawing_area.sankey.nodes_list.forEach(n => {
-    const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-    if (!tagg) {
-      return
-    }
-    const product_tag = tagg.tags_dict['produit']
-    const sector_tag = tagg.tags_dict['secteur']
-    //const echange_tag = tagg.tags_dict['echange']
-    if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-      n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
-    } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-      n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
-    }
-  })
-  app_data.drawing_area.legend.masked = false
-  if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-    app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-  } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
-    applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
-  }
-  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  if (unit_taggs.length > 0) {
-    app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
-    app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
-  }
-
-  // Case 1 : Apply extracted layout if present -> contains positions
-  if (apply_layout_current_sankey) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(current_json)
-  } else if (JSON_data['layout']) {
-    app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(JSON_data as Type_JSON)
-  } else {
-    app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
-  }
-  // })
-  // })
+      // Case 1 : Apply extracted layout if present -> contains positions
+      if (apply_layout_current_sankey) {
+        app_data.drawing_area.nodePositioning.computeScale()
+        app_data.updateFromJSON(current_json)
+      } else if (JSON_data['layout']) {
+        app_data.drawing_area.nodePositioning.computeScale()
+        app_data.updateFromJSON(JSON_data as Type_JSON)
+      } else {
+        app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+      }
+    })
 }
 
 /**
@@ -317,21 +313,21 @@ export const UniversalFileConverter = ({
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
-    case 'excel': return output_options_excel
-    case 'json': return output_options_json
-    case 'blob': return {}
-    case 'example_excel': return {}
-    case 'example_json': return {}
+      case 'excel': return output_options_excel
+      case 'json': return output_options_json
+      case 'blob': return {}
+      case 'example_excel': return {}
+      case 'example_json': return {}
     }
   }
 
   const getCurrentInputOptions = () => {
     switch (input_format) {
-    case 'excel': return input_options_excel
-    case 'json': return input_options_json
-    case 'blob': return {}
-    case 'example_excel': return {}
-    case 'example_json': return {}
+      case 'excel': return input_options_excel
+      case 'json': return input_options_json
+      case 'blob': return {}
+      case 'example_excel': return {}
+      case 'example_json': return {}
     }
   }
 

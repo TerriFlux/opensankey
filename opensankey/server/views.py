@@ -32,9 +32,6 @@ Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlu
 import tempfile
 import os
 import json
-import time
-
-from SankeyExcelParser.io_base import conversion_thread
 
 from .views_utils import clean_file, handle_json_or_compressed, parse_folder
 import requests
@@ -493,6 +490,77 @@ def launch_conversion():
             status=500,
             mimetype="application/json"
         )
+
+def conversion_thread(
+    input_file_name,
+    output_file_name,
+    input_format,
+    output_format,
+    input_options,
+    output_options,
+    log_filename,
+):
+    """
+    Thread de conversion universel.
+
+    Parameters
+    ----------
+    input_file_name : str
+        Chemin du fichier d'entrée
+    output_file_name : str
+        Chemin du fichier de sortie
+    input_format : str
+        Format d'entrée ('excel', 'json')
+    output_format : str
+        Format de sortie ('excel', 'json')
+    input_options : dict
+        Options de lecture du format d'entrée
+    output_options : dict
+        Options d'écriture du format de sortie
+    trace_filename : str
+        Fichier de trace utilisateur
+    log_filename : str
+        Fichier de logs debug
+    """
+    trace.logger_init(log_filename, "a")
+    max_line_length = 50
+
+    # conversion_key = f"{input_format}_{output_format}"
+
+    trace.logger.info("=" * 80)
+    trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
+    trace.logger.info(f"Input options: {input_options}")
+    trace.logger.info(f"Output options: {output_options}")
+    trace.logger.info("=" * 80)
+
+    # try:
+    # Choisir le bon IO selon le format
+    if input_format == 'excel':
+        io_input = IOExcel()
+    elif input_format == 'json':
+        io_input = IOJson()
+    else:
+        raise ValueError(f"Format d'entrée '{input_format}' non supporté")
+
+    # Charger avec les options d'entrée
+    trace.logger.info("📖 Lecture du fichier source...")
+    ok, msg = io_input.load_sankey(input_file_name, **input_options)
+    if not ok:
+        raise Exception(f"Erreur de chargement: {msg}")
+
+    # Choisir le bon IO pour l'écriture
+    if output_format == 'excel':
+        io_output = IOExcel(io_input.sankey)
+    elif output_format == 'json':
+        io_output = IOJson(io_input.sankey)
+    else:
+        raise ValueError(f"Format de sortie '{output_format}' non supporté")
+
+    # Écrire avec les options de sortie
+    trace.logger.info("📝 Écriture du fichier de sortie...")
+    io_output.write_sankey(output_file_name, **output_options)
+
+    trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=max_line_length))
 
 
 @opensankey.route("/upload/clean", methods=["POST"])

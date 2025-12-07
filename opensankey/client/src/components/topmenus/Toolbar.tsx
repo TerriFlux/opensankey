@@ -391,38 +391,38 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Récupération des tags selon le mode
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
-    case 'element':
-      return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
-        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
-    case 'level': {
-      const level_taggs = sankey.level_taggs_dict
-      return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/) as unknown as Class_TagGroup[]
-    }
-    case 'data':
-      return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
-        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+      case 'element':
+        return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+      case 'level': {
+        const level_taggs = sankey.level_taggs_dict
+        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/) as unknown as Class_TagGroup[]
+      }
+      case 'data':
+        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       // case 'flow':
       //   return Object.values(app_data.drawing_area.sankey.flux_taggs_dict)
       //     .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-    default:
-      return [] as unknown as Class_TagGroup[]
+      default:
+        return [] as unknown as Class_TagGroup[]
     }
   }
   const getActiveTagsForMode = (): Set<Class_ProtoTag> => {
     switch (mode) {
-    case 'element':
-      return new Set([...sankey.nodes_list.flatMap(node => node.tags_list), ...sankey.links_list.flatMap(link => link.flux_tags_list)]) as unknown as Set<Class_ProtoTag>
-    case 'level': {
-      const level_taggs = sankey.level_taggs_dict
-      return new Set(Object.values(level_taggs).filter(
-        tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/
-      ).flatMap(tagg => tagg.tags_list)) as unknown as Set<Class_ProtoTag>
-    }
-    case 'data':
-      return new Set(Object.values(app_data.drawing_area.sankey.data_taggs_dict)
-        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi').flatMap(tagg => tagg.tags_list))
-    default:
-      return {} as Set<Class_ProtoTag>
+      case 'element':
+        return new Set([...sankey.nodes_list.flatMap(node => node.tags_list), ...sankey.links_list.flatMap(link => link.flux_tags_list)]) as unknown as Set<Class_ProtoTag>
+      case 'level': {
+        const level_taggs = sankey.level_taggs_dict
+        return new Set(Object.values(level_taggs).filter(
+          tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/
+        ).flatMap(tagg => tagg.tags_list)) as unknown as Set<Class_ProtoTag>
+      }
+      case 'data':
+        return new Set(Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi').flatMap(tagg => tagg.tags_list))
+      default:
+        return {} as Set<Class_ProtoTag>
     }
   }
   const updateComponents = () => {
@@ -484,25 +484,25 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-    case 'level':
-      if (app_data.drawing_area.sankey.default_node_style.position_type == 'parametric') {
-        app_data.drawing_area.nodePositioning.computeParametricVForTagg()
-      }
-      app_data.drawing_area.sankey.showAccordingToLevelTags()
-      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-      app_data.drawing_area.draw()
-      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
-      app_data.drawing_area.orderElementOnDA()
-      break
-    case 'data':
-      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-      break
-    case 'element':
-      app_data.drawing_area.bypass_compute_positions = true
-      app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
-      app_data.drawing_area.bypass_compute_positions = false
-      app_data.drawing_area.orderElementOnDA()
-      break
+      case 'level':
+        if (app_data.drawing_area.sankey.default_node_style.position_type == 'parametric') {
+          app_data.drawing_area.nodePositioning.computeParametricVForTagg()
+        }
+        app_data.drawing_area.sankey.showAccordingToLevelTags()
+        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+        app_data.drawing_area.draw()
+        app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+        app_data.drawing_area.orderElementOnDA()
+        break
+      case 'data':
+        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+        break
+      case 'element':
+        app_data.drawing_area.bypass_compute_positions = true
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+        app_data.drawing_area.bypass_compute_positions = false
+        app_data.drawing_area.orderElementOnDA()
+        break
     }
     app_data.drawing_area.bypass_autofit = false
     updateComponents()
@@ -600,6 +600,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           isChecked={level_tagg.activated}
           icon={<CustomFaEyeCheckIcon />}
           onChange={evt => {
+
             level_tagg.activated = evt.target.checked
             const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
             level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
@@ -607,16 +608,21 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             //   app_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !level_tagg.activated
             // })
             app_data.drawing_area.bypass_autofit = true
+            app_data.drawing_area.bypass_redraws = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg()
             app_data.drawing_area.resetAllVerticalIntervals()
             level_tagg.selectTagsFromId(selected_tag ?? '')
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            app_data.drawing_area.draw()
-            app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-            app_data.drawing_area.bypass_autofit = false
-            updateComponents()
-          }} />
+            app_data.sendWaitingToast(
+              () => {
+                app_data.drawing_area.draw()
+                app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+                app_data.drawing_area.bypass_autofit = false
+                updateComponents()
+              })
+          }
+          } />
       ) : <></>
     } else if (mode === 'data') {
       return (
