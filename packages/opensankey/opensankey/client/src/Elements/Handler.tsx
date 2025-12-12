@@ -163,7 +163,7 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
         if (d3_drawing_area_selection.nodes().length > 0) {
           this.d3_selection = d3_drawing_area_selection.append('g')
           this.d3_selection.attr('id', this.svg_group)
-            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
+            //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
         }
       }
     } else {
