@@ -450,7 +450,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const input_loader_json_catalog = <Input
     type="file"
     multiple
-    accept='.json,.json.gz'
+    accept='.json,.json.gz,.gz'
     ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
