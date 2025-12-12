@@ -1232,6 +1232,9 @@ export class Class_DrawingArea {
       this.d3_selection_elements_group?.attr(
         'transform',
         'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
+        this.d3_selection_legend?.attr(
+        'transform',
+        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
     }
 
     if (!this.bypass_autofit) {
