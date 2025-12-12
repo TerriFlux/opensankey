@@ -52,7 +52,6 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_NodeElement } from './Node'
 
-const default_pos_from_legacy = false
 const default_stick_to_drawing = true
 const default_masked = true
 const default_display_legend_scale = false
@@ -77,9 +76,6 @@ const default_legend_position_y = 50
  */
 export class ClassTemplate_Legend extends ClassTemplate_Element {
 
-  // PRIVATE ATTRIBUTES =================================================================
-
-  private _pos_from_legacy = default_pos_from_legacy
   private _stick_to_drawing = default_stick_to_drawing
   private _masked: boolean = default_masked
   private _display_legend_scale: boolean = default_display_legend_scale
@@ -182,7 +178,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         this.dragHandleEnd(),
         { class: 'legend_left_handle' },
         undefined,
-        'grp_legend',
+        'grp_legend'
       ),
       right: new ClassTemplate_Handler(
         'legend_right_handle_' + this.id,
@@ -193,7 +189,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         this.dragHandleEnd(),
         { class: 'legend_right_handle' },
         undefined,
-        'grp_legend',
+        'grp_legend'
       ),
 
     }
@@ -216,7 +212,6 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     this._legend_show_dataTags = _._legend_show_dataTags
     this._legend_show_constraints = _._legend_show_constraints
     this._info_link_value_void = _._info_link_value_void
-    this._pos_from_legacy = _._pos_from_legacy
     this._stick_to_drawing = _._stick_to_drawing
   }
 
@@ -276,39 +271,15 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     }
   }
 
-  // PUBLIC METHODS =====================================================================
-
-  /**
-   * Function called in _afterFromJSON in ApplicationData,
-   * the function correctly place legend as if it was in legacy despite being not anymore relative to DA
-   *
-   * @memberof ClassTemplate_Legend
-   */
-  public posIfFromLegacy(force: boolean = false) {
-    if (this._pos_from_legacy || force) {
-      let x = 0, y = 0, k = 1
-      const tmp = this.drawing_area.d3_selection_zoom_area?.node()
-      if (tmp && tmp !== null) {
-        x = d3.zoomTransform(tmp).x
-        y = d3.zoomTransform(tmp).y
-        k = d3.zoomTransform(tmp).k
-      }
-      //Set pos of legend like it was in legacy (so we have to take into account old pos of legend & scale of DA)
-      this.setPosXY((this.display.position.x * k) + x, (this.display.position.y * k) + y)
-      this._pos_from_legacy = false
-    }
-
-  }
-
   // /**
   //  * _drawLegendBg with timeout
   //  *
   //  * @private
   //  * @memberof ClassTemplate_Legend
   //  */
-  // public drawLegendBg() {
-  //   this._process_or_bypass(() => this._drawLegendBg())
-  // }
+  public drawLegendBg() {
+    this._drawLegendBg()
+  }
 
   /**
    * _drawTagDisplayed with timeout
@@ -317,7 +288,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @memberof ClassTemplate_Legend
    */
   public drawTagDisplayed() {
-    this._process_or_bypass(() => this._drawTagDisplayed())
+    this._drawTagDisplayed()
   }
 
   /**
@@ -327,7 +298,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @memberof ClassTemplate_Legend
    */
   public drawInfoDataType() {
-    this._process_or_bypass(() => this._drawInfoDataType())
+    this._drawInfoDataType()
   }
 
   /**
@@ -337,7 +308,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @memberof ClassTemplate_Legend
    */
   public drawInfoDashedLink() {
-    this._process_or_bypass(() => this._drawInfoDashedLink())
+    this._drawInfoDashedLink()
   }
 
   /**
@@ -347,7 +318,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @memberof ClassTemplate_Legend
    */
   public drawSankeyScale() {
-    this._process_or_bypass(() => this._drawSankeyScale())
+    this._drawSankeyScale()
   }
 
   /**
@@ -381,11 +352,11 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   protected eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
-    this._display.position.x += (event.sourceEvent.movementX)
+    this._display.position.x += (event.dx)
     if (!this.stick_to_drawing) {
       if (this._display.position.x < 0) this._display.position.x = 0
     }
-    this._display.position.y += (event.sourceEvent.movementY)
+    this._display.position.y += (event.dy)
     if (!this.stick_to_drawing) {
       if (this._display.position.y < 0) this._display.position.y = 0
     }
@@ -407,24 +378,26 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       const d3_svg = this.drawing_area.d3_selection_zoom_area
       if (d3_svg !== null) {
         const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
-        if (d3_drawing_area_selection.nodes().length > 0) {
-          this.d3_selection = d3_drawing_area_selection.append('g')
-          this.d3_selection.attr('id', this.svg_group)
-            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')')  // init drawing area zone with a margin for taking into account the navbar
-        }
+        // Supprimer l'élément existant s'il existe
+        d3_drawing_area_selection.selectAll('#' + this.svg_group).remove()
+        this.d3_selection = d3_drawing_area_selection.append('g')
+        this.d3_selection.attr('id', this.svg_group)
+        //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')')  // init drawing area zone with a margin for taking into account the navbar
       }
+
     } else {
       const d3_svg = this.drawing_area.d3_selection
       if (d3_svg !== null) {
         const d3_drawing_area_selection = d3_svg.selectAll(' #' + this._svg_parent_group)
-        if (d3_drawing_area_selection.nodes().length > 0) {
-          const scale_da = this.drawing_area.getZoomScale()
-          this.d3_selection = d3_drawing_area_selection.append('g')
-          this.d3_selection.attr('id', this.svg_group)
-            .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
-        }
+        // Supprimer l'élément existant s'il existe
+        d3_drawing_area_selection.selectAll('#' + this.svg_group).remove()
+        const scale_da = this.drawing_area.getZoomScale()
+        this.d3_selection = d3_drawing_area_selection.append('g')
+        this.d3_selection.attr('id', this.svg_group)
+        //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
       }
     }
+
   }
 
   protected _draw() {
@@ -433,7 +406,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
     // Update class attributes
     this.d3_selection?.attr('class', 'gg_legend')
     // Draw Background
-    // this._drawLegendBg()
+    this._drawLegendBg()
     // Reset content positionning
     this._dx = 0
     this._dy = 0
@@ -458,10 +431,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       this._drawInfoConstraintLink()
     }
     // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
-    requestAnimationFrame(() => {
-      this.updateDragZone()
-      //this.drawing_area.checkAndUpdateAreaSize();
-    })
+    this.updateDragZone()
   }
 
   /**
@@ -472,13 +442,15 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
  */
   protected override _applyPosition() {
     if (this.d3_selection !== null) {
-      const position_y = this.position_y + this.drawing_area.getNavBarHeight()
-      const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')')
+        'translate(' + this.position_x + ', ' + this.position_y + ')'
+      )
     }
+    this.drawDragHandlers()
   }
+
+
 
   protected override eventMaintainedClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
@@ -587,13 +559,16 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
 
   private computeLeftHandlerPos() {
     // left handle pos
-    this._drag_handler.left.position_x = this.position_x + 0
+    this._drag_handler.left.position_x = this.position_x + -5
     this._drag_handler.left.position_y = this.position_y + this._dy / 2
   }
 
   private computeRightHandlerPos() {
     // right handle pos
-    this._drag_handler.right.position_x = this.position_x + this._width
+    if (!this.d3_selection) {
+      return
+    }
+    this._drag_handler.right.position_x = this.position_x + this.width
     this._drag_handler.right.position_y = this.position_y + this._dy / 2
   }
 
@@ -610,8 +585,8 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       .attr('class', 'g_drag_zone_leg')
       .append('rect')
       .attr('class', 'zone_for_dragging')
-      .attr('width', legendBbox?legendBbox.width!:null)
-      .attr('height', legendBbox?legendBbox.height!:null)
+      .attr('width', legendBbox ? legendBbox.width! : null)
+      .attr('height', legendBbox ? legendBbox.height! : null)
       .attr('rx', '2px')
       .attr('ry', '2px')
       .attr('stroke-dasharray', () => '')
@@ -969,13 +944,15 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       .attr('transform', 'translate(5,25)')
       .text(Math.round(scale) + ' ' + unit)
 
-
-    // Add drag event for the scale representation
-    g_draggable?.call(d3.drag<SVGGElement, unknown, unknown>()
-      .subject(Object)
-      .on('drag', function (event) {
-        g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
-      }))
+    // const that = this
+    // // Add drag event for the scale representation
+    // g_draggable?.call(d3.drag<SVGGElement, unknown, unknown>()
+    //   .subject(Object)
+    //   .on('drag', function (event) {
+    //     //g_draggable.attr('transform', 'translate(' + (event.x) + ',' + (event.y) + ')')
+    //     that.position_x += event.dx
+    //     that.position_y += event.dy
+    //   }))
 
     this._dy += 20
   }
@@ -1008,7 +985,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @memberof ClassTemplate_Legend
    */
   private updateLegendHeight() {
-    this._process_or_bypass(() => this.updateLegendHeight())
+    this.updateLegendHeight()
   }
 
   /**
@@ -1031,7 +1008,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
 
     dragZone.append('rect')
       .attr('class', 'zone_for_dragging')
-      .attr('width', contentBbox.width + 10) // Petit padding
+      .attr('width', this.width) // Petit padding
       .attr('height', contentBbox.height + 10)
       .attr('x', contentBbox.x - 5)
       .attr('y', contentBbox.y - 5)
@@ -1083,5 +1060,36 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
 
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
-  public set stick_to_drawing(_) { this._stick_to_drawing = _; this.draw() }
+  public set stick_to_drawing(stick) {
+    if (stick) {
+      if (this.drawing_area.d3_selection) {
+        this.drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove()
+        this.drawing_area.d3_selection_legend = this.drawing_area.d3_selection.append('g').attr('id', 'grp_legend')
+        let x = 0, y = 0, k = 1
+        const tmp = this.drawing_area.d3_selection_zoom_area?.node()
+        if (tmp && tmp !== null) {
+          x = d3.zoomTransform(tmp).x
+          y = d3.zoomTransform(tmp).y
+          k = d3.zoomTransform(tmp).k
+        }
+        // Convertit la position actuelle vers le format legacy
+        // Position legacy = (position actuelle - offset) / scale
+        this.display.position.x = (this.display.position.x - x) / k
+        this.display.position.y = (this.display.position.y - y) / k
+      }
+    } else if (this.drawing_area.d3_selection_zoom_area) {
+      this.drawing_area.d3_selection?.select('#grp_legend').remove()
+      this.drawing_area.d3_selection_legend = this.drawing_area.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+      let x = 0, y = 0, k = 1
+      const tmp = this.drawing_area.d3_selection_zoom_area?.node()
+      if (tmp && tmp !== null) {
+        x = d3.zoomTransform(tmp).x
+        y = d3.zoomTransform(tmp).y
+        k = d3.zoomTransform(tmp).k
+      }
+      //Set pos of legend like it was in legacy (so we have to take into account old pos of legend & scale of DA)
+      this.setPosXY((this.display.position.x * k) + x, (this.display.position.y * k) + y)
+    }
+    this._stick_to_drawing = stick; this.draw()
+  }
 }
