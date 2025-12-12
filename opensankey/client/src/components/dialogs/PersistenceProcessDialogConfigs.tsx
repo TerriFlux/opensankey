@@ -145,6 +145,10 @@ export const translations = {
       en: 'Input file JSON',
       fr: 'Fichier d\'entrée json'
     },
+    load_example: {
+      en: 'Load Example',
+      fr: 'Chargement de l\'exemple'
+    },
     no_input_file_detected: {
       en: 'No file has been selected',
       fr: 'Aucun fichier n\'a été sélectionné'

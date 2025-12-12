@@ -63,13 +63,13 @@ const FORMAT_CONFIG: Record<FileFormat, {
   },
   json: {
     extension: '.json',
-    accept: '.json,.json.gz',
+    accept: '.json,.json.gz,.gz',
     label: 'Fichier JSON',
     icon: '📄'
   },
   blob: {
     extension: '.json',
-    accept: '.json,.json.gz',
+    accept: '.json,.json.gz,.gz',
     label: 'Sankey courant',
     icon: '📄'
   }

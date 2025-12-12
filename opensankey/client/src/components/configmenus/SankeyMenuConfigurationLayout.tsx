@@ -474,20 +474,6 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
     const f = (_: boolean) => {
       const {drawing_area} = new_data
       drawing_area.legend.stick_to_drawing = _
-      if (_) {
-        if (drawing_area.d3_selection) {
-          drawing_area.d3_selection_zoom_area?.select('#grp_legend').remove()
-          drawing_area.d3_selection_legend = drawing_area.d3_selection.append('g').attr('id', 'grp_legend')
-          drawing_area.draw()
-        }
-      } else {
-        if (drawing_area.d3_selection_zoom_area) {
-          drawing_area.d3_selection?.select('#grp_legend').remove()
-          drawing_area.d3_selection_legend = drawing_area.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
-          drawing_area.legend.posIfFromLegacy(true)
-          drawing_area.draw()
-        }
-      }
       refreshThisAndUpdateRelatedComponents()
     }
     new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)

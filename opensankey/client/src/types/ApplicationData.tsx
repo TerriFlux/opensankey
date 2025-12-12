@@ -574,7 +574,6 @@ export class Class_ApplicationData {
         if (draw) {
           this._drawing_area.sankey.sortNodes()
           this._drawing_area.draw()
-          this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
         }
       })
   }
@@ -704,7 +703,6 @@ export class Class_ApplicationData {
     this.sendWaitingToast(
       () => {
         this._drawing_area.draw()
-        this._drawing_area.legend.posIfFromLegacy() // Function do something only if JSON was from legacy
       },
       {
         success: {
