@@ -507,6 +507,7 @@ export const UniversalFileConverter = ({
       setStarted(false)
       setProcessing(false)
       setFailure(false)
+      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
       return
     } else if (input_format == 'json' && output_format == 'blob') {
       decompressUploadedFileUniversal(input_file as File).then(JSON_data => {
