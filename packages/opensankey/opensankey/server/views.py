@@ -286,7 +286,8 @@ def retrieve_result():
         download_name = download_name_map.get(ext, root_file_name + ext)
 
         trace.logger.info(f"Envoi du fichier: {output_file_name} ({mimetype})")
-        output_file_name = handle_json_or_compressed(output_file_name)
+        if output_format == 'json':
+          output_file_name = handle_json_or_compressed(output_file_name)
         return send_file(
             output_file_name,
             as_attachment=True,
