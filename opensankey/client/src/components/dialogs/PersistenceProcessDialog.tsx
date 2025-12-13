@@ -289,6 +289,7 @@ export const UniversalFileConverter = ({
   //const [layout_open, setLayoutOpen] = useState(false)
   const [auto_layout, setAutoLayout] = useState(false)
   const [auto_load, setAutoLoad] = useState(false)
+  const [auto_save, setAutoSave] = useState(false)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
   const [input_format, set_input_format] = useState<FormatType>('excel')
   const [output_format, set_output_format] = useState<FormatType>('json')
@@ -333,6 +334,7 @@ export const UniversalFileConverter = ({
 
   const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
     setAutoLoad(!config.output.required)
+    setAutoSave(!config.input.required)
     setConfig(config)
     const input_format = getInitialFormat(config.input.format, 'excel')
     set_input_format(input_format)
@@ -379,6 +381,11 @@ export const UniversalFileConverter = ({
   }
 
   const handleFinish = async () => {
+    if (auto_save) {
+      downloadFileResult()
+      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
+      return
+    }
     if (!auto_load) {
       console.log('🔄 Conversion terminée - en attente d\'action utilisateur')
       setStarted(false)
@@ -386,6 +393,7 @@ export const UniversalFileConverter = ({
       setFailure(false)
       return
     }
+
 
     // ========== MODE CHARGEMENT CLASSIQUE ==========
     const path = window.location.origin
