@@ -60,7 +60,6 @@ import { STATIC_NODE_MENU_CONFIG } from './deps/OpenSankey+/deps/OpenSankey/comp
 import { SankeyModalStyleContainer } from './deps/OpenSankey+/components/SankeyPlusStyle'
 import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey+/components/UniversalConverterDialogConfig'
 import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
-import { Class_IconLibraryLoginComponent } from './deps/LoginComponent/IconLibraryLoginComponent'
 
 
 // Specific methods ==================================================================================
@@ -117,7 +116,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     <UserPagesButtons
       t={new_data_app.t}
       logo={new_data_app.logo}
-      icon_library={new_data_app.icon_library as unknown as  Class_IconLibraryLoginComponent}
+      icon_user={new_data_app.icon_library.icon_user}
       show_splashscreen={new_data_app.menu_configuration.show_splashscreen}
       login_component={new_data_app.login_component}
       setLicenses={setLicenses}
