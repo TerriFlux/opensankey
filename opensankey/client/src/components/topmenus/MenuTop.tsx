@@ -789,7 +789,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         variant='info'
         onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
       >
-        ?
+        <b>Aide à la navigation</b>
       </Button>
     </OSTooltip>
 

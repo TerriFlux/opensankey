@@ -127,6 +127,7 @@ export const FileFormatSection = ({
   const { t } = app_data
   const is_input = section_type === 'input'
   const config_to_use = is_input ? input_config : output_config
+  const display = Object.keys(config_to_use['base']).length > 0 || Object.keys(config_to_use[current_format]).length > 0
   const gridTemplateColumns = hasOptionsFormat(format_config) && format_config.options.length > 1 ? '1fr 2fr 3fr' : '1fr'
   
   if (!required) return <></>
@@ -189,7 +190,7 @@ export const FileFormatSection = ({
         </Box>
         
         {/* Options de format avec Tabs */}
-        {hasOptionsFormat(format_config) && (
+        {(hasOptionsFormat(format_config) && display) && (
           <WrapperBoxSubSectionMenu
             new_data={app_data}
             title={is_input
@@ -689,7 +690,7 @@ export const UniversalFileConverter = ({
             {t(config.launch_button_label)}
           </Button>
         </Box></> : <></>}
-      {config.input.required && !input_file ? <Alert status='warning'>
+      {config.input.required && input_format !== 'blob' && !input_file ? <Alert status='warning'>
         <AlertIcon />
         {t('ProcessDialog.waiting_file')}
       </Alert> : <></>}
