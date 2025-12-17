@@ -1,3 +1,4 @@
+import { MenuCondition } from "./SankeyMenuContext";
 
 export const translations = {
   ProcessDialog: {
@@ -202,17 +203,14 @@ export interface FormatAttributeConfig<T> {
   type: () => T
   labels: { en: string; fr: string }
   tooltips: { en: string; fr: string }
-  conditional?: {
-    dependsOn: string  // Clé de l'attribut parent
-    showWhen: boolean | number | string  // Valeur qui active l'affichage
-  }
+  visibilityConditions?: MenuCondition[]
 }
-
+export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | {}> 
 // ==================================================================================================
 // OPTIONS D'ENTRÉE (INPUT)
 // ==================================================================================================
 
-export const INPUT_ATTRIBUTES_CONFIG = {
+export const INPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
   // =================== BASE (communes à tous les formats) ===================
   base: {
     // À compléter plus tard selon tes besoins
@@ -247,19 +245,8 @@ export const INPUT_ATTRIBUTES_CONFIG = {
 } as const
 
 // Définir base en dehors
-const BASE_OUTPUT_CONFIG = {
-  only_current_view: {
-    default: false,
-    type: (() => false) as (() => boolean),
-    labels: {
-      en: 'Only current view',
-      fr: 'Seulement la vue courante'
-    },
-    tooltips: {
-      en: 'Load only the current view',
-      fr: 'Charger seulement la vue courante'
-    }
-  } satisfies FormatAttributeConfig<boolean>,
+const BASE_OUTPUT_CONFIG : FormatConfigStructure = {
+
   with_values: {
     default: true,
     type: (() => true) as (() => boolean),
@@ -302,9 +289,11 @@ const BASE_OUTPUT_CONFIG = {
   example_json: {}
 } as const
 
-export const OUTPUT_ATTRIBUTES_CONFIG = {
-  excel: {
+export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
+  base : {
     ...BASE_OUTPUT_CONFIG,
+  },
+  excel: {
     with_sheet_formating: {
       default: true,
       type: (() => true) as (() => boolean),
@@ -355,10 +344,15 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
         en: 'Activate writing of all flux in DATA_SHEET table',
         fr: 'Activer l\'écriture de tous les flux dans le tableau DATA_SHEET'
       },
-      conditional: {
-        dependsOn: 'activate_data_table',
-        showWhen: true
-      }
+      // Utiliser le nouveau système de conditions
+      visibilityConditions: [
+        {
+          type: 'optionProperty',
+          property: 'activate_data_table',
+          operator: '==',
+          value: true
+        }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_flux_matrix: {
@@ -385,10 +379,14 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
         en: 'Activate writing of data in IO_SHEET / TER_SHEET table',
         fr: 'Activer l\'écriture des données dans le tableau IO_SHEET / TER_SHEET'
       },
-      conditional: {
-        dependsOn: 'activate_flux_matrix',
-        showWhen: true
-      }
+      visibilityConditions: [
+        {
+          type: 'optionProperty',
+          property: 'activate_flux_matrix',
+          operator: '==',
+          value: true
+        }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     write_ratio_constraints: {
@@ -418,7 +416,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
     } satisfies FormatAttributeConfig<boolean>,
   },
   json: {
-    ...BASE_OUTPUT_CONFIG,
     keep_siblings: {
       default: false,
       type: (() => false) as (() => boolean),
@@ -431,8 +428,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
         fr: 'Conserver les nœuds frères dans l\'export'
       }
     } satisfies FormatAttributeConfig<boolean>,
-
-
 
     mode_compressed: {
       default: false,
@@ -453,49 +448,47 @@ export const OUTPUT_ATTRIBUTES_CONFIG = {
   example_json: {}
 } as const
 
-export type FormatType = 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
+export type FormatType = 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
 
-export type OutputAttributeKey<F extends FormatType> = keyof typeof OUTPUT_ATTRIBUTES_CONFIG[F]
-export type InputAttributeKey<F extends FormatType> = keyof typeof INPUT_ATTRIBUTES_CONFIG[F]
+// export type OutputAttributeKey<F extends FormatType> = keyof typeof OUTPUT_ATTRIBUTES_CONFIG[F]
+// export type InputAttributeKey<F extends FormatType> = keyof typeof INPUT_ATTRIBUTES_CONFIG[F]
 
-export type OutputOptionTypes<F extends FormatType> = {
-  //@ts-expect-error xxx
-  [K in OutputAttributeKey<F>]: ReturnType<typeof OUTPUT_ATTRIBUTES_CONFIG[F][K]['type']>
-}
+// export type OutputOptionTypes<F extends FormatType> = {
+//   //@ts-expect-error xxx
+//   [K in OutputAttributeKey<F>]: ReturnType<typeof OUTPUT_ATTRIBUTES_CONFIG[F][K]['type']>
+// }
 
-export type InputOptionTypes<F extends FormatType> = {
-  //@ts-expect-error xxx
-  [K in InputAttributeKey<F>]: ReturnType<typeof INPUT_ATTRIBUTES_CONFIG[F][K]['type']>
-}
+// export type InputOptionTypes<F extends FormatType> = {
+//   //@ts-expect-error xxx
+//   [K in InputAttributeKey<F>]: ReturnType<typeof INPUT_ATTRIBUTES_CONFIG[F][K]['type']>
+// }
 
 // Valeurs par défaut pour chaque format
-export const getDefaultOutputOptions = <F extends FormatType>(format: F): OutputOptionTypes<F> => {
-  const config = OUTPUT_ATTRIBUTES_CONFIG[format]
+export const getDefaultOutputOptions = (config:FormatAttributeConfig<boolean | number | string>|{} ): Record<string,unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default
     return acc
-  }, {} as OutputOptionTypes<F>)
+  }, {} as Record<string,unknown>)
 }
 
-export const getDefaultInputOptions = <F extends FormatType>(format: F): InputOptionTypes<F> => {
-  const config = INPUT_ATTRIBUTES_CONFIG[format]
+export const getDefaultInputOptions = (config: FormatAttributeConfig<boolean | number | string>|{}): Record<string,unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default
     return acc
-  }, {} as InputOptionTypes<F>)
+  }, {} as Record<string,unknown>)
 }
 
-export type ConfigAttribute<C, F extends FormatType, K> =
-  C extends typeof OUTPUT_ATTRIBUTES_CONFIG | typeof INPUT_ATTRIBUTES_CONFIG
-  ? K extends keyof C[F]
-  ? C[F][K]
-  : never
-  : never
+// export type ConfigAttribute<C, F extends FormatType, K> =
+//   C extends typeof OUTPUT_ATTRIBUTES_CONFIG | typeof INPUT_ATTRIBUTES_CONFIG
+//   ? K extends keyof C[F]
+//   ? C[F][K]
+//   : never
+//   : never
 
-// Type helper pour garantir qu'on a bien un FormatAttributeConfig
-export type ExtractAttributeConfig<T> = T extends FormatAttributeConfig<infer U> ? FormatAttributeConfig<U> : never
+// // Type helper pour garantir qu'on a bien un FormatAttributeConfig
+// export type ExtractAttributeConfig<T> = T extends FormatAttributeConfig<infer U> ? FormatAttributeConfig<U> : never
 
 // DialogConfigs.ts (ajouter à la fin)
 

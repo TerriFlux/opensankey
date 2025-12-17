@@ -42,7 +42,7 @@ import {
   Text
 } from '@chakra-ui/react'
 
-import {ApplyLayoutDialog} from '../dialogs/SankeyMenuDialogs'
+import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
@@ -59,6 +59,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
+import { FormatConfigStructure,} from '../dialogs/PersistenceProcessDialogConfigs'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -83,15 +84,17 @@ export const menu_config_width = 20
  *
  * @returns
  */
-export const Menu = (
+export const SankeyMenu = (
   {
     app_data,
-    external_modal,
-    additionalMenus
+    additionalMenus,
+    input_config,
+    output_config
   }: {
     app_data: Class_ApplicationData,
-    external_modal: JSX.Element[],
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
+    input_config:FormatConfigStructure,
+    output_config:FormatConfigStructure
   }
 ) => {
   const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
@@ -160,7 +163,6 @@ export const Menu = (
 
   return (
     <>
-      {external_modal.map((c, i) => { return <React.Fragment key={i}>{c}</React.Fragment> })}
       {/* Top Navbar with navigation and edition elements */}
       {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ?
         <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
@@ -179,39 +181,39 @@ export const Menu = (
             (!app_data.is_static) ||
             (window.sankey && window.sankey.footer)
           ) ? <Box
-              display='grid'
-              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-              margin='0.2rem'
+            display='grid'
+            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+            margin='0.2rem'
+          >
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='start'
             >
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='start'
-              >
               ©
-                <img
-                  width={75}
-                  src={logo_terriflux}
-                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-                />
+              <img
+                width={75}
+                src={logo_terriflux}
+                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+              />
               - {t('tdr')}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                {app_name}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-              </Box>
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='end'
-                paddingRight='1.5rem'
-              >
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              {app_name}
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+            </Box>
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='end'
+              paddingRight='1.5rem'
+            >
               12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-              </Box>
-            </Box> :
+            </Box>
+          </Box> :
             <></>
           }
         </Box>
@@ -296,6 +298,8 @@ export const Menu = (
       <UniversalFileConverter
         app_data={app_data}
         dialog_name={'ref_setter_show_modal_file_converter'}
+        input_config={input_config}
+        output_config={output_config}
       />
 
       {modal_support}
@@ -472,7 +476,7 @@ const ConfigContent = ({ app_data, additional_menus }:
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
     },
-    presentation: { 
+    presentation: {
       ...additional_menus.current.additional_new_menu_config_content.presentation
     }
   }
