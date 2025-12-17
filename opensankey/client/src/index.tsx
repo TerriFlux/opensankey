@@ -54,6 +54,7 @@ import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from './components/dialogs/
 import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_JSON } from './types/Utils'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 // CONSTANTS =========================================================================================
 declare const window: Window &
@@ -169,6 +170,8 @@ const App: FC = () => {
       LINK_MENU_CONFIG={LINK_MENU_CONFIG}
       NODE_MENU_CONFIG={dataApp.is_static ? STATIC_NODE_MENU_CONFIG :NODE_MENU_CONFIG}
       createNodeModifier={(app_data) => createNodeModifier(app_data)}
+      input_config={INPUT_ATTRIBUTES_CONFIG}
+      output_config={OUTPUT_ATTRIBUTES_CONFIG}
     />
   </ChakraProvider>
 }

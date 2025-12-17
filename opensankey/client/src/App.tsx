@@ -31,7 +31,7 @@ import { TourProvider } from '@reactour/tour'
 
 /*************************************************************************************************/
 
-import { Menu } from './components/topmenus/SankeyMenus'
+import { SankeyMenu } from './components/topmenus/SankeyMenus'
 
 import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
@@ -46,6 +46,7 @@ import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
 import { ToolbarFilter } from './components/topmenus/Toolbar'
+import { FormatConfigStructure } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 declare const window: Window &
   typeof globalThis & {
@@ -68,7 +69,9 @@ export const OpenSankeyApp = ({
   createLinkModifier,
   LINK_MENU_CONFIG,
   NODE_MENU_CONFIG,
-  createNodeModifier
+  createNodeModifier,
+  input_config,
+  output_config
 }: {
   initializeApplicationData: () => Class_ApplicationData,
   initializeAdditionalMenus: FType_InitializeAdditionalMenus,
@@ -80,6 +83,8 @@ export const OpenSankeyApp = ({
   LINK_MENU_CONFIG: MenuConfig,
   NODE_MENU_CONFIG: MenuConfig,
   createNodeModifier: (app_data: Class_ApplicationData) => NodeModifierType,
+  input_config: FormatConfigStructure,
+  output_config: FormatConfigStructure,
 }) => {
 
   // Datas init -------------------------------------------------------------------------
@@ -168,14 +173,13 @@ export const OpenSankeyApp = ({
             app_data={app_data}
           /> : <></>}
         <>
-          <Menu
+          <SankeyMenu
             app_data={app_data}
-            external_modal={[
-              <></>
-            ]}
             additionalMenus={
               app_data.menu_configuration.additionalMenus
             }
+            input_config={input_config}
+            output_config={output_config}
           />
         </>
       </div>

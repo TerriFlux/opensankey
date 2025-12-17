@@ -39,7 +39,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 // ==================================================================================================
 
 export type MenuConditionOperator = '==' | '!=' | '>' | '<' | '>=' | '<=' | 'includes'
-export type MenuConditionType = 'nodeCount' | 'nodeProperty' | 'custom'
+export type MenuConditionType = 'nodeCount' | 'nodeProperty' | 'custom' | 'optionProperty'
 
 export interface MenuCondition {
   type: MenuConditionType
@@ -47,6 +47,7 @@ export interface MenuCondition {
   value?: unknown
   property?: string
   customCheck?: (app_data: Class_ApplicationData) => boolean
+  optionCheck?: (options: Record<string, unknown>) => boolean
 }
 
 export type MenuStructureItemType = 'button' | 'submenu' | 'widget' | 'separator'
@@ -120,43 +121,62 @@ export interface MenuPosition {
 // ==================================================================================================
 
 export class MenuConditionEvaluator {
-  static evaluate(condition: MenuCondition, app_data: Class_ApplicationData): boolean {
+  static evaluate(
+    condition: MenuCondition,
+    app_data: Class_ApplicationData,
+    options?: Record<string, unknown>
+  ): boolean {
     const { drawing_area } = app_data
     const contextualised_node = drawing_area.node_contextualised
     const selected_nodes = drawing_area.visible_and_selected_nodes_list
 
     switch (condition.type) {
-    case 'nodeCount': {
-      const count = selected_nodes.length
-      return this.compareValues(count, condition.operator!, condition.value)
-    }
-    case 'nodeProperty': {
-      if (!contextualised_node || !condition.property) return false
-      const propValue = this.getNestedProperty(contextualised_node, condition.property)
-      return this.compareValues(propValue, condition.operator!, condition.value)
-    }
-    case 'custom':
-      return condition.customCheck ? condition.customCheck(app_data) : false
+      case 'nodeCount': {
+        const count = selected_nodes.length
+        return this.compareValues(count, condition.operator!, condition.value)
+      }
+      case 'nodeProperty': {
+        if (!contextualised_node || !condition.property) return false
+        const propValue = this.getNestedProperty(contextualised_node, condition.property)
+        return this.compareValues(propValue, condition.operator!, condition.value)
+      }
+      case 'optionProperty': {
+        if (!options || !condition.property) return false
+        const optionValue = options[condition.property]
+        return this.compareValues(optionValue, condition.operator!, condition.value)
+      }
+      case 'custom':
+        if (condition.customCheck) {
+          return condition.customCheck(app_data)
+        }
+        if (condition.optionCheck && options) {
+          return condition.optionCheck(options)
+        }
+        return false
 
-    default:
-      return true
+      default:
+        return true
     }
   }
 
-  static evaluateAll(conditions: MenuCondition[], app_data: Class_ApplicationData): boolean {
-    return conditions.every(condition => this.evaluate(condition, app_data))
+  static evaluateAll(
+    conditions: MenuCondition[], 
+    app_data: Class_ApplicationData,
+    options?: Record<string, unknown>
+  ): boolean {
+    return conditions.every(condition => this.evaluate(condition, app_data,options))
   }
 
   private static compareValues(actual: unknown, operator: MenuConditionOperator, expected: unknown): boolean {
     switch (operator) {
-    case '==': return actual === expected
-    case '!=': return actual !== expected
-    case '>': return (actual as number) > (expected as number)
-    case '<': return (actual as number) < (expected as number)
-    case '>=': return (actual as number) >= (expected as number)
-    case '<=': return (actual as number) <= (expected as number)
-    case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
-    default: return true
+      case '==': return actual === expected
+      case '!=': return actual !== expected
+      case '>': return (actual as number) > (expected as number)
+      case '<': return (actual as number) < (expected as number)
+      case '>=': return (actual as number) >= (expected as number)
+      case '<=': return (actual as number) <= (expected as number)
+      case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
+      default: return true
     }
   }
 
@@ -271,8 +291,8 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
           contextualised_node.master_node.dimensions_as_parent_pure :
           contextualised_node.dimensions_as_parent_pure
         const existingButtons = item.children!.filter(child =>
-          child.type === 'button'  && child.actionName === 'contractLeft' ||
-            child.actionName === 'contractRight')
+          child.type === 'button' && child.actionName === 'contractLeft' ||
+          child.actionName === 'contractRight')
         // Créer un sous-menu pour chaque dimension child
         let dimensionSubmenusAgg: MenuStructureItem[] = []
         if (child_dims.length > 0) {
@@ -380,7 +400,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         }
         return [{
           ...item,
-          children: [...existingButtons,...dimensionSubmenusAgg, ...dimensionSubmenusDesagg]
+          children: [...existingButtons, ...dimensionSubmenusAgg, ...dimensionSubmenusDesagg]
         }]
       }
     }
@@ -452,10 +472,10 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         {label}
         {(() => {
           if (!actionConfig.showCheck || !actionConfig.getToggleValue) return null
-      
+
           const toggleValue = modifier[actionConfig.getToggleValue]
           if (typeof toggleValue !== 'function') return null
-      
+
           const isChecked = (toggleValue as () => boolean)()
           return isChecked ? ' ✓' : ''
         })()}
@@ -481,79 +501,79 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     }
 
     switch (item.type) {
-    case 'separator':
-      return (
-        <hr
-          key={`sep-${index}`}
-          style={{
-            margin: '8px 0',
-            border: 'none',
-            borderTop: '1px solid #e2e8f0'
-          }}
-        />
-      )
+      case 'separator':
+        return (
+          <hr
+            key={`sep-${index}`}
+            style={{
+              margin: '8px 0',
+              border: 'none',
+              borderTop: '1px solid #e2e8f0'
+            }}
+          />
+        )
 
-    case 'button':
-      if (item.actionName) {
-        let title_name = ''
-        if (item.titleName) title_name = item.titleName
-        else title_name = item.actionName.includes('_')
-          ? t(`${path}.${item.actionName.split('_')[0]}`)
-          : t(`${path}.${item.actionName}`)
+      case 'button':
+        if (item.actionName) {
+          let title_name = ''
+          if (item.titleName) title_name = item.titleName
+          else title_name = item.actionName.includes('_')
+            ? t(`${path}.${item.actionName.split('_')[0]}`)
+            : t(`${path}.${item.actionName}`)
+
+          return (
+            <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
+          )
+        }
+        return <React.Fragment key={`btn-empty-${index}`} />
+
+      case 'widget':
+        if (!item.widgetName) return null
 
         return (
-          <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
+          <Box key={`widget-${index}`} p={2}>
+            <WidgetRenderer
+              widgetName={item.widgetName}
+              widgetProps={item.widgetProps}
+              app_data={app_data}
+              refreshCallback={refreshCallback}
+            />
+          </Box>
+        )
+
+      case 'submenu': {
+        if ((!item.titleName && !item.titleKey) || !item.children) return null
+
+        // Filtrer les enfants visibles après génération dynamique
+        const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
+        const visibleChildren = processedChildren.filter(child => isItemVisible(child))
+
+        if (visibleChildren.length === 0) return null
+
+        const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
+          ? t(item.titleKey!)
+          : t(`${path}.${item.titleKey}`))
+
+        return (
+          <Menu key={`submenu-${index}`} placement='end'>
+            <MenuButton
+              variant='contextmenu_button'
+              as={Button}
+              rightIcon={<ChevronRightIcon />}
+              className="dropdown-basic"
+            >
+              {sectionTitle}
+            </MenuButton>
+            <MenuList as={Box} layerStyle='context_menu'>
+              {visibleChildren.map((child, childIndex) =>
+                renderStructureItem(child, childIndex, depth + 1)
+              )}
+            </MenuList>
+          </Menu>
         )
       }
-      return <React.Fragment key={`btn-empty-${index}`} />
-
-    case 'widget':
-      if (!item.widgetName) return null
-
-      return (
-        <Box key={`widget-${index}`} p={2}>
-          <WidgetRenderer
-            widgetName={item.widgetName}
-            widgetProps={item.widgetProps}
-            app_data={app_data}
-            refreshCallback={refreshCallback}
-          />
-        </Box>
-      )
-
-    case 'submenu': {
-      if ((!item.titleName && !item.titleKey) || !item.children) return null
-
-      // Filtrer les enfants visibles après génération dynamique
-      const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
-      const visibleChildren = processedChildren.filter(child => isItemVisible(child))
-
-      if (visibleChildren.length === 0) return null
-
-      const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
-        ? t(item.titleKey!)
-        : t(`${path}.${item.titleKey}`))
-
-      return (
-        <Menu key={`submenu-${index}`} placement='end'>
-          <MenuButton
-            variant='contextmenu_button'
-            as={Button}
-            rightIcon={<ChevronRightIcon />}
-            className="dropdown-basic"
-          >
-            {sectionTitle}
-          </MenuButton>
-          <MenuList as={Box} layerStyle='context_menu'>
-            {visibleChildren.map((child, childIndex) =>
-              renderStructureItem(child, childIndex, depth + 1)
-            )}
-          </MenuList>
-        </Menu>
-      )
-    } 
-    default:
-      return null
+      default:
+        return null
     }
   }
 

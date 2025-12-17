@@ -36,6 +36,7 @@ import { NODE_MENU_CONFIG } from './components/dialogs/ContextNodeConfig'
 import { createNodeModifier } from './components/dialogs/NodeActions'
 import { Class_ApplicationData } from './types/ApplicationData'
 import { useTranslation } from 'react-i18next'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 
 export const DefaultOpenSankeyApp = () => {
@@ -73,6 +74,8 @@ export const DefaultOpenSankeyApp = () => {
       LINK_MENU_CONFIG={LINK_MENU_CONFIG}
       NODE_MENU_CONFIG={NODE_MENU_CONFIG}
       createNodeModifier={(app_data) => createNodeModifier(app_data)}
+      input_config={INPUT_ATTRIBUTES_CONFIG}
+      output_config={OUTPUT_ATTRIBUTES_CONFIG}
     />
   </ChakraProvider>
 }
