@@ -29,8 +29,7 @@ import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngro
 import { Class_IconLibrary } from '../deps/OpenSankey/css/IconLibrairie'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import React from 'react'
-import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom } from 'react-icons/fa'
-
+import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 // Hand made icon ===========================================================================
 const logo_object = <svg
   width={26}
@@ -706,7 +705,13 @@ export class Class_IconLibraryOSP extends Class_IconLibrary {
 
   protected _icon_delete = <FontAwesomeIcon icon={faDeleteLeft} />
 
+  protected _icon_user = <FaUser />
+  protected _icon_logout = <FaPowerOff />
 
+  // Getters ===================================
+
+  public get icon_user() { return this._icon_user }
+  public get icon_logout() { return this._icon_logout }
 
   protected _icon_palette_color = <FaPalette />
   protected _icon_random = <FaRandom />
