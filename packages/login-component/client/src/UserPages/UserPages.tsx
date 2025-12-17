@@ -9,14 +9,13 @@ import { LoginOutButton } from '../Login/Login'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { TFunction } from 'i18next'
 import { LoginComponent } from '../LoginComponent'
-import { Class_IconLibraryLoginComponent } from '../IconLibraryLoginComponent'
 
 export const UserPagesButtons = (
-  { t, show_splashscreen,logo,icon_library,login_component,setLicenses, returnToApp }: {
+  { t, show_splashscreen,logo,icon_user,login_component,setLicenses, returnToApp }: {
     t: TFunction,
     show_splashscreen: boolean,
     logo:string,
-    icon_library: Class_IconLibraryLoginComponent,
+    icon_user: JSX.Element,
     login_component:LoginComponent,
     setLicenses: React.MutableRefObject<() => void>,
     returnToApp: (navigate: NavigateFunction) => void,
@@ -75,8 +74,7 @@ export const UserPagesButtons = (
         }
       }}>
 
-      {
-        icon_library.icon_user}
+      {icon_user}
     </Button>
     <LoginOutButton
       t={t}
