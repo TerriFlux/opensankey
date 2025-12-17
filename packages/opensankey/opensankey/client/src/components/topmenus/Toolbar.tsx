@@ -16,6 +16,7 @@ declare const window: Window &
   typeof globalThis & {
     sankey: {
       data_type: boolean
+      value_filter: boolean
       data_type_intervals: boolean
     }
   }
@@ -83,7 +84,9 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
             {
               window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
             }
-            <FlowValueFilter app_data={app_data} />
+            {
+              window.sankey?.value_filter != false ? <FlowValueFilter app_data={app_data} /> : <></>
+            }
             <LevelTagFilter app_data={app_data} />
             <NodeTagGroupFilter app_data={app_data} level={false} />
             <DataTagGroupFilter app_data={app_data} />
