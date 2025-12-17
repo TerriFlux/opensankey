@@ -3,7 +3,7 @@ import { tabsAnatomy } from '@chakra-ui/anatomy'
 import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
 
 const { definePartsStyle } =
-    createMultiStyleConfigHelpers(tabsAnatomy.keys)
+  createMultiStyleConfigHelpers(tabsAnatomy.keys)
 
 
 export const tabs_variant_preference = definePartsStyle({
@@ -43,8 +43,8 @@ export const tabs_variant_preference = definePartsStyle({
   },
   tabpanel: {
     display: 'block',
-    maxH:window.innerHeight*0.6,
-    overflowY:'auto',
+    maxH: window.innerHeight * 0.6,
+    overflowY: 'auto',
     width: '100%',
   }
 
@@ -84,8 +84,8 @@ export const tabs_variant_preference_tags = definePartsStyle({
       fill: 'white',
       path: 'white',
       background: 'primaire.3',
-      span:{
-        color:'white'
+      span: {
+        color: 'white'
       }
 
     },
@@ -105,7 +105,7 @@ export const tabs_variant_preference_tags = definePartsStyle({
   },
   tablist: {
     display: 'flex',
-    margin:'0',
+    margin: '0',
     borderColor: 'primaire.3 !important',
   },
   tabpanels: {
@@ -121,8 +121,8 @@ export const tabs_variant_preference_tags = definePartsStyle({
 
 export const tabs_variant_preference_style = definePartsStyle({
   ...tabs_variant_preference_tags,
-  tab:{
+  tab: {
     ...tabs_variant_preference_tags.tab,
-    height:'2rem'
+    height: '2rem'
   },
 })

@@ -1,10 +1,11 @@
 import { Dispatch, MutableRefObject, SetStateAction, useRef } from 'react'
-import {Class_MenuConfigLoginComponent } from './deps/LoginComponent/MenuConfigLoginComponent'
+import { Class_MenuConfigOSP } from './deps/OpenSankey+/types/MenuConfigOSP'
+//import {Class_MenuConfigLoginComponent } from './deps/LoginComponent/MenuConfigLoginComponent'
 
 type SAShowMenuComponentsVarType = {
   ref_setter_show_modal_sankeytheque: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
-export class Class_MenuConfigSA extends Class_MenuConfigLoginComponent {
+export class Class_MenuConfigSA extends Class_MenuConfigOSP {
   private _ref_to_btn_top_sankeytheque_updater: MutableRefObject<(() => void)>
 
   private _dict_setter_show_dialog_SA: SAShowMenuComponentsVarType

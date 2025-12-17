@@ -1,8 +1,10 @@
 
 import { useToast } from '@chakra-ui/react'
 import { Class_MenuConfigSA } from './MenuConfigSA'
-import { Class_ApplicationDataLoginComponent} from './deps/LoginComponent/ApplicationDataLoginComponent'
 import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationHistory'
+import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
+import { LoginComponent } from './deps/LoginComponent/LoginComponent'
+import { Class_MenuConfig } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {
@@ -10,7 +12,7 @@ declare const window: Window &
       logo: string
     }
   }
-export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent {
+export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   /**
    * Creates an instance of Class_ApplicationDataSA.
    * @param {boolean} published_mode
@@ -25,7 +27,11 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
     //this._menu_configuration = this.menu_configuration
     // Get MFA logo
     this._logo_mfa = 'logos/logo_OSS.png'
+    this._login_component = new LoginComponent
   }
+
+  public get login_component() { return this._login_component}
+  private _login_component : LoginComponent
 
   private _logo_mfa: string = ''
 
@@ -34,7 +40,6 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataLoginComponent
   public createNewMenuConfiguration() {
     this._toast = useToast()
     this._menu_configuration = new Class_MenuConfigSA()
-    //@ts-expect-error xxx
     this._history = new Class_ApplicationHistory(this._menu_configuration)
     return this._menu_configuration
   }

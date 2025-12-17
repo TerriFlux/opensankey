@@ -11,7 +11,6 @@
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
 import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
-import { ButtonOpenUSerPreference, ModalPreference } from './deps/LoginComponent/Preferences/Preferences'
 
 import {
   Box,
@@ -25,19 +24,19 @@ import TextLoop from 'react-text-loop'
 
 // OpenSankey imports ===============================================================================
 
-import OpenSankeyApp from './deps/LoginComponent//deps/OpenSankey+/deps/OpenSankey/App'
+import OpenSankeyApp from './deps/OpenSankey+/deps/OpenSankey/App'
 
 // OpenSankey+ imports ===============================================================================
 
 import {
   initializeAdditionalMenusOSP,
   moduleDialogsOSP,
-} from './deps/LoginComponent//deps/OpenSankey+/ModulesOSP'
-import { ModalWelcomeBuilderOSP } from './deps/LoginComponent//deps/OpenSankey+/components/ModalWelcomeOSP'
+} from './deps/OpenSankey+/ModulesOSP'
+import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/ModalWelcomeOSP'
 import {
   createZDDModifierPlus, createNodeModifierPlus,
   createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus
-} from './deps/LoginComponent/deps/OpenSankey+/components/ContextMenuConfigs'
+} from './deps/OpenSankey+/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
 import { Theme_SankeyApplication } from './chakra/Theme'
@@ -52,13 +51,16 @@ import { MetaTags } from './components/MetaTags'
 import i18next from 'i18next'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
-import { FType_ModuleDialogs } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/Modules'
+import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
-import { STATIC_NODE_MENU_CONFIG } from './deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextNodeConfig'
-import { SankeyModalStyleContainer } from './deps/LoginComponent/deps/OpenSankey+/components/SankeyPlusStyle'
+import { STATIC_NODE_MENU_CONFIG } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextNodeConfig'
+import { SankeyModalStyleContainer } from './deps/OpenSankey+/components/SankeyPlusStyle'
+import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey+/components/UniversalConverterDialogConfig'
+import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
+import { Class_IconLibraryLoginComponent } from './deps/LoginComponent/IconLibraryLoginComponent'
 
 
 // Specific methods ==================================================================================
@@ -113,7 +115,11 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
 
   additionalMenus.current.additional_nav_item.push(
     <UserPagesButtons
-      new_data_app={new_data_app}
+      t={new_data_app.t}
+      logo={new_data_app.logo}
+      icon_library={new_data_app.icon_library as unknown as  Class_IconLibraryLoginComponent}
+      show_splashscreen={new_data_app.menu_configuration.show_splashscreen}
+      login_component={new_data_app.login_component}
       setLicenses={setLicenses}
       returnToApp={returnToApp}
     />
@@ -217,6 +223,8 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
       NODE_MENU_CONFIG={new_data_app.is_static ? STATIC_NODE_MENU_CONFIG : createNodeMenuConfigPlus()}
       createNodeModifier={(app_data) => createNodeModifierPlus(app_data as Class_ApplicationDataSA)}
+      input_config={OSP_INPUT_ATTRIBUTES_CONFIG}
+      output_config={OSP_OUTPUT_ATTRIBUTES_CONFIG}
     />
 
   if (new_data_app.is_static)

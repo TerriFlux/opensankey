@@ -23,7 +23,7 @@ import {
   ModalOverlay,
 } from '@chakra-ui/react'
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
-import { Type_JSON } from '../deps/LoginComponent/deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 const logo_sankeytheque = <svg
