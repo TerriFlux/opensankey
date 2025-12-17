@@ -1,32 +1,37 @@
 
-import React, { useState } from 'react'
+import React from 'react'
 import { useNavigate, NavigateFunction } from 'react-router-dom'
 import {
   Button,
   ButtonGroup,
 } from '@chakra-ui/react'
 import { LoginOutButton } from '../Login/Login'
-import {Class_ApplicationDataLoginComponent} from '../ApplicationDataLoginComponent'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
-//import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+import { TFunction } from 'i18next'
+import { LoginComponent } from '../LoginComponent'
+import { Class_IconLibraryLoginComponent } from '../IconLibraryLoginComponent'
 
 export const UserPagesButtons = (
-  { new_data_app, setLicenses,returnToApp }:{
-  new_data_app: Class_ApplicationDataLoginComponent
-  setLicenses: React.MutableRefObject<() => void>,
+  { t, show_splashscreen,logo,icon_library,login_component,setLicenses, returnToApp }: {
+    t: TFunction,
+    show_splashscreen: boolean,
+    logo:string,
+    icon_library: Class_IconLibraryLoginComponent,
+    login_component:LoginComponent,
+    setLicenses: React.MutableRefObject<() => void>,
     returnToApp: (navigate: NavigateFunction) => void,
-}
+  }
 ) => {
   // Traduction
-  const { t } = new_data_app
+
 
   // If window.sankey.publish is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
   // and if the app is in publication mode we aren't in one
   const navigate = useNavigate()
 
-  const [count, setCount] = useState(0)
-  const refreshThis = () => { setCount(count + 1) }
-  new_data_app.menu_configuration_login_component.ref_to_additional_menus_updater.current = refreshThis
+  // const [count, setCount] = useState(0)
+  //const refreshThis = () => { setCount(count + 1) }
+  //new_data_app.menu_configuration_login_component.ref_to_additional_menus_updater.current = refreshThis
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
@@ -38,7 +43,7 @@ export const UserPagesButtons = (
   >
     <OSTooltip
       label={t('UserNav.tooltip.to_buy')}
-      isAlwaysOpen={new_data_app.menu_configuration.show_splashscreen}>
+      isAlwaysOpen={show_splashscreen}>
       <Button
         variant='btn_lone_navigation_primary'
         size='sizeBtnTextLogin'
@@ -69,18 +74,19 @@ export const UserPagesButtons = (
           ev.onkeydown(tmp)
         }
       }}>
-      {new_data_app.icon_library.icon_user}
+
+      {
+        icon_library.icon_user}
     </Button>
     <LoginOutButton
-      t={new_data_app.t}
-      logo={new_data_app.logo}
+      t={t}
+      logo={logo}
       returnToApp={returnToApp}
-      loginComponent={new_data_app.login_component}
+      loginComponent={login_component}
       setLicenses={setLicenses}
     />
   </ButtonGroup>
 
-
-  return (!new_data_app.login_component.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
+  return (!login_component.has_account ? user_navigation_bar_free : user_navigation_bar_connected)
 }
 
