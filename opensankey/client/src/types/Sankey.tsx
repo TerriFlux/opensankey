@@ -464,7 +464,7 @@ export class Class_Sankey {
     Object.entries(sankey_to_copy._node_styles)
       .forEach(([idx, node_style_to_copy]) => {
         this.addNewNodeStyle(idx, node_style_to_copy.name)
-          .copyFrom(node_style_to_copy)
+          .copyFrom(undefined,node_style_to_copy)
       })
     Object.entries(sankey_to_copy._link_styles)
       .forEach(([idx, link_style_to_copy]) => {
@@ -545,11 +545,11 @@ export class Class_Sankey {
         .forEach(id => {
           const ns = other_sankey._node_styles[id]
           this.addNewNodeStyle(ns.id, ns.name)
-          this._node_styles[ns.id].copyFrom(ns)
+          this._node_styles[ns.id].copyFrom(undefined,ns)
         })
       ns_to_update
         .forEach(id => {
-          this._node_styles[id].copyFrom(other_sankey._node_styles[id])
+          this._node_styles[id].copyFrom(undefined,other_sankey._node_styles[id])
         })
 
       // Link styles can be to remove, to add or to update

@@ -163,7 +163,7 @@ export class Class_NodeStyle extends Class_NodeAttribute {
     }
   }
 
-  public copyFrom(element: Class_NodeStyle) {
+  public copyFrom(_: Class_NodeElement|undefined,element: Class_NodeStyle) {
     Object.keys(element._attributes).forEach(key => {
       //@ts-expect-error xxx
       this._attributes[key as NodeAttributeKey] = element._attributes[key as NodeAttributeKey]

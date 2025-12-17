@@ -264,9 +264,15 @@ export class Class_NodeAttribute extends NodeAttributeTypeScript {
     })
   }
 
-  public copyFrom(element: Class_NodeAttribute) {
+  public copyFrom(parent_node: Class_NodeElement|undefined, element: Class_NodeAttribute) {
     Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
-      if (element._attributes[key as AttributeKey] == undefined) return
+      if (element._attributes[key as AttributeKey] == undefined) {
+        if (this._attributes[key as AttributeKey] !== undefined && 
+          this._attributes[key as AttributeKey] !==parent_node!.getStyleProperty(key as AttributeKey)) {
+          delete this._attributes[key as AttributeKey]
+        }
+        return
+      }
       //@ts-expect-error Copy operation
       this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
     })
