@@ -320,7 +320,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     super._copyFrom(_)
     this._name = _.name
     this._display.style = _._display.style.map(s => this.sankey.node_styles_dict[s.id])
-    this._display.attributes.copyFrom(_._display.attributes)
+    this._display.attributes.copyFrom(this,_._display.attributes)
     this._display.position_x_label = _._display.position_x_label
     this._display.position_y_label = _._display.position_y_label
     this._display.position.u = _._display.position.u
