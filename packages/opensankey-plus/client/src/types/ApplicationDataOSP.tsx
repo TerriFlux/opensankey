@@ -326,7 +326,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array
         }
       })
-    const active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    if (this.is_static && active_view_id == default_main_sankey_id) active_view_id = Object.keys(views_json)[0]
     if (active_view_id == default_main_sankey_id) {
       this._drawing_area.sankey.setVisible()
       return

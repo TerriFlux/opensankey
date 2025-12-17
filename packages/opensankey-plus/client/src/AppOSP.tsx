@@ -19,13 +19,14 @@ import { createLinkMenuConfigPlus, createNodeMenuConfigPlus, createZDDMenuConfig
 import { createLinkModifier } from './deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { opensankey_theme } from './deps/OpenSankey/css/Theme'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
+import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './components/UniversalConverterDialogConfig'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
 
 export const OpenSankeyPlusApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
     //@ts-expect-error xxx
-    initializeApplicationData={()=>new Class_ApplicationDataOSP(window.sankey.publish)}
+    initializeApplicationData={() => new Class_ApplicationDataOSP(window.sankey.publish)}
     initializeAdditionalMenus={initializeAdditionalMenusOSP}
     moduleDialogs={moduleDialogsOSP}
     ModalWelcome={ModalWelcomeBuilderOSP}
@@ -37,5 +38,7 @@ export const OpenSankeyPlusApp = <ChakraProvider theme={opensankey_theme}>
     NODE_MENU_CONFIG={createNodeMenuConfigPlus()}
     //@ts-expect-error xxx
     createNodeModifier={(app_data) => createNodeModifier(app_data as Class_ApplicationData)}
+    input_config={OSP_INPUT_ATTRIBUTES_CONFIG}
+    output_config={OSP_OUTPUT_ATTRIBUTES_CONFIG}
   />
 </ChakraProvider>

@@ -81,6 +81,7 @@ import {
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { UniversalFileConverter } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -285,6 +286,8 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <UniversalFileConverter
       app_data={new_data_plus}
       dialog_name={'ref_setter_show_modal_file_converter'}
+      input_config={INPUT_ATTRIBUTES_CONFIG}
+      output_config={OUTPUT_ATTRIBUTES_CONFIG}
     />
   ]
 
