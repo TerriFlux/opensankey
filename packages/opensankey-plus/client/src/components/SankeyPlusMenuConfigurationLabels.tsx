@@ -12,17 +12,18 @@ import {
 
 import { Type_JSON, default_style_id } from '../deps/OpenSankey/types/Utils'
 import { Class_ContainerElement } from '../deps/OpenSankey/Elements/TextZone'
-import { Class_ContainerStyle } from '../deps/OpenSankey/Elements/ElementStyle'
 import { ConfigMenuStyleElementContainer } from '../deps/OpenSankey/components/dialogs/SankeyStyle'
+import { Class_NodeStyle } from '../deps/OpenSankey/Elements/Element'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 import { OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { listOptionSizeQuill } from './UtilsOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { listOptionSizeQuill } from '../deps/OpenSankey/components/dialogs/RichTextEditor'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 import { default_font_size } from '../deps/OpenSankey/css/Theme'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
-import { CONTAINERS_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ContainerAttributesConfig'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
+import { Class_ProtoElement } from '../deps/OpenSankey/Elements/Element'
+import { NODES_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -31,7 +32,7 @@ export interface selected_type { 'label': string; 'value': string }
 // 🆕 Hook pour gérer la configuration des attributs disable (comme pour nodes/links)
 const useContainerAttributeConfig = (
   app_data: Class_ApplicationData,
-  elements: (Class_ContainerElement | Class_ContainerStyle)[]
+  elements: (Class_ContainerElement | Class_NodeStyle)[]
 ) => {
   return useMemo(() => {
     const { drawing_area, menu_configuration } = app_data
@@ -39,7 +40,7 @@ const useContainerAttributeConfig = (
     const { ref_selected_style_container } = menu_configuration
     const { container_styles_dict } = sankey
 
-    const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ContainerStyle)
+    const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ProtoElement)
 
     // En mode style : utiliser customisable_attribute du style sélectionné
     // En mode direct : utiliser customisable_attribute du style par défaut
@@ -63,8 +64,8 @@ const useContainerAttributeConfig = (
  * Returns the value if all elements have the same value, otherwise returns defaultValue
  */
 const getCommonValue = <T,>(
-  selected_elements: (Class_ContainerElement | Class_ContainerStyle)[],
-  propertyGetter: (element: Class_ContainerElement | Class_ContainerStyle) => T,
+  selected_elements: (Class_ContainerElement | Class_NodeStyle)[],
+  propertyGetter: (element: Class_ContainerElement | Class_NodeStyle) => T,
   defaultValue: T
 ): T => {
   if (selected_elements.length === 0) return defaultValue
@@ -80,10 +81,10 @@ const getCommonValue = <T,>(
  * This is the core factorization for all update functions
  */
 const createUpdateFunction = <T,>(
-  selected_elements: (Class_ContainerElement | Class_ContainerStyle)[],
+  selected_elements: (Class_ContainerElement | Class_NodeStyle)[],
   propertyName: string,
-  propertyGetter: (element: Class_ContainerElement | Class_ContainerStyle) => T,
-  propertySetter: (element: Class_ContainerElement | Class_ContainerStyle, value: T) => void,
+  propertyGetter: (element: Class_ContainerElement | Class_NodeStyle) => T,
+  propertySetter: (element: Class_ContainerElement | Class_NodeStyle, value: T) => void,
   history:  Class_ApplicationHistory,
   redrawCallback: () => void
 ) => {
@@ -137,7 +138,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
   }
 
   // Elements on which this menu applies
-  let elements: Class_ContainerStyle[] | Class_ContainerElement[]
+  let elements: Class_NodeStyle[] | Class_ContainerElement[]
 
   if (menu_for_style) {
     // MODE STYLE: editing the selected style
@@ -184,7 +185,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
   // Options selector only for direct mode (not for style editing)
   const options_selector = !menu_for_style 
     ? app_data.drawing_area.containers_list_sorted.map((d) => ({ 
-      'label': d.title, 
+      'label': d.name, 
       'value': d.id, 
       selected: d.is_selected 
     }))
@@ -195,7 +196,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const redrawAndRefresh = () => {
     if (elements[0] instanceof Class_ContainerElement) {
       elements.forEach(zdt => (zdt as Class_ContainerElement).drawAsSelected())
-      ref_set_text_value_input.current((elements[0] as Class_ContainerElement)?.title ?? '')
+      ref_set_text_value_input.current((elements[0] as Class_ContainerElement)?.name ?? '')
     }
     setForceUpdate(!forceUpdate)
     if (menu_for_style) {
@@ -232,25 +233,25 @@ export const MenuConfigurationFreeLabelsOSP = ({
   // =================== FACTORIZED FUNCTIONS FOR ALL LABEL PROPERTIES ===================
   
   const allLabelHeight = () => 
-    Math.round(getCommonValue(elements, d => d.label_height, -1))
+    Math.round(getCommonValue(elements, d => d.shape_min_height, -1))
 
   const allLabelWidth = () => 
-    Math.round(getCommonValue(elements, d => d.label_width, -1))
+    Math.round(getCommonValue(elements, d => d.shape_min_width, -1))
 
   const allLabelTitle = () => 
-    elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].title : ''
+    elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].name : ''
 
   const allLabelTransparent = () => 
-    getCommonValue(elements, d => d.opacity, 0)
+    getCommonValue(elements, d => d.shape_opacity, 0)
 
   const allLabelThickness = () => 
-    getCommonValue(elements, d => d.thickness, 0)
+    getCommonValue(elements, d => d.shape_border_thickness, 0)
 
   const allLabelDashed = () => 
-    getCommonValue(elements, d => d.dashed, false)
+    getCommonValue(elements, d => d.shape_border_dashed, false)
 
   const allLabelBgVisible = () => 
-    getCommonValue(elements, d => d.color_visible, false)
+    getCommonValue(elements, d => d.shape_color_visible, false)
 
   const allLabelTiedToNodes = () => {
     if (menu_for_style) return false // Styles don't have tied_to_nodes
@@ -296,38 +297,38 @@ export const MenuConfigurationFreeLabelsOSP = ({
     getCommonValue(elements, d => d.margin_bottom, 0)
 
   const allLabelVerticalText = () => 
-    getCommonValue(elements, d => d.vertical_text, false)
+    getCommonValue(elements, d => d.name_label_vertical_text, false)
 
-  const allLabelVerticalAlignment = (_: 'left' | 'right') => {
-    if (elements.length === 0) return false
-    return elements.every(d => d.vertical_alignment === _)
-  }
+  // const allLabelVerticalAlignment = (_: 'left' | 'right') => {
+  //   if (elements.length === 0) return false
+  //   return elements.every(d => d.vertical_alignment === _)
+  // }
 
   // =================== FACTORIZED UPDATE FUNCTIONS ===================
   
   const updateTitle = createUpdateFunction(
     elements,
     'title',
-    d => (d as Class_ContainerElement).title,
-    (d, v) => { if (d instanceof Class_ContainerElement) d.title = v },
+    d => (d as Class_ContainerElement).name,
+    (d, v) => { if (d instanceof Class_ContainerElement) d.name = v },
     app_data.history,
     redrawAndRefresh
   )
 
   const updateHeight = createUpdateFunction(
     elements,
-    'label_height',
-    d => d.label_height,
-    (d, v) => d.label_height = v,
+    'shape_min_height',
+    d => d.shape_min_height,
+    (d, v) => d.shape_min_height = v,
     app_data.history,
     redrawAndRefresh
   )
 
   const updateWidth = createUpdateFunction(
     elements,
-    'label_width',
-    d => d.label_width,
-    (d, v) => d.label_width = v,
+    'shape_min_width',
+    d => d.shape_min_width,
+    (d, v) => d.shape_min_width = v,
     app_data.history,
     redrawAndRefresh
   )
@@ -335,8 +336,8 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const updateTransparent = createUpdateFunction(
     elements,
     'opacity',
-    d => d.opacity,
-    (d, v) => d.opacity = v,
+    d => d.shape_opacity,
+    (d, v) => d.shape_opacity = v,
     app_data.history,
     redrawAndRefresh
   )
@@ -344,8 +345,8 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const updateThickness = createUpdateFunction(
     elements,
     'thickness',
-    d => d.thickness,
-    (d, v) => d.thickness = v,
+    d => d.shape_border_thickness,
+    (d, v) => d.shape_border_thickness = v,
     app_data.history,
     redrawAndRefresh
   )
@@ -353,17 +354,17 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const updateDashed = createUpdateFunction(
     elements,
     'dashed',
-    d => d.dashed,
-    (d, v) => d.dashed = v,
+    d => d.shape_border_dashed,
+    (d, v) => d.shape_border_dashed = v,
     app_data.history,
     redrawAndRefresh
   )
 
   const updateLabelBgVisible = createUpdateFunction(
     elements,
-    'color_visible',
-    d => d.color_visible,
-    (d, v) => d.color_visible = v,
+    'shape_color_visible',
+    d => d.shape_color_visible,
+    (d, v) => d.shape_color_visible = v,
     app_data.history,
     redrawAndRefresh
   )
@@ -461,20 +462,20 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const updateVerticalText = createUpdateFunction(
     elements,
     'vertical_text',
-    d => d.vertical_text,
-    (d, v) => d.vertical_text = v,
+    d => d.name_label_vertical_text,
+    (d, v) => d.name_label_vertical_text = v,
     app_data.history,
     redrawAndRefresh
   )
 
-  const updateVerticalAlignment = createUpdateFunction(
-    elements,
-    'vertical_alignment',
-    d => d.vertical_alignment,
-    (d, v) => d.vertical_alignment = v,
-    app_data.history,
-    redrawAndRefresh
-  )
+  // const updateVerticalAlignment = createUpdateFunction(
+  //   elements,
+  //   'vertical_alignment',
+  //   d => d.vertical_alignment,
+  //   (d, v) => d.vertical_alignment = v,
+  //   app_data.history,
+  //   redrawAndRefresh
+  // )
 
   const updateImageSrc = (value: string) => {
     if (menu_for_style) return // Styles don't have image_src
@@ -497,13 +498,13 @@ export const MenuConfigurationFreeLabelsOSP = ({
   // =================== SPECIAL UPDATE FUNCTIONS ===================
 
   const updateLabelBorderTransparent = (_: boolean) => {
-    const dict_old_val = Object.fromEntries(elements.map(d => [d.id, d.transparent_border]))
+    const dict_old_val = Object.fromEntries(elements.map(d => [d.id, d.shape_border_visible]))
     const _updateLabelBorderTransparent = () => {
-      elements.map(d => d.transparent_border = !_)
+      elements.map(d => d.shape_border_visible = !_)
       redrawAndRefresh()
     }
     const inv_updateLabelBorderTransparent = () => {
-      elements.map(d => d.transparent_border = dict_old_val[d.id])
+      elements.map(d => d.shape_border_visible = dict_old_val[d.id])
       redrawAndRefresh()
     }
     app_data.history.saveUndo(inv_updateLabelBorderTransparent)
@@ -582,7 +583,8 @@ export const MenuConfigurationFreeLabelsOSP = ({
     const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
     
     const _deleteSelectedLabels = () => {
-      dict_old_element = Object.fromEntries(containerElements.map(cont => [cont.id, cont.toJSON()]))
+      const json_object = {}
+      dict_old_element = Object.fromEntries(containerElements.map(cont => [cont.id, cont.toJSON(json_object)]))
       app_data.drawing_area.deleteSelectedFreeLabels()
       redrawAndRefresh()
     }
@@ -613,12 +615,12 @@ export const MenuConfigurationFreeLabelsOSP = ({
     }))
     : []
     
-  const valAllLabelBorderTransparent = elements[0]?.transparent_border ?? false
+  const valAllLabelBorderTransparent = elements[0]?.shape_border_visible ?? true
   // const valAllLabelDashed = elements[0]?.dashed ?? false
-  const valAllLabelBorderTransparentIndeterminate = !menu_for_style && !elements.every(zdt => zdt.transparent_border == valAllLabelBorderTransparent)
+  const valAllLabelBorderTransparentIndeterminate = !menu_for_style && !elements.every(zdt => zdt.shape_border_visible == !valAllLabelBorderTransparent)
   // const valAllLabelDashedIndeterminate = !menu_for_style && !elements.every(zdt => zdt.dashed == valAllLabelDashed)
   // const valAllLabelBgVisible = elements[0]?.color_visible ?? false
-  const valAllLabelBgVisibleIndeterminate = !menu_for_style && !elements.every(zdt => zdt.color_visible == elements[0]?.color_visible)
+  const valAllLabelBgVisibleIndeterminate = !menu_for_style && !elements.every(zdt => zdt.shape_color_visible == elements[0]?.shape_color_visible)
   
   const valAllLabeTiedToNode = elements[0] instanceof Class_ContainerElement ? elements[0].tied_to_nodes : false
   const valAllLabelTiedToNodeIndeterminate = !elements
@@ -690,7 +692,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
       <Box layerStyle='menuconfigpanel_option_name'>{t('LL.hl')}</Box>
       <ConfigMenuNumberInput
         t={app_data.t}
-        disabled={!disable_attr_props['label_height'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_left || is_zdt_at_extremity_right))}
+        disabled={!disable_attr_props['shape_min_height'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_left || is_zdt_at_extremity_right))}
         default_value={allLabelHeight()}
         function_on_blur={updateHeight}
         minimum_value={1}
@@ -701,7 +703,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
       <Box layerStyle='menuconfigpanel_option_name'>{t('LL.ll')}</Box>
       <ConfigMenuNumberInput
         t={app_data.t}
-        disabled={!disable_attr_props['label_width'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_top || is_zdt_at_extremity_bottom))}
+        disabled={!disable_attr_props['shape_min_width'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_top || is_zdt_at_extremity_bottom))}
         default_value={allLabelWidth()}
         function_on_blur={updateWidth}
         minimum_value={1}
@@ -785,14 +787,14 @@ export const MenuConfigurationFreeLabelsOSP = ({
       {/* Title only for direct mode */}
       {!menu_for_style && (
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' gridTemplateColumns='1fr 9fr'>
-          <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>{t('LL.title')}</Box>
+          <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>{t('LL.name')}</Box>
           <ConfigMenuTextInput disabled={disable_options} default_value={allLabelTitle()} function_on_blur={updateTitle} />
         </Box>
       )}
       {menu_for_style ? <></> : <ConfigMenuStyleElementContainer
         app_data={app_data}
         selected_elements={selected_containers}
-        config={CONTAINERS_ATTRIBUTES_CONFIG}
+        config={NODES_ATTRIBUTES_CONFIG}
       />}
       {/* Text/Image toggle only for direct mode */}
       {!menu_for_style && (
@@ -810,13 +812,13 @@ export const MenuConfigurationFreeLabelsOSP = ({
         <Box style={{ 'height': '300px' }}>
           <ReactQuill
             className='quill_editor'
-            value={elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].content : ''}
+            value={elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].fo_content : ''}
             ref={r_editor_ZDT}
             onChange={(evt, _, src) => {
               if (src == 'user') {
                 elements
                   .filter(e => e instanceof Class_ContainerElement)
-                  .forEach(n => (n as Class_ContainerElement).content = evt)
+                  .forEach(n => (n as Class_ContainerElement).fo_content = evt)
                 redrawAndRefresh()
               }
             }}
@@ -836,51 +838,37 @@ export const MenuConfigurationFreeLabelsOSP = ({
       {/* Vertical text options - available in both modes */}
       {(menu_for_style || button_text_or_image === 'text') && (
         <>
-          <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['vertical_text']} isChecked={allLabelVerticalText()} onChange={(evt) => updateVerticalText(evt.target.checked)}>
+          <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['name_label_vertical_text']} isChecked={allLabelVerticalText()} onChange={(evt) => updateVerticalText(evt.target.checked)}>
             <OSTooltip label={t('LL.tooltips.verticalText') || 'Orient text vertically'} placement='left'>
               {t('LL.verticalText') || 'Vertical Text'}
             </OSTooltip>
           </Checkbox>
-
-          {allLabelVerticalText() && (
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('LL.verticalAlignment') || 'Alignment'}</Box>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Button isDisabled={!disable_attr_props['vertical_alignment']} variant='menuconfigpanel_option_button' colorScheme={allLabelVerticalAlignment('left') ? 'blue' : 'gray'} onClick={() => updateVerticalAlignment('left')}>
-                  {t('LL.alignLeft') || 'Left'}
-                </Button>
-                <Button isDisabled={!disable_attr_props['vertical_alignment']} variant='menuconfigpanel_option_button' colorScheme={allLabelVerticalAlignment('right') ? 'blue' : 'gray'} onClick={() => updateVerticalAlignment('right')}>
-                  {t('LL.alignRight') || 'Right'}
-                </Button>
-              </Box>
-            </Box>
-          )}
         </>
       )}
       
       {/* Style attributes - available in both modes */}
       <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBgVisibleIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['color_visible']} isIndeterminate={valAllLabelBgVisibleIndeterminate} isChecked={allLabelBgVisible()} onChange={(evt) => updateLabelBgVisible(evt.target.checked)}>
+        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBgVisibleIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['shape_color_visible']} isIndeterminate={valAllLabelBgVisibleIndeterminate} isChecked={allLabelBgVisible()} onChange={(evt) => updateLabelBgVisible(evt.target.checked)}>
           {t('LL.cfl')}
         </Checkbox>
-        <MenuColorPicker isDisabled={!disable_attr_props['color']} initialColor={(elements.length === 1) ? elements[0].color : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.color = new_color); redrawAndRefresh() }} />
+        <MenuColorPicker isDisabled={!disable_attr_props['shape_color']} initialColor={(elements.length === 1) ? elements[0].shape_color : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.shape_color = new_color); redrawAndRefresh() }} />
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
           <Box layerStyle='menuconfigpanel_option_name'>{t('LL.ft')}</Box>
-          <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['opacity']} default_value={allLabelTransparent()} function_on_blur={updateTransparent} minimum_value={0} stepper={true} />
+          <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['shape_opacity']} default_value={allLabelTransparent()} function_on_blur={updateTransparent} minimum_value={0} stepper={true} />
         </Box>
       </Box>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['transparent_border']} isIndeterminate={valAllLabelBorderTransparentIndeterminate} isChecked={!valAllLabelBorderTransparent} onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
+        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['shape_border_visible']} isIndeterminate={valAllLabelBorderTransparentIndeterminate} isChecked={!valAllLabelBorderTransparent} onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
           {t('LL.bt')}
         </Checkbox>
-        <MenuColorPicker isDisabled={!disable_attr_props['color_border']} initialColor={(elements.length === 1) ? elements[0].color_border : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.color_border = new_color); redrawAndRefresh() }} />
+        <MenuColorPicker isDisabled={!disable_attr_props['shape_border_color']} initialColor={(elements.length === 1) ? elements[0].shape_border_color : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.shape_border_color = new_color); redrawAndRefresh() }} />
       </Box>
 
       <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
         <Box layerStyle='menuconfigpanel_option_name'>{t('LL.thickness')}</Box>
-        <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['thickness']} default_value={allLabelThickness()} function_on_blur={updateThickness} minimum_value={0} stepper={true} />
-        <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['dashed']} isChecked={allLabelDashed()} onChange={(evt) => updateDashed(evt.target.checked)}>{t('LL.dashed')}</Checkbox>
+        <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['shape_border_thickness']} default_value={allLabelThickness()} function_on_blur={updateThickness} minimum_value={0} stepper={true} />
+        <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['shape_border_dashed']} isChecked={allLabelDashed()} onChange={(evt) => updateDashed(evt.target.checked)}>{t('LL.dashed')}</Checkbox>
       </Box>
 
       {sep}

@@ -1,12 +1,4 @@
-// ==================================================================================================
-// Authors :
-//  - Vincent CLAVEL
-//  - Julien ALAPETITE
-//  - Vincent LE DOZE
-// Date : 28/08/2024
-// All rights reserved for TerriFlux
-// ==================================================================================================
-import { Class_ZoneSelectionOSP } from './SelectionZoneOSP'
+
 import {
   default_main_sankey_id,
   getStringFromJSON,
@@ -60,17 +52,6 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
     // Overrides
     this.application_data = application_data as Class_ApplicationDataOSP
     this._group_to_select += ',.gg_labels'
-  }
-
-  // ABSTRACT METHODS ===================================================================
-
-  protected createNewSankey(id?: string) {
-    const sankey = new Class_Sankey(this, id)
-    return sankey
-  }
-
-  protected createNewSelectionZone(): Class_ZoneSelectionOSP {
-    return new Class_ZoneSelectionOSP(this)
   }
 
   // CLEANING METHODS ===================================================================

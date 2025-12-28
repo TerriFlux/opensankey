@@ -112,23 +112,23 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       const cont = el as Type_JSON
 
       if (cont.name !== undefined) {
-        cont.content = cont.name as string
-        if (!cont.content.includes('<p')) {
-          if (cont.font_uppercase && !cont.content.includes('ql-align-center')) {
-            cont.content = cont.content.toUpperCase()
+        cont.fo_content = cont.name as string
+        if (!cont.fo_content.includes('<p')) {
+          if (cont.font_uppercase && !cont.fo_content.includes('ql-align-center')) {
+            cont.fo_content = cont.fo_content.toUpperCase()
           }
 
           if (cont.font_weight) {
-            cont.content = cont.content ? '<strong>' + cont.content + '</strong>' : ''
+            cont.fo_content = cont.fo_content ? '<strong>' + cont.fo_content + '</strong>' : ''
           }
           if (cont.position_horiz === 'gauche') {
-            cont.content = cont.content ? '<p class="ql-align-left">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-left">' + cont.fo_content + '</p>' : ''
           }
           if (cont.position_horiz === 'centre') {
-            cont.content = cont.content ? '<p class="ql-align-center">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-center">' + cont.fo_content + '</p>' : ''
           }
           if (cont.position_horiz === 'droite') {
-            cont.content = cont.content ? '<p class="ql-align-right">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-right">' + cont.fo_content + '</p>' : ''
           }
         }
       }
@@ -143,7 +143,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       } else {
         cont['opacity'] = 100
       }
-      cont['content'] = container_content
+      cont['fo_content'] = container_content
 
     })
     json_object.labels = Object.fromEntries(
@@ -200,15 +200,3 @@ export function getOldViewsFromJSON(
   return undefined
 }
 
-/**
- * Create an array of string, it return a list from start to stop (at a pace of step)
- * with suffix 'px'
- *
- * @param {number} start
- * @param {number} stop
- * @param {number} step
- */
-const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px')
-
-// Exported variable for Quill editor
-export const listOptionSizeQuill = arrayRangePx(9, 120, 1)

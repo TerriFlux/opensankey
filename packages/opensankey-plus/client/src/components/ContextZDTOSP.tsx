@@ -66,14 +66,14 @@ export const ContextZDT = (
       // Check if node is horizontally in zdt
       const is_node_horizontally_in_zone = (
         (n.position_x >= zdt_to_contextualise.position_x) &&
-        (n.position_x <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width)) &&
-        ((n.position_x + n.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width))
+        (n.position_x <= (zdt_to_contextualise.position_x + zdt_to_contextualise.shape_min_width)) &&
+        ((n.position_x + n.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.shape_min_width))
       )
       // Check if node is vertically in zdt
       const is_node_vertically_in_zone = (
         (n.position_y >= zdt_to_contextualise.position_y) &&
-        (n.position_y <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height)) &&
-        ((n.position_y + n.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height))
+        (n.position_y <= (zdt_to_contextualise.position_y + zdt_to_contextualise.shape_min_height)) &&
+        ((n.position_y + n.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.shape_min_height))
       )
       // Must be in zdt
       return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
@@ -94,10 +94,10 @@ export const ContextZDT = (
   }
 
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
-  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
+  const valAllLabelBorderTransparent = selected_zdt[0]?.shape_border_visible ?? true
 
   const btn_mask_border = <Button onClick={() => {
-    selected_zdt.forEach(zdt => zdt.transparent_border = !valAllLabelBorderTransparent)
+    selected_zdt.forEach(zdt => zdt.shape_border_visible = !valAllLabelBorderTransparent)
     redrawAndRefresh()
   }} variant='contextmenu_button'>{valAllLabelBorderTransparent ? t('LL.display_border') : t('LL.hide_border')}</Button>
 
@@ -107,9 +107,9 @@ export const ContextZDT = (
       <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
         <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
         <MenuColorPicker
-          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].shape_color : '#ffffff'}
           onColorChange={(new_color) => {
-            selected_zdt.map(d => d.color = new_color)
+            selected_zdt.map(d => d.shape_color = new_color)
             redrawAndRefresh()
           }} />
       </Box>

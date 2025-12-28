@@ -215,7 +215,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    *
    * @memberof Class_ApplicationDataOSP
    */
-  protected _reset(kwargs?: Type_JSON): void {
+  public reset(kwargs?: Type_JSON): void {
     if ((kwargs && kwargs['only_current_view']) && this.has_views && this._master_drawing_area != undefined && this._drawing_area.id != default_main_sankey_id) {
       this.drawing_area.purgeSelection()
       this.drawing_area.unDraw()
@@ -224,7 +224,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       delete this._master_drawing_area
       this._views = {}
       this._views_order = []
-      super._reset(kwargs)
+      super.reset(kwargs)
     }
   }
 
@@ -679,7 +679,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       new_drawing_area.attachNodeToCont(node, cont)
     })
 
-    cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
+    cont.fo_content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
     // Add new sankey to views
     this._views[new_drawing_area.id] = {

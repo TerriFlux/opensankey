@@ -43,7 +43,7 @@ import { MenuConfigurationFreeLabelsOSP } from './SankeyPlusMenuConfigurationLab
 import { CutName, default_style_id } from '../deps/OpenSankey/types/Utils'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { checked } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
-import { Type_customisable_container_attr } from '../deps/OpenSankey/Elements/ContainerAttributes'
+import { NODES_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 /**
  * Modal component for editing container styles
@@ -85,11 +85,11 @@ export const SankeyModalStyleContainer = ({ new_data }: { new_data: Class_Applic
                 onClick={() => {
                   // Si l'attribut de style n'est pas personnalisable, supprimer la valeur
                   if (value) {
-                    delete style_select[key as Type_customisable_container_attr]
+                    style_select.deleteAttribute(key as keyof typeof NODES_ATTRIBUTES_CONFIG)
                   }
 
                   // Mettre à jour la personnalisabilité de l'attribut de style
-                  style_select.customisable_attribute[key as Type_customisable_container_attr] = !value
+                  style_select.customisable_attribute[key as keyof typeof NODES_ATTRIBUTES_CONFIG] = !value
 
                   // Mettre à jour les composants associés
                   new_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()

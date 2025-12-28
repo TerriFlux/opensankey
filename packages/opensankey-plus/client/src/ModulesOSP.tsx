@@ -64,9 +64,6 @@ import {
   ModalSelectionIconsOSP
 } from './components/SankeyPlusCatalogIcon'
 import {
-  NodeForeignObjectOSP
-} from './components/SankeyPlusForeignObject'
-import {
   SankeyMenuConfigurationNodesTags
 } from './components/SankeyPlusMenuConfigurationNodesTags'
 import {
@@ -161,7 +158,6 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
 
   additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
-  additionalMenus.current.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
 
   additionalMenus.current.template_module_key.push('intermediary')
   additionalMenus.current.template_module_key.push('advanced')
@@ -258,7 +254,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   // Add new_menus
   const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
     app_data={new_data_plus}
-    menu_for_style={true}
+    menu_for_style={false}
   />
   const modules_dialogs_OSP = [
     <MenuDraggable
@@ -266,7 +262,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
       content={content_draggable_menu_zdt}
       title={t('Menu.LL')}
-      maxW='20%'
+      maxW='50%'
     />,
     <ContextZDT
       app_data={new_data_plus}
