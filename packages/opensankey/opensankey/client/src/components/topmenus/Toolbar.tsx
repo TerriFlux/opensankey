@@ -172,7 +172,7 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
           onChange={(evt) => {
             app_data.drawing_area.filter_label = +evt
             setCount(a => a + 1)
-            app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValue())
+            app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
           }}
         >
           <SliderTrack>
@@ -191,7 +191,7 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
               }
               app_data.drawing_area.filter_label = value
               setCount(a => a + 1)
-              app_data.drawing_area.sankey.links_list.forEach(link => link.drawValue())
+              app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
             }
 
             ref.current?.focus() //avoid closure of popover

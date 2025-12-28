@@ -4,6 +4,7 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { GetRandomInt, list_palette_color } from '../types/Utils'
+import { Class_NodeBase } from '../Elements/NodeBase'
 
 /**
  * Fonction générique pour appliquer des couleurs aléatoires à une liste d'éléments
@@ -12,7 +13,7 @@ import { GetRandomInt, list_palette_color } from '../types/Utils'
  */
 export const applyRandomColors = (
   app_data: Class_ApplicationData,
-  elements: (Class_LinkElement | Class_NodeElement)[]
+  elements: Class_LinkElement[] | Class_NodeBase[]
 ) => {
   const color_selected = list_palette_color[GetRandomInt(list_palette_color.length)]
   const size_color = elements.length

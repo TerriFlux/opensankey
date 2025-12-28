@@ -1,6 +1,7 @@
 import { MenuConfig } from './SankeyMenuContext'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
+import { Class_LinkAttribute, Class_ProtoElement, StorageType } from '../../Elements/Element'
+import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 export const LINK_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -184,9 +185,9 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     // Style actions
     resetAttr: () => {
-      const dict_old_value: { [x: string]: Class_LinkAttribute } = {}
+      const dict_old_value: { [x: string]: StorageType<typeof NODES_ATTRIBUTES_CONFIG> } = {}
       selected_links.forEach(l => {
-        dict_old_value[l.id] = l.display.attributes
+        dict_old_value[l.id] = l.attributes
       })
 
       const doReset = () => {
@@ -196,7 +197,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
       const undoReset = () => {
         selected_links.forEach(l => {
-          l.display.attributes = dict_old_value[l.id]
+          l.attributes = dict_old_value[l.id]
         })
         refreshThisAndToggleSaving()
       }
@@ -223,7 +224,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     toggleNameVisibility: () => {
       const dict_old_name: { [x: string]: Class_LinkAttribute } = {}
       selected_links.forEach(l => {
-        dict_old_name[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.display.attributes)), l.display.attributes)
+        dict_old_name[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.attributes)), l.attributes)
       })
 
       const context_link_name_visible = contextualised_link?.name_label_is_visible ?? false
@@ -237,7 +238,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
       const undoToggle = () => {
         selected_links.forEach(l => {
-          l.display.attributes = dict_old_name[l.id]
+          l.attributes = dict_old_name[l.id]
           l.draw()
         })
         refreshThisAndToggleSaving()
@@ -253,7 +254,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     toggleValueVisibility: () => {
       const dict_old_value: { [x: string]: Class_LinkAttribute } = {}
       selected_links.forEach(l => {
-        dict_old_value[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.display.attributes)), l.display.attributes)
+        dict_old_value[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.attributes)), l.attributes)
       })
 
       const context_link_value_visible = contextualised_link?.value_label_is_visible ?? false
@@ -267,7 +268,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
       const undoToggle = () => {
         selected_links.forEach(l => {
-          l.display.attributes = dict_old_value[l.id]
+          l.attributes = dict_old_value[l.id]
           l.draw()
         })
         refreshThisAndToggleSaving()

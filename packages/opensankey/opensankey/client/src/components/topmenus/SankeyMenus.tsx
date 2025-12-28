@@ -53,13 +53,17 @@ import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigu
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinkShape } from '../configmenus/SankeyMenuConfigurationLinksShape'
 import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
-import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
+import { MenuConfigurationNodeLabel } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure,} from '../dialogs/PersistenceProcessDialogConfigs'
+import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
+import { MenuShapeAttributes } from '../configmenus/MenuShapeBase'
+import { MenuUnit } from '../configmenus/MenuValueLabel'
+import { VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -301,6 +305,25 @@ export const SankeyMenu = (
         input_config={input_config}
         output_config={output_config}
       />
+      <LabelRichTextEditor
+        app_data={app_data}
+      />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_shape_attribute_editor'}
+        content={<MenuShapeAttributes app_data={app_data}/>}
+        title={'Fond de Label'}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_value_formatting_editor'}
+        content={<MenuUnit app_data={app_data} config={VALUE_LABEL_CONFIG}/>}
+        title={'Formattage des valeurs'}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
 
       {modal_support}
       {modal_resolution_png}
@@ -447,11 +470,11 @@ const ConfigContent = ({ app_data, additional_menus }:
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkLabel new_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinkLabel app_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
 
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeContext app_data={app_data} menu_for_style={false} />
+        <MenuConfigurationNodeLabel app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.context

@@ -27,20 +27,18 @@
 
 import React, { useState } from 'react'
 import { Box, Button } from '@chakra-ui/react'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import {
   ElementAttrSetterNumberInput2Cols, ElementAttrSetterTextInput2Cols,
   MenuSectionCheckbox, OSTooltip, updateElements, ValueKey
 } from './MenuCommon'
 import { SankeyMenuLabelComponent } from './MenuLabel'
-import { MenuUnit } from './MenuUnit'
-import { SankeyMenuValueLabelComponent } from './MenuValueLabel'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { NAME_LABEL_CONFIG, NODES_ATTRIBUTES_CONFIG, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 
-export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
+export const MenuConfigurationNodeLabel = ({ app_data, menu_for_style }: {
   app_data: Class_ApplicationData,
   menu_for_style: boolean
 }) => {
@@ -57,8 +55,8 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
   // Elements on which menu modification applies
   const elements = menu_for_style ? [sankey.node_styles_dict[ref_selected_style_node.current]] : selected_nodes
   const element_ref = elements[0]
-  const name_label_is_visible = (element_ref?.name_label_is_visible ?? NODES_ATTRIBUTES_CONFIG.name_label_is_visible.default)
-  const value_label_is_visible = (element_ref?.value_label_is_visible ?? NODES_ATTRIBUTES_CONFIG.value_label_is_visible.default)
+  const name_label_is_visible = (element_ref?.name_label_is_visible ?? NAME_LABEL_CONFIG.is_visible.default)
+  const value_label_is_visible = (element_ref?.value_label_is_visible ?? VALUE_LABEL_CONFIG.is_visible.default)
 
   // Boolean used to force this component to reload
   const [, setCount] = useState(0)
@@ -94,65 +92,67 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
     >
       {
         name_label_is_visible ? <><SankeyMenuLabelComponent
-          new_data={app_data}
+          app_data={app_data}
+          attributePath='Noeud.labels'
           elements={elements}
+          config={NAME_LABEL_CONFIG}
           refreshParentComponent={refreshThisAndUpdateRelatedComponents}
           prefix={'name_'} />
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={'Noeud.labels'}
-          attributeKey={'name_label_box_width' as ValueKey}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          unit_text='pixels'
-        />
-        {/* Position horizontal du label par rapport à l'ancre*/}
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={'Noeud.labels'}
-          attributeKey={'name_label_horiz_shift' as ValueKey}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          unit_text='pixels'
-        />
-        {/* Position vertical du label par rapport à l'ancre*/}
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={'Noeud.labels'}
-          attributeKey={'name_label_vert_shift' as ValueKey}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-          unit_text='pixels'
-        />
-        <ElementAttrSetterTextInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={'Noeud.labels'}
-          attributeKey={'name_label_separator' as ValueKey}
-          refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        />
-        {/* Masquer une partie des noms des noeuds */}
-        <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
-          <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
-            <Box layerStyle='options_2cols'>
-              <Button variant={element_ref?.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-                onClick={() => {
-                  updateElements(app_data, elements, 'name_label_separator_part' as ValueKey, 'before', refreshThisAndUpdateRelatedComponents)
-                }}
-              >
-                {t('Menu.before')}
-              </Button>
-              <Button variant={element_ref?.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                onClick={() => {
-                  updateElements(app_data, elements, 'name_label_separator_part' as ValueKey, 'after', refreshThisAndUpdateRelatedComponents)
-                }}
-              >
-                {t('Menu.after')}
-              </Button>
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={'Noeud.labels'}
+            attributeKey={'name_label_box_width' as ValueKey}
+            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+            unit_text='px'
+          />
+          {/* Position horizontal du label par rapport à l'ancre*/}
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={'Noeud.labels'}
+            attributeKey={'name_label_horiz_shift' as ValueKey}
+            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+            unit_text='px'
+          />
+          {/* Position vertical du label par rapport à l'ancre*/}
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={'Noeud.labels'}
+            attributeKey={'name_label_vert_shift' as ValueKey}
+            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+            unit_text='px'
+          />
+          <ElementAttrSetterTextInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={'Noeud.labels'}
+            attributeKey={'name_label_separator' as ValueKey}
+            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+          />
+          {/* Masquer une partie des noms des noeuds */}
+          <OSTooltip label={t('Menu.tooltips.node_label_sep_pos')}>
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.node_label_sep_pos')}</Box>
+              <Box layerStyle='options_2cols'>
+                <Button variant={element_ref?.name_label_separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                  onClick={() => {
+                    updateElements(app_data, elements, 'name_label_separator_part' as ValueKey, 'before', refreshThisAndUpdateRelatedComponents)
+                  }}
+                >
+                  {t('Menu.before')}
+                </Button>
+                <Button variant={element_ref?.name_label_separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                  onClick={() => {
+                    updateElements(app_data, elements, 'name_label_separator_part' as ValueKey, 'after', refreshThisAndUpdateRelatedComponents)
+                  }}
+                >
+                  {t('Menu.after')}
+                </Button>
+              </Box>
             </Box>
-          </Box>
-        </OSTooltip>
+          </OSTooltip>
         </> : <></>
       }
     </MenuSectionCheckbox>
@@ -166,14 +166,11 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
   >
     {value_label_is_visible ? <>
       <SankeyMenuLabelComponent
-        new_data={app_data}
+        app_data={app_data}
         elements={elements}
+        attributePath='Noeud.labels'
         refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        prefix={'value_'} />
-      <SankeyMenuValueLabelComponent
-        new_data={app_data}
-        elements={elements}
-        refreshParentComponent={refreshThisAndUpdateRelatedComponents}
+        config={VALUE_LABEL_CONFIG}
         prefix={'value_'} />
       {/* Position horizontal du label par rapport à l'ancre*/}
       <ElementAttrSetterNumberInput2Cols
@@ -182,7 +179,7 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
         attributePath={'Noeud.labels'}
         attributeKey={'value_label_horiz_shift' as ValueKey}
         refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        unit_text='pixels'
+        unit_text='px'
       />
       {/* Position vertical du label par rapport à l'ancre*/}
       <ElementAttrSetterNumberInput2Cols
@@ -191,7 +188,7 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
         attributePath={'Noeud.labels'}
         attributeKey={'value_label_vert_shift' as ValueKey}
         refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        unit_text='pixels'
+        unit_text='px'
       />
 
     </> : <></>}
@@ -208,9 +205,6 @@ export const MenuConfigurationNodeContext = ({ app_data, menu_for_style }: {
     {elements.length > 0 ? <>
       {content_label}
       {content_label_value}
-      {<MenuUnit
-        new_data={app_data}
-        elements={elements}
-        refreshParentComponent={refreshThisAndUpdateRelatedComponents} />} </> : <></>}
+        </> : <></>}
   </Box>
 }

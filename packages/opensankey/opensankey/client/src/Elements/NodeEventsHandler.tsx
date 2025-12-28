@@ -28,8 +28,11 @@ import * as d3 from 'd3'
 
 // Local modules
 import { Class_NodeElement } from './Node'
-import { ClassTemplate_GhostLinkElement } from './LinkGhostElement'
 import { TooltipEventManager } from './TooltipsConfig'
+import { Class_NodeBase } from './NodeBase'
+import { Class_LinkElement } from './Link'
+import { Class_ProtoElement } from './Element'
+import { NODES_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
 /**
  * Class that handles all event operations for NodeElement
@@ -106,11 +109,11 @@ export class NodeEventsHandler {
     if (nodes_selected.includes(this._node)) {
       // Memorize for undo
       nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+        dict_old_pos[n.id] = [n.position_x, n.position_y]
       })
     } else {
       // Undo function
-      dict_old_pos[this._node.id] = [this._node.display.position.x, this._node.display.position.y]
+      dict_old_pos[this._node.id] = [this._node.position_x, this._node.position_y]
     }
 
     // ✅ Utiliser les nouvelles méthodes d'accès
@@ -176,7 +179,7 @@ export class NodeEventsHandler {
     // If we moved 'this' node then we save nodes dragged previous pos in undo & current pos in redo
     // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
     if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
-      function undo(_: Class_NodeElement) {
+      function undo(_: Class_ProtoElement<typeof NODES_ATTRIBUTES_CONFIG>) {
         Object.keys(dict_old_pos).forEach(k => {
           const n = _.drawing_area.sankey.nodes_dict[k]
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
@@ -256,7 +259,7 @@ export class NodeEventsHandler {
       this._node.drawing_area.closeAllMenus()
 
       // Ref newly created link this var to be used in other mouse event
-      this._node.drawing_area.ghost_link = new ClassTemplate_GhostLinkElement(
+      this._node.drawing_area.ghost_link = new Class_LinkElement(
         'ghost_link',
         this._node,
         target,
@@ -386,7 +389,7 @@ export class NodeEventsHandler {
       const dict_old_pos: { [x: string]: [number, number] } = {}
       // Memorize for redo
       nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+        dict_old_pos[n.id] = [n.position_x, n.position_y]
       })
       // Redo function
       function redo() {
@@ -398,10 +401,10 @@ export class NodeEventsHandler {
       this._node.saveRedo(redo)
     } else {
       // Memorize for redo
-      const old_x = this._node.display.position.x
-      const old_y = this._node.display.position.y
+      const old_x = this._node.position_x
+      const old_y = this._node.position_y
       // Redo function
-      function redo(_: Class_NodeElement) {
+      function redo(_: Class_ProtoElement<typeof NODES_ATTRIBUTES_CONFIG>) {
         _.setPosXY(old_x, old_y)
         drawing_area.checkAndUpdateAreaSize()
       }

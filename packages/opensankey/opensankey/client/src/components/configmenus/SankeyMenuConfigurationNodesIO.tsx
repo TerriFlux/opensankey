@@ -39,8 +39,6 @@ import {
   Tr,
 } from '@chakra-ui/react'
 
-import type { Type_Side } from '../../Elements/LinkAttributes'
-
 /*************************************************************************************************/
 
 import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
@@ -49,6 +47,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from './MenuCommon'
+import { Type_Side } from '../../Elements/ElementsAttributesConfig'
 
 /*************************************************************************************************/
 
