@@ -23,40 +23,47 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React from 'react'
-import {
-  Box,
-  Button, Select, InputGroup
-} from '@chakra-ui/react'
+import React, { useState } from 'react'
+import { Box, Checkbox, Button, Select } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkStyle } from '../../Elements/ElementStyle'
+import { Class_LinkStyle,Class_NodeStyle } from '../../Elements/Element'
 import { Class_NodeElement } from '../../Elements/Node'
-import { Class_NodeStyle } from '../../Elements/ElementStyle'
 import { default_style_id, font_families } from '../../types/Utils'
-import { CheckboxWithColorPicker, updateElements, ValueElementsType, ValueKey, WrapperBoxSubSectionMenu } from './MenuCommon'
+import { updateElements, ValueKey } from './MenuCommon'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesShape'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { MenuColorPicker } from './MenuColorPicker'
+import { Class_NodeBase } from '../../Elements/NodeBase'
+import { getLabelValues, LabelConfigReturn, NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { Class_ElementStyle } from '../../Elements/Element'
 
 export const SankeyMenuLabelComponent = ({
-  new_data, elements, refreshParentComponent, prefix
+  app_data,
+  attributePath,
+  elements,
+  refreshParentComponent,
+  prefix,
+  config
 }: {
-  new_data: Class_ApplicationData
-  elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeElement[] | Class_NodeStyle[],
+  app_data: Class_ApplicationData
+  attributePath: string
+  elements: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeBase[] | Class_NodeStyle[],
   refreshParentComponent: () => void,
-  prefix: 'name_' | 'value_'
+  prefix: 'name_' | 'value_',
+  config: LabelConfigReturn
 }) => {
-  const { ref_selected_style_node, ref_selected_style_link } = new_data.menu_configuration
-  const { node_styles_dict, link_styles_dict } = new_data.drawing_area.sankey
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
+  const [rich_text, setRichText] = useState(false)
+  const { ref_selected_style_node, ref_selected_style_link } = app_data.menu_configuration
+  const { node_styles_dict, link_styles_dict } = app_data.drawing_area.sankey
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle || elements[0] instanceof Class_ElementStyle)
 
 
-  const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
-  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
+  const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+  const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_ElementStyle || elements[0] instanceof Class_NodeElement)
+  const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
 
   const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
   const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
@@ -66,7 +73,7 @@ export const SankeyMenuLabelComponent = ({
     correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
     correct_dict_style_to_use[default_style_id].customisable_attribute
 
-  const check_indeterminate = (curr: Class_LinkElement | Class_NodeElement) => {
+  const check_indeterminate = (curr: Class_LinkElement | Class_NodeBase) => {
     const ref_element = elements[0]
     if (curr instanceof Class_LinkElement && ref_element instanceof Class_LinkElement) {
       return (ref_element.isEqual(curr))
@@ -77,136 +84,195 @@ export const SankeyMenuLabelComponent = ({
     }
   }
   const is_indeterminate = !(elements as (Class_NodeElement | Class_LinkElement)[]).every(check_indeterminate)
-  // Declare var used to set default attribute value in inputs 
-  let label_horiz = NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
-  let label_vert = NODES_ATTRIBUTES_CONFIG.value_label_vert.default
-  let label_font_size = NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
-  let label_color = NODES_ATTRIBUTES_CONFIG.value_label_color.default
-  let label_bold = NODES_ATTRIBUTES_CONFIG.value_label_bold.default
-  let label_italic = NODES_ATTRIBUTES_CONFIG.value_label_italic.default
-  let label_uppercase = NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
-  let label_font_family = NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
-  let label_background = NODES_ATTRIBUTES_CONFIG.value_label_background.default
-  let label_background_shape = NODES_ATTRIBUTES_CONFIG.value_label_background_shape.default
-  let label_background_opacity = NODES_ATTRIBUTES_CONFIG.value_label_background_opacity.default
+
+  let label_horiz = config.horiz.default
+  let label_vert = config.vert.default
+  let label_font_size = config.font_size.default
+  let label_color = config.color.default
+  let label_bold = config.bold.default
+  let label_italic = config.italic.default
+  let label_uppercase = config.uppercase.default
+  let label_font_family = config.font_family.default
+  let label_vertical = config.vertical_text.default
+
+  let label_background = config.background_visible.default
+  let label_background_shape = config.background_type.default
+  let label_background_opacity = config.background_opacity.default
+
+
   // If elements selected set displayed value with first selected element
   if (elements.length > 0) {
-    const element_ref = elements[0]
-    // Since element_ref can be LinkAttributes | Class_LinkElement | Class_NodeElement | Class_NodeStyle
-    // we use a function to use correct decorator 'getter' to get attribute of either name label or value label depending on what we used in prefix
-    label_horiz = Reflect.get(element_ref, prefix + 'label_horiz') ?? NODES_ATTRIBUTES_CONFIG.value_label_horiz.default
-    label_vert = Reflect.get(element_ref, prefix + 'label_vert') ?? NODES_ATTRIBUTES_CONFIG.value_label_vert.default
-    label_font_size = Reflect.get(element_ref, prefix + 'label_font_size') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_size.default
-    label_color = Reflect.get(element_ref, prefix + 'label_color') ?? NODES_ATTRIBUTES_CONFIG.value_label_color.default
-    label_font_family = Reflect.get(element_ref, prefix + 'label_font_family') ?? NODES_ATTRIBUTES_CONFIG.value_label_font_family.default
-    label_bold = Reflect.get(element_ref, prefix + 'label_bold') ?? NODES_ATTRIBUTES_CONFIG.value_label_bold.default
-    label_italic = Reflect.get(element_ref, prefix + 'label_italic') ?? NODES_ATTRIBUTES_CONFIG.value_label_italic.default
-    label_uppercase = Reflect.get(element_ref, prefix + 'label_uppercase') ?? NODES_ATTRIBUTES_CONFIG.value_label_uppercase.default
-    label_background = Reflect.get(element_ref, prefix + 'label_background') ?? NODES_ATTRIBUTES_CONFIG.value_label_background.default
-    label_background_shape = Reflect.get(element_ref, prefix + 'label_background_shape') ?? NODES_ATTRIBUTES_CONFIG.value_label_background_shape.default
-    label_background_opacity = Reflect.get(element_ref, prefix + 'label_background_opacity') ?? NODES_ATTRIBUTES_CONFIG.value_label_background_opacity.default
+    const labelValues = elements.length > 0
+      ? getLabelValues(elements[0], prefix, config)
+      : Object.fromEntries(
+        Object.entries(config).map(([key, value]) => [key, value.default])
+      ) as { [K in keyof typeof config]: ReturnType<typeof config[K]['type']> }
+    label_horiz = labelValues.horiz
+    label_vert = labelValues.vert
+    label_font_size = labelValues.font_size
+    label_color = labelValues.color
+    label_font_family = labelValues.font_family
+    label_bold = labelValues.bold
+    label_italic = labelValues.italic
+    label_uppercase = labelValues.uppercase
+
+    label_background = labelValues.background_visible
+    label_background_shape = labelValues.background_type
+    label_background_opacity = labelValues.background_opacity
+    label_vertical = labelValues.vertical_text
   }
 
   const is_label_font_size_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_font_size') == Reflect.get(elements[0], prefix + 'label_font_size'))
   const is_label_background_opacity_indetermined = !elements.every(el => Reflect.get(el, prefix + 'label_background_opacity') == Reflect.get(elements[0], prefix + 'label_background_opacity'))
+  const is_label_vertical_indetermined = !elements.every(el => Reflect.get(el, prefix + 'vertical_text') == Reflect.get(elements[0], prefix + 'vertical_text'))
+
   return <Box
     layerStyle='menuconfigpanel_grid'
   >
     <Box
       layerStyle='menuconfigpanel_grid'
     >
-      {/* Police et taille du texte de label */}
-      <Box layerStyle='options_2cols'>
-        <Select
-          isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_font_family')}
-          variant='menuconfigpanel_option_select'
-          value={label_font_family}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            updateElements(new_data, elements, prefix + 'label_font_family' as ValueKey, evt.target.value, refreshParentComponent)
-          }}
-        >
-          {font_families
-            .map((d) => {
-              return <option
-                style={{ fontFamily: d }}
-                key={'ff-' + d}
-                value={d}
-              >
-                {d}
-              </option>
-            })}
-        </Select>
-
-        <ConfigMenuNumberInput
-          disabled={!Reflect.get(disable_attr_props, prefix + 'label_font_size')}
-          t={new_data.t}
-          default_value={label_font_size}
-          menu_for_style={menu_for_style}
-          minimum_value={11}
-          stepper={true}
-          unit_text='pixels'
-          function_on_blur={(value) => {
-            updateElements(new_data, elements, prefix + 'label_font_size' as ValueKey, value ?? undefined, refreshParentComponent)
-          }}
-          multiValue={is_label_font_size_indetermined} />
-      </Box>
-
-      {/* Text style et position horizontale et vertical */}
-      <Box layerStyle='options_3cols'>
-        <Box layerStyle='options_3cols'>
-          {/* Gras */}
-          <Button
-            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_bold')}
-            variant={label_bold ?
-              'menuconfigpanel_option_button_activated_left' :
-              'menuconfigpanel_option_button_left'}
-            paddingStart='0'
-            paddingEnd='0'
-            minWidth='0'
+      <Box layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='options_2cols'>
+          <Button variant={rich_text ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
             onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_bold' as ValueKey, !label_bold, refreshParentComponent)
+              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
+              app_data.menu_configuration.r_editor_content_set_elements.current(base_elements)
+              base_elements.forEach(n => {
+                n.has_fo = true
+                n.draw()
+              })
+              setRichText(true)
             }}
           >
-            {new_data.icon_library.icon_text_bold}
+            {'Rich text'}
           </Button>
-
-          {/* en majuscule */}
-          <Button
-            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_uppercase')}
-            variant={label_uppercase ?
-              'menuconfigpanel_option_button_activated_center' :
-              'menuconfigpanel_option_button_center'}
-            paddingStart='0'
-            paddingEnd='0'
-            minWidth='0'
+          <Button variant={!rich_text ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
             onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_uppercase' as ValueKey, !label_uppercase, refreshParentComponent)
+              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
+              base_elements.forEach(el => {
+                el.has_fo = false
+                el.draw()
+              })
+              setRichText(false)
             }}
           >
-            {svg_label_upper}
-          </Button>
-
-          {/* En italique */}
-          <Button
-            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_italic')}
-            variant={label_italic ?
-              'menuconfigpanel_option_button_activated_right' :
-              'menuconfigpanel_option_button_right'}
-            paddingStart='0'
-            paddingEnd='0'
-            minWidth='0'
-            onClick={() => {
-              updateElements(new_data, elements, prefix + 'label_italic' as ValueKey, !label_italic, refreshParentComponent)
-            }}
-          >
-            {new_data.icon_library.icon_text_italic}
+            {'Simple text'}
           </Button>
         </Box>
+      </Box>
+      {rich_text ? <></> : <>
+        <Box layerStyle='menuconfigpanel_row_2cols' >
+          <Box layerStyle='options_3cols'>
+            {/* Gras */}
+            <Button
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_bold')}
+              variant={label_bold ?
+                'menuconfigpanel_option_button_activated_left' :
+                'menuconfigpanel_option_button_left'}
+              paddingStart='0'
+              paddingEnd='0'
+              minWidth='0'
+              onClick={() => {
+                updateElements(app_data, elements, prefix + 'label_bold' as ValueKey, !label_bold, refreshParentComponent)
+              }}
+            >
+              {app_data.icon_library.icon_text_bold}
+            </Button>
 
+            {/* en majuscule */}
+            <Button
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_uppercase')}
+              variant={label_uppercase ?
+                'menuconfigpanel_option_button_activated_center' :
+                'menuconfigpanel_option_button_center'}
+              paddingStart='0'
+              paddingEnd='0'
+              minWidth='0'
+              onClick={() => {
+                updateElements(app_data, elements, prefix + 'label_uppercase' as ValueKey, !label_uppercase, refreshParentComponent)
+              }}
+            >
+              {svg_label_upper}
+            </Button>
+
+            {/* En italique */}
+            <Button
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_italic')}
+              variant={label_italic ?
+                'menuconfigpanel_option_button_activated_right' :
+                'menuconfigpanel_option_button_right'}
+              paddingStart='0'
+              paddingEnd='0'
+              minWidth='0'
+              onClick={() => {
+                updateElements(app_data, elements, prefix + 'label_italic' as ValueKey, !label_italic, refreshParentComponent)
+              }}
+            >
+              {app_data.icon_library.icon_text_italic}
+            </Button>
+          </Box>
+          {/* Police et taille du texte de label */}
+          <Box layerStyle='option_with_activation'>
+            <Select
+              isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_font_family')}
+              variant='menuconfigpanel_option_select'
+              value={label_font_family}
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                updateElements(app_data, elements, prefix + 'label_font_family' as ValueKey, evt.target.value, refreshParentComponent)
+              }}
+            >
+              {font_families
+                .map((d) => {
+                  return <option
+                    style={{ fontFamily: d }}
+                    key={'ff-' + d}
+                    value={d}
+                  >
+                    {d}
+                  </option>
+                })}
+            </Select>
+
+            <ConfigMenuNumberInput
+              disabled={!Reflect.get(disable_attr_props, prefix + 'label_font_size')}
+              t={app_data.t}
+              default_value={label_font_size}
+              menu_for_style={menu_for_style}
+              minimum_value={11}
+              stepper={true}
+              unit_text='px'
+              function_on_blur={(value) => {
+                updateElements(app_data, elements, prefix + 'label_font_size' as ValueKey, value ?? undefined, refreshParentComponent)
+              }}
+              multiValue={is_label_font_size_indetermined} />
+          </Box>
+        </Box>
+        {/* Couleur des Labels  */}
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Flux.apparence.shape_color')}
+            {!menu_for_style ? <TooltipElementOverloaded
+              elements={base_elements}
+              k={prefix + 'label_color' as ValueKey}
+              t={t}
+            /> : <></>}
+          </Box>
+          <MenuColorPicker
+            isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_color')}
+            initialColor={label_color}
+            onColorChange={(new_color) => {
+              updateElements(app_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent)
+
+            }} />
+        </Box>
+      </>}
+      {/* Text style et position horizontale et vertical */}
+      <Box layerStyle='options_2cols'>
         {/* Positionnement lateral des label */}
         <Box layerStyle='options_3cols'>
           {/* Vers le début  */}
-          <OSTooltip label={t('Flux.labels.tooltips.deb')}>
+          <OSTooltip label={t(attributePath + '.tooltips.deb')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
@@ -216,14 +282,14 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_left' :
                 'menuconfigpanel_option_button_left'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'left', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_horiz' as ValueKey, 'left', refreshParentComponent)
               }}>
-              {new_data.icon_library.icon_text_align_left}
+              {app_data.icon_library.icon_text_align_left}
             </Button>
           </OSTooltip>
 
           {/* Vers le milieu  */}
-          <OSTooltip label={t('Flux.labels.tooltips.milieu_h')}>
+          <OSTooltip label={t(attributePath + '.tooltips.milieu_h')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
@@ -233,14 +299,14 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_center' :
                 'menuconfigpanel_option_button_center'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'middle', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_horiz' as ValueKey, 'middle', refreshParentComponent)
               }}>
-              {new_data.icon_library.icon_text_align_center}
+              {app_data.icon_library.icon_text_align_center}
             </Button>
           </OSTooltip>
 
           {/* Vers la fin du flux  */}
-          <OSTooltip label={t('Flux.labels.tooltips.fin')}>
+          <OSTooltip label={t(attributePath + '.tooltips.fin')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_horiz')}
               paddingStart='0'
@@ -250,9 +316,9 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_right' :
                 'menuconfigpanel_option_button_right'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_horiz' as ValueKey, 'right', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_horiz' as ValueKey, 'right', refreshParentComponent)
               }}>
-              {new_data.icon_library.icon_text_align_right}
+              {app_data.icon_library.icon_text_align_right}
             </Button>
           </OSTooltip>
         </Box>
@@ -260,7 +326,7 @@ export const SankeyMenuLabelComponent = ({
         {/* Positionnement vertical des label  */}
         <Box layerStyle='options_3cols'>
           {/* Positionnement au dessous  */}
-          <OSTooltip label={t('Flux.labels.tooltips.dessous')}>
+          <OSTooltip label={t(attributePath + '.tooltips.dessous')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
@@ -273,15 +339,15 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_left' :
                 'menuconfigpanel_option_button_left'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'bottom', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_vert' as ValueKey, 'bottom', refreshParentComponent)
               }}
             >
-              {new_data.icon_library.icon_text_vert_pos_bottom}
+              {app_data.icon_library.icon_text_vert_pos_bottom}
             </Button>
           </OSTooltip>
 
           {/* Positionnement au milieu  */}
-          <OSTooltip label={t('Flux.labels.tooltips.milieu_v')}>
+          <OSTooltip label={t(attributePath + '.tooltips.milieu_v')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
@@ -295,15 +361,15 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_center' :
                 'menuconfigpanel_option_button_center'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'middle', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_vert' as ValueKey, 'middle', refreshParentComponent)
               }}
             >
-              {new_data.icon_library.icon_text_vert_pos_center}
+              {app_data.icon_library.icon_text_vert_pos_center}
             </Button>
           </OSTooltip>
 
           {/* Positionnement au dessus  */}
-          <OSTooltip label={t('Flux.labels.tooltips.dessus')}>
+          <OSTooltip label={t(attributePath + '.tooltips.dessus')}>
             <Button
               isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_vert')}
               paddingStart='0'
@@ -316,122 +382,34 @@ export const SankeyMenuLabelComponent = ({
                 'menuconfigpanel_option_button_activated_right' :
                 'menuconfigpanel_option_button_right'}
               onClick={() => {
-                updateElements(new_data, elements, prefix + 'label_vert' as ValueKey, 'top', refreshParentComponent)
+                updateElements(app_data, elements, prefix + 'label_vert' as ValueKey, 'top', refreshParentComponent)
               }}>
-              {new_data.icon_library.icon_text_vert_pos_top}
+              {app_data.icon_library.icon_text_vert_pos_top}
             </Button>
           </OSTooltip>
         </Box>
       </Box>
 
-      {/* Couleur des Labels  */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Flux.apparence.shape_color')}
-          {!menu_for_style ? <TooltipElementOverloaded
-            elements={elements as (Class_NodeElement | Class_LinkElement)[]}
-            k={prefix + 'label_color' as ValueKey}
-            t={t}
-          /> : <></>}
-        </Box>
-        <MenuColorPicker
-          isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_color')}
-          initialColor={label_color}
-          onColorChange={(new_color) => {
-            updateElements(new_data, elements, prefix + 'label_color' as ValueKey, new_color, refreshParentComponent)
+      {/* Texte vertical */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        iconColor={is_label_vertical_indetermined ? '#78C2AD' : 'white'}
+        isIndeterminate={is_label_vertical_indetermined}
+        isChecked={label_vertical}
+        onChange={(evt) => {
+          updateElements(app_data, elements, prefix + 'label_vertical_text' as ValueKey, evt.target.checked, refreshParentComponent)
+        }}
+      >
+        <OSTooltip label={t('Noeud.labels.tooltips.name_label_vertical_text') || 'Orienter le texte verticalement'}>
+          {t('Noeud.labels.name_label_vertical_text') || 'Texte vertical'}
+          <TooltipElementOverloaded elements={base_elements} t={t} k={prefix + 'label_vertical_text' as ValueKey} />
+        </OSTooltip>
+      </Checkbox>
 
-          }} />
-      </Box>
-      <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.labels.'+prefix+'label_background')}>
-        <>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <CheckboxWithColorPicker
-              app_data={new_data}
-              elements={elements}
-              attributePath={'Noeud.labels'}
-              checkboxAttributeKey={prefix + 'label_background' as ValueKey}
-              inputAttributeKey={prefix + 'label_background_color' as ValueKey}
-              refreshParentComponent={refreshParentComponent} />
-            {/* Forme du noeud */}
-            <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
-              <Box layerStyle='options_3cols' >
-                <Button
-                  isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
-                  value="ellipse"
-                  variant={
-                    label_background_shape === 'ellipse' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    updateElements(new_data, elements, prefix + 'label_background_shape' as ValueKey, 'ellipse', refreshParentComponent)
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill='#78C2AD'
-                    stroke='currentColor'
-                    viewBox='0 0 17 17'
-                    width="1rem"
-                    height="1rem"
-                  >
-                    <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
-                  </svg>
-                </Button>
 
-                <Button
-                  isDisabled={!Reflect.get(disable_attr_props, prefix + 'label_background_shape')}
-                  variant={
-                    label_background_shape === 'rect' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    updateElements(new_data, elements, prefix + 'label_background_' + 'shape' as ValueKey, 'rect', refreshParentComponent)
-                  }}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill='#78C2AD'
-                    stroke='currentColor'
-                    viewBox='0 0 17 17'
-                    width="1rem"
-                    height="1rem"
-                  >
-                    <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
-                  </svg>
-                  {/* {t('Noeud.apparence.Rectangle')} */}
-                </Button>
-              </Box>
-            </OSTooltip>
-          </Box>
-          {label_background ?
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Flux.apparence.shape_opacity')}
-                {!menu_for_style ? <TooltipElementOverloaded
-                  elements={elements as (Class_NodeElement | Class_LinkElement)[]}
-                  t={t}
-                  k={'shape_opacity'} /> : <></>}
-              </Box>
-              <InputGroup variant='menuconfigpanel_option_input' >
-                <OSTooltip label={t('Flux.apparence.tooltips.shape_opacity')}>
-                  <ConfigMenuNumberInput
-                    disabled={!Reflect.get(disable_attr_props, prefix + 'label_background_opacity')}
-                    t={new_data.t}
-                    default_value={label_background_opacity}
-                    menu_for_style={menu_for_style}
-                    minimum_value={0}
-                    maximum_value={1}
-                    step={0.1}
-                    stepper={true}
-                    function_on_blur={(v: number | null) => { updateElements(new_data, elements, prefix + 'label_background_opacity' as ValueKey, v as ValueElementsType, refreshParentComponent) }}
-                    multiValue={is_label_background_opacity_indetermined}
-                  />
-
-                </OSTooltip>
-              </InputGroup>
-            </Box> : <></>}
-        </></WrapperBoxSubSectionMenu>
     </Box>
 
-  </Box>
+  </Box >
 }
+
+

@@ -1,160 +1,512 @@
-// ==================================================================================================
-// The MIT License (MIT)
-// ==================================================================================================
-// Copyright (c) 2025 TerriFlux
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-// ==================================================================================================
-// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
-// ==================================================================================================
+// NodeDrawLabelBase.ts - Classe de base abstraite pour les labels de nodes
 
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
-
-// Local modules
+import { Class_NodeBase } from './NodeBase'
+import { label_margin, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
-import { Type_TextHPos, Type_TextVPos } from './NodeAttributes'
-import { label_margin, default_selected_stroke_width } from './Node'
+import { Class_LinkElement, format_value } from './Link'
+import { BASE_SHAPE_CONFIG, getShapeValues, ShapePrefix, Type_TextHPos, Type_TextVPos } from './ElementsAttributesConfig'
+
+type LabelPrefix = 'name_label' | 'value_label'
+type DisplayKey = 'label' // Les deux utilisent position_x_label et position_y_label
+
+// LabelHelpers.ts
 
 /**
- * Class that handles all drawing and rendering operations for NodeElement name labels
+ * Dessine le background d'un label (name ou value) avec support complet de BASE_SHAPE_CONFIG
+ * Gère rect et ellipse avec bordures configurables
  */
-export class NodeDrawNameLabel {
+export function drawLabelBackground(
+  group: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined,
+  element: Class_NodeBase | Class_LinkElement,
+  prefix: 'name_label' | 'value_label',
+  textSelector: string,
+  elementId: string
+) {
+  if (!group) return
+  // Nettoyer le background précédent
+  group.select(`.${prefix}_background`).remove()
+  
+  // Récupérer les valeurs du background via getShapeValues
+  const bgPrefix = `${prefix}_background` as ShapePrefix
+  const bgValues = getShapeValues(element, bgPrefix, BASE_SHAPE_CONFIG)
+  
+  // Ne rien faire si background non visible
+  if (!bgValues.visible) return
+  
+  // Récupérer la bounding box du texte
+  const bbox = (group?.select(textSelector).node() as SVGGElement)?.getBBox() 
+    ?? { x: 0, y: 0, height: 0, width: 0 }
+  
+  // Padding (TODO: rendre configurable via un attribut ?)
+  const paddingH = 5  // Horizontal padding
+  const paddingV = 2  // Vertical padding (peut être différent)
+  
+  const width = bbox.width + (paddingH * 2)
+  const height = bbox.height + (paddingV * 2)
+  
+  // Créer l'élément (rect ou ellipse)
+  const bgElement = group.append(bgValues.type === 'ellipse' ? 'ellipse' : 'rect')
+    .classed(`${prefix}_bg`, true)
+    .classed(prefix, true)
+    .classed(`${prefix}_background`, true)
+    .attr('id', `${prefix}_background_${elementId}`)
+  
+  // Appliquer les styles communs
+  bgElement
+    .attr('fill', bgValues.color_visible ? bgValues.color : 'none')
+    .attr('fill-opacity', bgValues.opacity)
+    .attr('stroke', bgValues.border_visible ? bgValues.border_color : 'none')
+    .attr('stroke-width', bgValues.border_thickness)
+    .attr('stroke-dasharray', bgValues.border_dashed ? '5,3' : '')
+  
+  // Positionner selon le type
+  if (bgValues.type === 'ellipse') {
+    bgElement
+      .attr('cx', bbox.x + width / 2)
+      .attr('cy', bbox.y + height / 2)
+      .attr('rx', width / 2)
+      .attr('ry', height / 2)
+  } else {
+    bgElement
+      .attr('x', bbox.x - paddingH)
+      .attr('y', bbox.y - paddingV)
+      .attr('width', width)
+      .attr('height', height)
+      .attr('rx', bgValues.border_radius)  // ✅ Utilise border_radius au lieu de 4 hardcodé
+  }
+  
+  // Mettre en arrière-plan
+  group?.select(`.${prefix}_background`).lower()
+}
 
-  private _node: Class_NodeElement
+/**
+ * Classe de base pour les labels de nodes (name et value)
+ * Utilise le préfixe pour accéder dynamiquement aux propriétés
+ */
+export abstract class NodeDrawLabelBase {
+  protected _node: Class_NodeBase
+  protected readonly prefix: LabelPrefix
 
-  constructor(node: Class_NodeElement) {
+  constructor(node: Class_NodeBase, prefix: LabelPrefix) {
     this._node = node
+    this.prefix = prefix
+  }
+
+  // =================== MÉTHODES ABSTRAITES ===================
+  
+  protected abstract getLabelText(): string | number
+  protected abstract shouldDrawLabel(): boolean
+  protected abstract drawSpecificLabel(): void
+
+  // =================== ACCÈS AUX PROPRIÉTÉS VIA PRÉFIXE ===================
+
+  protected getFontSize(): number {
+    return (this._node as any)[`${this.prefix}_font_size`]
+  }
+
+  protected getIsVisible(): boolean {
+    return (this._node as any)[`${this.prefix}_is_visible`]
+  }
+
+  protected getColor(): string {
+    return (this._node as any)[`${this.prefix}_color`]
+  }
+
+  protected getBold(): boolean {
+    return (this._node as any)[`${this.prefix}_bold`]
+  }
+
+  protected getItalic(): boolean {
+    return (this._node as any)[`${this.prefix}_italic`]
+  }
+
+  protected getUppercase(): boolean {
+    return (this._node as any)[`${this.prefix}_uppercase`]
+  }
+
+  protected getFontFamily(): string {
+    return (this._node as any)[`${this.prefix}_font_family`]
+  }
+
+  protected getHorizPosition(): Type_TextHPos {
+    return (this._node as any)[`${this.prefix}_horiz`]
+  }
+
+  protected getVertPosition(): Type_TextVPos {
+    return (this._node as any)[`${this.prefix}_vert`]
+  }
+
+  protected getHorizShift(): number {
+    return (this._node as any)[`${this.prefix}_horiz_shift`]
+  }
+
+  protected getVertShift(): number {
+    return this._node[`${this.prefix}_vert_shift`]
+  }
+
+  protected setHorizPosition(value: Type_TextHPos): void {
+    this._node[`${this.prefix}_horiz`] = value
+  }
+
+  protected setVertPosition(value: Type_TextVPos): void {
+    this._node[`${this.prefix}_vert`] = value
+  }
+
+  // Note: Les deux labels utilisent les mêmes position_x_label et position_y_label
+  protected getDisplayXValue(): number | undefined {
+    return this._node[`${this.prefix}_position_x`]
+  }
+
+  protected setDisplayXValue(value: number | undefined): void {
+    if (value != undefined) this._node[`${this.prefix}_position_x`] = value
+    else this._node.delete_attribute(`${this.prefix}_position_x`)
+  }
+
+  protected getDisplayYValue(): number | undefined {
+    return this._node[`${this.prefix}_position_y`]
+  }
+
+  protected setDisplayYValue(value: number | undefined): void {
+      if (value != undefined) this._node[`${this.prefix}_position_y`] = value
+    else this._node.delete_attribute(`${this.prefix}_position_y`)
+  }
+
+  protected getTextSelector(): string {
+    return `.${this.prefix}_text`
+  }
+
+  // =================== MÉTHODES COMMUNES ===================
+
+  /**
+   * Dessine le background du label
+   */
+  protected drawBackground(group: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined) {
+    drawLabelBackground(
+      group,
+      this._node,
+      this.prefix,
+      this.getTextSelector(),
+      this._node.id
+    )
   }
 
   /**
-   * Draw node name label on D3 svg
+   * Calcule la position du label
    */
+  protected getLabelPos(): [number, number, string, string, string] {
+    // x position
+    let label_anchor = 'start'
+    let label_align = 'start'
+    let label_pos_x = 0
+
+    if (this.getDisplayXValue() !== undefined) {
+      label_pos_x = this.getDisplayXValue()!
+      label_anchor = 'middle'
+      label_align = 'center'
+    } else {
+      const shape_width = this._node.getShapeWidthToUse()
+      const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
+      label_pos_x = shape_width + label_pos_dx + label_margin + this.getHorizShift()
+
+      if (this.getHorizPosition() === 'left') {
+        label_pos_x = 0 - label_margin + this.getHorizShift()
+        label_anchor = 'end'
+        label_align = 'end'
+      }
+      else if (this.getHorizPosition() === 'middle') {
+        label_pos_x = shape_width / 2 + this.getHorizShift()
+        label_anchor = 'middle'
+        label_align = 'center'
+      }
+    }
+
+    // y position
+    const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
+    const shape_height = this._node.getShapeHeightToUse()
+
+    let label_pos_y: number
+    let label_baseline: string
+
+    // ✅ Différence name vs value : position Y par défaut
+    if (this.prefix === 'name_label') {
+      label_pos_y = label_pos_dy + shape_height + this.getVertShift()
+      label_baseline = 'text-before-edge'
+    } else {
+      // value_label
+      label_pos_y = label_pos_dy + shape_height + this.getFontSize() + this.getVertShift()
+      label_baseline = 'text-before-edge'
+    }
+
+    if (this.getDisplayYValue() !== undefined) {
+      label_pos_y = this.getDisplayYValue()!
+      label_baseline = 'middle'
+    } else {
+      if (this.getVertPosition() === 'top') {
+        label_pos_y = -label_pos_dy + this.getVertShift()
+        label_baseline = 'text-after-edge'
+      }
+      else if (this.getVertPosition() === 'middle') {
+        if (this.prefix === 'name_label') {
+          label_pos_y = shape_height / 2 + this.getVertShift()
+        } else {
+          label_pos_y = (shape_height / 2) + (this.getFontSize() / 2) + this.getVertShift()
+        }
+        label_baseline = 'middle'
+      }
+    }
+
+    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
+  }
+
+  /**
+   * Met à jour la position du label
+   */
+  protected updateLabelPos(): [number, number, string] {
+    const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getLabelPos()
+    const drawingElements = (this._node as Class_NodeElement).internalDrawingElements
+    const groupSelector = this.prefix === 'name_label' ? 'd3_selection_g_name_label' : 'd3_selection_g_value_label'
+
+    drawingElements[groupSelector]?.selectAll(this.getTextSelector())
+      .attr('x', label_pos_x)
+      .attr('y', label_pos_y)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .attr('text-align', label_align)
+
+    drawingElements[groupSelector]?.select(this.getTextSelector()).selectAll('tspan')
+      .attr('x', label_pos_x)
+      .attr('dx', 0)
+      .attr('dominant-baseline', label_baseline)
+      .attr('text-anchor', label_anchor)
+      .attr('text-align', label_align)
+
+    return [label_pos_x, label_pos_y, label_anchor]
+  }
+
+  /**
+   * Applique le style de texte à une sélection
+   */
+  protected applyTextStyle(selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined) {
+    selection
+      ?.attr('fill', this.getColor())
+      .attr('font-weight', this.getBold() ? 'bold' : 'normal')
+      .attr('font-style', this.getItalic() ? 'italic' : 'normal')
+      .attr('font-size', String(this.getFontSize()) + 'px')
+      .attr('font-family', this.getFontFamily())
+      .style('text-transform', this.getUppercase() ? 'uppercase' : 'none')
+      .attr('stroke', 'none')
+  }
+
+  // =================== DRAG & DROP HANDLERS ===================
+
+  protected dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
+      this.getDisplayXValue(),
+      this.getDisplayYValue(),
+      this.getHorizPosition(),
+      this.getVertPosition()
+    ]
+
+    if (this.getDisplayXValue() === undefined) {
+      const shape_width = this._node.getShapeWidthToUse()
+      const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
+
+      let label_pos_x = shape_width + label_pos_dx
+      if (this.getHorizPosition() === 'left') {
+        label_pos_x = -label_pos_dx
+      }
+      else if (this.getHorizPosition() === 'middle') {
+        label_pos_x = shape_width / 2
+      }
+
+      this.setDisplayXValue(label_pos_x)
+    }
+
+    if (this.getDisplayYValue() === undefined) {
+      const shape_height = this._node.getShapeHeightToUse()
+      const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
+
+      let label_pos_y = label_pos_dy + shape_height
+      if (this.getVertPosition() === 'top') {
+        label_pos_y = -label_pos_dy
+      }
+      else if (this.getVertPosition() === 'middle') {
+        label_pos_y = shape_height / 2
+      }
+
+      this.setDisplayYValue(label_pos_y)
+    }
+
+    this.setHorizPosition('dragged')
+    this.setVertPosition('dragged')
+
+    const inv = () => {
+      this.setDisplayXValue(old_val[0])
+      this.setDisplayYValue(old_val[1])
+      this.setHorizPosition(old_val[2])
+      this.setVertPosition(old_val[3])
+      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.drawSpecificLabel()
+    }
+
+    this._node.drawing_area.application_data.history.saveUndo(inv)
+  }
+
+  protected dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+    if (!this._node.getFirstDragMove()) {
+      this.setDisplayXValue((this.getDisplayXValue() ?? 0) + event.dx)
+      this.setDisplayYValue((this.getDisplayYValue() ?? 0) + event.dy)
+    } else {
+      this._node.setFirstDragMove(false)
+    }
+
+    this.updateLabelPos()
+  }
+
+  protected dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
+    this.drawSpecificLabel()
+    this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+
+    const new_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
+      this.getDisplayXValue(),
+      this.getDisplayYValue(),
+      this.getHorizPosition(),
+      this.getVertPosition()
+    ]
+
+    this._node.setFirstDragMove(true)
+
+    const redo = () => {
+      this.setDisplayXValue(new_val[0])
+      this.setDisplayYValue(new_val[1])
+      this.setHorizPosition(new_val[2])
+      this.setVertPosition(new_val[3])
+      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.drawSpecificLabel()
+    }
+
+    this._node.drawing_area.application_data.history.saveRedo(redo)
+  }
+}
+
+export class NodeDrawNameLabel extends NodeDrawLabelBase {
+  
+  constructor(node: Class_NodeBase) {
+    super(node, 'name_label')
+  }
+
+  protected getLabelText(): string {
+    return this._node.name_label
+  }
+
+  protected shouldDrawLabel(): boolean {
+    return this.getIsVisible()
+  }
+
+  protected drawSpecificLabel(): void {
+    this.drawNameLabel()
+  }
+
+  // =================== MÉTHODE PUBLIQUE ===================
+
   public drawNameLabel() {
-    // Speed-up computing
-    if (!this._node.d3_selection)
-      return
-    
+    if (!this._node.d3_selection) return
+
+    // Si Foreign Object, déléguer
+    if (this._node.has_fo) {
+      return this.drawFO()
+    }
+
     const drawingElements = this._node.internalDrawingElements
-    
-    // Clean previous label
     drawingElements.d3_selection_g_name_label?.remove()
-    
-    // Add name label
-    if (this._node.name_label_is_visible) {
-      const label_to_display = this._node.name_label
-      
-      // Box position is set by label position. For text / shape ref point is not the same
-      // - Text : ref point is below of text + right/middle/left depending on anchor
-      // - Shape : ref point if above-left corner
-      const box_width = Math.min(
-        label_to_display.length * this._node.name_label_font_size,
-        this._node.name_label_box_width)
 
-      // Create label wrapper
-      const wrapper = textwrap()
-        .bounds({ height: 100, width: this._node.name_label_box_width })
-        .method('tspans')
+    if (!this.shouldDrawLabel()) return
 
-      // Create name label group
-      const d3_selection_g_name_label = this._node.d3_selection?.append('g')
-        .attr('id', 'g_name_label')
-      
-      this._node.setInternalDrawingElements({ d3_selection_g_name_label })
+    const label_to_display = this.getLabelText()
+    const box_width = Math.min(
+      label_to_display.length * this.getFontSize(),
+      this._node.name_label_box_width
+    )
 
-      // Add name label text
-      const label_text = d3_selection_g_name_label?.append('text')
-        .classed('name_label', true)
-        .classed('name_label_text', true)
-        .attr('fill', this._node.name_label_color)
-        .attr('id', 'name_label_text_' + this._node.id)
-        .attr('font-weight', this._node.name_label_bold ? 'bold' : 'normal')
-        .attr('font-style', this._node.name_label_italic ? 'italic' : 'normal')
-        .attr('font-size', String(this._node.name_label_font_size) + 'px')
-        .attr('font-family', this._node.name_label_font_family)
-        .style('text-transform', this._node.name_label_uppercase ? 'uppercase' : 'none')
-        .attr('stroke', 'none')
-        .text(label_to_display)
-        .filter(() => label_to_display.split(' ').length > 1)//only call wrapper if text displayed has space to be splitted by wrapper
-        .call(wrapper)
+    // Create label wrapper
+    const wrapper = textwrap()
+      .bounds({ height: 100, width: this._node.name_label_box_width })
+      .method('tspans')
 
-      // Position label & return it coord_x, coord_y & it text anchor for use in other element (label bg, label fo)
-      const [label_pos_x, label_pos_y, label_anchor] = this.updateNameLabelPos()
-      let box_pos_x = label_pos_x
-      let box_pos_y = label_pos_y
-      
-      if (this._node.name_label_vert == 'top') {
-        box_pos_y -= (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this._node.name_label_font_size)
-        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this._node.name_label_font_size))
-      } else if (this._node.name_label_vert == 'middle') {
-        box_pos_y -= this._node.name_label_font_size / 2
-        label_text?.attr('y', label_pos_y - (((label_text?.selectAll('tspan').nodes().length ?? 1) - 1) * this._node.name_label_font_size / 2))
-      }
-      
-      if (label_anchor === 'end') {
-        box_pos_x = box_pos_x - box_width
-      }
-      else if (label_anchor === 'middle') {
-        box_pos_x = box_pos_x - box_width / 2
-      }
+    // Create name label group
+    const d3_selection_g_name_label = this._node.d3_selection?.append('g')
+      .attr('id', 'g_name_label')
 
-      // Draw Name Label Background
-      this.drawNameLabelBackground(d3_selection_g_name_label)
+    this._node.setInternalDrawingElements({ d3_selection_g_name_label })
 
-      // Draw Name Label Input
-      this.drawNameLabelInput(d3_selection_g_name_label, box_pos_x, box_pos_y, box_width, label_text)
+    // Add name label text
+    const label_text = d3_selection_g_name_label?.append('text')
+      .classed('name_label', true)
+      .classed('name_label_text', true)
+      .attr('id', 'name_label_text_' + this._node.id)
+
+    this.applyTextStyle(label_text)
+
+    label_text
+      ?.text(label_to_display)
+      .filter(() => label_to_display.split(' ').length > 1)
+      .call(wrapper)
+
+    if (this._node.name_label_vertical_text) {
+      label_text?.attr('transform', `rotate(-90)`)
     }
+
+    // Position label
+    const [label_pos_x, label_pos_y, label_anchor] = this.updateLabelPos()
+    let box_pos_x = label_pos_x
+    let box_pos_y = label_pos_y
+
+    // Adjust for multi-line text
+    if (this._node.name_label_vert === 'top') {
+      const lineCount = (label_text?.selectAll('tspan').nodes().length ?? 1) - 1
+      box_pos_y -= lineCount * this.getFontSize()
+      label_text?.attr('y', label_pos_y - lineCount * this.getFontSize())
+    } else if (this._node.name_label_vert === 'middle') {
+      box_pos_y -= this.getFontSize() / 2
+      const lineCount = (label_text?.selectAll('tspan').nodes().length ?? 1) - 1
+      label_text?.attr('y', label_pos_y - (lineCount * this.getFontSize() / 2))
+    }
+
+    if (label_anchor === 'end') {
+      box_pos_x = box_pos_x - box_width
+    }
+    else if (label_anchor === 'middle') {
+      box_pos_x = box_pos_x - box_width / 2
+    }
+
+    // Draw background
+    this.drawBackground(d3_selection_g_name_label)
+
+    // Draw input for editing
+    this.drawNameLabelInput(d3_selection_g_name_label, box_pos_x, box_pos_y, box_width, label_text)
   }
 
-  /**
-   * Draw name label background
-   */
-  private drawNameLabelBackground(d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined) {
-    d3_selection_g_name_label?.select('.name_label_background').remove()
-    
-    if (this._node.name_label_is_visible && this._node.name_label_background && d3_selection_g_name_label) {
-      // Get bounding box
-      const name_label_bounding_box = (d3_selection_g_name_label.select('.name_label_text').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
+  // =================== MÉTHODES SPÉCIFIQUES NAME LABEL ===================
 
-      // Create svg element
-      d3_selection_g_name_label?.append('rect')
-        .attr('class', 'name_label_bg')
-        .classed('name_label', true)
-        .classed('name_label_background', true)
-        .attr('id', 'name_label_background_' + this._node.id)
-        .attr('x', (name_label_bounding_box.x - 5) + 'px')
-        .attr('y', name_label_bounding_box.y + 'px')
-        .attr('width', (name_label_bounding_box.width + 10) + 'px')
-        .attr('height', name_label_bounding_box.height + 'px')
-        .attr('fill', this._node.name_label_background_color)
-        .attr('fill-opacity', 0.55)
-        .attr('rx', 4)
-        .style('stroke', 'none')
-
-      // Lower label to have it on background
-      d3_selection_g_name_label?.select('.name_label_background').lower()
-    }
+  public drawFO() {
+    if (!this._node.d3_selection) return
+    this._node.d3_selection?.select('.node_fo').remove()
+    if (!this._node.has_fo || !this._node.fo_content) return
+    const d3_selection_g_FO_illustration = this._node.d3_selection?.append('foreignObject')
+      .attr('id', this._node.id + '_fo')
+      .attr('class', 'node_fo')
+    d3_selection_g_FO_illustration?.append('xhtml:div')
+      .attr('class', 'ql-editor')
+      .html(this._node.fo_content)
+    const name_label_bounding_box = (d3_selection_g_FO_illustration.select('.node_fo').node() as SVGGElement)?.getBBox() ?? { x: 0, y: 0, height: 0, width: 0 }
+    d3_selection_g_FO_illustration.attr('width', name_label_bounding_box.width)
+    d3_selection_g_FO_illustration.attr('height', name_label_bounding_box.height)
+    this._node.setInternalDrawingElements({ d3_selection_g_FO_illustration })
   }
 
-  /**
-   * Draw name label input for editing
-   */
+
   private drawNameLabelInput(
     d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined,
     box_pos_x: number,
@@ -162,8 +514,6 @@ export class NodeDrawNameLabel {
     box_width: number,
     label_text: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
-    // Add an input to change the name of the node
-    // The input appear when we double click on the label
     if (!this._node.drawing_area.static) {
       d3_selection_g_name_label?.append('foreignObject')
         .classed('name_label', true)
@@ -180,33 +530,29 @@ export class NodeDrawNameLabel {
         .attr('id', 'name_label_input_' + this._node.id)
         .attr('type', 'text')
         .attr('value', this._node.name)
-        .attr('font-size', String(this._node.name_label_font_size) + 'px')
-        .on('input', (evt) => { 
-          // Access node through closure rather than 'this'
-          const node = this._node
+        .attr('font-size', String(this.getFontSize()) + 'px')
+        .on('input', (evt) => {
           this._node.sankey.drawing_area.bypass_redraws = true
-          node.name = evt.target.value 
+          this._node.name = evt.target.value
           this._node.sankey.drawing_area.bypass_redraws = false
         })
         .on('blur', () => this.setInputLabelInvisible())
 
       label_text?.call(d3.drag<SVGTextElement, unknown>()
-        .filter(evt => (evt.which == 1) && evt.altKey && this._node.drawing_area.isInSelectionMode()) // only trigger drag when LMB drag & DA is in mode selection
+        .filter(evt => (evt.which == 1) && evt.altKey && this._node.drawing_area.isInSelectionMode())
         .on('start', ev => this.dragTextStart(ev))
         .on('drag', ev => this.dragTextMove(ev))
         .on('end', ev => this.dragTextEnd(ev))
       )
+
       d3_selection_g_name_label?.on(
         'mouseover',
-        (event: MouseEvent) =>
-        //@ts-expect-error xxx
-          this._node.eventMouseOver(event))
+        (event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) =>
+          this._node.eventMouseOver(event)
+      )
     }
   }
 
-  /**
-   * Hide the name label of the node & set visible the input to modify it
-   */
   public setInputLabelVisible() {
     const drawingElements = this._node.internalDrawingElements
     drawingElements.d3_selection_g_name_label?.select('.name_label_text').style('display', 'none')
@@ -214,202 +560,114 @@ export class NodeDrawNameLabel {
     document.getElementById('name_label_input_' + this._node.id)?.focus()
   }
 
-  /**
-   * Hide the input label of the node & set visible the name
-   */
   public setInputLabelInvisible() {
     const drawingElements = this._node.internalDrawingElements
     drawingElements.d3_selection_g_name_label?.select('.name_label_fo_input').style('display', 'none')
     drawingElements.d3_selection_g_name_label?.select('.name_label_text').style('display', 'inline-block')
     this.drawNameLabel()
-    // Update selection menu for nodes
     this._node.drawing_area.application_data.menu_configuration.updateComponentRelatedToNodesSelection()
   }
+}
 
-  /**
-   * Get name label position
-   */
-  private getNameLabelPos(): [number, number, string, string, string] {
-    // x position
-    let label_anchor = 'start'
-    let label_align = 'start'
-    let label_pos_x = 0
-    
-    if (this._node.display.position_x_label !== undefined) {
-      label_pos_x = this._node.display.position_x_label
-      label_anchor = 'middle'
-      label_align = 'center'
-    } else {
-      const shape_width = this._node.getShapeWidthToUse()
-      const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
-      label_pos_x = shape_width + label_pos_dx + label_margin + this._node.name_label_horiz_shift
-      
-      if (this._node.name_label_horiz === 'left') {
-        label_pos_x = 0 - label_margin + this._node.name_label_horiz_shift
-        label_anchor = 'end'
-        label_align = 'end'
-      }
-      else if (this._node.name_label_horiz === 'middle') {
-        label_pos_x = shape_width / 2 + this._node.name_label_horiz_shift
-        label_anchor = 'middle'
-        label_align = 'center'
-      }
-    }
-
-    // y position
-    const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
-    const shape_height = this._node.getShapeHeightToUse()
-
-    let label_pos_y = label_pos_dy + shape_height + this._node.name_label_vert_shift
-    let label_baseline = 'text-before-edge'
-    
-    if (this._node.display.position_y_label !== undefined) {
-      label_pos_y = this._node.display.position_y_label
-      label_baseline = 'middle'
-    } else {
-      if (this._node.name_label_vert === 'top') {
-        label_pos_y = -label_pos_dy + this._node.name_label_vert_shift
-        label_baseline = 'text-after-edge'
-      }
-      else if (this._node.name_label_vert === 'middle') {
-        label_pos_y = shape_height / 2 + this._node.name_label_vert_shift
-        label_baseline = 'middle'
-      }
-    }
-    
-    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
+export class NodeDrawValueLabel extends NodeDrawLabelBase {
+  // Cast pour avoir accès à Class_NodeElement au lieu de Class_NodeBase
+  protected get _nodeElement(): Class_NodeElement {
+    return this._node as Class_NodeElement
   }
 
-  /**
-   * Function that update name label position & return var used for drawNameLabel()
-   */
-  private updateNameLabelPos(): [number, number, string] {
-    const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getNameLabelPos()
-    const drawingElements = this._node.internalDrawingElements
+  constructor(node: Class_NodeElement) {
+    super(node, 'value_label')
+  }
 
-    drawingElements.d3_selection_g_name_label?.selectAll('.name_label_text')
+  protected getLabelText(): string {
+    return this.getValueLabel()
+  }
+
+  protected shouldDrawLabel(): boolean {
+    if (this._node.drawing_area.type_data === 'structure') return false
+    return this.getIsVisible()
+  }
+
+  protected drawSpecificLabel(): void {
+    this.drawValueLabel()
+  }
+
+  // =================== MÉTHODE PUBLIQUE ===================
+
+  public drawValueLabel() {
+    if (!this._node.d3_selection) return
+
+    const drawingElements = (this._node as Class_NodeElement).internalDrawingElements
+    drawingElements.d3_selection_g_value_label?.remove()
+
+    if (!this.shouldDrawLabel()) return
+
+    // Create group
+    const d3_selection_g_value_label = this._node.d3_selection?.append('g')
+      .attr('id', 'g_value_label');
+
+    (this._node as Class_NodeElement).setInternalDrawingElements({ d3_selection_g_value_label })
+
+    // Position
+    const [label_pos_x, label_pos_y, label_anchor, label_align] = this.getLabelPos()
+
+    // Add value label text
+    const label_text = d3_selection_g_value_label?.append('text')
+      .classed('value_label', true)
+      .classed('value_label_text', true)
+      .attr('id', 'value_label_text_' + this._node.id)
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
-      .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
       .attr('text-align', label_align)
-      
-    drawingElements.d3_selection_g_name_label?.select('.name_label_text').selectAll('tspan')
-      .attr('x', label_pos_x)
-      .attr('dx', 0)
-      .attr('dominant-baseline', label_baseline)
-      .attr('text-anchor', label_anchor)
-      .attr('text-align', label_align)
+      .text(this.getLabelText())
 
-    return [label_pos_x, label_pos_y, label_anchor]
+    this.applyTextStyle(label_text)
+
+    // Draw background
+    this.drawBackground(d3_selection_g_value_label)
   }
 
-  // DRAG EVENT HANDLERS ================================================================
+  // =================== CALCUL DE VALEUR SPÉCIFIQUE ===================
 
-  /**
-   * Function triggered when we start dragging node name label
-   */
-  private dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
-      this._node.display.position_x_label, 
-      this._node.display.position_y_label, 
-      this._node.name_label_horiz, 
-      this._node.name_label_vert
-    ]
-    
-    //if position_x_label is undefined init position_x_label pos with current fixed x position value
-    if (this._node.display.position_x_label === undefined) {
-      const shape_width = this._node.getShapeWidthToUse()
-      const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
+  public getValueLabel(): string {
+    let input_val = 0
+    let output_val = 0
 
-      let label_pos_x = shape_width + label_pos_dx
-      if (this._node.name_label_horiz === 'left') { 
-        label_pos_x = -label_pos_dx 
-      }
-      else if (this._node.name_label_horiz === 'middle') { 
-        label_pos_x = shape_width / 2 
-      }
+    // Éviter les problèmes de float
+    let max_digit_in = 0
+    const link_in = this._nodeElement.input_links_list
+      .filter(link => link.is_visible)
+      .map(link => {
+        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        if (decimal_digit !== undefined) {
+          max_digit_in = Math.max(max_digit_in, decimal_digit.length)
+        }
+        return link
+      })
 
-      this._node.display.position_x_label = label_pos_x
-    }
+    const pow_in = Math.pow(10, max_digit_in)
+    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
 
-    //if position_y_label is undefined init position_y_label pos with current fixed y position value
-    if (this._node.display.position_y_label === undefined) {
-      const shape_height = this._node.getShapeHeightToUse()
-      const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
+    let max_digit_out = 0
+    const link_out = this._nodeElement.output_links_list
+      .filter(link => link.is_visible)
+      .map(link => {
+        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        if (decimal_digit !== undefined) {
+          max_digit_out = Math.max(max_digit_out, decimal_digit.length)
+        }
+        return link
+      })
 
-      let label_pos_y = label_pos_dy + shape_height
-      if (this._node.name_label_vert === 'top') { 
-        label_pos_y = -label_pos_dy 
-      }
-      else if (this._node.name_label_vert === 'middle') { 
-        label_pos_y = shape_height / 2 
-      }
+    const pow_out = Math.pow(10, max_digit_out)
+    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
 
-      this._node.display.position_y_label = label_pos_y
-    }
-
-    // Set to dragged state
-    const nodeDisplay = this._node.display
-    nodeDisplay.attributes.name_label_horiz = 'dragged'
-    nodeDisplay.attributes.name_label_vert = 'dragged'
-
-    // Undo function
-    const inv_dragTextStart = () => {
-      this._node.display.position_x_label = old_val[0]
-      this._node.display.position_y_label = old_val[1]
-      nodeDisplay.attributes.name_label_horiz = old_val[2]
-      nodeDisplay.attributes.name_label_vert = old_val[3]
-      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.drawNameLabel()
-    }
-    
-    // Save undo
-    this._node.drawing_area.application_data.history.saveUndo(inv_dragTextStart)
-  }
-
-  /**
-   * Function triggered when we move the node name label
-   */
-  private dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    // When we go through this func just after dragTextStart dx & dy are incredibly high, moving text way off the mouse so we limit potential shift
-    if (!this._node.getFirstDragMove()) {
-      this._node.display.position_x_label = ((this._node.display.position_x_label !== undefined) ? this._node.display.position_x_label : 0) + event.dx
-      this._node.display.position_y_label = ((this._node.display.position_y_label !== undefined) ? this._node.display.position_y_label : 0) + event.dy
-    } else {
-      this._node.setFirstDragMove(false)
-    }
-    
-    this.updateNameLabelPos()
-  }
-
-  /**
-   * Function triggered when we end dragging node name label
-   */
-  private dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    this.drawNameLabel()
-    this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    
-    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
-      this._node.display.position_x_label, 
-      this._node.display.position_y_label, 
-      this._node.name_label_horiz, 
-      this._node.name_label_vert
-    ]
-    
-    this._node.setFirstDragMove(true)
-    
-    // redo function
-    const _dragTextEnd = () => {
-      this._node.display.position_x_label = old_val[0]
-      this._node.display.position_y_label = old_val[1]
-      this._node.display.attributes.name_label_horiz = old_val[2]
-      this._node.display.attributes.name_label_vert = old_val[3]
-      this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.drawNameLabel()
-    }
-    
-    // Save redo
-    this._node.drawing_area.application_data.history.saveRedo(_dragTextEnd)
+    return format_value(
+      this._node.sankey.drawing_area.type_data,
+      Math.max(input_val / pow_in, output_val / pow_out),
+      this._nodeElement,
+      this._nodeElement.value_label_unit
+    )
   }
 }

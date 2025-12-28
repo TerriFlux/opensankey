@@ -34,6 +34,10 @@ import { Class_DataTag } from './Tag'
 import {
   ConverterConfig
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import { Class_NodeBase } from '../Elements/NodeBase'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_LinkStyle, Class_NodeStyle } from '../Elements/Element'
+import { ShapePrefix } from '../Elements/ElementsAttributesConfig'
 
 export type Type_AdditionalMenus = {
   // Top Menu
@@ -66,7 +70,6 @@ export type Type_AdditionalMenus = {
   // Links
   additional_menu_configuration_links: { [_: string]: JSX.Element },
   additional_data_element: JSX.Element[],
-  additional_link_appearence_value: ((_: boolean) => JSX.Element)[],
   additional_link_visual_filter_content: JSX.Element[],
 
   // Preferences
@@ -91,6 +94,9 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_value_formatting_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -102,7 +108,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_styles_links_labels: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
-  ref_setter_show_modal_styles_containers: MutableRefObject<Dispatch<SetStateAction<boolean>>>  
+  ref_setter_show_modal_styles_containers: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   // Other modals
   ref_setter_show_modal_preference: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_templates_lib: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -158,7 +164,7 @@ export class Class_MenuConfig {
   ]
 
   protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
-  protected _shape_shape: string[] = ['bezier_path', 'bezier_outline']
+  protected _shape_type: string[] = ['bezier_path', 'bezier_outline']
 
   /**
    * Variable that determine what kind of element we are configuring in the config menu
@@ -181,7 +187,7 @@ export class Class_MenuConfig {
     'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'DA', 'flow', 'node'] },
     'context': { 'theme': '#786960', elements_configurable: ['DA', 'flow', 'node', 'tag_flow', 'tag_node'] },
     'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'flow', 'node'] },
-    'presentation' : { 'theme': '#778a95', elements_configurable: ['flow', 'node','flow_tag', 'node_tag','object','view'] }
+    'presentation': { 'theme': '#778a95', elements_configurable: ['flow', 'node', 'flow_tag', 'node_tag', 'object', 'view'] }
   }
 
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
@@ -314,7 +320,7 @@ export class Class_MenuConfig {
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
-  private _ref_universal_converter_set_config : MutableRefObject<(_:ConverterConfig,file_path:string, launch_at_opening: boolean) => void>
+  private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean) => void>
 
   // Update component ApplyLayoutDialog
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
@@ -395,7 +401,6 @@ export class Class_MenuConfig {
     // Links
     additional_menu_configuration_links: {},
     additional_data_element: [],
-    additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
     // Preferences
@@ -508,7 +513,7 @@ export class Class_MenuConfig {
 
     // Init dict of setter show dialog -------------------------------------------------
     this._ref_universal_converter_set_config = useRef(
-      (_:ConverterConfig,_file_path:string, _launch_at_opening: boolean) => null
+      (_: ConverterConfig, _file_path: string, _launch_at_opening: boolean) => null
     )
 
     this._dict_setter_show_dialog = {
@@ -519,6 +524,9 @@ export class Class_MenuConfig {
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_modal_rich_text_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_value_formatting_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -545,7 +553,20 @@ export class Class_MenuConfig {
     this._ref_to_menu_context_container_updater = useRef(() => null)
 
     this._r_setter_editor_content_fo_node = useRef(() => null)
-    this._r_editor_content_fo_node_updater = useRef(() => null)
+    this._r_editor_content_set_elements = useRef<Dispatch<SetStateAction<Class_NodeBase[] | Class_LinkElement[]>>>(() => null)
+    this._r_shape_attributes_set_elements = useRef<(
+      elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+      attributePath: string,
+      prefix: ShapePrefix,
+      disable_attr_props: Record<string, boolean>,
+      refreshUI: () => void
+    ) => void>(() => null)
+    this._r_value_formatting_set_elements = useRef<(
+      elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+      attributePath: string,
+      disable_attr_props: Record<string, boolean>,
+    ) => void>(() => null)
+
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
     this._ref_to_menu_config_link_scientific_precision_updater = useRef(() => null)
 
@@ -568,6 +589,9 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
@@ -1475,7 +1499,7 @@ export class Class_MenuConfig {
 
   public get ref_to_updater_modal_apply_layout_plus(): MutableRefObject<(() => void)> { return this._ref_to_updater_modal_apply_layout_plus }
 
-  public get r_editor_content_fo_node_updater(): MutableRefObject<(() => void)> { return this._r_editor_content_fo_node_updater }
+  public get r_editor_content_set_elements() { return this._r_editor_content_set_elements }
 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
 
@@ -1485,6 +1509,9 @@ export class Class_MenuConfig {
   public get ref_to_menu_context_container_updater() { return this._ref_to_menu_context_container_updater }
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
+  public get r_shape_attributes_set_elements() { return this._r_shape_attributes_set_elements }
+  public get r_value_formatting_set_elements() { return this._r_value_formatting_set_elements }
+
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
   public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
   public get ref_to_toolbar_node_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_node_tag_updater }
@@ -1510,7 +1537,7 @@ export class Class_MenuConfig {
 
   public get style_config(): { [x: string]: { theme: string; elements_configurable: string[] } } { return this._style_config }
   public get flow_color_origin_type(): string[] { return this._flow_color_origin_type }
-  public get shape_shape(): string[] { return this._shape_shape }
+  public get shape_type(): string[] { return this._shape_type }
 
   public get additionalMenus() { return this._additionalMenus }
 
@@ -1527,8 +1554,20 @@ export class Class_MenuConfig {
 
   // config ref related to node FO elements
   private _r_setter_editor_content_fo_node: MutableRefObject<Dispatch<SetStateAction<string>> | undefined>
-  private _r_editor_content_fo_node_updater: MutableRefObject<(() => void)>
+  private _r_editor_content_set_elements: MutableRefObject<((_: Class_NodeBase[] | Class_LinkElement[]) => void)>
   private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
+  private _r_shape_attributes_set_elements: MutableRefObject<(
+    elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+    attributePath: string,
+    prefix: ShapePrefix,
+    disable_attr_props: Record<string, boolean>,
+    refreshUI: () => void
+  ) => void>
+  private _r_value_formatting_set_elements: MutableRefObject<(
+    elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+    attributePath: string,
+    disable_attr_props: Record<string, boolean>
+  ) => void>
 
   /**
  * Update component with timeOut to avoid multiple refreshs
