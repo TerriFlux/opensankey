@@ -26,20 +26,21 @@
 
 
 import React, { useState, MutableRefObject } from 'react'
-import { Box, Button, Slider, SliderFilledTrack, SliderMark, SliderThumb, SliderTrack,Checkbox } from '@chakra-ui/react'
+import { Box, Button,Checkbox } from '@chakra-ui/react'
 
 import { Class_NodeElement } from '../../Elements/Node'
-import { default_position_type } from '../../Elements/NodeAttributes'
-import { type Class_NodeStyle } from '../../Elements/ElementStyle'
+import { type Class_NodeStyle } from '../../Elements/Element'
 import { ElementAttrSetterNumberInput2Cols, MenuSectionCheckbox, updateElements, ValueKey, WrapperBoxSubSectionMenu } from './MenuCommon'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_style_id } from '../../types/Utils'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
-import { MenuColorPicker } from './MenuColorPicker'
+import { MenuShapeAttributes } from './MenuShapeBase'
+import { Class_NodeBase } from '../../Elements/NodeBase'
+import { Class_LinkElement } from '../../Elements/Link'
+import { default_position_type, NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -69,12 +70,11 @@ export type typeValNodeAttr = Class_NodeElement[keyNodeAttr]
 export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additional_menus }: {
   app_data: Class_ApplicationData,
   menu_for_style: boolean,
-  additional_menus : MutableRefObject<Type_AdditionalMenus>
+  additional_menus: MutableRefObject<Type_AdditionalMenus>
 }) => {
   const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey, selected_nodes_list_sorted, visible_and_selected_nodes_list_sorted } = drawing_area
   const { ref_selected_style_node, is_selector_only_for_visible_nodes } = menu_configuration
-  const { icon_direction_down, icon_direction_left, icon_direction_rift, icon_direction_up, icon_locked, icon_unlocked } = icon_library
 
   const selected_nodes = !is_selector_only_for_visible_nodes ?
     selected_nodes_list_sorted :
@@ -83,22 +83,16 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
   // Elements on which menu modification applies
   const elements = menu_for_style ? [sankey.node_styles_dict[ref_selected_style_node.current]] : selected_nodes
   const element_ref = elements[0]
-
-  // Get values or default values
-  const shape_visible = (element_ref?.shape_visible ?? NODES_ATTRIBUTES_CONFIG.shape_visible.default)
-  const shape_color = (element_ref?.shape_color ?? NODES_ATTRIBUTES_CONFIG.shape_color.default)
-  const shape_type = (element_ref?.shape_type ?? NODES_ATTRIBUTES_CONFIG.shape_type.default)
-  const shape_arrow_angle_factor = (element_ref?.shape_arrow_angle_factor ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_factor.default)
-  const shape_arrow_angle_direction = (element_ref?.shape_arrow_angle_direction ?? NODES_ATTRIBUTES_CONFIG.shape_arrow_angle_direction.default)
-  const shape_color_sustainable = (element_ref?.shape_color_sustainable ?? NODES_ATTRIBUTES_CONFIG.shape_color_sustainable.default)
   const orphan_node_visible = (element_ref?.orphan_node_visible ?? NODES_ATTRIBUTES_CONFIG.orphan_node_visible.default)
+  const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
+
   const check_indeterminate = (curr: Class_NodeElement) => {
     return (selected_nodes[0].orphan_node_visible == curr.orphan_node_visible)
   }
   const is_indeterminate = !selected_nodes.every(check_indeterminate)
 
   const position_type = menu_for_style ?
-    ((element_ref as Class_NodeStyle)?.position.type ?? default_position_type) :
+    ((element_ref as Class_NodeStyle)?.position_type ?? default_position_type) :
     ((element_ref as Class_NodeElement)?.position_type ?? default_position_type)
 
   // Components updaters ----------------------------------------------------------------
@@ -146,6 +140,8 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
 
   let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
+  const attr_shape_type = 'shape_type'
+    const shape_type = element_ref?.[attr_shape_type] ?? 'rect'
 
   const content_appearence = <MenuSectionCheckbox
     app_data={app_data}
@@ -154,258 +150,51 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     attributeKey={'shape_visible' as ValueKey}
     refreshParentComponent={refreshThisAndUpdateRelatedComponents}
   >
-    {shape_visible ? <>
-      {/* In this position of the array, there is an input who can change the node visibility (hide if intermediary)(dev) */}
-      {additional_menus.current.advanced_appearence_content.splice(1, 1)}
-
-      <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
-        {t('Menu.edition')}
-      </Box>
-
-      {/* Couleur du noeud */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Noeud.apparence.shape_color')}
-          <TooltipElementOverloaded elements={selected_nodes} t={t} k='shape_color' />
-        </Box>
-        <Box layerStyle='option_with_activation'>
-          <OSTooltip label={t('Noeud.apparence.tooltips.shape_color')}>
-            <Box>
-              <MenuColorPicker
-                isDisabled={!disable_attr_props['shape_color']}
-                initialColor={shape_color}
-                onColorChange={(new_color) => {
-                  updateElements(app_data, elements, 'shape_color' as ValueKey, new_color, refreshThisAndUpdateRelatedComponents)
-                }}
-              />
-            </Box>
-          </OSTooltip>
-          <OSTooltip label={t('Noeud.apparence.tooltips.shape_color_sustainable')}>
-            <Button
-              isDisabled={!disable_attr_props['shape_color_sustainable']}
-              //Si la valeur est a true alors la couleur des noeuds reste celle sélectionné loreque que l'on affiche les flux celon leur étiquettes
-              variant={
-                shape_color_sustainable ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-              onClick={() => {
-                updateElements(app_data, elements, 'shape_color_sustainable' as ValueKey, !shape_color_sustainable, refreshThisAndUpdateRelatedComponents)
-              }}
-            >
-              {shape_color_sustainable ? icon_locked : icon_unlocked}
-              <TooltipElementOverloaded elements={selected_nodes} t={t} k='shape_color_sustainable' />
-            </Button>
-          </OSTooltip>
-        </Box>
-      </Box>
-
       {/* Forme du noeud */}
-      <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box layerStyle='menuconfigpanel_option_name' >
-            {t('Noeud.apparence.shape_type')}
-            <TooltipElementOverloaded elements={selected_nodes} t={t} k='shape_type' />
+      <OSTooltip label={t(`Noeud.apparence.tooltips.${attr_shape_type}`)}>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t(`Noeud.apparence.${attr_shape_type}`)}
+            <TooltipElementOverloaded elements={base_elements} t={t} k={attr_shape_type} />
           </Box>
-          <Box layerStyle='options_3cols' >
+          <Box layerStyle='options_3cols'>
             <Button
-              isDisabled={!disable_attr_props['shape_type']}
+              isDisabled={!disable_attr_props[attr_shape_type]}
               value="ellipse"
               variant={
                 shape_type === 'ellipse' ?
                   'menuconfigpanel_option_button_activated' :
                   'menuconfigpanel_option_button'}
               onClick={() => {
-                updateElements(app_data, elements, 'shape_type' as ValueKey, 'ellipse', refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, attr_shape_type as ValueKey, 'ellipse', refreshThisAndUpdateRelatedComponents)
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill='#78C2AD'
-                stroke='currentColor'
-                viewBox='0 0 17 17'
-                width="1rem"
-                height="1rem"
-              >
-                <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
-              </svg>
+              {app_data.icon_library.icon_ellipse_shape}
             </Button>
 
             <Button
-              isDisabled={!disable_attr_props['shape_type']}
+              isDisabled={!disable_attr_props[attr_shape_type]}
               variant={
                 shape_type === 'rect' ?
                   'menuconfigpanel_option_button_activated' :
                   'menuconfigpanel_option_button'}
               onClick={() => {
-                updateElements(app_data, elements, 'shape_type' as ValueKey, 'rect', refreshThisAndUpdateRelatedComponents)
+                updateElements(app_data, elements, attr_shape_type as ValueKey, 'rect', refreshThisAndUpdateRelatedComponents)
               }}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill='#78C2AD'
-                stroke='currentColor'
-                viewBox='0 0 17 17'
-                width="1rem"
-                height="1rem"
-              >
-                <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
-              </svg>
-              {/* {t('Noeud.apparence.Rectangle')} */}
-            </Button>
-
-            <Button
-              isDisabled={!disable_attr_props['shape_type']}
-              variant={
-                shape_type === 'arrow' ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'
-              }
-              onClick={() => {
-                updateElements(app_data, elements, 'shape_type' as ValueKey, 'arrow', refreshThisAndUpdateRelatedComponents)
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill='#78C2AD'
-                stroke='currentColor'
-                viewBox='0 0 17 17'
-                width="1rem"
-                height="1rem"
-              >
-                <path d="M 0.11499051,0.11500028 H 10.015883 L 16.844087,8.5149428 10.015883,16.818334 H 0.11499051 L 6.601784,8.5149428 Z" />
-              </svg>
+              {app_data.icon_library.icon_rect_shape}
             </Button>
           </Box>
         </Box>
       </OSTooltip>
-
-      {
-        /* Change the angle of the arrow shaped node */
-        shape_type === 'arrow' ?
-          <Box layerStyle='menuconfigpanel_grid'>
-            <OSTooltip label={t('Noeud.apparence.tooltips.shape_arrow_angle_factor')}>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name' >
-                  {t('Noeud.apparence.shape_arrow_angle_factor')}
-                  <TooltipElementOverloaded elements={selected_nodes} t={t} k='shape_arrow_angle_factor' />
-                </Box>
-                <Slider
-                  isDisabled={!disable_attr_props['shape_arrow_angle_factor']}
-                  min={0}
-                  max={45}
-                  step={5}
-                  value={shape_arrow_angle_factor}
-                  onChange={(value) => {
-                    updateElements(app_data, elements, 'shape_arrow_angle_factor' as ValueKey, value, refreshThisAndUpdateRelatedComponents)
-                  }}
-                >
-                  <SliderMark
-                    value={shape_arrow_angle_factor as number}
-                  >
-                    {shape_arrow_angle_factor}°
-                  </SliderMark>
-                  <SliderTrack>
-                    <SliderFilledTrack />
-                  </SliderTrack>
-                  <SliderThumb />
-                </Slider>
-              </Box>
-            </OSTooltip>
-
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name' >
-                {t('Noeud.apparence.shape_arrow_angle_direction')}
-                <TooltipElementOverloaded elements={selected_nodes} t={t} k='shape_arrow_angle_direction' />
-              </Box>
-              <Box layerStyle='options_4cols' >
-                <Button
-                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
-                  variant={
-                    shape_arrow_angle_direction === 'left' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'
-                  }
-                  minWidth={0}
-                  onClick={() => {
-                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'left', refreshThisAndUpdateRelatedComponents)
-                  }}
-                >
-                  {icon_direction_left}
-                </Button>
-                <Button
-                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
-                  variant={
-                    shape_arrow_angle_direction === 'right' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'
-                  }
-                  minWidth={0}
-                  onClick={() => {
-                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'right', refreshThisAndUpdateRelatedComponents)
-                  }}
-                >
-                  {icon_direction_rift}
-                </Button>
-                <Button
-                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
-                  variant={
-                    shape_arrow_angle_direction === 'top' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'
-                  }
-                  minWidth={0}
-                  onClick={() => {
-                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'top', refreshThisAndUpdateRelatedComponents)
-
-                  }}
-                >
-                  {icon_direction_up}
-                </Button>
-                <Button
-                  isDisabled={!disable_attr_props['shape_arrow_angle_direction']}
-                  variant={
-                    shape_arrow_angle_direction === 'bottom' ?
-                      'menuconfigpanel_option_button_activated' :
-                      'menuconfigpanel_option_button'
-                  }
-                  minWidth={0}
-                  onClick={() => {
-                    updateElements(app_data, elements, 'shape_arrow_angle_direction' as ValueKey, 'bottom', refreshThisAndUpdateRelatedComponents)
-                  }}
-                >
-                  {icon_direction_down}
-                </Button>
-              </Box>
-            </Box>
-          </Box> :
-          <></>
-      }
-
-      {/* Shape Opacity */}
-      <ElementAttrSetterNumberInput2Cols
-        app_data={app_data}
-        elements={elements}
-        attributePath='Noeud.apparence'
-        attributeKey={'shape_opacity' as ValueKey}
-        refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-        unit_text='pixels'
-        minimum_value={0}
-        maximum_value={1}
-        step={0.1}
-        stepper={true} />
-        
-      <Checkbox
-        isDisabled={!disable_attr_props['orphan_node_visible']}
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={is_indeterminate}
-        isChecked={orphan_node_visible}
-        onChange={(evt) => { updateElements(app_data,elements,'orphan_node_visible' as ValueKey, evt.target.checked,refreshThisAndUpdateRelatedComponents) }}>
-        <OSTooltip label={t('Noeud.apparence.tooltips.orphan_node_visible')}>
-          {t('Noeud.apparence.orphan_node_visible')}
-          <TooltipElementOverloaded elements={selected_nodes} t={t} k={'orphan_node_visible'} />
-        </OSTooltip>
-      </Checkbox>
-    </> : <></>}
+    <MenuShapeAttributes
+      app_data={app_data}
+      elements={elements}
+      attributePath='Noeud.apparence'
+      prefix='shape'
+      disable_attr_props={disable_attr_props}
+      refreshUI={refreshThisAndUpdateRelatedComponents}
+    />
   </MenuSectionCheckbox>
 
   const content_geometry = <WrapperBoxSubSectionMenu is_open={false} new_data={app_data} title={t('Noeud.apparence.Geometry')}><>
@@ -420,7 +209,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       attributePath='Noeud.apparence'
       attributeKey={'shape_min_width' as ValueKey}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-      unit_text='pixels'
+      unit_text='px'
       stepper={true} />
 
     {/* Hauteur minimale du noeud */}
@@ -430,7 +219,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       attributePath='Noeud.apparence'
       attributeKey={'shape_min_height' as ValueKey}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-      unit_text='pixels'
+      unit_text='px'
       stepper={true} />
 
     <Box as='span' layerStyle='menuconfigpanel_part_title_2' >
@@ -496,7 +285,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       attributeKey={'position_u' as ValueKey}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       minimum_value={1}
-      unit_text='pixels'
+      unit_text='px'
       stepper={true} /> : <></>}
     <ElementAttrSetterNumberInput2Cols
       app_data={app_data}
@@ -504,7 +293,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       attributePath='Noeud.apparence'
       attributeKey={'position_dx' as ValueKey}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
-      unit_text='pixels'
+      unit_text='px'
       stepper={true} />
     <ElementAttrSetterNumberInput2Cols
       app_data={app_data}
@@ -512,7 +301,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       attributePath='Noeud.apparence'
       attributeKey={'position_dy' as ValueKey}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
-      unit_text='pixels'
+      unit_text='px'
       stepper={true} />
 
     {/* Positionnement vertical automatique*/}
@@ -532,7 +321,6 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     {additional_menus.current.advanced_appearence_content}
   </></WrapperBoxSubSectionMenu>
 
-
   const additional_content = menu_for_style ? <></> : additional_menus.current.additional_node_config_style.map((el, i) =>
     <React.Fragment key={'add_node_config_style_' + i}>{el}</React.Fragment>
   )
@@ -549,6 +337,17 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     <>{elements.length > 0 ?
       <>
         {content_appearence}
+        <Checkbox
+          isDisabled={!disable_attr_props['orphan_node_visible']}
+          variant='menuconfigpanel_option_checkbox'
+          isIndeterminate={is_indeterminate}
+          isChecked={orphan_node_visible}
+          onChange={(evt) => { updateElements(app_data, elements, 'orphan_node_visible' as ValueKey, evt.target.checked, refreshThisAndUpdateRelatedComponents) }}>
+          <OSTooltip label={t('Noeud.apparence.tooltips.orphan_node_visible')}>
+            {t('Noeud.apparence.orphan_node_visible')}
+            <TooltipElementOverloaded elements={selected_nodes} t={t} k={'orphan_node_visible'} />
+          </OSTooltip>
+        </Checkbox>
         {content_geometry}
         {additional_content}
       </> : <></>

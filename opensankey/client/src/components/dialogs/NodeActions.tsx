@@ -4,7 +4,6 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
-import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
 import {
   aggregate,
   disaggregate,
@@ -18,6 +17,8 @@ import {
 } from '../../Algorithms/Hierarchies'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
+import { Class_NodeAttribute, StorageType } from '../../Elements/Element'
+import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -156,7 +157,7 @@ export class NodeActions {
     const childDims = this.contextualised_node.master_node ?
       this.contextualised_node.master_node.dimensions_as_parent_pure :
       this.contextualised_node.dimensions_as_parent_pure
-    this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
+    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]
       disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
@@ -169,7 +170,7 @@ export class NodeActions {
     const childDims = this.contextualised_node.master_node ?
       this.contextualised_node.master_node.dimensions_as_parent_pure :
       this.contextualised_node.dimensions_as_parent_pure
-    this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
+    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]
       disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
@@ -467,9 +468,9 @@ export class NodeActions {
   }
 
   resetAttr = () => {
-    const dict_old_value: { [x: string]: Class_NodeAttribute } = {}
+    const dict_old_value: { [x: string]: StorageType<typeof NODES_ATTRIBUTES_CONFIG> } = {}
     this.selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.display.attributes
+      dict_old_value[n.id] = n.attributes
     })
 
     const doReset = () => {
@@ -479,7 +480,7 @@ export class NodeActions {
 
     const undoReset = () => {
       this.selected_nodes.forEach(n => {
-        n.display.attributes = dict_old_value[n.id]
+        n.attributes = dict_old_value[n.id]
       })
       this.refreshAndSave()
     }

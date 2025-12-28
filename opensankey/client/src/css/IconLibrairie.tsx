@@ -91,6 +91,17 @@ const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24
 const svg_label_center = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
   <path d="M24,12c0,.553-.448,1-1,1H1c-.552,0-1-.447-1-1s.448-1,1-1H23c.552,0,1,.447,1,1Zm-13.414-3.586c.39,.39,.902,.585,1.414,.585s1.024-.195,1.414-.585l3.293-3.293c.391-.391,.391-1.023,0-1.414s-1.023-.391-1.414,0l-2.293,2.293V1c0-.553-.448-1-1-1s-1,.447-1,1V6l-2.293-2.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l3.293,3.293Zm2.828,7.172c-.779-.779-2.049-.779-2.828,0l-3.293,3.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l2.293-2.293v5c0,.553,.448,1,1,1s1-.447,1-1v-5l2.293,2.293c.195,.195,.451,.293,.707,.293s.512-.098,.707-.293c.391-.391,.391-1.023,0-1.414l-3.293-3.293Z" />
 </svg>
+const svg_label_left = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M0,4.5v15c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5v-7.247c.042,.143,.12,.278,.234,.391l5.191,5.087c.581,.574,1.575,.167,1.575-.644v-3.587h12.5c.829,0,1.5-.671,1.5-1.5s-.671-1.5-1.5-1.5H10v-3.587c0-.811-.994-1.218-1.575-.644L3.234,11.356c-.114,.113-.192,.248-.234,.391V4.5c0-.828-.671-1.5-1.5-1.5s-1.5,.672-1.5,1.5Z" />
+</svg>
+
+const svg_label_right = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M21,19.5v-7.247c-.042,.143-.12,.278-.234,.391l-5.191,5.087c-.581,.574-1.575,.167-1.575-.644v-3.587H1.5c-.829,0-1.5-.672-1.5-1.5s.671-1.5,1.5-1.5H14v-3.587c0-.811,.994-1.218,1.575-.644l5.191,5.087c.114,.113,.192,.248,.234,.391V4.5c0-.828,.671-1.5,1.5-1.5s1.5,.672,1.5,1.5v15c0,.828-.671,1.5-1.5,1.5s-1.5-.672-1.5-1.5Z" />
+</svg>
+
+const svg_label_center_horizontal = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12">
+  <path d="M12,24c.553,0,1-.448,1-1V1c0-.552-.447-1-1-1s-1,.448-1,1V23c0,.552,.447,1,1,1Zm-3.586-13.414c.39-.39,.585-.902,.585-1.414s-.195-1.024-.585-1.414l-3.293-3.293c-.391-.391-1.023-.391-1.414,0s-.391,1.023,0,1.414l2.293,2.293H1c-.553,0-1,.448-1,1s.447,1,1,1H6l-2.293,2.293c-.391,.391-.391,1.023,0,1.414s1.023,.391,1.414,0l3.293-3.293Zm7.172-2.828c.779,.779,2.049,.779,2.828,0l3.293-3.293c.391-.391,1.023-.391,1.414,0s.391,1.023,0,1.414l-2.293,2.293h5c.553,0,1,.448,1,1s-.447,1-1,1h-5l2.293,2.293c.391,.391,.391,1.023,0,1.414s-1.023,.391-1.414,0l-3.293-3.293Z" />
+</svg>
 
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
   width="16"
@@ -315,7 +326,48 @@ const logo_to_the_right = <svg
 </svg>
 
 
+interface ShapeIconProps {
+  fill?: string
+  stroke?: string
+  width?: string
+  height?: string
+}
 
+const EllipseShapeIcon: React.FC<ShapeIconProps> = ({
+  fill = '#78C2AD',
+  stroke = 'currentColor',
+  width = '1rem',
+  height = '1rem'
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill={fill}
+    stroke={stroke}
+    viewBox='0 0 17 17'
+    width={width}
+    height={height}
+  >
+    <path d="M 16.440445,8.4666672 A 7.9737778,7.9737773 0 0 1 8.4666672,16.440444 7.9737778,7.9737773 0 0 1 0.4928894,8.4666672 7.9737778,7.9737773 0 0 1 8.4666672,0.49288988 7.9737778,7.9737773 0 0 1 16.440445,8.4666672 Z" />
+  </svg>
+)
+
+const RectShapeIcon: React.FC<ShapeIconProps> = ({
+  fill = '#78C2AD',
+  stroke = 'currentColor',
+  width = '1rem',
+  height = '1rem'
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill={fill}
+    stroke={stroke}
+    viewBox='0 0 17 17'
+    width={width}
+    height={height}
+  >
+    <path d="M 0.385555,0.385555 H 16.547779 V 16.547779 H 0.385555 Z" />
+  </svg>
+)
 
 
 // Class ===========================================================================
@@ -323,6 +375,8 @@ const logo_to_the_right = <svg
 export class Class_IconLibrary {
 
   // Define icon ===================================
+  protected _icon_rect_shape = <RectShapeIcon/>
+  protected _icon_ellipse_shape = <EllipseShapeIcon/>
 
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
@@ -371,9 +425,9 @@ export class Class_IconLibrary {
   protected _icon_config_spreadsheet = <FontAwesomeIcon icon={faTable} />
   protected _icon_config_menu = <FontAwesomeIcon icon={faSliders} />
 
-  protected _icon_text_align_left = <FaAlignLeft />
-  protected _icon_text_align_center = <FaAlignCenter />
-  protected _icon_text_align_right = <FaAlignRight />
+  protected _icon_text_align_left = svg_label_left
+  protected _icon_text_align_center = svg_label_center_horizontal
+  protected _icon_text_align_right = svg_label_right
 
   protected _icon_text_vert_pos_top = svg_label_top
   protected _icon_text_vert_pos_center = svg_label_center
@@ -443,6 +497,9 @@ export class Class_IconLibrary {
   }
 
   // Getters ===================================
+  public get icon_rect_shape() { return this._icon_rect_shape }
+  public get icon_ellipse_shape() { return this._icon_ellipse_shape }
+
   public get icon_new_da() { return this._icon_new_da }
   public get icon_open_sankey() { return this._icon_open_sankey }
   public get icon_file_converter() { return this._icon_file_converter }

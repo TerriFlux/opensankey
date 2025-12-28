@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { ClassTemplate_ProtoElement } from './Element'
+import { Class_ProtoElement } from './Element'
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
 import { TooltipBehaviorManager } from './TooltipsCSS'
@@ -10,7 +10,7 @@ import { TooltipBehaviorManager } from './TooltipsCSS'
 export class TooltipEventManager {
   private static instance: TooltipEventManager
   private activeTooltip: {
-    element: ClassTemplate_ProtoElement | null;
+    element: Class_LinkElement | Class_NodeElement | null;
     behaviorManager: TooltipBehaviorManager | null;
   } = { element: null, behaviorManager: null }
 
@@ -99,7 +99,7 @@ export class TooltipEventManager {
   /**
    * Ouvre un tooltip pour un élément donné
    */
-  public showTooltip(element: ClassTemplate_ProtoElement, mouseX: number, mouseY: number) {
+  public showTooltip(element: Class_LinkElement | Class_NodeElement, mouseX: number, mouseY: number) {
     // Fermer le tooltip actuel s'il y en a un
     if (this.activeTooltip.element && this.activeTooltip.element !== element) {
       this.closeTooltip()

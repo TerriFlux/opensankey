@@ -27,70 +27,48 @@
 // External imports
 import * as d3 from 'd3'
 
-import {
-  ClassTemplate_Element,
-  ClassTemplate_ProtoElement
-} from '../Elements/Element'
-import { default_element_position } from '../types/Utils'
+import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { AttributeConfig } from './ElementsAttributesConfig'
 
-
-/**
- * Class that define a handler used to manipulate a element
- * @export
- * @class ClassTemplate_Handler
- * @extends {ClassTemplate_Element}
- */
-export class ClassTemplate_Handler extends ClassTemplate_Element {
-  // PRIVATE ATTRIBUTES =================================================================
-
+export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> extends Class_BaseElement{
+  protected _svg_parent_group: string
+  private _id: string
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string | undefined
-  private _ref_element: ClassTemplate_ProtoElement
-  private _ref_element_optional?: ClassTemplate_ProtoElement | undefined
+  private _ref_element: Class_ProtoElement<CONFIG>
+  private _ref_element_optional?: Class_BaseElement | undefined
   private _custom_html_grp: boolean
+  protected _is_visible: boolean = true
 
-  // CONSTRUCTOR ========================================================================
-
-  /**
-  * Creates an instance of ClassTemplate_Handler.
-  * @param {string} id
-  * @param {Class_DrawingArea} drawing_area
-  * @param {Class_MenuConfig} menu_config
-  * @param {ClassTemplate_ProtoElement} ref
-  * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragStart_function
-  * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} drag_function
-  * @param {(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void} dragEnd_function
-  * @param {{class?:string, size?: number, color?: string, filled?: boolean }} [options]
-  * @param {ClassTemplate_ProtoElement} [ref_optional]
-  * @memberof ClassTemplate_Handler
-  */
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    ref: ClassTemplate_ProtoElement,
+    ref: Class_ProtoElement<CONFIG>,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     options?: { class?: string, size?: number, color?: string, filled?: boolean },
-    ref_optional?: ClassTemplate_ProtoElement,
+    ref_optional?: Class_BaseElement,
     custom_parent_grp?: string
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, custom_parent_grp ? custom_parent_grp : 'g_handlers')
+    super(drawing_area, true)
+    this._id = id
+    this._svg_parent_group = custom_parent_grp ? custom_parent_grp : 'g_handlers'
     this._ref_element = ref
     this._ref_element_optional = ref_optional
     this._custom_html_grp = custom_parent_grp !== undefined
     // Init other class attributes
-    this._display = {
-      position: structuredClone(default_element_position),
-    }
+    // this._display = {
+    //   position: structuredClone(default_element_position),
+    // }
     // Drag handling functions -> defined by parent element
-    this.eventMouseDragStart = dragStart_function
-    this.eventMouseDrag = drag_function
-    this.eventMouseDragEnd = dragEnd_function
+    // this.eventMouseDragStart = dragStart_function
+    // this.eventMouseDrag = drag_function
+    // this.eventMouseDragEnd = dragEnd_function
     // Set optional variable value
     if (options) {
       if (options.size !== undefined) {
@@ -108,23 +86,15 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
     }
   }
 
-  // COPY METHODS =======================================================================
-
-  protected _copyFrom(element: ClassTemplate_Handler) {
-    super._copyFrom(element)
+  protected copyFrom(element: Class_Handler<CONFIG>) {
+    super.copyFrom(element)
     this._size = element._size
     this._color = element._color
     this._filled = element._filled
     this._custom_class = element._custom_class
   }
 
-  // PUBLIC METHODS =====================================================================
-
   public drawElements() {
-    this._process_or_bypass(() => this._drawElement())
-  }
-
-  protected _drawElement() {
     const elementClassName = 'gg_handler ' + (this._custom_class ? this._custom_class : '')
     this.d3_selection?.attr('class', elementClassName).datum(this)
     const size_to_use = this.sizeToUse()
@@ -139,21 +109,12 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
 
-
-  // PROTECTED METHODS =====================================================================
-
-  protected _draw() {
-    super._draw()
-    this._drawElement()
+  public draw() {
+    this.applyPosition()
+    this.drawElements()
   }
 
-
-  /**
-   * Override initDraw to allow the creation of html grp outside the DA
-   *
-   * @memberof Class_Handler
-   */
-  protected override _initDraw(): void {
+  protected _initDraw(): void {
     // If the parent id is referenced in the constructor we allow the creation of the new group outside the DA
     // (orginally this override was created to allow the creation of legend handler outside the DA)
     if (this._custom_html_grp) {
@@ -163,22 +124,15 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
         if (d3_drawing_area_selection.nodes().length > 0) {
           this.d3_selection = d3_drawing_area_selection.append('g')
           this.d3_selection.attr('id', this.svg_group)
-            //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
+          //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
         }
       }
-    } else {
+    } /*else {
       // Normal _initDraw
       super._initDraw()
-    }
+    }*/
   }
 
-  /**
-   * Correct size to use for handler, it take into account scale of DA to to counter visual size reduction
-   *
-   * @private
-   * @return {*} 
-   * @memberof ClassTemplate_Handler
-   */
   private sizeToUse() {
     if (this._custom_html_grp)
       return this._size
@@ -186,27 +140,18 @@ export class ClassTemplate_Handler extends ClassTemplate_Element {
       return this._size / this.drawing_area.getZoomScale()
   }
 
-  // GETTERS / SETTERS ==================================================================
-
-  /**
-     * Getter used to display or not the handler (called in draw of ClassTemplate_Element)
-     *
-     * @readonly
-     * @memberof ClassTemplate_Handler
-     */
   public get is_visible(): boolean {
     return (
-      super.is_visible &&
+      this._is_visible &&
       this._ref_element.is_visible &&
       this._ref_element.is_selected &&
       (this._ref_element_optional?.is_visible ?? true))
   }
 
-  public get ref_element(): ClassTemplate_ProtoElement {
-    return this._ref_element
-  }
+  public get ref_element() {return this._ref_element}
 
-  public get ref_element_optional(): ClassTemplate_ProtoElement | undefined {
-    return this._ref_element_optional
-  }
+  public get ref_element_optional() {return this._ref_element_optional}
+
+  public get svg_parent_group() { return this._svg_parent_group }
+  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
 }

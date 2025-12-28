@@ -455,7 +455,8 @@ export const SpreadSheet = (
         dict_new_id[l.id][fieldName] = l[fieldName].id  //save new id of source
 
         if (!prevNode.hasInputLinks() && !prevNode.hasOutputLinks()) {
-          dict_old_id[l.id].deletedJSON = prevNode.toJSON()//save json of deleted node
+          dict_old_id[l.id].deletedJSON = {}
+          prevNode.toJSON(dict_old_id[l.id].deletedJSON as Type_JSON)//save json of deleted node
           // Remove lone nodes
           drawing_area.deleteNode(prevNode)
         }

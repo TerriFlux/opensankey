@@ -43,37 +43,11 @@ export const default_toast_duration: number = 1000 // 1sec
 export const default_toast_waiting_delay: number = 500 // 500ms
 export const toast_bypass: boolean = window.sankey?.publish??false
 
-/**
- * Define necessary properties for a position
- * @type Type_ElementPosition
- */
-export type Type_ElementPosition = {
-  type?: Type_Position
+export type Type_BaseElementPosition = {
   x: number
   y: number
-  u: number
-  v: number
-  dx?: number
-  dy?: number
-  relative_dx?: number
-  relative_dy?: number
-  auto_x?: boolean
-  auto_y?: boolean
 }
 
-export type Type_ElementPositionOptionnal = {
-  type?: Type_Position
-  x?: number
-  y?: number
-  u?: number
-  v?: number
-  dx?: number
-  dy?: number
-  relative_dx?: number
-  relative_dy?: number
-  auto_x?: boolean
-  auto_y?: boolean
-}
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
 /**
@@ -162,12 +136,10 @@ export const default_main_sankey_id = 'sankey_maitre'
 
 export const const_default_position_x = 50
 export const const_default_position_y = 50
-export const default_element_position: Type_ElementPosition = {
-  x: const_default_position_x,
-  y: const_default_position_y,
-  u: 0,
-  v: -1
-}
+// export const default_element_position: Type_ElementPosition = {
+//   x: const_default_position_x,
+//   y: const_default_position_y,
+// }
 
 export const default_style_id = 'default'
 export const default_style_name = 'Style par default'
@@ -422,7 +394,6 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
 
     additional_menu_configuration_links: {},
     additional_data_element: [],
-    additional_link_appearence_value: [],
     additional_link_visual_filter_content: [],
 
     additional_preferences: [],

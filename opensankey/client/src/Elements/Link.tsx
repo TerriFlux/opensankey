@@ -35,32 +35,23 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import {
-  Type_ElementPosition,
-  default_style_id,
   Type_JSON,
   getJSONFromJSON,
-  getJSONOrUndefinedFromJSON,
-  getStringListFromJSON,
   getStringFromJSON,
   Type_Structure,
-  getNumberFromJSON
+  getNumberFromJSON,
+  Type_BaseElementPosition
 } from '../types/Utils'
-import {
-  Class_LinkAttribute,
-  Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_Side
-} from './LinkAttributes'
-import { Class_LinkStyle } from './ElementStyle'
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
-import { LinkDrawLabel } from './LinkDrawLabel'
-import { LinkDrawValue } from './LinkDrawValue'
-import { LinkTooltip } from './LinkTooltip'
+import { LinkDrawLabel, LinkDrawValue } from './LinkDrawLabel'
+import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
-import { ClassTemplate_ProtoElement } from './Element'
-import { LINKS_ATTRIBUTES_CONFIG, LinkSetterGenerator } from './LinkAttributesConfig'
-
+import { Class_NodeBase } from './NodeBase'
+import { LinkAttributeMappings, Type_Side, } from './ElementsAttributesConfig'
+import { Class_LinkAttribute } from './Element'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -69,7 +60,7 @@ const side_order: { [_ in Type_Side]: number } = {
   'top': 3
 }
 
-// export const default_shape_shape_is_gradient = false
+// export const default_shape_type_is_gradient = false
 // SPECIFIC FUNCTIONS ********************************************************************
 
 export function defaultLinkId(
@@ -90,8 +81,8 @@ export function defaultLinkId(
  * @return {*}
  */
 export function sortLinksElementsByIds(
-  a: Class_LinkElement | Class_LinkStyle,
-  b: Class_LinkElement | Class_LinkStyle
+  a: Class_LinkElement,
+  b: Class_LinkElement
 ) {
   if (a.id > b.id) return 1
   else if (a.id < b.id) return -1
@@ -173,34 +164,30 @@ export function sortLinksElementsByRelativeNodesPositions(
   }
 }
 
-
-
-type StyleProperty = keyof typeof LINKS_ATTRIBUTES_CONFIG;
-
-export const link_data_label = (type_data:Type_Structure,link:Class_LinkElement) => {
+export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement) => {
   if (type_data == 'data' || type_data == 'data_label') {
     if (!link.value?.valueData) return ''
-    return link.formatValueWithOption(format_value(type_data,link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+    return link.formatValueWithOption(format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
         return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
       }*/
   }
   if (link.value?.result_min !== null) {
     if (type_data === 'free_interval') {
-      return '[' + format_value(type_data,link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data,link.value!.result_max, link, link.unit_name) + ']'
+      return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name) + ']'
     }
     if (type_data === 'free_value') {
-      return format_value(type_data,link.valueCurrent!, link, link.unit_name)
+      return format_value(type_data, link.valueCurrent!, link, link.unit_name)
     }
     return ''
   }
 
-  return format_value(type_data,link.valueCurrent!, link, link.unit_name)  
+  return format_value(type_data, link.valueCurrent!, link, link.unit_name)
 }
 
 export const format_value = (
-  data_type:Type_Structure,
+  data_type: Type_Structure,
   data_value: number | undefined | null,
-  element: Class_LinkElement | Class_NodeElement,
+  element: Class_LinkElement | Class_NodeBase,
   unit_name: string
 ) => {
   /*==========================================================================*/
@@ -297,92 +284,26 @@ export const format_value = (
  *
  * @class Class_LinkElement
  */
-export class Class_LinkElement extends ClassTemplate_ProtoElement {
-  shape_local_link_scale!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_local_link_scale']['type']>
-  shape_is_curved!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_curved']['type']>
-  shape_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_shape']['type']>
-  shape_curvature!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_curvature']['type']>
-  shape_is_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_recycling']['type']>
-  shape_is_structure!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_structure']['type']>
-  shape_orientation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_orientation']['type']>
-  shape_starting_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_curve']['type']>
-  shape_ending_curve!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_curve']['type']>
-  shape_starting_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_starting_tangeant']['type']>
-  shape_ending_tangeant!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_ending_tangeant']['type']>
-  shape_middle_recycling!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_middle_recycling']['type']>
-  shape_is_arrow!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_arrow']['type']>
-  shape_arrow_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_arrow_size']['type']>
-  shape_is_dashed!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_is_dashed']['type']>
-  shape_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color']['type']>
-  shape_color_rule!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_color_rule']['type']>
-  shape_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['shape_opacity']['type']>
-  value_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_is_visible']['type']>
-  value_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_family']['type']>
-  value_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_font_size']['type']>
-  value_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_uppercase']['type']>
-  value_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_bold']['type']>
-  value_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_italic']['type']>
-  value_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_color']['type']>
-  value_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_horiz']['type']>
-  value_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_vert']['type']>
-  value_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_opacity']['type']>
-  value_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_shape']['type']>
-  value_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background_color']['type']>
-  value_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_background']['type']>
-  value_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_on_path']['type']>
-  value_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_pos_auto']['type']>
-  value_label_scientific_notation!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_scientific_notation']['type']>
-  value_label_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_significant_digits']['type']>
-  value_label_nb_significant_digits!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_significant_digits']['type']>
-  value_label_custom_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_custom_digit']['type']>
-  value_label_nb_digit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_nb_digit']['type']>
-  value_label_unit_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_visible']['type']>
-  value_label_unit_type!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_type']['type']>
-  value_label_unit!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit']['type']>
-  value_label_unit_factor!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['value_label_unit_factor']['type']>
-  name_label_is_visible!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_is_visible']['type']>
-  name_label_font_family!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_family']['type']>
-  name_label_font_size!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_font_size']['type']>
-  name_label_uppercase!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_uppercase']['type']>
-  name_label_bold!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_bold']['type']>
-  name_label_italic!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_italic']['type']>
-  name_label_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_color']['type']>
-  name_label_horiz!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_horiz']['type']>
-  name_label_vert!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_vert']['type']>
-  name_label_background!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background']['type']>
-  name_label_background_color!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_color']['type']>
-  name_label_background_opacity!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_opacity']['type']>
-  name_label_background_shape!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_background_shape']['type']>
-  name_label_on_path!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_on_path']['type']>
-  name_label_pos_auto!: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG['name_label_pos_auto']['type']>
-  /**
-   * Display attributes for link
-   * @protected
-   * @type {{
-  *     drawing_area: Class_DrawingArea,
-  *     position: Type_ElementPosition,
-  *     local: Class_LinkAttribute,
-  *     style: Class_LinkStyle[]
-  *   }}
-  * @memberof Class_LinkElement
-  */
-  public _display: {
-    position_starting: Type_ElementPosition,
-    position_ending: Type_ElementPosition,
+export class Class_LinkElement extends Class_LinkAttribute {
 
-    style: Class_LinkStyle[],
-    attributes: Class_LinkAttribute
 
-    position_x_value?: number // optional var used when value label is dragged (if label doesn't follow link path)
-    position_y_value?: number // optional var used when value label is dragged (if label doesn't follow link path)
-    position_offset_value?: number // optional var used when value label is dragged (if label follow link path)
-    position_x_name?: number // optional var used when name label is dragged (if label doesn't follow link path)
-    position_y_name?: number // optional var used when name label is dragged (if label doesn't follow link path)
-    position_offset_name?: number // optional var used when name label is dragged (if label follow link path)
-    position_x_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    position_y_label?: number // optional var used when label is dragged (if label doesn't follow link path)
-    position_offset_label?: number // optional var used when label is dragged (if label follow link path)
-  }
+  private _position_ending: Type_BaseElementPosition
+
+  //style: Class_LinkStyle[],
+  //attributes: Class_LinkAttribute
+
+  // optional var used when value label is dragged (if label doesn't follow link path)
+  private _position_x_value?: number
+  private _position_y_value?: number
+  private _position_offset_value?: number
+
+  private _position_x_name?: number
+  private _position_y_name?: number
+  private _position_offset_name?: number
+  // private _position_x_label?: number
+  // private _position_y_label?: number
+  // private _position_offset_label?: number
+
   private _tooltip_text: string = ''
 
   public parallel_curve: Class_LinkElement | undefined
@@ -412,36 +333,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   protected _link_draw_value: LinkDrawValue
   public _link_tooltip: LinkTooltip
 
-  /**
-  * Node from which link starts
-  * @private
-  * @type {Class_NodeElement}
-  * @memberof Class_LinkElement
-  */
   private _source: Class_NodeElement
-
-  /**
-   * Node to which link arrives
-   * @private
-   * @type {Class_NodeElement}
-   * @memberof Class_LinkElement
-   */
   private _target: Class_NodeElement
-
-  /**
-   * Value of link
-   * @private
-   * @type {Class_LinkValueTree | Class_LinkValue}
-   * @memberof Class_LinkElement
-   */
   private _values: Class_LinkValueTree | Class_LinkValue
-
-  /**
-   * d3 shape for this link arrow
-   * @private
-   * @type {(string | undefined)}
-   * @memberof Class_LinkElement
-   */
   private _arrow_shape: string | undefined
 
   // Boolean var only used when enlarging thickness when mouse hovering link
@@ -472,8 +366,10 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    LinkSetterGenerator.generateSetters(this)
+    super(
+      id, drawing_area, 'g_elements_sankey', new LinkAttributeMappings(), drawing_area.sankey.default_link_style
+    )
+    // LinkSetterGenerator.generateSetters(this)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
@@ -497,24 +393,13 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     drawing_area.list_g_element.push(this.id)
 
     // Display
-    this._display = {
-      position_starting: {
-        x: 0,
-        y: 0,
-        u: 0,
-        v: 0
-      },
-      position_ending: {
-        x: 0,
-        y: 0,
-        u: 0,
-        v: 0
-      },
-      style: [drawing_area.sankey.default_link_style as Class_LinkStyle],
-      attributes: new Class_LinkAttribute()
+
+    this._position_ending = {
+      x: 0,
+      y: 0
     }
-    // Link with style
-    this._display.style[0].addReference(this)
+
+
     this.source.addOutputLink(this)
     this.target.addInputLink(this)// Target
     // Instanciate display on svg
@@ -522,6 +407,13 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       this._link_control_points.computeControlPoints()
     }
     this.draw()
+  }
+
+  public drawIllustration() {
+  }
+  public drawIllustrationImage() {
+  }
+  public drawIllustrationIcon() {
   }
 
   public createLinkValue(
@@ -554,34 +446,9 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._values.delete()
   }
 
-  // COPY METHODS =======================================================================
-  /**
-   * Copy attributes from a given link
-   *
-   * @param {Class_LinkElement} link_to_copy
-   * @memberof Class_LinkElement
-   */
-  public copyAttrFrom(_: Class_LinkElement) {
-    super._copyFrom(_)
-    // Update style
-    this._display.style = _._display.style
-
-    // Local attributes
-    this._display.attributes.copyFrom(_._display.attributes)
-    // Display
-    this._display.position_starting = structuredClone(_._display.position_starting)
-    this._display.position_ending = structuredClone(_._display.position_ending)
-    this._display.position_x_value = _._display.position_x_value
-    this._display.position_y_value = _._display.position_y_value
-    this._display.position_offset_value = _._display.position_offset_value
-    this._display.position_x_name = _._display.position_x_name
-    this._display.position_y_name = _._display.position_y_name
-    this._display.position_offset_name = _._display.position_offset_name
-    // Tooltips
-    this.tooltip_text = _.tooltip_text
-  }
-
-  protected _copyFrom(_: Class_LinkElement) {
+  //public copyFrom(_: Class_ProtoElement<typeof LINKS_ATTRIBUTES_CONFIG>) {
+  public copyFrom(_: Class_LinkElement) {
+    super.copyFrom(_)
     // Source relations
     if (this._source.id !== _._source.id) {
       let source = this.sankey.nodes_dict[_._source.id] as Class_NodeElement
@@ -600,10 +467,19 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       }
       this.target = target
     }
-    this._display.style = _._display.style
+    //this._display.style = _._display.style
 
     // Local attributes
-    this.copyAttrFrom(_)
+    this._position = structuredClone(_._position)
+    this._position_ending = structuredClone(_._position_ending)
+    this._position_x_value = _._position_x_value
+    this._position_y_value = _._position_y_value
+    this._position_offset_value = _._position_offset_value
+    this._position_x_name = _._position_x_name
+    this._position_y_name = _._position_y_name
+    this._position_offset_name = _._position_offset_name
+    // Tooltips
+    this.tooltip_text = _.tooltip_text
     // Values
     if (_._values instanceof Class_LinkValue) {
       this._values = this.createLinkValue(this)
@@ -648,25 +524,22 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     }
   }
 
-  protected _toJSON(
+  public toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super._toJSON(json_object, kwargs)
+    super.toJSON(json_object, kwargs)
     // Related nodes
     json_object['idSource'] = this._source.sibling ? this._source.sibling.id : this._source.id
     json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
-    // Fill style & local attributes
-    if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    const attr_json = this._display.attributes.toJSON(this, null)
-    if (Object.keys(attr_json).length > 0) json_object['local'] = this._display.attributes.toJSON(this, null)
+
     // Fill positions attributes
-    if (this._display.position_offset_value !== undefined) json_object['position_offset_value'] = this._display.position_offset_value
-    if (this._display.position_offset_name !== undefined) json_object['position_offset_label'] = this._display.position_offset_name
-    if (this._display.position_x_value !== undefined) json_object['position_x_label'] = this._display.position_x_value
-    if (this._display.position_y_value !== undefined) json_object['position_y_label'] = this._display.position_y_value
-    if (this._display.position_x_name !== undefined) json_object['position_x_name'] = this._display.position_x_name
-    if (this._display.position_y_name !== undefined) json_object['position_y_name'] = this._display.position_y_name
+    // if (this._position_offset_value !== undefined) json_object['position_offset_value'] = this._position_offset_value
+    // if (this._position_offset_name !== undefined) json_object['position_offset_label'] = this._position_offset_name
+    // if (this._position_x_value !== undefined) json_object['position_x_label'] = this._position_x_value
+    // if (this._position_y_value !== undefined) json_object['position_y_label'] = this._position_y_value
+    // if (this._position_x_name !== undefined) json_object['position_x_name'] = this._position_x_name
+    // if (this._position_y_name !== undefined) json_object['position_y_name'] = this._position_y_name
 
     // Tooltips
     if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
@@ -687,35 +560,20 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @param {Type_JSON} [kwargs]
    * @memberof Class_LinkElement
    */
-  protected _fromJSON(
+  public fromJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    // Root attributes
-    super._fromJSON(json_object)
-    // Matching names if needed
+    super.fromJSON(json_object, kwargs)
+
     const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
     const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
-    // Get style & local attributes
-    const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-    this.style = style_id.map(s_id => this.sankey.link_styles_dict[s_id]) as Class_LinkStyle[]
 
-    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
-    if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object, this, null)
-      // If local attribute have key local_scale then update local scale domain
-      if (this._display.attributes.shape_local_link_scale) {
-        this.setDomainLocalScale(this._display.attributes.shape_local_link_scale)
-      }
+
+    if (this.shape_local_link_scale) {
+      this.setDomainLocalScale(this.shape_local_link_scale)
     }
-    // Get positions infos
-    this._display.position_offset_value = getNumberFromJSON(json_object, 'position_offset_value',this._display.position_offset_value!)
-    this._display.position_offset_name = getNumberFromJSON(json_object, 'position_offset_label',  this._display.position_offset_name!)
-    this._display.position_x_value = getNumberFromJSON(json_object, 'position_x_label', this._display.position_x_value!)
-    this._display.position_y_value = getNumberFromJSON(json_object, 'position_y_label',this._display.position_y_value!)
-    this._display.position_x_name = getNumberFromJSON(json_object, 'position_x_name',this._display.position_x_name!)
-    this._display.position_y_name = getNumberFromJSON(json_object, 'position_y_name',this._display.position_y_name!)
-    // Get value
+
     this._values.fromJSON(
       getJSONFromJSON(json_object, 'value', {}),
       matching_taggs_id,
@@ -732,23 +590,24 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._arrow_shape = undefined // reset shape also
   }
 
-  public drawPath() {
-    this._process_or_bypass(() => { this._link_shape.drawPath(); this._orderD3Elements() })
+  public drawShape() {
+    this._link_shape.drawShape()
+    this._orderD3Elements()
   }
 
   public drawArrow() {
-    this._process_or_bypass(() => { this._drawArrow(); this._orderD3Elements() })
+    this._drawArrow()
+    this._orderD3Elements()
   }
 
-  public drawValue() {
-    this._process_or_bypass(() => { this._link_draw_value.drawValue(); this._orderD3Elements() })
+  public drawValueLabel() {
+    this._link_draw_value.drawValue();
+    this._orderD3Elements()
   }
 
-  public drawLabel() {
-    this._process_or_bypass(() => {
-      this._link_draw_label.drawLabel()
-      this._orderD3Elements()
-    })
+  public drawNameLabel() {
+    this._link_draw_label.drawLabel()
+    this._orderD3Elements()
   }
 
   public drawWithNodes() {
@@ -760,20 +619,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
 
   public drawAsSelected() {
     this._link_control_points.drawControlPoint()
-  }
-
-  public drawElements() {
-    this._process_or_bypass(() => this._drawElements())
-  }
-
-  /**
-   * Reset all attributes as defined by style
-   * @memberof Class_LinkElement
-   */
-  public resetAttributes() {
-    this._display.attributes = new Class_LinkAttribute()
-    // Need to redraw from nodes
-    this.drawWithNodes()
   }
 
   /**
@@ -796,18 +641,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this._target.addInputLink(this)
     // Draw
     this.drawElements()
-  }
-
-  public deleteDraggedValuePos() {
-    delete this._display.position_x_value
-    delete this._display.position_y_value
-    delete this._display.position_offset_value
-  }
-
-  public deleteDraggedLabelPos() {
-    delete this._display.position_x_name
-    delete this._display.position_y_name
-    delete this._display.position_offset_name
   }
 
   /**
@@ -887,33 +720,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       // Set to recompute visibility from tags after -> less data tag = differente value = different flux tags
       this.tagsUpdated()
     }
-  }
-
-  public useDefaultStyle() {
-    this.style = [this.sankey.default_link_style] as Class_LinkStyle[]
-    this.drawElements()
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_LinkAttribute) {
-    if (this._display.attributes[attr] === undefined) return false
-    if (this._display.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false
-    return true
-  }
-
-  public isEqual(_: this) {
-    // Implementation de comparaison des attributs
-    const compareAttrs = [
-      'shape_orientation', 'shape_starting_curve', 'shape_ending_curve', 'shape_curvature',
-      'shape_is_curved', 'shape_shape', 'shape_is_recycling', 'shape_arrow_size',
-      'value_label_horiz', 'value_label_vert', 'value_label_on_path', 'value_label_pos_auto',
-      'shape_is_arrow', 'shape_color', 'shape_opacity', 'shape_is_dashed',
-      'value_label_is_visible', 'value_label_font_size', 'value_label_color',
-      'value_label_custom_digit', 'value_label_nb_digit', 'value_label_significant_digits',
-      'value_label_nb_significant_digits', 'value_label_scientific_notation',
-      'value_label_font_family', 'value_label_unit_visible', 'value_label_unit',
-      'value_label_unit_factor'
-    ] as const
-    return compareAttrs.every(attr => this[attr] === _[attr])
   }
 
   public getPathColorToUse(): string {
@@ -1173,7 +979,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     this.source.addOutputLink(l)
     this.target.addInputLink(l)
     l.setAsChildLink(tag)
-    l.shape_shape = 'bezier_outline'
+    l.shape_type = 'bezier_outline'
     tag.group.use_colors = true
   }
 
@@ -1182,28 +988,28 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @private
    * @memberof Class_LinkElement
    */
-  protected _draw() {
+  public draw() {
     if (!this.is_value_above_threshold) {
       return
     }
     // Heritance
-    super._draw()
+    super.draw()
     // Get starting point
     const starting_point = this.source.getOutputLinkStartingPoint(this)
     if (starting_point) {
-      this._display.position_starting.x = starting_point.x
-      this._display.position_starting.y = starting_point.y
+      this._position.x = starting_point.x
+      this._position.y = starting_point.y
     }
     // Get ending point
     const ending_point = this.target.getInputLinkEndingPoint(this)
     if (ending_point) {
-      this._display.position_ending.x = ending_point.x
-      this._display.position_ending.y = ending_point.y
+      this._position_ending.x = ending_point.x
+      this._position_ending.y = ending_point.y
     }
     // Draw only if we have starting & ending points
     if (starting_point && ending_point) {
       // Draw elements
-      this._drawElements()
+      this.drawElements()
     }
   }
 
@@ -1250,11 +1056,12 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
    * @protected
    * @memberof Class_LinkElement
    */
-  protected _drawElements() {
-    this._link_shape.drawPath()
+  public drawElements() {
+    this._link_shape.drawShape()
     this._drawArrow()
     this._link_draw_value.drawValue()
     this._link_draw_label.drawLabel()
+    this._link_draw_label.drawFO()
   }
 
   public drawControlPoint() {
@@ -1289,7 +1096,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     const drawing_area = this.drawing_area
     if (drawing_area.application_data.is_static) {
       drawing_area.purgeSelection()
-      return      
+      return
     }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
@@ -1332,7 +1139,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     if (this.drawing_area.application_data.is_static) {
-      return      
+      return
     }
     // Apply parent behavior first
     super.eventSimpleRMBCLick(event)
@@ -1453,20 +1260,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     }
   }
 
-  /**
-   * Function that return the frist style that has the k attribute,
-   * if not take default node style that is guaranted to have the attribute.
-   *
-   * Go from last style added to oldest (default style)
-   *
-   * @param {keyof Class_NodeStyle} k
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public getStyleWithAttr(k: keyof Class_LinkStyle) {
-    return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_link_style as Class_LinkStyle
-  }
-
   // GETTERS / SETTERS ==================================================================
   public defaultLinkName(
     source: Class_NodeElement,
@@ -1513,10 +1306,6 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       this.are_related_flux_tags_selected &&
       this.is_not_zero
     )
-  }
-
-  public get display() {
-    return this._display
   }
 
   /**
@@ -1758,7 +1547,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     // Cast as number
     if (value !== null) {
       value.text_value = _
-      this.drawLabel()
+      this.drawNameLabel()
     }
   }
 
@@ -1798,7 +1587,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get data_label() {
-    return link_data_label(this.sankey.drawing_area.type_data,this)
+    return link_data_label(this.sankey.drawing_area.type_data, this)
   }
 
   /**
@@ -1846,29 +1635,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
     return Object.values(this.flux_taggs_dict)
   }
 
-
-
-  /**
-   * Get style key of node
-   * @return {string}
-   * @memberof ClassLink
-   */
-  public get style() {
-    return this._display.style
+  public drawFO() {
+    this._link_draw_label.drawFO()
   }
 
-  /**
-  * Set style key of node
-  * @memberof Class_Node
-  */
-  public set style(_: Class_LinkStyle[]) {
-    if (!_) return
-    this._display.style.forEach(style => style.removeReference(this))
-    this._display.style = _
-    _.forEach(style => style.addReference(this))
 
-    this.drawElements()
-  }
 
   public linkIsStructure = () => {
     if (this.sankey.drawing_area.type_data == 'structure') return true
@@ -1908,11 +1679,11 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get position_x_start() {
-    return this._display.position_starting.x
+    return this._position.x
   }
 
   public get position_y_start() {
-    return this._display.position_starting.y
+    return this._position.y
   }
 
   public get position_x_end() {
@@ -1924,7 +1695,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._display.position_ending.x - shifting_end_point_x
+    return this._position_ending.x - shifting_end_point_x
   }
 
   public get position_y_end() {
@@ -1936,7 +1707,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._display.position_ending.y - shifting_end_point_y
+    return this._position_ending.y - shifting_end_point_y
   }
 
   // public set shape_local_link_scale(value: number | undefined) {
@@ -1945,24 +1716,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   //   this.redrawNodesSourceTarget()
   // }
 
-  public getLinkProperty(propertyName: StyleProperty) {
-    // Vérifier d'abord dans les attributs
-    if (this._display.attributes[propertyName] !== undefined) {
-      return this._display.attributes[propertyName]
-    }
-    return this.getStyleProperty(propertyName)
-  }
 
-  public getStyleProperty(propertyName: StyleProperty) {
-    // Ensuite dans le style
-    const valueOfStyle = this.getStyleWithAttr(propertyName)
-    if (valueOfStyle[propertyName] !== undefined) {
-      return valueOfStyle[propertyName]
-    }
-
-    // Enfin la valeur par défaut
-    return LINKS_ATTRIBUTES_CONFIG[propertyName].default
-  }
 
 
   // Orientation
@@ -1980,181 +1734,7 @@ export class Class_LinkElement extends ClassTemplate_ProtoElement {
   }
 
   public get value_label_unit_is_reference() { return this._is_unit_reference }
-  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValue() }
-
-  /**
-   * Setter personnalisé pour name_label_pos_auto avec logique spéciale
-   */
-  customNameLabelPosAuto(value: boolean) {
-    this._display.attributes.name_label_pos_auto = value
-    const orth_pos = this._display.attributes.name_label_vert
-    this._display.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-  }
-
-  // ==================================================================================================
-  // SETTERS PERSONNALISÉS POUR LOGIQUE COMPLEXE
-  // ==================================================================================================
-  /**
-     * Setter personnalisé pour shape_orientation avec logique spéciale
-     */
-  customShapeOrientation(value: Type_Orientation) {
-    if ((!this._display.attributes.shape_is_recycling) && (
-      ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) &&
-      ((value === 'hh') || (value === 'vv'))
-    )) {
-      if (this._display.attributes.shape_starting_curve !== undefined)
-        this._display.attributes.shape_starting_curve = this._display.attributes.shape_starting_curve / 2
-      if (this._display.attributes.shape_ending_curve !== undefined)
-        this._display.attributes.shape_ending_curve = this._display.attributes.shape_ending_curve / 2
-    }
-    this._display.attributes.shape_orientation = value
-  }
-
-  /**
-   * Setter personnalisé pour shape_starting_curve avec logique spéciale
-   */
-  customStartingCurve(value: number) {
-    if (value !== undefined && value >= 0) {
-      if (!this._display.attributes.shape_is_recycling) {
-        if ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) {
-          this._display.attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
-        } else {
-          const endingCurve = this._display.attributes.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default
-          this._display.attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
-        }
-      } else {
-        this._display.attributes.shape_starting_curve = value
-      }
-    } else {
-      this._display.attributes.shape_starting_curve = value
-    }
-  }
-
-  /**
-   * Setter personnalisé pour shape_ending_curve avec logique spéciale
-   */
-  customEndingCurve(value: number) {
-    if (value !== undefined && value >= 0) {
-      if (!this._display.attributes.shape_is_recycling) {
-        if ((this._display.attributes.shape_orientation === 'vh') || (this._display.attributes.shape_orientation === 'hv')) {
-          this._display.attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
-        } else {
-          const startingCurve = this._display.attributes.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default
-          this._display.attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
-        }
-      } else {
-        this._display.attributes.shape_ending_curve = value
-      }
-    } else {
-      this._display.attributes.shape_ending_curve = value
-    }
-  }
-
-  /**
-   * Setter personnalisé pour shape_starting_tangeant avec logique spéciale
-   */
-  customStartingTangeant(value: number) {
-    this._display.attributes.shape_starting_tangeant = (value !== undefined && value > 0) ? value : value
-  }
-
-  /**
-   * Setter personnalisé pour shape_ending_tangeant avec logique spéciale
-   */
-  customEndingTangeant(value: number) {
-    this._display.attributes.shape_ending_tangeant = (value !== undefined && value > 0) ? value : value
-  }
-
-  /**
-   * Setter personnalisé pour shape_is_recycling avec logique spéciale
-   */
-  customShapeIsRecycling(value: boolean) {
-    // En mode recycling, pas de limite supérieure pour starting & ending
-    // En mode normal, on a des limites, donc on doit les appliquer
-    if (!value && this._display.attributes.shape_is_recycling) {
-      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
-      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
-    }
-    this._display.attributes.shape_is_recycling = value
-  }
-
-  /**
-   * Setter personnalisé pour value_label_horiz avec logique spéciale
-   */
-  customValueLabelHoriz(value: Type_PathLabelHPosition) {
-    this._display.attributes.value_label_pos_auto = false
-    if (value !== 'dragged') this.deleteDraggedValuePos()
-    this._display.attributes.value_label_horiz = value
-  }
-
-  /**
-   * Setter personnalisé pour value_label_vert avec logique spéciale
-   */
-  customValueLabelVert(value: Type_PathLabelVPosition) {
-    if (value !== 'dragged') this.deleteDraggedValuePos()
-    this._display.attributes.value_label_pos_auto = false
-    this._display.attributes.value_label_vert = value
-  }
-
-  /**
-   * Setter personnalisé pour value_label_on_path avec logique spéciale
-   */
-  customValueLabelOnPath(value: boolean) {
-    this._display.attributes.value_label_on_path = value
-    if (value) {
-      const lab_pos = this._display.attributes.value_label_horiz
-      const lab_orth_pos = this._display.attributes.value_label_vert
-      this._display.attributes.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this._display.attributes.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-    }
-  }
-
-  /**
-   * Setter personnalisé pour value_label_pos_auto avec logique spéciale
-   */
-  customValueLabelPosAuto(value: boolean) {
-    this._display.attributes.value_label_pos_auto = value
-    this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert === 'dragged') ? 'middle' : this._display.attributes.value_label_vert
-  }
-
-  /**
-   * Setter personnalisé pour value_label_custom_digit avec logique spéciale
-   */
-  customValueLabelCustomDigit(value: boolean) {
-    this._display.attributes.value_label_custom_digit = value
-    if (value) {
-      this.value_label_scientific_notation = false
-      this.value_label_significant_digits = false
-    }
-  }
-
-  /**
-   * Setter personnalisé pour name_label_horiz avec logique spéciale
-   */
-  customNameLabelHoriz(value: Type_PathLabelHPosition) {
-    if (value !== 'dragged') this.deleteDraggedLabelPos()
-    this._display.attributes.name_label_horiz = value
-  }
-
-  /**
-   * Setter personnalisé pour name_label_vert avec logique spéciale
-   */
-  customNameLabelVert(value: Type_PathLabelVPosition) {
-    if (value !== 'dragged') this.deleteDraggedLabelPos()
-    this._display.attributes.name_label_vert = value
-  }
-
-  /**
-   * Setter personnalisé pour name_label_on_path avec logique spéciale
-   */
-  customNameLabelOnPath(value: boolean) {
-    this._display.attributes.name_label_on_path = value
-    if (value) {
-      const lab_pos = this._display.attributes.name_label_horiz
-      const lab_orth_pos = this._display.attributes.name_label_vert
-      this._display.attributes.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this._display.attributes.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-    }
-  }
+  public set value_label_unit_is_reference(_) { this._is_unit_reference = _; this.drawValueLabel() }
 
   public get datatags_fingerprint() { return this._datatags_fingerprint }
 

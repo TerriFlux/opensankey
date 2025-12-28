@@ -8,13 +8,12 @@ import { resources_guided_tour } from './traduction_guided_tour'
 import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
-import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
-import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
 import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
 import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import { LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 
 interface TranslationItem {
   en: string

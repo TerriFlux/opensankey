@@ -46,22 +46,19 @@ import { MenuConfigurationLinkShape } from '../configmenus/SankeyMenuConfigurati
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { default_style_id } from '../../types/Utils'
 import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
-import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
+import { MenuConfigurationNodeLabel } from '../configmenus/SankeyMenuConfigurationNodesLabel'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { checked } from './SankeyMenuContext'
-import { Class_NodeAttribute, Type_customisable_node_style_attr } from '../../Elements/NodeAttributes'
-import { Class_LinkAttribute, Type_customisable_flow_style_attr } from '../../Elements/LinkAttributes'
 import { isElementAttributeOverloaded, MenuResetAttrLocal, OSMultiSelect, OSTooltip, typeElementSelectable, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { Class_NodeElement } from '../../Elements/Node'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
-import { Class_ContainerStyle, Class_LinkStyle, Class_NodeStyle } from '../../Elements/ElementStyle'
+import { Class_NodeStyle, Class_LinkStyle } from '../../Elements/Element'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { Class_ContainerElement } from '../../Elements/TextZone'
-import { CONTAINERS_ATTRIBUTES_CONFIG } from '../../Elements/ContainerAttributesConfig'
+import { LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG, Type_customisable_flow_style_attr, Type_customisable_node_style_attr } from '../../Elements/ElementsAttributesConfig'
+import { Class_LinkAttribute, Class_NodeAttribute } from '../../Elements/Element'
 
 
 export const SankeyModalStyleNode = ({
@@ -112,10 +109,10 @@ export const SankeyModalStyleNode = ({
               onClick={() => {
                 //if style attribute is not customisable delete value
                 if (ent[1])
-                  delete style_select[ent[0] as Type_customisable_node_style_attr]
+                  style_select.deleteAttribute(ent[0] as keyof typeof NODES_ATTRIBUTES_CONFIG)
 
                 //Update style attribute customisability
-                style_select.customisable_attribute[ent[0] as Type_customisable_node_style_attr] = !ent[1]
+                style_select.customisable_attribute[ent[0] as keyof typeof NODES_ATTRIBUTES_CONFIG] = !ent[1]
 
                 // Update related components
                 new_data.menu_configuration.updateComponentRelatedToNodesStyles()
@@ -175,7 +172,7 @@ export const SankeyModalStyleNode = ({
     content_node_style_context = <WrapperNodeStyleSelector new_data={new_data}>
       <>
         {content_node_customisable_attribute_labels}
-        <MenuConfigurationNodeContext
+        <MenuConfigurationNodeLabel
           app_data={new_data}
           menu_for_style={true}
         />
@@ -384,10 +381,11 @@ export const SankeyModalStyleLink = ({
               onClick={() => {
                 //if style attribute is not customisable delete value
                 if (ent[1])
-                  delete style_select[ent[0] as Type_customisable_flow_style_attr]
+                  
+                  style_select.deleteAttribute(ent[0] as keyof typeof LINKS_ATTRIBUTES_CONFIG)
 
                 //Update style attribute customisability
-                style_select.customisable_attribute[ent[0] as Type_customisable_flow_style_attr] = !ent[1]
+                style_select.customisable_attribute[ent[0] as keyof typeof LINKS_ATTRIBUTES_CONFIG] = !ent[1]
 
                 // Update related components
                 new_data.menu_configuration.updateComponentRelatedToLinksStyles()
@@ -445,7 +443,7 @@ export const SankeyModalStyleLink = ({
     content_apparence_contenxt = <WrapperLinkStyleSelector new_data={new_data}><>
       {content_flow_customisable_attribute_context}
       <MenuConfigurationLinkLabel
-        new_data={new_data}
+        app_data={new_data}
         additionMenus={additionalMenus}
         menu_for_style={true}
       />
@@ -641,7 +639,7 @@ export const ConfigMenuStyleElement = ({ app_data, selected_elements, config, ca
     }
   })
 
-  return <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Style')} ><>
+  return <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Style')} is_open = {false} ><>
     <Box layerStyle='menuconfigpanel_row_stylechoice' >
       <OSTooltip label={t('Noeud.tooltips.AS')}>
         <MenuResetAttrLocal new_data={app_data} nodesOrLinks={nodesOrLinks} dict_overwritted_attr={dict_overwritted_attr} />
@@ -825,7 +823,7 @@ export const ConfigMenuStyleElementContainer = ({
 }: {
   app_data: Class_ApplicationData
   selected_elements: Class_ContainerElement[]
-  config: typeof CONTAINERS_ATTRIBUTES_CONFIG
+  config: typeof NODES_ATTRIBUTES_CONFIG
 }) => {
   const { drawing_area, t, icon_library, menu_configuration } = app_data
   const { sankey } = drawing_area
@@ -959,8 +957,8 @@ export const MenuOrderStylesOfSelectedContainers = ({
                     const style_src = style_list_to_use[element_idx]
                     const style_trgt = style_list_to_use[element_idx - 1]
                     drawing_area.moveOrderStyleInSelectedContainers(
-                      style_src as Class_ContainerStyle,
-                      style_trgt as Class_ContainerStyle
+                      style_src as Class_NodeStyle,
+                      style_trgt as Class_NodeStyle
                     )
                     menu_configuration.updateAllComponentsRelatedToContainers()
                   }}
@@ -975,8 +973,8 @@ export const MenuOrderStylesOfSelectedContainers = ({
                     const style_src = style_list_to_use[element_idx]
                     const style_trgt = style_list_to_use[element_idx + 1]
                     drawing_area.moveOrderStyleInSelectedContainers(
-                      style_src as Class_ContainerStyle,
-                      style_trgt as Class_ContainerStyle
+                      style_src as Class_NodeStyle,
+                      style_trgt as Class_NodeStyle
                     )
                     menu_configuration.updateAllComponentsRelatedToContainers()
                   }}

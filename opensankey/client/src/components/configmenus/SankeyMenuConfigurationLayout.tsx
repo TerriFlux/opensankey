@@ -49,7 +49,7 @@ const right_addon_pixel = (val: number) => {
   if (val === 1) {
     return 'pixel'
   }
-  return 'pixels'
+  return 'px'
 }
 
 // MENU COMPONENT ***********************************************************************
@@ -694,7 +694,7 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
 }
 
 
-export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
+export const LegendContextConfig = ({ new_data }:BaseApplicationDataType) => {
 
   const { t } = new_data
   const [, setCount] = useState(0)
@@ -813,7 +813,7 @@ export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) =
   </>
 }
 
-export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
+export const GraphElementsOrdoner = ({ new_data }:{new_data:Class_ApplicationData}) => {
   const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
   const [, setUpdate] = useState(0)
 
@@ -848,7 +848,7 @@ export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ 
                   if (!element.is_visible)
                     return <></>
                   return (
-                    <Draggable key={element.id} index={element_idx} draggableId={'line_drag_' + element.id}>
+                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
                       {(provided, snapshot) => (
                         <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
                           {...provided.draggableProps}

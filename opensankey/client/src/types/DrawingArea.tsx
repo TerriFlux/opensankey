@@ -46,26 +46,25 @@ import {
 } from '../types/Utils'
 import {
   Class_NodeElement,
-  sortNodesElements
 } from '../Elements/Node'
 import {
   Class_LinkElement,
   sortLinksElementsByIds
 } from '../Elements/Link'
-import { ClassTemplate_GhostLinkElement } from '../Elements/LinkGhostElement'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
-import { ClassTemplate_ProtoElement } from '../Elements/Element'
-import { Class_ContainerStyle, Class_NodeStyle } from '../Elements/ElementStyle'
-import { Class_LinkStyle } from '../Elements/ElementStyle'
+import { Class_BaseElement, Class_BaseShape, Class_ProtoElement } from '../Elements/Element'
+import { Class_LinkStyle, Class_NodeStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
-import { ClassTemplate_Handler } from '../Elements/Handler'
+import { Class_Handler } from '../Elements/Handler'
 import { Class_ApplicationData } from './ApplicationData'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
+import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
+import { AttributeConfig } from '../Elements/ElementsAttributesConfig'
 
 
 declare const window: Window &
@@ -79,8 +78,8 @@ declare const window: Window &
   }
 
 function sortElementByIdOrder(
-  el_a: ClassTemplate_ProtoElement,
-  el_b: ClassTemplate_ProtoElement,
+  el_a: Class_NodeBase | Class_LinkElement,
+  el_b: Class_NodeBase | Class_LinkElement,
   list: string[]) {
   return list.indexOf(el_a.id) - list.indexOf(el_b.id)
 }
@@ -260,6 +259,9 @@ export class Class_DrawingArea {
    */
   private _scale: number = default_scale
 
+  private starting_x_point = 0
+  private starting_y_point = 0
+
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
@@ -322,10 +324,10 @@ export class Class_DrawingArea {
    *Elements that are selected in this area
    *
    * @protected
-   * @type {{ [id: string]: ClassTemplate_ProtoElement }}
+   * @type {{ [id: string]: Class_ProtoElement }}
    * @memberof Class_DrawingArea
    */
-  protected _selection: { [id: string]: ClassTemplate_ProtoElement } = {}
+  protected _selection: { [id: string]: Class_BaseElement } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
@@ -387,7 +389,7 @@ export class Class_DrawingArea {
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
-    this._selection_zone.delete()
+    this._selection_zone.unDraw()
     // Properly delete containers
     this.containers_list.forEach(container => container.delete())
     this._containers = {}
@@ -534,13 +536,14 @@ export class Class_DrawingArea {
       const json_object_labels = {} as Type_JSON
       json_object['labels'] = json_object_labels
       this.containers_list.forEach(obj => {
-        json_object_labels[obj.id] = obj.toJSON()
+        json_object_labels[obj.id] = {}
+        obj.toJSON(json_object_labels[obj.id] as Type_JSON)
       })
     }
     // Dump with json of contained elements
     const out = {
       ...json_object,
-      ...this._legend.toJSON(),
+      ...this._legend.toJSON(json_object),
       ...this._sankey.toJSON(kwargs)
     }
 
@@ -569,7 +572,7 @@ export class Class_DrawingArea {
       convert_data_legacy(json_object)
       this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
 
-      Object.values(json_object.style_node).forEach(s=>{
+      Object.values(json_object.style_node).forEach(s => {
         if (s.position == 'parametric') s.position = 'absolute'
       })
       console.log(json_object.version)
@@ -1096,13 +1099,16 @@ export class Class_DrawingArea {
     if (deleteSelectedNodes) {
       this.selected_nodes_list
         .forEach(node => {
-          json_hist_nodes[node.id] = node.toJSON()
+          json_hist_nodes[node.id] = {}
+          node.toJSON(json_hist_nodes[node.id])
           node.input_links_list.forEach(link => {
-            json_hist_links[link.id] = link.toJSON()
+            json_hist_links[link.id] = {}
+            link.toJSON(json_hist_links[link.id])
             json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
           })
           node.output_links_list.forEach(link => {
-            json_hist_links[link.id] = link.toJSON()
+            json_hist_links[link.id] = {}
+            link.toJSON(json_hist_links[link.id])
             json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
           })
         })
@@ -1110,7 +1116,8 @@ export class Class_DrawingArea {
     // --- Selected links
     if (deleteSelectedLinks) {
       this.selected_links_list.forEach(link => {
-        json_hist_links[link.id] = link.toJSON()
+        json_hist_links[link.id] = {}
+        link.toJSON(json_hist_links[link.id])
         json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
         json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
       })
@@ -1208,31 +1215,39 @@ export class Class_DrawingArea {
     // Get current drawing zone dimensions
     let width = this.width
     let height = this.height
-    let x0 = this._background_d3_groups_shift_x
-    let y0 = this._background_d3_groups_shift_y
+    // let lefter_x = this._background_d3_groups_shift_x
+    // let upper_y= this._background_d3_groups_shift_y
 
     // Check horizontal fitting
-    const new_x0 = Math.min(0, bbox.x - default_DA_marging)
-    const new_x1 = Math.max(fitting_width, bbox.x + bbox.width + default_DA_marging)
-    width = new_x1 - new_x0
-    x0 = new_x0
+    let new_lefter_x = bbox.x - default_DA_marging
+    const new_righter_x = bbox.x + bbox.width + default_DA_marging
+    width = new_righter_x - new_lefter_x
+    //lefter_x = new_lefter_x
+    if (!recenter) {
+      new_lefter_x = 0
+      width = fitting_width
+    }
 
     // Check vertical fitting
-    const new_y0 = Math.min(0, bbox.y - default_DA_marging)
-    const new_y1 = Math.max(fitting_height, bbox.y + bbox.height + default_DA_marging)
-    height = new_y1 - new_y0
-    y0 = new_y0
+    let new_upper_y = bbox.y - default_DA_marging
+    const new_bottom_y = bbox.y + bbox.height + default_DA_marging
+    height = new_bottom_y - new_upper_y
+    //upper_y = new_upper_y
+    if (!recenter) {
+      new_upper_y = 0
+      height = fitting_height
+    }
 
     // Recenter elements
     if (recenter && window.sankey?.recenter !== false) {
       if (!this.bypass_autofit) {
-        this._elements_d3_groups_shift_x = -(bbox.x + bbox.width / 2) + (x0 + width / 2)
-        this._elements_d3_groups_shift_y = -(bbox.y + bbox.height / 2) + (y0 + height / 2)
+        this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (width - bbox.width) / 2
+        this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (height - bbox.height) / 2
       }
       this.d3_selection_elements_group?.attr(
         'transform',
         'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-        this.d3_selection_legend?.attr(
+      this.d3_selection_legend?.attr(
         'transform',
         'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
     }
@@ -1241,8 +1256,8 @@ export class Class_DrawingArea {
       // Save new dimensions
       this._width = width
       this._height = height
-      this._background_d3_groups_shift_x = x0
-      this._background_d3_groups_shift_y = y0
+      this._background_d3_groups_shift_x = new_lefter_x
+      this._background_d3_groups_shift_y = new_upper_y
       // And redraw
       this.d3_selection_bg_group?.attr(
         'transform',
@@ -1447,7 +1462,7 @@ export class Class_DrawingArea {
    *
    * @protected
    * @param {string} process_id
-   * @param {(_: ClassTemplate_ProtoElement) => void} process_func
+   * @param {(_: Class_ProtoElement) => void} process_func
    * @memberof ClassTemplate_ProtoElement
    */
   protected _process_or_bypass(
@@ -1498,8 +1513,8 @@ export class Class_DrawingArea {
       return this._sankey.links_dict[id]
     }
     if (id in this.containers_dict) {
-      const cont = this.containers_dict[id]
-      return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
+      return this.containers_dict[id]
+      //return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
     }
 
     return { name: id, is_selected: false, is_visible: false }
@@ -1539,9 +1554,11 @@ export class Class_DrawingArea {
 
   public orderElementOnDA() {
     const list_element_id = this._list_g_element_id
+
     this.d3_selection_elements_sankey_group
       ?.selectAll(this._group_to_select)
-      ?.sort((a, b) => { return sortElementByIdOrder(a as ClassTemplate_ProtoElement, b as ClassTemplate_ProtoElement, [...list_element_id].reverse()) })
+      //@ts-expect-error xxx
+      ?.sort((a, b) => { return sortElementByIdOrder(a, b, [...list_element_id].reverse()) })
       .order()
   }
 
@@ -1599,9 +1616,9 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-  public moveOrderStyleInSelectedContainers = (style_src: Class_ContainerStyle, style_trgt: Class_ContainerStyle) => {
+  public moveOrderStyleInSelectedContainers = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
     // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_ContainerStyle[] } = {}
+    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
     this.selected_containers_list.forEach(n => list_old_style[n.id] = n.style)
 
     // Function undo
@@ -1907,7 +1924,7 @@ export class Class_DrawingArea {
         // Make target a 'ghost' node
         target.setInvisible()
         // Ref newly created link this var to be used in other mouse event
-        this._ghost_link = new ClassTemplate_GhostLinkElement(
+        this._ghost_link = new Class_LinkElement(
           'ghost_link',
           source,
           target,
@@ -1975,8 +1992,8 @@ export class Class_DrawingArea {
         mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
         // Display the selection zone & set it starting position
         this._selection_zone.setVisible()
-        this._selection_zone.starting_x_point = mouse_position[0]
-        this._selection_zone.starting_y_point = mouse_position[1]
+        this.starting_x_point = mouse_position[0]
+        this.starting_y_point = mouse_position[1]
         this._selection_zone.draw()
       }
     }
@@ -2019,7 +2036,8 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
-          ghost_link_json = l.toJSON() //For undo/redo
+          ghost_link_json = {}
+          l.toJSON(ghost_link_json) //For undo/redo
           this.purgeSelectionOfLinks(false)
           this.addLinkToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
@@ -2035,7 +2053,8 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this._ghost_link.target as Class_NodeElement
           )
-          ghost_link_json = l.toJSON() //For undo/redo
+          ghost_link_json = {}
+          l.toJSON(ghost_link_json) //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
 
           this.purgeSelectionOfLinks(false)
@@ -2049,14 +2068,16 @@ export class Class_DrawingArea {
           // For undo : Set wasGhostSrc to true to delete created the node source when we created a link with the mouse on the DA
           wasGhostSrc = true
           // For redo : save ghost source in json to recreate it correctly at redo
-          ghost_src_json = this._ghost_link_source.toJSON()
+          ghost_src_json = {}
+          this._ghost_link_source.toJSON(ghost_src_json)
         }
 
         if (this._ghost_link_target) {
           // For undo : Set wasGhostTrgt to true to delete created the node target when we created a link with the mouse on the DA
           wasGhostTrgt = true
           // For redo : save ghost target in json to recreate it correctly at redo
-          ghost_trgt_json = this._ghost_link_target.toJSON()
+          ghost_trgt_json = {}
+          this._ghost_link_target.toJSON(ghost_trgt_json)
 
         }
 
@@ -2113,7 +2134,7 @@ export class Class_DrawingArea {
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position && this.sankey.default_node_style.position.type == 'parametric') {
+        if (this.sankey.default_node_style.position_type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
               this.nodePositioning.computeParametrization(false)
@@ -2201,20 +2222,20 @@ export class Class_DrawingArea {
         mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
         mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
-        let new_x = this.selection_zone.starting_x_point,
-          new_y = this.selection_zone.starting_y_point
+        let new_x = this.starting_x_point,
+          new_y = this.starting_y_point
 
         if (mouse_position[0] > this._selection_zone.position_x) {
           this.selection_zone.width = mouse_position[0] - this._selection_zone.position_x
         } else {
-          this.selection_zone.width = Math.abs(mouse_position[0] - this._selection_zone.starting_x_point)
+          this.selection_zone.width = Math.abs(mouse_position[0] - this.starting_x_point)
           new_x = mouse_position[0]
         }
 
-        if (mouse_position[1] > this._selection_zone.starting_y_point) {
-          this.selection_zone.height = mouse_position[1] - this._selection_zone.starting_y_point
+        if (mouse_position[1] > this.starting_y_point) {
+          this.selection_zone.height = mouse_position[1] - this.starting_y_point
         } else {
-          this.selection_zone.height = Math.abs(this._selection_zone.starting_y_point - mouse_position[1])
+          this.selection_zone.height = Math.abs(this.starting_y_point - mouse_position[1])
           new_y = mouse_position[1]
         }
 
@@ -2282,7 +2303,7 @@ export class Class_DrawingArea {
       // only lauch draw for handler visible since those not visible don't create a <g> (therefore selectAll can't select them)
       this.application_data._add_waiting_process('redraw_handler', () => {
         this.d3_selection_handlers?.selectAll('.gg_handler').each((evt) => {
-          const handle = evt as ClassTemplate_Handler
+          const handle = evt as Class_BaseElement
           handle.draw()
         })
       }, 500)
@@ -2423,10 +2444,9 @@ export class Class_DrawingArea {
       // Create node
       const zdt = new Class_ContainerElement(
         id,
-        this.application_data.menu_configuration,
         this)
       // Set node to default position
-      zdt.initDefaultPosXY()
+      //zdt.initDefaultPosXY()
       // Update registry of nodes
       this._addLabel(zdt)
       return zdt
@@ -2462,7 +2482,7 @@ export class Class_DrawingArea {
   // Free labels
   public get containers_dict() { return this._containers }
   public get containers_list() { return Object.values(this._containers) }
-  public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+  public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
   public get visible_containers_list() {
     return this.containers_list.filter(zdt => zdt.is_visible)
   }
@@ -2720,10 +2740,10 @@ export class Class_DrawingArea {
     const dict_old_pos_node: { [x: string]: [number, number] } = {}
     // Memorize for undo
     containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
     })
     nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
     })
     // undo function
     const undo = () => {
@@ -2750,10 +2770,10 @@ export class Class_DrawingArea {
     const dict_old_pos_node: { [x: string]: [number, number] } = {}
     // Memorize for redo
     containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.display.position.x, n.display.position.y]
+      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
     })
     nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.display.position.x, n.display.position.y]
+      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
     })
     // redo function
     const redo = () => {
@@ -2957,9 +2977,9 @@ export class Class_DrawingArea {
 
   public resetAllVerticalIntervals() {
     Object.values(this.sankey.nodes_dict)
-      .filter(node => node.display.position.type !== 'relative')
+      .filter(node => node.position_type !== 'relative')
       .forEach(node => {
-        node.resetPositionAttribute('dy')
+        node.delete_attribute('position_dy')
         node.applyPosition()
       }
       )
@@ -2990,7 +3010,7 @@ export class Class_DrawingArea {
   public get selected_containers_list(): Class_ContainerElement[] {
     return this.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
   }
-  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.title > b.title) ? 1 : ((b.title > a.title) ? -1 : 0)) }
+  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
 
   public get contextualised_container(): Class_ContainerElement | undefined { return this._contextualised_free_label }
   public set contextualised_container(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }

@@ -26,8 +26,9 @@
 
 // Local modules
 import { Class_LinkElement } from './Link'
-import { ClassTemplate_Handler } from './Handler'
+import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { LINKS_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
 
 /**
@@ -41,21 +42,21 @@ export class LinkControlPoints {
    * Struct of all control points
    * @private
    * @type {{
-   *     starting_curve_point: ClassTemplate_Handler,
-   *     ending_curve_point: ClassTemplate_Handler,
-   *     starting_bezier_point: ClassTemplate_Handler,
-   *     ending_bezier_point: ClassTemplate_Handler,
-   *     middle_recycling_point: ClassTemplate_Handler,
+   *     starting_curve_point: Class_Handler,
+   *     ending_curve_point: Class_Handler,
+   *     starting_bezier_point: Class_Handler,
+   *     ending_bezier_point: Class_Handler,
+   *     middle_recycling_point: Class_Handler,
    *     is_dragged: boolean
    *   }}
    * @memberof Class_LinkElement
    */
   private _control_points: {
-    starting_curve_point: ClassTemplate_Handler,
-    ending_curve_point: ClassTemplate_Handler,
-    starting_bezier_point: ClassTemplate_Handler,
-    ending_bezier_point: ClassTemplate_Handler,
-    middle_recycling_point: ClassTemplate_Handler,
+    starting_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
+    ending_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
+    starting_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
+    ending_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
+    middle_recycling_point:Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
     is_dragged: boolean
   }
 
@@ -80,7 +81,7 @@ export class LinkControlPoints {
     drawing_area: Class_DrawingArea
   ) {
     return {
-      starting_curve_point: new ClassTemplate_Handler(
+      starting_curve_point: new Class_Handler(
         'cp_start_' + this.link.id,
         drawing_area,
         this.link,
@@ -88,7 +89,7 @@ export class LinkControlPoints {
         this.startCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_start' }),
-      ending_curve_point: new ClassTemplate_Handler(
+      ending_curve_point: new Class_Handler(
         'cp_end_' + this.link.id,
         drawing_area,
         this.link,
@@ -96,7 +97,7 @@ export class LinkControlPoints {
         this.endCurvePointDragEvent(),
         this.dragHandleEnd(),
         { class: 'cp_end' }),
-      starting_bezier_point: new ClassTemplate_Handler(
+      starting_bezier_point: new Class_Handler(
         'bz_start_' + this.link.id,
         drawing_area,
         this.link,
@@ -104,7 +105,7 @@ export class LinkControlPoints {
         this.startTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_start' }),
-      ending_bezier_point: new ClassTemplate_Handler(
+      ending_bezier_point: new Class_Handler(
         'bz_end_' + this.link.id,
         drawing_area,
         this.link,
@@ -112,7 +113,7 @@ export class LinkControlPoints {
         this.endTangeantDragEvent(),
         this.dragHandleEnd(),
         { class: 'bz_end' }),
-      middle_recycling_point: new ClassTemplate_Handler(
+      middle_recycling_point: new Class_Handler(
         'recy_middle_' + this.link.id,
         drawing_area,
         this.link,
@@ -228,20 +229,20 @@ export class LinkControlPoints {
    */
   public cleanForDeletion() {
     // Delete control points
-    this._control_points.starting_curve_point.delete()
-    this._control_points.ending_curve_point.delete()
-    this._control_points.starting_bezier_point.delete()
-    this._control_points.ending_bezier_point.delete()
-    this._control_points.middle_recycling_point.delete()
+    this._control_points.starting_curve_point.unDraw()
+    this._control_points.ending_curve_point.unDraw()
+    this._control_points.starting_bezier_point.unDraw()
+    this._control_points.ending_bezier_point.unDraw()
+    this._control_points.middle_recycling_point.unDraw()
   }
 
   public get control_points_position() {
     return {
-      'starting_curve': [this._control_points.starting_curve_point.display.position.x, this._control_points.starting_curve_point.display.position.y],
-      'ending_curve': [this._control_points.ending_curve_point.display.position.x, this._control_points.ending_curve_point.display.position.y],
-      'starting_bezier': [this._control_points.starting_bezier_point.display.position.x, this._control_points.starting_bezier_point.display.position.y],
-      'ending_bezier': [this._control_points.ending_bezier_point.display.position.x, this._control_points.ending_bezier_point.display.position.y],
-      'middle_recycling': [this._control_points.middle_recycling_point.display.position.x, this._control_points.middle_recycling_point.display.position.y],
+      'starting_curve': [this._control_points.starting_curve_point.position_x, this._control_points.starting_curve_point.position_y],
+      'ending_curve': [this._control_points.ending_curve_point.position_x, this._control_points.ending_curve_point.position_y],
+      'starting_bezier': [this._control_points.starting_bezier_point.position_x, this._control_points.starting_bezier_point.position_y],
+      'ending_bezier': [this._control_points.ending_bezier_point.position_x, this._control_points.ending_bezier_point.position_y],
+      'middle_recycling': [this._control_points.middle_recycling_point.position_x, this._control_points.middle_recycling_point.position_y],
     }
   }
 
@@ -507,10 +508,10 @@ export class LinkControlPoints {
       }
       // Save redo to reposition handler to current pos
       this.link.drawing_area.application_data.history.saveRedo(() => {
-        this.link.display.attributes.shape_starting_curve = ghost['shape_starting_curve']
-        this.link.display.attributes.shape_ending_curve = ghost['shape_ending_curve']
-        this.link.display.attributes.shape_starting_tangeant = ghost['shape_starting_tangeant']
-        this.link.display.attributes.shape_ending_tangeant = ghost['shape_ending_tangeant']
+        this.link.shape_starting_curve = ghost['shape_starting_curve']
+        this.link.shape_ending_curve = ghost['shape_ending_curve']
+        this.link.shape_starting_tangeant = ghost['shape_starting_tangeant']
+        this.link.shape_ending_tangeant = ghost['shape_ending_tangeant']
         this.link.draw()
       })
 

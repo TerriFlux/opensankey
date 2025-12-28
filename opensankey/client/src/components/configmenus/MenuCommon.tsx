@@ -23,7 +23,7 @@
 // ==================================================================================================
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
-import React, { FC, useRef,useState, useMemo, ChangeEvent,ReactNode,useEffect,MutableRefObject } from 'react'
+import React, { FC, useRef, useState, useMemo, ChangeEvent, ReactNode, useEffect, MutableRefObject } from 'react'
 import { t, TFunction } from 'i18next'
 import {
   Box,
@@ -42,14 +42,9 @@ import {
   PlacementWithLogical,
   Textarea
 } from '@chakra-ui/react'
-import {FaCaretDown, FaCaretUp } from 'react-icons/fa'
+import { FaCaretDown, FaCaretUp } from 'react-icons/fa'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkAttribute } from '../../Elements/LinkAttributes'
-import { Class_LinkStyle } from '../../Elements/ElementStyle'
-import {
-  Class_NodeAttribute
-} from '../../Elements/NodeAttributes'
-import { Class_NodeStyle } from '../../Elements/ElementStyle'
+import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/Element'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -60,18 +55,17 @@ import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
 import { default_style_id } from '../../types/Utils'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { MenuColorPicker } from './MenuColorPicker'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/NodeAttributesConfig'
 import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
 import { SankeyLinkSelectionSimple } from './SankeyMenuConfigurationLinks'
 import { Class_ContainerElement } from '../../Elements/TextZone'
-import { Class_ContainerAttribute } from '../../Elements/ContainerAttributes'
-import { CONTAINERS_ATTRIBUTES_CONFIG } from '../../Elements/ContainerAttributesConfig'
+import { Class_NodeBase } from '../../Elements/NodeBase'
+import { LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { Class_NodeAttribute, Class_LinkAttribute } from '../../Elements/Element'
 
 
 // ✅ Union de tous vos éléments
-export type ElementsType = Class_LinkStyle | Class_LinkElement | Class_NodeElement | Class_NodeStyle
+export type ElementsType = Class_LinkStyle[] | Class_LinkElement[] | Class_NodeBase[] | Class_NodeStyle[]
 
 // ✅ Toutes les clés possibles
 export type ValueKey = keyof Class_NodeAttribute & keyof Class_LinkAttribute
@@ -91,7 +85,7 @@ export type ValueElementsType =
   | undefined
 
 // Hook pour extraire la logique commune des composants ElementAttr*
-export const useElementAttributeConfig = (app_data: Class_ApplicationData, elements: ElementsType[]) => {
+export const useElementAttributeConfig = (app_data: Class_ApplicationData, elements: ElementsType) => {
   return useMemo(() => {
     const { drawing_area, menu_configuration } = app_data
     const { sankey } = drawing_area
@@ -118,7 +112,7 @@ export const useElementAttributeConfig = (app_data: Class_ApplicationData, eleme
 }
 
 // Hook pour obtenir la valeur d'un attribut et vérifier s'il est indéterminé
-export const useAttributeValue = (elements: ElementsType[], attributeKey: ValueKey) => {
+export const useAttributeValue = (elements: ElementsType, attributeKey: ValueKey) => {
   return useMemo(() => {
     const attribute_value = elements[0]
       ? Reflect.get(elements[0], attributeKey)
@@ -146,7 +140,7 @@ export const useAttributeValue = (elements: ElementsType[], attributeKey: ValueK
  */
 export const updateElements = (
   data: Class_ApplicationData,
-  elements: ElementsType[],
+  elements: ElementsType,
   k: ValueKey,
   val: ValueElementsType,
   refreshParentComponent: () => void
@@ -183,16 +177,16 @@ export const updateElements = (
  * }
  * @return {*} 
  */
-export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
+export const WrapperBoxSubSectionMenu = ({
   new_data,
   title,
   is_open = true,
   with_border = true,
   children
-}) => {
+}: FCType_WrapperBoxSubSectionMenu) => {
   // Hooks controlling collapse opening, initiallised at true
   const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: is_open })
-  return <Box layerStyle={with_border?'menu_sub_section':'menu_sub_section_without_border'}>
+  return <Box layerStyle={with_border ? 'menu_sub_section' : 'menu_sub_section_without_border'}>
     <Box layerStyle='menu_sub_section_head'>
       <Button variant='menu_sub_section_collapse_button'
         size='sizeCollapseButton'
@@ -224,7 +218,7 @@ const icon_collapse_down = <FaCaretDown />
  * }
  * @return {*} 
  */
-export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,children}:{
+export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, children }: {
   title: string,
   open?: boolean,
   onClick: (evt: boolean) => void,
@@ -246,16 +240,16 @@ export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,childre
     </Checkbox>
 
   </Box>
-  <Collapse in={isOpen} animateOpacity>
-    <Box
-      layerStyle='menuconfigpanel_grid'
-      marginLeft='1rem'
-      borderLeft='lightgray 1px solid'
-      paddingLeft='0.2rem'
-    >
-      {children}
-    </Box>
-  </Collapse>
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+        marginLeft='1rem'
+        borderLeft='lightgray 1px solid'
+        paddingLeft='0.2rem'
+      >
+        {children}
+      </Box>
+    </Collapse>
   </>
 }
 
@@ -265,9 +259,10 @@ export const WrapperCheckBoxSubSectionMenu = ({title,open = true,onClick,childre
  * @param {*} { app_data, title, children, hide = false }
  * @return {*} 
  */
-export const WrapperContentConfig = ({ title, children, hide = false }  :React.PropsWithChildren<
-  { title: string; hide?: boolean
-    children: JSX.Element 
+export const WrapperContentConfig = ({ title, children, hide = false }: React.PropsWithChildren<
+  {
+    title: string; hide?: boolean
+    children: JSX.Element
   }>) => {
   // If var hide is at true then return 'nothing'
   if (hide)
@@ -291,22 +286,22 @@ export const MenuResetAttrLocal = (
     nodesOrLinks,
     dict_overwritted_attr
   }: {
-    new_data: Class_ApplicationData, 
+    new_data: Class_ApplicationData,
     nodesOrLinks: 'nodes' | 'links' | 'zdt',
     dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
   }) => {
-  const { t, icon_library,drawing_area } = new_data
+  const { t, icon_library, drawing_area } = new_data
   const { sankey } = drawing_area
   const { icon_undo } = icon_library
 
   // Delete all local attributes of selected elements
   const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ? 
-    sankey.deleteLocalAttrSelectedNodes(k as (keyof typeof  NODES_ATTRIBUTES_CONFIG),drawing_area.selected_nodes_list) : 
-    nodesOrLinks == 'links' ? 
-      sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG),drawing_area.selected_links_list) :
-      sankey.deleteLocalAttrSelectedContainers(k as (keyof typeof CONTAINERS_ATTRIBUTES_CONFIG),drawing_area.selected_containers_list)
+  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ?
+    sankey.deleteLocalAttrSelectedNodes(k as (keyof typeof NODES_ATTRIBUTES_CONFIG), drawing_area.selected_nodes_list) :
+    nodesOrLinks == 'links' ?
+      sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG), drawing_area.selected_links_list) :
+      sankey.deleteLocalAttrSelectedContainers(k as (keyof typeof NODES_ATTRIBUTES_CONFIG), drawing_area.selected_containers_list)
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
       {icon_undo}
@@ -358,9 +353,9 @@ export const OSMultiSelect = ({ elements, onClick }: {
       icon={(selected_elements.length == elements.length) ? <FontAwesomeIcon icon={faSquareCheck} /> : <FaSquare />}
       onClick={() => {
         if (selected_elements.length == elements.length) {
-          elements.forEach(e=>e.selected = false)
+          elements.forEach(e => e.selected = false)
         } else {
-          elements.forEach(e=>e.selected = true)
+          elements.forEach(e => e.selected = true)
         }
         const new_sel = selected_elements.length == elements.length ? [] : elements //select or deselect all
         onClick(new_sel)
@@ -461,7 +456,7 @@ export const RowSetter2Cols = ({
 export const ElementAttrSetter2Cols = ({
   elements, attributePath, attributeKey, t, showTooltipOverload = true, children
 }: React.PropsWithChildren<{
-  elements: (Class_LinkElement | Class_NodeElement | Class_LinkStyle | Class_NodeStyle)[]; // Éléments pour vérifier l'overload
+  elements: (Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: keyof (Class_LinkAttribute | Class_NodeAttribute); // Clé de l'attribut pour les traductions et overload
   t: TFunction; // Fonction de traduction
@@ -481,7 +476,7 @@ export const ElementAttrSetter2Cols = ({
             {showTooltipOverload && (
               <TooltipElementOverloaded
                 k={attributeKey}
-                elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+                elements={elements as Class_LinkElement[] | Class_NodeBase[]}
                 t={t} />
             )}
           </Box>
@@ -495,7 +490,7 @@ export const ElementAttrSetter2Cols = ({
 // Version refactorisée d'ElementAttrSetterSelect2Cols
 export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributePath, attributeKey, refreshParentComponent, options }: {
   app_data: Class_ApplicationData
-  elements: ElementsType[]
+  elements: ElementsType
   attributePath: string,
   attributeKey: ValueKey
   refreshParentComponent: () => void
@@ -509,7 +504,7 @@ export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributePath
     <ElementAttrSetter2Cols
       attributePath={attributePath}
       attributeKey={attributeKey}
-      t={t} 
+      t={t}
       elements={elements}>
       <Select
         isDisabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]}
@@ -534,9 +529,9 @@ export const ElementAttrSetterSelect2Cols = ({ app_data, elements, attributePath
 // ==================================================================================================
 
 // Version refactorisée d'ElementAttrSetterTextInput2Cols
-export const ElementAttrSetterTextInput2Cols = ({ app_data, elements, attributePath, attributeKey, refreshParentComponent }:{
+export const ElementAttrSetterTextInput2Cols = ({ app_data, elements, attributePath, attributeKey, refreshParentComponent }: {
   app_data: Class_ApplicationData
-  elements: ElementsType[]
+  elements: ElementsType
   attributePath: string
   attributeKey: ValueKey
   refreshParentComponent: () => void
@@ -570,7 +565,7 @@ export const ElementAttrSetterNumberInput2Cols = ({
   minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
 }: {
   app_data: Class_ApplicationData
-  elements: ElementsType[]
+  elements: ElementsType
   attributePath: string,
   attributeKey: ValueKey
   refreshParentComponent?: () => void
@@ -585,7 +580,7 @@ export const ElementAttrSetterNumberInput2Cols = ({
   const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig(app_data, elements)
   const { attribute_value, is_attribute_indetermined } = useAttributeValue(elements, attributeKey)
 
-  const geometry_attributes = ['position_dx','position_dy','position_u']
+  const geometry_attributes = ['position_dx', 'position_dy', 'position_u']
   return (
     <ElementAttrSetter2Cols
       attributePath={attributePath}
@@ -593,7 +588,7 @@ export const ElementAttrSetterNumberInput2Cols = ({
       t={t}
       elements={elements}>
       <ConfigMenuNumberInput
-        disabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props]&& !geometry_attributes.includes(attributeKey)}
+        disabled={!disable_attr_props[attributeKey as keyof typeof disable_attr_props] && !geometry_attributes.includes(attributeKey)}
         t={t}
         default_value={percent ? attribute_value * 100 : attribute_value}
         function_on_blur={(value) => {
@@ -620,7 +615,7 @@ export const DataTagSelector = ({ data_tagg, value, onChange }: {
 }) => {
   return (
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box as='span'layerStyle='menuconfigpanel_part_title_3'>
+      <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
         {data_tagg.name}
       </Box>
       <Select
@@ -645,14 +640,14 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
-export const OSTooltip = ({label, delay = 500, placement = 'auto', isAlwaysOpen = false, children}:React.PropsWithChildren<{
+export const OSTooltip = ({ label, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
   placement?: PlacementWithLogical
   isAlwaysOpen?: boolean
   children: ReactNode
 }>) => {
-  if (label === undefined || label === null ) {
+  if (label === undefined || label === null) {
     return <>{children}</>
   }
   const element_key = label.split(' ').join('_')
@@ -696,23 +691,23 @@ export const CustomFaEyeCheckIcon = (props: CheckboxProps) => {
  */
 
 export const isElementAttributeOverloaded = (
-  elements: (Class_LinkElement | Class_NodeElement | Class_ContainerElement)[],
-  attr: keyof Class_LinkAttribute | keyof Class_NodeAttribute | keyof Class_ContainerAttribute
+  elements: (Class_LinkElement | Class_NodeBase | Class_ContainerElement)[],
+  attr: keyof Class_LinkAttribute | keyof Class_NodeAttribute
 ) => {
   return elements.some(element => {
     if (element instanceof Class_LinkElement) {
-      return element.isAttributeOverloaded(attr as unknown as keyof Class_LinkAttribute)
+      return element.isAttributeOverloaded(attr as keyof typeof LINKS_ATTRIBUTES_CONFIG)
     } else if (element instanceof Class_NodeElement) {
-      return element.isAttributeOverloaded(attr as unknown as keyof Class_NodeAttribute)
+      return element.isAttributeOverloaded(attr as keyof typeof NODES_ATTRIBUTES_CONFIG)
     } else if (element instanceof Class_ContainerElement) {
-      return element.isAttributeOverloaded(attr as unknown as keyof Class_ContainerAttribute)
+      return element.isAttributeOverloaded(attr as keyof typeof NODES_ATTRIBUTES_CONFIG)
     }
     return false
   })
 }
 interface TooltipElementOverloadedProps {
   k: keyof Class_LinkAttribute | keyof Class_NodeAttribute // Clé de l'attribut à vérifier
-  elements: (Class_LinkElement | Class_NodeElement)[] // Éléments à vérifier
+  elements: Class_LinkElement[] | Class_NodeBase[] // Éléments à vérifier
   t: TFunction // Fonction de traduction
   tooltipPrefix?: string // Préfixe pour le tooltip (par défaut 'el_var_')
 }
@@ -724,7 +719,7 @@ interface TooltipElementOverloadedProps {
    */
 /**
  * Local component that adds an icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
- * @template TElement - Type of elements (Class_LinkElement | Class_NodeElement)
+ * @template TElement - Type of elements (Class_LinkElement | Class_NodeBase)
  * @template TElementAttribute - Type of element attributes (Class_LinkAttribute | Class_NodeAttribute)
  */
 export const TooltipElementOverloaded = ({
@@ -737,11 +732,11 @@ export const TooltipElementOverloaded = ({
 }
 
 // Version refactorisée de MenuSectionCheckbox
-export const MenuSectionCheckbox = ({ 
-  app_data, elements,attributePath, attributeKey, refreshParentComponent, children 
+export const MenuSectionCheckbox = ({
+  app_data, elements, attributePath, attributeKey, refreshParentComponent, children
 }: React.PropsWithChildren<{
   app_data: Class_ApplicationData
-  elements: ElementsType[]
+  elements: ElementsType
   attributePath: string,
   attributeKey: ValueKey
   refreshParentComponent: () => void
@@ -775,7 +770,7 @@ export const MenuSectionCheckbox = ({
           {!menu_for_style && (
             <TooltipElementOverloaded
               k={attributeKey}
-              elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+              elements={elements as Class_LinkElement[] | Class_NodeBase[]}
               t={t}
             />
           )}
@@ -797,7 +792,7 @@ export const ConditionalCheckboxWithInput = ({
   minimum_value = 0, stepper = true, children
 }: {
   app_data: Class_ApplicationData,
-  elements: ElementsType[],
+  elements: ElementsType,
   checkboxAttributeKey: ValueKey,
   inputAttributeKey: ValueKey,
   refreshParentComponent: () => void,
@@ -827,7 +822,7 @@ export const ConditionalCheckboxWithInput = ({
         {!menu_for_style && (
           <TooltipElementOverloaded
             k={checkboxAttributeKey}
-            elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
             t={t}
           />
         )}
@@ -859,7 +854,7 @@ export const CheckboxWithColorPicker = ({
   app_data, elements, attributePath, checkboxAttributeKey, inputAttributeKey, refreshParentComponent, children
 }: {
   app_data: Class_ApplicationData,
-  elements: ElementsType[],
+  elements: ElementsType,
   attributePath: string,
   checkboxAttributeKey: ValueKey,
   inputAttributeKey: ValueKey,
@@ -888,7 +883,7 @@ export const CheckboxWithColorPicker = ({
         {!menu_for_style && (
           <TooltipElementOverloaded
             k={checkboxAttributeKey}
-            elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
             t={t}
           />
         )}
@@ -900,7 +895,7 @@ export const CheckboxWithColorPicker = ({
             isDisabled={!disable_attr_props[inputAttributeKey as keyof typeof disable_attr_props]}
             initialColor={attribute_value}
             onColorChange={(new_color) => {
-              updateElements(app_data, elements, inputAttributeKey, new_color,refreshParentComponent)
+              updateElements(app_data, elements, inputAttributeKey, new_color, refreshParentComponent)
             }} />
         </OSTooltip>
       )}
@@ -913,7 +908,7 @@ export const SimpleElementCheckbox = ({
   app_data, elements, attributeKey, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
 }: {
   app_data: Class_ApplicationData
-  elements: ElementsType[]
+  elements: ElementsType
   attributeKey: ValueKey
   refreshParentComponent: () => void
   variant?: string
@@ -936,7 +931,7 @@ export const SimpleElementCheckbox = ({
       {!menu_for_style && (
         <TooltipElementOverloaded
           k={attributeKey}
-          elements={elements as (Class_LinkElement | Class_NodeElement)[]}
+          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
           t={t}
         />
       )}
@@ -952,12 +947,12 @@ interface TooltipElement {
 /**
  * Composant générique pour éditer les tooltips des noeuds et liens
  */
-export const TooltipEditor = ({app_data,elements,updaterRef}:{
+export const TooltipEditor = ({ app_data, elements, updaterRef }: {
   app_data: Class_ApplicationData
   elements: TooltipElement[]
   updaterRef: React.MutableRefObject<(() => void) | null>
 }) => {
-  const { t,menu_configuration,history } = app_data
+  const { t, menu_configuration, history } = app_data
 
   // Editor state
   const [editor_content_tooltip, setEditorContentTooltip] = useState('')
@@ -1026,7 +1021,7 @@ export const TooltipEditor = ({app_data,elements,updaterRef}:{
       // Toggle saving indicator
       menu_configuration.ref_to_save_in_cache_indicator.current(false)
     }
-    
+
     const inv_applyEditor = () => {
       elements.forEach(element => {
         setTooltipText(element, dict_old_value[element.id])
@@ -1046,7 +1041,7 @@ export const TooltipEditor = ({app_data,elements,updaterRef}:{
   }
 
   // Link with new_data components updater
-  updaterRef.current = () => { 
+  updaterRef.current = () => {
     setCount(a => a + 1)
     setIsInitialized(false)
     setTimeout(() => {
@@ -1102,15 +1097,15 @@ const NodeTooltipEditor: FC<{
   app_data: Class_ApplicationData
   elements: TooltipElement[]
   updaterRef: React.MutableRefObject<(() => void) | null>
-}> = (props) => <TooltipEditor {...props}/>
+}> = (props) => <TooltipEditor {...props} />
 
 const LinkTooltipEditor: FC<{
   app_data: Class_ApplicationData
   elements: TooltipElement[]
   updaterRef: React.MutableRefObject<(() => void) | null>
-}> = (props) => <TooltipEditor {...props}/>
+}> = (props) => <TooltipEditor {...props} />
 
-export const MenuConfigurationNodesTooltip = ({new_data}: {new_data: Class_ApplicationData}) => {
+export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
   let selected_nodes
   if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
@@ -1121,7 +1116,7 @@ export const MenuConfigurationNodesTooltip = ({new_data}: {new_data: Class_Appli
   return (
     <>
       <SankeyNodeSelectionSimple new_data={new_data} />
-      <NodeTooltipEditor 
+      <NodeTooltipEditor
         app_data={new_data}
         elements={selected_nodes}
         updaterRef={new_data.menu_configuration.ref_to_menu_config_nodes_tooltips_updater}
@@ -1130,7 +1125,7 @@ export const MenuConfigurationNodesTooltip = ({new_data}: {new_data: Class_Appli
   )
 }
 
-export const MenuConfigurationLinksTooltip = ({app_data}: {app_data: Class_ApplicationData}) => {
+export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
   let selected_links
   if (!app_data.menu_configuration.is_selector_only_for_visible_links) {
     selected_links = app_data.drawing_area.selected_links_list_sorted
@@ -1141,7 +1136,7 @@ export const MenuConfigurationLinksTooltip = ({app_data}: {app_data: Class_Appli
   return (
     <>
       <SankeyLinkSelectionSimple new_data={app_data} />
-      <LinkTooltipEditor 
+      <LinkTooltipEditor
         app_data={app_data}
         elements={selected_links}
         updaterRef={app_data.menu_configuration.ref_to_menu_config_links_tooltips_updater}

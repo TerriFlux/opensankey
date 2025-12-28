@@ -1,125 +1,29 @@
 import * as d3 from 'd3'
 
-import { ClassTemplate_Handler } from './Handler'
-import { Type_ElementPosition, Type_JSON, default_element_position, default_style_id, getBooleanFromJSON, getStringFromJSON, getStringListFromJSON, } from '../types/Utils'
-import { Class_MenuConfig } from '../types/MenuConfig'
+import { Type_JSON, getBooleanFromJSON, getStringFromJSON} from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
-import { ClassTemplate_Element } from './Element'
-import { Class_ContainerAttribute } from './ContainerAttributes'
-import { CONTAINERS_ATTRIBUTES_CONFIG, ContainerSetterGenerator } from './ContainerAttributesConfig'
-import { Class_ContainerStyle } from './ElementStyle'
+import { Class_NodeBase } from './NodeBase'
+
 
 export const default_container_content = 'Text Label ...'
-export const default_container_is_image = false
-export const default_container_image_src = ''
-
-// 🆕 TextZone hérite de ClassTemplate_Element et utilise Class_ContainerAttribute en composition
-export class Class_ContainerElement extends ClassTemplate_Element {
-  protected d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-
-  protected _display: {
-    position: Type_ElementPosition,
-  }
-
-  // 🆕 Utiliser Class_ContainerAttribute en composition au lieu de _attributes brut
-  private _container_attributes: Class_ContainerAttribute
-  private _style: Class_ContainerStyle[]
-
-  private _title: string
-  private _content: string
-  private _is_image: boolean
-  private _image_src: string
+export class Class_ContainerElement extends Class_NodeBase {
   private _tied_to_nodes: boolean
   private _attached_node: Class_NodeElement[]
   private _at_extremity_of_attached_nodes: boolean
   private _extremity_position: 'top' | 'bottom' | 'left' | 'right'
 
-  private _drag_handler: {
-    top: ClassTemplate_Handler,
-    bottom: ClassTemplate_Handler,
-    left: ClassTemplate_Handler,
-    right: ClassTemplate_Handler,
-  }
-
-  // Déclarations pour les propriétés générées automatiquement
-  vertical_text!: boolean
-  vertical_alignment!: 'left' | 'right'
-  label_width!: number
-  label_height!: number
-  color!: string
-  color_visible!: boolean
-  color_border!: string
-  transparent_border!: boolean
-  thickness!: number
-  dashed!: boolean
-  opacity!: number
-  margin_left!: number
-  margin_right!: number
-  margin_top!: number
-  margin_bottom!: number
-
-  constructor(id: string,
-    menu_config: Class_MenuConfig,
+  constructor(
+    id: string,
     drawing_area: Class_DrawingArea,
   ) {
-    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-
-    // 🆕 Créer l'instance de Class_ContainerAttribute
-    this._container_attributes = new Class_ContainerAttribute()
-    this._style = [drawing_area.sankey.default_container_style],
-    this._display = {
-      position: structuredClone(default_element_position as Type_ElementPosition),
-    }
-    this._title = 'Zone de texte ' + this.id
-    this._content = default_container_content
-    this._is_image = default_container_is_image
-    this._image_src = default_container_image_src
+    //super(id, id, drawing_area, 'g_elements_sankey')
+super(id, id, drawing_area) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
     this._at_extremity_of_attached_nodes = false
     this._extremity_position = 'top'
 
-    ContainerSetterGenerator.generateSetters(this)
-
-    // Initialize title AFTER setters are generated
-    this.title = 'Zone de texte ' + this.id
-
-    // Free labels drag handlers
-    this._drag_handler = {
-      top: new ClassTemplate_Handler(
-        'zdt_top_handle_' + id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragTopHandler(),
-        this.dragHandleEnd(),
-        { class: 'zdt_top_handle' }),
-      bottom: new ClassTemplate_Handler(
-        'zdt_bottom_handle_' + id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragBottomHandler(),
-        this.dragHandleEnd(),
-        { class: 'zdt_bottom_handle' }),
-      left: new ClassTemplate_Handler(
-        'zdt_left_handle_' + id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragLeftHandler(),
-        this.dragHandleEnd(),
-        { class: 'zdt_left_handle' }),
-      right: new ClassTemplate_Handler(
-        'zdt_right_handle_' + id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragRightHandler(),
-        this.dragHandleEnd(),
-        { class: 'zdt_right_handle' }),
-    }
     drawing_area.list_g_element.push(this.id)
 
     // Launch timer to reorder element on DA
@@ -128,29 +32,6 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     })
   }
 
-  // 🆕 METHODS CALLED BY CONFIGURED ACTIONS IN ContainerAttributesConfig
-  // These methods are called automatically when attributes change
-
-  /**
-   * Action: drawContent - Redraw only the content
-   * Called by: content, vertical_text, vertical_alignment
-   */
-  public drawContent() {
-    this._drawContent()
-  }
-
-  /**
-   * Action: drawBorder - Redraw only the border
-   * Called by: color_border, transparent_border, thickness, dashed
-   */
-  public drawBorder() {
-    this._drawShape()
-  }
-
-  /**
-   * Action: updateSizeAndPosition - Recalculate from attached nodes
-   * Called by: tied_to_nodes, at_extremity_of_attached_nodes, extremity_position, margins
-   */
   public updateSizeAndPosition() {
     if (this.tied_to_nodes && this._attached_node.length > 0) {
       this.computeSizeAndPositionFromAttachedNodes()
@@ -158,76 +39,42 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this.draw()
   }
 
-  protected cleanForDeletion() {
-    // Delete control points
-    this._drag_handler.top.delete()
-    this._drag_handler.bottom.delete()
-    this._drag_handler.right.delete()
-    this._drag_handler.left.delete()
+  public copyFrom(container_to_copy: Class_NodeBase) {
+    super.copyFrom(container_to_copy)
+    const cast_copy = container_to_copy as unknown as Class_ContainerElement
+    this._tied_to_nodes = cast_copy._tied_to_nodes
+    this._at_extremity_of_attached_nodes = cast_copy._at_extremity_of_attached_nodes
+    this._extremity_position = cast_copy._extremity_position
 
-    // Remove from style references
-    if (this._style) {
-      this._style.forEach(_ => _.removeReference(this))
-    }
-  }
-
-  protected _copyFrom(container_to_copy: Class_ContainerElement) {
-    super._copyFrom(container_to_copy)
-    this._title = container_to_copy._title
-    this._content = container_to_copy._content
-    this._is_image = container_to_copy._is_image
-    this._image_src = container_to_copy._image_src
-
-    this._tied_to_nodes = container_to_copy._tied_to_nodes
-    this._at_extremity_of_attached_nodes = container_to_copy._at_extremity_of_attached_nodes
-    this._extremity_position = container_to_copy._extremity_position
-
-    // 🆕 Utiliser la méthode copyFrom de Class_ContainerAttribute
-    this._container_attributes.copyFrom(container_to_copy._container_attributes)
-
-    container_to_copy._attached_node.forEach(n => {
+    cast_copy._attached_node.forEach(n => {
       const node = this.drawing_area.sankey.nodes_dict[n.id]
       this.drawing_area.attachContToNode(this, node)
     })
   }
 
-  protected _toJSON(
+  public toJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super._toJSON(json_object, kwargs)
-    json_object['title'] = this._title
-    json_object['content'] = this._content
-    json_object['is_image'] = this._is_image
-    json_object['image_src'] = this._image_src
+    super.toJSON(json_object, kwargs)
     json_object['tiedToNode'] = this._tied_to_nodes
-
-    // Save all attributes
-    this.attributes.toJSON(json_object,this.style[0])
-
-    if (this.style!.length > 0) json_object['style'] = this.style.map(s => s.id)
-
-    // Save attached nodes
     json_object['attachedNodes'] = this._attached_node.map(n => n.id)
     json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
     json_object['extremityPos'] = this._extremity_position
+
+    return json_object
   }
 
   protected _fromJSON(
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
-    super._fromJSON(json_object, kwargs)
-    this._title = getStringFromJSON(json_object, 'title', this.title)
-    this._content = getStringFromJSON(json_object, 'content', this.content)
-    this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
-    this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
+    super.fromJSON(json_object, kwargs)
+    // this._title = getStringFromJSON(json_object, 'title', this.title)
+    // this._content = getStringFromJSON(json_object, 'content', this.content)
+    // this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
+    // this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
     this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
-
-    const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-    this._style = style_id.map(s_id => this.sankey.container_styles_dict[s_id]) as Class_ContainerStyle[]
-
-    this.attributes.fromJSON(json_object,this,this._style[0])
 
     // Load attached nodes
     const list_id_nodes = (json_object['attachedNodes'] as string[]) || []
@@ -241,24 +88,14 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom' | 'left' | 'right'
   }
 
-  public getStyleWithAttr(k: keyof Class_ContainerStyle) {
-    return this.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_container_style as Class_ContainerStyle
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_ContainerAttribute) {
-    if (this.attributes[attr] === undefined) return false
-    if (this.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false
-    return true
-  }
-
-  protected _draw() {
-    super._draw()
-    this.d3_selection?.attr('class', 'gg_labels').datum(this)
-    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
-    this._drawShape()
-    this._drawContent()
-    this.d3_selection?.lower()
-  }
+  // protected _draw() {
+  //   super._draw()
+  //   this.d3_selection?.attr('class', 'gg_labels').datum(this)
+  //   this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
+  //   this._drawShape()
+  //   this._drawContent()
+  //   this.d3_selection?.lower()
+  // }
 
   public setEventsListeners() {
     if (this.drawing_area.container_activated) {
@@ -285,19 +122,19 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     // Apply shape value
     this.d3_selection_g_shape?.append('rect')
       .classed('zdt_shape', true)
-      .attr('width', this.label_width)
-      .attr('height', this.label_height)
+      .attr('width', this.shape_min_width)
+      .attr('height', this.shape_min_height)
       .attr('rx', 5)
 
     // Apply common properties
     this.d3_selection_g_shape?.selectAll('.zdt_shape')
       .attr('id', this.id)
-      .attr('fill-opacity', this.color_visible ? this.opacity / 100 : 0)
-      .attr('fill', this.color)
-      .attr('stroke', this.color_border)
-      .attr('stroke-width', this.thickness)
-      .attr('stroke-dasharray', this.dashed ? '10,3' : '')
-      .attr('stroke-opacity', (this.transparent_border) ? 0 : 1)
+      .attr('fill-opacity', this.shape_color_visible ? this.shape_opacity / 100 : 0)
+      .attr('fill', this.shape_color)
+      .attr('stroke', this.shape_border_color)
+      .attr('stroke-width', this.shape_border_thickness)
+      .attr('stroke-dasharray', this.shape_border_dashed ? '10,3' : '')
+      .attr('stroke-opacity', (this.shape_border_visible) ? 1 : 0)
   }
 
   private unescapeHtml = (html: string): string => {
@@ -310,47 +147,26 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    *
    * @memberof Class_ContainerElement
    */
-  public _drawContent() {
-    // Clean svg group before (re)drawing zdt content
-    this.d3_selection?.selectAll('.content').remove()
+  // public _drawContent() {
+  //   // Clean svg group before (re)drawing zdt content
+  //   this.d3_selection?.selectAll('.content').remove()
 
-    if (this.is_image) {
-      this.drawContentImage()
-    } else {
-      this.drawContentText()
-    }
-  }
+  //   if (this.is_image) {
+  //     this.drawContentImage()
+  //   } else {
+  //     this.drawContentText()
+  //   }
+  // }
 
   /**
    * Function triggered when element is (un)selected
    *
    * @memberof Class_ContainerElement
    */
-  public drawAsSelected() {
-    this.draw()
-    this.drawDragHandlers()
-  }
-
-  /**
-   * Draw all control points
-   *
-   * @private
-   * @memberof Class_ContainerElement
-   */
-  public drawDragHandlers() {
-    // Compute positions
-    this.computeTopHandlerPos()
-    this.computeBottomHandlerPos()
-    this.computeLeftHandlerPos()
-    this.computeRightHandlerPos()
-    // Draw
-    this._drag_handler.top.draw()
-    this._drag_handler.bottom.draw()
-    this._drag_handler.left.draw()
-    this._drag_handler.right.draw()
-  }
-
-  // PRIVATE METHODS ====================================================================
+  // public drawAsSelected() {
+  //   this.draw()
+  //   this.drawDragHandlers()
+  // }
 
   /**
    * Draw the content of the zdt when it is a formated text
@@ -360,37 +176,37 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @private
    * @memberof Class_ContainerElement
    */
-  private drawContentText() {
-    if (!this.d3_selection) return
-    const foreignObject = this.d3_selection.append('foreignObject')
-      .classed('content', true)
-      .attr('id', this.id + '_text')
-    if (this.vertical_text) {
-      // Mode vertical: inverser width et height
-      foreignObject
-        .attr('width', this.label_height + 'px')
-        .attr('height', this.label_width + 'px')
+  // private drawContentText() {
+  //   if (!this.d3_selection) return
+  //   const foreignObject = this.d3_selection.append('foreignObject')
+  //     .classed('content', true)
+  //     .attr('id', this.id + '_text')
+  //   if (this.vertical_text) {
+  //     // Mode vertical: inverser width et height
+  //     foreignObject
+  //       .attr('width', this.shape_min_height + 'px')
+  //       .attr('height', this.shape_min_width + 'px')
 
-      // Calculer la position et rotation selon l'alignement
-      if (this.vertical_alignment === 'left') {
-        // Texte vertical à gauche
-        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_height}, 0)`)
-      } else {
-        // Texte vertical à droite
-        foreignObject.attr('transform', `rotate(-90) translate(${-this.label_height}, ${this.label_width - this.label_width})`)
-      }
-    } else {
-      // Mode horizontal normal
-      foreignObject
-        .attr('width', this.label_width + 'px')
-        .attr('height', this.label_height + 'px')
-    }
+  //     // Calculer la position et rotation selon l'alignement
+  //     if (this.vertical_alignment === 'left') {
+  //       // Texte vertical à gauche
+  //       foreignObject.attr('transform', `rotate(-90) translate(${-this.shape_min_height}, 0)`)
+  //     } else {
+  //       // Texte vertical à droite
+  //       foreignObject.attr('transform', `rotate(-90) translate(${-this.shape_min_height}, ${this.shape_min_width - this.shape_min_width})`)
+  //     }
+  //   } else {
+  //     // Mode horizontal normal
+  //     foreignObject
+  //       .attr('width', this.shape_min_width + 'px')
+  //       .attr('height', this.shape_min_height + 'px')
+  //   }
 
-    foreignObject
-      .append('xhtml:div')
-      .attr('class', 'ql-editor')
-      .html(this.content)
-  }
+  //   foreignObject
+  //     .append('xhtml:div')
+  //     .attr('class', 'ql-editor')
+  //     .html(this.content)
+  // }
   /**
    * Draw the content of the zdt when it is an image
    *
@@ -399,17 +215,17 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @private
    * @memberof Class_ContainerElement
    */
-  private drawContentImage() {
-    this.d3_selection?.append('image')
-      .classed('content', true)
-      .attr('width', this.label_width + 'px')
-      .attr('height', this.label_height + 'px')
-      .style('width', this.label_width + 'px')
-      .style('height', this.label_height + 'px')
-      .attr('id', this.id + '_img')
-      .attr('xlink:href', this.image_src)
-      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-  }
+  // private drawContentImage() {
+  //   this.d3_selection?.append('image')
+  //     .classed('content', true)
+  //     .attr('width', this.shape_min_width + 'px')
+  //     .attr('height', this.shape_min_height + 'px')
+  //     .style('width', this.shape_min_width + 'px')
+  //     .style('height', this.shape_min_height + 'px')
+  //     .attr('id', this.id + '_img')
+  //     .attr('xlink:href', this.image_src)
+  //     .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
+  // }
 
   /**
    * Activate the control points alignement guide
@@ -418,19 +234,19 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @return {*}
    * @memberof Class_ContainerElement
    */
-  private dragHandleStart() {
+  protected dragHandleStart() {
     return () => {
       const old_val = {
         x: this.position_x,
         y: this.position_y,
-        w: this.label_width,
-        h: this.label_height,
+        w: this.shape_min_width,
+        h: this.shape_min_height,
       }
       this.drawing_area.application_data.history.saveUndo(() => {
-        this.label_width = old_val.w
-        this.label_height = old_val.h
-        this._display.position.x = old_val.x
-        this._display.position.y = old_val.y
+        this.shape_min_width = old_val.w
+        this.shape_min_height = old_val.h
+        this.position_x = old_val.x
+        this.position_y = old_val.y
         this.draw()
       })
     }
@@ -442,21 +258,21 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     * @return {*}
     * @memberof Class_ContainerElement
     */
-  private dragHandleEnd() {
+  protected dragHandleEnd() {
     return () => {
       this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
 
       const old_val = {
         x: this.position_x,
         y: this.position_y,
-        w: this.label_width,
-        h: this.label_height,
+        w: this.shape_min_width,
+        h: this.shape_min_height,
       }
       this.drawing_area.application_data.history.saveRedo(() => {
-        this.label_width = old_val.w
-        this.label_height = old_val.h
-        this._display.position.x = old_val.x
-        this._display.position.y = old_val.y
+        this.shape_min_width = old_val.w
+        this.shape_min_height = old_val.h
+        this.position_x = old_val.x
+        this.position_y = old_val.y
         this.draw()
       })
     }
@@ -469,13 +285,13 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @return {*}
    * @memberof Class_ContainerElement
    */
-  private dragTopHandler() {
+  protected dragTopHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       // Early return if tied to nodes
       if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['left', 'right'].includes(this.extremity_position))
         return
 
-      this.label_height -= event.dy
+      this.shape_min_height -= event.dy
       this.position_y = this.position_y + event.dy
       this.draw()
 
@@ -491,13 +307,13 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @return {*}
    * @memberof Class_ContainerElement
    */
-  private dragBottomHandler() {
+  protected dragBottomHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       // Early return if tied to nodes
       if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['left', 'right'].includes(this.extremity_position))
         return
 
-      this.label_height += event.dy
+      this.shape_min_height += event.dy
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -512,13 +328,13 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @return {*}
    * @memberof Class_ContainerElement
    */
-  private dragLeftHandler() {
+  protected dragLeftHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       // Early return if tied to nodes
       if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this.extremity_position))
         return
 
-      this.label_width -= event.dx
+      this.shape_min_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
       this.draw()
 
@@ -534,42 +350,18 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @return {*}
    * @memberof Class_ContainerElement
    */
-  private dragRightHandler() {
+  protected dragRightHandler() {
     return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
       // Early return if tied to nodes
       if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this.extremity_position))
         return
 
-      this.label_width += event.dx
+      this.shape_min_width += event.dx
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
       this.drawDragHandlers()
     }
-  }
-
-  private computeTopHandlerPos() {
-    // Top handle pos
-    this._drag_handler.top.position_x = this.position_x + this.label_width / 2
-    this._drag_handler.top.position_y = this.position_y + 0
-  }
-
-  private computeBottomHandlerPos() {
-    // bottom handle pos
-    this._drag_handler.bottom.position_x = this.position_x + this.label_width / 2
-    this._drag_handler.bottom.position_y = this.position_y + this.label_height
-  }
-
-  private computeLeftHandlerPos() {
-    // left handle pos
-    this._drag_handler.left.position_x = this.position_x + 0
-    this._drag_handler.left.position_y = this.position_y + this.label_height / 2
-  }
-
-  private computeRightHandlerPos() {
-    // right handle pos
-    this._drag_handler.right.position_x = this.position_x + this.label_width
-    this._drag_handler.right.position_y = this.position_y + this.label_height / 2
   }
 
   /**
@@ -601,32 +393,32 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     if (this.at_extremity_of_attached_nodes) {
       switch (this.extremity_position) {
       case 'top':
-        this._display.position.y = min_y - this.label_height - this.margin_bottom
-        this._display.position.x = min_x - this.margin_left
-        this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+        this.position_y = min_y - this.shape_min_height - this.margin_bottom
+        this.position_x = min_x - this.margin_left
+        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
         break
       case 'bottom':
-        this._display.position.y = max_y + this.margin_top
-        this._display.position.x = min_x - this.margin_left
-        this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
+        this.position_y = max_y + this.margin_top
+        this.position_x = min_x - this.margin_left
+        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
         break
       case 'left':
-        this._display.position.x = min_x - this.label_width - this.margin_right
-        this._display.position.y = min_y - this.margin_top
-        this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+        this.position_x = min_x - this.shape_min_width - this.margin_right
+        this.position_y = min_y - this.margin_top
+        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
         break
       case 'right':
-        this._display.position.x = max_x + this.margin_left
-        this._display.position.y = min_y - this.margin_top
-        this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+        this.position_x = max_x + this.margin_left
+        this.position_y = min_y - this.margin_top
+        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
         break
       }
     } else {
       // Mode englobant : appliquer les marges sur tous les côtés
-      this._display.position.x = min_x - this.margin_left
-      this._display.position.y = min_y - this.margin_top
-      this.attributes.label_width = max_x - min_x + this.margin_left + this.margin_right
-      this.attributes.label_height = max_y - min_y + this.margin_top + this.margin_bottom
+      this.position_x = min_x - this.margin_left
+      this.position_y = min_y - this.margin_top
+      this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
+      this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
     }
   }
 
@@ -702,7 +494,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  protected eventDoubleLMBCLick(
+  public eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventDoubleLMBCLick(_event)
@@ -714,7 +506,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  protected eventSimpleRMBCLick(
+  public eventSimpleRMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventSimpleRMBCLick(_event)
@@ -760,7 +552,7 @@ export class Class_ContainerElement extends ClassTemplate_Element {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  protected eventMouseOver(
+  public eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     super.eventMouseOver(_event)
@@ -808,8 +600,8 @@ export class Class_ContainerElement extends ClassTemplate_Element {
       drawing_area.checkAndUpdateAreaSize()
     } else {
       // Memorize for undo
-      const old_x = this._display.position.x
-      const old_y = this._display.position.y
+      const old_x = this.position_x
+      const old_y = this.position_y
       // Undo function
       const undo = () => {
         this.setPosXY(old_x, old_y)
@@ -863,8 +655,8 @@ export class Class_ContainerElement extends ClassTemplate_Element {
         drawing_area.saveRedoLabelSelectedPos()
       } else {
         // Memorize for redo
-        const old_x = this._display.position.x
-        const old_y = this._display.position.y
+        const old_x = this.position_x
+        const old_y = this.position_y
         // redo function
         const redo = () => {
           this.setPosXY(old_x, old_y)
@@ -875,41 +667,6 @@ export class Class_ContainerElement extends ClassTemplate_Element {
     }
   }
 
-  protected _applyPosition(): void {
-    super._applyPosition()
-    this.drawDragHandlers()
-  }
-
-  public getContainerProperty(propertyName: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG) {
-    if (this.attributes[propertyName] !== undefined) {
-      return this.attributes[propertyName]
-    }
-    return this.getStyleProperty(propertyName)
-  }
-
-  public getStyleProperty(propertyName: keyof typeof CONTAINERS_ATTRIBUTES_CONFIG) {
-    const valueOfStyle = this.getStyleWithAttr(propertyName as keyof Class_ContainerStyle)
-    if (valueOfStyle[propertyName] !== undefined) {
-      return valueOfStyle[propertyName]
-    }
-    return CONTAINERS_ATTRIBUTES_CONFIG[propertyName].default
-  }
-
-  public get style() { return this._style }
-  public set style(_) { this._style = _ }
-
-  public get is_visible() { return super.is_visible }
-  public get title(): string { return this._title }
-  public set title(value: string) { this._title = value }
-
-  public get content(): string { return this._content }
-  public set content(value: string) { this._content = value }
-
-  public get is_image(): boolean { return this._is_image }
-  public set is_image(value: boolean) { this._is_image = value }
-
-  public get image_src(): string { return this._image_src }
-  public set image_src(value: string) { this._image_src = value }
   public get attached_node() { return this._attached_node }
 
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
@@ -920,6 +677,4 @@ export class Class_ContainerElement extends ClassTemplate_Element {
 
   public get extremity_position(): 'top' | 'bottom' | 'left' | 'right' { return this._extremity_position }
   public set extremity_position(value: 'top' | 'bottom' | 'left' | 'right') { this._extremity_position = value }
-
-  public get attributes() { return this._container_attributes }
 }

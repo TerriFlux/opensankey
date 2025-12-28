@@ -97,8 +97,6 @@ export const resources_nodes = {
           asn: 'Apply style to nodes',
           override_type_node_shape: 'Override default shape',
           arrow: 'Arrow',
-          shape_arrow_angle_factor: 'Angle',
-          shape_arrow_angle_direction: 'Angle orientation',
           display_shape: 'Display the node shape',
           hide_shape: 'Hide the node shape',
           display_label: 'Display the label',

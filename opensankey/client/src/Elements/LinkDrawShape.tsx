@@ -27,7 +27,8 @@
 // Local modules
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
-import { ClassTemplate_Handler } from './Handler'
+import { Class_Handler } from './Handler'
+import { LINKS_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
 /**
  * Class that handles all drawing and rendering operations for LinkElement
@@ -38,11 +39,11 @@ export class LinkDrawShape {
   private _link_control_points: LinkControlPoints
   private _link_control_points_internal: {
     readonly controlPoints: {
-      starting_curve_point: ClassTemplate_Handler;
-      ending_curve_point: ClassTemplate_Handler;
-      starting_bezier_point: ClassTemplate_Handler;
-      ending_bezier_point: ClassTemplate_Handler;
-      middle_recycling_point: ClassTemplate_Handler;
+      starting_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      ending_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      starting_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      ending_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      middle_recycling_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
       is_dragged: boolean;
     };
   }
@@ -64,20 +65,28 @@ export class LinkDrawShape {
  * @protected
  * @memberof Class_LinkElement
  */
-  public drawPath() {
+  public drawShape() {
     // Speed-up computing
     if (!this._link.d3_selection)
       return
     // Clean previous shape
     this._link.d3_selection?.selectAll('.link_path').remove()
+    this._link.d3_selection?.selectAll('.link_path_border').remove()
     this._link.d3_selection?.selectAll('.link_shape').remove()
-    this._link.d3_selection?.selectAll('.link_shape').remove()
+
     // Failsafe
     if (this._link.source && this._link.target) {
+      const border_visible = this._link.shape_border_visible
+      const border_color = this._link.shape_border_color
+      const border_dashed = this._link.shape_border_dashed
+      const border_radius = this._link.shape_border_radius
+      const border_thickness = this._link.shape_border_thickness
+
       // Avoid recomputations
       const thickness = !this._link.linkIsStructure() ? this._link.thickness : 2
       const shape_color = this._link.getPathColorToUse()
-      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && ! this._link.has_data ? 0.2 : this._link.shape_opacity
+      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && !this._link.has_data ? 0.2 : this._link.shape_opacity
+
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
       const x0 = this._link.position_x_start
@@ -86,14 +95,15 @@ export class LinkDrawShape {
       const yf = this._link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
       const show_as_path = show_as_dash || Math.abs(yf - y0) < 50 || ((dist / thickness) > 1.1) || this._link.shape_is_recycling
-      // Show as full shape for specific shapes
-      if (!show_as_path && this._link.shape_shape !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
 
+      // Show as full shape for specific shapes
+      if (!show_as_path && this._link.shape_type !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
         const shape = this.getBezierPath(true)
         this._link.d3_selection?.append('path')
           .classed('link', true)
           .classed('link_shape', true)
           .attr('d', shape)
+
         // Apply properties
         this._link.d3_selection?.selectAll('.link_shape')
           .attr('id', this._link.id)
@@ -107,16 +117,32 @@ export class LinkDrawShape {
         let path = ''
         if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
         else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
-        else path = this.getBezierPath(this._link.shape_shape == 'bezier_outline')
+        else path = this.getBezierPath(this._link.shape_type == 'bezier_outline')
 
         const da = this._link.sankey.drawing_area
-        da.type_data
-        // Add new path
+        const is_stroke = this._link.shape_type == 'bezier_path' || !this._link.shape_is_curved
+
+        // =================== BORDURE (si visible et c'est un stroke) ===================
+        if (border_visible && border_thickness > 0 && is_stroke) {
+          this._link.d3_selection?.append('path')
+            .classed('link', true)
+            .classed('link_path_border', true)
+            .attr('id', `${this._link.id}_border`)
+            .attr('d', path)
+            .attr('fill', 'none')
+            .attr('stroke', border_color)
+            .attr('stroke-width', thickness + (border_thickness * 2))
+            .attr('stroke-opacity', shape_opacity)
+            .attr('stroke-dasharray', border_dashed ? '10,2' : '')
+            .attr('pointer-events', 'none')
+        }
+
+        // =================== PATH PRINCIPAL ===================
         this._link.d3_selection?.append('path')
           .classed('link', true)
           .classed('link_path', true)
           .attr('d', path)
-        const is_stroke = this._link.shape_shape == 'bezier_path' || !this._link.shape_is_curved
+
         // Apply properties
         this._link.d3_selection?.selectAll('.link_path')
           .attr('id', this._link.id)
@@ -125,6 +151,7 @@ export class LinkDrawShape {
           .attr('stroke-opacity', is_stroke ? shape_opacity : '0')
           .attr('stroke-width', is_stroke ? thickness : '0')
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+
         if (!is_stroke) {
           this._link.d3_selection?.selectAll('.link_path')
             .attr('fill-opacity', da.type_data == 'data_label' ? 0.2 : shape_opacity)
@@ -133,6 +160,7 @@ export class LinkDrawShape {
       }
     }
   }
+
   // PATH GENERATION METHODS ============================================================
 
   /**

@@ -185,23 +185,8 @@ export class Class_ApplicationData {
     'attrDrawingArea'
   ]
 
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  /**
-   * Traduction function
-   * @private
-   * @type {TFunction}
-   * @memberof Class_ApplicationData
-   */
   //@ts-expect-error xxx
   protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
-
-  /**
-   * i18n saved
-   * @private
-   * @memberof Class_ApplicationData
-   */
   //@ts-expect-error xxx
   protected _i18n: i18n = () => null//useTranslation('translation', { useSuspense: false }).i18n //traductor
 
@@ -321,36 +306,22 @@ export class Class_ApplicationData {
     document.onkeydown = this._keyboardEventListener(this)
   }
 
-  // CLEANING METHODS ===================================================================
-  /**
-   * Reset drawing area -> clean data & undraw
-   * Use a waiting spinner
-   * @memberof Class_ApplicationData
-   */
-  public reset(kwargs: Type_JSON) {
-    this.sendWaitingToast(
-      () => {
-        // Reset
-        this._reset(kwargs)
-      },
-      {
-        success: {
-          title: this.t('toast.reset.success.title'),
-          desc: this.t('toast.reset.success.desc')
-        },
-        loading: {
-          title: this.t('toast.reset.loading.title'),
-          desc: this.t('toast.reset.loading.desc')
-        }
-      })
-  }
+  // // CLEANING METHODS ===================================================================
+  // /**
+  //  * Reset drawing area -> clean data & undraw
+  //  * Use a waiting spinner
+  //  * @memberof Class_ApplicationData
+  //  */
+  // public reset(kwargs: Type_JSON) {
+  //   this._reset(kwargs)
+  // }
 
   /**
    * Reset drawing area -> clean data & undraw
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _reset(_?: Type_JSON) {
+  public reset(_?: Type_JSON) {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
@@ -564,7 +535,7 @@ export class Class_ApplicationData {
         // Always bypass redrawings
         this._drawing_area.bypass_redraws = true
         // Reset everything
-        this._reset(kwargs)
+        this.reset(kwargs)
         this._drawing_area.bypass_redraws = true
         // Read json file
         this._fromJSON(json_object,kwargs)
@@ -1166,7 +1137,7 @@ export class Class_ApplicationData {
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
 
-  public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
+  //public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }

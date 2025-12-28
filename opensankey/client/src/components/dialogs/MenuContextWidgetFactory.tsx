@@ -31,10 +31,10 @@ import { Button } from '@chakra-ui/react'
 
 import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 import { updateElements, ValueElementsType, ValueKey } from '../configmenus/MenuCommon'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
+import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 /*************************************************************************************************/
 

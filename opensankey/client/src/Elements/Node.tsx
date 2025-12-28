@@ -25,80 +25,28 @@
 // ==================================================================================================
 
 import * as d3 from 'd3'
+import { Class_NodeBase } from './NodeBase'
 
-import type { Type_Side } from './LinkAttributes'
-import type { Class_LinkStyle } from './ElementStyle'
-import type {
-  Class_Tag
-} from '../types/Tag'
-import type {
-  Class_TagGroup,
-  Class_LevelTagGroup
-} from '../types/TagGroup'
 import {
   Class_LinkElement,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
-import {
-  Type_ElementPosition,
-  Type_Position,
-  default_element_position,
-  default_style_id,
-  getJSONOrUndefinedFromJSON,
-  getNumberOrUndefinedFromJSON,
-  getStringFromJSON,
-  getStringListFromJSON,
-  Type_JSON,
-  Type_ElementPositionOptionnal,
-} from '../types/Utils'
-import {
-  Class_NodeAttribute, default_dx, default_dy, Type_TextHPos, Type_TextVPos,
-  default_position_type,
-  default_auto_x,
-  default_auto_y
-} from './NodeAttributes'
-import { Class_NodeStyle } from './ElementStyle'
-import { Class_NodeDimension } from './NodeDimension'
-import { ClassTemplate_Handler } from './Handler'
-
-import { draw_arrow_part, NodeDrawShape } from './NodeDrawShape'
-import { NodeDrawNameLabel } from './NodeDrawLabel'
-import { NodeDrawValueLabel } from './NodeDrawValue'
-import { NodeTooltip } from './NodeTooltip'
-import { NodeEventsHandler } from './NodeEventsHandler'
-import { NodeTagsManager } from './NodeTagsManager'
-import { NodeDimensionsManager } from './NodeDimensionsManager'
-import { Class_ContainerElement } from './TextZone'
+import { Class_Handler } from './Handler'
+import { default_element_color, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
-import { Class_DrawingArea } from '../types/DrawingArea'
+import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
-import { ClassTemplate_Element } from './Element'
-import { AttributeTypes as NodeAttributeTypes, NODES_ATTRIBUTES_CONFIG, NodeSetterGenerator } from './NodeAttributesConfig'
-import { OSPFormatConverter } from '../Persistence/OSPFormatConverter'
-
-export const default_selected_stroke_width = 3
-export const label_margin = 5
-
-// SPECIFIC FUNCTIONS *******************************************************************
-
-export function sortNodesElements(
-  a: Class_NodeElement | Class_NodeStyle,
-  b: Class_NodeElement | Class_NodeStyle
-) {
-  if (a.name > b.name) return 1
-  else if (a.name < b.name) return -1
-  else return 0
-}
-
-export function isPositionOverloaded(
-  nodes: Class_NodeElement[],
-  attr: keyof Type_ElementPosition
-) {
-  let overloaded = false
-  nodes.forEach(node => overloaded = (overloaded || node.isPositionOverloaded(attr)))
-  return overloaded
-}
-
+import { Class_Tag } from '../types/Tag'
+import { NodeTooltip } from './TooltipsNode'
+import { NodeEventsHandler } from './NodeEventsHandler'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
+import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { NodeTagsManager } from './NodeTagsManager'
+import { NodeDrawValueLabel } from './NodeDrawLabel'
+import { NODES_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
+import { Class_LinkStyle, Class_NodeStyle } from './Element'
+// 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
 /**
@@ -107,136 +55,27 @@ export function isPositionOverloaded(
  * @class Class_NodeElement
  * @extends {ClassAbstract_NodeElement}
  */
-export class Class_NodeElement extends ClassTemplate_Element {
-  // Shape attributes
-  shape_visible!: NodeAttributeTypes['shape_visible']
-  orphan_node_visible!: NodeAttributeTypes['orphan_node_visible']
-  shape_type!: NodeAttributeTypes['shape_type']
-  shape_arrow_angle_factor!: NodeAttributeTypes['shape_arrow_angle_factor']
-  shape_arrow_angle_direction!: NodeAttributeTypes['shape_arrow_angle_direction']
-  shape_min_width!: NodeAttributeTypes['shape_min_width']
-  shape_min_height!: NodeAttributeTypes['shape_min_height']
-  shape_color!: NodeAttributeTypes['shape_color']
-  shape_opacity!: NodeAttributeTypes['shape_opacity']
-  shape_color_sustainable!: NodeAttributeTypes['shape_color_sustainable']
-  // Name label attributes
-  name_label_is_visible!: NodeAttributeTypes['name_label_is_visible']
-  name_label_font_family!: NodeAttributeTypes['name_label_font_family']
-  name_label_font_size!: NodeAttributeTypes['name_label_font_size']
-  name_label_uppercase!: NodeAttributeTypes['name_label_uppercase']
-  name_label_bold!: NodeAttributeTypes['name_label_bold']
-  name_label_italic!: NodeAttributeTypes['name_label_italic']
-  name_label_color!: NodeAttributeTypes['name_label_color']
-  name_label_horiz!: NodeAttributeTypes['name_label_horiz']
-  name_label_vert!: NodeAttributeTypes['name_label_vert']
-  name_label_background!: NodeAttributeTypes['name_label_background']
-  name_label_background_color!: NodeAttributeTypes['name_label_background_color']
-  name_label_horiz_shift!: NodeAttributeTypes['name_label_horiz_shift']
-  name_label_vert_shift!: NodeAttributeTypes['name_label_vert_shift']
-  name_label_box_width!: NodeAttributeTypes['name_label_box_width']
-  name_label_separator!: NodeAttributeTypes['name_label_separator']
-  name_label_separator_part!: NodeAttributeTypes['name_label_separator_part']
-  // Value label attributes
-  value_label_is_visible!: NodeAttributeTypes['value_label_is_visible']
-  value_label_font_family!: NodeAttributeTypes['value_label_font_family']
-  value_label_font_size!: NodeAttributeTypes['value_label_font_size']
-  value_label_uppercase!: NodeAttributeTypes['value_label_uppercase']
-  value_label_bold!: NodeAttributeTypes['value_label_bold']
-  value_label_italic!: NodeAttributeTypes['value_label_italic']
-  value_label_color!: NodeAttributeTypes['value_label_color']
-  value_label_horiz!: NodeAttributeTypes['value_label_horiz']
-  value_label_vert!: NodeAttributeTypes['value_label_vert']
-  value_label_background!: NodeAttributeTypes['value_label_background']
-  value_label_background_color!: NodeAttributeTypes['value_label_background_color']
-  value_label_horiz_shift!: NodeAttributeTypes['value_label_horiz_shift']
-  value_label_vert_shift!: NodeAttributeTypes['value_label_vert_shift']
-  value_label_box_width!: NodeAttributeTypes['value_label_box_width']
-  value_label_scientific_notation!: NodeAttributeTypes['value_label_scientific_notation']
-  value_label_significant_digits!: NodeAttributeTypes['value_label_significant_digits']
-  value_label_nb_significant_digits!: NodeAttributeTypes['value_label_nb_significant_digits']
-  value_label_custom_digit!: NodeAttributeTypes['value_label_custom_digit']
-  value_label_nb_digit!: NodeAttributeTypes['value_label_nb_digit']
-  value_label_unit_type!: NodeAttributeTypes['value_label_unit_type']
-  value_label_unit_visible!: NodeAttributeTypes['value_label_unit_visible']
-  value_label_unit!: NodeAttributeTypes['value_label_unit']
-  value_label_unit_factor!: NodeAttributeTypes['value_label_unit_factor']
-  //Icon attributes
-  icon_name!: NodeAttributeTypes['icon_name']
-  icon_color!: NodeAttributeTypes['icon_color']
-  icon_visible!: NodeAttributeTypes['icon_visible']
-  icon_view_box!: NodeAttributeTypes['icon_view_box']
-  icon_color_sustainable!: NodeAttributeTypes['icon_color_sustainable']
-  //Foreign Object attributes
-  has_fo!: NodeAttributeTypes['has_fo']
-  is_fo_raw!: NodeAttributeTypes['is_fo_raw']
-  fo_content!: NodeAttributeTypes['fo_content']
-  //Image attributes
-  is_image!: NodeAttributeTypes['is_image']
-  image_src!: NodeAttributeTypes['image_src']
-  // Hyperlink attribute
-  hyperlink!: NodeAttributeTypes['hyperlink']
-
-  public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
+export class Class_NodeElement extends Class_NodeBase {
+  public _nodeTooltip: NodeTooltip
+  public _nodeEventsHandler: NodeEventsHandler
+  protected _nodeDimensionsManager: NodeDimensionsManager
+  protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
+  protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
+  protected _leveltaggs_as_antitagged: Class_LevelTagGroup[] = []
+  protected _nodeDrawValueLabel: NodeDrawValueLabel
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
   protected _sibling_node: Class_NodeElement | undefined = undefined
   protected _master_node: Class_NodeElement | undefined = undefined
   protected _slave_nodes: Class_NodeElement[] = []
-
-  public _display: {
-    position: Type_ElementPosition,
-    style: Class_NodeStyle[],
-    attributes: Class_NodeAttribute
-    position_x_label?: number
-    position_y_label?: number
-  }
-
-  // Visibility memorized
+  public _nodeTagsManager: NodeTagsManager
+  protected _tags: Class_Tag[] = []
+  protected _taggs_dict: { [x: string]: Class_Tag[] } = {}
   protected _are_related_node_tags_selected: boolean | undefined = undefined
   protected _node_tags_fingerprint: string = ''
   protected _are_related_dimensions_selected: boolean | undefined = undefined
-  protected _links_visibilities_fingerprint: string = ''
-  protected _are_links_visibilities_ok: boolean | undefined = undefined
-
-  private _name: string
-
-  private _nodeDrawShape: NodeDrawShape
-  private _nodeDrawNameLabel: NodeDrawNameLabel
-  private _nodeDrawValueLabel: NodeDrawValueLabel
-  public _nodeTooltip: NodeTooltip
-  public _nodeEventsHandler: NodeEventsHandler
-  public _nodeTagsManager: NodeTagsManager
-  private _nodeDimensionsManager: NodeDimensionsManager
-
-  private _input_links: { [id: string]: Class_LinkElement } = {}
-  private _output_links: { [id: string]: Class_LinkElement } = {}
-  private _links_order: Class_LinkElement[] = []
-  private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
-  private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
-  private _input_links_handle: { [x: string]: ClassTemplate_Handler } = {}
-  private _output_links_handle: { [x: string]: ClassTemplate_Handler } = {}
-  private _link_dragged: Class_LinkElement | undefined
-
-  private _tags: Class_Tag[] = []
-  private _taggs_dict: { [x: string]: Class_Tag[] } = {}
-  private _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
-  private _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
-  private _leveltaggs_as_antitagged: Class_LevelTagGroup[] = []
-
-  private _tooltip_text: string = ''
-  private _drag: boolean = false
-  private _drag_start_pos: { [x: string]: [number, number] } = {}
-  private first_drag_move = true
-  private _node_current_dx = 0
-  private _node_current_dy = 0
-
-  private _attached_container: Class_ContainerElement[] = []
-
+  protected _tooltip_text: string = ''
   /**
-   * Creates an instance of Class_NodeElement.
+   * Creates an instance of Class_NodeBase.
    */
   constructor(
     id: string,
@@ -244,89 +83,138 @@ export class Class_NodeElement extends ClassTemplate_Element {
     drawing_area: Class_DrawingArea
   ) {
     // Init parent class attributes
-    super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-
-    NodeSetterGenerator.generateSetters(this)
-
-    // Init attributes
-    this._name = name
-    this._display = {
-      position: structuredClone(default_element_position),
-      style: [drawing_area.sankey.default_node_style],
-      attributes: new Class_NodeAttribute()
-    }
-    this._display.style[0].addReference(this)
-
-    // Init specialized components (SAUF NodeLinksManager)
-    this._nodeDrawShape = new NodeDrawShape(this)
-    this._nodeDrawNameLabel = new NodeDrawNameLabel(this)
-    this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
+    //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
+    super(id, name,drawing_area)
     this._nodeTooltip = new NodeTooltip(this)
     this._nodeEventsHandler = new NodeEventsHandler(this)
-    this._nodeTagsManager = new NodeTagsManager(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
-
+    this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
+    this._nodeTagsManager = new NodeTagsManager(this)
     drawing_area.list_g_element.unshift(this.id)
   }
+
+  protected _links_visibilities_fingerprint: string = ''
+  protected _are_links_visibilities_ok: boolean | undefined = undefined
+
+  private _input_links: { [id: string]: Class_LinkElement } = {}
+  private _output_links: { [id: string]: Class_LinkElement } = {}
+  private _links_order: Class_LinkElement[] = []
+  private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
+  private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
+  private _input_links_handle: { [x: string]: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG> } = {}
+  private _output_links_handle: { [x: string]: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG> } = {}
+  private _link_dragged: Class_LinkElement | undefined
 
   public resetLinkVisibilitiesMemorization() {
     this._are_links_visibilities_ok = undefined
   }
   // CLEANING METHODS ===================================================================
+  protected _orderD3Elements() {
+    this.d3_selection_g_shape?.raise()
+    this.d3_selection_g_name_label?.raise()
+    this.d3_selection_g_value_label?.raise()
+    this.d3_selection_g_FO_illustration?.raise()
+    this.d3_selection_g_image?.raise()
+    this.d3_selection_g_icon?.raise()
+  }
+  public get internalDrawingElements() {
+    return {
+      d3_selection_g_shape: this.d3_selection_g_shape,
+      d3_selection_g_name_label: this.d3_selection_g_name_label,
+      d3_selection_g_value_label: this.d3_selection_g_value_label,
+      d3_selection_g_FO_illustration: this.d3_selection_g_FO_illustration
+    }
+  }
+  public setInternalDrawingElements(elements: {
+    d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+    d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+    d3_selection_g_value_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+    d3_selection_g_FO_illustration?: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null,
+  }) {
+    if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
+    if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
+    if (elements.d3_selection_g_value_label !== undefined) this.d3_selection_g_value_label = elements.d3_selection_g_value_label
+    if (elements.d3_selection_g_FO_illustration !== undefined) this.d3_selection_g_FO_illustration = elements.d3_selection_g_FO_illustration
+  } 
 
+  public copyTagsReferencingFrom(
+    node_to_copy: Class_NodeElement,
+    matching_tagg: { [_: string]: string },
+    matching_tags: { [_: string]: { [_: string]: string } }
+  ) {
+    this._nodeTagsManager.copyTagsReferencingFrom(node_to_copy, matching_tagg, matching_tags)
+  }
+  
   /**
-   * Define deletion behavior
+   * Select the right color to use for this node (attribute / style / tags / ...)
    */
-  protected cleanForDeletion() {
-    // 🔄 LINKS CLEANUP - RÉINTÉGRÉ DIRECTEMENT
+  public getShapeColorToUse() {
+    // Default color
+    let shape_color = default_element_color
+    if (
+      (this.shape_color_sustainable)
+    ) {
+      return this.shape_color
+    }
+    if (!this.sankey.node_taggs_list.some(tagg=>tagg.use_colors)) {
+      return this.shape_color
+    }
+    // Is the color defined by tags
+    const taggs_activated = this.taggs_list
+      .filter(tagg => tagg.use_colors)
+    if (
+      (taggs_activated.length > 0)
+    ) {
+      const tagg_for_colormap = taggs_activated[0]
+      const tags_for_colormap = this.tags_list
+        .filter(tag => (tag.group === tagg_for_colormap))
+      const selected_tags_for_colormap = tags_for_colormap
+        .filter(tag => tag.is_selected)
+
+      if (selected_tags_for_colormap.length > 0) {
+        shape_color = selected_tags_for_colormap[0].color
+      }
+    }
+
+    return shape_color
+  }
+
+
+  protected override cleanForDeletion() {
+        this._nodeDimensionsManager.cleanForDeletion()
+            this._nodeTagsManager.cleanForDeletion()
+    // Cleanup links (lignes 282-297)
     this._links_order = []
-    Object.values(this._input_links)
-      .forEach(link => {
-        this.removeInputLink(link)
-        link.delete()
-      })
-    Object.values(this._output_links)
-      .forEach(link => {
-        this.removeOutputLink(link)
-        link.delete()
-      })
+    Object.values(this._input_links).forEach(link => {
+      this.removeInputLink(link)
+      link.delete()
+    })
+    Object.values(this._output_links).forEach(link => {
+      this.removeOutputLink(link)
+      link.delete()
+    })
     this._input_links = {}
     this._output_links = {}
     this._links_order = []
     this._input_links_handle = {}
     this._output_links_handle = {}
 
-    this._nodeTagsManager.cleanForDeletion()
-    this._nodeDimensionsManager.cleanForDeletion()
-    this.style.forEach(s => s.removeReference(this))
+    // Call parent
+    super.cleanForDeletion()
   }
-
-  // COPY METHODS =======================================================================
-
-  /**
-   * Full copy
-   */
-  protected _copyFrom(_: Class_NodeElement): void {
-    this.copyAttrFrom(_)
-    this._tooltip_text = _._tooltip_text
+  public copyFrom(_: Class_NodeElement): void {
+    super.copyFrom(_)
+    this.copyDimensionsFrom(_ as Class_NodeElement)
+      this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
-    this.copyDimensionsFrom(_)
   }
 
-  /**
-   * Copy attributes from a given node
-   */
-  public copyAttrFrom(_: Class_NodeElement): void {
-    super._copyFrom(_)
-    this._name = _.name
-    this._display.style = _._display.style.map(s => this.sankey.node_styles_dict[s.id])
-    this._display.attributes.copyFrom(this,_._display.attributes)
-    this._display.position_x_label = _._display.position_x_label
-    this._display.position_y_label = _._display.position_y_label
-    this._display.position.u = _._display.position.u
-    this._display.position.v = _._display.position.v
-    this._display.position.x = _._display.position.x
-    this._display.position.y = _._display.position.y
+  public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
+    const json_object = {}
+    node_to_copy._nodeDimensionsManager.toJSON(json_object)
+    this._nodeDimensionsManager.fromJSON(json_object)
+    //this.copyDimensionsFrom(node_to_copy)
+    //this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
   }
 
   // 🔄 LINK COPY METHODS - RÉINTÉGRÉS DIRECTEMENT
@@ -349,46 +237,25 @@ export class Class_NodeElement extends ClassTemplate_Element {
     const to_keep = prev_links_order.filter(l => !this._links_order.includes(l))
     to_keep.forEach(l => this._links_order.push(l))
   }
-
-  public copyTagsReferencingFrom(
-    node_to_copy: Class_NodeElement,
-    matching_tagg: { [_: string]: string },
-    matching_tags: { [_: string]: { [_: string]: string } }
+  public dimensionsFromJSON(
+    json_node_object: Type_JSON,
+    matching_nodes_id: { [_: string]: string } = {},
+    matching_taggs_id: { [_: string]: string } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
-    this._nodeTagsManager.copyTagsReferencingFrom(node_to_copy, matching_tagg, matching_tags)
+    this._nodeDimensionsManager.fromJSON(json_node_object, matching_nodes_id, matching_taggs_id, matching_tags_id)
   }
-
-  public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
-    const json_object = {}
-    node_to_copy._nodeDimensionsManager.toJSON(json_object)
-    this._nodeDimensionsManager.fromJSON(json_object)
-    //this.copyDimensionsFrom(node_to_copy)
-    //this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
-  }
-
-  // SAVING METHODS =====================================================================
 
   /**
    * Convert node to JSON
    */
-  protected _toJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    super._toJSON(json_object, kwargs)
-    json_object['name'] = this._name
-
-    if (this._display.position_x_label) json_object['x_label'] = this._display.position_x_label
-    if (this._display.position_y_label) json_object['y_label'] = this._display.position_y_label
-
-
-    if (this.style.length > 0 && this.style[0].id != default_style_id) json_object['style'] = this.style.map(s => s.id)
-    json_object['local'] = this._display.attributes.toJSON(this, null)
-    if (this._display.position.dx) json_object['local']['dx'] = this._display.position.dx
-    if (this._display.position.dy) json_object['local']['dy'] = this._display.position.dy
-
+  public toJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    super.toJSON(json_object, kwargs)
+    this._nodeDimensionsManager.toJSON(json_object)
     if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
 
     // Délégation aux managers
     this._nodeTagsManager.toJSON(json_object)
-    this._nodeDimensionsManager.toJSON(json_object)
 
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (this.input_links_list.length > 0) {
@@ -421,52 +288,31 @@ export class Class_NodeElement extends ClassTemplate_Element {
         json_object['links_order'] = this._links_order.map(link => link.id)
       }
     }
+    return json_object
   }
-
+  public get master_node() { return this._master_node }
+  public set master_node(_) {
+    this._master_node = _
+    _?.add_slave_nodes(this)
+  }
+  public get slave_nodes() { return this._slave_nodes }
+  public add_slave_nodes(_:Class_NodeElement) { this._slave_nodes.push(_) }
+  public get sibling() { return this._sibling_node }
+  public set sibling(_) { this._sibling_node = _ }
   /**
-   * Assign to node implementation values from json
+   * Draw given node on drawing area
    */
-  protected _fromJSON(json_node_object: Type_JSON, kwargs?: Type_JSON) {
-    super._fromJSON(json_node_object, kwargs)
-
-    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
-    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
-
-    this._name = getStringFromJSON(json_node_object, 'name', this._name)
-    this._display.position_x_label = getNumberOrUndefinedFromJSON(json_node_object, 'x_label')
-    this._display.position_y_label = getNumberOrUndefinedFromJSON(json_node_object, 'y_label')
-
-    if (!Array.isArray(json_node_object.style)) {
-      const style_id = getStringFromJSON(json_node_object, 'style', default_style_id)
-      this.style = [this.sankey.node_styles_dict[style_id]]
-    } else {
-      const style_id = getStringListFromJSON(json_node_object, 'style', [default_style_id])
-      this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
-    }
-
-    OSPFormatConverter.convertNodeFromOSPFormat(json_node_object)
-    const json_local_object = getJSONOrUndefinedFromJSON(json_node_object, 'local')
-    if (json_local_object) {
-      this._display.attributes.fromJSON(json_local_object, this, null)
-      this._display.position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
-      this._display.position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
-      const relative_dx = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dx')
-      if (relative_dx) {
-        this._display.position.dx = relative_dx
-      }
-      const relative_dy = getNumberOrUndefinedFromJSON(json_local_object, 'relative_dy')
-      if (relative_dy) {
-        this._display.position.dy = relative_dy
-      }
-    }
-
-
-    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
-
-    // Délégation aux managers
-    this._nodeTagsManager.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
+  public draw() {
+    super.draw()
+    this._nodeDrawValueLabel.drawValueLabel()
   }
-
+  public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
+  public drawValueLabel() {
+    this._process_or_bypass(() => {
+      this._nodeDrawValueLabel.drawValueLabel()
+      this._orderD3Elements()
+    })
+  }
   // 🔄 LINKS JSON METHODS - RÉINTÉGRÉS DIRECTEMENT
   public linksFromJSON(json_node_object: Type_JSON, matching_links_id: { [_: string]: string } = {}) {
     // Input links
@@ -495,114 +341,18 @@ export class Class_NodeElement extends ClassTemplate_Element {
         }) as Class_LinkElement[]
     }
   }
-
-  public dimensionsFromJSON(
-    json_node_object: Type_JSON,
-    matching_nodes_id: { [_: string]: string } = {},
-    matching_taggs_id: { [_: string]: string } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string } } = {},
-  ) {
-    this._nodeDimensionsManager.fromJSON(json_node_object, matching_nodes_id, matching_taggs_id, matching_tags_id)
-  }
-
-  // PUBLIC DRAWING METHODS =============================================================
-
-  public unDraw() {
-    super.unDraw()
-    // 🔄 UNDRAW HANDLES - RÉINTÉGRÉ DIRECTEMENT
-    this._links_order
-      .forEach(link => {
-        link.unDraw()
-        if (link.source === this) this._output_links_handle[link.id].unDraw()
-        if (link.target === this) this._input_links_handle[link.id].unDraw()
-      })
-  }
-
-  public drawAsSelected() {
-    this._nodeDrawShape.drawShape()
-    this._nodeDrawShape.updateSelectedStroke(this.is_selected)
-    // 🔄 DRAW HANDLES FOR VISIBLE LINKS - RÉINTÉGRÉ DIRECTEMENT
-    this.links_order_visible
-      .forEach(link => {
-        if (link.source === this) this._output_links_handle[link.id].draw()
-        if (link.target === this) this._input_links_handle[link.id].draw()
-      })
-  }
-
-  public drawShape() {
-    this._process_or_bypass(() => {
-      this._nodeDrawShape.drawShape()
-      this._orderD3Elements()
-    })
-  }
-
-  public drawNameLabel() {
-    this._process_or_bypass(() => {
-      this._nodeDrawNameLabel.drawNameLabel()
-      this._orderD3Elements()
-    })
-  }
-
-  public drawValueLabel() {
-    this._process_or_bypass(() => {
-      this._nodeDrawValueLabel.drawValueLabel()
-      this._orderD3Elements()
-    })
-  }
-
-  // 🔄 DRAW LINKS - RÉINTÉGRÉ DIRECTEMENT
-  public drawLinks() {
-    this._process_or_bypass(() => this._drawLinks())
-  }
-
-  // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
-  public drawLinksArrow() {
-    this._process_or_bypass(() => {
-      this._drawLinksArrow()
-      this._orderD3Elements()
-    })
-  }
-
-  public drawTooltip() {
-    this._nodeTooltip.drawTooltip()
-  }
-
-  // Ajouter ces méthodes dans la section PUBLIC DRAWING METHODS
-
   /**
-   * Draw foreign object on node
+   * Assign to node implementation values from json
    */
-  public drawFO() {
-    this._process_or_bypass(() => this._drawFO())
-  }
+  public fromJSON(json_node_object: Type_JSON, kwargs?: Type_JSON) {
+    super.fromJSON(json_node_object, kwargs)
+    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
+    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
 
-  /**
-   * Draw illustration on node
-   */
-  public drawIllustration() {
-    this._process_or_bypass(() => this._drawIllustration())
-  }
+    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
 
-  /**
-   * Draw image illustration on node
-   */
-  public drawIllustrationImage() {
-    this._process_or_bypass(() => this._drawIllustrationImage())
-  }
-
-  /**
-   * Draw icon illustration on node
-   */
-  public drawIllustrationIcon() {
-    this._process_or_bypass(() => this._drawIllustrationIcon())
-  }
-
-  /**
-   * Launch animation from this node
-   */
-  public launchAnimation() {
-    const animation = new SankeyAnimation(this.drawing_area, this)
-    animation.launchAnimation()
+    // Délégation aux managers
+    this._nodeTagsManager.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
   }
 
   /**
@@ -621,74 +371,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     return [...new Set(nodeList)]
   }
-  // STYLE / ATTRIBUTES METHODS =========================================================
-
-  public useDefaultStyle() {
-    this.style = [this.sankey.default_node_style as Class_NodeStyle]
-  }
-
-  public resetAttributes() {
-    this._display.attributes = new Class_NodeAttribute()
-    this.draw()
-  }
-
-  public resetPositionAttributes() {
-    this._display.position = default_element_position
-    this.draw()
-  }
-
-  public isAttributeOverloaded(attr: keyof Class_NodeAttribute) {
-    if (this._display.attributes[attr] === undefined) return false
-    if (this._display.attributes[attr] === this.getStyleWithAttr(attr)[attr]) return false
-    return true
-  }
-
-  public isPositionOverloaded(attr: keyof Type_ElementPosition) {
-    return this._display.position[attr] !== undefined
-  }
-
-  public resetPositionAttribute(attr: keyof Type_ElementPosition) {
-    delete this._display.position[attr]
-  }
-
-  public isEqual(_: Class_NodeElement) {
-    // Implementation de comparaison des attributs
-    const compareAttrs = [
-      'shape_visible', 'name_label_is_visible', 'shape_min_width', 'shape_min_height',
-      'shape_color', 'shape_type', 'shape_arrow_angle_factor', 'shape_arrow_angle_direction',
-      'shape_color_sustainable', 'name_label_font_family', 'name_label_font_size',
-      'name_label_uppercase', 'name_label_bold', 'name_label_italic', 'name_label_box_width',
-      'name_label_color', 'name_label_vert', 'name_label_vert_shift', 'name_label_horiz',
-      'name_label_horiz_shift', 'value_label_is_visible', 'value_label_vert',
-      'value_label_vert_shift', 'value_label_horiz', 'value_label_horiz_shift', 'value_label_font_size'
-    ] as const
-
-    return compareAttrs.every(attr => this[attr] === _[attr])
-  }
-
-  public getShapeColorToUse() { return this._nodeDrawShape.getShapeColorToUse() }
-
-  // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
-  public getShapeWidthToUse() {
-    // Compute sum of thickness on each sides
-    const sum_of_top_thickness = this.getSumOfLinksThickness('top')
-    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
-    // Return max thickness
-    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
-  }
-
-  public getShapeHeightToUse() {
-    // Compute sum of thickness on each sides
-    const sum_of_left_thickness = this.getSumOfLinksThickness('left')
-    const sum_of_right_thickness = this.getSumOfLinksThickness('right')
-    // Return max thickness
-    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-    if (echangeTag && this.hasGivenTag(echangeTag)) {
-      // TODO code to be rewritten when rearchitecturing code for Import Export
-      return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
-    }
-    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
-  }
 
   // TAGS METHODS =======================================================================
   public hasGivenTag(tag: Class_Tag) { return this._nodeTagsManager.hasGivenTag(tag) }
@@ -704,6 +386,17 @@ export class Class_NodeElement extends ClassTemplate_Element {
     this.draw()
   }
 
+  public get grouped_taggs_dict() { return this._taggs_dict }
+  public get tags_list() { return this._tags }
+  public get taggs_dict() {
+    const taggs: { [_: string]: Class_TagGroup } = {}
+    this.tags_list.forEach(tag => {
+      if (!taggs[tag.group.id])
+        taggs[tag.group.id] = tag.group
+    })
+    return taggs
+  }
+  public get taggs_list() { return Object.values(this.taggs_dict) }
 
   public dimensionsUpdated() {
     this._are_related_dimensions_selected = undefined
@@ -746,6 +439,71 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public nodeDimensionAsChild(parent: Class_NodeElement) {
     return this._nodeDimensionsManager.nodeDimensionAsChild(parent)
+  }
+
+  // PUBLIC DRAWING METHODS =============================================================
+
+  public unDraw() {
+    super.unDraw()
+    // 🔄 UNDRAW HANDLES - RÉINTÉGRÉ DIRECTEMENT
+    this._links_order
+      .forEach(link => {
+        link.unDraw()
+        if (link.source === this) this._output_links_handle[link.id].unDraw()
+        if (link.target === this) this._input_links_handle[link.id].unDraw()
+      })
+  }
+
+  public drawAsSelected() {
+    super.drawAsSelected()
+    this.links_order_visible
+      .forEach(link => {
+        if (link.source === this) this._output_links_handle[link.id].draw()
+        if (link.target === this) this._input_links_handle[link.id].draw()
+      })
+  }
+
+  // 🔄 DRAW LINKS - RÉINTÉGRÉ DIRECTEMENT
+  public drawLinks() {
+    this._process_or_bypass(() => this._drawLinks())
+  }
+
+  // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
+  public drawLinksArrow() {
+    this._process_or_bypass(() => {
+      this._drawLinksArrow()
+      this._orderD3Elements()
+    })
+  }
+
+  /**
+   * Launch animation from this node
+   */
+  public launchAnimation() {
+    const animation = new SankeyAnimation(this.drawing_area, this)
+    animation.launchAnimation()
+  }
+
+  // 🔄 SHAPE SIZE METHODS - RÉINTÉGRÉS DIRECTEMENT
+  public getShapeWidthToUse() {
+    // Compute sum of thickness on each sides
+    const sum_of_top_thickness = this.getSumOfLinksThickness('top')
+    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom')
+    // Return max thickness
+    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
+  }
+
+  public getShapeHeightToUse() {
+    // Compute sum of thickness on each sides
+    const sum_of_left_thickness = this.getSumOfLinksThickness('left')
+    const sum_of_right_thickness = this.getSumOfLinksThickness('right')
+    // Return max thickness
+    const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
+    if (echangeTag && this.hasGivenTag(echangeTag)) {
+      // TODO code to be rewritten when rearchitecturing code for Import Export
+      return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
+    }
+    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
   }
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================
@@ -809,7 +567,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   public removeInputLink(link: Class_LinkElement) {
-    this._input_links_handle[link.id]?.delete()
+    this._input_links_handle[link.id]?.unDraw()
     delete this._input_links_handle[link.id]
     delete this._input_links_ending_point[link.id]
     delete this._input_links[link.id]
@@ -817,7 +575,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   public removeOutputLink(link: Class_LinkElement) {
-    this._output_links_handle[link.id]?.delete()
+    this._output_links_handle[link.id]?.unDraw()
     delete this._output_links_handle[link.id]
     delete this._output_links_starting_point[link.id]
     delete this._output_links[link.id]
@@ -954,97 +712,14 @@ export class Class_NodeElement extends ClassTemplate_Element {
     }
   }
 
-
-  public setInputLabelVisible() { this._nodeDrawNameLabel.setInputLabelVisible() }
-  public setInputLabelInvisible() { this._nodeDrawNameLabel.setInputLabelInvisible() }
-
-  public shiftVertically(shift: number) { this._display.position.y += shift }
-
-  /**
-   * Draw given node on drawing area
-   */
-  protected _draw() {
-    super._draw()
-    this._nodeDrawNameLabel.drawNameLabel()
+  protected drawElements() {
+    super.drawElements()
     this._nodeDrawValueLabel.drawValueLabel()
-    this._drawIllustration()  // Ajouter cette ligne
-    this._drawFO()           // Ajouter cette ligne
   }
-
-  protected _initDraw() {
-    super._initDraw()
-    this.d3_selection?.attr('class', 'gg_nodes').datum(this)
-    this.d3_selection?.style('display', 'inline')
-    this.d3_selection?.attr('font-family', this.name_label_font_family)
-    this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
-  }
-
-  // Ajouter ces méthodes dans la section PROTECTED METHODS
-
-  protected _drawFO() {
-    if (!this.d3_selection) return
-    this.d3_selection?.select('.node_fo').remove()
-    if (!this.has_fo || !this.fo_content) return
-    this.d3_selection_g_FO_illustration = this.d3_selection?.append('foreignObject')
-      .attr('id', this.id + '_fo')
-      .attr('class', 'node_fo')
-      .attr('width', this.getShapeWidthToUse())
-      .attr('height', this.getShapeHeightToUse())
-    this.d3_selection_g_FO_illustration?.append('xhtml:div')
-      .attr('class', 'ql-editor')
-      .html(this.fo_content)
-  }
-
-  protected _drawIllustration() {
-    this.d3_selection?.select('.illustration').remove()
-    if (this.is_image) this._drawIllustrationImage()
-    if (this.icon_visible) this._drawIllustrationIcon()
-  }
-
-  protected _drawIllustrationImage() {
-    if (!this.d3_selection || !this.image_src) return
-    this.d3_selection_g_image = this.d3_selection?.append('image')
-      .attr('id', 'image_node_' + this.id)
-      .attr('class', 'illustration image')
-      .attr('xlink:href', this.image_src)
-      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-      .attr('height', this.getShapeHeightToUse() + 'px')
-      .attr('width', this.getShapeWidthToUse() + 'px')
-      .style('height', this.getShapeHeightToUse() + 'px')
-      .style('width', this.getShapeWidthToUse() + 'px')
-  }
-
-  protected _drawIllustrationIcon() {
-    if (!this.d3_selection || !this.icon_name || !this.icon_color) return
-    this.d3_selection_g_icon = this.d3_selection?.append('svg')
-      .attr('id', 'icon_node_' + this.id)
-      .attr('class', 'illustration icon_node')
-      .attr('viewBox', this.icon_view_box ? this.icon_view_box : '0 0 1000 1000')
-      .attr('height', this.getShapeHeightToUse())
-      .attr('width', this.getShapeWidthToUse())
-      .attr('x', 0)
-      .append('g')
-      .append('path')
-      .style('fill', this.icon_color_sustainable ? this.icon_color : this.getShapeColorToUse())
-      .attr('d', this.sankey.getIconFromCatalog(this.icon_name))
-  }
-
-  /**
-   * Put d3 elements in correct display order
-   */
-  protected _orderD3Elements() {
-    this.d3_selection_g_shape?.raise()
-    this.d3_selection_g_name_label?.raise()
-    this.d3_selection_g_value_label?.raise()
-    this.d3_selection_g_FO_illustration?.raise()
-    this.d3_selection_g_image?.raise()
-    this.d3_selection_g_icon?.raise()
-  }
-
   /**
    * Apply node position to it shape in d3
    */
-  protected _applyPosition() {
+  public applyPosition() {
     if (this.d3_selection !== null) {
       // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
       if (
@@ -1060,15 +735,15 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // Node is export
             const input_link = this.getFirstInputLink()
             const source_node = input_link!.source
-            this._display.position.x = source_node.position_x + this.position_dx + source_node.getShapeWidthToUse()
-            this._display.position.y = source_node.position_y + this.position_dy + source_node.getShapeHeightToUse()
+            this._position.x = source_node.position_x + this.position_dx + source_node.getShapeWidthToUse()
+            this._position.y = source_node.position_y + this.position_dy + source_node.getShapeHeightToUse()
           }
           else if (this.hasOutputLinks()) {
             // Node is import
             const output_link = this.getFirstOutputLink()
             const target_node = output_link!.target
-            this._display.position.x = target_node.position_x + this.position_dx - this.getShapeWidthToUse()
-            this._display.position.y = target_node.position_y + this.position_dy
+            this._position.x = target_node.position_x + this.position_dx - this.getShapeWidthToUse()
+            this._position.y = target_node.position_y + this.position_dy
           }
         }
         // Apply parametric position
@@ -1084,12 +759,12 @@ export class Class_NodeElement extends ClassTemplate_Element {
             //same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
             const nodeAbove = same_u_import[same_u_import.indexOf(this) - 1]
             if (nodeAbove) {
-              this._display.position.y = nodeAbove.position_y
+              this._position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             } else {
               // position of the first import node
-              this._display.position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.position_dy
+              this._position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.position_dy
             }
             // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
             //   // The import nodes must be above the rest of the diagram. It is pushed downward.
@@ -1102,7 +777,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
             // Exportations
             const nodeAbove = same_u_export[same_u_export.indexOf(this) - 1]
             if (nodeAbove) {
-              this._display.position.y = nodeAbove.position_y
+              this._position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
                 + this.position_dy
             } else {
@@ -1110,7 +785,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
               this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
                 max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
               })
-              this._display.position.y = max_vertical_offset + 100
+              this._position.y = max_vertical_offset + 100
             }
           }
           else {
@@ -1120,18 +795,18 @@ export class Class_NodeElement extends ClassTemplate_Element {
                 this._attached_container.includes(item)
               )
               if (same_container) {
-                this._display.position.y = nodeAbove.position_y
+                this._position.y = nodeAbove.position_y
                   + nodeAbove.getShapeHeightToUse()
                   + this.position_dy
               }
             } else {
-              if (this.position_auto_y) {
-                this._display.position.y = 0
-              }
+              // if (this.position_auto_y) {
+              //   this._position.y = 0
+              // }
             }
-            if (this.position_auto_x) {
-              this._display.position.x = this._display.position.u * this.position_dx
-            }
+            // if (this.position_auto_x) {
+            //   this._position.x = this. position_u * this.position_dx
+            // }
           }
         }
       }
@@ -1139,7 +814,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
       this.input_links_list.filter(l => l.source.position_type == 'relative').forEach(l => l.source.applyPosition())
       this.output_links_list.filter(l => l.target.position_type == 'relative').forEach(l => l.target.applyPosition())
 
-      super._applyPosition()
+      super.applyPosition()
     }
     // Redraw links
     this._drawLinks()
@@ -1157,7 +832,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     else
       this.sankey.visible_links_list.forEach(l => l.draw())
     // Node shape -> affected if links are added or removed, or if links values change
-    this._nodeDrawShape.drawShape()
+    this.drawShape()
   }
 
   /**
@@ -1203,43 +878,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
         // Thickness of the link influence arrow size
         const link_value = link.thickness
-
-        // If the node target is in arrow shape then we have to modify some variable beforehand
-        if (node_shape === 'arrow') {
-          const node_angle_direction = this.shape_arrow_angle_direction
-          const node_angle_factor = this.shape_arrow_angle_factor
-          if (link_direction_same_as_node_arrow) {
-            // If the incoming link go in the same direction as the node shaped as arrow then we 'imbricate' the link arrow in the node angle
-            let node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-            switch (node_angle_direction) {
-            case 'left':
-              node_face_size = Math.max(sumLinkLeft, sumLinkRight)
-              break
-            case 'top':
-              node_face_size = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size = sumLinkTop
-              break
-            }
-            node_arrow_shift = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size / 2)
-
-            let node_face_size2 = sumLinkLeft
-            switch (node_angle_direction) {
-            case 'left':
-              node_face_size2 = sumLinkRight
-              break
-            case 'top':
-              node_face_size2 = sumLinkBottom
-              break
-            case 'bottom':
-              node_face_size2 = sumLinkTop
-              break
-            }
-            arrows_adjustment = Math.tan(node_angle_factor * Math.PI / 180) * (node_face_size2 / 2)
-            arrows_adjustment = node_arrow_shift - arrows_adjustment
-          }
-        }
 
         let xt: number
         let yt: number
@@ -1288,8 +926,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
           is_revert,
           arrow_length,
           node_arrow_shift,
-          arrows_adjustment,
-          node_shape === 'arrow'
+          arrows_adjustment
         )
 
         // Increment side cumul of drawn arrow to influence next arrow starting position
@@ -1311,91 +948,9 @@ export class Class_NodeElement extends ClassTemplate_Element {
   /**
    * Redraw links to recolor them
    */
-  protected updateLinksColor() { this._links_order.forEach(link => { if (link.is_visible) link.drawPath() }) }
+  protected updateLinksColor() { this._links_order.forEach(link => { if (link.is_visible) link.drawShape() }) }
 
-  // EVENT HANDLING =====================================================================
 
-  public eventSimpleLMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleLMBCLick(event)
-    this._nodeEventsHandler.handleSimpleLMBClick(event)
-    // OSP Extension - Ajouter cette section
-    if (this.hyperlink) {
-      window.open(this.hyperlink)
-    }
-  }
-
-  public eventDoubleLMBCLick() {
-    if (this.hyperlink) {
-      window.open(this.hyperlink, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDragStart(event)
-    this._nodeEventsHandler.handleMouseDragStart(event)
-  }
-
-  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDrag(event)
-    if (this.drawing_area.isInSelectionMode()) {
-      this.drawing_area.moveSelectedContainerFromDragEvent(event)
-    }
-    this._nodeEventsHandler.handleMouseDrag(event)
-  }
-
-  public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDragEnd(event)
-    if (this.drawing_area.isInSelectionMode()) {
-      this._attached_container.forEach(cont => cont.draw())
-      this.drawing_area.orderElementOnDA()
-    }
-    this._nodeEventsHandler.handleMouseDragEnd(event)
-  }
-
-  protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMaintainedClick(event)
-    this._nodeEventsHandler.handleMaintainedClick(event)
-  }
-
-  protected eventSimpleRMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleRMBCLick(event)
-    this._nodeEventsHandler.handleSimpleRMBClick(event)
-  }
-
-  public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseOver(event)
-    this._nodeEventsHandler.handleMouseOver(event)
-  }
-
-  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseMove(event)
-    this._nodeEventsHandler.handleMouseMove()
-  }
-
-  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseOut(event)
-    this._nodeEventsHandler.handleMouseOut()
-  }
-
-  // HISTORY METHODS ====================================================================
-
-  public saveUndo(f: (_: Class_NodeElement) => void) {
-    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
-  }
-
-  public saveRedo(f: (_: Class_NodeElement) => void) {
-    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
-  }
-
-  // UTILITY METHODS ====================================================================
-
-  public getStyleWithAttr(k: keyof Class_NodeStyle) {
-    return this._display.style.slice().reverse().find(s => s[k] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
-  }
-
-  public getStyleWithPositionAttr(k: keyof Type_ElementPositionOptionnal) {
-    return this._display.style.slice().reverse().find(s => s.position[k as keyof Type_ElementPositionOptionnal] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
-  }
 
   // 🔄 PRIVATE HELPER METHODS - RÉINTÉGRÉS DIRECTEMENT ============================
 
@@ -1426,7 +981,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
     link: Class_LinkElement,
     type: 'input' | 'output'
   ) {
-    const handle = new ClassTemplate_Handler(
+    const handle = new Class_Handler(
       ('handle_' + this.id + type + '_' + link.id),
       this.drawing_area,
       this,
@@ -1663,7 +1218,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
   }
 
   private dragStartHandlerMoveLink = (_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-    const handler = _event.subject as ClassTemplate_Handler
+    const handler = _event.subject as Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>
     const link_ref = handler.ref_element_optional
     if (link_ref && link_ref instanceof Class_LinkElement) {
       this._link_dragged = link_ref as Class_LinkElement
@@ -1685,221 +1240,6 @@ export class Class_NodeElement extends ClassTemplate_Element {
       this.draw()
     })
   }
-
-  public get display() { return this._display }
-
-  public get is_visible() {
-    return (
-      super.is_visible &&
-      this.are_related_node_tags_selected &&
-      this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok &&
-      this.orphan_visible
-    )
-  }
-  public get is_visible_without_orphan() {
-    return (
-      super.is_visible &&
-      this.are_related_node_tags_selected &&
-      this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok
-    )
-  }
-
-  public get name() { return this._name }
-  public set name(_: string) { this._name = _; this.drawNameLabel() }
-  public get name_label() {
-    if (this.name_label_separator !== '') {
-      const splitted_label = this._name.split(this.name_label_separator)
-      return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
-    }
-    return this._name
-  }
-
-  public get links_order_visible(): Class_LinkElement[] { return this._links_order.filter(link => link.is_visible) }
-  public get links_order(): Class_LinkElement[] { return this._links_order }
-
-  // TAGS GETTERS =======================================================================
-
-  public get grouped_taggs_dict() { return this._taggs_dict }
-  public get tags_list() { return this._tags }
-  public get taggs_dict() {
-    const taggs: { [_: string]: Class_TagGroup } = {}
-    this.tags_list.forEach(tag => {
-      if (!taggs[tag.group.id])
-        taggs[tag.group.id] = tag.group
-    })
-    return taggs
-  }
-  public get taggs_list() { return Object.values(this.taggs_dict) }
-  public get is_child() { return this._nodeDimensionsManager.is_child }
-  public get is_parent() { return this._nodeDimensionsManager.is_parent }
-  public get is_multi_parent() { return this._nodeDimensionsManager.is_multi_parent }
-  public get dimensions_as_parent() { return this._nodeDimensionsManager.dimensions_as_parent }
-  public get dimensions_as_parent_pure() { return this._nodeDimensionsManager.dimensions_as_parent_pure }
-  public get is_multi_children() { return this._nodeDimensionsManager.is_multi_children }
-  public get dimensions_as_child() { return this._nodeDimensionsManager.dimensions_as_child }
-  public get dimensions_as_child_pure() { return this._nodeDimensionsManager.dimensions_as_child_pure }
-  public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
-  public get input_links_dict() { return this._input_links }
-  public get input_links_list() { return Object.values(this._input_links) }
-  public get visible_input_links_list() { return Object.values(this._input_links).filter(l => l.is_visible) }
-  public get output_links_dict() { return this._output_links }
-  public get output_links_list() { return Object.values(this._output_links) }
-  public get visible_output_links_list() { return Object.values(this._output_links).filter(l => l.is_visible) }
-  public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
-  public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
-  public get style() { return this._display.style as Class_NodeStyle[] }
-
-  public set style(_: Class_NodeStyle[]) {
-    if (!_) return
-    this._display.style.forEach(style => style.removeReference(this))
-    this._display.style = _
-    _.forEach(style => style.addReference(this))
-    this.draw()
-  }
-
-  // POSITION GETTERS/SETTERS ===========================================================
-
-  public get position_type() {
-    if (this._display.position.type !== undefined) {
-      return this._display.position.type
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('type')
-    if (valueOfStyle.position.type !== undefined) {
-      return valueOfStyle.position.type
-    }
-    return default_position_type
-  }
-
-  public set position_type(_: Type_Position) {
-    this._display.position.type = _
-  }
-
-  public get position_dx() {
-    if (this._display.position.dx !== undefined) {
-      return this._display.position.dx
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('dx')
-    if (valueOfStyle.position.dx !== undefined) {
-      return valueOfStyle.position.dx
-    }
-    return default_dx
-  }
-
-  public set position_dx(_: number) {
-    this._display.position.dx = _
-  }
-
-  public get position_dy() {
-    if (this._display.position.dy !== undefined) {
-      return this._display.position.dy
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('dy')
-    if (valueOfStyle.position.dy !== undefined) {
-      return valueOfStyle.position.dy
-    }
-    return default_dy
-  }
-
-  public set position_dy(_: number) {
-    this._display.position.dy = _
-  }
-
-  public get position_auto_x() {
-    if (this._display.position.auto_x !== undefined) {
-      return this._display.position.auto_x
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('auto_x')
-    if (valueOfStyle.position.auto_x !== undefined) {
-      return valueOfStyle.position.auto_x
-    }
-    return default_auto_x
-  }
-
-  public set position_auto_x(_: boolean) {
-    this._display.position.auto_x = _
-    this.applyPosition()
-  }
-
-  public get position_auto_y() {
-    if (this._display.position.auto_y !== undefined) {
-      return this._display.position.auto_y
-    }
-    const valueOfStyle = this.getStyleWithPositionAttr('auto_y')
-    if (valueOfStyle.position.auto_y !== undefined) {
-      return valueOfStyle.position.auto_y
-    }
-    return default_auto_y
-  }
-
-  public set position_auto_y(_: boolean) {
-    this._display.position.auto_y = _
-    this.applyPosition()
-  }
-
-  public getNodeProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
-    if (this._display.attributes[propertyName] !== undefined) {
-      return this._display.attributes[propertyName]
-    }
-    return this.getStyleProperty(propertyName)
-  }
-
-  public getStyleProperty(propertyName: keyof typeof NODES_ATTRIBUTES_CONFIG) {
-    const valueOfStyle = this.getStyleWithAttr(propertyName as keyof Class_NodeStyle)
-    if (valueOfStyle[propertyName] !== undefined) {
-      return valueOfStyle[propertyName]
-    }
-    return NODES_ATTRIBUTES_CONFIG[propertyName].default
-  }
-
-  /**
-   * Setter personnalisé pour name_label_horiz avec logique spéciale
-   */
-  customNameLabelHoriz(value: Type_TextHPos) {
-    if (value !== 'dragged') delete this._display.position_x_label
-    this._display.attributes.name_label_horiz = value
-  }
-
-  /**
-   * Setter personnalisé pour name_label_vert avec logique spéciale
-   */
-  customNameLabelVert(value: Type_TextVPos) {
-    if (value !== 'dragged') delete this._display.position_y_label
-    this._display.attributes.name_label_vert = value
-  }
-
-  /**
-   * Setter personnalisé pour value_label_horiz avec logique spéciale
-   */
-  customValueLabelHoriz(value: Type_TextHPos) {
-    this._display.attributes.value_label_horiz = value
-    this._display.attributes.value_label_vert = (this._display.attributes.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this._display.attributes.value_label_vert
-  }
-
-  /**
-   * Setter personnalisé pour value_label_vert avec logique spéciale
-   */
-  customValueLabelVert(value: Type_TextVPos) {
-    this._display.attributes.value_label_vert = value
-    this._display.attributes.value_label_horiz = (this._display.attributes.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this._display.attributes.value_label_horiz
-  }
-
-  public get tooltip_text() { return this._tooltip_text }
-  public set tooltip_text(_: string) { this._tooltip_text = _ }
-
-  public get attached_container(): Class_ContainerElement[] { return this._attached_container }
-
-  public get master_node() { return this._master_node }
-  public set master_node(_) {
-    this._master_node = _
-    _?.add_slave_nodes(this)
-  }
-  public get slave_nodes() { return this._slave_nodes }
-  public add_slave_nodes(_: Class_NodeElement) { this._slave_nodes.push(_) }
-  public get sibling() { return this._sibling_node }
-  public set sibling(_) { this._sibling_node = _ }
-
   public get are_related_node_tags_selected(): boolean {
     if (
       (this._are_related_node_tags_selected === undefined) ||
@@ -1927,18 +1267,39 @@ export class Class_NodeElement extends ClassTemplate_Element {
     return this._are_related_node_tags_selected
   }
 
-  public get are_related_dimensions_selected(): boolean {
-    if (this._are_related_dimensions_selected === undefined) {
-      const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
-
-      if (are_related_dimensions_selected !== this._are_related_dimensions_selected) {
-        this.updateVisibilityFingerprint()
-      }
-
-      this._are_related_dimensions_selected = are_related_dimensions_selected
-    }
-    return this._are_related_dimensions_selected
+  public get is_visible() {
+    return (
+      super.is_visible &&
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      this.are_links_visibilities_ok &&
+      this.orphan_visible
+    )
   }
+  public get is_visible_without_orphan() {
+    return (
+      super.is_visible &&
+      this.are_related_node_tags_selected &&
+      this.are_related_dimensions_selected &&
+      this.are_links_visibilities_ok
+    )
+  }
+
+  public get links_order_visible(): Class_LinkElement[] { return this._links_order.filter(link => link.is_visible) }
+  public get links_order(): Class_LinkElement[] { return this._links_order }
+
+  // TAGS GETTERS =======================================================================
+
+
+  public get input_links_dict() { return this._input_links }
+  public get input_links_list() { return Object.values(this._input_links) }
+  public get visible_input_links_list() { return Object.values(this._input_links).filter(l => l.is_visible) }
+  public get output_links_dict() { return this._output_links }
+  public get output_links_list() { return Object.values(this._output_links) }
+  public get visible_output_links_list() { return Object.values(this._output_links).filter(l => l.is_visible) }
+  public get link_dragged(): Class_LinkElement | undefined { return this._link_dragged }
+  public set link_dragged(value: Class_LinkElement | undefined) { this._link_dragged = value }
+
 
   // 🔄 LINKS VISIBILITY - RÉINTÉGRÉ DIRECTEMENT
   private get are_links_visibilities_ok() {
@@ -2073,20 +1434,85 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
   public setTradeDimensions(importation: boolean) { this._nodeDimensionsManager.setTradeDimensions(importation) }
 
-  // DRAG STATE MANAGEMENT ==============================================================
+  public eventSimpleLMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventSimpleLMBCLick(event)
+    this._nodeEventsHandler.handleSimpleLMBClick(event)
+    // OSP Extension - Ajouter cette section
+    if (this.hyperlink) {
+      window.open(this.hyperlink)
+    }
+  }
 
-  public setDragStartPositions(positions: { [x: string]: [number, number] }) { this._drag_start_pos = positions }
-  public getDragStartPositions(): { [x: string]: [number, number] } { return this._drag_start_pos }
-  public setDragState(drag: boolean) { this._drag = drag }
-  public getDragState(): boolean { return this._drag }
-  public setLinkDragged(link: Class_LinkElement | undefined) { this._link_dragged = link }
-  public getLinkDragged(): Class_LinkElement | undefined { return this._link_dragged }
-  public setFirstDragMove(value: boolean) { this.first_drag_move = value }
-  public getFirstDragMove(): boolean { return this.first_drag_move }
-  public updateNodeCurrentDelta(dx: number, dy: number) { this._node_current_dx += dx; this._node_current_dy += dy }
-  public resetNodeCurrentDelta() { this._node_current_dx = 0; this._node_current_dy = 0 }
-  public getNodeCurrentDeltas(): { dx: number, dy: number } {
-    return { dx: this._node_current_dx, dy: this._node_current_dy }
+  public drawTooltip() {
+    this._nodeTooltip.drawTooltip()
+  }
+
+  protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDragStart(event)
+    this._nodeEventsHandler.handleMouseDragStart(event)
+  }
+
+  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDrag(event)
+    if (this.drawing_area.isInSelectionMode()) {
+      this.drawing_area.moveSelectedContainerFromDragEvent(event)
+    }
+    this._nodeEventsHandler.handleMouseDrag(event)
+  }
+
+  public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDragEnd(event)
+    if (this.drawing_area.isInSelectionMode()) {
+      this._attached_container.forEach(cont => cont.draw())
+      this.drawing_area.orderElementOnDA()
+    }
+    this._nodeEventsHandler.handleMouseDragEnd(event)
+  }
+
+  protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMaintainedClick(event)
+    this._nodeEventsHandler.handleMaintainedClick(event)
+  }
+
+  protected eventSimpleRMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventSimpleRMBCLick(event)
+    this._nodeEventsHandler.handleSimpleRMBClick(event)
+  }
+
+  public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseOver(event)
+    this._nodeEventsHandler.handleMouseOver(event)
+  }
+
+  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseMove(event)
+    this._nodeEventsHandler.handleMouseMove()
+  }
+
+  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseOut(event)
+    this._nodeEventsHandler.handleMouseOut()
+  }
+  public get is_child() { return this._nodeDimensionsManager.is_child }
+  public get is_parent() { return this._nodeDimensionsManager.is_parent }
+  public get is_multi_parent() { return this._nodeDimensionsManager.is_multi_parent }
+  public get dimensions_as_parent() { return this._nodeDimensionsManager.dimensions_as_parent }
+  public get dimensions_as_parent_pure() { return this._nodeDimensionsManager.dimensions_as_parent_pure }
+  public get is_multi_children() { return this._nodeDimensionsManager.is_multi_children }
+  public get dimensions_as_child() { return this._nodeDimensionsManager.dimensions_as_child }
+  public get dimensions_as_child_pure() { return this._nodeDimensionsManager.dimensions_as_child_pure }
+
+  public get are_related_dimensions_selected(): boolean {
+    if (this._are_related_dimensions_selected === undefined) {
+      const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
+
+      if (are_related_dimensions_selected !== this._are_related_dimensions_selected) {
+        this.updateVisibilityFingerprint()
+      }
+
+      this._are_related_dimensions_selected = are_related_dimensions_selected
+    }
+    return this._are_related_dimensions_selected
   }
 
   // REMAINING MANAGERS DATA ACCESS =====================================================
@@ -2104,20 +1530,7 @@ export class Class_NodeElement extends ClassTemplate_Element {
 
     }
   }
-  public get internalDrawingElements() {
-    return {
-      d3_selection_g_shape: this.d3_selection_g_shape,
-      d3_selection_g_name_label: this.d3_selection_g_name_label,
-      d3_selection_g_value_label: this.d3_selection_g_value_label
-    }
-  }
-  public setInternalDrawingElements(elements: {
-    d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_value_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null
-  }) {
-    if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
-    if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
-    if (elements.d3_selection_g_value_label !== undefined) this.d3_selection_g_value_label = elements.d3_selection_g_value_label
-  }
+
+  public get tooltip_text() { return this._tooltip_text }
+  public set tooltip_text(_: string) { this._tooltip_text = _ }
 }
