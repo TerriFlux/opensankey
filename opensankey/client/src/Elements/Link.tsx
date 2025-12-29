@@ -958,8 +958,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-
-
   public setValuesForDataTags(tags: Class_DataTag[], val: Class_LinkValue) {
     if (this._values instanceof Class_LinkValueTree) {
       this._values.setLinkValueForDataTags(tags, val)
@@ -988,12 +986,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @private
    * @memberof Class_LinkElement
    */
-  public draw() {
+  protected _draw() {
     if (!this.is_value_above_threshold) {
       return
     }
     // Heritance
-    super.draw()
+    super._draw()
     // Get starting point
     const starting_point = this.source.getOutputLinkStartingPoint(this)
     if (starting_point) {
@@ -1299,6 +1297,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_multi_link() { return this._is_multi_link }
 
   public get is_visible() {
+    if (this.sankey.drawing_area.drawing_link) {
+      return super.is_visible
+    }
     return (
       super.is_visible &&
       Object.values(this._child_links).length == 0 &&

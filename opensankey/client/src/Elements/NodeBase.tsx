@@ -150,8 +150,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
     drawing_area.list_g_element.unshift(this.id)
   }
 
-  public copyFrom(_: Class_NodeBase): void {
-    super.copyFrom(_)
+  protected _copyFrom(_: Class_NodeBase): void {
+    super._copyFrom(_)
     this._name = _.name
     this._position_u = _._position_u
     this._position_v = _._position_v
@@ -176,6 +176,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
 
   public drawAsSelected() {
     this._nodeDrawShape.drawShape()
+    this.drawDragHandlers()
     // this._nodeDrawShape.updateSelectedStroke(this.is_selected)
   }
 
@@ -217,8 +218,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
 
   public shiftVertically(shift: number) { this._position.y += shift }
 
-  public draw() {
-    super.draw()
+  protected _draw() {
+    super._draw()
     this._nodeDrawShape.drawShape()
     this._nodeDrawNameLabel.drawNameLabel()
     this.drawIllustrationImage()

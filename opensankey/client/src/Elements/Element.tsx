@@ -51,20 +51,138 @@ export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   private _drawing_area: Class_DrawingArea
   protected _is_visible: boolean = false
+  protected _visibility_fingerprint: string
+
+  private _is_currently_deleted = false
+
   protected _position: Type_BaseElementPosition
   protected _is_selected: boolean = false
+  protected _svg_parent_group: string
+  protected _id: string
+  protected _is_mouse_over: boolean = false
+  protected _is_mouse_grabbed: boolean = false
+
   constructor(
+    id: string,
     drawing_area: Class_DrawingArea,
-    is_visible: boolean
+    is_visible: boolean,
+    svg_parent_group: string,
   ) {
+    this._id = id
     this._is_visible = is_visible
+    this._svg_parent_group = svg_parent_group
 
     this._drawing_area = drawing_area
     this._position = {
       x: const_default_position_x,
       y: const_default_position_y
     }
+    this._visibility_fingerprint = randomId()
   }
+
+  public setEventsListeners() {
+    this.d3_selection?.on(
+      'contextmenu',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventSimpleRMBCLick(event))
+    // Right mouse button clicks
+    this.d3_selection?.on(
+      'click',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventSimpleLMBCLick(event))
+    if (!this.drawing_area.static) {
+
+      this.d3_selection?.on(
+        'dblclick',
+        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+          this.eventDoubleLMBCLick(event))
+      // Left mouse button click
+
+      // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
+      if (this.drawing_area.isInSelectionMode()) {
+        this.d3_selection?.call(
+          d3.drag<SVGGElement, unknown>()
+            .on('start',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDragStart(event))
+            .on('drag',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDrag(event))
+            .on('end',
+              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
+                this.eventMouseDragEnd(event))
+        )
+      }
+      // In edition mode we don't use drag event on elements
+      else if (this.drawing_area.isInEditionMode()) {
+        this.d3_selection?.on('mousedown.drag', null) // Remove dag event
+      }
+    }
+    // Right mouse button maintained
+    this.d3_selection?.on(
+      'mousedown',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventMaintainedClick(event))
+    this.d3_selection?.on(
+      'mouseup',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventReleasedClick(event))
+    // Mouse cursor goes over this
+    this.d3_selection?.on(
+      'mouseover',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventMouseOver(event))
+    this.d3_selection?.on(
+      'mouseout',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventMouseOut(event))
+    // Mouse cursor move
+    this.d3_selection?.on(
+      'mousemove',
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
+        this.eventMouseMove(event))
+  }
+  public delete() {
+    if (this._is_currently_deleted === false) {
+      // Set deletion boolean to true
+      this._is_currently_deleted = true
+      // Remove from drawing area
+      this.unDraw()
+      // Abstract method for cleaning relations between elements
+      this.cleanForDeletion()
+    }
+  }
+  protected cleanForDeletion() {
+    // Does nothing here
+  }
+
+  public copyFrom(element_to_copy: Class_BaseElement) {
+    // Remove from drawing area
+    this.unDraw()
+    // Copy intrasect values
+    this._copyFrom(element_to_copy)
+    // We will need to check all visibility tests after copy
+    this.updateVisibilityFingerprint()
+  }
+
+  protected _copyFrom(element: Class_BaseElement) {
+    this._is_visible = element._is_visible
+    this._is_selected = element._is_selected
+    this._position.x = element.position_x
+    this._position.y = element.position_y
+    this._svg_parent_group = element._svg_parent_group;
+  }
+
+  public draw() {
+    this.unDraw()
+    if (this.is_visible && !this._is_currently_deleted)
+      this._draw()
+  }
+  protected _draw() {
+    this._initDraw()
+    this.setEventsListeners()
+  }
+
   public unDraw() {
     if (this.d3_selection !== null) {
       this.d3_selection.remove()
@@ -72,17 +190,18 @@ export abstract class Class_BaseElement {
     }
   }
 
-  protected copyFrom(element: Class_BaseElement) {
-    this._is_visible = element._is_visible
-        this._is_selected = element._is_selected
-    this._position.x = element.position_x
-    this._position.y = element.position_y
+  protected _initDraw() {
+    const d3_drawing_area = this.drawing_area.d3_selection
+    if (d3_drawing_area !== null) {
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
+      if (d3_drawing_area_selection.nodes().length > 0) {
+        this.d3_selection = d3_drawing_area_selection.append('g')
+        this.d3_selection.attr('id', this.svg_group)
+      }
+    }
   }
-  public draw() {
-  }
-
-  public setPosXY(x: number, y: number) { 
-    this._position.x = x; this._position.y = y; this.applyPosition() 
+  public setPosXY(x: number, y: number) {
+    this._position.x = x; this._position.y = y; this.applyPosition()
   }
   protected applyPosition() {
     this.d3_selection?.attr(
@@ -95,15 +214,102 @@ export abstract class Class_BaseElement {
   public set position_y(_) { this._position.y = _ }
 
   public get drawing_area() { return this._drawing_area }
-  public get is_visible() { return this._is_visible }
-  public setVisible() { this._is_visible = true; this.draw() }
-  public setInvisible() { this._is_visible = false; this.draw() }
+  public get is_visible() {
+    return (this.sankey.is_visible && this._is_visible)
+  }
+  public get visibility_fingerprint() { return this._visibility_fingerprint }
+  public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
+  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
+  public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
 
   public setSelected() { this._is_selected = true; this.drawAsSelected() }
   public setUnSelected() { this._is_selected = false; this.drawAsSelected() }
   public get is_selected() { return this._is_selected }
-  protected drawAsSelected() {
+  protected drawAsSelected() { }
 
+  public get id() { return this._id }
+  public get sankey() { return this.drawing_area.sankey }
+  public get svg_parent_group() { return this._svg_parent_group }
+  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
+
+  public isMouseOver() { return this._is_mouse_over }
+  public setMouseOver() { this._is_mouse_over = true }
+  public unsetMouseOver() { this._is_mouse_over = false }
+
+  protected eventSimpleLMBCLick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Clear tooltips presents
+    d3.selectAll('.sankey-tooltip').remove()
+    // TODO do something
+  }
+
+  protected eventDoubleLMBCLick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // TODO Ajouter déclemenchement editeur nom de noeud
+  }
+
+  protected eventSimpleRMBCLick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Clear tooltips presents
+    d3.selectAll('.sankey-tooltip').remove()
+    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
+  }
+
+  protected eventMaintainedClick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+    this._is_mouse_grabbed = true
+  }
+
+  protected eventReleasedClick(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir clique gauche sur element */
+    this._is_mouse_grabbed = false
+  }
+
+  protected eventMouseOver(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
+    this.sankey.links_list.forEach(l => l.unsetMouseOver())
+    // Update mouse over indicator for element
+    this.setMouseOver()
+  }
+
+  protected eventMouseOut(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Update mouse left indicator for element
+    this.unsetMouseOver()
+  }
+
+  protected eventMouseMove(
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    /* TODO définir  */
+  }
+
+  protected eventMouseDragStart(
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    /* TODO définir  */
+  }
+
+  protected eventMouseDrag(
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    /* TODO définir  */
+  }
+
+  protected eventMouseDragEnd(
+    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    /* TODO définir  */
   }
 }
 export abstract class Class_ProtoElement<
@@ -113,17 +319,6 @@ export abstract class Class_ProtoElement<
 
   private _storage: StorageType<CONFIG> = {}
   private _config: CONFIG
-
-  protected _svg_parent_group: string
-
-  protected _visibility_fingerprint: string
-
-  protected _is_mouse_over: boolean = false
-  protected _is_mouse_grabbed: boolean = false
-
-  private _id: string
-  private _is_currently_deleted = false
-
   protected _jsonMapping: AttributeMappings
 
   protected _position: Type_BaseElementPosition
@@ -137,10 +332,8 @@ export abstract class Class_ProtoElement<
     default_style: STYLE_TYPE,
     jsonMapping: AttributeMappings
   ) {
-    super(drawing_area,true)
-    this._id = id
-    this._svg_parent_group = svg_parent_group
-    this._visibility_fingerprint = randomId()
+    super(id, drawing_area, true, svg_parent_group)
+
     this._jsonMapping = jsonMapping
     this._position = {
       x: const_default_position_x,
@@ -163,9 +356,9 @@ export abstract class Class_ProtoElement<
             const setter = this[attribute.setter as keyof this]
             if (typeof setter === 'function') {
               setter.call(this, value)
+            } else {
+              this._storage[key] = value
             }
-          } else {
-            this._storage[key] = value
 
             if (attribute.callback) {
               const callback = this[attribute.callback as keyof this]
@@ -253,14 +446,6 @@ export abstract class Class_ProtoElement<
     delete this._storage[k]
   }
 
-  public delete() {
-    if (this._is_currently_deleted === false) {
-      this._is_currently_deleted = true
-      this.unDraw()
-      this.cleanForDeletion()
-    }
-  }
-
   protected cleanForDeletion() {
     this.style.forEach(s => s.removeReference(this))
   }
@@ -277,11 +462,8 @@ export abstract class Class_ProtoElement<
       }
     })
   }
-  public copyFrom(element_to_copy: Class_ProtoElement<CONFIG>) {
-    super.copyFrom(element_to_copy)
-    this.unDraw()
-
-    this._svg_parent_group = element_to_copy._svg_parent_group;
+  protected _copyFrom(element_to_copy: Class_ProtoElement<CONFIG>) {
+    super._copyFrom(element_to_copy)
     this.copyAttrFrom(element_to_copy)
     this.updateVisibilityFingerprint()
   }
@@ -358,24 +540,6 @@ export abstract class Class_ProtoElement<
     this.updateVisibilityFingerprint()
   }
 
-  public draw() {
-    this.unDraw()
-    if (this.is_visible && !this._is_currently_deleted)
-    this._initDraw()
-    this.setEventsListeners()
-  }
-
-  protected _initDraw() {
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
-      if (d3_drawing_area_selection.nodes().length > 0) {
-        this.d3_selection = d3_drawing_area_selection.append('g')
-        this.d3_selection.attr('id', this.svg_group)
-      }
-    }
-  }
-
   public isRelatedD3SelectionPresentAndSynced() {
     const d3_drawing_area = this.drawing_area.d3_selection
     if (d3_drawing_area !== null) {
@@ -387,69 +551,6 @@ export abstract class Class_ProtoElement<
       }
     }
     return false
-  }
-
-  public setEventsListeners() {
-    this.d3_selection?.on(
-      'contextmenu',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventSimpleRMBCLick(event))
-    // Right mouse button clicks
-    this.d3_selection?.on(
-      'click',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventSimpleLMBCLick(event))
-    if (!this.drawing_area.static) {
-
-      this.d3_selection?.on(
-        'dblclick',
-        (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
-      // Left mouse button click
-
-      // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
-      if (this.drawing_area.isInSelectionMode()) {
-        this.d3_selection?.call(
-          d3.drag<SVGGElement, unknown>()
-            .on('start',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragStart(event))
-            .on('drag',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDrag(event))
-            .on('end',
-              (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) =>
-                this.eventMouseDragEnd(event))
-        )
-      }
-      // In edition mode we don't use drag event on elements
-      else if (this.drawing_area.isInEditionMode()) {
-        this.d3_selection?.on('mousedown.drag', null) // Remove dag event
-      }
-    }
-    // Right mouse button maintained
-    this.d3_selection?.on(
-      'mousedown',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventMaintainedClick(event))
-    this.d3_selection?.on(
-      'mouseup',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventReleasedClick(event))
-    // Mouse cursor goes over this
-    this.d3_selection?.on(
-      'mouseover',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventMouseOver(event))
-    this.d3_selection?.on(
-      'mouseout',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventMouseOut(event))
-    // Mouse cursor move
-    this.d3_selection?.on(
-      'mousemove',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventMouseMove(event))
   }
 
   protected _process_or_bypass(
@@ -467,99 +568,6 @@ export abstract class Class_ProtoElement<
   public saveRedo(f: (_: Class_ProtoElement<CONFIG>) => void) {
     this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
-
-  protected eventSimpleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Clear tooltips presents
-    d3.selectAll('.sankey-tooltip').remove()
-    // TODO do something
-  }
-
-  protected eventDoubleLMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // TODO Ajouter déclemenchement editeur nom de noeud
-  }
-
-  protected eventSimpleRMBCLick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Clear tooltips presents
-    d3.selectAll('.sankey-tooltip').remove()
-    // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
-  }
-
-  protected eventMaintainedClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir clique gauche sur element */
-    this._is_mouse_grabbed = true
-  }
-
-  protected eventReleasedClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir clique gauche sur element */
-    this._is_mouse_grabbed = false
-  }
-
-  protected eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    this.sankey.nodes_list.forEach(n => n.unsetMouseOver())
-    this.sankey.links_list.forEach(l => l.unsetMouseOver())
-    // Update mouse over indicator for element
-    this.setMouseOver()
-  }
-
-  protected eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    // Update mouse left indicator for element
-    this.unsetMouseOver()
-  }
-
-  protected eventMouseMove(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    /* TODO définir  */
-  }
-
-  protected eventMouseDragStart(
-    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    /* TODO définir  */
-  }
-
-  protected eventMouseDrag(
-    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    /* TODO définir  */
-  }
-
-  protected eventMouseDragEnd(
-    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    /* TODO définir  */
-  }
-
-  public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
-
-
-  public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
-  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
-  public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
-  public get is_visible() { return (this.sankey.is_visible && this._is_visible) }
-  public get visibility_fingerprint() { return this._visibility_fingerprint }
-
-  public isMouseOver() { return this._is_mouse_over }
-  public setMouseOver() { this._is_mouse_over = true }
-  public unsetMouseOver() { this._is_mouse_over = false }
-
-  public get id() { return this._id }
-  public get sankey() { return this.drawing_area.sankey }
 }
 export abstract class Class_BaseShape<
   CONFIG extends Record<string, AttributeConfig<any>>,
@@ -780,10 +788,10 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
       ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) &&
       ((value === 'hh') || (value === 'vv'))
     )) {
-      if (this.shape_starting_curve !== undefined) this.shape_starting_curve = this.shape_starting_curve / 2
-      if (this.shape_ending_curve !== undefined) this.shape_ending_curve = this.shape_ending_curve / 2
+      if (this.shape_starting_curve !== undefined) this.attributes.shape_starting_curve = this.shape_starting_curve / 2
+      if (this.shape_ending_curve !== undefined) this.attributes.shape_ending_curve = this.shape_ending_curve / 2
     }
-    this.shape_orientation = value
+    this.attributes.shape_orientation = value
     this.updateLinkAndSourceTarget()
   }
 
@@ -791,16 +799,16 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
     if (value !== undefined && value >= 0) {
       if (!this.shape_is_recycling) {
         if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
-          this.shape_starting_curve = value <= 1.0 ? value : 1.0
+          this.attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
         } else {
           const endingCurve = this.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default
-          this.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
+          this.attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
         }
       } else {
-        this.shape_starting_curve = value
+        this.attributes.shape_starting_curve = value
       }
     } else {
-      this.shape_starting_curve = value
+      this.attributes.shape_starting_curve = value
     }
   }
 
@@ -808,83 +816,83 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
     if (value !== undefined && value >= 0) {
       if (!this.shape_is_recycling) {
         if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
-          this.shape_ending_curve = value <= 1.0 ? value : 1.0
+          this.attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
         } else {
           const startingCurve = this.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default
-          this.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
+          this.attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
         }
       } else {
-        this.shape_ending_curve = value
+        this.attributes.shape_ending_curve = value
       }
     } else {
-      this.shape_ending_curve = value
+      this.attributes.shape_ending_curve = value
     }
   }
 
   private customStartingTangeant(value: number) {
-    this.shape_starting_tangeant = (value !== undefined && value > 0) ? value : value
+    this.attributes['shape_starting_tangeant'] = (value !== undefined && value > 0) ? value : value
 
   }
 
   private customEndingTangeant(value: number) {
-    this.shape_ending_tangeant = (value !== undefined && value > 0) ? value : value
+    this.attributes['shape_ending_tangeant'] = (value !== undefined && value > 0) ? value : value
 
   }
 
   private customValueLabelHoriz(value: Type_PathLabelHPosition) {
-    this.value_label_horiz = value
-    this.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
+    this.attributes.value_label_horiz = value
+    this.attributes.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
 
   }
 
   private customValueLabelVert(value: Type_PathLabelVPosition) {
-    this.value_label_vert = value
-    this.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
+    this.attributes.value_label_vert = value
+    this.attributes.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
 
   }
 
   private customValueLabelOnPath(value: boolean) {
-    this.value_label_on_path = value
+    this.attributes.value_label_on_path = value
     if (value) {
       const lab_pos = this.value_label_horiz
       const lab_orth_pos = this.value_label_vert
-      this.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+      this.attributes.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+      this.attributes.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
 
   }
 
   private customValueLabelPosAuto(value: boolean) {
-    this.value_label_pos_auto = value
-    this.value_label_vert = (this.value_label_vert === 'dragged') ? 'middle' : this.value_label_vert
+    this.attributes.value_label_pos_auto = value
+    this.attributes.value_label_vert = (this.value_label_vert === 'dragged') ? 'middle' : this.value_label_vert
 
   }
 
   private customNameLabelHoriz(value: Type_TextHPos) {
-    this.name_label_horiz = value
-    this.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
+    this.attributes.name_label_horiz = value
+    this.attributes.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
 
   }
 
   private customNameLabelVert(value: Type_TextVPos) {
-    this.name_label_vert = value
-    this.name_label_horiz = this.name_label_horiz == 'dragged' && value !== 'dragged' ? 'middle' : this.name_label_horiz
+    this.attributes.name_label_vert = value
+    this.attributes.name_label_horiz = this.name_label_horiz == 'dragged' && value !== 'dragged' ? 'middle' : this.name_label_horiz
   }
 
   private customNameLabelOnPath(value: boolean) {
-    this.name_label_on_path = value
+    this.attributes.name_label_on_path = value
     if (value) {
       const lab_pos = this.name_label_horiz
       const lab_orth_pos = this.name_label_vert
-      this.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+      this.attributes.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
+      this.attributes.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
     }
   }
 
   private customNameLabelPosAuto(value: boolean) {
-    this.name_label_pos_auto = value
+    this.attributes.name_label_pos_auto = value
     const orth_pos = this.name_label_vert
-    this.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
+    this.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
   }
 
   // Méthodes abstraites

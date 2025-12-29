@@ -36,7 +36,7 @@ export class Class_ZoneSelection extends Class_BaseElement {
   constructor(
     drawing_area: Class_DrawingArea
   ) {
-    super(drawing_area,false)
+    super('selection_zone',drawing_area,false, 'g_select_zone')
   }
 
   public setSize() {
@@ -118,11 +118,11 @@ export class Class_ZoneSelection extends Class_BaseElement {
     this._width = 0
     this._height = 0
     this._is_visible = false
-    //this.draw()
+    this.draw()
   }
 
-  public draw() {
-    super.draw()
+  public _draw() {
+    super._draw()
     this.d3_selection?.append('rect')
       .attr('class', 'zone_selection')
       .attr('width', this._width)

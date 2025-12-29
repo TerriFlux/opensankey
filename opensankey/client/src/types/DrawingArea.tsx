@@ -195,6 +195,7 @@ export class Class_DrawingArea {
    */
   public static: boolean = !!window.sankey?.publish
 
+  public drawing_link = false
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
   private _bypass_autofit: boolean = false
@@ -1914,10 +1915,12 @@ export class Class_DrawingArea {
         mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
         // Create default source node
         const source = this.sankey.addNewDefaultNode()
+        source.draw()
         // Position center of source node to pointer pos
         source.setPosXY(
           mouse_position[0] - (source.getShapeWidthToUse() / 2),
           mouse_position[1] - (source.getShapeHeightToUse() / 2))
+
         // Create default target node
         const target = this.sankey.addNewDefaultNode()
         target.setPosXY(mouse_position[0] + 2, mouse_position[1] + 2)
@@ -1929,6 +1932,7 @@ export class Class_DrawingArea {
           source,
           target,
           this)
+        this.drawing_link = true
         this._ghost_link_source = source
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
@@ -1942,6 +1946,7 @@ export class Class_DrawingArea {
           // then delete the link & target to keep only the source
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target as Class_NodeElement)
+          this.drawing_link = false
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -1959,6 +1964,7 @@ export class Class_DrawingArea {
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
+          this.drawing_link = false
         }
         else {
           // Make ghost target visible
@@ -2023,7 +2029,7 @@ export class Class_DrawingArea {
           // then delete the link & target to keep only the source
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target as Class_NodeElement)
-
+          this.drawing_link = false
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -2043,6 +2049,7 @@ export class Class_DrawingArea {
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
+          this.drawing_link = false
         }
         else {
           // Make ghost target visible

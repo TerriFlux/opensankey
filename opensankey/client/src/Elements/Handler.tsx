@@ -32,8 +32,6 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { AttributeConfig } from './ElementsAttributesConfig'
 
 export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> extends Class_BaseElement{
-  protected _svg_parent_group: string
-  private _id: string
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
@@ -55,9 +53,9 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
     custom_parent_grp?: string
   ) {
     // Init parent class attributes
-    super(drawing_area, true)
-    this._id = id
-    this._svg_parent_group = custom_parent_grp ? custom_parent_grp : 'g_handlers'
+    super(id,drawing_area, true,'g_handlers')
+    //this._id = id
+    //this._svg_parent_group = custom_parent_grp ? custom_parent_grp : 'g_handlers'
     this._ref_element = ref
     this._ref_element_optional = ref_optional
     this._custom_html_grp = custom_parent_grp !== undefined
@@ -66,9 +64,9 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
     //   position: structuredClone(default_element_position),
     // }
     // Drag handling functions -> defined by parent element
-    // this.eventMouseDragStart = dragStart_function
-    // this.eventMouseDrag = drag_function
-    // this.eventMouseDragEnd = dragEnd_function
+    this.eventMouseDragStart = dragStart_function
+    this.eventMouseDrag = drag_function
+    this.eventMouseDragEnd = dragEnd_function
     // Set optional variable value
     if (options) {
       if (options.size !== undefined) {
@@ -86,15 +84,16 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
     }
   }
 
-  protected copyFrom(element: Class_Handler<CONFIG>) {
-    super.copyFrom(element)
+
+  protected _copyFrom(element: Class_Handler<CONFIG>) {
+    super._copyFrom(element)
     this._size = element._size
     this._color = element._color
     this._filled = element._filled
     this._custom_class = element._custom_class
   }
 
-  public drawElements() {
+  public drawElement() {
     const elementClassName = 'gg_handler ' + (this._custom_class ? this._custom_class : '')
     this.d3_selection?.attr('class', elementClassName).datum(this)
     const size_to_use = this.sizeToUse()
@@ -109,12 +108,13 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
       .attr('fill-opacity', this._filled ? 1 : 0)
   }
 
-  public draw() {
+  protected _draw() {
+    super._draw()
+    this.drawElement()
     this.applyPosition()
-    this.drawElements()
   }
 
-  protected _initDraw(): void {
+  protected _initDraw() {
     // If the parent id is referenced in the constructor we allow the creation of the new group outside the DA
     // (orginally this override was created to allow the creation of legend handler outside the DA)
     if (this._custom_html_grp) {
@@ -127,10 +127,9 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
           //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ')') // init drawing area zone with a margin for taking into account the navbar
         }
       }
-    } /*else {
-      // Normal _initDraw
+    } else {
       super._initDraw()
-    }*/
+    }
   }
 
   private sizeToUse() {
@@ -149,9 +148,5 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
   }
 
   public get ref_element() {return this._ref_element}
-
   public get ref_element_optional() {return this._ref_element_optional}
-
-  public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
 }
