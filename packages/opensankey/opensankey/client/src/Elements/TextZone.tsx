@@ -1,6 +1,6 @@
 import * as d3 from 'd3'
 
-import { Type_JSON, getBooleanFromJSON, getStringFromJSON} from '../types/Utils'
+import { Type_JSON, getBooleanFromJSON, getStringFromJSON } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
@@ -18,7 +18,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
   ) {
     //super(id, id, drawing_area, 'g_elements_sankey')
-super(id, id, drawing_area) //'g_elements_sankey')
+    super(id, id, drawing_area) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
     this._at_extremity_of_attached_nodes = false
@@ -39,8 +39,8 @@ super(id, id, drawing_area) //'g_elements_sankey')
     this.draw()
   }
 
-  public copyFrom(container_to_copy: Class_NodeBase) {
-    super.copyFrom(container_to_copy)
+  protected _copyFrom(container_to_copy: Class_NodeBase) {
+    super._copyFrom(container_to_copy)
     const cast_copy = container_to_copy as unknown as Class_ContainerElement
     this._tied_to_nodes = cast_copy._tied_to_nodes
     this._at_extremity_of_attached_nodes = cast_copy._at_extremity_of_attached_nodes
@@ -392,26 +392,26 @@ super(id, id, drawing_area) //'g_elements_sankey')
     // Appliquer les marges selon la position
     if (this.at_extremity_of_attached_nodes) {
       switch (this.extremity_position) {
-      case 'top':
-        this.position_y = min_y - this.shape_min_height - this.margin_bottom
-        this.position_x = min_x - this.margin_left
-        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-        break
-      case 'bottom':
-        this.position_y = max_y + this.margin_top
-        this.position_x = min_x - this.margin_left
-        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-        break
-      case 'left':
-        this.position_x = min_x - this.shape_min_width - this.margin_right
-        this.position_y = min_y - this.margin_top
-        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-        break
-      case 'right':
-        this.position_x = max_x + this.margin_left
-        this.position_y = min_y - this.margin_top
-        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-        break
+        case 'top':
+          this.position_y = min_y - this.shape_min_height - this.margin_bottom
+          this.position_x = min_x - this.margin_left
+          this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
+          break
+        case 'bottom':
+          this.position_y = max_y + this.margin_top
+          this.position_x = min_x - this.margin_left
+          this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
+          break
+        case 'left':
+          this.position_x = min_x - this.shape_min_width - this.margin_right
+          this.position_y = min_y - this.margin_top
+          this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
+          break
+        case 'right':
+          this.position_x = max_x + this.margin_left
+          this.position_y = min_y - this.margin_top
+          this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
+          break
       }
     } else {
       // Mode englobant : appliquer les marges sur tous les côtés

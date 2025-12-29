@@ -202,8 +202,8 @@ export class Class_NodeElement extends Class_NodeBase {
     // Call parent
     super.cleanForDeletion()
   }
-  public copyFrom(_: Class_NodeElement): void {
-    super.copyFrom(_)
+  protected _copyFrom(_: Class_NodeElement): void {
+    super._copyFrom(_)
     this.copyDimensionsFrom(_ as Class_NodeElement)
       this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
@@ -302,8 +302,8 @@ export class Class_NodeElement extends Class_NodeBase {
   /**
    * Draw given node on drawing area
    */
-  public draw() {
-    super.draw()
+  protected _draw() {
+    super._draw()
     this._nodeDrawValueLabel.drawValueLabel()
   }
   public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
