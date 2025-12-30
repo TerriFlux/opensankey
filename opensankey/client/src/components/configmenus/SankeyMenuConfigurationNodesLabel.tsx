@@ -98,32 +98,8 @@ export const MenuConfigurationNodeLabel = ({ app_data, menu_for_style }: {
           config={NAME_LABEL_CONFIG}
           refreshParentComponent={refreshThisAndUpdateRelatedComponents}
           prefix={'name_'} />
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={'Noeud.labels'}
-            attributeKey={'name_label_box_width' as ValueKey}
-            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-            unit_text='px'
-          />
-          {/* Position horizontal du label par rapport à l'ancre*/}
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={'Noeud.labels'}
-            attributeKey={'name_label_horiz_shift' as ValueKey}
-            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-            unit_text='px'
-          />
-          {/* Position vertical du label par rapport à l'ancre*/}
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={'Noeud.labels'}
-            attributeKey={'name_label_vert_shift' as ValueKey}
-            refreshParentComponent={refreshThisAndUpdateRelatedComponents}
-            unit_text='px'
-          />
+
+
           <ElementAttrSetterTextInput2Cols
             app_data={app_data}
             elements={elements}

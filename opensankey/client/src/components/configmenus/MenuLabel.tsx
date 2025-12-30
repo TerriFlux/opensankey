@@ -27,10 +27,10 @@ import React, { useState } from 'react'
 import { Box, Checkbox, Button, Select } from '@chakra-ui/react'
 import { t } from 'i18next'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkStyle,Class_NodeStyle } from '../../Elements/Element'
+import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/Element'
 import { Class_NodeElement } from '../../Elements/Node'
 import { default_style_id, font_families } from '../../types/Utils'
-import { updateElements, ValueKey } from './MenuCommon'
+import { ElementAttrSetterNumberInput2Cols, updateElements, ValueKey } from './MenuCommon'
 import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
 import { svg_label_upper } from './SankeyMenuConfigurationNodesShape'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
@@ -405,8 +405,32 @@ export const SankeyMenuLabelComponent = ({
           <TooltipElementOverloaded elements={base_elements} t={t} k={prefix + 'label_vertical_text' as ValueKey} />
         </OSTooltip>
       </Checkbox>
-
-
+      {/* Position horizontal du label par rapport à l'ancre*/}
+      <ElementAttrSetterNumberInput2Cols
+        app_data={app_data}
+        elements={elements}
+        attributePath={attributePath}
+        attributeKey={prefix + 'label_horiz_shift' as ValueKey}
+        refreshParentComponent={refreshParentComponent}
+        unit_text='px'
+      />
+      {/* Position vertical du label par rapport à l'ancre*/}
+      <ElementAttrSetterNumberInput2Cols
+        app_data={app_data}
+        elements={elements}
+        attributePath={attributePath}
+        attributeKey={prefix + 'label_vert_shift' as ValueKey}
+        refreshParentComponent={refreshParentComponent}
+        unit_text='px'
+      />
+      <ElementAttrSetterNumberInput2Cols
+        app_data={app_data}
+        elements={elements}
+        attributePath={attributePath}
+        attributeKey={prefix + 'label_box_width' as ValueKey}
+        refreshParentComponent={refreshParentComponent}
+        unit_text='px'
+      />
     </Box>
 
   </Box >

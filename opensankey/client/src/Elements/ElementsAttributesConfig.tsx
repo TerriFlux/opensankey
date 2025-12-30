@@ -695,6 +695,20 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
                 fr: 'Orienter le texte verticalement'
             }
         } satisfies AttributeConfig<boolean>,
+        position_absolute: {
+            default: false as boolean,
+            type: (() => false) as (() => boolean),
+            category: category,
+            actions: [drawAction] as BaseActionType[],
+            labels: {
+                en: 'position_absolute',
+                fr: 'position_absolute'
+            },
+            tooltips: {
+                en: 'position_absolute',
+                fr: 'position_absolute'
+            }
+        } satisfies AttributeConfig<boolean>,
         position_x: {
             default: 0 as number,
             type: (() => 0) as (() => number),
@@ -1137,10 +1151,22 @@ export const HYPER_LINK_CONFIG = {
 export type ValueLabelConfigReturn = typeof VALUE_LABEL_CONFIG
 export type LabelConfigReturn = ReturnType<typeof createLabelConfig>
 // Type pour mapper tous les attributs du config vers leurs valeurs
-type LabelValues<T extends LabelConfigReturn> = {
-    [K in keyof T]: ExtractConfigValue<T[K]>
+export type LabelValues<T extends LabelConfigReturn> = {
+    -readonly [K in keyof T]: ExtractConfigValue<T[K]>
 }
+export const NAME_LABEL_LINK_CONFIG = {
+  ...NAME_LABEL_CONFIG,
+  ...createLinkLabelSpecificConfig('name_label', 'name_label', 'drawNameLabel')
+} as const
 
+export const VALUE_LABEL_LINK_CONFIG = {
+  ...VALUE_LABEL_CONFIG,
+  ...createLinkLabelSpecificConfig('value_label', 'value_label', 'drawValueLabel')
+} as const
+/**
+ * Crée une vue réactive sur les attributs de label d'un élément
+ * Les modifications sont immédiatement répercutées sur l'élément source
+ */
 export function getLabelValues<T extends LabelConfigReturn>(
     element: Class_LinkElement | Class_NodeBase | Class_ElementStyle<typeof NODES_ATTRIBUTES_CONFIG> | Class_ElementStyle<typeof LINKS_ATTRIBUTES_CONFIG>,
     prefix: 'name_' | 'value_',
@@ -1148,19 +1174,28 @@ export function getLabelValues<T extends LabelConfigReturn>(
 ): LabelValues<T> {
     const result = {} as any
 
-    // Parcourir toutes les clés du config
+    // Créer des getters/setters pour chaque propriété
     for (const key in config) {
         if (Object.prototype.hasOwnProperty.call(config, key)) {
             const fullKey = `${prefix}label_${key}`
-            const configEntry = config[key] as any  // Cast nécessaire pour accéder à .default
 
-            // Récupérer la valeur depuis l'élément ou utiliser la valeur par défaut
-            result[key] = Reflect.get(element, fullKey) ?? configEntry.default
+            Object.defineProperty(result, key, {
+                get: () => {
+                    //@ts-expect-error xxx
+                    return Reflect.get(element, fullKey) ?? config[key].default
+                },
+                set: (value: any) => {
+                    Reflect.set(element, fullKey, value)
+                },
+                enumerable: true,
+                configurable: true
+            })
         }
     }
 
     return result as LabelValues<T>
 }
+
 export type IconConfigReturn = typeof ICON_CONFIG
 export type RichTextConfigReturn = typeof RICH_TEXT_CONFIG
 export type ImageConfigReturn = typeof IMAGE_CONFIG
@@ -1205,115 +1240,115 @@ export type ImageAttributeTypes = {
 }
 
 const NODE_SHAPE_SPECIFIC_CONFIG = {
-  // =================== MARGINS ===================
-  margin_left: {
-    default: 50,
-    type: (() => 50) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'Left margin',
-      fr: 'Marge gauche'
-    },
-    tooltips: {
-      en: 'Left margin from attached nodes',
-      fr: 'Marge gauche depuis les nœuds attachés'
-    }
-  } satisfies AttributeConfig<number>,
+    // =================== MARGINS ===================
+    margin_left: {
+        default: 50,
+        type: (() => 50) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
 
-  margin_right: {
-    default: 50,
-    type: (() => 50) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'Right margin',
-      fr: 'Marge droite'
-    },
-    tooltips: {
-      en: 'Right margin from attached nodes',
-      fr: 'Marge droite depuis les nœuds attachés'
-    }
-  } satisfies AttributeConfig<number>,
+        labels: {
+            en: 'Left margin',
+            fr: 'Marge gauche'
+        },
+        tooltips: {
+            en: 'Left margin from attached nodes',
+            fr: 'Marge gauche depuis les nœuds attachés'
+        }
+    } satisfies AttributeConfig<number>,
 
-  margin_top: {
-    default: 50,
-    type: (() => 50) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'Top margin',
-      fr: 'Marge haute'
-    },
-    tooltips: {
-      en: 'Top margin from attached nodes',
-      fr: 'Marge haute depuis les nœuds attachés'
-    }
-  } satisfies AttributeConfig<number>,
+    margin_right: {
+        default: 50,
+        type: (() => 50) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
 
-  margin_bottom: {
-    default: 50,
-    type: (() => 50) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'Bottom margin',
-      fr: 'Marge basse'
-    },
-    tooltips: {
-      en: 'Bottom margin from attached nodes',
-      fr: 'Marge basse depuis les nœuds attachés'
-    }
-  } satisfies AttributeConfig<number>,
-  position_type: {
-    default: default_position_type,
-    type: (() => default_position_type) as (() => Type_Position),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'x',
-      fr: 'x'
-    },
-    tooltips: {
-      en: 'x',
-      fr: 'x'
-    }
-  } satisfies AttributeConfig<Type_Position>,
-  position_dx: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'x',
-      fr: 'x'
-    },
-    tooltips: {
-      en: 'x',
-      fr: 'x'
-    }
-  } satisfies AttributeConfig<number>,
-  position_dy: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'margins' as const,
-    actions: ['drawShape'] as BaseActionType[],
-    
-    labels: {
-      en: 'x',
-      fr: 'x'
-    },
-    tooltips: {
-      en: 'x',
-      fr: 'x'
-    }
-  } satisfies AttributeConfig<number>
+        labels: {
+            en: 'Right margin',
+            fr: 'Marge droite'
+        },
+        tooltips: {
+            en: 'Right margin from attached nodes',
+            fr: 'Marge droite depuis les nœuds attachés'
+        }
+    } satisfies AttributeConfig<number>,
+
+    margin_top: {
+        default: 50,
+        type: (() => 50) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
+
+        labels: {
+            en: 'Top margin',
+            fr: 'Marge haute'
+        },
+        tooltips: {
+            en: 'Top margin from attached nodes',
+            fr: 'Marge haute depuis les nœuds attachés'
+        }
+    } satisfies AttributeConfig<number>,
+
+    margin_bottom: {
+        default: 50,
+        type: (() => 50) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
+
+        labels: {
+            en: 'Bottom margin',
+            fr: 'Marge basse'
+        },
+        tooltips: {
+            en: 'Bottom margin from attached nodes',
+            fr: 'Marge basse depuis les nœuds attachés'
+        }
+    } satisfies AttributeConfig<number>,
+    position_type: {
+        default: default_position_type,
+        type: (() => default_position_type) as (() => Type_Position),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
+
+        labels: {
+            en: 'x',
+            fr: 'x'
+        },
+        tooltips: {
+            en: 'x',
+            fr: 'x'
+        }
+    } satisfies AttributeConfig<Type_Position>,
+    position_dx: {
+        default: 0,
+        type: (() => 0) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
+
+        labels: {
+            en: 'x',
+            fr: 'x'
+        },
+        tooltips: {
+            en: 'x',
+            fr: 'x'
+        }
+    } satisfies AttributeConfig<number>,
+    position_dy: {
+        default: 0,
+        type: (() => 0) as (() => number),
+        category: 'margins' as const,
+        actions: ['drawShape'] as BaseActionType[],
+
+        labels: {
+            en: 'x',
+            fr: 'x'
+        },
+        tooltips: {
+            en: 'x',
+            fr: 'x'
+        }
+    } satisfies AttributeConfig<number>
 
 } as const
 
@@ -1354,163 +1389,60 @@ export const NODES_ATTRIBUTES_CONFIG = {
 } as const
 
 export abstract class AttributeMappings {
-  abstract getToJsonMapping(): { [key: string]: string }
-  abstract getFromJsonMapping(): { [key: string]: NodeAttributeKey | LinkAttributeKey }
+    abstract getToJsonMapping(): { [key: string]: string }
+    abstract getFromJsonMapping(): { [key: string]: NodeAttributeKey | LinkAttributeKey }
 }
 export class NodeAttributeMappings extends AttributeMappings {
-  // Mapping principal: attribut interne -> clé JSON
-  private readonly MAIN_MAPPING: { [key: string]: string } = {
-    // Shape mappings
-    shape_type: 'shape',
-    shape_min_width: 'node_width',
-    shape_min_height: 'node_height',
-    shape_color: 'color',
-    shape_opacity: 'opacity',
-    shape_color_sustainable: 'colorSustainable',
-    // Icon attributes
-    'iconName': 'icon_name',
-    'iconColor': 'icon_color',
-    'iconVisible': 'icon_visible',
-    'iconViewBox': 'icon_view_box',
-    'iconColorSustainable': 'icon_color_sustainable',
-    
-    // Foreign Object attributes
-    'has_FO': 'has_fo',
-    'is_FO_raw': 'is_fo_raw',
-    'FO_content': 'fo_content',
-    
-    // Image attributes
-    'is_image': 'is_image',
-    'image_src': 'image_src',
-    
-    // Hyperlink attribute
-    'hyperlink': 'hyperlink'
-  }
+    // Mapping principal: attribut interne -> clé JSON
+    private readonly MAIN_MAPPING: { [key: string]: string } = {
+        // Shape mappings
+        shape_type: 'shape',
+        shape_min_width: 'node_width',
+        shape_min_height: 'node_height',
+        shape_color: 'color',
+        shape_opacity: 'opacity',
+        shape_color_sustainable: 'colorSustainable',
+        // Icon attributes
+        'iconName': 'icon_name',
+        'iconColor': 'icon_color',
+        'iconVisible': 'icon_visible',
+        'iconViewBox': 'icon_view_box',
+        'iconColorSustainable': 'icon_color_sustainable',
 
-  // Mapping legacy: ancienne clé JSON -> attribut interne
-  private readonly LEGACY_MAPPING: { [key: string]: string } = {
-    // Name label legacy
-    'label_visible': 'name_label_is_visible',
-    'font_family': 'name_label_font_family',
-    'font_size': 'name_label_font_size',
-    'uppercase': 'name_label_uppercase',
-    'bold': 'name_label_bold',
-    'italic': 'name_label_italic',
-    'label_color': 'name_label_color',
-    'label_horiz': 'name_label_horiz',
-    'label_vert': 'name_label_vert',
-    'label_background': 'name_label_background',
-    'label_background_color': 'name_label_background_color',
-    'label_box_width': 'name_label_box_width',
+        // Foreign Object attributes
+        'has_FO': 'has_fo',
+        'is_FO_raw': 'is_fo_raw',
+        'FO_content': 'fo_content',
 
-    // Value label legacy
-    'show_value': 'value_label_is_visible',
-    'value_font_size': 'value_label_font_size',
-    'label_horiz_valeur': 'value_label_horiz',
-    'label_vert_valeur': 'value_label_vert',
-    'to_precision': 'value_label_scientific_notation',
-    'scientific_precision': 'value_label_significant_digits',
-    'nb_scientific_precision': 'value_label_nb_significant_digits',
-    'custom_digit': 'value_label_custom_digit',
-    'nb_digit': 'value_label_nb_digit',
-    'label_unit_visible': 'value_label_unit_visible',
-    'label_unit': 'value_label_unit',
-    'label_unit_factor': 'value_label_unit_factor',
+        // Image attributes
+        'is_image': 'is_image',
+        'image_src': 'image_src',
 
-    // Shape legacy (fusion avec MAIN_MAPPING)
-    'shape': 'shape_type',
-    'node_width': 'shape_min_width',
-    'node_height': 'shape_min_height',
-    'color': 'shape_color',
-    'opacity': 'shape_opacity',
-    'colorSustainable': 'shape_color_sustainable',
-  }
-
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...this.MAIN_MAPPING }
-  }
-
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
-  }
-}
-
-export class LinkAttributeMappings extends AttributeMappings {
-  private readonly LEGACY_MAPPING: { [key: string]: LinkAttributeKey } = {
-      'user_scale': 'shape_local_link_scale',
-      'curved': 'shape_is_curved',
-      'curvature': 'shape_curvature',
-      'recycling': 'shape_is_recycling',
-      'is_structur': 'shape_is_structure',
-      'orientation': 'shape_orientation',
-      'left_horiz_shift': 'shape_starting_curve',
-      'right_horiz_shift': 'shape_ending_curve',
-      'starting_tangeant': 'shape_starting_tangeant',
-      'ending_tangeant': 'shape_ending_tangeant',
-      'vert_shift': 'shape_middle_recycling',
-      'arrow': 'shape_is_arrow',
-      'arrow_size': 'shape_arrow_size',
-      'dashed': 'shape_is_dashed',
-      'color': 'shape_color',
-      'color_rule': 'shape_color_rule',
-      'opacity': 'shape_opacity',
+        // Hyperlink attribute
+        'hyperlink': 'hyperlink'
     }
 
-private readonly MAIN_MAPPING: { [key: string]: string } = {
-      shape_local_link_scale: 'user_scale',
-      shape_is_curved: 'curved',
-      shape_type: 'shape_type',
-      shape_curvature: 'curvature',
-      shape_is_recycling: 'recycling',
-      shape_is_structure: 'is_structur',
-      shape_orientation: 'orientation',
-      shape_starting_curve: 'left_horiz_shift',
-      shape_ending_curve: 'right_horiz_shift',
-      shape_starting_tangeant: 'starting_tangeant',
-      shape_ending_tangeant: 'ending_tangeant',
-      shape_middle_recycling: 'vert_shift',
-      shape_is_arrow: 'arrow',
-      shape_arrow_size: 'arrow_size',
-      shape_is_dashed: 'dashed',
-      shape_color: 'color',
-      shape_color_rule: 'color_rule',
-      shape_opacity: 'opacity',
-    }
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...this.MAIN_MAPPING }
-  }
+    // Mapping legacy: ancienne clé JSON -> attribut interne
+    private readonly LEGACY_MAPPING: { [key: string]: string } = {
+        // Name label legacy
+        'label_visible': 'name_label_is_visible',
+        'font_family': 'name_label_font_family',
+        'font_size': 'name_label_font_size',
+        'uppercase': 'name_label_uppercase',
+        'bold': 'name_label_bold',
+        'italic': 'name_label_italic',
+        'label_color': 'name_label_color',
+        'label_horiz': 'name_label_horiz',
+        'label_vert': 'name_label_vert',
+        'label_background': 'name_label_background',
+        'label_background_color': 'name_label_background_color',
+        'label_box_width': 'name_label_box_width',
 
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public  getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
-  }
-
-
-  protected fromLegacyJSON(json_local_object: Type_JSON) {
-    if (json_local_object['version'] === undefined) {
-      // Mapping legacy simplifié
-      const legacyMapping: { [key: string]: string } = {
-        'label_visible': 'value_label_is_visible',
-        'font_family': 'value_label_font_family',
-        'label_font_size': 'value_label_font_size',
-        'text_color': 'value_label_color',
-        'label_position': 'value_label_horiz',
-        'orthogonal_label_position': 'value_label_vert',
-        'label_on_path': 'value_label_on_path',
-        'label_pos_auto': 'value_label_pos_auto',
+        // Value label legacy
+        'show_value': 'value_label_is_visible',
+        'value_font_size': 'value_label_font_size',
+        'label_horiz_valeur': 'value_label_horiz',
+        'label_vert_valeur': 'value_label_vert',
         'to_precision': 'value_label_scientific_notation',
         'scientific_precision': 'value_label_significant_digits',
         'nb_scientific_precision': 'value_label_nb_significant_digits',
@@ -1519,26 +1451,129 @@ private readonly MAIN_MAPPING: { [key: string]: string } = {
         'label_unit_visible': 'value_label_unit_visible',
         'label_unit': 'value_label_unit',
         'label_unit_factor': 'value_label_unit_factor',
-        'font_size': 'name_label_font_size',
-        'uppercase': 'name_label_uppercase',
-        'bold': 'name_label_bold',
-        'italic': 'name_label_italic',
-        'label_color': 'name_label_color',
-        'label_horiz': 'name_label_horiz',
-        'label_vert': 'name_label_vert'
-      }
-      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
-      if (was_gradient) {
-        json_local_object['shape_color_rule'] = 'gradient'
-      }
-      Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
-        if (json_local_object[oldKey] !== undefined) {
-          //@ts-expect-error xxx
-          this[newKey as AttributeKey] = json_local_object[oldKey]
-        }
-      })
+
+        // Shape legacy (fusion avec MAIN_MAPPING)
+        'shape': 'shape_type',
+        'node_width': 'shape_min_width',
+        'node_height': 'shape_min_height',
+        'color': 'shape_color',
+        'opacity': 'shape_opacity',
+        'colorSustainable': 'shape_color_sustainable',
     }
-  }
+
+    /**
+     * Retourne le mapping pour toJSON (attribut -> JSON)
+     */
+    public getToJsonMapping(): { [key: string]: string } {
+        return { ...this.MAIN_MAPPING }
+    }
+
+    /**
+     * Retourne le mapping pour fromJSON (JSON -> attribut)
+     * Combine legacy + main mapping inversé
+     */
+    public getFromJsonMapping() {
+        return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
+    }
+}
+
+export class LinkAttributeMappings extends AttributeMappings {
+    private readonly LEGACY_MAPPING: { [key: string]: LinkAttributeKey } = {
+        'user_scale': 'shape_local_link_scale',
+        'curved': 'shape_is_curved',
+        'curvature': 'shape_curvature',
+        'recycling': 'shape_is_recycling',
+        'is_structur': 'shape_is_structure',
+        'orientation': 'shape_orientation',
+        'left_horiz_shift': 'shape_starting_curve',
+        'right_horiz_shift': 'shape_ending_curve',
+        'starting_tangeant': 'shape_starting_tangeant',
+        'ending_tangeant': 'shape_ending_tangeant',
+        'vert_shift': 'shape_middle_recycling',
+        'arrow': 'shape_is_arrow',
+        'arrow_size': 'shape_arrow_size',
+        'dashed': 'shape_is_dashed',
+        'color': 'shape_color',
+        'color_rule': 'shape_color_rule',
+        'opacity': 'shape_opacity',
+    }
+
+    private readonly MAIN_MAPPING: { [key: string]: string } = {
+        shape_local_link_scale: 'user_scale',
+        shape_is_curved: 'curved',
+        shape_type: 'shape_type',
+        shape_curvature: 'curvature',
+        shape_is_recycling: 'recycling',
+        shape_is_structure: 'is_structur',
+        shape_orientation: 'orientation',
+        shape_starting_curve: 'left_horiz_shift',
+        shape_ending_curve: 'right_horiz_shift',
+        shape_starting_tangeant: 'starting_tangeant',
+        shape_ending_tangeant: 'ending_tangeant',
+        shape_middle_recycling: 'vert_shift',
+        shape_is_arrow: 'arrow',
+        shape_arrow_size: 'arrow_size',
+        shape_is_dashed: 'dashed',
+        shape_color: 'color',
+        shape_color_rule: 'color_rule',
+        shape_opacity: 'opacity',
+    }
+    /**
+     * Retourne le mapping pour toJSON (attribut -> JSON)
+     */
+    public getToJsonMapping(): { [key: string]: string } {
+        return { ...this.MAIN_MAPPING }
+    }
+
+    /**
+     * Retourne le mapping pour fromJSON (JSON -> attribut)
+     * Combine legacy + main mapping inversé
+     */
+    public getFromJsonMapping() {
+        return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
+    }
+
+
+    protected fromLegacyJSON(json_local_object: Type_JSON) {
+        if (json_local_object['version'] === undefined) {
+            // Mapping legacy simplifié
+            const legacyMapping: { [key: string]: string } = {
+                'label_visible': 'value_label_is_visible',
+                'font_family': 'value_label_font_family',
+                'label_font_size': 'value_label_font_size',
+                'text_color': 'value_label_color',
+                'label_position': 'value_label_horiz',
+                'orthogonal_label_position': 'value_label_vert',
+                'label_on_path': 'value_label_on_path',
+                'label_pos_auto': 'value_label_pos_auto',
+                'to_precision': 'value_label_scientific_notation',
+                'scientific_precision': 'value_label_significant_digits',
+                'nb_scientific_precision': 'value_label_nb_significant_digits',
+                'custom_digit': 'value_label_custom_digit',
+                'nb_digit': 'value_label_nb_digit',
+                'label_unit_visible': 'value_label_unit_visible',
+                'label_unit': 'value_label_unit',
+                'label_unit_factor': 'value_label_unit_factor',
+                'font_size': 'name_label_font_size',
+                'uppercase': 'name_label_uppercase',
+                'bold': 'name_label_bold',
+                'italic': 'name_label_italic',
+                'label_color': 'name_label_color',
+                'label_horiz': 'name_label_horiz',
+                'label_vert': 'name_label_vert'
+            }
+            const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
+            if (was_gradient) {
+                json_local_object['shape_color_rule'] = 'gradient'
+            }
+            Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
+                if (json_local_object[oldKey] !== undefined) {
+                    //@ts-expect-error xxx
+                    this[newKey as AttributeKey] = json_local_object[oldKey]
+                }
+            })
+        }
+    }
 }
 
 //Export des types (inchangé)
@@ -1878,7 +1913,17 @@ export const LINKS_ATTRIBUTES_CONFIG = {
     ...createConfigWithPrefix(createLinkLabelSpecificConfig('name_label', 'name_label', 'drawNameLabel'), 'name_label'),
 
     // =================== VALUE LABEL (avec prefix "value_label_") ===================
-    ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
+    ...createConfigWithPrefixAndOverrides(
+        VALUE_LABEL_CONFIG, 
+        'value_label' as const,
+        'value_label',
+        ['drawValueLabel'] as BaseActionType[],
+        {
+            is_visible:{default: 'true'},
+            font_size: {default: '20'},
+            vert: {default: 'middle'}
+        }
+    ),
     ...createConfigWithPrefix(createLinkLabelSpecificConfig('value_label', 'value_label', 'drawValueLabel'), 'value_label'),
 
     ...ICON_CONFIG,
