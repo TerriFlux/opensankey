@@ -45,7 +45,7 @@ import {
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
-import { LinkDrawLabel, LinkDrawValue } from './LinkDrawLabel'
+import { LinkDrawNameLabel, LinkDrawValueLabel } from './LinkDrawLabel'
 import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
@@ -329,8 +329,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // PRIVATE ATTRIBUTES =================================================================
   private _link_shape: LinkDrawShape
   protected _link_control_points: LinkControlPoints
-  protected _link_draw_label: LinkDrawLabel
-  protected _link_draw_value: LinkDrawValue
+  protected _link_draw_label: LinkDrawNameLabel
+  protected _link_draw_value: LinkDrawValueLabel
   public _link_tooltip: LinkTooltip
 
   private _source: Class_NodeElement
@@ -374,8 +374,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
     this._link_shape = new LinkDrawShape(this, this._link_control_points)
-    this._link_draw_label = new LinkDrawLabel(this, this._link_control_points)
-    this._link_draw_value = new LinkDrawValue(this, this._link_control_points)
+    this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points)
+    this._link_draw_value = new LinkDrawValueLabel(this, this._link_control_points)
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
@@ -601,12 +601,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawValueLabel() {
-    this._link_draw_value.drawValue();
+    this._link_draw_value.drawValueLabel();
     this._orderD3Elements()
   }
 
   public drawNameLabel() {
-    this._link_draw_label.drawLabel()
+    this._link_draw_label.drawNameLabel()
     this._orderD3Elements()
   }
 
@@ -1057,8 +1057,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public drawElements() {
     this._link_shape.drawShape()
     this._drawArrow()
-    this._link_draw_value.drawValue()
-    this._link_draw_label.drawLabel()
+    this._link_draw_value.drawValueLabel()
+    this._link_draw_label.drawNameLabel()
     this._link_draw_label.drawFO()
   }
 

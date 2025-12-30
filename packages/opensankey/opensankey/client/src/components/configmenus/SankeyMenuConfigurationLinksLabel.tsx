@@ -117,7 +117,7 @@ export const MenuConfigurationLinkLabel = ({ app_data, menu_for_style, additionM
           app_data={app_data}
           elements={elements}
           attributePath='Flux.labels'
-          config={NAME_LABEL_CONFIG}
+          config={VALUE_LABEL_CONFIG}
           refreshParentComponent={refreshThisAndUpdateRelatedComponents}
           prefix={'value_'} />
         {content_value_specific_flow}
@@ -180,7 +180,7 @@ export const MenuConfigurationLinkLabel = ({ app_data, menu_for_style, additionM
       app_data={app_data}
       elements={elements}
       attributePath='Flux.labels'
-      config={VALUE_LABEL_CONFIG}
+      config={NAME_LABEL_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
       prefix={'name_'} /> : <></>}
 
