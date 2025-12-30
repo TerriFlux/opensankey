@@ -5,18 +5,16 @@ import { textwrap } from 'd3-textwrap'
 import { Class_NodeBase } from './NodeBase'
 import { label_margin, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
-import { Class_LinkElement, format_value } from './Link'
-import { BASE_SHAPE_CONFIG, getShapeValues, ShapePrefix, Type_TextHPos, Type_TextVPos } from './ElementsAttributesConfig'
+import { Class_LinkElement, } from './Link'
+import { 
+  BASE_SHAPE_CONFIG, getLabelValues, getShapeValues, LabelConfigReturn, 
+  LabelValues, ShapePrefix, Type_TextHPos, Type_TextVPos, 
+  VALUE_LABEL_CONFIG 
+} from './ElementsAttributesConfig'
 
 type LabelPrefix = 'name_label' | 'value_label'
 type DisplayKey = 'label' // Les deux utilisent position_x_label et position_y_label
 
-// LabelHelpers.ts
-
-/**
- * Dessine le background d'un label (name ou value) avec support complet de BASE_SHAPE_CONFIG
- * Gère rect et ellipse avec bordures configurables
- */
 export function drawLabelBackground(
   group: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined,
   element: Class_NodeBase | Class_LinkElement,
@@ -40,8 +38,8 @@ export function drawLabelBackground(
     ?? { x: 0, y: 0, height: 0, width: 0 }
   
   // Padding (TODO: rendre configurable via un attribut ?)
-  const paddingH = 5  // Horizontal padding
-  const paddingV = 2  // Vertical padding (peut être différent)
+  const paddingH = 0  // Horizontal padding
+  const paddingV = 0  // Vertical padding (peut être différent)
   
   const width = bbox.width + (paddingH * 2)
   const height = bbox.height + (paddingV * 2)
@@ -88,96 +86,25 @@ export function drawLabelBackground(
 export abstract class NodeDrawLabelBase {
   protected _node: Class_NodeBase
   protected readonly prefix: LabelPrefix
-
+  protected _label_values : LabelValues<LabelConfigReturn>
   constructor(node: Class_NodeBase, prefix: LabelPrefix) {
     this._node = node
     this.prefix = prefix
+    this._label_values = getLabelValues(
+      this._node, 
+      prefix == 'name_label' ? 'name_' : 'value_', 
+      VALUE_LABEL_CONFIG
+    )
   }
-
-  // =================== MÉTHODES ABSTRAITES ===================
   
   protected abstract getLabelText(): string | number
   protected abstract shouldDrawLabel(): boolean
   protected abstract drawSpecificLabel(): void
 
-  // =================== ACCÈS AUX PROPRIÉTÉS VIA PRÉFIXE ===================
-
-  protected getFontSize(): number {
-    return (this._node as any)[`${this.prefix}_font_size`]
-  }
-
-  protected getIsVisible(): boolean {
-    return (this._node as any)[`${this.prefix}_is_visible`]
-  }
-
-  protected getColor(): string {
-    return (this._node as any)[`${this.prefix}_color`]
-  }
-
-  protected getBold(): boolean {
-    return (this._node as any)[`${this.prefix}_bold`]
-  }
-
-  protected getItalic(): boolean {
-    return (this._node as any)[`${this.prefix}_italic`]
-  }
-
-  protected getUppercase(): boolean {
-    return (this._node as any)[`${this.prefix}_uppercase`]
-  }
-
-  protected getFontFamily(): string {
-    return (this._node as any)[`${this.prefix}_font_family`]
-  }
-
-  protected getHorizPosition(): Type_TextHPos {
-    return (this._node as any)[`${this.prefix}_horiz`]
-  }
-
-  protected getVertPosition(): Type_TextVPos {
-    return (this._node as any)[`${this.prefix}_vert`]
-  }
-
-  protected getHorizShift(): number {
-    return (this._node as any)[`${this.prefix}_horiz_shift`]
-  }
-
-  protected getVertShift(): number {
-    return this._node[`${this.prefix}_vert_shift`]
-  }
-
-  protected setHorizPosition(value: Type_TextHPos): void {
-    this._node[`${this.prefix}_horiz`] = value
-  }
-
-  protected setVertPosition(value: Type_TextVPos): void {
-    this._node[`${this.prefix}_vert`] = value
-  }
-
-  // Note: Les deux labels utilisent les mêmes position_x_label et position_y_label
-  protected getDisplayXValue(): number | undefined {
-    return this._node[`${this.prefix}_position_x`]
-  }
-
-  protected setDisplayXValue(value: number | undefined): void {
-    if (value != undefined) this._node[`${this.prefix}_position_x`] = value
-    else this._node.delete_attribute(`${this.prefix}_position_x`)
-  }
-
-  protected getDisplayYValue(): number | undefined {
-    return this._node[`${this.prefix}_position_y`]
-  }
-
-  protected setDisplayYValue(value: number | undefined): void {
-      if (value != undefined) this._node[`${this.prefix}_position_y`] = value
-    else this._node.delete_attribute(`${this.prefix}_position_y`)
-  }
-
   protected getTextSelector(): string {
     return `.${this.prefix}_text`
   }
 
-  // =================== MÉTHODES COMMUNES ===================
 
   /**
    * Dessine le background du label
@@ -192,33 +119,27 @@ export abstract class NodeDrawLabelBase {
     )
   }
 
-  /**
-   * Calcule la position du label
-   */
-  protected getLabelPos(): [number, number, string, string, string] {
-    // x position
-    let label_anchor = 'start'
-    let label_align = 'start'
+  protected getLabelPos(): [number, number, string, string] {
     let label_pos_x = 0
+    let label_anchor = 'start'
+    let label_pos_y: number
+    let label_baseline: string
 
-    if (this.getDisplayXValue() !== undefined) {
-      label_pos_x = this.getDisplayXValue()!
+    if (this._label_values.position_absolute) {
+      label_pos_x = this._label_values.position_x
       label_anchor = 'middle'
-      label_align = 'center'
     } else {
       const shape_width = this._node.getShapeWidthToUse()
       const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
-      label_pos_x = shape_width + label_pos_dx + label_margin + this.getHorizShift()
+      label_pos_x = shape_width + label_pos_dx + label_margin + this._label_values.horiz_shift
 
-      if (this.getHorizPosition() === 'left') {
-        label_pos_x = 0 - label_margin + this.getHorizShift()
+      if (this._label_values.horiz === 'left') {
+        label_pos_x = 0 - label_margin + this._label_values.horiz_shift
         label_anchor = 'end'
-        label_align = 'end'
       }
-      else if (this.getHorizPosition() === 'middle') {
-        label_pos_x = shape_width / 2 + this.getHorizShift()
+      else if (this._label_values.horiz === 'middle') {
+        label_pos_x = shape_width / 2 + this._label_values.horiz_shift
         label_anchor = 'middle'
-        label_align = 'center'
       }
     }
 
@@ -226,45 +147,42 @@ export abstract class NodeDrawLabelBase {
     const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
     const shape_height = this._node.getShapeHeightToUse()
 
-    let label_pos_y: number
-    let label_baseline: string
-
     // ✅ Différence name vs value : position Y par défaut
     if (this.prefix === 'name_label') {
-      label_pos_y = label_pos_dy + shape_height + this.getVertShift()
+      label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
       label_baseline = 'text-before-edge'
     } else {
       // value_label
-      label_pos_y = label_pos_dy + shape_height + this.getFontSize() + this.getVertShift()
+      label_pos_y = label_pos_dy + shape_height + this._label_values.font_size + this._label_values.vert_shift
       label_baseline = 'text-before-edge'
     }
 
-    if (this.getDisplayYValue() !== undefined) {
-      label_pos_y = this.getDisplayYValue()!
+    if (this._label_values.position_absolute) {
+      label_pos_y = this._label_values.position_y
       label_baseline = 'middle'
     } else {
-      if (this.getVertPosition() === 'top') {
-        label_pos_y = -label_pos_dy + this.getVertShift()
+      if (this._label_values.vert === 'top') {
+        label_pos_y = -label_pos_dy + this._label_values.vert_shift
         label_baseline = 'text-after-edge'
       }
-      else if (this.getVertPosition() === 'middle') {
+      else if (this._label_values.vert === 'middle') {
         if (this.prefix === 'name_label') {
-          label_pos_y = shape_height / 2 + this.getVertShift()
+          label_pos_y = shape_height / 2 + this._label_values.vert_shift
         } else {
-          label_pos_y = (shape_height / 2) + (this.getFontSize() / 2) + this.getVertShift()
+          label_pos_y = (shape_height / 2) + (this._label_values.font_size / 2) + this._label_values.vert_shift
         }
         label_baseline = 'middle'
       }
     }
 
-    return [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline]
+    return [label_pos_x, label_pos_y, label_anchor, label_baseline]
   }
 
   /**
    * Met à jour la position du label
    */
   protected updateLabelPos(): [number, number, string] {
-    const [label_pos_x, label_pos_y, label_anchor, label_align, label_baseline] = this.getLabelPos()
+    const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
     const drawingElements = (this._node as Class_NodeElement).internalDrawingElements
     const groupSelector = this.prefix === 'name_label' ? 'd3_selection_g_name_label' : 'd3_selection_g_value_label'
 
@@ -273,14 +191,12 @@ export abstract class NodeDrawLabelBase {
       .attr('y', label_pos_y)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
-      .attr('text-align', label_align)
 
     drawingElements[groupSelector]?.select(this.getTextSelector()).selectAll('tspan')
       .attr('x', label_pos_x)
       .attr('dx', 0)
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
-      .attr('text-align', label_align)
 
     return [label_pos_x, label_pos_y, label_anchor]
   }
@@ -288,65 +204,67 @@ export abstract class NodeDrawLabelBase {
   /**
    * Applique le style de texte à une sélection
    */
-  protected applyTextStyle(selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined) {
+  protected applyTextStyle(
+    selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
+  ) {
     selection
-      ?.attr('fill', this.getColor())
-      .attr('font-weight', this.getBold() ? 'bold' : 'normal')
-      .attr('font-style', this.getItalic() ? 'italic' : 'normal')
-      .attr('font-size', String(this.getFontSize()) + 'px')
-      .attr('font-family', this.getFontFamily())
-      .style('text-transform', this.getUppercase() ? 'uppercase' : 'none')
+      ?.attr('fill', this._label_values.color)
+      .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
+      .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
+      .attr('font-size', String(this._label_values.font_size) + 'px')
+      .attr('font-family', this._label_values.font_family)
+      .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
   }
 
   // =================== DRAG & DROP HANDLERS ===================
 
   protected dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    const old_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+    const old_val: [number, number, Type_TextHPos, Type_TextVPos] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
-    if (this.getDisplayXValue() === undefined) {
+    if (this._label_values.position_x === undefined) {
       const shape_width = this._node.getShapeWidthToUse()
       const label_pos_dx = this._node.is_selected ? default_selected_stroke_width : 0
 
       let label_pos_x = shape_width + label_pos_dx
-      if (this.getHorizPosition() === 'left') {
+      if (this._label_values.horiz === 'left') {
         label_pos_x = -label_pos_dx
       }
-      else if (this.getHorizPosition() === 'middle') {
+      else if (this._label_values.horiz === 'middle') {
         label_pos_x = shape_width / 2
       }
-
-      this.setDisplayXValue(label_pos_x)
+      this._label_values.position_x = label_pos_x
+    //   this.setDisplayXValue(label_pos_x)
     }
 
-    if (this.getDisplayYValue() === undefined) {
+    if (this._label_values.position_y === undefined) {
       const shape_height = this._node.getShapeHeightToUse()
       const label_pos_dy = this._node.is_selected ? default_selected_stroke_width : 0
 
       let label_pos_y = label_pos_dy + shape_height
-      if (this.getVertPosition() === 'top') {
+      if (this._label_values.vert === 'top') {
         label_pos_y = -label_pos_dy
       }
-      else if (this.getVertPosition() === 'middle') {
+      else if (this._label_values.vert === 'middle') {
         label_pos_y = shape_height / 2
       }
 
-      this.setDisplayYValue(label_pos_y)
+      this._label_values.position_y = label_pos_y
     }
 
-    this.setHorizPosition('dragged')
-    this.setVertPosition('dragged')
+    this._label_values.horiz = 'dragged'
+    this._label_values.vert = 'dragged'
 
     const inv = () => {
-      this.setDisplayXValue(old_val[0])
-      this.setDisplayYValue(old_val[1])
-      this.setHorizPosition(old_val[2])
-      this.setVertPosition(old_val[3])
+      this._label_values.position_x = old_val[0]
+      this._label_values.position_y = old_val[1]
+      this._label_values.horiz = old_val[2]
+      this._label_values.vert = old_val[3]
       this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawSpecificLabel()
     }
@@ -356,8 +274,8 @@ export abstract class NodeDrawLabelBase {
 
   protected dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     if (!this._node.getFirstDragMove()) {
-      this.setDisplayXValue((this.getDisplayXValue() ?? 0) + event.dx)
-      this.setDisplayYValue((this.getDisplayYValue() ?? 0) + event.dy)
+      this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
+      this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
     } else {
       this._node.setFirstDragMove(false)
     }
@@ -369,20 +287,20 @@ export abstract class NodeDrawLabelBase {
     this.drawSpecificLabel()
     this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
-    const new_val: [number | undefined, number | undefined, Type_TextHPos, Type_TextVPos] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+    const new_val: [number , number , Type_TextHPos, Type_TextVPos] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
     this._node.setFirstDragMove(true)
 
     const redo = () => {
-      this.setDisplayXValue(new_val[0])
-      this.setDisplayYValue(new_val[1])
-      this.setHorizPosition(new_val[2])
-      this.setVertPosition(new_val[3])
+      this._label_values.position_x = new_val[0]
+      this._label_values.position_y = new_val[1]
+      this._label_values.horiz = new_val[2]
+      this._label_values.vert = new_val[3]
       this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawSpecificLabel()
     }
@@ -402,7 +320,7 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   }
 
   protected shouldDrawLabel(): boolean {
-    return this.getIsVisible()
+    return this._label_values.is_visible
   }
 
   protected drawSpecificLabel(): void {
@@ -426,7 +344,7 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
 
     const label_to_display = this.getLabelText()
     const box_width = Math.min(
-      label_to_display.length * this.getFontSize(),
+      label_to_display.length * this._label_values.font_size,
       this._node.name_label_box_width
     )
 
@@ -466,12 +384,12 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     // Adjust for multi-line text
     if (this._node.name_label_vert === 'top') {
       const lineCount = (label_text?.selectAll('tspan').nodes().length ?? 1) - 1
-      box_pos_y -= lineCount * this.getFontSize()
-      label_text?.attr('y', label_pos_y - lineCount * this.getFontSize())
+      box_pos_y -= lineCount * this._label_values.font_size
+      label_text?.attr('y', label_pos_y - lineCount * this._label_values.font_size)
     } else if (this._node.name_label_vert === 'middle') {
-      box_pos_y -= this.getFontSize() / 2
+      box_pos_y -= this._label_values.font_size / 2
       const lineCount = (label_text?.selectAll('tspan').nodes().length ?? 1) - 1
-      label_text?.attr('y', label_pos_y - (lineCount * this.getFontSize() / 2))
+      label_text?.attr('y', label_pos_y - (lineCount * this._label_values.font_size / 2))
     }
 
     if (label_anchor === 'end') {
@@ -530,7 +448,7 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
         .attr('id', 'name_label_input_' + this._node.id)
         .attr('type', 'text')
         .attr('value', this._node.name)
-        .attr('font-size', String(this.getFontSize()) + 'px')
+        .attr('font-size', String(this._label_values.font_size) + 'px')
         .on('input', (evt) => {
           this._node.sankey.drawing_area.bypass_redraws = true
           this._node.name = evt.target.value
@@ -570,22 +488,22 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
 }
 
 export class NodeDrawValueLabel extends NodeDrawLabelBase {
-  // Cast pour avoir accès à Class_NodeElement au lieu de Class_NodeBase
-  protected get _nodeElement(): Class_NodeElement {
-    return this._node as Class_NodeElement
-  }
-
   constructor(node: Class_NodeElement) {
     super(node, 'value_label')
   }
 
+    // Cast pour avoir accès à Class_NodeElement au lieu de Class_NodeBase
+  protected get _nodeElement(): Class_NodeElement {
+    return this._node as Class_NodeElement
+  }
+
   protected getLabelText(): string {
-    return this.getValueLabel()
+    return this._nodeElement.data_label
   }
 
   protected shouldDrawLabel(): boolean {
     if (this._node.drawing_area.type_data === 'structure') return false
-    return this.getIsVisible()
+    return this._label_values.is_visible
   }
 
   protected drawSpecificLabel(): void {
@@ -609,7 +527,7 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     (this._node as Class_NodeElement).setInternalDrawingElements({ d3_selection_g_value_label })
 
     // Position
-    const [label_pos_x, label_pos_y, label_anchor, label_align] = this.getLabelPos()
+    const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
 
     // Add value label text
     const label_text = d3_selection_g_value_label?.append('text')
@@ -619,7 +537,6 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
       .attr('text-anchor', label_anchor)
-      .attr('text-align', label_align)
       .text(this.getLabelText())
 
     this.applyTextStyle(label_text)
@@ -628,46 +545,5 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     this.drawBackground(d3_selection_g_value_label)
   }
 
-  // =================== CALCUL DE VALEUR SPÉCIFIQUE ===================
-
-  public getValueLabel(): string {
-    let input_val = 0
-    let output_val = 0
-
-    // Éviter les problèmes de float
-    let max_digit_in = 0
-    const link_in = this._nodeElement.input_links_list
-      .filter(link => link.is_visible)
-      .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
-        if (decimal_digit !== undefined) {
-          max_digit_in = Math.max(max_digit_in, decimal_digit.length)
-        }
-        return link
-      })
-
-    const pow_in = Math.pow(10, max_digit_in)
-    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
-
-    let max_digit_out = 0
-    const link_out = this._nodeElement.output_links_list
-      .filter(link => link.is_visible)
-      .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
-        if (decimal_digit !== undefined) {
-          max_digit_out = Math.max(max_digit_out, decimal_digit.length)
-        }
-        return link
-      })
-
-    const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
-
-    return format_value(
-      this._node.sankey.drawing_area.type_data,
-      Math.max(input_val / pow_in, output_val / pow_out),
-      this._nodeElement,
-      this._nodeElement.value_label_unit
-    )
-  }
 }
+

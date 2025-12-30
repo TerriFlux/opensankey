@@ -356,24 +356,24 @@ export abstract class Class_ProtoElement<
             const setter = this[attribute.setter as keyof this]
             if (typeof setter === 'function') {
               setter.call(this, value)
-            } else {
-              this._storage[key] = value
             }
+          } else {
+            this._storage[key] = value
+          }
 
-            if (attribute.callback) {
-              const callback = this[attribute.callback as keyof this]
-              if (typeof callback === 'function') {
-                callback.call(this)
+          if (attribute.callback) {
+            const callback = this[attribute.callback as keyof this]
+            if (typeof callback === 'function') {
+              callback.call(this)
+            }
+          }
+          if (attribute.actions) {
+            attribute.actions.forEach(action => {
+              const actionMethod = this[action as keyof this]
+              if (typeof actionMethod === 'function') {
+                actionMethod.call(this)
               }
-            }
-            if (attribute.actions) {
-              attribute.actions.forEach(action => {
-                const actionMethod = this[action as keyof this]
-                if (typeof actionMethod === 'function') {
-                  actionMethod.call(this)
-                }
-              })
-            }
+            })
           }
         },
         enumerable: true,
@@ -724,25 +724,25 @@ export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_A
 
   // Setters personnalisés pour la logique complexe
   private customNameLabelHoriz(value: Type_TextHPos) {
-    this.name_label_horiz = value
-    this.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
+    this.attributes.name_label_horiz = value
+    this.attributes.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
 
   }
 
   private customNameLabelVert(value: Type_TextVPos) {
-    this.name_label_vert = value
-    this.name_label_horiz = (this.name_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_horiz
+    this.attributes.name_label_vert = value
+    this.attributes.name_label_horiz = (this.name_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_horiz
 
   }
 
   private customValueLabelHoriz(value: Type_TextHPos) {
-    this.value_label_horiz = value
-    this.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
+    this.attributes.value_label_horiz = value
+    this.attributes.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
   }
 
   private customValueLabelVert(value: Type_TextVPos) {
-    this.value_label_vert = value
-    this.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
+    this.attributes.value_label_vert = value
+    this.attributes.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
   }
 }
 
@@ -869,12 +869,18 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
   }
 
   private customNameLabelHoriz(value: Type_TextHPos) {
+    delete this.attributes.value_label_position_offset
+    delete this.attributes.value_label_position_x
+    delete this.attributes.value_label_position_y
     this.attributes.name_label_horiz = value
     this.attributes.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
 
   }
 
   private customNameLabelVert(value: Type_TextVPos) {
+    delete this.attributes.value_label_position_offset
+    delete this.attributes.value_label_position_x
+    delete this.attributes.value_label_position_y
     this.attributes.name_label_vert = value
     this.attributes.name_label_horiz = this.name_label_horiz == 'dragged' && value !== 'dragged' ? 'middle' : this.name_label_horiz
   }
@@ -1087,6 +1093,7 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
+  name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']
@@ -1123,7 +1130,7 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
-
+  value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']
@@ -1229,7 +1236,7 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
-
+  name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']
@@ -1266,6 +1273,7 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
+  value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']

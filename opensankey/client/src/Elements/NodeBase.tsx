@@ -244,8 +244,6 @@ export class Class_NodeBase extends Class_NodeAttribute {
       .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
       .attr('height', this.getShapeHeightToUse() + 'px')
       .attr('width', this.getShapeWidthToUse() + 'px')
-      .style('height', this.getShapeHeightToUse() + 'px')
-      .style('width', this.getShapeWidthToUse() + 'px')
   }
 
   protected drawIllustrationIcon() {

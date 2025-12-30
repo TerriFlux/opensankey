@@ -5,17 +5,21 @@ import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 import { drawLabelBackground } from './NodeDrawLabel'
-import { LINKS_ATTRIBUTES_CONFIG, Type_PathLabelHPosition, Type_PathLabelVPosition } from './ElementsAttributesConfig'
+import { 
+  getLabelValues, LabelValues, LINKS_ATTRIBUTES_CONFIG, 
+  NAME_LABEL_LINK_CONFIG, Type_PathLabelHPosition, Type_PathLabelVPosition, 
+  VALUE_LABEL_LINK_CONFIG 
+} from './ElementsAttributesConfig'
 
 type LabelPrefix = 'name_label' | 'value_label'
 type DisplayPrefix = 'name' | 'value'
 
-/**
- * Classe de base pour les labels de liens (name et value)
- * Utilise le préfixe pour accéder dynamiquement aux propriétés
- */
 export abstract class LinkDrawLabelBase {
   protected _link: Class_LinkElement
+  protected readonly prefix: LabelPrefix
+  protected readonly displayPrefix: DisplayPrefix
+  protected _label_values: LabelValues<typeof NAME_LABEL_LINK_CONFIG | typeof VALUE_LABEL_LINK_CONFIG>
+
   protected _link_control_points: LinkControlPoints
   protected _link_control_points_internal: {
     readonly controlPoints: {
@@ -27,10 +31,6 @@ export abstract class LinkDrawLabelBase {
       is_dragged: boolean
     }
   }
-
-  // ✅ Le préfixe est stocké dans la classe
-  protected readonly prefix: LabelPrefix
-  protected readonly displayPrefix: DisplayPrefix
 
   constructor(
     link: Class_LinkElement,
@@ -44,77 +44,17 @@ export abstract class LinkDrawLabelBase {
     }
     this.prefix = prefix
     this.displayPrefix = prefix === 'name_label' ? 'name' : 'value'
+    
+    this._label_values = getLabelValues(
+      this._link,
+      prefix === 'name_label' ? 'name_' : 'value_',
+      prefix === 'name_label' ? NAME_LABEL_LINK_CONFIG : VALUE_LABEL_LINK_CONFIG
+    )
   }
 
-  // =================== MÉTHODES ABSTRAITES (seulement pour les cas particuliers) ===================
-
-  protected abstract getLabelText(): string | number | null | undefined
+  protected abstract getLabelText(): string | number | null 
   protected abstract shouldDrawLabel(): boolean
-  protected abstract redrawLabel(): void
-
-  // =================== ACCÈS AUX PROPRIÉTÉS VIA PRÉFIXE ===================
-  protected getFontSize(): number {
-    let font_size = this._link[`${this.prefix}_font_size`]
-    if (font_size > this._link.thickness && this._link.is_multi_link) {
-      font_size = this._link.thickness
-    }
-    return font_size
-  }
-
-  protected getIsVisible(): boolean {
-    return this._link[`${this.prefix}_is_visible`]
-  }
-
-  protected getOnPath(): boolean {
-    return this._link[`${this.prefix}_on_path`]
-  }
-
-  protected getPosAuto(): boolean {
-    return this._link[`${this.prefix}_pos_auto`]
-  }
-
-  protected getHorizPosition(): Type_PathLabelHPosition {
-    return this._link[`${this.prefix}_horiz`]
-  }
-
-  protected getVertPosition(): Type_PathLabelVPosition {
-    return this._link[`${this.prefix}_vert`]
-  }
-
-  protected setHorizPosition(value: Type_PathLabelHPosition): void {
-    this._link[`${this.prefix}_horiz`] = value
-  }
-
-  protected setVertPosition(value: Type_PathLabelVPosition): void {
-    this._link[`${this.prefix}_vert`] = value
-  }
-
-  protected getDisplayOffsetValue(): number | undefined {
-    return this._link[`${this.prefix}_position_offset`]
-  }
-
-  protected setDisplayOffsetValue(value: number | undefined): void {
-    if (value != undefined) this._link[`${this.prefix}_position_offset`] = value
-    else this._link.delete_attribute(`${this.prefix}_position_offset`)
-  }
-
-  protected getDisplayXValue(): number | undefined {
-    return this._link[`${this.prefix}_position_x`]
-  }
-
-  protected setDisplayXValue(value: number | undefined): void {
-    if (value != undefined) this._link[`${this.prefix}_position_x`] = value
-    else this._link.delete_attribute(`${this.prefix}_position_x`)
-  }
-
-  protected getDisplayYValue(): number | undefined {
-    return this._link[`${this.prefix}_position_y`]
-  }
-
-  protected setDisplayYValue(value: number | undefined): void {
-    if (value != undefined) this._link[`${this.prefix}_position_y`] = value
-    else this._link.delete_attribute(`${this.prefix}_position_y`)
-  }
+  protected abstract drawSpecificLabel(): void
 
   protected getTextSelector(): string {
     return `.link_${this.displayPrefix}_text`
@@ -124,29 +64,18 @@ export abstract class LinkDrawLabelBase {
     return `.link_${this.displayPrefix}_textpath`
   }
 
-  protected getFontFamily(): string {
-    return this._link[`${this.prefix}_font_family`]
+  protected getFontSize(): number {
+    let font_size = this._label_values.font_size
+    if (font_size > this._link.thickness && this._link.is_multi_link) {
+      font_size = this._link.thickness
+    }
+    return font_size
   }
 
-  protected getColor(): string {
-    return this._link[`${this.prefix}_color`]
-  }
-
-  protected getBold(): boolean {
-    return this._link[`${this.prefix}_bold`]
-  }
-
-  protected getItalic(): boolean {
-    return this._link[`${this.prefix}_italic`]
-  }
-
-  protected getUppercase(): boolean {
-    return this._link[`${this.prefix}_uppercase`]
-  }
-
-  // =================== MÉTHODES COMMUNES (inchangées) ===================
-
-  protected drawBackground(group: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | undefined) {
+    /**
+   * Dessine le background du label
+   */
+  protected drawBackground(group: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> ) {
     drawLabelBackground(
       group,
       this._link,
@@ -154,6 +83,51 @@ export abstract class LinkDrawLabelBase {
       this.getTextSelector(),
       this._link.id
     )
+  }
+
+  protected getLabelPos(): [number, number, string] {
+    let label_pos_y = this._link.position_y_start
+    let label_pos_x = this._link.position_x_start
+    let label_anchor = 'start'
+
+    if (this._label_values.position_absolute) {
+      label_pos_x = this._label_values.position_x
+    } else {
+      if (this._label_values.horiz === 'middle') {
+        label_anchor = 'middle'
+        label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
+          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2 + this._label_values.horiz_shift
+        label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
+          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2 + this._label_values.vert_shift
+      } else if (this._label_values.horiz === 'right') {
+        label_anchor = 'end'
+        label_pos_x = this._link.position_x_end + this._label_values.horiz_shift
+        label_pos_y = this._link.position_y_end + this._label_values.vert_shift
+      }
+    }
+
+    if (this._label_values.position_y !== 0) {
+      label_pos_y = this._label_values.position_y
+    } else {
+      if (this._label_values.vert === 'top' || (this._label_values.pos_auto && this.getFontSize() > this._link.thickness)) {
+        label_pos_y -= (this.getFontSize() / 2) + this._link.thickness / 2 + this._label_values.vert_shift
+      } else if (this._label_values.vert === 'middle') {
+        label_pos_y += this.getFontSize() / 3 + this._label_values.vert_shift
+      } else if (this._label_values.vert === 'bottom') {
+        label_pos_y += this.getFontSize() + this._link.thickness / 2 + this._label_values.vert_shift
+      }
+    }
+
+    return [label_pos_x, label_pos_y, label_anchor]
+  }
+
+  protected updateLabelPos() {
+    const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
+    const textSelector = this.getTextSelector()
+
+    this._link.d3_selection?.select(textSelector).attr('y', label_pos_y)
+    this._link.d3_selection?.select(textSelector).attr('x', label_pos_x)
+    this._link.d3_selection?.select(textSelector).attr('text-anchor', label_anchor)
   }
 
   protected getTextPathSide(): 'left' | 'right' {
@@ -168,24 +142,24 @@ export abstract class LinkDrawLabelBase {
 
     const thickness = this._link.sankey.drawing_area.type_data !== 'structure' ? this._link.thickness : 2
 
-    if (this.getDisplayOffsetValue() !== undefined) {
-      label_position = this.getDisplayOffsetValue()!
+    if (this._label_values.position_offset !== 0) {
+      label_position = this._label_values.position_offset
     } else {
-      if (this.getHorizPosition() === 'middle') {
+      if (this._label_values.horiz === 'middle') {
         label_anchor = 'middle'
         label_position = 50
-      } else if (this.getHorizPosition() === 'right') {
+      } else if (this._label_values.horiz === 'right') {
         label_anchor = 'end'
         label_position = 99
       }
     }
 
-    if (this.getVertPosition() === 'top' || (this.getPosAuto() && this.getFontSize() > this._link.thickness)) {
+    if (this._label_values.vert === 'top' || (this._label_values.pos_auto && this.getFontSize() > this._link.thickness)) {
       label_ortho_position = -thickness / 2
-    } else if (this.getVertPosition() === 'middle') {
+    } else if (this._label_values.vert === 'middle') {
       label_ortho_position = 0
       label_dominant_baseline = 'middle'
-    } else if (this.getVertPosition() === 'bottom') {
+    } else if (this._label_values.vert === 'bottom') {
       label_ortho_position = this._link.thickness / 2 + this.getFontSize()
       label_dominant_baseline = 'text-top'
     }
@@ -212,100 +186,53 @@ export abstract class LinkDrawLabelBase {
     this._link.d3_selection?.select(textPathSelector).attr('dominant-baseline', label_dominant_baseline)
   }
 
-  protected getTextXYPos(): [number, number, string] {
-    let label_ortho_pos = this._link.position_y_start
-    let label_pos = this._link.position_x_start
-    let label_anchor = 'start'
-
-    if (this.getDisplayXValue() !== undefined) {
-      label_pos = this.getDisplayXValue()!
-    } else {
-      if (this.getHorizPosition() === 'middle') {
-        label_anchor = 'middle'
-        label_pos = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
-        label_ortho_pos = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
-      } else if (this.getHorizPosition() === 'right') {
-        label_anchor = 'end'
-        label_pos = this._link.position_x_end
-        label_ortho_pos = this._link.position_y_end
-      }
-    }
-
-    if (this.getDisplayYValue() !== undefined) {
-      label_ortho_pos = this.getDisplayYValue()!
-    } else {
-      if (this.getVertPosition() === 'top' || (this.getPosAuto() && this.getFontSize() > this._link.thickness)) {
-        label_ortho_pos -= (this.getFontSize() / 2) + this._link.thickness / 2
-      } else if (this.getVertPosition() === 'middle') {
-        label_ortho_pos += this.getFontSize() / 3
-      } else if (this.getVertPosition() === 'bottom') {
-        label_ortho_pos += this.getFontSize() + this._link.thickness / 2
-      }
-    }
-
-    return [label_pos, label_ortho_pos, label_anchor]
-  }
-
-  protected updateTextXYPosition() {
-    const [label_pos, label_ortho_pos, label_anchor] = this.getTextXYPos()
-    const textSelector = this.getTextSelector()
-
-    this._link.d3_selection?.select(textSelector).attr('y', label_ortho_pos)
-    this._link.d3_selection?.select(textSelector).attr('x', label_pos)
-    this._link.d3_selection?.select(textSelector).attr('text-anchor', label_anchor)
-  }
-
-  // =================== DRAG & DROP HANDLERS ===================
-
   protected dragTextPathStart(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
-    const old_val: [number | undefined, Type_PathLabelHPosition] = [
-      this.getDisplayOffsetValue(),
-      this.getHorizPosition()
+    const old_val: [number , Type_PathLabelHPosition] = [
+      this._label_values.position_offset,
+      this._label_values.horiz
     ]
 
-    if (this.getDisplayOffsetValue() === undefined) {
+    if (this._label_values.position_offset === undefined) {
       const [label_offset] = this.getTextPathOffset()
-      this.setDisplayOffsetValue(label_offset)
-      this.setHorizPosition('dragged')
+      this._label_values.position_offset = label_offset
+      this._label_values.horiz = 'dragged'
     }
 
     const inv = () => {
-      this.setDisplayOffsetValue(old_val[0])
-      this.setHorizPosition(old_val[1])
+      this._label_values.position_offset = old_val[0]
+      this._label_values.horiz = old_val[1]
     }
 
     this._link.drawing_area.application_data.history.saveUndo(inv)
   }
 
   protected dragTextStart(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    const old_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+    const old_val: [number , number , Type_PathLabelHPosition, Type_PathLabelVPosition] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
-    const [label_pos, label_ortho_pos] = this.getTextXYPos()
+    const [label_pos, label_ortho_pos] = this.getLabelPos()
 
-    if (this.getDisplayXValue() === undefined) {
-      this.setDisplayXValue(label_pos)
-      this.setHorizPosition('dragged')
+    if (this._label_values.position_x === 0) {
+      this._label_values.position_x = label_pos
+      this._label_values.horiz = 'dragged'
     }
 
-    if (this.getDisplayYValue() === undefined) {
-      this.setDisplayYValue(label_ortho_pos)
-      this.setVertPosition('dragged')
+    if (this._label_values.position_y === 0) {
+      this._label_values.position_y = label_ortho_pos
+      this._label_values.vert = 'dragged'
     }
 
     const inv = () => {
-      this.setDisplayXValue(old_val[0])
-      this.setDisplayYValue(old_val[1])
-      this.setHorizPosition(old_val[2])
-      this.setVertPosition(old_val[3])
+      this._label_values.position_x = old_val[0]
+      this._label_values.position_y = old_val[1]
+      this._label_values.horiz = old_val[2]
+      this._label_values.vert = old_val[3]
       this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.redrawLabel()
+      this.drawSpecificLabel()
     }
 
     this._link.drawing_area.application_data.history.saveUndo(inv)
@@ -313,33 +240,33 @@ export abstract class LinkDrawLabelBase {
 
   protected dragTextPathMove(event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     const relative_dx = event.dx / (this._link.target.position_x - this._link.source.position_x) * 100
-    let newOffset = ((this.getDisplayOffsetValue() ?? 0) + relative_dx)
+    let newOffset = ((this._label_values.position_offset ?? 0) + relative_dx)
 
     if (newOffset < 0) newOffset = 0
     else if (newOffset > 100) newOffset = 100
 
-    this.setDisplayOffsetValue(newOffset)
+    this._label_values.position_offset = newOffset
     this.updateTextPathOffset()
   }
 
   protected dragTextMove(event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
-    this.setDisplayXValue((this.getDisplayXValue() ?? 0) + event.dx)
-    this.setDisplayYValue((this.getDisplayYValue() ?? 0) + event.dy)
-    this.updateTextXYPosition()
+    this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
+    this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
+    this.updateLabelPos()
   }
 
   protected dragTextPathEnd(_event: d3.D3DragEvent<SVGTextPathElement, unknown, unknown>) {
     this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
-    const new_val: [number | undefined, Type_PathLabelHPosition] = [
-      this.getDisplayOffsetValue(),
-      this.getHorizPosition()
+    const new_val: [number , Type_PathLabelHPosition] = [
+      this._label_values.position_offset,
+      this._label_values.horiz
     ]
 
     const redo = () => {
-      this.setDisplayOffsetValue(new_val[0])
-      this.setHorizPosition(new_val[1])
-      this.redrawLabel()
+      this._label_values.position_offset = new_val[0]
+      this._label_values.horiz = new_val[1]
+      this.drawSpecificLabel()
     }
 
     this._link.drawing_area.application_data.history.saveRedo(redo)
@@ -349,27 +276,27 @@ export abstract class LinkDrawLabelBase {
   protected dragTextEnd(_event: d3.D3DragEvent<SVGTextElement, unknown, unknown>) {
     this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
-    const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+    const new_val: [number , number , Type_PathLabelHPosition, Type_PathLabelVPosition] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
     const redo = () => {
-      this.setHorizPosition(new_val[2])
-      this.setVertPosition(new_val[3])
-      this.setDisplayXValue(new_val[0])
-      this.setDisplayYValue(new_val[1])
+      this._label_values.horiz = new_val[2]
+      this._label_values.vert = new_val[3]
+      this._label_values.position_x = new_val[0]
+      this._label_values.position_y = new_val[1]
       this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      this.redrawLabel()
+      this.drawSpecificLabel()
     }
 
     this._link.drawing_area.application_data.history.saveRedo(redo)
     redo()
   }
 
-  // =================== MÉTHODE GÉNÉRIQUE DE DESSIN ===================
+  // =================== MÉTHODE GÉNÉRIQUE DE DESSIN (simplifiée) ===================
 
   protected drawGenericLabel() {
     if (!this._link.d3_selection) return
@@ -392,14 +319,15 @@ export abstract class LinkDrawLabelBase {
         .classed(`link_${this.displayPrefix}`, true)
         .classed(`link_${this.displayPrefix}_text`, true)
         .attr('id', `${this.displayPrefix}_text_${this._link.id}`)
+        // ✅ Utiliser _label_values
         .style('font-size', String(this.getFontSize()) + 'px')
-        .style('font-family', this.getFontFamily())
-        .attr('fill', this.getColor())
-        .attr('font-weight', this.getBold() ? 'bold' : 'normal')
-        .attr('font-style', this.getItalic() ? 'italic' : 'normal')
-        .style('text-transform', this.getUppercase() ? 'uppercase' : 'none')
+        .style('font-family', this._label_values.font_family)
+        .attr('fill', this._label_values.color)
+        .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
+        .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
+        .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
 
-      if (this.getOnPath()) {
+      if (this._label_values.on_path) {
         const d3_textpath_selection = d3_text_selection?.append('textPath')
           .classed('link', true)
           .classed(`link_${this.displayPrefix}`, true)
@@ -422,7 +350,7 @@ export abstract class LinkDrawLabelBase {
           )
         }
       } else {
-        this.updateTextXYPosition()
+        this.updateLabelPos()
         d3_text_selection?.text(String(labelText))
           .attr('spacing', 'exact')
           .attr('method', 'align')
@@ -451,7 +379,7 @@ export abstract class LinkDrawLabelBase {
     if (!this._link.has_fo || !this._link.fo_content) return
 
     // Utiliser la même position que le label
-    const [x, y] = this.getTextXYPos()
+    const [x, y] = this.getLabelPos()
 
     const d3_selection_g_FO = this._link.d3_selection?.append('foreignObject')
       .attr('id', this._link.id + '_fo')
@@ -503,31 +431,31 @@ export abstract class LinkDrawLabelBase {
   }
 
   // Handlers de drag pour le FO (réutilisent la logique du texte)
-  private dragFOStart(_event: d3.D3DragEvent<SVGForeignObjectElement, unknown, unknown>) {
-    const old_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+private dragFOStart(_event: d3.D3DragEvent<SVGForeignObjectElement, unknown, unknown>) {
+    const old_val: [number , number , Type_PathLabelHPosition, Type_PathLabelVPosition] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
-    const [label_pos, label_ortho_pos] = this.getTextXYPos()
+    const [label_pos, label_ortho_pos] = this.getLabelPos()
 
-    if (this.getDisplayXValue() === undefined) {
-      this.setDisplayXValue(label_pos)
-      this.setHorizPosition('dragged')
+    if (this._label_values.position_x === undefined) {
+      this._label_values.position_x = label_pos
+      this._label_values.horiz = 'dragged'
     }
 
-    if (this.getDisplayYValue() === undefined) {
-      this.setDisplayYValue(label_ortho_pos - this.getFontSize())
-      this.setVertPosition('dragged')
+    if (this._label_values.position_y === undefined) {
+      this._label_values.position_y = label_ortho_pos - this.getFontSize()
+      this._label_values.vert = 'dragged'
     }
 
     const inv = () => {
-      this.setDisplayXValue(old_val[0])
-      this.setDisplayYValue(old_val[1])
-      this.setHorizPosition(old_val[2])
-      this.setVertPosition(old_val[3])
+      this._label_values.position_x = old_val[0]
+      this._label_values.position_y = old_val[1]
+      this._label_values.horiz = old_val[2]
+      this._label_values.vert = old_val[3]
       this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawFO()
     }
@@ -536,11 +464,11 @@ export abstract class LinkDrawLabelBase {
   }
 
   private dragFOMove(event: d3.D3DragEvent<SVGForeignObjectElement, unknown, unknown>) {
-    this.setDisplayXValue((this.getDisplayXValue() ?? 0) + event.dx)
-    this.setDisplayYValue((this.getDisplayYValue() ?? 0) + event.dy)
+    this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
+    this._label_values.position_y = (this._label_values.position_y ?? 0) + event.dy
 
-    const x = this.getDisplayXValue()!
-    const y = this.getDisplayYValue()!
+    const x = this._label_values.position_x
+    const y = this._label_values.position_y
 
     this._link.d3_selection?.select('.link_fo')
       .attr('x', x)
@@ -550,18 +478,18 @@ export abstract class LinkDrawLabelBase {
   private dragFOEnd(_event: d3.D3DragEvent<SVGForeignObjectElement, unknown, unknown>) {
     this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
 
-    const new_val: [number | undefined, number | undefined, Type_PathLabelHPosition, Type_PathLabelVPosition] = [
-      this.getDisplayXValue(),
-      this.getDisplayYValue(),
-      this.getHorizPosition(),
-      this.getVertPosition()
+    const new_val: [number , number , Type_PathLabelHPosition, Type_PathLabelVPosition] = [
+      this._label_values.position_x,
+      this._label_values.position_y,
+      this._label_values.horiz,
+      this._label_values.vert
     ]
 
     const redo = () => {
-      this.setHorizPosition(new_val[2])
-      this.setVertPosition(new_val[3])
-      this.setDisplayXValue(new_val[0])
-      this.setDisplayYValue(new_val[1])
+      this._label_values.horiz = new_val[2]
+      this._label_values.vert = new_val[3]
+      this._label_values.position_x = new_val[0]
+      this._label_values.position_y = new_val[1]
       this._link.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       this.drawFO()
     }
@@ -573,7 +501,7 @@ export abstract class LinkDrawLabelBase {
 
 // LinkDrawLabel.ts - Version ultra-simplifiée
 
-export class LinkDrawLabel extends LinkDrawLabelBase {
+export class LinkDrawNameLabel extends LinkDrawLabelBase {
 
   constructor(link: Class_LinkElement, link_control_points: LinkControlPoints) {
     super(link, link_control_points, 'name_label')
@@ -588,25 +516,25 @@ export class LinkDrawLabel extends LinkDrawLabelBase {
     const link_val = this._link.valueCurrent
 
     return (
-      this.getIsVisible() &&
+      this._label_values.is_visible &&
       !this._link.has_fo &&
       ((link_text ?? '') !== '') &&
       !(link_val !== undefined && link_val !== null && link_val <= this._link.drawing_area.filter_label)
     )
   }
 
-  protected redrawLabel() {
-    this.drawLabel()
+  protected drawSpecificLabel() {
+    this.drawNameLabel()
   }
 
-  public drawLabel() {
+  public drawNameLabel() {
     this.drawGenericLabel()
   }
 }
 
 // LinkDrawValue.ts - Version ultra-simplifiée
 
-export class LinkDrawValue extends LinkDrawLabelBase {
+export class LinkDrawValueLabel extends LinkDrawLabelBase {
 
   constructor(link: Class_LinkElement, link_control_points: LinkControlPoints) {
     super(link, link_control_points, 'value_label')
@@ -640,11 +568,11 @@ export class LinkDrawValue extends LinkDrawLabelBase {
     return true
   }
 
-  protected redrawLabel() {
-    this.drawValue()
+  protected drawSpecificLabel() {
+    this.drawValueLabel()
   }
 
-  public drawValue() {
+  public drawValueLabel() {
     this.drawGenericLabel()
   }
 }
