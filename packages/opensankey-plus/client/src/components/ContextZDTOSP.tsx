@@ -5,9 +5,9 @@ import {
   Box, Button, ButtonGroup
 } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
 import { sep } from './SankeyPlusMenuConfigurationLabels'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
+import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }

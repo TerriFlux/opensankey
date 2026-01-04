@@ -12,7 +12,6 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { Class_IconLibraryOSP } from './IconLibrairieOSP'
 import { nodeStyleConfigs, linkStyleConfigs, node_unitary_styles, link_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
@@ -205,9 +204,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       id
     )
     return drawing_area
-  }
-  public createNewIconLibrary() {
-    return new Class_IconLibraryOSP()
   }
 
   /**
@@ -679,7 +675,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       new_drawing_area.attachNodeToCont(node, cont)
     })
 
-    cont.fo_content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
+    //cont.fo_content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
     // Add new sankey to views
     this._views[new_drawing_area.id] = {
@@ -904,9 +900,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get menu_configuration_osp(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
   public set menu_configuration_osp(_) { this._menu_configuration = _ }
 
-  public get icon_library(): Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
-  // Views
   public get views_dict() {
     return this._views
   }

@@ -48,8 +48,7 @@ import {
 } from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
 import {
-  NodeHyperLinkOSP,
-  NodeIconOSP
+  NodeHyperLinkOSP
 } from './components/SankeyPlusNodes'
 
 import {
@@ -61,7 +60,7 @@ import {
 } from './components/SankeyPlusViews'
 
 import {
-  ModalSelectionIconsOSP
+  ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
 import {
   SankeyMenuConfigurationNodesTags
@@ -157,14 +156,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
   // additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
 
-  additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
+  // additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
 
   additionalMenus.current.template_module_key.push('intermediary')
   additionalMenus.current.template_module_key.push('advanced')
 
 
   additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
-  additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
+  additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false }
   additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
@@ -193,7 +192,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
           elementTagNameProp='node_taggs'
         />
         <SankeyMenuConfigurationNodesTags
-          new_data={new_data_plus}
+          app_data={new_data_plus}
         /></>
     </WrapperContentConfig>,
     'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
@@ -273,18 +272,18 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <ModalViewNotSavedOSP
       new_data_plus={new_data_plus}
     />,
-    <ModalSelectionIconsOSP
-      new_data_plus={new_data_plus}
+    <ModalSelectionIcon
+      app_data={new_data_plus}
     />,
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
     />,
-    <UniversalFileConverter
-      app_data={new_data_plus}
-      dialog_name={'ref_setter_show_modal_file_converter'}
-      input_config={INPUT_ATTRIBUTES_CONFIG}
-      output_config={OUTPUT_ATTRIBUTES_CONFIG}
-    />
+    // <UniversalFileConverter
+    //   app_data={new_data_plus}
+    //   dialog_name={'ref_setter_show_modal_file_converter'}
+    //   input_config={INPUT_ATTRIBUTES_CONFIG}
+    //   output_config={OUTPUT_ATTRIBUTES_CONFIG}
+    // />
   ]
 
   return [

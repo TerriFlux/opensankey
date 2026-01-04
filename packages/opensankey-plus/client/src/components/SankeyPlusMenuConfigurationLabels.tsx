@@ -1,25 +1,13 @@
-import React, { useState, ChangeEvent, useRef, useMemo } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import ReactQuill from 'react-quill'
-
-// Imported libs
-import {
-  Box,
-  Checkbox,
-  Button,
-  Input,
-  ButtonGroup
-} from '@chakra-ui/react'
+import {Box,Checkbox,Button,ButtonGroup} from '@chakra-ui/react'
 
 import { Type_JSON, default_style_id } from '../deps/OpenSankey/types/Utils'
 import { Class_ContainerElement } from '../deps/OpenSankey/Elements/TextZone'
 import { ConfigMenuStyleElementContainer } from '../deps/OpenSankey/components/dialogs/SankeyStyle'
 import { Class_NodeStyle } from '../deps/OpenSankey/Elements/Element'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
-import { OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { ConfigMenuNumberInput, ConfigMenuTextInput, OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { listOptionSizeQuill } from '../deps/OpenSankey/components/dialogs/RichTextEditor'
-import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
-import { default_font_size } from '../deps/OpenSankey/css/Theme'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_ProtoElement } from '../deps/OpenSankey/Elements/Element'
@@ -176,10 +164,10 @@ export const MenuConfigurationFreeLabelsOSP = ({
 
   const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
   const element_ref = elements[0]
-  const zdt_or_image = (element_ref && element_ref instanceof Class_ContainerElement) 
-    ? (element_ref.is_image === true ? 'image' : 'text') 
-    : 'text'
-  const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
+  // const zdt_or_image = (element_ref && element_ref instanceof Class_ContainerElement) 
+  //   ? (element_ref.is_image === true ? 'image' : 'text') 
+  //   : 'text'
+  // const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Options selector only for direct mode (not for style editing)
@@ -230,29 +218,6 @@ export const MenuConfigurationFreeLabelsOSP = ({
     )
   }
 
-  // =================== FACTORIZED FUNCTIONS FOR ALL LABEL PROPERTIES ===================
-  
-  const allLabelHeight = () => 
-    Math.round(getCommonValue(elements, d => d.shape_min_height, -1))
-
-  const allLabelWidth = () => 
-    Math.round(getCommonValue(elements, d => d.shape_min_width, -1))
-
-  const allLabelTitle = () => 
-    elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].name : ''
-
-  const allLabelTransparent = () => 
-    getCommonValue(elements, d => d.shape_opacity, 0)
-
-  const allLabelThickness = () => 
-    getCommonValue(elements, d => d.shape_border_thickness, 0)
-
-  const allLabelDashed = () => 
-    getCommonValue(elements, d => d.shape_border_dashed, false)
-
-  const allLabelBgVisible = () => 
-    getCommonValue(elements, d => d.shape_color_visible, false)
-
   const allLabelTiedToNodes = () => {
     if (menu_for_style) return false // Styles don't have tied_to_nodes
     return getCommonValue(
@@ -295,76 +260,12 @@ export const MenuConfigurationFreeLabelsOSP = ({
 
   const allLabelMarginBottom = () => 
     getCommonValue(elements, d => d.margin_bottom, 0)
-
-  const allLabelVerticalText = () => 
-    getCommonValue(elements, d => d.name_label_vertical_text, false)
-
-  // const allLabelVerticalAlignment = (_: 'left' | 'right') => {
-  //   if (elements.length === 0) return false
-  //   return elements.every(d => d.vertical_alignment === _)
-  // }
-
-  // =================== FACTORIZED UPDATE FUNCTIONS ===================
   
   const updateTitle = createUpdateFunction(
     elements,
     'title',
     d => (d as Class_ContainerElement).name,
     (d, v) => { if (d instanceof Class_ContainerElement) d.name = v },
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateHeight = createUpdateFunction(
-    elements,
-    'shape_min_height',
-    d => d.shape_min_height,
-    (d, v) => d.shape_min_height = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateWidth = createUpdateFunction(
-    elements,
-    'shape_min_width',
-    d => d.shape_min_width,
-    (d, v) => d.shape_min_width = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateTransparent = createUpdateFunction(
-    elements,
-    'opacity',
-    d => d.shape_opacity,
-    (d, v) => d.shape_opacity = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateThickness = createUpdateFunction(
-    elements,
-    'thickness',
-    d => d.shape_border_thickness,
-    (d, v) => d.shape_border_thickness = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateDashed = createUpdateFunction(
-    elements,
-    'dashed',
-    d => d.shape_border_dashed,
-    (d, v) => d.shape_border_dashed = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  const updateLabelBgVisible = createUpdateFunction(
-    elements,
-    'shape_color_visible',
-    d => d.shape_color_visible,
-    (d, v) => d.shape_color_visible = v,
     app_data.history,
     redrawAndRefresh
   )
@@ -459,103 +360,6 @@ export const MenuConfigurationFreeLabelsOSP = ({
     redrawAndRefresh
   )
 
-  const updateVerticalText = createUpdateFunction(
-    elements,
-    'vertical_text',
-    d => d.name_label_vertical_text,
-    (d, v) => d.name_label_vertical_text = v,
-    app_data.history,
-    redrawAndRefresh
-  )
-
-  // const updateVerticalAlignment = createUpdateFunction(
-  //   elements,
-  //   'vertical_alignment',
-  //   d => d.vertical_alignment,
-  //   (d, v) => d.vertical_alignment = v,
-  //   app_data.history,
-  //   redrawAndRefresh
-  // )
-
-  const updateImageSrc = (value: string) => {
-    if (menu_for_style) return // Styles don't have image_src
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.image_src]))
-    
-    const _update = () => {
-      containerElements.forEach(d => d.image_src = value)
-      redrawAndRefresh()
-    }
-    const inv_update = () => {
-      containerElements.forEach(d => d.image_src = dict_old_val[d.id])
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_update)
-    app_data.history.saveRedo(_update)
-    _update()
-  }
-
-  // =================== SPECIAL UPDATE FUNCTIONS ===================
-
-  const updateLabelBorderTransparent = (_: boolean) => {
-    const dict_old_val = Object.fromEntries(elements.map(d => [d.id, d.shape_border_visible]))
-    const _updateLabelBorderTransparent = () => {
-      elements.map(d => d.shape_border_visible = !_)
-      redrawAndRefresh()
-    }
-    const inv_updateLabelBorderTransparent = () => {
-      elements.map(d => d.shape_border_visible = dict_old_val[d.id])
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_updateLabelBorderTransparent)
-    app_data.history.saveRedo(_updateLabelBorderTransparent)
-    _updateLabelBorderTransparent()
-  }
-
-  const updateTypeLabelToText = () => {
-    if (menu_for_style) return
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.is_image]))
-    const old_type = button_text_or_image
-    
-    const _update = () => {
-      containerElements.forEach(d => d.is_image = false)
-      set_button_text_or_image('text')
-      redrawAndRefresh()
-    }
-    const inv_update = () => {
-      containerElements.forEach(d => d.is_image = dict_old_val[d.id])
-      set_button_text_or_image(old_type)
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_update)
-    app_data.history.saveRedo(_update)
-    _update()
-  }
-
-  const updateTypeLabelToImage = () => {
-    if (menu_for_style) return
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.is_image]))
-    const old_type = button_text_or_image
-    
-    const _update = () => {
-      containerElements.forEach(d => d.is_image = true)
-      set_button_text_or_image('image')
-      redrawAndRefresh()
-    }
-    const inv_update = () => {
-      containerElements.forEach(d => d.is_image = dict_old_val[d.id])
-      set_button_text_or_image(old_type)
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_update)
-    app_data.history.saveRedo(_update)
-    _update()
-  }
-
-  // =================== ADD/DELETE FUNCTIONS (ONLY FOR DIRECT MODE) ===================
-
   const addFreeLAbel = () => {
     if (menu_for_style) return // Can't add labels in style mode
     
@@ -614,39 +418,11 @@ export const MenuConfigurationFreeLabelsOSP = ({
       selected: list_node_tied.includes(node) 
     }))
     : []
-    
-  const valAllLabelBorderTransparent = elements[0]?.shape_border_visible ?? true
-  // const valAllLabelDashed = elements[0]?.dashed ?? false
-  const valAllLabelBorderTransparentIndeterminate = !menu_for_style && !elements.every(zdt => zdt.shape_border_visible == !valAllLabelBorderTransparent)
-  // const valAllLabelDashedIndeterminate = !menu_for_style && !elements.every(zdt => zdt.dashed == valAllLabelDashed)
-  // const valAllLabelBgVisible = elements[0]?.color_visible ?? false
-  const valAllLabelBgVisibleIndeterminate = !menu_for_style && !elements.every(zdt => zdt.shape_color_visible == elements[0]?.shape_color_visible)
-  
+ 
   const valAllLabeTiedToNode = elements[0] instanceof Class_ContainerElement ? elements[0].tied_to_nodes : false
   const valAllLabelTiedToNodeIndeterminate = !elements
     .filter(e => e instanceof Class_ContainerElement)
     .every(zdt => (zdt as Class_ContainerElement).tied_to_nodes == valAllLabeTiedToNode)
-
-  const Size = ReactQuill.Quill.import('attributors/style/size')
-  Size.whitelist = listOptionSizeQuill
-  ReactQuill.Quill.register(Size, true)
-
-  const modules = {
-    toolbar: [
-      [{ 'font': [] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'size': listOptionSizeQuill }],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-      [{ 'align': [] }],
-      ['clean'],
-    ],
-  }
-
-  const formats = [
-    'font', 'size', 'bold', 'italic', 'underline', 'strike',
-    'color', 'background', 'list', 'bullet', 'align'
-  ]
 
   const disable_options = menu_for_style 
     ? false // Always enabled in style mode
@@ -656,61 +432,6 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const is_zdt_at_extremity_bottom = allLabelTiedToNodesAtExtremityPos('bottom')
   const is_zdt_at_extremity_left = allLabelTiedToNodesAtExtremityPos('left')
   const is_zdt_at_extremity_right = allLabelTiedToNodesAtExtremityPos('right')
-
-  // =================== CONTENT BLOCKS ===================
-
-  const content_image = <>
-    <OSTooltip label={!has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Noeud.img_src')}
-        </Box>
-        <Input
-          accept='image/*'
-          type="file"
-          disabled={disable_options || menu_for_style}
-          onChange={(evt: ChangeEvent) => {
-            if (menu_for_style) return
-            const files = (evt.target as HTMLFormElement).files
-            const reader = new FileReader()
-            reader.onload = (() => {
-              return (e: ProgressEvent<FileReader>) => {
-                const resultat = (e.target as FileReader).result
-                const res = resultat?.toString().replaceAll('=', '')
-                updateImageSrc((res as string))
-              }
-            })()
-            reader.readAsDataURL(files[0])
-          }}
-        />
-      </Box>
-    </OSTooltip>
-  </>
-
-  const content_pos_not_tied_to_nodes = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('LL.hl')}</Box>
-      <ConfigMenuNumberInput
-        t={app_data.t}
-        disabled={!disable_attr_props['shape_min_height'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_left || is_zdt_at_extremity_right))}
-        default_value={allLabelHeight()}
-        function_on_blur={updateHeight}
-        minimum_value={1}
-        stepper={true}
-      />
-    </Box>
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('LL.ll')}</Box>
-      <ConfigMenuNumberInput
-        t={app_data.t}
-        disabled={!disable_attr_props['shape_min_width'] || (is_all_zdt_node_tied && (is_zdt_at_extremity_top || is_zdt_at_extremity_bottom))}
-        default_value={allLabelWidth()}
-        function_on_blur={updateWidth}
-        minimum_value={1}
-        stepper={true}
-      />
-    </Box>
-  </Box>
 
   const content_pos_tied_to_nodes = menu_for_style ? <></> : <Box>
     <OSMultiSelect
@@ -788,7 +509,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
       {!menu_for_style && (
         <Box as='span' layerStyle='menuconfigpanel_row_2cols' gridTemplateColumns='1fr 9fr'>
           <Box layerStyle='menuconfigpanel_option_name' textStyle='h3'>{t('LL.name')}</Box>
-          <ConfigMenuTextInput disabled={disable_options} default_value={allLabelTitle()} function_on_blur={updateTitle} />
+          <ConfigMenuTextInput disabled={disable_options} default_value={'tutu'} function_on_blur={updateTitle} />
         </Box>
       )}
       {menu_for_style ? <></> : <ConfigMenuStyleElementContainer
@@ -796,82 +517,8 @@ export const MenuConfigurationFreeLabelsOSP = ({
         selected_elements={selected_containers}
         config={NODES_ATTRIBUTES_CONFIG}
       />}
-      {/* Text/Image toggle only for direct mode */}
-      {!menu_for_style && (
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.illustration_type')}</Box>
-          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-            <Button isDisabled={disable_options} variant='menuconfigpanel_option_button' onClick={updateTypeLabelToText}>Texte</Button>
-            <Button disabled={disable_options} variant='menuconfigpanel_option_button' onClick={updateTypeLabelToImage}>Image</Button>
-          </Box>
-        </Box>
-      )}
 
-      {/* Content editor only for direct mode */}
-      {!menu_for_style && button_text_or_image === 'text' && (
-        <Box style={{ 'height': '300px' }}>
-          <ReactQuill
-            className='quill_editor'
-            value={elements.length > 0 && elements[0] instanceof Class_ContainerElement ? elements[0].fo_content : ''}
-            ref={r_editor_ZDT}
-            onChange={(evt, _, src) => {
-              if (src == 'user') {
-                elements
-                  .filter(e => e instanceof Class_ContainerElement)
-                  .forEach(n => (n as Class_ContainerElement).fo_content = evt)
-                redrawAndRefresh()
-              }
-            }}
-            theme="snow"
-            modules={modules}
-            formats={formats}
-            readOnly={disable_options}
-            style={{ 'height': '300px', fontSize: default_font_size, color: (disable_options) ? '#666666' : '', backgroundColor: (disable_options) ? '#cccccc' : '', overflowY: 'scroll' }}
-          />
-        </Box>
-      )}
-      
-      {!menu_for_style && button_text_or_image === 'image' && content_image}
-      
-      {sep}
-      
-      {/* Vertical text options - available in both modes */}
-      {(menu_for_style || button_text_or_image === 'text') && (
-        <>
-          <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['name_label_vertical_text']} isChecked={allLabelVerticalText()} onChange={(evt) => updateVerticalText(evt.target.checked)}>
-            <OSTooltip label={t('LL.tooltips.verticalText') || 'Orient text vertically'} placement='left'>
-              {t('LL.verticalText') || 'Vertical Text'}
-            </OSTooltip>
-          </Checkbox>
-        </>
-      )}
-      
-      {/* Style attributes - available in both modes */}
-      <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBgVisibleIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['shape_color_visible']} isIndeterminate={valAllLabelBgVisibleIndeterminate} isChecked={allLabelBgVisible()} onChange={(evt) => updateLabelBgVisible(evt.target.checked)}>
-          {t('LL.cfl')}
-        </Checkbox>
-        <MenuColorPicker isDisabled={!disable_attr_props['shape_color']} initialColor={(elements.length === 1) ? elements[0].shape_color : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.shape_color = new_color); redrawAndRefresh() }} />
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.ft')}</Box>
-          <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['shape_opacity']} default_value={allLabelTransparent()} function_on_blur={updateTransparent} minimum_value={0} stepper={true} />
-        </Box>
-      </Box>
 
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Checkbox variant='menuconfigpanel_option_checkbox' iconColor={valAllLabelBorderTransparentIndeterminate ? '#78C2AD' : 'white'} isDisabled={!disable_attr_props['shape_border_visible']} isIndeterminate={valAllLabelBorderTransparentIndeterminate} isChecked={!valAllLabelBorderTransparent} onChange={(evt) => updateLabelBorderTransparent(evt.target.checked)}>
-          {t('LL.bt')}
-        </Checkbox>
-        <MenuColorPicker isDisabled={!disable_attr_props['shape_border_color']} initialColor={(elements.length === 1) ? elements[0].shape_border_color : '#ffffff'} onColorChange={(new_color) => { elements.map(d => d.shape_border_color = new_color); redrawAndRefresh() }} />
-      </Box>
-
-      <Box as='span' layerStyle='menuconfigpanel_row_3cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('LL.thickness')}</Box>
-        <ConfigMenuNumberInput t={app_data.t} disabled={!disable_attr_props['shape_border_thickness']} default_value={allLabelThickness()} function_on_blur={updateThickness} minimum_value={0} stepper={true} />
-        <Checkbox variant='menuconfigpanel_option_checkbox' isDisabled={!disable_attr_props['shape_border_dashed']} isChecked={allLabelDashed()} onChange={(evt) => updateDashed(evt.target.checked)}>{t('LL.dashed')}</Checkbox>
-      </Box>
-
-      {sep}
 
       {/* Tied to nodes - only for direct mode */}
       {!menu_for_style && (
@@ -881,7 +528,6 @@ export const MenuConfigurationFreeLabelsOSP = ({
           </Checkbox>
 
           {is_all_zdt_node_tied ? content_pos_tied_to_nodes : <></>}
-          {(!is_all_zdt_node_tied || (is_all_zdt_node_tied && is_all_node_tied_to_extremity)) ? content_pos_not_tied_to_nodes : <></>}
         </>
       )}
     </Box>

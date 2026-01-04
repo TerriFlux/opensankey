@@ -8,7 +8,7 @@ import {
 
 // Local types
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
-import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
+import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuSelectionElements'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
@@ -180,7 +180,7 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.flow_associated_tag')}>
     <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
       <>
-        <SankeyLinkSelectionSimple new_data={new_data} />
+        <SankeyLinkSelectionSimple app_data={new_data} />
         {content}
       </>
     </OSTooltip>

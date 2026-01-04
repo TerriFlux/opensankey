@@ -37,11 +37,9 @@ import {
   makeId,
   Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
-import {
-  ConfigMenuTextInput
-} from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+
+import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'

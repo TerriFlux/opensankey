@@ -54,7 +54,7 @@ export const resources_app_elements = {
 
         Config: {
           presentation: 'Presentation',
-          element_object: 'Object',
+          element_object: 'Shape',
           element_view: 'View',
         },
         Transformation: {
@@ -518,7 +518,7 @@ export const resources_app_elements = {
 
         ElOrder: 'Ordonner la superposition des éléments',
         Config: {
-          element_object: 'Objet',
+          element_object: 'Forme',
           element_view: 'Vues',
         },
         Transformation: {

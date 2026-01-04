@@ -1,26 +1,18 @@
-// External imports
-import React, { FC, useState } from 'react'
-import {
-  Box,
-  Checkbox,
-  Select,
-} from '@chakra-ui/react'
 
-// Local types
+import React, { useState } from 'react'
+import {Box,Checkbox,Select,} from '@chakra-ui/react'
+
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
-import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuSelectionElements'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
-// Component definition =================================================================
 export interface BaseComponentProps {
-  new_data: Class_ApplicationDataOSP
+  app_data: Class_ApplicationDataOSP
 }
-export interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
-}
+
 /**
  * Tab that handle tag association to nodes, a nodes can have tags from the same grouptag or from different group
  * To visaulize nodes according to their tag associated, the groupTags must be at least have it banner in mode one or mutliple
@@ -28,17 +20,15 @@ export interface BaseComponentPropsPlus {
  *
  * @type {*}
  */
-export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
-  new_data,
-}) => {
+export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) => {
 
   // Data ------------------------------------------------------------------------------
 
-  const { t } = new_data
+  const { t } = app_data
 
   // Node tags groups ------------------------------------------------------------------
 
-  const list_node_taggs = new_data.drawing_area.sankey.node_taggs_list
+  const list_node_taggs = app_data.drawing_area.sankey.node_taggs_list
   const has_node_taggs = list_node_taggs.length > 0
   const [node_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
   const node_tagg_entry = list_node_taggs[node_tagg_entry_index]
@@ -46,13 +36,13 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
   // Selected nodes ---------------------------------------------------------------------
 
   let selected_nodes: Class_NodeElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+  if (!app_data.menu_configuration.is_selector_only_for_visible_nodes) {
     // All availables nodes
-    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+    selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
   }
   else {
     // Only visible nodes
-    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
+    selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list_sorted
   }
 
   // Menu updaters ----------------------------------------------------------------------
@@ -60,7 +50,7 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
   const [, setCount] = useState(0)
   const updateThis = () => {
     // Can just use simple refresh if node_tagg entry exists
-    if (new_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
+    if (app_data.drawing_area.sankey.node_taggs_list[node_tagg_entry_index])
       setCount(a => a + 1)
     // If not, reset entry index
     else
@@ -68,7 +58,7 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
     setCount(a => a + 1)
 
   }
-  new_data.menu_configuration.ref_to_menu_config_nodes_tags_updater.current = updateThis
+  app_data.menu_configuration.ref_to_menu_config_nodes_tags_updater.current = updateThis
 
 
   // Utils functions --------------------------------------------------------------------
@@ -104,11 +94,11 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
       layerStyle='menu_sub_section_title'>
       {t('Menu.node_associated_tag')}
     </Box>
-    <SankeyNodeSelectionSimple new_data={new_data} />
+    <SankeyNodeSelectionSimple app_data={app_data} />
     <Box layerStyle='menuconfigpanel_grid' >
       {/* Groupe d'étiquettes  */}
       <Select
-        isDisabled={!new_data.has_sankey_plus}
+        isDisabled={!app_data.has_sankey_plus}
         variant='menuconfigpanel_option_select'
         value={node_tagg_entry_index}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
@@ -135,7 +125,7 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
             .map(node_tag => {
               const [allTrue, allFalse] = haveAllSelectedNodesGivenTag(node_tag)
               return <Checkbox
-                isDisabled={!new_data.has_sankey_plus}
+                isDisabled={!app_data.has_sankey_plus}
                 variant='menuconfigpanel_tag_checkbox'
                 isIndeterminate={
                   (selected_nodes.length > 1) &&
@@ -145,7 +135,7 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
                 isChecked={allTrue}
                 onChange={(evt) => {
                   const visible = evt.target.checked
-                  new_data.drawing_area.updateSelectedNodesTagAssignation(visible, node_tag)
+                  app_data.drawing_area.updateSelectedNodesTagAssignation(visible, node_tag)
                 }}
               >
                 {node_tag.name}
@@ -155,8 +145,8 @@ export const SankeyMenuConfigurationNodesTags: FC<BaseComponentProps> = ({
       </Box> : <></>}
     </Box>
   </>
-  return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.node_associated_tag')}>
-    <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
+  return <WrapperBoxSubSectionMenu new_data={app_data} title={t('Menu.node_associated_tag')}>
+    <OSTooltip label={app_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
       {content}
     </OSTooltip>
   </WrapperBoxSubSectionMenu>
