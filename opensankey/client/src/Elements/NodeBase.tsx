@@ -36,16 +36,16 @@ import {
 } from '../types/Utils'
 
 import { Class_NodeStyle } from './Element'
-import { NodeDrawNameLabel } from './NodeDrawLabel'
+import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
-import { NodeAttributeMappings, NODES_ATTRIBUTES_CONFIG} from './ElementsAttributesConfig'
+import { NodeAttributeMappings, NODES_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 import { Class_NodeAttribute } from './Element'
 
 export const default_selected_stroke_width = 3
-export const label_margin = 5
+export const label_margin = 0
 
 export function sortNodesElements(
   a: Class_NodeBase | Class_NodeStyle,
@@ -74,10 +74,6 @@ export class Class_NodeBase extends Class_NodeAttribute {
   }
 
   public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_name_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_FO_illustration: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_image: d3.Selection<SVGImageElement, unknown, SVGGElement, unknown> | null = null
-  protected d3_selection_g_icon: d3.Selection<SVGPathElement, unknown, SVGGElement, unknown> | null = null
 
   private _position_u: number
   private _position_v: number
@@ -85,6 +81,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
   protected _name: string
   protected _nodeDrawShape: NodeDrawShape
   protected _nodeDrawNameLabel: NodeDrawNameLabel
+  protected _nodeDrawIcon: NodeDrawNameLabel
 
   protected _drag: boolean = false
   protected _drag_start_pos: { [x: string]: [number, number] } = {}
@@ -107,7 +104,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
 
     this._name = name
     this._nodeDrawShape = new NodeDrawShape(this)
-    this._nodeDrawNameLabel = new NodeDrawNameLabel(this)
+    this._nodeDrawNameLabel = new NodeDrawNameLabel(this, 'name_label')
+    this._nodeDrawIcon = new NodeDrawNameLabel(this, 'icon')
 
     this._position_u = 0
     this._position_v = 0
@@ -182,10 +180,13 @@ export class Class_NodeBase extends Class_NodeAttribute {
 
   protected drawElements() {
     this._nodeDrawShape.drawShape()
-    this._nodeDrawNameLabel.drawNameLabel()
-    this._nodeDrawNameLabel.drawFO()
+    this._nodeDrawNameLabel.drawGenericLabel()
+    this._nodeDrawNameLabel.drawGenericLabel()
+    this._nodeDrawIcon.drawGenericLabel()
   }
-
+  public drawIcon() {
+    this._nodeDrawIcon.drawGenericLabel()
+  }
   public drawShape() {
     this._nodeDrawShape.drawShape()
     if (this._is_selected) {
@@ -195,12 +196,12 @@ export class Class_NodeBase extends Class_NodeAttribute {
   }
 
   public drawNameLabel() {
-    this._nodeDrawNameLabel.drawNameLabel()
+    this._nodeDrawNameLabel.drawGenericLabel()
     this._orderD3Elements()
   }
 
   public drawFO() {
-    this._nodeDrawNameLabel.drawFO()
+    this._nodeDrawNameLabel.drawGenericLabel()
   }
 
   public useDefaultStyle() {
@@ -220,10 +221,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
 
   protected _draw() {
     super._draw()
-    this._nodeDrawShape.drawShape()
-    this._nodeDrawNameLabel.drawNameLabel()
-    this.drawIllustrationImage()
-    this.drawIllustrationIcon()
+    this.drawElements()
     this.applyPosition()
   }
 
@@ -235,46 +233,14 @@ export class Class_NodeBase extends Class_NodeAttribute {
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
 
-  protected drawIllustrationImage() {
-    if (!this.d3_selection || !this.image_src) return
-    this.d3_selection_g_image = this.d3_selection?.append('image')
-      .attr('id', 'image_node_' + this.id)
-      .attr('class', 'illustration image')
-      .attr('xlink:href', this.image_src)
-      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-      .attr('height', this.getShapeHeightToUse() + 'px')
-      .attr('width', this.getShapeWidthToUse() + 'px')
-  }
+  public getShapeWidthToUse() { return this.shape_min_width }
 
-  protected drawIllustrationIcon() {
-    if (!this.d3_selection || !this.icon_name || !this.icon_color) return
-    this.d3_selection_g_icon = this.d3_selection?.append('svg')
-      .attr('id', 'icon_node_' + this.id)
-      .attr('class', 'illustration icon_node')
-      .attr('viewBox', this.icon_view_box ? this.icon_view_box : '0 0 1000 1000')
-      .attr('height', this.getShapeHeightToUse())
-      .attr('width', this.getShapeWidthToUse())
-      .attr('x', 0)
-      .append('g')
-      .append('path')
-      .style('fill', this.icon_color_sustainable ? this.icon_color : this.getShapeColorToUse())
-      .attr('d', this.sankey.getIconFromCatalog(this.icon_name))
-  }
-
-  public getShapeWidthToUse() {
-    return this.shape_min_width
-  }
-
-  public getShapeHeightToUse() {
-    return this.shape_min_height
-  }
+  public getShapeHeightToUse() { return this.shape_min_height }
 
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
-    this.d3_selection_g_name_label?.raise()
-    this.d3_selection_g_FO_illustration?.raise()
-    this.d3_selection_g_image?.raise()
-    this.d3_selection_g_icon?.raise()
+    this._nodeDrawNameLabel.d3_selection?.raise()
+    this._nodeDrawIcon.d3_selection?.raise()
   }
 
   public eventDoubleLMBCLick(
@@ -313,22 +279,22 @@ export class Class_NodeBase extends Class_NodeAttribute {
     return { dx: this._node_current_dx, dy: this._node_current_dy }
   }
 
-  public get internalDrawingElements() {
-    return {
-      d3_selection_g_shape: this.d3_selection_g_shape,
-      d3_selection_g_name_label: this.d3_selection_g_name_label,
-      d3_selection_g_FO_illustration: this.d3_selection_g_FO_illustration
-    }
-  }
-  public setInternalDrawingElements(elements: {
-    d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_FO_illustration?: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null,
-  }) {
-    if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
-    if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
-    if (elements.d3_selection_g_FO_illustration !== undefined) this.d3_selection_g_FO_illustration = elements.d3_selection_g_FO_illustration
-  }
+  // public get internalDrawingElements() {
+  //   return {
+  //     d3_selection_g_shape: this.d3_selection_g_shape,
+  //     d3_selection_g_name_label: this.d3_selection_g_name_label,
+  //     d3_selection_g_FO_illustration: this.d3_selection_g_FO_illustration
+  //   }
+  // }
+  // public setInternalDrawingElements(elements: {
+  //   d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+  //   d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
+  //   d3_selection_g_FO_illustration?: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null,
+  // }) {
+  //   if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
+  //   if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
+  //   if (elements.d3_selection_g_FO_illustration !== undefined) this.d3_selection_g_FO_illustration = elements.d3_selection_g_FO_illustration
+  // }
   /**
    * Activate the control points alignement guide
    *

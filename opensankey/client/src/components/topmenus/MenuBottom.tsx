@@ -3,10 +3,9 @@ import {
   Box, Button, ButtonGroup, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)

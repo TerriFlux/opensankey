@@ -54,7 +54,7 @@ import {
   LINKS_ATTRIBUTES_CONFIG, NodeAttributeMappings, NODES_ATTRIBUTES_CONFIG,
   Type_customisable_flow_style_attr, Type_customisable_node_style_attr
 } from '../Elements/ElementsAttributesConfig'
-import { Class_ElementStyle, Class_LinkAttribute, Class_LinkStyle, Class_NodeAttribute, Class_NodeStyle, StorageType } from '../Elements/Element'
+import { Class_LinkStyle, Class_NodeStyle, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
 /**
@@ -118,19 +118,19 @@ export class Class_Sankey {
 
   protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
     return new Class_NodeStyle(
-      id, name, is_deletable!,new NodeAttributeMappings,this.default_node_style
+      id, name, is_deletable!,new NodeAttributeMappings,this.default_node_style,this.drawing_area
     )
   }
   
   protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
     const style = new Class_LinkStyle(
-      id, name, is_deletable!, new LinkAttributeMappings, this.default_link_style
+      id, name, is_deletable!, new LinkAttributeMappings, this.default_link_style,this.drawing_area
     )
     return style
   }
   protected createNewContainerStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
     const style = new Class_NodeStyle(
-      id, name, is_deletable!, new LinkAttributeMappings, this.default_node_style
+      id, name, is_deletable!, new LinkAttributeMappings, this.default_node_style,this.drawing_area
     )
     return style
   }
@@ -1506,7 +1506,7 @@ export class Class_Sankey {
       // Create node
       const node = this.createNewNode(id, name)
       // Set node to default position
-      //node.initDefaultPosXY()
+      node.draw()
       // Update registry of nodes
       this._addNode(node)
       return node
@@ -1699,7 +1699,7 @@ export class Class_Sankey {
   ): Class_NodeStyle {
     if (!this._node_styles[id]) {
       const style = new Class_NodeStyle(
-        id, name, true,new NodeAttributeMappings,this.default_node_style
+        id, name, true,new NodeAttributeMappings,this.default_node_style,this.drawing_area
       )
       this._node_styles[id] = style
       return style
@@ -1714,7 +1714,7 @@ export class Class_Sankey {
   ): Class_NodeStyle {
     if (!this._node_styles[id]) {
       const style = new Class_NodeStyle(
-        id, name, true,new NodeAttributeMappings,this.default_node_style
+        id, name, true,new NodeAttributeMappings,this.default_node_style,this.drawing_area
       )
       this._container_styles[id] = style
       return style
@@ -1770,7 +1770,7 @@ export class Class_Sankey {
   ): Class_LinkStyle {
     if (!this._link_styles[id]) {
       const style = new Class_LinkStyle(
-        id, name, true,new NodeAttributeMappings,this.default_link_style
+        id, name, true,new NodeAttributeMappings,this.default_link_style,this.drawing_area
       )
       this._link_styles[id] = style
       return style

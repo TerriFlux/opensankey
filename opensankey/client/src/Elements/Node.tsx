@@ -29,11 +29,10 @@ import { Class_NodeBase } from './NodeBase'
 
 import {
   Class_LinkElement,
-  format_value,
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
-import { default_element_color, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
+import { default_element_color, format_value, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
@@ -44,7 +43,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
-import { NodeDrawValueLabel } from './NodeDrawLabel'
+import { NodeDrawValueLabel } from './DrawLabel'
 import { NODES_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
 import { Class_LinkStyle, Class_NodeStyle } from './Element'
 // 
@@ -85,7 +84,7 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    super(id, name,drawing_area)
+    super(id, name, drawing_area)
     this._nodeTooltip = new NodeTooltip(this)
     this._nodeEventsHandler = new NodeEventsHandler(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
@@ -109,34 +108,11 @@ export class Class_NodeElement extends Class_NodeBase {
   public resetLinkVisibilitiesMemorization() {
     this._are_links_visibilities_ok = undefined
   }
-  // CLEANING METHODS ===================================================================
+
   protected _orderD3Elements() {
-    this.d3_selection_g_shape?.raise()
-    this.d3_selection_g_name_label?.raise()
-    this.d3_selection_g_value_label?.raise()
-    this.d3_selection_g_FO_illustration?.raise()
-    this.d3_selection_g_image?.raise()
-    this.d3_selection_g_icon?.raise()
+    super._orderD3Elements()
+    this._nodeDrawValueLabel.d3_selection?.raise()
   }
-  public get internalDrawingElements() {
-    return {
-      d3_selection_g_shape: this.d3_selection_g_shape,
-      d3_selection_g_name_label: this.d3_selection_g_name_label,
-      d3_selection_g_value_label: this.d3_selection_g_value_label,
-      d3_selection_g_FO_illustration: this.d3_selection_g_FO_illustration
-    }
-  }
-  public setInternalDrawingElements(elements: {
-    d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_value_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-    d3_selection_g_FO_illustration?: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null,
-  }) {
-    if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
-    if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
-    if (elements.d3_selection_g_value_label !== undefined) this.d3_selection_g_value_label = elements.d3_selection_g_value_label
-    if (elements.d3_selection_g_FO_illustration !== undefined) this.d3_selection_g_FO_illustration = elements.d3_selection_g_FO_illustration
-  } 
 
   public copyTagsReferencingFrom(
     node_to_copy: Class_NodeElement,
@@ -145,7 +121,7 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     this._nodeTagsManager.copyTagsReferencingFrom(node_to_copy, matching_tagg, matching_tags)
   }
-  
+
   /**
    * Select the right color to use for this node (attribute / style / tags / ...)
    */
@@ -157,7 +133,7 @@ export class Class_NodeElement extends Class_NodeBase {
     ) {
       return this.shape_color
     }
-    if (!this.sankey.node_taggs_list.some(tagg=>tagg.use_colors)) {
+    if (!this.sankey.node_taggs_list.some(tagg => tagg.use_colors)) {
       return this.shape_color
     }
     // Is the color defined by tags
@@ -182,8 +158,8 @@ export class Class_NodeElement extends Class_NodeBase {
 
 
   protected override cleanForDeletion() {
-        this._nodeDimensionsManager.cleanForDeletion()
-            this._nodeTagsManager.cleanForDeletion()
+    this._nodeDimensionsManager.cleanForDeletion()
+    this._nodeTagsManager.cleanForDeletion()
     // Cleanup links (lignes 282-297)
     this._links_order = []
     Object.values(this._input_links).forEach(link => {
@@ -206,7 +182,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _copyFrom(_: Class_NodeElement): void {
     super._copyFrom(_)
     this.copyDimensionsFrom(_ as Class_NodeElement)
-      this._tooltip_text = _._tooltip_text
+    this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
   }
 
@@ -297,7 +273,7 @@ export class Class_NodeElement extends Class_NodeBase {
     _?.add_slave_nodes(this)
   }
   public get slave_nodes() { return this._slave_nodes }
-  public add_slave_nodes(_:Class_NodeElement) { this._slave_nodes.push(_) }
+  public add_slave_nodes(_: Class_NodeElement) { this._slave_nodes.push(_) }
   public get sibling() { return this._sibling_node }
   public set sibling(_) { this._sibling_node = _ }
   /**
@@ -305,14 +281,12 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   protected _draw() {
     super._draw()
-    this._nodeDrawValueLabel.drawValueLabel()
+    this._nodeDrawValueLabel.drawGenericLabel()
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
-    this._process_or_bypass(() => {
-      this._nodeDrawValueLabel.drawValueLabel()
-      this._orderD3Elements()
-    })
+    this._nodeDrawValueLabel.drawGenericLabel()
+    this._orderD3Elements()
   }
   // 🔄 LINKS JSON METHODS - RÉINTÉGRÉS DIRECTEMENT
   public linksFromJSON(json_node_object: Type_JSON, matching_links_id: { [_: string]: string } = {}) {
@@ -715,7 +689,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   protected drawElements() {
     super.drawElements()
-    this._nodeDrawValueLabel.drawValueLabel()
+    this._nodeDrawValueLabel.drawGenericLabel()
   }
   /**
    * Apply node position to it shape in d3
@@ -1250,7 +1224,7 @@ export class Class_NodeElement extends Class_NodeBase {
       const list_tag = this.tags_list
       if (list_tag.length > 0) {
         let display = true
-        Object.entries(this._taggs_dict).filter(([key,_])=>this.sankey.node_taggs_dict[key]).forEach(([_,tag_list]) => {
+        Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
         are_related_node_tags_selected = display
@@ -1518,11 +1492,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // REMAINING MANAGERS DATA ACCESS =====================================================
 
-  public get internalTagsData() { return { 
-    tags: this._tags, 
-    taggs_dict: this._taggs_dict,
-    leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
-  } }
+  public get internalTagsData() {
+    return {
+      tags: this._tags,
+      taggs_dict: this._taggs_dict,
+      leveltaggs_as_antitagged: this._leveltaggs_as_antitagged
+    }
+  }
 
   public get internalDimensionsData() {
     return {
@@ -1535,7 +1511,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public get tooltip_text() { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
 
-    public get data_label(): string {
+  public get data_label(): string {
     let input_val = 0
     let output_val = 0
 

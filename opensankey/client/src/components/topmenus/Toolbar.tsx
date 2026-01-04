@@ -4,8 +4,7 @@ import {
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch
 } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
-import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip } from '../configmenus/MenuCommon'
+import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
 import { Class_ProtoTag } from '../../types/Tag'

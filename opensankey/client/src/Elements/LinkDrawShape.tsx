@@ -85,7 +85,7 @@ export class LinkDrawShape {
       // Avoid recomputations
       const thickness = !this._link.linkIsStructure() ? this._link.thickness : 2
       const shape_color = this._link.getPathColorToUse()
-      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && !this._link.has_data ? 0.2 : this._link.shape_opacity
+      const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && !this._link.has_data ? 0.2 : (this._link.shape_color_visible ? this._link.shape_opacity : 0)
 
       // Check to choose how to draw
       const show_as_dash = this._link.shape_is_dashed || this._link.valueCurrent == null || this._link.linkIsStructure()
@@ -108,22 +108,31 @@ export class LinkDrawShape {
         this._link.d3_selection?.selectAll('.link_shape')
           .attr('id', this._link.id)
           .attr('fill', shape_color)
-          .attr('opacity', shape_opacity)
+          .attr('opacity', this._link.shape_color_visible ? shape_opacity : 0)
           .attr('stroke', 'none')
           .attr('stroke-opacity', '0')
           .attr('stroke-width', '0')
       }
       else {
+        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.shape_color_visible)
         let path = ''
         if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
         else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
-        else path = this.getBezierPath(this._link.shape_type == 'bezier_outline')
+        else path = this.getBezierPath(bezier_outline)
 
         const da = this._link.sankey.drawing_area
-        const is_stroke = this._link.shape_type == 'bezier_path' || !this._link.shape_is_curved
 
-        // =================== BORDURE (si visible et c'est un stroke) ===================
-        if (border_visible && border_thickness > 0 && is_stroke) {
+        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.shape_color_visible))
+
+        // =================== BORDURE (si visible) ===================
+        // ✅ Ajout de la condition pour bezier_outline
+        if (border_visible && border_thickness > 0 && (is_stroke || bezier_outline)) {
+          // Pour is_stroke: thickness + border des 2 côtés
+          // Pour bezier_outline (shape avec fill): juste border des 2 côtés
+          const border_stroke_width = is_stroke
+            ? thickness + (border_thickness * 2)
+            : border_thickness * 2
+
           this._link.d3_selection?.append('path')
             .classed('link', true)
             .classed('link_path_border', true)
@@ -131,8 +140,8 @@ export class LinkDrawShape {
             .attr('d', path)
             .attr('fill', 'none')
             .attr('stroke', border_color)
-            .attr('stroke-width', thickness + (border_thickness * 2))
-            .attr('stroke-opacity', shape_opacity)
+            .attr('stroke-width', border_stroke_width)
+            .attr('stroke-opacity', 1)
             .attr('stroke-dasharray', border_dashed ? '10,2' : '')
             .attr('pointer-events', 'none')
         }
@@ -516,8 +525,12 @@ export class LinkDrawShape {
   }
 
   public getBezierPath(is_outline: boolean): string {
-    if (!this._link.shape_is_curved)
+    if (!this._link.shape_is_curved) {
+      if (is_outline) {
+        return this.getLineShape()
+      }
       return this.getLinesPath()
+    }
 
     this._link_control_points.computeControlPoints()
 

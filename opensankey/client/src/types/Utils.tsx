@@ -28,6 +28,10 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
+import { value_option_percent_constants, ValueOptionType } from '../Elements/LinkValues'
+import { Class_NodeBase } from '../Elements/NodeBase'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_DataTagGroup } from './TagGroup'
 
 declare const window: Window &
   typeof globalThis & {
@@ -425,4 +429,120 @@ export function checkForUrlToJSON() {
   const url_var = urlParams.get('url')
   return url_var
 
+}
+
+
+export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement) => {
+  if (type_data == 'data' || type_data == 'data_label') {
+    if (!link.value?.valueData) return ''
+    return link.formatValueWithOption(format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+        return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
+      }*/
+  }
+  if (link.value?.result_min !== null) {
+    if (type_data === 'free_interval') {
+      return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name) + ']'
+    }
+    if (type_data === 'free_value') {
+      return format_value(type_data, link.valueCurrent!, link, link.unit_name)
+    }
+    return ''
+  }
+
+  return format_value(type_data, link.valueCurrent!, link, link.unit_name)
+}
+
+export const format_value = (
+  data_type: Type_Structure,
+  data_value: number | undefined | null,
+  element: Class_LinkElement | Class_NodeBase,
+  unit_name: string
+) => {
+  /*==========================================================================*/
+  // First step. value transformation
+  const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const link = element as Class_LinkElement
+  if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const tag = unit_taggs[0].tags_dict[element.value_label_unit]
+    const new_value = link.valueForTag(tag)
+    data_value = new_value?.valueResult ?? new_value?.valueData
+  }
+
+  if (element.value_label_unit_type == '%IS') {
+    let total_source = 0
+    // if (unit_taggs.length > 0) {
+    //   link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    // }
+    link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_source * 100 : null
+  } else if (element.value_label_unit_type == '%OD') {
+    let total_target = 0
+    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%OS') {
+    let total_target = 0
+    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%ID') {
+    let total_source = 0
+    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_source * 100 : null
+  } else if (element.value_label_unit_type == 'normalized') {
+    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
+  }
+
+  /*==========================================================================*/
+  // Second step. value formatting
+  let text_value = ''
+  // Create data label
+  if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
+    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+    if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
+      data_value /= element.value_label_unit_factor
+    }
+
+    // Convert
+    if (element.value_label_scientific_notation) {
+      // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      if (element.value_label_significant_digits) {
+        text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
+      } else {
+        text_value = data_value.toExponential()
+      }
+    } else if (element.value_label_significant_digits == true) {
+      // Do we need to keep only N significant numbers ?
+      // 12345.67 avec nb_sign = 4 devient 12340
+      text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+      if (element.value_label_custom_digit) {
+        text_value = String(parseFloat(parseFloat(text_value).toFixed(element.value_label_nb_digit)))
+      }
+      if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
+        text_value += '.'
+      }
+    } else if (element.value_label_custom_digit) {
+      text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
+    }
+    else {
+      text_value = String(data_value)
+    }
+  }
+  text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+  if (!element.value_label_unit_visible) {
+    return text_value
+  }
+  // Add unit suffix
+  if (data_type == 'data' || data_type == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
+  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
+  else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
+  else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
+    //const label_unit = unit_taggs[0].first_selected_tags!.name
+    text_value = text_value + ' ' + unit_name
+  } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0) {
+    text_value = link.formatValueWithOption(text_value, element.value_label_unit_type as ValueOptionType)
+  } else if (element.value_label_unit_type == 'normalized') return text_value
+
+  return text_value
 }

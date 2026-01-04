@@ -29,12 +29,12 @@ import { MenuList, MenuButton, MenuItem, Menu } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
-import { updateElements, ValueElementsType, ValueKey } from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput} from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
 import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { Class_LinkElement } from '../../Elements/Link'
 
 /*************************************************************************************************/
 
@@ -82,8 +82,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
   return <ConfigMenuNumberInput
     t={app_data.t}
     default_value={default_value}
-    function_on_blur={(_: number | null) => updateElements(
-      app_data, selected_links, 'valueCurrent' as ValueKey, _ as ValueElementsType, refreshThisAndUpdateRelatedComponents
+    function_on_blur={(_: number | null) => Class_LinkElement.updateLinks(
+      app_data, selected_links, 'valueCurrent' , _!, refreshThisAndUpdateRelatedComponents
     )}
     minimum_value={0}
     stepper={true}

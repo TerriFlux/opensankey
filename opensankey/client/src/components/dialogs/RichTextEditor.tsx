@@ -3,10 +3,11 @@ import React, { useRef, MutableRefObject, forwardRef, useImperativeHandle, useSt
 import ReactQuill from 'react-quill'
 import { Box, Textarea, Button, Checkbox } from '@chakra-ui/react'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { getElementsLabelValues, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'
+import { BASE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 /**
  * Create an array of string, it return a list from start to stop (at a pace of step)
@@ -89,7 +90,7 @@ export const ForeignObjectEditor = forwardRef<ForeignObjectEditorHandle, Foreign
       }
     }))
 
-    const disabled = !isActivated 
+    const disabled = !isActivated
 
     const editorStyle = {
       color: disabled ? '#666666' : '',
@@ -138,91 +139,43 @@ export const ForeignObjectEditor = forwardRef<ForeignObjectEditorHandle, Foreign
 
 ForeignObjectEditor.displayName = 'ForeignObjectEditor'
 
-export const LabelRichTextEditor = ({
-  app_data,
-}: {
-  app_data: Class_ApplicationData
-}) => {
-  const { drawing_area, t } = app_data
+export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t } = app_data
   const is_activated = true
 
   const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
   const [, setCount] = useState(0)
-  const [elements, setElements] = useState<Class_NodeBase[]|Class_LinkElement[]>([])
-  //const elements = drawing_area.elements_list
+  const [elements, setElements] = useState<Class_NodeBase[] | Class_LinkElement[]>([])
+  const [prefix, setPrefix] = useState<'name_label' | 'value_label' | 'icon'>('name_label')
   const editorRef = useRef<ForeignObjectEditorHandle>(null)
+  const [is_raw, setIsRaw] = useState(false)
 
-  app_data.menu_configuration.r_editor_content_set_elements.current = setElements
+  //app_data.menu_configuration.r_editor_content_set_elements.current = setElements
+
+  app_data.menu_configuration.r_editor_content_set_elements.current = (
+    _elements: Class_NodeBase[] | Class_LinkElement[],
+    _prefix: 'name_label' | 'value_label' | 'icon'
+  ) => {
+    setElements(_elements)
+    setPrefix(_prefix)
+  }
+
   let s_tmp_editor_content_fo_node = s_editor_content_fo_node
   app_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
+  const labelValues = elements.length > 0
+    ? getElementsLabelValues(elements, prefix, () => setCount(a => a + 1))
+    : Object.fromEntries(
+      Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof BASE_LABEL_CONFIG]: ReturnType<typeof BASE_LABEL_CONFIG[K]['type']> }
+
   let s_tmp_editor_content_changed = false
   if (elements.length > 0) {
-    if (elements[0].fo_content !== s_editor_content_fo_node) {
+    if (labelValues.fo_content !== s_editor_content_fo_node) {
       s_tmp_editor_content_changed = true
     }
   }
-  const is_FO_raw = (elements[0]?.is_fo_raw ?? false)
 
-  const check_indeterminate = (curr: Class_NodeBase|Class_LinkElement) => {
-    //@ts-expect-error xxx
-    return (elements[0].isEqual(curr))
-  }
-  const is_indeterminated = !elements.every(check_indeterminate)
-
-
-
-  const updateFORaw = (_: boolean) => {
-    const dict_old_value: { [x: string]: boolean } = {}
-    elements.forEach(n => {
-      dict_old_value[n.id] = n.is_fo_raw
-    })
-    const _updateFORaw = () => {
-      elements.forEach(n => {
-        n.is_fo_raw = _
-        n.draw()
-      })
-      setCount(a => a + 1)
-    }
-
-    const inv_updateFORaw = () => {
-      elements.forEach(n => {
-        n.is_fo_raw = dict_old_value[n.id]
-        n.draw()
-      })
-      setCount(a => a + 1)
-    }
-    app_data.history.saveUndo(inv_updateFORaw)
-    app_data.history.saveRedo(_updateFORaw)
-    _updateFORaw()
-  }
-
-  const applyEditor = () => {
-    const dict_old_value: { [x: string]: string } = {}
-    elements.map(node => dict_old_value[node.id] = node.fo_content!)
-
-    const _applyEditor = () => {
-      elements.map(node => {
-        node.fo_content = s_tmp_editor_content_fo_node
-        node.drawFO()
-      })
-      sEditorContentFoNode(s_tmp_editor_content_fo_node)
-      app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    }
-    const inv_applyEditor = () => {
-      elements.map(node => {
-        node.fo_content = dict_old_value[node.id]
-        node.drawFO()
-      })
-      sEditorContentFoNode(elements[0].fo_content ?? '')
-    }
-
-    app_data.history.saveUndo(inv_applyEditor)
-    app_data.history.saveRedo(_applyEditor)
-    _applyEditor()
-  }
-
-  // ✅ UTILISATION DU NOUVEAU COMPOSANT
   const content = (
     <Box layerStyle='menu_sub_section'>
 
@@ -230,9 +183,8 @@ export const LabelRichTextEditor = ({
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
           isDisabled={!is_activated}
-          isIndeterminate={is_indeterminated}
-          isChecked={is_FO_raw}
-          onChange={(evt) => updateFORaw(evt.target.checked)}
+          isChecked={is_raw}
+          onChange={(evt) => setIsRaw(evt.target.checked)}
         >
           {is_activated ? (
             <>{t('Noeud.foreign_object.raw')}</>
@@ -253,8 +205,8 @@ export const LabelRichTextEditor = ({
           >
             <ForeignObjectEditor
               ref={editorRef}
-              isRawMode={is_FO_raw}
-              value={elements[0].fo_content ?? ''}
+              isRawMode={is_raw}
+              value={labelValues.fo_content ?? ''}
               onChange={(newContent) => {
                 s_tmp_editor_content_fo_node = newContent
                 if (!s_tmp_editor_content_changed) {
@@ -278,7 +230,7 @@ export const LabelRichTextEditor = ({
             isDisabled={!is_activated || !s_tmp_editor_content_changed}
             backgroundColor='red.200'
             onClick={() => {
-              const resetValue = elements[0]?.fo_content ?? ''
+              const resetValue = labelValues.fo_content
               editorRef.current?.resetContent(resetValue)
               sEditorContentFoNode(resetValue)
               setCount(a => a + 1)
@@ -289,7 +241,9 @@ export const LabelRichTextEditor = ({
           <Button
             variant='menuconfigpanel_option_button_right'
             isDisabled={!is_activated || !s_tmp_editor_content_changed}
-            onClick={applyEditor}
+            onClick={() => {
+              labelValues.fo_content = s_tmp_editor_content_fo_node
+            }}
           >
             {t('Noeud.FO.submit')}
           </Button>

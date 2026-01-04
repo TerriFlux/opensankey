@@ -180,7 +180,7 @@ export class SankeyAnimation {
           if (targetNode) {
             const colorTarget = targetNode.shape_visible
               ? (targetNode.getShapeColorToUse?.() || '#999')
-              : (targetNode.icon_visible ? targetNode.icon_color : 'grey')
+              : (targetNode.icon_is_visible ? targetNode.icon_color : 'grey')
 
             const isGradient = animatedLink.shape_color_rule === 'gradient'
             const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')

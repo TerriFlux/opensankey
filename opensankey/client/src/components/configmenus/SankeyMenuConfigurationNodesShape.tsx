@@ -26,12 +26,13 @@
 
 
 import React, { useState, MutableRefObject } from 'react'
-import { Box, Button,Checkbox } from '@chakra-ui/react'
+import { Box, Button, Checkbox } from '@chakra-ui/react'
 
 import { Class_NodeElement } from '../../Elements/Node'
 import { type Class_NodeStyle } from '../../Elements/Element'
-import { ElementAttrSetterNumberInput2Cols, MenuSectionCheckbox, updateElements, ValueKey, WrapperBoxSubSectionMenu } from './MenuCommon'
-import { SankeyNodeSelectionSimple } from './SankeyMenuConfigurationNodes'
+import {
+  ElementAttrSetterNumberInput2Cols, getNodeShapeValues, getShapeValues, MenuSectionCheckbox, WrapperBoxSubSectionMenu
+} from './MenuCommon'
 import { OSTooltip, TooltipElementOverloaded } from './MenuCommon'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -39,8 +40,8 @@ import { default_style_id } from '../../types/Utils'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { MenuShapeAttributes } from './MenuShapeBase'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { Class_LinkElement } from '../../Elements/Link'
-import { default_position_type, NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { BASE_SHAPE_CONFIG, isNodeShapeSpecificValueIndeterminate, NODE_SHAPE_SPECIFIC_CONFIG, NODES_ATTRIBUTES_CONFIG, NODES_SHAPE_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { SankeyNodeSelectionSimple } from './MenuSelectionElements'
 
 export const svg_label_top = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,0H4.5c-.829,0-1.5,.671-1.5,1.5s.671,1.5,1.5,1.5h7.247c-.143,.042-.278,.12-.391,.234l-5.087,5.191c-.574,.581-.167,1.575,.644,1.575h3.587v12.5c0,.829,.671,1.5,1.5,1.5s1.5-.671,1.5-1.5V10h3.587c.811,0,1.218-.994,.644-1.575L12.644,3.234c-.113-.114-.248-.192-.391-.234h7.247c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
 export const svg_label_bottom = <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 24 24' width="12" height="12"><path d="M19.5,21h-7.247c.143-.042,.278-.12,.391-.234l5.087-5.191c.574-.581,.167-1.575-.644-1.575h-3.587V1.5c0-.829-.672-1.5-1.5-1.5s-1.5,.671-1.5,1.5V14h-3.587c-.811,0-1.218,.994-.644,1.575l5.087,5.191c.113,.114,.248,.192,.391,.234H4.5c-.828,0-1.5,.671-1.5,1.5s.672,1.5,1.5,1.5h15c.828,0,1.5-.671,1.5-1.5s-.672-1.5-1.5-1.5Z" /></svg>
@@ -80,32 +81,16 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
     selected_nodes_list_sorted :
     visible_and_selected_nodes_list_sorted
 
-  // Elements on which menu modification applies
   const elements = menu_for_style ? [sankey.node_styles_dict[ref_selected_style_node.current]] : selected_nodes
-  const element_ref = elements[0]
-  const orphan_node_visible = (element_ref?.orphan_node_visible ?? NODES_ATTRIBUTES_CONFIG.orphan_node_visible.default)
-  const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
+  const base_elements = elements as Class_NodeBase[]
 
-  const check_indeterminate = (curr: Class_NodeElement) => {
-    return (selected_nodes[0].orphan_node_visible == curr.orphan_node_visible)
-  }
-  const is_indeterminate = !selected_nodes.every(check_indeterminate)
-
-  const position_type = menu_for_style ?
-    ((element_ref as Class_NodeStyle)?.position_type ?? default_position_type) :
-    ((element_ref as Class_NodeElement)?.position_type ?? default_position_type)
-
-  // Components updaters ----------------------------------------------------------------
-
-  // Boolean used to force this component to reload
   const [, setCount] = useState(0)
-  const [, setCountStyle] = useState(0)
 
   // Node this menu's update function
   if (!menu_for_style) {
     app_data.menu_configuration.ref_to_menu_config_nodes_apparence_visual_updater.current = () => setCount(a => a + 1)
   } else {
-    app_data.menu_configuration.ref_to_menu_config_nodes_styles_updater.current = () => setCountStyle(a => a + 1)
+    app_data.menu_configuration.ref_to_menu_config_nodes_styles_updater.current = () => setCount(a => a + 1)
   }
   /**
    * Function used to reset menu UI
@@ -140,53 +125,71 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
 
   let disable_attr_props = sankey.node_styles_dict[default_style_id].customisable_attribute
   if (menu_for_style) disable_attr_props = sankey.node_styles_dict[ref_selected_style_node.current].customisable_attribute
-  const attr_shape_type = 'shape_type'
-    const shape_type = element_ref?.[attr_shape_type] ?? 'rect'
+
+  const shapeValues = selected_nodes.length > 0
+    ? getShapeValues(selected_nodes, 'shape', refreshThisAndUpdateRelatedComponents)
+    : Object.fromEntries(
+      Object.entries(BASE_SHAPE_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof BASE_SHAPE_CONFIG]: ReturnType<typeof BASE_SHAPE_CONFIG[K]['type']> }
+
+  const nodeShapeValues = selected_nodes.length > 0
+    ? getNodeShapeValues(selected_nodes, refreshThisAndUpdateRelatedComponents)
+    : Object.fromEntries(
+      Object.entries(NODE_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof NODE_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof NODE_SHAPE_SPECIFIC_CONFIG[K]['type']> }
 
   const content_appearence = <MenuSectionCheckbox
     app_data={app_data}
     elements={selected_nodes}
     attributePath='Noeud.apparence'
-    attributeKey={'shape_visible' as ValueKey}
+    attributeKey={'visible'}
+    config={BASE_SHAPE_CONFIG}
+    prefix={'shape'}
     refreshParentComponent={refreshThisAndUpdateRelatedComponents}
   >
-      {/* Forme du noeud */}
-      <OSTooltip label={t(`Noeud.apparence.tooltips.${attr_shape_type}`)}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>
-            {t(`Noeud.apparence.${attr_shape_type}`)}
-            <TooltipElementOverloaded elements={base_elements} t={t} k={attr_shape_type} />
-          </Box>
-          <Box layerStyle='options_3cols'>
-            <Button
-              isDisabled={!disable_attr_props[attr_shape_type]}
-              value="ellipse"
-              variant={
-                shape_type === 'ellipse' ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-              onClick={() => {
-                updateElements(app_data, elements, attr_shape_type as ValueKey, 'ellipse', refreshThisAndUpdateRelatedComponents)
-              }}
-            >
-              {app_data.icon_library.icon_ellipse_shape}
-            </Button>
-
-            <Button
-              isDisabled={!disable_attr_props[attr_shape_type]}
-              variant={
-                shape_type === 'rect' ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-              onClick={() => {
-                updateElements(app_data, elements, attr_shape_type as ValueKey, 'rect', refreshThisAndUpdateRelatedComponents)
-              }}
-            >
-              {app_data.icon_library.icon_rect_shape}
-            </Button>
-          </Box>
+    {/* Forme du noeud */}
+    <OSTooltip label={t(`Noeud.apparence.tooltips.${'shape_type'}`)}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t(`Noeud.apparence.${'shape_type'}`)}
+          {!menu_for_style ?
+            <TooltipElementOverloaded
+              elements={base_elements}
+              t={t}
+              attributeKey={'type'}
+              prefix='shape'
+              config={BASE_SHAPE_CONFIG} /> : <></>}
         </Box>
-      </OSTooltip>
+        <Box layerStyle='options_3cols'>
+          <Button
+            isDisabled={!disable_attr_props['shape_type']}
+            value="ellipse"
+            variant={
+              shapeValues.type === 'ellipse' ?
+                'menuconfigpanel_option_button_activated' :
+                'menuconfigpanel_option_button'}
+            onClick={() => {
+              shapeValues.type = 'ellipse'
+            }}
+          >
+            {app_data.icon_library.icon_ellipse_shape}
+          </Button>
+
+          <Button
+            isDisabled={!disable_attr_props['shape_type']}
+            variant={
+              shapeValues.type === 'rect' ?
+                'menuconfigpanel_option_button_activated' :
+                'menuconfigpanel_option_button'}
+            onClick={() => {
+              shapeValues.type = 'rect'
+            }}
+          >
+            {app_data.icon_library.icon_rect_shape}
+          </Button>
+        </Box>
+      </Box>
+    </OSTooltip>
     <MenuShapeAttributes
       app_data={app_data}
       elements={elements}
@@ -207,7 +210,9 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       app_data={app_data}
       elements={elements}
       attributePath='Noeud.apparence'
-      attributeKey={'shape_min_width' as ValueKey}
+      attributeKey={'min_width'}
+      prefix={'shape'}
+      config={BASE_SHAPE_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
       unit_text='px'
       stepper={true} />
@@ -217,7 +222,9 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       app_data={app_data}
       elements={elements}
       attributePath='Noeud.apparence'
-      attributeKey={'shape_min_height' as ValueKey}
+      attributeKey={'min_height'}
+      prefix={'shape'}
+      config={BASE_SHAPE_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponents}
       unit_text='px'
       stepper={true} />
@@ -236,7 +243,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
           <Button
             value="absolute"
             variant={
-              position_type === 'absolute' ?
+              nodeShapeValues.position_type === 'absolute' ?
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
@@ -249,7 +256,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
 
           <Button
             variant={
-              position_type === 'parametric' ?
+              nodeShapeValues.position_type === 'parametric' ?
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
             onClick={() => {
@@ -262,7 +269,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
 
           <Button
             variant={
-              position_type === 'relative' ?
+              nodeShapeValues.position_type === 'relative' ?
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'
             }
@@ -278,20 +285,24 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
         </Box>
       </Box>
     </OSTooltip>
-    {!menu_for_style ? <ElementAttrSetterNumberInput2Cols
+    {/* {!menu_for_style ? <ElementAttrSetterNumberInput2Cols
       app_data={app_data}
       elements={elements}
       attributePath='Noeud.apparence'
-      attributeKey={'position_u' as ValueKey}
+      attributeKey={'position_u'}
+      prefix={'shape'}
+      config={NODE_SHAPE_SPECIFIC_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       minimum_value={1}
       unit_text='px'
-      stepper={true} /> : <></>}
+      stepper={true} /> : <></>} */}
     <ElementAttrSetterNumberInput2Cols
       app_data={app_data}
       elements={elements}
       attributePath='Noeud.apparence'
-      attributeKey={'position_dx' as ValueKey}
+      attributeKey={'position_dx'}
+      prefix={'shape'}
+      config={NODES_SHAPE_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       unit_text='px'
       stepper={true} />
@@ -299,7 +310,9 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
       app_data={app_data}
       elements={elements}
       attributePath='Noeud.apparence'
-      attributeKey={'position_dy' as ValueKey}
+      attributeKey={'position_dy'}
+      prefix={'shape'}
+      config={NODES_SHAPE_CONFIG}
       refreshParentComponent={refreshThisAndUpdateRelatedComponentsGeometry}
       unit_text='px'
       stepper={true} />
@@ -326,7 +339,7 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
   )
 
   return <>
-    {menu_for_style ? <></> : <SankeyNodeSelectionSimple new_data={app_data} />}
+    {menu_for_style ? <></> : <SankeyNodeSelectionSimple app_data={app_data} />}
     {menu_for_style ? <></> : <ConfigMenuStyleElement
       app_data={app_data}
       selected_elements={selected_nodes}
@@ -340,12 +353,17 @@ export const MenuConfigurationNodeStyle = ({ app_data, menu_for_style, additiona
         <Checkbox
           isDisabled={!disable_attr_props['orphan_node_visible']}
           variant='menuconfigpanel_option_checkbox'
-          isIndeterminate={is_indeterminate}
-          isChecked={orphan_node_visible}
-          onChange={(evt) => { updateElements(app_data, elements, 'orphan_node_visible' as ValueKey, evt.target.checked, refreshThisAndUpdateRelatedComponents) }}>
+          isIndeterminate={isNodeShapeSpecificValueIndeterminate(elements, 'orphan_node_visible')}
+          isChecked={nodeShapeValues.orphan_node_visible}
+          onChange={(evt) => {
+            nodeShapeValues.orphan_node_visible = evt.target.checked
+          }}>
           <OSTooltip label={t('Noeud.apparence.tooltips.orphan_node_visible')}>
             {t('Noeud.apparence.orphan_node_visible')}
-            <TooltipElementOverloaded elements={selected_nodes} t={t} k={'orphan_node_visible'} />
+            {!menu_for_style ?
+              <TooltipElementOverloaded elements={selected_nodes} t={t} attributeKey={'orphan_node_visible'}
+                prefix='shape'
+                config={NODE_SHAPE_SPECIFIC_CONFIG} /> : <></>}
           </OSTooltip>
         </Checkbox>
         {content_geometry}

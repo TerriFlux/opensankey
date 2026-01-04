@@ -36,25 +36,22 @@ import {
   ConditionalCheckboxWithInput,
   ElementAttrSetterNumberInput2Cols, ElementAttrSetterSelect2Cols,
   ElementAttrSetterTextInput2Cols,
+  getElementsValueLabelValues,
   OSTooltip,
   SimpleElementCheckbox,
-  TooltipElementOverloaded,
-  updateElements,
-  ValueKey
+  TooltipElementOverloaded
 } from './MenuCommon'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { getLabelValueAttributeKey, getLabelValues, isLabelValueIndeterminate, ValueLabelConfigReturn } from '../../Elements/ElementsAttributesConfig'
+import { BASE_LABEL_CONFIG, getLabelValues, getValueLabelValues, isValueLabelIndeterminate, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 
 export const MenuUnit = ({
   app_data,
-  config,
   attributePath: initialAttributePath,
   elements: initialElements,
   disable_attr_props: initialDisableAttrProps,
 }: {
   app_data: Class_ApplicationData,
-  config: ValueLabelConfigReturn
   attributePath?: string
   elements?: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeBase[] | Class_NodeStyle[],
   disable_attr_props?: Record<string, boolean>
@@ -81,52 +78,40 @@ export const MenuUnit = ({
     }
   }
   const { elements, attributePath, disable_attr_props } = state
-  if (!elements || elements.length === 0 || !attributePath || !disable_attr_props) {
-    return <></>
-  }
+  if (!elements || !attributePath || !disable_attr_props) return <></>
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const unit_tagg = sankey.data_taggs_list.find(tagg => tagg.is_unit)
-  //const is_link = elements.length > 0 && (elements[0] instanceof Class_LinkElement || elements[0] instanceof Class_LinkStyle)
-  const attr_visible = getLabelValueAttributeKey('unit_visible')
-  const is_indeterminate_visible = isLabelValueIndeterminate(elements, 'unit_visible')
 
-  let unit_visible = config.unit_visible.default
-  let unit_type = config.unit_type.default
-
-  // Construction des clés d'attributs avec le préfixe
-  const customDigitKey = `value_label_custom_digit` as ValueKey
-  const nbDigitKey = `value_label_nb_digit` as ValueKey
-  const significantDigitsKey = `value_label_significant_digits` as ValueKey
-  const nbSignificantDigitsKey = `value_label_nb_significant_digits` as ValueKey
-  const scientificNotationKey = `value_label_scientific_notation` as ValueKey
-
-  // If elements selected set displayed value with first selected element
-  if (elements.length > 0) {
-    const labelValues = elements.length > 0
-      ? getLabelValues(elements[0], 'value_', config)
-      : Object.fromEntries(
-        Object.entries(config).map(([key, value]) => [key, value.default])
-      ) as { [K in keyof typeof config]: ReturnType<typeof config[K]['type']> }
-    unit_visible = labelValues.unit_visible
-    unit_type = labelValues.unit_type
-  }
+  const labelValues = elements.length > 0
+    ? getElementsValueLabelValues(elements, 'value_label', refreshUI)
+    : Object.fromEntries(
+      Object.entries(VALUE_LABEL_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof VALUE_LABEL_CONFIG]: ReturnType<typeof VALUE_LABEL_CONFIG[K]['type']> }
 
   return <Box
     layerStyle='menuconfigpanel_grid'
   >
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
-      iconColor={is_indeterminate_visible ? '#78C2AD' : 'white'}
-      isDisabled={!disable_attr_props[attr_visible]}
-      isIndeterminate={is_indeterminate_visible}
-      isChecked={unit_visible}
+      iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
+      isDisabled={!disable_attr_props['value_label_unit_visible']}
+      isIndeterminate={isValueLabelIndeterminate(elements, 'unit_visible')}
+      isChecked={labelValues.unit_visible}
       onChange={(evt) => {
-        updateElements(app_data, elements!, attr_visible as ValueKey, evt.target.checked, refreshUI!)
+        labelValues.unit_visible = evt.target.checked
       }}
     >
-      <OSTooltip label={t(`${attributePath}.tooltips.${attr_visible}`) || 'Afficher le fond'}>
-        {t(`${attributePath}.${attr_visible}`) || 'Fond visible'}
-        <TooltipElementOverloaded elements={base_elements} t={t} k={attr_visible} />
+      <OSTooltip label={t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || 'Afficher le fond'}>
+        {t(`${attributePath}.${'value_label_unit_visible'}`) || 'Fond visible'}
+        {!menu_for_style ?
+          <TooltipElementOverloaded
+            elements={base_elements}
+            t={t}
+            attributeKey={'unit_visible'}
+            config={VALUE_LABEL_CONFIG}
+            prefix={'value_label'}
+          /> : <></>}
       </OSTooltip>
     </Checkbox>
     {/* Select pour unit type (seulement pour les liens) */}
@@ -134,8 +119,10 @@ export const MenuUnit = ({
       <ElementAttrSetterSelect2Cols
         app_data={app_data}
         attributePath={attributePath}
-        attributeKey={'value_label_unit_type'}
+        attributeKey={'unit_type'}
         elements={elements}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
         options={unit_constants.map(el => ({
           key: 'value_' + el,
           value: el,
@@ -145,12 +132,14 @@ export const MenuUnit = ({
       />
     }
     {/* Select pour unit tag (quand type = other_unit_tag) */}
-    {unit_type == 'other_unit_tag' && unit_tagg && (
+    {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
       <ElementAttrSetterSelect2Cols
         app_data={app_data}
         elements={elements}
         attributePath={attributePath}
-        attributeKey={'value_label_unit'}
+        attributeKey={'unit'}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
         options={unit_tagg.tags_list.map(el => ({
           key: 'value_' + el.id,
           value: el.id,
@@ -160,20 +149,24 @@ export const MenuUnit = ({
       />
     )}
     {/* Text input et number input pour unit_name */}
-    {unit_type == 'unit_name' && (
+    {labelValues.unit_type == 'unit_name' && (
       <>
         <ElementAttrSetterTextInput2Cols
           app_data={app_data}
           elements={elements}
           attributePath={attributePath}
-          attributeKey={'value_label_unit'}
+          attributeKey={'unit'}
+          config={VALUE_LABEL_CONFIG}
+          prefix='value_label'
           refreshParentComponent={refreshUI}
         />
         <ElementAttrSetterNumberInput2Cols
           app_data={app_data}
           elements={elements}
           attributePath={attributePath}
-          attributeKey={'value_label_unit_factor'}
+          attributeKey={'unit_factor'}
+          config={VALUE_LABEL_CONFIG}
+          prefix='value_label'
           refreshParentComponent={refreshUI}
           stepper={false}
         />
@@ -184,8 +177,10 @@ export const MenuUnit = ({
       <ConditionalCheckboxWithInput
         app_data={app_data}
         elements={elements}
-        checkboxAttributeKey={customDigitKey}
-        inputAttributeKey={nbDigitKey}
+        checkboxAttributeKey={'custom_digit'}
+        inputAttributeKey={'nb_digit'}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
         refreshParentComponent={refreshUI}
         minimum_value={0}
         stepper={true}
@@ -195,8 +190,10 @@ export const MenuUnit = ({
       <ConditionalCheckboxWithInput
         app_data={app_data}
         elements={elements}
-        checkboxAttributeKey={significantDigitsKey}
-        inputAttributeKey={nbSignificantDigitsKey}
+        checkboxAttributeKey={'significant_digits'}
+        inputAttributeKey={'nb_significant_digits'}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
         refreshParentComponent={refreshUI}
         minimum_value={0}
         stepper={true}
@@ -206,7 +203,9 @@ export const MenuUnit = ({
       <SimpleElementCheckbox
         app_data={app_data}
         elements={elements}
-        attributeKey={scientificNotationKey}
+        attributeKey={'scientific_notation'}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
         refreshParentComponent={refreshUI}
       />
     </Box>
