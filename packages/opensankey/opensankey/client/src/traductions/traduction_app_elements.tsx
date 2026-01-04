@@ -153,6 +153,7 @@ export const resources_app_elements = {
 
           title_table: 'Flow Table',
           title_graph: 'Graph',
+          title_legend: 'Legend',
           title_node: 'Nodes',
           title_flow: 'Flows',
           title_node_tag: 'Node Label Editing',
@@ -608,6 +609,7 @@ export const resources_app_elements = {
 
           title_table: 'Tableau des flux  ',
           title_graph: 'Graphe',
+          title_legend: 'Légende',
           title_node: 'Noeuds',
           title_flow: 'Flux',
           title_node_tag: 'Édition des étiquettes de noeuds',

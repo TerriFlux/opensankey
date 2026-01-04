@@ -48,22 +48,22 @@ import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
-import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaConfig, GraphElementsOrdoner, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
 import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { MenuConfigurationLinkShape } from '../configmenus/SankeyMenuConfigurationLinksShape'
 import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
-import { MenuConfigurationNodeLabel } from '../configmenus/SankeyMenuConfigurationNodesLabel'
+import { MenuConfigurationNodeLabel, MenuConfigurationLinkLabel, MenuConfigurationContainersLabel } from '../configmenus/MenuConfigurationElementsLabel'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
-import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
-import { FormatConfigStructure,} from '../dialogs/PersistenceProcessDialogConfigs'
+import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 import { MenuShapeAttributes } from '../configmenus/MenuShapeBase'
 import { MenuUnit } from '../configmenus/MenuValueLabel'
 import { VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { SankeyContainerSelection } from '../configmenus/MenuSelectionElements'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -97,8 +97,8 @@ export const SankeyMenu = (
   }: {
     app_data: Class_ApplicationData,
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
-    input_config:FormatConfigStructure,
-    output_config:FormatConfigStructure
+    input_config: FormatConfigStructure,
+    output_config: FormatConfigStructure
   }
 ) => {
   const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
@@ -311,7 +311,7 @@ export const SankeyMenu = (
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
         dialog_name={'ref_setter_show_shape_attribute_editor'}
-        content={<MenuShapeAttributes app_data={app_data}/>}
+        content={<MenuShapeAttributes app_data={app_data} />}
         title={'Fond de Label'}
         minW={'25vw'}
         maxW={'25vw'}
@@ -319,7 +319,7 @@ export const SankeyMenu = (
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
         dialog_name={'ref_setter_show_value_formatting_editor'}
-        content={<MenuUnit app_data={app_data} config={VALUE_LABEL_CONFIG}/>}
+        content={<MenuUnit app_data={app_data} />}
         title={'Formattage des valeurs'}
         minW={'25vw'}
         maxW={'25vw'}
@@ -447,7 +447,7 @@ const ConfigContent = ({ app_data, additional_menus }:
 
       'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <LayoutConfigDAScaleAndLimit new_data={app_data} />
+          <DrawingAreaConfig new_data={app_data} />
           <GraphElementsOrdoner new_data={app_data} />
         </>
       </WrapperContentConfig>,
@@ -459,37 +459,23 @@ const ConfigContent = ({ app_data, additional_menus }:
         <MenuConfigurationLinksData app_data={app_data} />
       </WrapperContentConfig>,
 
+      'object': <WrapperContentConfig title={t('Menu.Config.element_object')}>
+        <SankeyContainerSelection app_data={app_data} />
+      </WrapperContentConfig>,
+
       ...additional_menus.current.additional_menu_config_content.data
 
     },
 
-    // Menus related to context config
-    context: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <LegendContextConfig new_data={app_data} />
-      </WrapperContentConfig>,
 
-      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkLabel app_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
-      </WrapperContentConfig>,
-
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeLabel app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
-
-      ...additional_menus.current.additional_menu_config_content.context
-
-    },
 
     // Menus related to style config
     style: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
+      DA: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
-          <DrawingAreaStyle new_data={app_data} extra_background_element={additional_menus.current.extra_background_element} />
-          <LegendStyleConfig new_data={app_data} />
+          <LegendConfig new_data={app_data} />
         </>
       </WrapperContentConfig>,
-
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
         <MenuConfigurationLinkShape new_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
@@ -498,6 +484,24 @@ const ConfigContent = ({ app_data, additional_menus }:
         <MenuConfigurationNodeStyle app_data={app_data} additional_menus={additional_menus} menu_for_style={false} />
       </WrapperContentConfig>,
       ...additional_menus.current.additional_menu_config_content.style
+    },
+    // Menus related to context config
+    context: {
+      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
+        <MenuConfigurationLinkLabel app_data={app_data} menu_for_style={false} />
+      </WrapperContentConfig>,
+
+      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+        <MenuConfigurationNodeLabel app_data={app_data} menu_for_style={false} />
+      </WrapperContentConfig>,
+      
+      'object': <WrapperContentConfig title={t('Menu.Config.element_object')}>
+        <MenuConfigurationContainersLabel app_data={app_data} menu_for_style={false} />
+      </WrapperContentConfig>,
+
+
+      ...additional_menus.current.additional_menu_config_content.context
+
     },
     presentation: {
       ...additional_menus.current.additional_new_menu_config_content.presentation

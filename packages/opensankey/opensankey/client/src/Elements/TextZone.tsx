@@ -88,144 +88,11 @@ export class Class_ContainerElement extends Class_NodeBase {
     this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom' | 'left' | 'right'
   }
 
-  // protected _draw() {
-  //   super._draw()
-  //   this.d3_selection?.attr('class', 'gg_labels').datum(this)
-  //   this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'label_shape') ?? null
-  //   this._drawShape()
-  //   this._drawContent()
-  //   this.d3_selection?.lower()
-  // }
-
   public setEventsListeners() {
     if (this.drawing_area.container_activated) {
       super.setEventsListeners()
     }
   }
-
-  /**
-   * Draw ZDT shape (a rectangle with custom size,bg color, bg opacity,border color, ...)
-   *
-   * @memberof Class_ContainerElement
-   */
-  public _drawShape() {
-    // Clean previous shape
-    this.d3_selection_g_shape?.selectAll('.zdt_shape').remove()
-    if (this.tied_to_nodes && this._attached_node.filter(node => node.is_visible).length > 0) {
-      this.computeSizeAndPositionFromAttachedNodes()
-      this.applyPosition()
-    }
-    if (this._is_selected) {
-      this.drawDragHandlers()
-    }
-
-    // Apply shape value
-    this.d3_selection_g_shape?.append('rect')
-      .classed('zdt_shape', true)
-      .attr('width', this.shape_min_width)
-      .attr('height', this.shape_min_height)
-      .attr('rx', 5)
-
-    // Apply common properties
-    this.d3_selection_g_shape?.selectAll('.zdt_shape')
-      .attr('id', this.id)
-      .attr('fill-opacity', this.shape_color_visible ? this.shape_opacity / 100 : 0)
-      .attr('fill', this.shape_color)
-      .attr('stroke', this.shape_border_color)
-      .attr('stroke-width', this.shape_border_thickness)
-      .attr('stroke-dasharray', this.shape_border_dashed ? '10,3' : '')
-      .attr('stroke-opacity', (this.shape_border_visible) ? 1 : 0)
-  }
-
-  private unescapeHtml = (html: string): string => {
-    const doc = new DOMParser().parseFromString(html, 'text/html')
-    return doc.documentElement.textContent || ''
-  }
-
-  /**
-   * Draw the content of the ZDT wich can be formated text or image
-   *
-   * @memberof Class_ContainerElement
-   */
-  // public _drawContent() {
-  //   // Clean svg group before (re)drawing zdt content
-  //   this.d3_selection?.selectAll('.content').remove()
-
-  //   if (this.is_image) {
-  //     this.drawContentImage()
-  //   } else {
-  //     this.drawContentText()
-  //   }
-  // }
-
-  /**
-   * Function triggered when element is (un)selected
-   *
-   * @memberof Class_ContainerElement
-   */
-  // public drawAsSelected() {
-  //   this.draw()
-  //   this.drawDragHandlers()
-  // }
-
-  /**
-   * Draw the content of the zdt when it is a formated text
-   *
-   * (Souldn't be called outside this class, to draw content use drawContent() )
-   *
-   * @private
-   * @memberof Class_ContainerElement
-   */
-  // private drawContentText() {
-  //   if (!this.d3_selection) return
-  //   const foreignObject = this.d3_selection.append('foreignObject')
-  //     .classed('content', true)
-  //     .attr('id', this.id + '_text')
-  //   if (this.vertical_text) {
-  //     // Mode vertical: inverser width et height
-  //     foreignObject
-  //       .attr('width', this.shape_min_height + 'px')
-  //       .attr('height', this.shape_min_width + 'px')
-
-  //     // Calculer la position et rotation selon l'alignement
-  //     if (this.vertical_alignment === 'left') {
-  //       // Texte vertical à gauche
-  //       foreignObject.attr('transform', `rotate(-90) translate(${-this.shape_min_height}, 0)`)
-  //     } else {
-  //       // Texte vertical à droite
-  //       foreignObject.attr('transform', `rotate(-90) translate(${-this.shape_min_height}, ${this.shape_min_width - this.shape_min_width})`)
-  //     }
-  //   } else {
-  //     // Mode horizontal normal
-  //     foreignObject
-  //       .attr('width', this.shape_min_width + 'px')
-  //       .attr('height', this.shape_min_height + 'px')
-  //   }
-
-  //   foreignObject
-  //     .append('xhtml:div')
-  //     .attr('class', 'ql-editor')
-  //     .html(this.content)
-  // }
-  /**
-   * Draw the content of the zdt when it is an image
-   *
-   * (Souldn't be called outside this class, to draw content use drawContent() )
-   *
-   * @private
-   * @memberof Class_ContainerElement
-   */
-  // private drawContentImage() {
-  //   this.d3_selection?.append('image')
-  //     .classed('content', true)
-  //     .attr('width', this.shape_min_width + 'px')
-  //     .attr('height', this.shape_min_height + 'px')
-  //     .style('width', this.shape_min_width + 'px')
-  //     .style('height', this.shape_min_height + 'px')
-  //     .attr('id', this.id + '_img')
-  //     .attr('xlink:href', this.image_src)
-  //     .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
-  // }
 
   /**
    * Activate the control points alignement guide
@@ -421,11 +288,6 @@ export class Class_ContainerElement extends Class_NodeBase {
       this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
     }
   }
-
-
-  // PROTECTED METHODS ==================================================================
-
-  // Mouse Events -----------------------------------------------------------------------
 
   /**
    * Deal with simple left Mouse Button (LMB) click on given element

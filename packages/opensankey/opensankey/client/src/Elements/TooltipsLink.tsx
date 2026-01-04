@@ -1,6 +1,7 @@
 import * as d3 from 'd3'
-import { Class_LinkElement, link_data_label } from './Link'
+import { Class_LinkElement } from './Link'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
+import { link_data_label } from '../types/Utils'
 
 export class LinkTooltip {
 

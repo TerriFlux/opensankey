@@ -25,14 +25,18 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import { Box, Select } from '@chakra-ui/react'
+import { Box, Select, Checkbox } from '@chakra-ui/react'
 
-import { RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip, updateElements, ValueKey, ValueElementsType } from './MenuCommon'
-import { ConfigMenuNumberInput, ConfigMenuTextInput } from './SankeyMenuConfiguration'
-import { SankeyLinkSelection } from './SankeyMenuConfigurationLinks'
+import { 
+  RowSetter2Cols, BOX2COLSTITLEH4, DataTagSelector, OSTooltip,TooltipElementOverloaded,
+  getLinkShapeValues, ConfigMenuNumberInput, ConfigMenuTextInput, ConfigMenuNumberOrUndefinedInput 
+} from './MenuCommon'
+import { SankeyLinkSelection } from './MenuSelectionElements'
 
 import { value_option_percent_constants, value_option_percent_constants_source, value_option_percent_constants_target, ValueOptionType } from '../../Elements/LinkValues'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { isLinkShapeSpecificValueIndeterminate, LINKS_SHAPE_SPECIFIC_CONFIG} from '../../Elements/ElementsAttributesConfig'
+import { Class_LinkElement } from '../../Elements/Link'
 
 /*************************************************************************************************/
 export const default_value_option = 'value'
@@ -40,6 +44,8 @@ export const default_value_option = 'value'
 export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
+  const { ref_selected_style_link } = menu_configuration
+  const { link_styles_dict } = sankey
   const { data_taggs_list } = sankey
   const {
     is_selector_only_for_visible_links,
@@ -52,8 +58,29 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const selected_links = is_selector_only_for_visible_links ?
     drawing_area.visible_and_selected_links_list_sorted :
     drawing_area.selected_links_list_sorted
+  const disable_attr_props = link_styles_dict[ref_selected_style_link.current].customisable_attribute
+
+
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
+  const refreshThis = () => {
+    setCount(a => a + 1)
+  }
+  // Link this menu's update function
+  const refreshThisAndUpdateRelatedComponents = () => {
+    drawing_area.updateScaleAtLinkValueSetting()
+    // Toogle saving indicator
+    ref_to_save_in_cache_indicator.current(false)
+    // And update this menu also
+    menu_configuration.updateComponentRelatedToLinksData()
+  }
+  ref_to_menu_config_links_data_updater.current = refreshThis
+
+  const shapeValues = selected_links.length > 0
+    ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)
+    : Object.fromEntries(
+      Object.entries(LINKS_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof LINKS_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINKS_SHAPE_SPECIFIC_CONFIG[K]['type']> }
 
   const value_option = first_link_value?.value_option ?? default_value_option
 
@@ -109,19 +136,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     return
   }
 
-  const refreshThis = () => {
-    setCount(a => a + 1)
-  }
 
-  // Link this menu's update function
-  const refreshThisAndUpdateRelatedComponents = () => {
-    drawing_area.updateScaleAtLinkValueSetting()
-    // Toogle saving indicator
-    ref_to_save_in_cache_indicator.current(false)
-    // And update this menu also
-    menu_configuration.updateComponentRelatedToLinksData()
-  }
-  ref_to_menu_config_links_data_updater.current = refreshThis
 
   data_taggs_list.map(data_tagg => {
     const selected_data_tags = data_tagg.selected_tags_list
@@ -247,8 +262,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       <ConfigMenuNumberInput
         t={t}
         default_value={default_value}
-        function_on_blur={(_: number | null) => updateElements(
-          app_data, selected_links, 'valueCurrent' as ValueKey, _ as ValueElementsType, refreshThisAndUpdateRelatedComponents
+        function_on_blur={(_: number | null) => Class_LinkElement.updateLinks(
+          app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
         )}
         minimum_value={0}
         stepper={true}
@@ -263,10 +278,61 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     >
       <ConfigMenuTextInput
         default_value={first_link_value?.text_value}
-        function_on_blur={(_: string | null) => updateElements(app_data, selected_links, 'text_value' as ValueKey, _ ?? '', refreshThisAndUpdateRelatedComponents)}
+        function_on_blur={(_: string | null) =>
+           Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
+        }
         multiValue={is_label_indeterminated}
       />
     </RowSetter2Cols>
+    <Checkbox
+      isDisabled={!disable_attr_props['shape_is_structure']}
+      variant='menuconfigpanel_option_checkbox'
+      isIndeterminate={isLinkShapeSpecificValueIndeterminate(selected_links, 'is_structure')}
+      isChecked={shapeValues.is_structure}
+      onChange={(evt) => {
+        shapeValues.is_structure = evt.target.checked
+      }}>
+      <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
+        {t('Flux.apparence.shape_is_structure')}
+        <TooltipElementOverloaded
+          elements={selected_links}
+          t={t}
+          attributeKey={'is_structure'}
+          config={LINKS_SHAPE_SPECIFIC_CONFIG}
+          prefix={'shape'}
+        />
+      </OSTooltip>
+    </Checkbox>
+
+    {/* Value of link local scale to override scale from DA, can be undefined */}
+    <Box layerStyle='menuconfigpanel_grid' >
+      <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+        <>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+            <Box layerStyle='menuconfigpanel_option_name' >
+              {t('Flux.apparence.shape_local_link_scale')}
+              <TooltipElementOverloaded
+                elements={selected_links}
+                t={t}
+                attributeKey={'local_link_scale'}
+                config={LINKS_SHAPE_SPECIFIC_CONFIG}
+                prefix={'shape'}
+              />
+            </Box>
+            <ConfigMenuNumberOrUndefinedInput
+              disabled={!disable_attr_props['shape_local_link_scale']}
+              default_value={shapeValues.local_link_scale}
+              function_on_blur={(_) => {
+                shapeValues.local_link_scale = _??shapeValues.local_link_scale
+              }}
+              minimum_value={0}
+              stepper={true}
+              step={1}
+            />
+          </Box>
+        </>
+      </OSTooltip>
+    </Box>
   </Box>
 }
 

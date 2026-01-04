@@ -41,8 +41,9 @@ import {
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import {
-  AttributeConfig, AttributeMappings, ForeignObjectAttributeTypes, IconAttributeTypes, ImageAttributeTypes,
-  LinkLabelSpecificAttributeTypes, LINKS_ATTRIBUTES_CONFIG, LinkShapeAttributeTypes,
+  AttributeConfig, AttributeMappings,
+  IconLabelAttributeTypes,
+  LinkLabelSpecificValues, LINKS_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
   NameLabelAttributeTypes, NODES_ATTRIBUTES_CONFIG, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_TextHPos, Type_TextVPos, ValueLabelAttributeTypes
 } from './ElementsAttributesConfig'
@@ -592,6 +593,9 @@ export abstract class Class_BaseShape<
 
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
+  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
+  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
+
   name_label_is_visible!: NameLabelAttributeTypes['is_visible']
   name_label_font_family!: NameLabelAttributeTypes['font_family']
   name_label_font_size!: NameLabelAttributeTypes['font_size']
@@ -613,7 +617,9 @@ export abstract class Class_BaseShape<
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
-
+  name_label_text_align!: NameLabelAttributeTypes['text_align']
+  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
+  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']
@@ -632,6 +638,9 @@ export abstract class Class_BaseShape<
 
   // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
   // Visibility & Font
+  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
+  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
+
   value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
   value_label_font_family!: ValueLabelAttributeTypes['font_family']
   value_label_font_size!: ValueLabelAttributeTypes['font_size']
@@ -650,7 +659,9 @@ export abstract class Class_BaseShape<
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
-
+  value_label_text_align!: ValueLabelAttributeTypes['text_align']
+  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
+  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']
@@ -680,22 +691,18 @@ export abstract class Class_BaseShape<
   value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
 
   // =================== ICON ATTRIBUTES (icon_*) ===================
-  icon_name!: IconAttributeTypes['name']
-  icon_color!: IconAttributeTypes['color']
-  icon_visible!: IconAttributeTypes['visible']
-  icon_view_box!: IconAttributeTypes['view_box']
-  icon_color_sustainable!: IconAttributeTypes['color_sustainable']
+  icon_color!: IconLabelAttributeTypes['color']
+  icon_is_visible!: IconLabelAttributeTypes['is_visible']
+  icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_view_box!: IconLabelAttributeTypes['view_box']
+  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
+  icon_horiz!: IconLabelAttributeTypes['horiz']
+  icon_vert!: IconLabelAttributeTypes['vert']
+  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
+  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_is_image!: IconLabelAttributeTypes['is_image']
+  icon_image_src!: IconLabelAttributeTypes['image_src']
 
-  // =================== FOREIGN OBJECT ATTRIBUTES ===================
-  has_fo!: ForeignObjectAttributeTypes['has_fo']
-  is_fo_raw!: ForeignObjectAttributeTypes['is_fo_raw']
-  fo_content!: ForeignObjectAttributeTypes['fo_content']
-
-  // =================== IMAGE ATTRIBUTES ===================
-  is_image!: ImageAttributeTypes['is_image']
-  image_src!: ImageAttributeTypes['image_src']
-
-  // =================== HYPERLINK ATTRIBUTES ===================
   hyperlink!: string | undefined
 }
 
@@ -722,52 +729,30 @@ export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_A
     )
   }
 
-  // Setters personnalisés pour la logique complexe
-  private customNameLabelHoriz(value: Type_TextHPos) {
-    this.attributes.name_label_horiz = value
-    this.attributes.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
-
-  }
-
-  private customNameLabelVert(value: Type_TextVPos) {
-    this.attributes.name_label_vert = value
-    this.attributes.name_label_horiz = (this.name_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_horiz
-
-  }
-
-  private customValueLabelHoriz(value: Type_TextHPos) {
-    this.attributes.value_label_horiz = value
-    this.attributes.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
-  }
-
-  private customValueLabelVert(value: Type_TextVPos) {
-    this.attributes.value_label_vert = value
-    this.attributes.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
-  }
 }
 
 export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle> {
-  shape_local_link_scale!: LinkShapeAttributeTypes['local_link_scale']
-  shape_is_curved!: LinkShapeAttributeTypes['is_curved']
-  shape_curvature!: LinkShapeAttributeTypes['curvature']
-  shape_is_recycling!: LinkShapeAttributeTypes['is_recycling']
-  shape_is_structure!: LinkShapeAttributeTypes['is_structure']
-  shape_orientation!: LinkShapeAttributeTypes['orientation']
-  shape_starting_curve!: LinkShapeAttributeTypes['starting_curve']
-  shape_ending_curve!: LinkShapeAttributeTypes['ending_curve']
-  shape_starting_tangeant!: LinkShapeAttributeTypes['starting_tangeant']
-  shape_ending_tangeant!: LinkShapeAttributeTypes['ending_tangeant']
-  shape_middle_recycling!: LinkShapeAttributeTypes['middle_recycling']
-  shape_is_arrow!: LinkShapeAttributeTypes['is_arrow']
-  shape_arrow_size!: LinkShapeAttributeTypes['arrow_size']
-  shape_is_dashed!: LinkShapeAttributeTypes['is_dashed']
-  shape_color_rule!: LinkShapeAttributeTypes['color_rule']
+  shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
+  shape_is_curved!: LinkShapeSpecificValues['is_curved']
+  shape_curvature!: LinkShapeSpecificValues['curvature']
+  shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
+  shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_orientation!: LinkShapeSpecificValues['orientation']
+  shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
+  shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
+  shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
+  shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
+  shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
+  shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
+  shape_color_rule!: LinkShapeSpecificValues['color_rule']
 
-  value_label_on_path!: LinkLabelSpecificAttributeTypes['on_path']
-  value_label_pos_auto!: LinkLabelSpecificAttributeTypes['pos_auto']
+  value_label_on_path!: LinkLabelSpecificValues['on_path']
+  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
-  name_label_on_path!: LinkLabelSpecificAttributeTypes['on_path']
-  name_label_pos_auto!: LinkLabelSpecificAttributeTypes['pos_auto']
+  name_label_on_path!: LinkLabelSpecificValues['on_path']
+  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
   constructor(
     id: string,
@@ -839,67 +824,16 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
 
   }
 
-  private customValueLabelHoriz(value: Type_PathLabelHPosition) {
-    this.attributes.value_label_horiz = value
-    this.attributes.value_label_vert = (this.value_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_vert
-
-  }
-
-  private customValueLabelVert(value: Type_PathLabelVPosition) {
-    this.attributes.value_label_vert = value
-    this.attributes.value_label_horiz = (this.value_label_horiz == 'dragged' && value !== 'dragged') ? 'middle' : this.value_label_horiz
-
-  }
-
-  private customValueLabelOnPath(value: boolean) {
-    this.attributes.value_label_on_path = value
-    if (value) {
-      const lab_pos = this.value_label_horiz
-      const lab_orth_pos = this.value_label_vert
-      this.attributes.value_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this.attributes.value_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
+  private customShapeIsRecycling(value: boolean) {
+    // En mode recycling, pas de limite supérieure pour starting & ending
+    // En mode normal, on a des limites, donc on doit les appliquer
+    if (!value && this.attributes.shape_is_recycling) {
+      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
+      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
     }
-
+    this.attributes.shape_is_recycling = value
   }
 
-  private customValueLabelPosAuto(value: boolean) {
-    this.attributes.value_label_pos_auto = value
-    this.attributes.value_label_vert = (this.value_label_vert === 'dragged') ? 'middle' : this.value_label_vert
-
-  }
-
-  private customNameLabelHoriz(value: Type_TextHPos) {
-    delete this.attributes.value_label_position_offset
-    delete this.attributes.value_label_position_x
-    delete this.attributes.value_label_position_y
-    this.attributes.name_label_horiz = value
-    this.attributes.name_label_vert = (this.name_label_vert == 'dragged' && value !== 'dragged') ? 'middle' : this.name_label_vert
-
-  }
-
-  private customNameLabelVert(value: Type_TextVPos) {
-    delete this.attributes.value_label_position_offset
-    delete this.attributes.value_label_position_x
-    delete this.attributes.value_label_position_y
-    this.attributes.name_label_vert = value
-    this.attributes.name_label_horiz = this.name_label_horiz == 'dragged' && value !== 'dragged' ? 'middle' : this.name_label_horiz
-  }
-
-  private customNameLabelOnPath(value: boolean) {
-    this.attributes.name_label_on_path = value
-    if (value) {
-      const lab_pos = this.name_label_horiz
-      const lab_orth_pos = this.name_label_vert
-      this.attributes.name_label_horiz = (lab_pos == 'dragged') ? 'middle' : lab_pos
-      this.attributes.name_label_vert = (lab_orth_pos == 'dragged' ? 'middle' : lab_orth_pos)
-    }
-  }
-
-  private customNameLabelPosAuto(value: boolean) {
-    this.attributes.name_label_pos_auto = value
-    const orth_pos = this.name_label_vert
-    this.attributes.name_label_vert = (orth_pos === 'dragged') ? 'middle' : orth_pos
-  }
 
   // Méthodes abstraites
   // protected update() { }
@@ -923,6 +857,7 @@ export class Class_ElementStyle<CONFIG extends Record<string, AttributeConfig<an
   private _customisable_attribute: { -readonly [K in keyof CONFIG]?: boolean } = {}
   private _attributeMappings: AttributeMappings
   private _default_style: Class_ElementStyle<CONFIG>
+  private _drawing_area: Class_DrawingArea
 
   constructor(
     config: CONFIG,
@@ -930,7 +865,8 @@ export class Class_ElementStyle<CONFIG extends Record<string, AttributeConfig<an
     name: string,
     is_deletable: boolean,
     attributeMappings: AttributeMappings,
-    default_style: Class_ElementStyle<CONFIG>
+    default_style: Class_ElementStyle<CONFIG>,
+    drawing_area: Class_DrawingArea
   ) {
     this._config = config
     this._id = id
@@ -938,10 +874,11 @@ export class Class_ElementStyle<CONFIG extends Record<string, AttributeConfig<an
     this._is_deletable = is_deletable;
     this._attributeMappings = attributeMappings
     this._default_style = default_style;
-    // Initialiser les attributs customisables
-    (Object.keys(this._config) as Array<keyof CONFIG>).forEach(key => {
-      this._customisable_attribute[key] = !is_deletable
-    })
+    this._drawing_area = drawing_area;
+      // Initialiser les attributs customisables
+      (Object.keys(this._config) as Array<keyof CONFIG>).forEach(key => {
+        this._customisable_attribute[key] = !is_deletable
+      })
 
     if (!is_deletable) {
       (Object.entries(this._config) as Array<[keyof CONFIG, AttributeConfig<any>]>).forEach(([key, config]) => {
@@ -1051,13 +988,14 @@ export class Class_ElementStyle<CONFIG extends Record<string, AttributeConfig<an
       }
     })
   }
+  public get drawing_area() { return this._drawing_area}
 }
 
 export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_CONFIG> {
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
-  shape_min_width!: ShapeAttributeTypes['min_width'] //only nodes
-  shape_min_height!: ShapeAttributeTypes['min_height'] //only nodes
+  shape_min_width!: ShapeAttributeTypes['min_width']
+  shape_min_height!: ShapeAttributeTypes['min_height']
   shape_color_visible!: ShapeAttributeTypes['color_visible']
   shape_color!: ShapeAttributeTypes['color']
   shape_opacity!: ShapeAttributeTypes['opacity']
@@ -1072,6 +1010,10 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
 
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
+
+  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
+  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
+
   name_label_is_visible!: NameLabelAttributeTypes['is_visible']
   name_label_font_family!: NameLabelAttributeTypes['font_family']
   name_label_font_size!: NameLabelAttributeTypes['font_size']
@@ -1094,6 +1036,9 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
   name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
+  name_label_text_align!: NameLabelAttributeTypes['text_align']
+  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
+  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']
@@ -1112,6 +1057,9 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
 
   // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
   // Visibility & Font
+  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
+  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
+
   value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
   value_label_font_family!: ValueLabelAttributeTypes['font_family']
   value_label_font_size!: ValueLabelAttributeTypes['font_size']
@@ -1131,6 +1079,9 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
   value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
+  value_label_text_align!: ValueLabelAttributeTypes['text_align']
+  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
+  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']
@@ -1160,20 +1111,17 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
 
   // =================== ICON ATTRIBUTES (icon_*) ===================
-  icon_name!: IconAttributeTypes['name']
-  icon_color!: IconAttributeTypes['color']
-  icon_visible!: IconAttributeTypes['visible']
-  icon_view_box!: IconAttributeTypes['view_box']
-  icon_color_sustainable!: IconAttributeTypes['color_sustainable']
-
-  // =================== FOREIGN OBJECT ATTRIBUTES ===================
-  has_fo!: ForeignObjectAttributeTypes['has_fo']
-  is_fo_raw!: ForeignObjectAttributeTypes['is_fo_raw']
-  fo_content!: ForeignObjectAttributeTypes['fo_content']
-
-  // =================== IMAGE ATTRIBUTES ===================
-  is_image!: ImageAttributeTypes['is_image']
-  image_src!: ImageAttributeTypes['image_src']
+  icon_color!: IconLabelAttributeTypes['color']
+  icon_is_visible!: IconLabelAttributeTypes['is_visible']
+  icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_view_box!: IconLabelAttributeTypes['view_box']
+  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
+  icon_horiz!: IconLabelAttributeTypes['horiz']
+  icon_vert!: IconLabelAttributeTypes['vert']
+  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
+  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_is_image!: IconLabelAttributeTypes['is_image']
+  icon_image_src!: IconLabelAttributeTypes['image_src']
 
   // =================== HYPERLINK ATTRIBUTES ===================
   hyperlink!: string | undefined
@@ -1186,14 +1134,16 @@ export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_
   margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
   margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
   margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+
   constructor(
     id: string,
     name: string,
     is_deletable: boolean = true,
     attributeMappings: AttributeMappings,
-    default_style: Class_NodeStyle
+    default_style: Class_NodeStyle,
+    drawing_area: Class_DrawingArea
   ) {
-    super(NODES_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style)
+    super(NODES_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style, drawing_area)
   }
 }
 export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_CONFIG> {
@@ -1215,6 +1165,9 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
 
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
+  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
+  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
+
   name_label_is_visible!: NameLabelAttributeTypes['is_visible']
   name_label_font_family!: NameLabelAttributeTypes['font_family']
   name_label_font_size!: NameLabelAttributeTypes['font_size']
@@ -1237,6 +1190,9 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
   name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
+  name_label_text_align!: NameLabelAttributeTypes['text_align']
+  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
+  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']
@@ -1255,6 +1211,9 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
 
   // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
   // Visibility & Font
+  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
+  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
+
   value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
   value_label_font_family!: ValueLabelAttributeTypes['font_family']
   value_label_font_size!: ValueLabelAttributeTypes['font_size']
@@ -1274,6 +1233,9 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
   value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
+  value_label_text_align!: ValueLabelAttributeTypes['text_align']
+  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
+  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']
@@ -1303,52 +1265,51 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
 
   // =================== ICON ATTRIBUTES (icon_*) ===================
-  icon_name!: IconAttributeTypes['name']
-  icon_color!: IconAttributeTypes['color']
-  icon_visible!: IconAttributeTypes['visible']
-  icon_view_box!: IconAttributeTypes['view_box']
-  icon_color_sustainable!: IconAttributeTypes['color_sustainable']
-
-  // =================== FOREIGN OBJECT ATTRIBUTES ===================
-  has_fo!: ForeignObjectAttributeTypes['has_fo']
-  is_fo_raw!: ForeignObjectAttributeTypes['is_fo_raw']
-  fo_content!: ForeignObjectAttributeTypes['fo_content']
-
-  // =================== IMAGE ATTRIBUTES ===================
-  is_image!: ImageAttributeTypes['is_image']
-  image_src!: ImageAttributeTypes['image_src']
+  icon_color!: IconLabelAttributeTypes['color']
+  icon_is_visible!: IconLabelAttributeTypes['is_visible']
+  icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_view_box!: IconLabelAttributeTypes['view_box']
+  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
+  icon_horiz!: IconLabelAttributeTypes['horiz']
+  icon_vert!: IconLabelAttributeTypes['vert']
+  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
+  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_is_image!: IconLabelAttributeTypes['is_image']
+  icon_image_src!: IconLabelAttributeTypes['image_src']
 
   // =================== HYPERLINK ATTRIBUTES ===================
   hyperlink!: string | undefined
 
-  shape_local_link_scale!: LinkShapeAttributeTypes['local_link_scale']
-  shape_is_curved!: LinkShapeAttributeTypes['is_curved']
-  shape_curvature!: LinkShapeAttributeTypes['curvature']
-  shape_is_recycling!: LinkShapeAttributeTypes['is_recycling']
-  shape_is_structure!: LinkShapeAttributeTypes['is_structure']
-  shape_orientation!: LinkShapeAttributeTypes['orientation']
-  shape_starting_curve!: LinkShapeAttributeTypes['starting_curve']
-  shape_ending_curve!: LinkShapeAttributeTypes['ending_curve']
-  shape_starting_tangeant!: LinkShapeAttributeTypes['starting_tangeant']
-  shape_ending_tangeant!: LinkShapeAttributeTypes['ending_tangeant']
-  shape_middle_recycling!: LinkShapeAttributeTypes['middle_recycling']
-  shape_is_arrow!: LinkShapeAttributeTypes['is_arrow']
-  shape_arrow_size!: LinkShapeAttributeTypes['arrow_size']
-  shape_is_dashed!: LinkShapeAttributeTypes['is_dashed']
-  shape_color_rule!: LinkShapeAttributeTypes['color_rule']
+  shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
+  shape_is_curved!: LinkShapeSpecificValues['is_curved']
+  shape_curvature!: LinkShapeSpecificValues['curvature']
+  shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
+  shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_orientation!: LinkShapeSpecificValues['orientation']
+  shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
+  shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
+  shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
+  shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
+  shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
+  shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
+  shape_color_rule!: LinkShapeSpecificValues['color_rule']
 
-  value_label_on_path!: LinkLabelSpecificAttributeTypes['on_path']
-  value_label_pos_auto!: LinkLabelSpecificAttributeTypes['pos_auto']
+  value_label_on_path!: LinkLabelSpecificValues['on_path']
+  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
-  name_label_on_path!: LinkLabelSpecificAttributeTypes['on_path']
-  name_label_pos_auto!: LinkLabelSpecificAttributeTypes['pos_auto']
+  name_label_on_path!: LinkLabelSpecificValues['on_path']
+  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
   constructor(
     id: string,
     name: string,
     is_deletable: boolean = true,
     attributeMappings: AttributeMappings,
-    default_style: Class_LinkStyle
+    default_style: Class_LinkStyle,
+    drawing_area: Class_DrawingArea
   ) {
-    super(LINKS_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style)
+    super(LINKS_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style,drawing_area)
   }
 }

@@ -41,13 +41,13 @@ import {
 
 /*************************************************************************************************/
 
-import { SankeyNodeSelection } from './SankeyMenuConfigurationNodes'
 import { WrapperBoxSubSectionMenu } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from './MenuCommon'
 import { Type_Side } from '../../Elements/ElementsAttributesConfig'
+import { SankeyNodeSelection } from './MenuSelectionElements'
 
 /*************************************************************************************************/
 
@@ -545,7 +545,7 @@ export const SankeyMenuConfigurationNodesIO: FC<BaseApplicationDataType> = ({
   </Box>
 
   const content = <>
-    <SankeyNodeSelection new_data={new_data} />
+    <SankeyNodeSelection app_data={new_data} />
     <WrapperBoxSubSectionMenu new_data={new_data} title={t('Noeud.Reorg_title')} >
       <Box layerStyle='menuconfigpanel_grid'>
         {content_reorg}
