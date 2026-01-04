@@ -884,7 +884,14 @@ export class Class_DrawingArea {
   public addNewDefaultLinkToSankey(): Class_LinkElement {
     return this.sankey.addNewDefaultLink()
   }
-
+  /**
+   * Add a new default link to drawing area sankey
+   * @return {Class_LinkElement}
+   * @memberof Class_DrawingArea
+   */
+  public addNewDefaultContainerToSankey(): Class_ContainerElement {
+    return this.addNewDefaultFreeLabel()
+  }
   /**
    * Retrieve node by id from sankey struct
    * @param {string} id
@@ -1055,6 +1062,19 @@ export class Class_DrawingArea {
     //  this mean that the hook referenced go from true -> false -> true before the rerender
     // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
     if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+  }
+
+  public purgeSelectionOfContainers(reset = true) {
+    // Unselect elements
+    this.selected_containers_list
+      .forEach(c => {
+        this.removeContainerFromSelection(c)
+      })
+    // Reset config menu
+    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
+    //  this mean that the hook referenced go from true -> false -> true before the rerender
+    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
+    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToContainers()
   }
 
   /**
@@ -2453,7 +2473,7 @@ export class Class_DrawingArea {
         id,
         this)
       // Set node to default position
-      //zdt.initDefaultPosXY()
+      zdt.draw()
       // Update registry of nodes
       this._addLabel(zdt)
       return zdt
@@ -2550,6 +2570,10 @@ export class Class_DrawingArea {
   public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
     return this.visible_and_selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
+  }
+  public get visible_and_selected_containers_list(): Class_ContainerElement[] {
+    return this.selected_containers_list
+      .filter(c => c.is_visible)
   }
 
   // Size
@@ -3018,7 +3042,10 @@ export class Class_DrawingArea {
     return this.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
   }
   public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
-
+  public get visible_and_selected_containers_list_sorted() {
+    return this.visible_and_selected_containers_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
   public get contextualised_container(): Class_ContainerElement | undefined { return this._contextualised_free_label }
   public set contextualised_container(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
 

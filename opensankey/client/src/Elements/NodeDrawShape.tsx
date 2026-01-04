@@ -56,10 +56,10 @@ export class NodeDrawShape {
     if (!this._node.d3_selection)
       return
 
-    const drawingElements = this._node.internalDrawingElements
+    //const drawingElements = this._node.internalDrawingElements
 
     // Clean previous shape
-    drawingElements.d3_selection_g_shape?.selectAll('.node_shape').remove()
+    this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
@@ -69,7 +69,7 @@ export class NodeDrawShape {
 
     // Apply shape value
     if (this._node.shape_type === 'rect') {
-      drawingElements.d3_selection_g_shape?.append('rect')
+      this._node.d3_selection_g_shape?.append('rect')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('width', width)
@@ -77,7 +77,7 @@ export class NodeDrawShape {
         .attr('rx', this._node.shape_border_radius)
     }
     else if (this._node.shape_type === 'ellipse') {
-      drawingElements.d3_selection_g_shape?.append('ellipse')
+      this._node.d3_selection_g_shape?.append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('cx', width / 2)
@@ -87,7 +87,7 @@ export class NodeDrawShape {
     }
 
     // Apply common properties
-    drawingElements.d3_selection_g_shape?.selectAll('.node_shape')
+    this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
       .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
       .attr('fill', color)

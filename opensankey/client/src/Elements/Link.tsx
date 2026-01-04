@@ -40,18 +40,19 @@ import {
   getStringFromJSON,
   Type_Structure,
   getNumberFromJSON,
-  Type_BaseElementPosition
+  Type_BaseElementPosition,
+  link_data_label
 } from '../types/Utils'
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
-import { LinkDrawNameLabel, LinkDrawValueLabel } from './LinkDrawLabel'
 import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
-import { Class_NodeBase } from './NodeBase'
 import { LinkAttributeMappings, Type_Side, } from './ElementsAttributesConfig'
 import { Class_LinkAttribute } from './Element'
+import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
+import { Class_ApplicationData } from '../types/ApplicationData'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -164,120 +165,6 @@ export function sortLinksElementsByRelativeNodesPositions(
   }
 }
 
-export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement) => {
-  if (type_data == 'data' || type_data == 'data_label') {
-    if (!link.value?.valueData) return ''
-    return link.formatValueWithOption(format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
-        return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
-      }*/
-  }
-  if (link.value?.result_min !== null) {
-    if (type_data === 'free_interval') {
-      return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name) + ']'
-    }
-    if (type_data === 'free_value') {
-      return format_value(type_data, link.valueCurrent!, link, link.unit_name)
-    }
-    return ''
-  }
-
-  return format_value(type_data, link.valueCurrent!, link, link.unit_name)
-}
-
-export const format_value = (
-  data_type: Type_Structure,
-  data_value: number | undefined | null,
-  element: Class_LinkElement | Class_NodeBase,
-  unit_name: string
-) => {
-  /*==========================================================================*/
-  // First step. value transformation
-  const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  const link = element as Class_LinkElement
-  if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
-    const tag = unit_taggs[0].tags_dict[element.value_label_unit]
-    const new_value = link.valueForTag(tag)
-    data_value = new_value?.valueResult ?? new_value?.valueData
-  }
-
-  if (element.value_label_unit_type == '%IS') {
-    let total_source = 0
-    // if (unit_taggs.length > 0) {
-    //   link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
-    // }
-    link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
-    data_value = data_value ? data_value / total_source * 100 : null
-  } else if (element.value_label_unit_type == '%OD') {
-    let total_target = 0
-    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    data_value = data_value ? data_value / total_target * 100 : null
-  } else if (element.value_label_unit_type == '%OS') {
-    let total_target = 0
-    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    data_value = data_value ? data_value / total_target * 100 : null
-  } else if (element.value_label_unit_type == '%ID') {
-    let total_source = 0
-    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    data_value = data_value ? data_value / total_source * 100 : null
-  } else if (element.value_label_unit_type == 'normalized') {
-    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
-  }
-
-  /*==========================================================================*/
-  // Second step. value formatting
-  let text_value = ''
-  // Create data label
-  if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
-    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-    if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
-      data_value /= element.value_label_unit_factor
-    }
-
-    // Convert
-    if (element.value_label_scientific_notation) {
-      // 12345.67 avec nb_sign = 4 devient 1,234*e+04
-      if (element.value_label_significant_digits) {
-        text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
-      } else {
-        text_value = data_value.toExponential()
-      }
-    } else if (element.value_label_significant_digits == true) {
-      // Do we need to keep only N significant numbers ?
-      // 12345.67 avec nb_sign = 4 devient 12340
-      text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
-      if (element.value_label_custom_digit) {
-        text_value = String(parseFloat(parseFloat(text_value).toFixed(element.value_label_nb_digit)))
-      }
-      if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
-        text_value += '.'
-      }
-    } else if (element.value_label_custom_digit) {
-      text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
-    }
-    else {
-      text_value = String(data_value)
-    }
-  }
-  text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-  if (!element.value_label_unit_visible) {
-    return text_value
-  }
-  // Add unit suffix
-  if (data_type == 'data' || data_type == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
-  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
-  else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
-  else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
-    //const label_unit = unit_taggs[0].first_selected_tags!.name
-    text_value = text_value + ' ' + unit_name
-  } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
-    const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
-    text_value = text_value + ' ' + label_unit
-  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0) {
-    text_value = link.formatValueWithOption(text_value, element.value_label_unit_type as ValueOptionType)
-  } else if (element.value_label_unit_type == 'normalized') return text_value
-
-  return text_value
-}
 
 /**
  * Class that define how to display a link element and how to interact with it
@@ -293,13 +180,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   //attributes: Class_LinkAttribute
 
   // optional var used when value label is dragged (if label doesn't follow link path)
-  private _position_x_value?: number
-  private _position_y_value?: number
-  private _position_offset_value?: number
+  // private _position_x_value?: number
+  // private _position_y_value?: number
+  // private _position_offset_value?: number
 
-  private _position_x_name?: number
-  private _position_y_name?: number
-  private _position_offset_name?: number
+  // private _position_x_name?: number
+  // private _position_y_name?: number
+  // private _position_offset_name?: number
   // private _position_x_label?: number
   // private _position_y_label?: number
   // private _position_offset_label?: number
@@ -331,6 +218,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected _link_control_points: LinkControlPoints
   protected _link_draw_label: LinkDrawNameLabel
   protected _link_draw_value: LinkDrawValueLabel
+  protected _link_draw_icon: LinkDrawNameLabel
   public _link_tooltip: LinkTooltip
 
   private _source: Class_NodeElement
@@ -374,8 +262,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
     this._link_shape = new LinkDrawShape(this, this._link_control_points)
-    this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points)
+    this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points,'name_label')
     this._link_draw_value = new LinkDrawValueLabel(this, this._link_control_points)
+    this._link_draw_icon = new LinkDrawNameLabel(this, this._link_control_points,'icon')
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
@@ -407,13 +296,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
       this._link_control_points.computeControlPoints()
     }
     this.draw()
-  }
-
-  public drawIllustration() {
-  }
-  public drawIllustrationImage() {
-  }
-  public drawIllustrationIcon() {
   }
 
   public createLinkValue(
@@ -472,12 +354,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // Local attributes
     this._position = structuredClone(_._position)
     this._position_ending = structuredClone(_._position_ending)
-    this._position_x_value = _._position_x_value
-    this._position_y_value = _._position_y_value
-    this._position_offset_value = _._position_offset_value
-    this._position_x_name = _._position_x_name
-    this._position_y_name = _._position_y_name
-    this._position_offset_name = _._position_offset_name
+    // this._position_x_value = _._position_x_value
+    // this._position_y_value = _._position_y_value
+    // this._position_offset_value = _._position_offset_value
+    // this._position_x_name = _._position_x_name
+    // this._position_y_name = _._position_y_name
+    // this._position_offset_name = _._position_offset_name
     // Tooltips
     this.tooltip_text = _.tooltip_text
     // Values
@@ -601,12 +483,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawValueLabel() {
-    this._link_draw_value.drawValueLabel();
+    this._link_draw_value.drawGenericLabel();
     this._orderD3Elements()
   }
 
   public drawNameLabel() {
-    this._link_draw_label.drawNameLabel()
+    this._link_draw_label.drawGenericLabel()
     this._orderD3Elements()
   }
 
@@ -1018,7 +900,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
 
-
+  public drawIcon() {
+    this._link_draw_icon.drawIcon()
+  }
   /**
    * Draw arrow shape on d3
    * @protected
@@ -1057,9 +941,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public drawElements() {
     this._link_shape.drawShape()
     this._drawArrow()
-    this._link_draw_value.drawValueLabel()
-    this._link_draw_label.drawNameLabel()
-    this._link_draw_label.drawFO()
+    this._link_draw_value.drawGenericLabel()
+    this._link_draw_label.drawGenericLabel()
+    this._link_draw_icon.drawGenericLabel()
+    this._orderD3Elements()
   }
 
   public drawControlPoint() {
@@ -1075,8 +960,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.d3_selection?.selectAll('.link_shape').raise()
     this.d3_selection?.selectAll('.link_path').raise()
     this.d3_selection?.selectAll('.link_arrow').raise()
-    this.d3_selection?.selectAll('.link_label').raise()
-    this.d3_selection?.selectAll('.link_value').raise()
+
+    this._link_draw_label.d3_selection?.raise()
+    this._link_draw_value.d3_selection?.raise()
+    //this._link_draw_image.d3_selection?.raise()
+    this._link_draw_icon.d3_selection?.raise()
   }
 
   /**
@@ -1865,5 +1753,38 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public set tooltip_text(value: string) {
     this._tooltip_text = value
+  }
+
+  public static updateLinks = <K extends 'valueCurrent' | 'text_value'> (
+    data: Class_ApplicationData,
+    elements: Class_LinkElement[],
+    key: K,
+    value: K extends 'valueCurrent' ? number | null : string,
+    refreshParentComponent: () => void
+  ) => {
+    const dict_old_val: { [id: string]: number | string | null } = {}
+    elements.forEach(element => {
+      dict_old_val[element.id] = element[key]
+    })
+  
+    // Original function
+    const _updateElements = () => {
+      elements.forEach(element => {
+        Reflect.set(element, key,value)
+      })
+      refreshParentComponent()
+    }
+  
+    // Undo function
+    const inv_updateElements = () => {
+      elements.forEach(element =>
+        Reflect.set(element, key, dict_old_val[element.id])
+      )
+      refreshParentComponent()
+    }
+  
+    data.history.saveUndo(inv_updateElements)
+    data.history.saveRedo(_updateElements)
+    _updateElements()
   }
 }
