@@ -30,19 +30,19 @@ import { t } from 'i18next'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/Element'
+import { Class_ElementStyle } from '../../Elements/Element'
 import { unit_constants } from '../../Elements/LinkValues'
 import {
   ConditionalCheckboxWithInput,
   ElementAttrSetterNumberInput2Cols, ElementAttrSetterSelect2Cols,
   ElementAttrSetterTextInput2Cols,
-  getElementsValueLabelValues,
   OSTooltip,
   SimpleElementCheckbox,
   TooltipElementOverloaded
 } from './MenuCommon'
+import { getElementsValueLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { BASE_LABEL_CONFIG, getLabelValues, getValueLabelValues, isValueLabelIndeterminate, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { isValueLabelIndeterminate, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 
 export const MenuUnit = ({
@@ -53,7 +53,7 @@ export const MenuUnit = ({
 }: {
   app_data: Class_ApplicationData,
   attributePath?: string
-  elements?: Class_LinkStyle[] | Class_LinkElement[] | Class_NodeBase[] | Class_NodeStyle[],
+  elements?: Class_ElementStyle[] | Class_LinkElement[] | Class_NodeBase[],
   disable_attr_props?: Record<string, boolean>
 }) => {
   const { drawing_area } = app_data
@@ -67,7 +67,7 @@ export const MenuUnit = ({
   })
   if (!initialElements) {
     app_data.menu_configuration.r_value_formatting_set_elements.current = (
-      _elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+      _elements: Class_NodeBase[] | Class_LinkElement[] | Class_ElementStyle[],
       _attributePath: string,
       _disable_attr_props: Record<string, boolean>) => {
       setState({
@@ -79,7 +79,7 @@ export const MenuUnit = ({
   }
   const { elements, attributePath, disable_attr_props } = state
   if (!elements || !attributePath || !disable_attr_props) return <></>
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const unit_tagg = sankey.data_taggs_list.find(tagg => tagg.is_unit)
 

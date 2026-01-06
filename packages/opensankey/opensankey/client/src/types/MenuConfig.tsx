@@ -36,7 +36,7 @@ import {
 } from '../components/dialogs/PersistenceProcessDialogConfigs'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_LinkStyle, Class_NodeStyle } from '../Elements/Element'
+import { Class_ElementStyle } from '../Elements/Element'
 import { ShapePrefix } from '../Elements/ElementsAttributesConfig'
 
 export type Type_AdditionalMenus = {
@@ -97,6 +97,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_formatting_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -187,8 +188,8 @@ export class Class_MenuConfig {
    */
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
     'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'DA', 'flow', 'node', 'object'] },
+    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'flow', 'node', 'object'] },
     'context': { 'theme': '#786960', elements_configurable: ['flow', 'node', 'object', 'tag_flow', 'tag_node'] },
-    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'flow', 'node'] },
     'presentation': { 'theme': '#778a95', elements_configurable: ['flow', 'node', 'flow_tag', 'node_tag', 'object', 'view'] }
   }
 
@@ -275,8 +276,7 @@ export class Class_MenuConfig {
   // update SankeyMenuConfigurationNodesDimTags
   private _ref_to_menu_config_nodes_dim_tags_updater: MutableRefObject<() => void>
 
-  // Update component SankeyMenuConfigurationNodesIO
-  private _ref_to_menu_config_nodes_io_updater: MutableRefObject<(() => void)>
+
 
   // Update component MenuConfigurationNodesTooltip
   private _ref_to_menu_config_nodes_tooltips_updater: MutableRefObject<(() => void)>
@@ -460,7 +460,6 @@ export class Class_MenuConfig {
     this._ref_to_menu_config_nodes_styles_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_styles_editor_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_tags_updater = useRef(() => null)
-    this._ref_to_menu_config_nodes_io_updater = useRef(() => null)
     this._ref_to_menu_config_nodes_tooltips_updater = useRef(() => null)
 
     // Containers
@@ -542,6 +541,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_rich_text_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_formatting_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -580,16 +580,21 @@ export class Class_MenuConfig {
       prefix: 'name_label' | 'value_label' | 'icon'
     ) => void>(() => null)
     this._r_shape_attributes_set_elements = useRef<(
-      elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+      elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
       attributePath: string,
       prefix: ShapePrefix,
       disable_attr_props: Record<string, boolean>,
       refreshUI: () => void
     ) => void>(() => null)
     this._r_value_formatting_set_elements = useRef<(
-      elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+      elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
       attributePath: string,
       disable_attr_props: Record<string, boolean>,
+    ) => void>(() => null)
+    this._r_value_type_set_elements = useRef<(
+    _selected_links: Class_LinkElement[],
+    _unit_data_tagg: Class_DataTagGroup,
+    _refreshThis: ()=>void
     ) => void>(() => null)
 
     this._ref_to_menu_config_node_name_label_bg_updater = useRef(() => null)
@@ -617,6 +622,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
@@ -855,19 +861,6 @@ export class Class_MenuConfig {
    * Update component with timeOut to avoid multiple refreshs
    * @memberof Class_MenuConfig
    */
-  public updateComponentRelatedToNodesIO() {
-    this._add_waiting_process(
-      'updateComponentRelatedToNodesIO',
-      (_this: Class_MenuConfig) => {
-        _this._ref_to_menu_config_nodes_io_updater.current()
-      }
-    )
-  }
-
-  /**
-   * Update component with timeOut to avoid multiple refreshs
-   * @memberof Class_MenuConfig
-   */
   public updateComponentRelatedToNodesTooltips() {
     this._add_waiting_process(
       'updateComponentRelatedToNodesTooltips',
@@ -996,7 +989,6 @@ export class Class_MenuConfig {
    * - SankeyNodeEdition
    * - OpenSankeyConfigurationNodesAttributes
    * - OpenSankeyConfigurationNodesTags
-   * - SankeyMenuConfigurationNodesIO
    * - MenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
@@ -1011,14 +1003,12 @@ export class Class_MenuConfig {
    * Re-render all submenus for node config
    * - OpenSankeyConfigurationNodesAttributes
    * - OpenSankeyConfigurationNodesTags
-   * - SankeyMenuConfigurationNodesIO
    * - MenuConfigurationNodesTooltip
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodesConfig() {
     this.updateComponentRelatedToNodesApparence()
     this.updateComponentRelatedToNodesTags()
-    this.updateComponentRelatedToNodesIO()
     this.updateComponentRelatedToNodesTooltips()
     this._ref_to_GraphElementsOrdoner_updater.current()
   }
@@ -1412,10 +1402,6 @@ export class Class_MenuConfig {
     return this._ref_to_menu_config_nodes_dim_tags_updater
   }
 
-  public get ref_to_menu_config_nodes_io_updater(): MutableRefObject<(() => void)> {
-    return this._ref_to_menu_config_nodes_io_updater
-  }
-
   public get ref_to_menu_config_nodes_tooltips_updater(): MutableRefObject<(() => void)> {
     return this._ref_to_menu_config_nodes_tooltips_updater
   }
@@ -1594,6 +1580,7 @@ export class Class_MenuConfig {
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   public get r_shape_attributes_set_elements() { return this._r_shape_attributes_set_elements }
   public get r_value_formatting_set_elements() { return this._r_value_formatting_set_elements }
+  public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
   public get ref_toolbar(): MutableRefObject<(() => void)> { return this._ref_toolbar }
@@ -1647,18 +1634,22 @@ export class Class_MenuConfig {
   ) => void)>
   private _ref_to_updater_modal_apply_layout_plus: MutableRefObject<(() => void)>
   private _r_shape_attributes_set_elements: MutableRefObject<(
-    elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+    elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
     attributePath: string,
     prefix: ShapePrefix,
     disable_attr_props: Record<string, boolean>,
     refreshUI: () => void
   ) => void>
   private _r_value_formatting_set_elements: MutableRefObject<(
-    elements: Class_NodeBase[] | Class_NodeStyle[] | Class_LinkElement[] | Class_LinkStyle[],
+    elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
     attributePath: string,
     disable_attr_props: Record<string, boolean>
   ) => void>
-
+  private _r_value_type_set_elements: MutableRefObject<(
+    _selected_links: Class_LinkElement[],
+    _unit_data_tagg: Class_DataTagGroup,
+    _refreshThis: ()=>void
+  ) => void>
   /**
  * Update component with timeOut to avoid multiple refreshs
  * @memberof Class_MenuConfig
