@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 
-import React, { FC, useRef, useState, useMemo, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX } from 'react'
+import React, { FC, useRef, useState, ChangeEvent, ReactNode, useEffect, MutableRefObject, CSSProperties, JSX } from 'react'
 import { ColorResult, SketchPicker } from 'react-color'
 import {
   Text,
@@ -60,24 +60,18 @@ import {
 } from '@chakra-ui/react'
 import { FaCaretDown, FaCaretUp } from 'react-icons/fa'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Class_LinkStyle, Class_NodeStyle } from '../../Elements/Element'
+import { Class_ElementStyle } from '../../Elements/Element'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSquareCheck, faEye, faEyeSlash, faCircleInfo } from '@fortawesome/free-solid-svg-icons'
-import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { default_style_id } from '../../types/Utils'
-import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuSelectionElements'
+import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { 
-  BASE_LABEL_CONFIG, AttributeConfig, BASE_SHAPE_CONFIG, ExtractConfigValue, LINKS_SHAPE_SPECIFIC_CONFIG, 
-  LINKS_ATTRIBUTES_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG, NAME_LABEL_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG, 
-  NODES_ATTRIBUTES_CONFIG, ShapePrefix, isConfigValueIndeterminate, VALUE_LABEL_CONFIG, ICON_LABEL_BASE_CONFIG 
-} from '../../Elements/ElementsAttributesConfig'
+import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_NodeAttribute, Class_LinkAttribute } from '../../Elements/Element'
 
 // Déclaration du type pour l'EyeDropper API
@@ -88,197 +82,6 @@ declare global {
     }
   }
 }
-// ✅ Union de tous vos éléments
-export type ElementsType = Class_LinkStyle[] | Class_LinkElement[] | Class_NodeBase[] | Class_NodeStyle[]
-
-// ✅ Toutes les clés possibles
-export type ValueKey = keyof Class_NodeAttribute & keyof Class_LinkAttribute
-
-// ✅ Type conditionnel pour obtenir la bonne valeur selon la clé
-export type ValueType<K extends ValueKey> =
-  K extends keyof Class_LinkAttribute
-  ? Class_LinkAttribute[K]
-  : K extends keyof Class_NodeAttribute
-  ? Class_NodeAttribute[K]
-  : never
-
-// ✅ Type de valeur qu'un élément peut avoir
-export type ValueElementsType =
-  | Class_LinkAttribute[keyof Class_LinkAttribute]
-  | Class_NodeAttribute[keyof Class_NodeAttribute]
-  | undefined
-
-// Hook pour extraire la logique commune des composants ElementAttr*
-export const useElementAttributeConfig = <
-  CONFIG extends Record<string, AttributeConfig<unknown>>
->(app_data: Class_ApplicationData, elements: ElementsType): {
-  menu_for_style: boolean
-  disable_attr_props: { -readonly [K in keyof CONFIG]?: boolean }
-  t: TFunction
-} => {
-  return useMemo(() => {
-    const { drawing_area, menu_configuration } = app_data
-    const { sankey } = drawing_area
-    const { ref_selected_style_node, ref_selected_style_link } = menu_configuration
-    const { link_styles_dict, node_styles_dict } = sankey
-
-    const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
-    const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_NodeStyle)
-    const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_NodeElement)
-
-    const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
-    const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
-
-    const disable_attr_props = menu_for_style ?
-      correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
-      correct_dict_style_to_use[default_style_id].customisable_attribute
-
-    return {
-      menu_for_style,
-      disable_attr_props,
-      t: app_data.t
-    } as {
-      menu_for_style: boolean
-      disable_attr_props: { -readonly [K in keyof CONFIG]?: boolean }
-      t: TFunction
-    }
-  }, [app_data, elements])
-}
-
-export function updateElements<
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  K extends keyof CONFIG
->(
-  data: Class_ApplicationData,
-  elements: (
-    | Class_LinkElement
-    | Class_NodeBase
-    | Class_NodeStyle | Class_LinkStyle
-  )[],
-  config: CONFIG,
-  prefix: string,
-  key: K,
-  value: ExtractConfigValue<CONFIG[K]>,
-  refreshParentComponent: () => void
-) {
-  const fullKey = prefix ? `${prefix}_${String(key)}` : String(key)
-  // Create a dict of old val for each elements 
-  const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]> } = {}
-  elements.forEach(element => {
-    dict_old_val[element.id] = Reflect.get(element, fullKey)
-  })
-
-  // Original function
-  const _updateElements = () => {
-    elements.forEach(element => {
-      Reflect.set(element, fullKey, value)
-    })
-    refreshParentComponent()
-  }
-
-  // Undo function
-  const inv_updateElements = () => {
-    elements.forEach(element =>
-      Reflect.set(element, fullKey, dict_old_val[element.id])
-    )
-    refreshParentComponent()
-  }
-
-  data.history.saveUndo(inv_updateElements)
-  data.history.saveRedo(_updateElements)
-  _updateElements()
-}
-
-/**
- * Fonction générique pour créer des proxies getter/setter sur des attributs d'éléments
- */
-export function getConfigValues<
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  ELEMENTS extends ElementsType
->(
-  elements: ELEMENTS,
-  config: CONFIG,
-  prefix: string = '',
-  refreshParentComponent: () => void
-): { -readonly [K in keyof CONFIG]: ExtractConfigValue<CONFIG[K]> } {
-  const result = {} as { -readonly [K in keyof CONFIG]: ExtractConfigValue<CONFIG[K]> }
-
-  // Créer des getters/setters pour chaque propriété
-  for (const key in config) {
-    if (Object.prototype.hasOwnProperty.call(config, key)) {
-      const fullKey = prefix ? `${prefix}_${key}` : key
-      const configKey = key as keyof CONFIG
-
-      Object.defineProperty(result, key, {
-        get: () => {
-          return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
-        },
-        set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {
-          updateElements(
-            elements[0].drawing_area.application_data,
-            elements,
-            config,
-            prefix,
-            configKey,
-            value,
-            refreshParentComponent
-          )
-        },
-        enumerable: true,
-        configurable: true
-      })
-    }
-  }
-
-  return result
-}
-
-// ✅ Fonctions spécialisées simplifiées (optionnelles, pour garder l'API existante)
-export const getElementsLabelValues = (
-  elements: ElementsType,
-  prefix: 'name_label' | 'value_label'|'icon',
-  refreshParentComponent: () => void
-) => getConfigValues(elements, BASE_LABEL_CONFIG, prefix, refreshParentComponent)
-
-export const getElementsValueLabelValues = (
-  elements: ElementsType,
-  prefix: 'name_label' | 'value_label',
-  refreshParentComponent: () => void
-) => getConfigValues(elements, VALUE_LABEL_CONFIG, prefix, refreshParentComponent)
-
-export const getLinksLabelValues = (
-  elements: Class_LinkElement[] | Class_LinkStyle[],
-  prefix: 'name_label' | 'value_label'|'icon',
-  refreshParentComponent: () => void
-) => getConfigValues(elements, LINKS_LABEL_SPECIFIC_CONFIG, prefix, refreshParentComponent)
-
-export const getNodesLabelValues = (
-  elements: Class_NodeElement[] | Class_NodeStyle[],
-  prefix: 'name_label' | 'value_label',
-  refreshParentComponent: () => void
-) => getConfigValues(elements, NAME_LABEL_CONFIG, prefix, refreshParentComponent)
-
-export const getShapeValues = (
-  elements: ElementsType,
-  prefix: ShapePrefix,
-  refreshParentComponent: () => void
-) => getConfigValues(elements, BASE_SHAPE_CONFIG, prefix, refreshParentComponent)
-
-export const getLinkShapeValues = (
-  elements: ElementsType,
-  refreshParentComponent: () => void
-) => getConfigValues(elements, LINKS_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
-
-export const getNodeShapeValues = (
-  elements: ElementsType,
-  refreshParentComponent: () => void
-) => getConfigValues(elements, NODE_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
-
-export const getIconValues = (
-  elements: ElementsType,
-  refreshParentComponent: () => void
-) => getConfigValues(elements, ICON_LABEL_BASE_CONFIG, 'icon', refreshParentComponent)
-
 /**
  * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
  *
@@ -572,7 +375,7 @@ export const ElementAttrSetter2Cols = <
   elements, attributePath, attributeKey, config,
   prefix = '', t, showTooltipOverload = true, children
 }: React.PropsWithChildren<{
-  elements: (Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle)[]; // Éléments pour vérifier l'overload
+  elements: (Class_LinkElement | Class_NodeBase | Class_ElementStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: K
   config: CONFIG
@@ -905,7 +708,7 @@ export const TooltipElementOverloaded = <
   t: TFunction // Fonction de traduction
   tooltipPrefix?: string // Préfixe pour le tooltip (par défaut 'el_var_')
 }): JSX.Element => {
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_NodeStyle || elements[0] instanceof Class_LinkStyle)
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle )
   if (menu_for_style) {
     return <></>
   }
@@ -1814,5 +1617,49 @@ export const MenuColorPicker = ({
         </Text>
       )} */}
     </Box >
+  )
+}
+/**
+ * Retourne le variant approprié pour un bouton selon son état
+ */
+export const getButtonVariant = (
+  position: 'left' | 'center' | 'right' | '',
+  isIndeterminate: boolean,
+  isActive: boolean
+): string => {
+  const suffix = position ? `_${position}` : ''
+
+  if (isIndeterminate) {
+    return `menuconfigpanel_option_button_indeterminate${suffix}`
+  }
+
+  if (isActive) {
+    return `menuconfigpanel_option_button_activated${suffix}`
+  }
+
+  return `menuconfigpanel_option_button${suffix}`
+}
+/**
+ * ✅ Wrapper qui combine un composant avec l'icône de surcharge
+ */
+export const LabelWithOverload = ({
+  attributeKey, elements, config, prefix, children, t
+}: React.PropsWithChildren<{
+  attributeKey: string
+  elements: ElementsType
+  config: typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG
+  prefix: string
+  children: React.ReactNode
+  t: TFunction
+}>) => {
+  return (
+    <Box display="flex" alignItems="center" gap={1}>
+      {children}
+      <TooltipElementOverloaded
+        attributeKey={`${prefix}_${attributeKey}` as any}
+        elements={elements as any}
+        config={config}
+        t={t} />
+    </Box>
   )
 }

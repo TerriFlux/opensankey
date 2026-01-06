@@ -25,8 +25,9 @@
 // ==================================================================================================
 
 import FileSaver from 'file-saver'
-import { type Type_JSON } from '../types/Utils'
+import { getBooleanFromJSON, type Type_JSON } from '../types/Utils'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { NodeAttributeKey, LinkAttributeKey } from '../Elements/ElementsAttributesConfig'
 
 declare global {
   interface Window {
@@ -282,6 +283,193 @@ async function _testDecompression(fileName: string): Promise<void> {
 
   } catch (error) {
     console.error('❌ Test échoué:', error)
+  }
+}
+export abstract class AttributeMappings {
+  abstract getToJsonMapping(): { [key: string]: string} 
+  abstract getFromJsonMapping(): { [key: string]: NodeAttributeKey | LinkAttributeKey} 
+}
+export class NodeAttributeMappings extends AttributeMappings {
+  // Mapping principal: attribut interne -> clé JSON
+  private readonly MAIN_MAPPING: { [key: string]: string}  = {
+    // Shape mappings
+    shape_type: 'shape',
+    shape_min_width: 'node_width',
+    shape_min_height: 'node_height',
+    shape_color: 'color',
+    shape_opacity: 'opacity',
+    shape_color_sustainable: 'colorSustainable',
+    // Icon attributes
+    'iconName': 'icon_name',
+    'iconColor': 'icon_color',
+    'iconVisible': 'icon_visible',
+    'iconViewBox': 'icon_view_box',
+    'iconColorSustainable': 'icon_color_sustainable',
+
+    // Foreign Object attributes
+    'has_FO': 'has_fo',
+    'is_FO_raw': 'is_fo_raw',
+    'FO_content': 'fo_content',
+
+    // Image attributes
+    'is_image': 'is_image',
+    'image_src': 'image_src',
+
+    // Hyperlink attribute
+    'hyperlink': 'hyperlink'
+  };
+
+  // Mapping legacy: ancienne clé JSON -> attribut interne
+  private readonly LEGACY_MAPPING: { [key: string]: string}  = {
+    // Name label legacy
+    'label_visible': 'name_label_is_visible',
+    'font_family': 'name_label_font_family',
+    'font_size': 'name_label_font_size',
+    'uppercase': 'name_label_uppercase',
+    'bold': 'name_label_bold',
+    'italic': 'name_label_italic',
+    'label_color': 'name_label_color',
+    'label_horiz': 'name_label_horiz',
+    'label_vert': 'name_label_vert',
+    'label_background': 'name_label_background',
+    'label_background_color': 'name_label_background_color',
+    'label_box_width': 'name_label_box_width',
+
+    // Value label legacy
+    'show_value': 'value_label_is_visible',
+    'value_font_size': 'value_label_font_size',
+    'label_horiz_valeur': 'value_label_horiz',
+    'label_vert_valeur': 'value_label_vert',
+    'to_precision': 'value_label_scientific_notation',
+    'scientific_precision': 'value_label_significant_digits',
+    'nb_scientific_precision': 'value_label_nb_significant_digits',
+    'custom_digit': 'value_label_custom_digit',
+    'nb_digit': 'value_label_nb_digit',
+    'label_unit_visible': 'value_label_unit_visible',
+    'label_unit': 'value_label_unit',
+    'label_unit_factor': 'value_label_unit_factor',
+
+    // Shape legacy (fusion avec MAIN_MAPPING)
+    'shape': 'shape_type',
+    'node_width': 'shape_min_width',
+    'node_height': 'shape_min_height',
+    'color': 'shape_color',
+    'opacity': 'shape_opacity',
+    'colorSustainable': 'shape_color_sustainable',
+  };
+
+  /**
+   * Retourne le mapping pour toJSON (attribut -> JSON)
+   */
+  public getToJsonMapping(): { [key: string]: string}  {
+    return { ...this.MAIN_MAPPING }
+  }
+
+  /**
+   * Retourne le mapping pour fromJSON (JSON -> attribut)
+   * Combine legacy + main mapping inversé
+   */
+  public getFromJsonMapping() {
+    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey} 
+  }
+}
+
+export class LinkAttributeMappings extends AttributeMappings {
+  private readonly LEGACY_MAPPING: { [key: string]: LinkAttributeKey}  = {
+    'user_scale': 'shape_local_link_scale',
+    'curved': 'shape_is_curved',
+    'curvature': 'shape_curvature',
+    'recycling': 'shape_is_recycling',
+    'is_structur': 'shape_is_structure',
+    'orientation': 'shape_orientation',
+    'left_horiz_shift': 'shape_starting_curve',
+    'right_horiz_shift': 'shape_ending_curve',
+    'starting_tangeant': 'shape_starting_tangeant',
+    'ending_tangeant': 'shape_ending_tangeant',
+    'vert_shift': 'shape_middle_recycling',
+    'arrow': 'shape_is_arrow',
+    'arrow_size': 'shape_arrow_size',
+    'dashed': 'shape_is_dashed',
+    'color': 'shape_color',
+    'color_rule': 'shape_color_rule',
+    'opacity': 'shape_opacity',
+  };
+
+  private readonly MAIN_MAPPING: { [key: string]: string}  = {
+    shape_local_link_scale: 'user_scale',
+    shape_is_curved: 'curved',
+    shape_type: 'shape_type',
+    shape_curvature: 'curvature',
+    shape_is_recycling: 'recycling',
+    shape_is_structure: 'is_structur',
+    shape_orientation: 'orientation',
+    shape_starting_curve: 'left_horiz_shift',
+    shape_ending_curve: 'right_horiz_shift',
+    shape_starting_tangeant: 'starting_tangeant',
+    shape_ending_tangeant: 'ending_tangeant',
+    shape_middle_recycling: 'vert_shift',
+    shape_is_arrow: 'arrow',
+    shape_arrow_size: 'arrow_size',
+    shape_is_dashed: 'dashed',
+    shape_color: 'color',
+    shape_color_rule: 'color_rule',
+    shape_opacity: 'opacity',
+  };
+  /**
+   * Retourne le mapping pour toJSON (attribut -> JSON)
+   */
+  public getToJsonMapping(): { [key: string]: string}  {
+    return { ...this.MAIN_MAPPING }
+  }
+
+  /**
+   * Retourne le mapping pour fromJSON (JSON -> attribut)
+   * Combine legacy + main mapping inversé
+   */
+  public getFromJsonMapping() {
+    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey} 
+  }
+
+
+  protected fromLegacyJSON(json_local_object: Type_JSON) {
+    if (json_local_object['version'] === undefined) {
+      // Mapping legacy simplifié
+      const legacyMapping: { [key: string]: string}  = {
+        'label_visible': 'value_label_is_visible',
+        'font_family': 'value_label_font_family',
+        'label_font_size': 'value_label_font_size',
+        'text_color': 'value_label_color',
+        'label_position': 'value_label_horiz',
+        'orthogonal_label_position': 'value_label_vert',
+        'label_on_path': 'value_label_on_path',
+        'label_pos_auto': 'value_label_pos_auto',
+        'to_precision': 'value_label_scientific_notation',
+        'scientific_precision': 'value_label_significant_digits',
+        'nb_scientific_precision': 'value_label_nb_significant_digits',
+        'custom_digit': 'value_label_custom_digit',
+        'nb_digit': 'value_label_nb_digit',
+        'label_unit_visible': 'value_label_unit_visible',
+        'label_unit': 'value_label_unit',
+        'label_unit_factor': 'value_label_unit_factor',
+        'font_size': 'name_label_font_size',
+        'uppercase': 'name_label_uppercase',
+        'bold': 'name_label_bold',
+        'italic': 'name_label_italic',
+        'label_color': 'name_label_color',
+        'label_horiz': 'name_label_horiz',
+        'label_vert': 'name_label_vert'
+      }
+      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
+      if (was_gradient) {
+        json_local_object['shape_color_rule'] = 'gradient'
+      }
+      Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
+        if (json_local_object[oldKey] !== undefined) {
+          //@ts-expect-error xxx
+          this[newKey as AttributeKey] = json_local_object[oldKey]
+        }
+      })
+    }
   }
 }
 

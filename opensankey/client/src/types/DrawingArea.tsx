@@ -32,9 +32,6 @@ import { MouseEvent } from 'react'
 import {
   Type_JSON,
   Type_Structure,
-  default_background_color,
-  default_black_color,
-  default_grid_color,
   default_main_sankey_id,
   getBooleanFromJSON,
   getJSONFromJSON,
@@ -45,6 +42,11 @@ import {
   getStringOrUndefinedFromJSON,
 } from '../types/Utils'
 import {
+  default_background_color,
+  default_black_color,
+  default_grid_color
+} from '../Elements/ElementsAttributesConfig'
+import {
   Class_NodeElement,
 } from '../Elements/Node'
 import {
@@ -53,18 +55,16 @@ import {
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
-import { Class_BaseElement, Class_BaseShape, Class_ProtoElement } from '../Elements/Element'
-import { Class_LinkStyle, Class_NodeStyle } from '../Elements/Element'
+import { Class_BaseElement } from '../Elements/Element'
+import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { Class_Sankey } from './Sankey'
 import { Class_ZoneSelection } from '../Elements/SelectionZone'
 import { Class_Tag } from './Tag'
 import { Class_ContainerElement } from '../Elements/TextZone'
-import { Class_Handler } from '../Elements/Handler'
 import { Class_ApplicationData } from './ApplicationData'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
-import { AttributeConfig } from '../Elements/ElementsAttributesConfig'
 
 
 declare const window: Window &
@@ -1590,9 +1590,9 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-  public moveOrderStyleInSelectedNodes = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
+  public moveOrderStyleInSelectedNodes = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
     // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
+    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
     this.selected_nodes_list.forEach(n => list_old_style[n.id] = n.style)
 
     // Function undo
@@ -1637,9 +1637,9 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-  public moveOrderStyleInSelectedContainers = (style_src: Class_NodeStyle, style_trgt: Class_NodeStyle) => {
+  public moveOrderStyleInSelectedContainers = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
     // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_NodeStyle[] } = {}
+    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
     this.selected_containers_list.forEach(n => list_old_style[n.id] = n.style)
 
     // Function undo
@@ -1684,9 +1684,9 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-  public moveOrderStyleInSelectedFlows = (style_src: Class_LinkStyle, style_trgt: Class_LinkStyle) => {
+  public moveOrderStyleInSelectedFlows = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
     // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_LinkStyle[] } = {}
+    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
     this.selected_links_list.forEach(n => list_old_style[n.id] = n.style)
 
     // Function undo
