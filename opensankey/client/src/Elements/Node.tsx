@@ -32,7 +32,8 @@ import {
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
-import { default_element_color, format_value, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
+import { format_value, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
+import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
@@ -45,7 +46,7 @@ import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { NODES_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
-import { Class_LinkStyle, Class_NodeStyle } from './Element'
+import { Class_ElementStyle } from './Element'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
@@ -1374,18 +1375,18 @@ export class Class_NodeElement extends Class_NodeBase {
       const link_importexport_style = this.position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
-        new_node.sankey.node_styles_dict['NodeSectorStyle'] as Class_NodeStyle,
-        new_node.sankey.node_styles_dict[node_importexport_style] as Class_NodeStyle,
+        new_node.sankey.node_styles_dict['NodeSectorStyle'],
+        new_node.sankey.node_styles_dict[node_importexport_style],
         importation ?
-          new_node.sankey.node_styles_dict[node_importation_style] as Class_NodeStyle :
-          new_node.sankey.node_styles_dict[node_exportation_style] as Class_NodeStyle
+          new_node.sankey.node_styles_dict[node_importation_style] :
+          new_node.sankey.node_styles_dict[node_exportation_style]
       ]
 
       input_or_output_link.style = [
-        new_node.sankey.link_styles_dict[link_importexport_style] as Class_LinkStyle,
+        new_node.sankey.link_styles_dict[link_importexport_style],
         importation ?
-          new_node.sankey.link_styles_dict[link_importation_style] as Class_LinkStyle :
-          new_node.sankey.link_styles_dict[link_exportation_style] as Class_LinkStyle
+          new_node.sankey.link_styles_dict[link_importation_style] :
+          new_node.sankey.link_styles_dict[link_exportation_style]
       ]
 
       input_or_output_link.shape_is_recycling = false

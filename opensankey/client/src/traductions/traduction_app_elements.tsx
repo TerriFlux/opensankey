@@ -598,7 +598,7 @@ export const resources_app_elements = {
           presentation: '4. Interactions',
 
           element_graph: 'Graphe',
-          element_node: 'Noeud',
+          element_node: 'Noeuds',
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',
           element_flow_tag: 'Étiq. Flux',

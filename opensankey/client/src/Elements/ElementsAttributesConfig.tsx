@@ -24,18 +24,42 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { ElementsType } from '../components/configmenus/MenuCommon'
+import { TFunction } from 'i18next'
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
+// ==================================================================================================
+import { useMemo } from 'react'
+import { Class_ApplicationData } from '../types/ApplicationData'
 import {
-  default_element_color,
-  default_element_color_source,
-  default_font,
-  getBooleanFromJSON,
-  Type_JSON,
+  default_style_id,
   Type_Position,
 } from '../types/Utils'
-import { Class_ElementStyle, Class_LinkStyle, Class_NodeStyle } from './Element'
+import { Class_ElementStyle } from './Element'
 import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
+import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
@@ -55,6 +79,73 @@ export type Type_PathLabelHPosition = 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'top' | 'middle' | 'bottom'
 export type Type_customisable_node_style_attr = keyof typeof NODES_ATTRIBUTES_CONFIG
 export type Type_customisable_flow_style_attr = keyof typeof LINKS_ATTRIBUTES_CONFIG
+// CONSTANTS ****************************************************************************
+
+export const default_grey_color = 'grey'
+export const default_black_color = 'black'
+export const default_background_color = '#f2f2f2'
+export const default_grid_color = '#d3d3d3'
+export const default_element_color = '#a9a9a9'
+export const default_element_color_source = 'flow'
+
+export const default_font = 'Arial,sans-serif'
+export const font_families = [
+  'Andale Mono,monospace',
+  'Apple Chancery,cursive',
+  'Arial,sans-serif',
+  'Avanta Garde,sans-serif',
+  'Baskerville,serif',
+  'Big Caslon,serif',
+  'Bodoni MT,serif',
+  'Book Antiqua,serif',
+  'Bookman,serif',
+  'Bradley Hand,cursive',
+  'Brush Script MT,cursive',
+  'Brush Script Std,cursive',
+  'Calibri,sans-serif',
+  'Calisto MT,serif',
+  'Cambria,serif',
+  'Candara,sans-serif',
+  'Century Gothic,sans-serif',
+  'Comic Sans MS,cursive',
+  'Comic Sans,cursive',
+  'Consolas,monospace',
+  'Coronet script,cursive',
+  'Courier New,monospace',
+  'Courier,monospace',
+  'Didot,serif',
+  'Florence,cursive',
+  'Franklin Gothic Medium,sans-serif',
+  'Futara,sans-serif',
+  'Garamond,serif',
+  'Geneva,sans-serif',
+  'Georgia,serif',
+  'Gill Sans,sans-serif',
+  'Goudy Old Style,serif',
+  'Helvetica,sans-serif',
+  'Hoefler Text,serif',
+  'Lucida Bright,serif',
+  'Lucida Console,monospace',
+  'Lucida Sans Typewriter,monospace',
+  'Lucida Sans,sans-serif',
+  'Lucidatypewriter,monospace',
+  'Monaco,monospace',
+  'New Century Schoolbook,serif',
+  'Noto,sans-serif',
+  'Optima,sans-serif',
+  'Palatino,serif',
+  'Parkavenue,cursive',
+  'Perpetua,serif',
+  'Rockwell Extra Bold,serif',
+  'Rockwell,serif',
+  'Segoe UI,sans-serif',
+  'Snell Roundhan,cursive',
+  'Times New Roman,serif',
+  'Trebuchet MS,sans-serif',
+  'URW Chancery,cursive',
+  'Verdana,sans-serif',
+  'Zapf Chancery,cursive',
+]
 
 // Types d'actions disponibles
 export type BaseActionType =
@@ -134,12 +225,12 @@ export const isShapeValueIndeterminate = (
 ) => isConfigValueIndeterminate(elements, BASE_SHAPE_CONFIG, configKey, prefix)
 
 export const isNodeShapeSpecificValueIndeterminate = (
-  elements: Class_NodeBase[] | Class_NodeStyle[],
+  elements: Class_NodeBase[] | Class_ElementStyle[],
   configKey: keyof typeof NODE_SHAPE_SPECIFIC_CONFIG
 ) => isConfigValueIndeterminate(elements, NODE_SHAPE_SPECIFIC_CONFIG, configKey, 'shape')
 
 export const isLinkShapeSpecificValueIndeterminate = (
-  elements: Class_LinkElement[] | Class_LinkStyle[],
+  elements: Class_LinkElement[] | Class_ElementStyle[],
   configKey: keyof typeof LINKS_SHAPE_SPECIFIC_CONFIG
 ) => isConfigValueIndeterminate(elements, LINKS_SHAPE_SPECIFIC_CONFIG, configKey, 'shape')
 
@@ -154,7 +245,7 @@ export const isValueLabelIndeterminate = (
 ) => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, configKey, 'value_label')
 
 export const isLinkLabelSpecificValueIndeterminate = (
-  elements: Class_LinkElement[] | Class_LinkStyle[],
+  elements: Class_LinkElement[] | Class_ElementStyle[],
   prefix: 'name_label' | 'value_label',
   configKey: keyof typeof LINKS_LABEL_SPECIFIC_CONFIG
 ) => isConfigValueIndeterminate(elements, LINKS_LABEL_SPECIFIC_CONFIG, configKey, prefix)
@@ -279,8 +370,8 @@ export const BASE_SHAPE_CONFIG = {
     category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
     labels: {
-      en: 'Shape',
-      fr: 'Forme'
+      en: 'Shape and background',
+      fr: 'Forme et Fond'
     },
     tooltips: {
       en: 'Show or hide the shape',
@@ -884,8 +975,9 @@ export const BASE_LABEL_CONFIG = {
 } as const
 
 function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
-  const visibility_string_fr = prefix === 'name_label' ? 'Label' : 'Valeur'
-  const visibility_string_en = prefix === 'value_label' ? 'Value' : 'Label'
+  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Illustration'
+  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Illustration'
+
 
   return {
     // ✅ Réutilisation de BASE_LABEL_CONFIG avec overrides
@@ -921,7 +1013,6 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
       [drawAction],
       {
         visible: {
-          default: prefix === 'name_label' ? true : false,
           labels: {
             en: 'Background visible',
             fr: 'Fond visible'
@@ -932,6 +1023,7 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
           }
         },
         color_visible: {
+          default: prefix === 'name_label' ? true : false,
           labels: {
             en: 'Background color',
             fr: 'Couleur de fond'
@@ -1160,10 +1252,6 @@ export const HYPER_LINK_CONFIG = {
   } satisfies AttributeConfig<string | undefined>
 } as const
 
-// export type ValueLabelConfigReturn = typeof VALUE_LABEL_CONFIG
-// export type LabelConfigReturn = ReturnType<typeof createLabelConfig>
-// // Type pour mapper tous les attributs du config vers leurs valeurs
-
 export type LabelValues<T extends typeof BASE_LABEL_CONFIG> = {
   -readonly [K in keyof T]: ExtractConfigValue<T[K]>
 }
@@ -1227,7 +1315,7 @@ export type LinkAttributeTypes = {
  * 
  */
 export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
-  element: Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle,
+  element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: ShapePrefix,
   config: T
 ) {
@@ -1256,7 +1344,7 @@ export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
 }
 
 export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
-  element: Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle,
+  element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: 'name_label' | 'value_label',
   config: T
 ): LabelValues<T> {
@@ -1285,7 +1373,7 @@ export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
 }
 
 export function getValueLabelValues(
-  element: Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle,
+  element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: 'name_label' | 'value_label' | 'icon'
 ) {
   const result = {} as ValueLabelAttributeTypes
@@ -1313,7 +1401,7 @@ export function getValueLabelValues(
 }
 
 export function getNameLabelValues(
-  element: Class_LinkElement | Class_NodeBase | Class_LinkStyle | Class_NodeStyle,
+  element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
   prefix: 'name_label' | 'value_label'
 ) {
   const result = {} as NameLabelAttributeTypes
@@ -1344,7 +1432,7 @@ export function getNameLabelValues(
  * Inclut margin_left, margin_right, margin_top, margin_bottom, position_type, position_dx, position_dy
  */
 export function getNodeShapeSpecificValues(
-  element: Class_NodeBase | Class_NodeStyle,
+  element: Class_NodeBase | Class_ElementStyle,
 ) {
   const result = {} as NodeShapeSpecificValues
   const config = NODE_SHAPE_SPECIFIC_CONFIG
@@ -1377,7 +1465,7 @@ export function getNodeShapeSpecificValues(
  * Inclut local_link_scale, is_curved, curvature, is_recycling, orientation, etc.
  */
 export const getLinkShapeSpecificValue = (
-  element: Class_LinkElement | Class_LinkStyle,
+  element: Class_LinkElement | Class_ElementStyle,
 ) => {
   const result = {} as LinkShapeSpecificValues
   const config = LINKS_SHAPE_SPECIFIC_CONFIG
@@ -1405,7 +1493,7 @@ export const getLinkShapeSpecificValue = (
   return result
 }
 export const getLinkLabelSpecificValue = (
-  element: Class_LinkElement | Class_LinkStyle,
+  element: Class_LinkElement | Class_ElementStyle,
   prefix: 'name_label' | 'value_label' | 'icon'
 ) => {
   const result = {} as LinkLabelSpecificValues
@@ -1561,220 +1649,6 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 } as const
-
-export const NODES_SHAPE_CONFIG = { ...createConfigWithPrefix(BASE_SHAPE_CONFIG, 'shape'), ...NODE_SHAPE_SPECIFIC_CONFIG }
-
-
-export const NODES_ATTRIBUTES_CONFIG = {
-  ...NODES_SHAPE_CONFIG,
-  ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
-  ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
-  ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
-  ...HYPER_LINK_CONFIG,
-} as const
-
-export abstract class AttributeMappings {
-  abstract getToJsonMapping(): { [key: string]: string }
-  abstract getFromJsonMapping(): { [key: string]: NodeAttributeKey | LinkAttributeKey }
-}
-export class NodeAttributeMappings extends AttributeMappings {
-  // Mapping principal: attribut interne -> clé JSON
-  private readonly MAIN_MAPPING: { [key: string]: string } = {
-    // Shape mappings
-    shape_type: 'shape',
-    shape_min_width: 'node_width',
-    shape_min_height: 'node_height',
-    shape_color: 'color',
-    shape_opacity: 'opacity',
-    shape_color_sustainable: 'colorSustainable',
-    // Icon attributes
-    'iconName': 'icon_name',
-    'iconColor': 'icon_color',
-    'iconVisible': 'icon_visible',
-    'iconViewBox': 'icon_view_box',
-    'iconColorSustainable': 'icon_color_sustainable',
-
-    // Foreign Object attributes
-    'has_FO': 'has_fo',
-    'is_FO_raw': 'is_fo_raw',
-    'FO_content': 'fo_content',
-
-    // Image attributes
-    'is_image': 'is_image',
-    'image_src': 'image_src',
-
-    // Hyperlink attribute
-    'hyperlink': 'hyperlink'
-  }
-
-  // Mapping legacy: ancienne clé JSON -> attribut interne
-  private readonly LEGACY_MAPPING: { [key: string]: string } = {
-    // Name label legacy
-    'label_visible': 'name_label_is_visible',
-    'font_family': 'name_label_font_family',
-    'font_size': 'name_label_font_size',
-    'uppercase': 'name_label_uppercase',
-    'bold': 'name_label_bold',
-    'italic': 'name_label_italic',
-    'label_color': 'name_label_color',
-    'label_horiz': 'name_label_horiz',
-    'label_vert': 'name_label_vert',
-    'label_background': 'name_label_background',
-    'label_background_color': 'name_label_background_color',
-    'label_box_width': 'name_label_box_width',
-
-    // Value label legacy
-    'show_value': 'value_label_is_visible',
-    'value_font_size': 'value_label_font_size',
-    'label_horiz_valeur': 'value_label_horiz',
-    'label_vert_valeur': 'value_label_vert',
-    'to_precision': 'value_label_scientific_notation',
-    'scientific_precision': 'value_label_significant_digits',
-    'nb_scientific_precision': 'value_label_nb_significant_digits',
-    'custom_digit': 'value_label_custom_digit',
-    'nb_digit': 'value_label_nb_digit',
-    'label_unit_visible': 'value_label_unit_visible',
-    'label_unit': 'value_label_unit',
-    'label_unit_factor': 'value_label_unit_factor',
-
-    // Shape legacy (fusion avec MAIN_MAPPING)
-    'shape': 'shape_type',
-    'node_width': 'shape_min_width',
-    'node_height': 'shape_min_height',
-    'color': 'shape_color',
-    'opacity': 'shape_opacity',
-    'colorSustainable': 'shape_color_sustainable',
-  }
-
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...this.MAIN_MAPPING }
-  }
-
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
-  }
-}
-
-export class LinkAttributeMappings extends AttributeMappings {
-  private readonly LEGACY_MAPPING: { [key: string]: LinkAttributeKey } = {
-    'user_scale': 'shape_local_link_scale',
-    'curved': 'shape_is_curved',
-    'curvature': 'shape_curvature',
-    'recycling': 'shape_is_recycling',
-    'is_structur': 'shape_is_structure',
-    'orientation': 'shape_orientation',
-    'left_horiz_shift': 'shape_starting_curve',
-    'right_horiz_shift': 'shape_ending_curve',
-    'starting_tangeant': 'shape_starting_tangeant',
-    'ending_tangeant': 'shape_ending_tangeant',
-    'vert_shift': 'shape_middle_recycling',
-    'arrow': 'shape_is_arrow',
-    'arrow_size': 'shape_arrow_size',
-    'dashed': 'shape_is_dashed',
-    'color': 'shape_color',
-    'color_rule': 'shape_color_rule',
-    'opacity': 'shape_opacity',
-  }
-
-  private readonly MAIN_MAPPING: { [key: string]: string } = {
-    shape_local_link_scale: 'user_scale',
-    shape_is_curved: 'curved',
-    shape_type: 'shape_type',
-    shape_curvature: 'curvature',
-    shape_is_recycling: 'recycling',
-    shape_is_structure: 'is_structur',
-    shape_orientation: 'orientation',
-    shape_starting_curve: 'left_horiz_shift',
-    shape_ending_curve: 'right_horiz_shift',
-    shape_starting_tangeant: 'starting_tangeant',
-    shape_ending_tangeant: 'ending_tangeant',
-    shape_middle_recycling: 'vert_shift',
-    shape_is_arrow: 'arrow',
-    shape_arrow_size: 'arrow_size',
-    shape_is_dashed: 'dashed',
-    shape_color: 'color',
-    shape_color_rule: 'color_rule',
-    shape_opacity: 'opacity',
-  }
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...this.MAIN_MAPPING }
-  }
-
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey }
-  }
-
-
-  protected fromLegacyJSON(json_local_object: Type_JSON) {
-    if (json_local_object['version'] === undefined) {
-      // Mapping legacy simplifié
-      const legacyMapping: { [key: string]: string } = {
-        'label_visible': 'value_label_is_visible',
-        'font_family': 'value_label_font_family',
-        'label_font_size': 'value_label_font_size',
-        'text_color': 'value_label_color',
-        'label_position': 'value_label_horiz',
-        'orthogonal_label_position': 'value_label_vert',
-        'label_on_path': 'value_label_on_path',
-        'label_pos_auto': 'value_label_pos_auto',
-        'to_precision': 'value_label_scientific_notation',
-        'scientific_precision': 'value_label_significant_digits',
-        'nb_scientific_precision': 'value_label_nb_significant_digits',
-        'custom_digit': 'value_label_custom_digit',
-        'nb_digit': 'value_label_nb_digit',
-        'label_unit_visible': 'value_label_unit_visible',
-        'label_unit': 'value_label_unit',
-        'label_unit_factor': 'value_label_unit_factor',
-        'font_size': 'name_label_font_size',
-        'uppercase': 'name_label_uppercase',
-        'bold': 'name_label_bold',
-        'italic': 'name_label_italic',
-        'label_color': 'name_label_color',
-        'label_horiz': 'name_label_horiz',
-        'label_vert': 'name_label_vert'
-      }
-      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
-      if (was_gradient) {
-        json_local_object['shape_color_rule'] = 'gradient'
-      }
-      Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
-        if (json_local_object[oldKey] !== undefined) {
-          //@ts-expect-error xxx
-          this[newKey as AttributeKey] = json_local_object[oldKey]
-        }
-      })
-    }
-  }
-}
-
-//Export des types (inchangé)
-
-
-export function getDefaultValue<K extends NodeAttributeKey>(key: K): NodeAttributeTypes[K] {
-  return NODES_ATTRIBUTES_CONFIG[key].default as NodeAttributeTypes[K]
-}
-
-export function getLabel(key: NodeAttributeKey, lang: 'en' | 'fr'): string {
-  return NODES_ATTRIBUTES_CONFIG[key].labels[lang]
-}
-
-export function getTooltip(key: NodeAttributeKey, lang: 'en' | 'fr'): string {
-  return NODES_ATTRIBUTES_CONFIG[key].tooltips[lang]
-}
 
 export const LINKS_SHAPE_SPECIFIC_CONFIG = {
 
@@ -2013,33 +1887,6 @@ export const LINKS_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<'flow' | 'source' | 'target' | 'gradient' | 'auto'>,
 } as const
 
-
-export const LINKS_SHAPE_CONFIG = {
-  ...createConfigWithPrefixAndOverrides(
-    BASE_SHAPE_CONFIG,
-    'shape' as const,
-    'shape',
-    ['drawElements'] as BaseActionType[],
-    {
-      // Overrides pour les liens
-      type: {
-        default: 'bezier_path',
-        labels: {
-          en: 'Type',
-          fr: 'Type'
-        },
-        tooltips: {
-          en: 'Choose the shape type for the link',
-          fr: 'Choisir le type de forme pour le flux'
-        }
-      }
-    }
-  ),
-
-  // ✅ ATTRIBUTS SPÉCIFIQUES AUX LIENS
-  ...createConfigWithPrefix(LINKS_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
-} as const
-
 export const LINKS_LABEL_SPECIFIC_CONFIG = {
   on_path: {
     default: true,
@@ -2093,15 +1940,39 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
     })
 }
 
+export const NODES_ATTRIBUTES_CONFIG = {
+  ...createConfigWithPrefix(BASE_SHAPE_CONFIG, 'shape'), 
+  ...NODE_SHAPE_SPECIFIC_CONFIG,
+  ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
+  ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
+  ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
+  ...HYPER_LINK_CONFIG,
+} as const
 
 export const LINKS_ATTRIBUTES_CONFIG = {
-  ...LINKS_SHAPE_CONFIG,
-
-  // =================== NAME LABEL (avec prefix "name_label_") ===================
+  ...createConfigWithPrefixAndOverrides(
+    BASE_SHAPE_CONFIG,
+    'shape' as const,
+    'shape',
+    ['drawElements'] as BaseActionType[],
+    {
+      // Overrides pour les liens
+      type: {
+        default: 'bezier_path',
+        labels: {
+          en: 'Type',
+          fr: 'Type'
+        },
+        tooltips: {
+          en: 'Choose the shape type for the link',
+          fr: 'Choisir le type de forme pour le flux'
+        }
+      }
+    }
+  ),
+  ...createConfigWithPrefix(LINKS_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
   ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
-
-  // =================== VALUE LABEL (avec prefix "value_label_") ===================
   ...createConfigWithPrefixAndOverrides(
     VALUE_LABEL_CONFIG,
     'value_label' as const,
@@ -2117,5 +1988,185 @@ export const LINKS_ATTRIBUTES_CONFIG = {
   ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
   ...HYPER_LINK_CONFIG,
 } as const
+// ✅ Union de tous vos éléments
+export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]
+// Hook pour extraire la logique commune des composants ElementAttr*
+
+export const useElementAttributeConfig = <
+  CONFIG extends Record<string, AttributeConfig<unknown>>
+>(app_data: Class_ApplicationData, elements: ElementsType): {
+  menu_for_style: boolean
+  disable_attr_props: {
+    -readonly [K in keyof CONFIG]?: boolean
+  }
+  t: TFunction
+} => {
+  return useMemo(() => {
+    const { drawing_area, menu_configuration } = app_data
+    const { sankey } = drawing_area
+    const { ref_selected_style_node, ref_selected_style_link } = menu_configuration
+    const { link_styles_dict, node_styles_dict } = sankey
+
+    const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+    const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+    const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_ElementStyle || elements[0] instanceof Class_NodeElement)
+
+    const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
+    const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
+
+    const disable_attr_props = menu_for_style ?
+      correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
+      correct_dict_style_to_use[default_style_id].customisable_attribute
+
+    return {
+      menu_for_style,
+      disable_attr_props,
+      t: app_data.t
+    } as {
+      menu_for_style: boolean
+      disable_attr_props: {
+        -readonly [K in keyof CONFIG]?: boolean
+      }
+      t: TFunction
+    }
+  }, [app_data, elements])
+}
+
+export function updateElements<
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  K extends keyof CONFIG
+>(
+  data: Class_ApplicationData,
+  elements: (Class_LinkElement |
+    Class_NodeBase |
+    Class_ElementStyle)[],
+  config: CONFIG,
+  prefix: string,
+  key: K,
+  value: ExtractConfigValue<CONFIG[K]>,
+  refreshParentComponent: () => void
+) {
+  const fullKey = prefix ? `${prefix}_${String(key)}` : String(key)
+  // Create a dict of old val for each elements 
+  const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]>}  = {}
+  elements.forEach(element => {
+    dict_old_val[element.id] = Reflect.get(element, fullKey)
+  })
+
+  // Original function
+  const _updateElements = () => {
+    elements.forEach(element => {
+      Reflect.set(element, fullKey, value)
+    })
+    refreshParentComponent()
+  }
+
+  // Undo function
+  const inv_updateElements = () => {
+    elements.forEach(element => Reflect.set(element, fullKey, dict_old_val[element.id])
+    )
+    refreshParentComponent()
+  }
+
+  data.history.saveUndo(inv_updateElements)
+  data.history.saveRedo(_updateElements)
+  _updateElements()
+}
+/**
+ * Fonction générique pour créer des proxies getter/setter sur des attributs d'éléments
+ */
+
+export function getConfigValues<
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  ELEMENTS extends ElementsType
+>(
+  elements: ELEMENTS,
+  config: CONFIG,
+  prefix: string = '',
+  refreshParentComponent: () => void
+): {
+    -readonly [K in keyof CONFIG]: ExtractConfigValue<CONFIG[K]>
+  } {
+  const result = {} as {
+    -readonly [K in keyof CONFIG]: ExtractConfigValue<CONFIG[K]>
+  }
+
+  // Créer des getters/setters pour chaque propriété
+  for (const key in config) {
+    if (Object.prototype.hasOwnProperty.call(config, key)) {
+      const fullKey = prefix ? `${prefix}_${key}` : key
+      const configKey = key as keyof CONFIG
+
+      Object.defineProperty(result, key, {
+        get: () => {
+          return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
+        },
+        set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {
+          updateElements(
+            elements[0].drawing_area.application_data,
+            elements,
+            config,
+            prefix,
+            configKey,
+            value,
+            refreshParentComponent
+          )
+        },
+        enumerable: true,
+        configurable: true
+      })
+    }
+  }
+
+  return result
+}
+// ✅ Fonctions spécialisées simplifiées (optionnelles, pour garder l'API existante)
+
+export const getElementsLabelValues = (
+  elements: ElementsType,
+  prefix: 'name_label' | 'value_label' | 'icon',
+  refreshParentComponent: () => void
+) => getConfigValues(elements, BASE_LABEL_CONFIG, prefix, refreshParentComponent)
+
+export const getElementsValueLabelValues = (
+  elements: ElementsType,
+  prefix: 'name_label' | 'value_label',
+  refreshParentComponent: () => void
+) => getConfigValues(elements, VALUE_LABEL_CONFIG, prefix, refreshParentComponent)
+
+export const getElementsNameLabelValues = (
+  elements: Class_NodeElement[] | Class_ElementStyle[],
+  prefix: 'name_label' | 'value_label',
+  refreshParentComponent: () => void
+) => getConfigValues(elements, NAME_LABEL_CONFIG, prefix, refreshParentComponent)
+
+export const getLinksLabelValues = (
+  elements: Class_LinkElement[] | Class_ElementStyle[],
+  prefix: 'name_label' | 'value_label' | 'icon',
+  refreshParentComponent: () => void
+) => getConfigValues(elements, LINKS_LABEL_SPECIFIC_CONFIG, prefix, refreshParentComponent)
+
+
+
+export const getShapeValues = (
+  elements: ElementsType,
+  prefix: ShapePrefix,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, BASE_SHAPE_CONFIG, prefix, refreshParentComponent)
+
+export const getLinkShapeValues = (
+  elements: ElementsType,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, LINKS_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
+
+export const getNodeShapeValues = (
+  elements: ElementsType,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, NODE_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
+
+export const getIconValues = (
+  elements: ElementsType,
+  refreshParentComponent: () => void
+) => getConfigValues(elements, ICON_LABEL_BASE_CONFIG, 'icon', refreshParentComponent)
 
 

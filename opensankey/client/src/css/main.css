@@ -62,6 +62,18 @@ body {
   .g_scale {
     cursor: "move";
   }
+
+  /* Style of ZDT handles top & bottom */
+  .zdt_top_handle,
+  .zdt_bottom_handle {
+    cursor: ns-resize;
+  }
+  /* Style of ZDT handles left & right */
+  .zdt_left_handle,
+  .zdt_right_handle {
+    cursor: ew-resize;
+  }
+
 }
 /* Since legend & legend handlers are outside DA, it can't have parent class .edition_mode or .selection_mode */
 .legend_left_handle,
@@ -90,6 +102,10 @@ body {
     cursor: url(cursors/move_node_handler.svg) 0 0, auto;
   }
 }
+
+
+
+
 
 /* ------------------------------------------------
  TOOLTIP

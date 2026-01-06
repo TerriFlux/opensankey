@@ -49,7 +49,8 @@ import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
-import { LinkAttributeMappings, Type_Side, } from './ElementsAttributesConfig'
+import { Type_Side, } from './ElementsAttributesConfig'
+import { LinkAttributeMappings } from '../Persistence/SankeyPersistence'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -77,8 +78,8 @@ export function defaultLinkId(
 /**
  * Allows to sort links alphabethically per id
  * @export
- * @param {(Class_LinkElement | Class_LinkStyle)} a
- * @param {(Class_LinkElement | Class_LinkStyle)} b
+ * @param {(Class_LinkElement | Class_ElementStyle)} a
+ * @param {(Class_LinkElement | Class_ElementStyle)} b
  * @return {*}
  */
 export function sortLinksElementsByIds(
@@ -176,7 +177,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _position_ending: Type_BaseElementPosition
 
-  //style: Class_LinkStyle[],
+  //style: Class_ElementStyle[],
   //attributes: Class_LinkAttribute
 
   // optional var used when value label is dragged (if label doesn't follow link path)

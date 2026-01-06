@@ -27,7 +27,7 @@
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_Tag } from '../types/Tag'
 import { default_style_id } from '../types/Utils'
-import { Class_NodeStyle } from '../Elements/Element'
+import { Class_ElementStyle } from '../Elements/Element'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
@@ -925,7 +925,7 @@ export const disaggregate = (
 
     new_nodes.forEach((n, i) => {
       n.position_u = aggregateNode.position_u
-      if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_NodeStyle).position_type == 'parametric' && i == 0) {
+      if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_ElementStyle).position_type == 'parametric' && i == 0) {
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
     })

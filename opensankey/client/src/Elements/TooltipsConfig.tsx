@@ -1,5 +1,4 @@
 import * as d3 from 'd3'
-import { Class_ProtoElement } from './Element'
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
 import { TooltipBehaviorManager } from './TooltipsCSS'

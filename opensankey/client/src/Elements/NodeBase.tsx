@@ -27,29 +27,27 @@
 import * as d3 from 'd3'
 
 import {
-  default_style_id,
-  getNumberOrUndefinedFromJSON,
   getStringFromJSON,
-  getStringListFromJSON,
   Type_JSON,
   getNumberFromJSON,
 } from '../types/Utils'
 
-import { Class_NodeStyle } from './Element'
+import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
-import { NodeAttributeMappings, NODES_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
+import { NODES_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
+import { NodeAttributeMappings } from '../Persistence/SankeyPersistence'
 import { Class_NodeAttribute } from './Element'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 0
 
 export function sortNodesElements(
-  a: Class_NodeBase | Class_NodeStyle,
-  b: Class_NodeBase | Class_NodeStyle
+  a: Class_NodeBase | Class_ElementStyle,
+  b: Class_NodeBase | Class_ElementStyle
 ) {
   if (a.name > b.name) return 1
   else if (a.name < b.name) return -1
@@ -205,7 +203,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
   }
 
   public useDefaultStyle() {
-    this.style = [this.sankey.default_node_style as Class_NodeStyle]
+    this.style = [this.sankey.default_node_style as Class_ElementStyle]
   }
 
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
@@ -252,7 +250,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
   }
 
   // public getStyleWithPositionAttr(k: keyof Type_ElementPositionOptionnal) {
-  //   return this.style.slice().reverse().find(s => s.position[k as keyof Type_ElementPositionOptionnal] !== undefined) ?? this.sankey.default_node_style as Class_NodeStyle
+  //   return this.style.slice().reverse().find(s => s.position[k as keyof Type_ElementPositionOptionnal] !== undefined) ?? this.sankey.default_node_style as Class_ElementStyle
   // }
 
   public get name() { return this._name }
@@ -311,8 +309,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
         h: this.getShapeHeightToUse(),
       }
       this.drawing_area.application_data.history.saveUndo(() => {
-        // this.shape_min_width = old_val.w
-        // this.shape_min_height = old_val.h
+        this.shape_min_width = old_val.w
+        this.shape_min_height = old_val.h
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.draw()
@@ -337,8 +335,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
         h: this.getShapeHeightToUse(),
       }
       this.drawing_area.application_data.history.saveRedo(() => {
-        // this.shape_min_width = old_val.w
-        // this.shape_min_height = old_val.h
+        this.shape_min_width = old_val.w
+        this.shape_min_height = old_val.h
         this._position.x = old_val.x
         this._position.y = old_val.y
         this.draw()
@@ -359,7 +357,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
       // if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['left', 'right'].includes(this.extremity_position))
       //   return
 
-      //this.shape_min_height -= event.dy
+      this.shape_min_height -= event.dy
       this.position_y = this.position_y + event.dy
       this.draw()
 
@@ -381,7 +379,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
       // if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['left', 'right'].includes(this.extremity_position))
       //   return
 
-      //this.shape_min_height += event.dy
+      this.shape_min_height += event.dy
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -402,8 +400,8 @@ export class Class_NodeBase extends Class_NodeAttribute {
       // if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this.extremity_position))
       //   return
 
-      //this.shape_min_width -= event.dx
-      //this.setPosXY(this.position_x + event.dx, this.position_y)
+      this.shape_min_width -= event.dx
+      this.setPosXY(this.position_x + event.dx, this.position_y)
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -424,7 +422,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
       // if (this.tied_to_nodes && this.at_extremity_of_attached_nodes && ['top', 'bottom'].includes(this.extremity_position))
       //   return
 
-      //this.shape_min_width += event.dx
+      this.shape_min_width += event.dx
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label

@@ -50,11 +50,11 @@ import {
 } from '../types/Utils'
 import { sortNodesElements } from '../Elements/NodeBase'
 import {
-  LinkAttributeMappings,
-  LINKS_ATTRIBUTES_CONFIG, NodeAttributeMappings, NODES_ATTRIBUTES_CONFIG,
+  LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG,
   Type_customisable_flow_style_attr, Type_customisable_node_style_attr
 } from '../Elements/ElementsAttributesConfig'
-import { Class_LinkStyle, Class_NodeStyle, StorageType } from '../Elements/Element'
+import { LinkAttributeMappings, NodeAttributeMappings } from '../Persistence/SankeyPersistence'
+import { Class_ElementStyle, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
 /**
@@ -72,9 +72,9 @@ export class Class_Sankey {
    */
   protected _is_visible: boolean = true
 
-  protected _link_styles: { [_: string]: Class_LinkStyle } = {}
-  protected _node_styles: { [_: string]: Class_NodeStyle } = {}
-  protected _container_styles: { [_: string]: Class_NodeStyle } = {}
+  protected _link_styles: { [_: string]: Class_ElementStyle } = {}
+  protected _node_styles: { [_: string]: Class_ElementStyle } = {}
+  protected _container_styles: { [_: string]: Class_ElementStyle } = {}
 
   protected _nodes_dimensions: { [_: string]: Class_NodeDimension } = {}
 
@@ -116,21 +116,21 @@ export class Class_Sankey {
     return link
   }
 
-  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
-    return new Class_NodeStyle(
-      id, name, is_deletable!,new NodeAttributeMappings,this.default_node_style,this.drawing_area
+  protected createNewNodeStyle(id: string, name: string, is_deletable?: boolean): Class_ElementStyle {
+    return new Class_ElementStyle(
+      NODES_ATTRIBUTES_CONFIG,id, name, is_deletable!,new NodeAttributeMappings,this.default_node_style,this.drawing_area
     )
   }
   
-  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_LinkStyle {
-    const style = new Class_LinkStyle(
-      id, name, is_deletable!, new LinkAttributeMappings, this.default_link_style,this.drawing_area
+  protected createNewLinkStyle(id: string, name: string, is_deletable?: boolean): Class_ElementStyle {
+    const style = new Class_ElementStyle(
+      LINKS_ATTRIBUTES_CONFIG,id, name, is_deletable!, new LinkAttributeMappings, this.default_link_style,this.drawing_area
     )
     return style
   }
-  protected createNewContainerStyle(id: string, name: string, is_deletable?: boolean): Class_NodeStyle {
-    const style = new Class_NodeStyle(
-      id, name, is_deletable!, new LinkAttributeMappings, this.default_node_style,this.drawing_area
+  protected createNewContainerStyle(id: string, name: string, is_deletable?: boolean): Class_ElementStyle {
+    const style = new Class_ElementStyle(
+      NODES_ATTRIBUTES_CONFIG,id, name, is_deletable!, new LinkAttributeMappings, this.default_node_style,this.drawing_area
     )
     return style
   }
@@ -1690,16 +1690,16 @@ export class Class_Sankey {
    * Create a new style for node
    * @param {string} id
    * @param {string} name
-   * @return {*}  {Class_NodeStyle}
+   * @return {*}  {Class_ElementStyle}
    * @memberof Class_Sankey
    */
   public addNewNodeStyle(
     id: string,
     name: string
-  ): Class_NodeStyle {
+  ): Class_ElementStyle {
     if (!this._node_styles[id]) {
-      const style = new Class_NodeStyle(
-        id, name, true,new NodeAttributeMappings,this.default_node_style,this.drawing_area
+      const style = new Class_ElementStyle(
+        NODES_ATTRIBUTES_CONFIG,id, name, true,new NodeAttributeMappings,this.default_node_style,this.drawing_area
       )
       this._node_styles[id] = style
       return style
@@ -1711,9 +1711,10 @@ export class Class_Sankey {
   public addNewContainerStyle(
     id: string,
     name: string
-  ): Class_NodeStyle {
+  ): Class_ElementStyle {
     if (!this._node_styles[id]) {
-      const style = new Class_NodeStyle(
+      const style = new Class_ElementStyle(
+        NODES_ATTRIBUTES_CONFIG,
         id, name, true,new NodeAttributeMappings,this.default_node_style,this.drawing_area
       )
       this._container_styles[id] = style
@@ -1726,10 +1727,10 @@ export class Class_Sankey {
 
   /**
    * Delete a given style
-   * @param {Class_NodeStyle} style
+   * @param {Class_ElementStyle} style
    * @memberof Class_Sankey
    */
-  public deleteNodeStyle(style: Class_NodeStyle) {
+  public deleteNodeStyle(style: Class_ElementStyle) {
     if (this._node_styles[style.id] !== undefined) {
       this._node_styles[style.id].delete()
       delete this._node_styles[style.id]
@@ -1767,10 +1768,11 @@ export class Class_Sankey {
   public addNewLinkStyle(
     id: string,
     name: string
-  ): Class_LinkStyle {
+  ): Class_ElementStyle {
     if (!this._link_styles[id]) {
-      const style = new Class_LinkStyle(
-        id, name, true,new NodeAttributeMappings,this.default_link_style,this.drawing_area
+      const style = new Class_ElementStyle(
+        LINKS_ATTRIBUTES_CONFIG,
+        id, name, true,new LinkAttributeMappings,this.default_link_style,this.drawing_area
       )
       this._link_styles[id] = style
       return style
@@ -1782,17 +1784,17 @@ export class Class_Sankey {
 
   /**
    * Delete a given style
-   * @param {Class_NodeStyle} style
+   * @param {Class_ElementStyle} style
    * @memberof Class_Sankey
    */
-  public deleteLinkStyle(style: Class_LinkStyle) {
+  public deleteLinkStyle(style: Class_ElementStyle) {
     if (this._link_styles[style.id] !== undefined) {
       this._link_styles[style.id].delete()
       delete this._link_styles[style.id]
     }
   }
 
-  public deleteContainerStyle(style: Class_NodeStyle) {
+  public deleteContainerStyle(style: Class_ElementStyle) {
     if (this._container_styles[style.id] !== undefined) {
       this._container_styles[style.id].delete()
       delete this._container_styles[style.id]
@@ -1827,12 +1829,12 @@ export class Class_Sankey {
   /**
   * Function that change selected nodes style and save undo
   *
-  * @param {Class_NodeStyle} n_style
+  * @param {Class_ElementStyle} n_style
   */
-  public switchNodeStyle(n_style: Class_NodeStyle, add: boolean) {
+  public switchNodeStyle(n_style: Class_ElementStyle, add: boolean) {
     const selected_nodes = this.drawing_area.selected_nodes_list
     const { ref_selected_style_node } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_NodeStyle[] } = {}
+    const curr_style: { [x: string]: Class_ElementStyle[] } = {}
     selected_nodes.map(node => {
       curr_style[node.id] = node.style
     })
@@ -1869,12 +1871,12 @@ export class Class_Sankey {
   /**
 * Function that change selected nodes style and save undo
 *
-* @param {Class_NodeStyle} n_style
+* @param {Class_ElementStyle} n_style
 */
-  public switchContainerStyle(n_style: Class_NodeStyle, add: boolean) {
+  public switchContainerStyle(n_style: Class_ElementStyle, add: boolean) {
     const selected_zdt = this.drawing_area.selected_containers_list
     const { ref_selected_style_container } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_NodeStyle[] } = {}
+    const curr_style: { [x: string]: Class_ElementStyle[] } = {}
     selected_zdt.map(node => {
       curr_style[node.id] = node.style
     })
@@ -1965,12 +1967,12 @@ export class Class_Sankey {
   /**
    * Function that change selected links style and save undo
    *
-   * @param {Class_LinkStyle} n_style
+   * @param {Class_ElementStyle} n_style
    */
-  public switchLinkStyle(n_style: Class_LinkStyle, add: boolean) {
+  public switchLinkStyle(n_style: Class_ElementStyle, add: boolean) {
     const selected_links = this.drawing_area.selected_links_list
     const { ref_selected_style_link } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_LinkStyle[] } = {}
+    const curr_style: { [x: string]: Class_ElementStyle[] } = {}
     selected_links.map(link => {
       curr_style[link.id] = link.style
     })

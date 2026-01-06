@@ -30,13 +30,13 @@ import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
 import {
-  default_element_color,
   getBooleanFromJSON,
   getNumberFromJSON,
   getStringFromJSON,
   Type_JSON,
   getJSONFromJSON,
 } from '../types/Utils'
+import { default_element_color } from './ElementsAttributesConfig'
 
 import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { Class_DrawingArea } from '../types/DrawingArea'

@@ -41,12 +41,13 @@ import {
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import {
-  AttributeConfig, AttributeMappings,
+  AttributeConfig, 
   IconLabelAttributeTypes,
   LinkLabelSpecificValues, LINKS_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
   NameLabelAttributeTypes, NODES_ATTRIBUTES_CONFIG, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
   Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_TextHPos, Type_TextVPos, ValueLabelAttributeTypes
 } from './ElementsAttributesConfig'
+import { AttributeMappings } from '../Persistence/SankeyPersistence'
 
 export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -314,8 +315,8 @@ export abstract class Class_BaseElement {
   }
 }
 export abstract class Class_ProtoElement<
-  CONFIG extends Record<string, AttributeConfig<any>>,
-  STYLE_TYPE extends Class_ElementStyle<CONFIG> = Class_ElementStyle<CONFIG>
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  STYLE_TYPE extends Class_ElementStyle = Class_ElementStyle
 > extends Class_BaseElement {
 
   private _storage: StorageType<CONFIG> = {}
@@ -507,7 +508,7 @@ export abstract class Class_ProtoElement<
     //   this.style = [this.sankey.node_styles_dict[style_id]]
     // } else {
     //   const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-    //   this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_NodeStyle[]
+    //   this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_ElementStyle[]
     // }
 
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
@@ -572,7 +573,7 @@ export abstract class Class_ProtoElement<
 }
 export abstract class Class_BaseShape<
   CONFIG extends Record<string, AttributeConfig<any>>,
-  STYLE_TYPE extends Class_ElementStyle<CONFIG> = Class_ElementStyle<CONFIG>
+  STYLE_TYPE extends Class_ElementStyle = Class_ElementStyle
 > extends Class_ProtoElement<CONFIG, STYLE_TYPE> {
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
   shape_visible!: ShapeAttributeTypes['visible']
@@ -706,7 +707,7 @@ export abstract class Class_BaseShape<
   hyperlink!: string | undefined
 }
 
-export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_ATTRIBUTES_CONFIG, Class_NodeStyle> {
+export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_ATTRIBUTES_CONFIG, Class_ElementStyle> {
   orphan_node_visible!: boolean
   position_type!: NodeShapeSpecificAttributeTypes['position_type']
   position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
@@ -721,7 +722,7 @@ export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_A
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
     attributeMappings: AttributeMappings,
-    default_style: Class_NodeStyle
+    default_style: Class_ElementStyle
   ) {
     super(
       id, drawing_area, svg_parent_group,
@@ -731,7 +732,7 @@ export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_A
 
 }
 
-export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_ATTRIBUTES_CONFIG, Class_LinkStyle> {
+export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_ATTRIBUTES_CONFIG, Class_ElementStyle> {
   shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
   shape_is_curved!: LinkShapeSpecificValues['is_curved']
   shape_curvature!: LinkShapeSpecificValues['curvature']
@@ -759,7 +760,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
     attributeMappings: AttributeMappings,
-    default_style: Class_LinkStyle
+    default_style: Class_ElementStyle
   ) {
     super(
       id, drawing_area, svg_parent_group,
@@ -844,309 +845,10 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
 type ExtractAttributeValue<T> = T extends AttributeConfig<infer U> ? U : never
 
 // Type pour le storage basé sur CONFIG
-export type StorageType<CONFIG extends Record<string, AttributeConfig<any>>> = {
+export type StorageType<CONFIG extends Record<string, AttributeConfig<unknown>>> = {
   -readonly [K in keyof CONFIG]?: ExtractAttributeValue<CONFIG[K]>
 }
-export class Class_ElementStyle<CONFIG extends Record<string, AttributeConfig<any>>> {
-  private _storage: StorageType<CONFIG> = {}
-  private _config: CONFIG
-  private _id: string
-  private _name: string
-  private _is_deletable: boolean
-  private _references: { [_: string]: Class_ProtoElement<CONFIG> } = {}
-  private _customisable_attribute: { -readonly [K in keyof CONFIG]?: boolean } = {}
-  private _attributeMappings: AttributeMappings
-  private _default_style: Class_ElementStyle<CONFIG>
-  private _drawing_area: Class_DrawingArea
-
-  constructor(
-    config: CONFIG,
-    id: string,
-    name: string,
-    is_deletable: boolean,
-    attributeMappings: AttributeMappings,
-    default_style: Class_ElementStyle<CONFIG>,
-    drawing_area: Class_DrawingArea
-  ) {
-    this._config = config
-    this._id = id
-    this._name = name
-    this._is_deletable = is_deletable;
-    this._attributeMappings = attributeMappings
-    this._default_style = default_style;
-    this._drawing_area = drawing_area;
-      // Initialiser les attributs customisables
-      (Object.keys(this._config) as Array<keyof CONFIG>).forEach(key => {
-        this._customisable_attribute[key] = !is_deletable
-      })
-
-    if (!is_deletable) {
-      (Object.entries(this._config) as Array<[keyof CONFIG, AttributeConfig<any>]>).forEach(([key, config]) => {
-        this._storage[key] = config.default
-      })
-    }
-  }
-  // Getter typé
-  public get<K extends keyof CONFIG>(key: K): ExtractAttributeValue<CONFIG[K]> | undefined {
-    return this._storage[key]
-  }
-
-  // Setter typé
-  public set<K extends keyof CONFIG>(key: K, value: ExtractAttributeValue<CONFIG[K]>): void {
-    this._storage[key] = value
-  }
-
-  public deleteAttribute<K extends keyof CONFIG>(key: K): void {
-    delete this._storage[key]
-  }
-
-  public copyFrom(element: Class_ElementStyle<CONFIG>) {
-    (Object.keys(element._storage) as Array<keyof CONFIG>).forEach(key => {
-      this._storage[key] = element._storage[key]
-    })
-    this._customisable_attribute = { ...element._customisable_attribute }
-  }
-
-  protected shouldSaveAttribute(
-    key: keyof CONFIG,
-    value: number | string | boolean | undefined,
-    default_style: Class_ElementStyle<CONFIG> | null
-  ) {
-    if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key as keyof Class_ElementStyle<CONFIG>]
-    }
-    return value !== undefined && this._customisable_attribute[key] && value !== this._config[key].default
-  }
-
-  public delete() {
-    if (this._is_deletable) {
-      Object.values(this._references).forEach(ref => ref.useDefaultStyle())
-      this._references = {}
-    }
-  }
-
-  public addReference(ref: Class_ProtoElement<CONFIG>) {
-    if (!this._references[ref.id]) {
-      this._references[ref.id] = ref
-    }
-  }
-
-  public removeReference(ref: Class_ProtoElement<CONFIG>) {
-    if (this._references[ref.id] !== undefined) {
-      delete this._references[ref.id]
-    }
-  }
-
-  protected update() {
-    Object.values(this._references).forEach(ref => ref.draw())
-  }
-
-  public get id() { return this._id }
-  public get name() { return this._name }
-  public set name(value: string) { this._name = value }
-  public get customisable_attribute() { return this._customisable_attribute }
-
-  public toJSON(): Type_JSON {
-    const json_object = {} as Type_JSON
-    const jsonMapping = this._attributeMappings.getToJsonMapping()
-    Object.entries(this).forEach(([key, value]) => {
-      if (this.shouldSaveAttribute(key as keyof CONFIG, value, this._default_style)) {
-        const jsonKey = jsonMapping[key] || key
-        json_object[jsonKey] = value
-      }
-    })
-    return json_object
-  }
-
-  public fromJSON(
-    json_local_object: Type_JSON
-  ) {
-    Object.keys(this._storage).forEach(key => {
-      if (this._storage[key as keyof CONFIG] !== undefined) {
-        this._customisable_attribute[key as keyof CONFIG] = true
-      }
-    })
-    const fromJsonMapping = this._attributeMappings.getFromJsonMapping()
-    // Mapping principal depuis JSON (inclut OSP et legacy)
-    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-      if (this._default_style && json_local_object[jsonKey] !== this._default_style[attrKey as keyof Class_ElementStyle<CONFIG>]) {
-        this._storage[attrKey as keyof CONFIG] = json_local_object[jsonKey] as ExtractAttributeValue<CONFIG[typeof attrKey]>
-      } else if (json_local_object[jsonKey] !== this._config[attrKey].default) {
-        this._storage[attrKey as keyof CONFIG] = json_local_object[jsonKey] as ExtractAttributeValue<CONFIG[typeof attrKey]>
-      }
-    }
-    )
-
-    // Attributs directs (même nom)
-    Object.keys(this._config).forEach(key => {
-      if (json_local_object[key] !== undefined) {
-        if (this._default_style && json_local_object[key] !== this._default_style[key as keyof Class_ElementStyle<CONFIG>]) {
-          this._storage[key as keyof CONFIG] = json_local_object[key] as ExtractAttributeValue<CONFIG[typeof key]>
-        } else if (json_local_object[key] !== this._config[key].default) {
-          this._storage[key as keyof CONFIG] = json_local_object[key] as ExtractAttributeValue<CONFIG[typeof key]>
-        }
-      }
-    })
-  }
-  public get drawing_area() { return this._drawing_area}
-}
-
-export class Class_NodeStyle extends Class_ElementStyle<typeof NODES_ATTRIBUTES_CONFIG> {
-  shape_visible!: ShapeAttributeTypes['visible']
-  shape_type!: ShapeAttributeTypes['type']
-  shape_min_width!: ShapeAttributeTypes['min_width']
-  shape_min_height!: ShapeAttributeTypes['min_height']
-  shape_color_visible!: ShapeAttributeTypes['color_visible']
-  shape_color!: ShapeAttributeTypes['color']
-  shape_opacity!: ShapeAttributeTypes['opacity']
-  shape_color_sustainable!: ShapeAttributeTypes['color_sustainable']
-
-  // =================== BORDER ATTRIBUTES (border_*) ===================
-  shape_border_visible!: ShapeAttributeTypes['border_visible']
-  shape_border_color!: ShapeAttributeTypes['border_color']
-  shape_border_thickness!: ShapeAttributeTypes['border_thickness']
-  shape_border_dashed!: ShapeAttributeTypes['border_dashed']
-  shape_border_radius!: ShapeAttributeTypes['border_radius']
-
-  // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
-  // Visibility & Font
-
-  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
-  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
-
-  name_label_is_visible!: NameLabelAttributeTypes['is_visible']
-  name_label_font_family!: NameLabelAttributeTypes['font_family']
-  name_label_font_size!: NameLabelAttributeTypes['font_size']
-  name_label_uppercase!: NameLabelAttributeTypes['uppercase']
-  name_label_bold!: NameLabelAttributeTypes['bold']
-  name_label_italic!: NameLabelAttributeTypes['italic']
-  name_label_color!: NameLabelAttributeTypes['color']
-  // Separator
-  name_label_separator!: NameLabelAttributeTypes['separator']
-  name_label_separator_part!: NameLabelAttributeTypes['separator_part']
-
-  // Position
-  name_label_horiz!: NameLabelAttributeTypes['horiz']
-  name_label_vert!: NameLabelAttributeTypes['vert']
-  name_label_horiz_shift!: NameLabelAttributeTypes['horiz_shift']
-  name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
-  name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
-  name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
-  name_label_position_x!: NameLabelAttributeTypes['position_x']
-  name_label_position_y!: NameLabelAttributeTypes['position_y']
-  name_label_position_offset!: NameLabelAttributeTypes['position_offset']
-  name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
-  name_label_text_align!: NameLabelAttributeTypes['text_align']
-  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
-  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
-  // Background
-  name_label_background_visible!: NameLabelAttributeTypes['background_visible']
-  name_label_background_color!: NameLabelAttributeTypes['background_color']
-  name_label_background_opacity!: NameLabelAttributeTypes['background_opacity']
-  name_label_background_type!: NameLabelAttributeTypes['background_type']
-  name_label_background_min_width!: NameLabelAttributeTypes['background_min_width']
-  name_label_background_min_height!: NameLabelAttributeTypes['background_min_height']
-  name_label_background_color_visible!: NameLabelAttributeTypes['background_color_visible']
-  name_label_background_color_sustainable!: NameLabelAttributeTypes['background_color_sustainable']
-  name_label_background_border_visible!: NameLabelAttributeTypes['background_border_visible']
-  name_label_background_border_color!: NameLabelAttributeTypes['background_border_color']
-  name_label_background_border_thickness!: NameLabelAttributeTypes['background_border_thickness']
-  name_label_background_border_dashed!: NameLabelAttributeTypes['background_border_dashed']
-  name_label_background_border_radius!: NameLabelAttributeTypes['background_border_radius']
-
-
-  // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
-  // Visibility & Font
-  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
-  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
-
-  value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
-  value_label_font_family!: ValueLabelAttributeTypes['font_family']
-  value_label_font_size!: ValueLabelAttributeTypes['font_size']
-  value_label_uppercase!: ValueLabelAttributeTypes['uppercase']
-  value_label_bold!: ValueLabelAttributeTypes['bold']
-  value_label_italic!: ValueLabelAttributeTypes['italic']
-  value_label_color!: ValueLabelAttributeTypes['color']
-
-  // Position
-  value_label_horiz!: ValueLabelAttributeTypes['horiz']
-  value_label_vert!: ValueLabelAttributeTypes['vert']
-  value_label_horiz_shift!: ValueLabelAttributeTypes['horiz_shift']
-  value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
-  value_label_box_width!: ValueLabelAttributeTypes['box_width']
-  value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
-  value_label_position_x!: ValueLabelAttributeTypes['position_x']
-  value_label_position_y!: ValueLabelAttributeTypes['position_y']
-  value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
-  value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
-  value_label_text_align!: ValueLabelAttributeTypes['text_align']
-  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
-  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
-  // Background
-  value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
-  value_label_background_color!: ValueLabelAttributeTypes['background_color']
-  value_label_background_opacity!: ValueLabelAttributeTypes['background_opacity']
-  value_label_background_type!: ValueLabelAttributeTypes['background_type']
-  value_label_background_min_width!: ValueLabelAttributeTypes['background_min_width']
-  value_label_background_min_height!: ValueLabelAttributeTypes['background_min_height']
-  value_label_background_color_visible!: ValueLabelAttributeTypes['background_color_visible']
-  value_label_background_color_sustainable!: ValueLabelAttributeTypes['background_color_sustainable']
-  value_label_background_border_visible!: ValueLabelAttributeTypes['background_border_visible']
-  value_label_background_border_color!: ValueLabelAttributeTypes['background_border_color']
-  value_label_background_border_thickness!: ValueLabelAttributeTypes['background_border_thickness']
-  value_label_background_border_dashed!: ValueLabelAttributeTypes['background_border_dashed']
-  value_label_background_border_radius!: ValueLabelAttributeTypes['background_border_radius']
-
-  // Formatting
-  value_label_scientific_notation!: ValueLabelAttributeTypes['scientific_notation']
-  value_label_significant_digits!: ValueLabelAttributeTypes['significant_digits']
-  value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
-  value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
-  value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
-
-  // Units
-  value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
-  value_label_unit_type!: ValueLabelAttributeTypes['unit_type']
-  value_label_unit!: ValueLabelAttributeTypes['unit']
-  value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
-
-  // =================== ICON ATTRIBUTES (icon_*) ===================
-  icon_color!: IconLabelAttributeTypes['color']
-  icon_is_visible!: IconLabelAttributeTypes['is_visible']
-  icon_icon_name!: IconLabelAttributeTypes['icon_name']
-  icon_view_box!: IconLabelAttributeTypes['view_box']
-  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
-  icon_horiz!: IconLabelAttributeTypes['horiz']
-  icon_vert!: IconLabelAttributeTypes['vert']
-  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
-  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
-  icon_is_image!: IconLabelAttributeTypes['is_image']
-  icon_image_src!: IconLabelAttributeTypes['image_src']
-
-  // =================== HYPERLINK ATTRIBUTES ===================
-  hyperlink!: string | undefined
-
-  orphan_node_visible!: boolean
-  position_type!: NodeShapeSpecificAttributeTypes['position_type']
-  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
-  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
-  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
-  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
-  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
-  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
-
-  constructor(
-    id: string,
-    name: string,
-    is_deletable: boolean = true,
-    attributeMappings: AttributeMappings,
-    default_style: Class_NodeStyle,
-    drawing_area: Class_DrawingArea
-  ) {
-    super(NODES_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style, drawing_area)
-  }
-}
-export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_CONFIG> {
+export class Class_ElementStyle {
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
   shape_min_width!: ShapeAttributeTypes['min_width'] //only nodes
@@ -1302,14 +1004,154 @@ export class Class_LinkStyle extends Class_ElementStyle<typeof LINKS_ATTRIBUTES_
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
+  orphan_node_visible!: boolean
+  position_type!: NodeShapeSpecificAttributeTypes['position_type']
+  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
+  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
+  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
+  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
+  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+
+  private _storage: Record<string,unknown> = {}
+  private _config: Record<string, AttributeConfig<unknown>>
+  private _id: string
+  private _name: string
+  private _is_deletable: boolean
+  private _references: { [_: string]: Class_BaseElement} = {}
+  private _customisable_attribute: { -readonly [K in string]: boolean } = {}
+  private _attributeMappings: AttributeMappings
+  private _default_style: Class_ElementStyle
+  private _drawing_area: Class_DrawingArea
+
   constructor(
+    config: Record<string, AttributeConfig<unknown>>,
     id: string,
     name: string,
-    is_deletable: boolean = true,
+    is_deletable: boolean,
     attributeMappings: AttributeMappings,
-    default_style: Class_LinkStyle,
+    default_style: Class_ElementStyle,
     drawing_area: Class_DrawingArea
   ) {
-    super(LINKS_ATTRIBUTES_CONFIG, id, name, is_deletable, attributeMappings, default_style,drawing_area)
+    this._config = config
+    this._id = id
+    this._name = name
+    this._is_deletable = is_deletable;
+    this._attributeMappings = attributeMappings
+    this._default_style = default_style;
+    this._drawing_area = drawing_area;
+      // Initialiser les attributs customisables
+      Object.keys(this._config).forEach(key => {
+        this._customisable_attribute[key] = !is_deletable
+      })
+
+    if (!is_deletable) {
+      Object.entries(this._config).forEach(([key, config]) => {
+        this._storage[key] = config.default
+      })
+    }
   }
+  // Getter typé
+  public get(key: string) {
+    return this._storage[key]
+  }
+
+  // Setter typé
+  public set(key:string,value: string): void {
+    this._storage[key] = value
+  }
+
+  public deleteAttribute(key: string): void {
+    delete this._storage[key]
+  }
+
+  public copyFrom(element: Class_ElementStyle) {
+    Object.keys(element._storage).forEach(key => {
+      this._storage[key] = element._storage[key]
+    })
+    this._customisable_attribute = { ...element._customisable_attribute }
+  }
+
+  protected shouldSaveAttribute(
+    key: string,
+    value: number | string | boolean | undefined,
+    default_style: Class_ElementStyle | null
+  ) {
+    if (default_style) {
+      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key as keyof Class_ElementStyle]
+    }
+    return value !== undefined && this._customisable_attribute[key] && value !== this._config[key].default
+  }
+
+  public delete() {
+    if (this._is_deletable) {
+      //Object.values(this._references).forEach(ref => ref.useDefaultStyle())
+      this._references = {}
+    }
+  }
+
+  public addReference(ref: Class_BaseElement) {
+    if (!this._references[ref.id]) {
+      this._references[ref.id] = ref
+    }
+  }
+
+  public removeReference(ref: Class_BaseElement) {
+    if (this._references[ref.id] !== undefined) {
+      delete this._references[ref.id]
+    }
+  }
+
+  protected update() {
+    Object.values(this._references).forEach(ref => ref.draw())
+  }
+
+  public get id() { return this._id }
+  public get name() { return this._name }
+  public set name(value: string) { this._name = value }
+  public get customisable_attribute() { return this._customisable_attribute }
+
+  public toJSON(): Type_JSON {
+    const json_object = {} as Type_JSON
+    const jsonMapping = this._attributeMappings.getToJsonMapping()
+    Object.entries(this).forEach(([key, value]) => {
+      if (this.shouldSaveAttribute(key, value, this._default_style)) {
+        const jsonKey = jsonMapping[key] || key
+        json_object[jsonKey] = value
+      }
+    })
+    return json_object
+  }
+
+  public fromJSON(
+    json_local_object: Type_JSON
+  ) {
+    Object.keys(this._storage).forEach(key => {
+      if (this._storage[key] !== undefined) {
+        this._customisable_attribute[key] = true
+      }
+    })
+    const fromJsonMapping = this._attributeMappings.getFromJsonMapping()
+    // Mapping principal depuis JSON (inclut OSP et legacy)
+    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
+      if (this._default_style && json_local_object[jsonKey] !== this._default_style[attrKey as keyof Class_ElementStyle]) {
+        this._storage[attrKey] = json_local_object[jsonKey]
+      } else if (json_local_object[jsonKey] !== this._config[attrKey].default) {
+        this._storage[attrKey] = json_local_object[jsonKey]
+      }
+    }
+    )
+
+    // Attributs directs (même nom)
+    Object.keys(this._config).forEach(key => {
+      if (json_local_object[key] !== undefined) {
+        if (this._default_style && json_local_object[key] !== this._default_style[key as keyof Class_ElementStyle]) {
+          this._storage[key] = json_local_object[key]
+        } else if (json_local_object[key] !== this._config[key].default) {
+          this._storage[key] = json_local_object[key]
+        }
+      }
+    })
+  }
+  public get drawing_area() { return this._drawing_area}
 }
