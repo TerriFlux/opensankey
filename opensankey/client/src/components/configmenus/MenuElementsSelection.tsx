@@ -16,21 +16,12 @@ type ElementType = 'node' | 'link' | 'container'
 type ElementInstance = Class_NodeElement | Class_LinkElement | Class_ContainerElement
 
 interface ElementConfig<T extends ElementInstance> {
+  type: ElementType
   // Getters pour les listes
   getAllElements: (app_data: Class_ApplicationData) => T[]
   getVisibleElements: (app_data: Class_ApplicationData) => T[]
   getSelectedElements: (app_data: Class_ApplicationData) => T[]
   getVisibleAndSelectedElements: (app_data: Class_ApplicationData) => T[]
-
-  // Flags de visibilité
-  getIsOnlyVisible: (app_data: Class_ApplicationData) => boolean
-  toggleOnlyVisible: (app_data: Class_ApplicationData) => void
-
-  // Gestion de la sélection
-  addToSelection: (app_data: Class_ApplicationData, element: T) => void
-  removeFromSelection: (app_data: Class_ApplicationData, element: T) => void
-  purgeSelection: (app_data: Class_ApplicationData) => void
-  deleteSelected: (app_data: Class_ApplicationData) => void
 
   // Création d'éléments
   createNewElement?: (app_data: Class_ApplicationData) => T
@@ -63,20 +54,13 @@ interface ElementConfig<T extends ElementInstance> {
 // ==================================================================================
 
 const NODE_CONFIG: ElementConfig<Class_NodeElement> = {
+  type: 'node',
   getAllElements: (app_data) => app_data.drawing_area.sankey.nodes_list_sorted,
   getVisibleElements: (app_data) => app_data.drawing_area.sankey.visible_nodes_list_sorted,
   getSelectedElements: (app_data) => app_data.drawing_area.selected_nodes_list_sorted,
   getVisibleAndSelectedElements: (app_data) => app_data.drawing_area.visible_and_selected_nodes_list_sorted,
 
-  getIsOnlyVisible: (app_data) => app_data.menu_configuration.is_selector_only_for_visible_nodes,
-  toggleOnlyVisible: (app_data) => app_data.menu_configuration.toggle_selector_on_visible_nodes(),
-
-  addToSelection: (app_data, element) => app_data.drawing_area.addNodeToSelection(element),
-  removeFromSelection: (app_data, element) => app_data.drawing_area.removeNodeFromSelection(element),
-  purgeSelection: (app_data) => app_data.drawing_area.purgeSelectionOfNode(),
-  deleteSelected: (app_data) => app_data.drawing_area.deleteSelectedNodes(),
-
-  createNewElement: (app_data) => app_data.drawing_area.addNewDefaultNodeToSankey(),
+  createNewElement: (app_data) => app_data.drawing_area.sankey.addNewDefaultNode(),
 
   getUpdateRef: (app_data) => app_data.menu_configuration.ref_to_menu_config_nodes_selection_updater,
   updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToNodesConfig(),
@@ -99,20 +83,13 @@ const NODE_CONFIG: ElementConfig<Class_NodeElement> = {
 }
 
 const LINK_CONFIG: ElementConfig<Class_LinkElement> = {
+  type: 'link',
   getAllElements: (app_data) => app_data.drawing_area.sankey.links_list,
   getVisibleElements: (app_data) => app_data.drawing_area.sankey.visible_links_list,
   getSelectedElements: (app_data) => app_data.drawing_area.selected_links_list,
   getVisibleAndSelectedElements: (app_data) => app_data.drawing_area.visible_and_selected_links_list,
 
-  getIsOnlyVisible: (app_data) => app_data.menu_configuration.is_selector_only_for_visible_links,
-  toggleOnlyVisible: (app_data) => app_data.menu_configuration.toggle_selector_on_visible_links(),
-
-  addToSelection: (app_data, element) => app_data.drawing_area.addLinkToSelection(element),
-  removeFromSelection: (app_data, element) => app_data.drawing_area.removeLinkFromSelection(element),
-  purgeSelection: (app_data) => app_data.drawing_area.purgeSelectionOfLinks(),
-  deleteSelected: (app_data) => app_data.drawing_area.deleteSelectedLinks(),
-
-  createNewElement: (app_data) => app_data.drawing_area.addNewDefaultLinkToSankey(),
+  createNewElement: (app_data) => app_data.drawing_area.sankey.addNewDefaultLink(),
 
   getUpdateRef: (app_data) => app_data.menu_configuration.ref_to_menu_config_links_selection_updater,
   updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToLinksConfig(),
@@ -131,20 +108,13 @@ const LINK_CONFIG: ElementConfig<Class_LinkElement> = {
 }
 
 const CONTAINER_CONFIG: ElementConfig<Class_ContainerElement> = {
-  getAllElements: (app_data) => app_data.drawing_area.containers_list,
-  getVisibleElements: (app_data) => app_data.drawing_area.visible_containers_list,
+  type: 'container',
+  getAllElements: (app_data) => app_data.drawing_area.sankey.containers_list,
+  getVisibleElements: (app_data) => app_data.drawing_area.sankey.visible_containers_list,
   getSelectedElements: (app_data) => app_data.drawing_area.selected_containers_list,
   getVisibleAndSelectedElements: (app_data) => app_data.drawing_area.visible_and_selected_containers_list,
 
-  getIsOnlyVisible: (app_data) => app_data.menu_configuration.is_selector_only_for_visible_containers,
-  toggleOnlyVisible: (app_data) => app_data.menu_configuration.toggle_selector_on_visible_containers(),
-
-  addToSelection: (app_data, element) => app_data.drawing_area.addContainerToSelection(element),
-  removeFromSelection: (app_data, element) => app_data.drawing_area.removeContainerFromSelection(element),
-  purgeSelection: (app_data) => app_data.drawing_area.purgeSelectionOfContainers(),
-  deleteSelected: (app_data) => app_data.drawing_area.deleteSelectedContainers(),
-
-  createNewElement: (app_data) => app_data.drawing_area.addNewDefaultContainerToSankey(),
+  createNewElement: (app_data) => app_data.drawing_area.sankey.addNewDefaultContainer(),
 
   getUpdateRef: (app_data) => app_data.menu_configuration.ref_to_menu_config_containers_selection_updater,
   updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToContainersConfig(),
@@ -165,8 +135,291 @@ const CONTAINER_CONFIG: ElementConfig<Class_ContainerElement> = {
   hasDeleteButton: true
 }
 
+const ALL_CONFIGS = {
+  node: NODE_CONFIG,
+  link: LINK_CONFIG,
+  container: CONTAINER_CONFIG
+}
+
 // ==================================================================================
-// COMPOSANT GÉNÉRIQUE DE SÉLECTION
+// COMPOSANT SÉLECTEUR MULTI-TYPE (NOUVEAU)
+// ==================================================================================
+
+interface MultiTypeSelectionProps {
+  app_data: Class_ApplicationData
+  enabledTypes?: ElementType[]
+  dropdownWidth?: string
+}
+
+export const SankeyMultiTypeSelectionSimple = ({
+  app_data,
+  enabledTypes = ['node', 'link', 'container'],
+  dropdownWidth
+}: MultiTypeSelectionProps) => {
+  const { t, icon_library, menu_configuration } = app_data
+  const { icon_element_visible, icon_element_invisible, icon_flow, icon_object, icon_node } = icon_library
+
+  // ✅ State pour les filtres actifs
+  const [activeFilters, setActiveFilters] = useState<Set<ElementType>>(new Set(enabledTypes))
+  const [, setCount] = useState(0)
+
+  // ✅ Icônes pour chaque type
+  const typeIcons = {
+    node: icon_node,
+    link: icon_flow,
+    container: icon_object
+  }
+
+  // ✅ Récupérer tous les éléments filtrés
+  const getAllFilteredElements = () => {
+    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<any> }[] = []
+
+    enabledTypes.forEach(type => {
+      if (!activeFilters.has(type)) return
+
+      const config = ALL_CONFIGS[type]
+      const elements = app_data.menu_configuration.is_selector_only_for_visible_elements
+        ? config.getVisibleElements(app_data)
+        : config.getAllElements(app_data)
+
+      elements.forEach(element => {
+        allElements.push({ element, type, config })
+      })
+    })
+
+    return allElements
+  }
+
+  // ✅ Récupérer tous les éléments sélectionnés
+  const getAllSelectedElements = () => {
+    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<any> }[] = []
+
+    enabledTypes.forEach(type => {
+      if (!activeFilters.has(type)) return
+
+      const config = ALL_CONFIGS[type]
+      const elements = app_data.menu_configuration.is_selector_only_for_visible_elements
+        ? config.getVisibleAndSelectedElements(app_data)
+        : config.getSelectedElements(app_data)
+
+      elements.forEach(element => {
+        selectedElements.push({ element, type, config })
+      })
+    })
+
+    return selectedElements
+  }
+
+  const allFilteredElements = getAllFilteredElements()
+  const allSelectedElements = getAllSelectedElements()
+
+  // ✅ Options pour MultiSelect avec préfixe de type
+  const options = allFilteredElements.map(({ element, type }) => ({
+    label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : 'C'}] ${element.name}`,
+    value: `${type}:${element.id}`,
+    type
+  }))
+
+  const selectedOptions = allSelectedElements.map(({ element, type }) => ({
+    label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : 'C'}] ${element.name}`,
+    value: `${type}:${element.id}`,
+    type
+  }))
+
+  // ✅ Lier les updaters
+  enabledTypes.forEach(type => {
+    const config = ALL_CONFIGS[type]
+    config.getUpdateRef(app_data).current = () => setCount(a => a + 1)
+  })
+
+  // ✅ Refresh
+  const refreshAndUpdateAll = () => {
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    enabledTypes.forEach(type => {
+      const config = ALL_CONFIGS[type]
+      config.updateRelatedComponents(app_data)
+    })
+    setCount(a => a + 1)
+  }
+
+  // ✅ Toggle filtre
+  const toggleFilter = (type: ElementType) => {
+    setActiveFilters(prev => {
+      const newFilters = new Set(prev)
+      if (newFilters.has(type)) {
+        newFilters.delete(type)
+      } else {
+        newFilters.add(type)
+      }
+      return newFilters
+    })
+  }
+
+  // ✅ Toggle visibilité (applique à tous les types actifs)
+  const toggleAllVisibility = () => {
+    enabledTypes.forEach(type => {
+      if (activeFilters.has(type)) {
+        const config = ALL_CONFIGS[type]
+        app_data.menu_configuration.toggle_selector_on_visible_elements()
+      }
+    })
+    setCount(a => a + 1)
+  }
+
+  // ✅ Vérifier si au moins un type a "only visible" activé
+  const hasAnyOnlyVisible = enabledTypes.some(type => {
+    if (!activeFilters.has(type)) return false
+    const config = ALL_CONFIGS[type]
+    return app_data.menu_configuration.is_selector_only_for_visible_elements
+  })
+
+  // ✅ Dropdown
+  const renderDropdown = () => {
+    const width = dropdownWidth || '8vw'
+
+    return (
+      <Box layerStyle='submenuconfig_droplist' width={width}>
+        <MultiSelect
+          options={options}
+          value={selectedOptions}
+          labelledBy={t('Menu.selection') || 'Sélection'}
+          onChange={(selected: [{ label: string; value: string; type: ElementType }]) => {
+            const newSelection = selected.map(d => d.value)
+
+            // Pour chaque type, mettre à jour la sélection
+            enabledTypes.forEach(type => {
+              if (!activeFilters.has(type)) return
+
+              const config = ALL_CONFIGS[type]
+              const elements = app_data.menu_configuration.is_selector_only_for_visible_elements
+                ? config.getVisibleElements(app_data)
+                : config.getAllElements(app_data)
+
+              elements.forEach(element => {
+                const key = `${type}:${element.id}`
+                if (newSelection.includes(key)) {
+                  app_data.drawing_area.addElementToSelection(element)
+                } else {
+                  app_data.drawing_area.removeElementFromSelection(element)
+                }
+              })
+            })
+
+            refreshAndUpdateAll()
+          }}
+          valueRenderer={(selected: { label: string; value: string; type: ElementType }[]) => {
+            if (!selected.length) {
+              return t('Menu.no_selection') || 'Aucune sélection'
+            }
+
+            // Compter par type
+            const counts = { node: 0, link: 0, container: 0 }
+            selected.forEach(s => counts[s.type]++)
+
+            const parts: string[] = []
+            if (counts.node > 0) parts.push(`${counts.node}N`)
+            if (counts.link > 0) parts.push(`${counts.link}F`)
+            if (counts.container > 0) parts.push(`${counts.container}C`)
+
+            return parts.join(' + ')
+          }}
+        />
+      </Box>
+    )
+  }
+
+  // ✅ Boutons de filtre
+  const renderFilters = () => (
+    <Box layerStyle='options_3cols'>
+      {enabledTypes.includes('node') && (
+        <OSTooltip label={t('Menu.filter_nodes') || 'Filtrer les nœuds'}>
+          <Button
+            variant={activeFilters.has('node') ? 'button_config_element_activated' : 'button_config_element'}
+            onClick={() => toggleFilter('node')}
+            sx={{
+              padding: '4px',
+              minWidth: 'auto',
+              height: 'auto',
+              '& svg': {
+                width: '10px',    // ✅ Réduit la taille des SVG
+                height: '10px'
+              }
+            }}
+          >
+            {typeIcons.node}
+          </Button>
+        </OSTooltip>
+      )}
+
+      {enabledTypes.includes('link') && (
+        <OSTooltip label={t('Menu.filter_links') || 'Filtrer les flux'}>
+          <Button
+            variant={activeFilters.has('link') ? 'button_config_element_activated' : 'button_config_element'}
+            onClick={() => toggleFilter('link')}
+            sx={{
+              padding: '4px',
+              minWidth: 'auto',
+              height: 'auto',
+              '& svg': {
+                width: '10px',    // ✅ Réduit la taille des SVG
+                height: '10px'
+              }
+            }}
+          >
+            {typeIcons.link}
+          </Button>
+        </OSTooltip>
+      )}
+
+      {enabledTypes.includes('container') && (
+        <OSTooltip label={t('Menu.filter_containers') || 'Filtrer les containers'}>
+          <Button
+            variant={activeFilters.has('container') ? 'button_config_element_activated' : 'button_config_element'}
+            onClick={() => toggleFilter('container')}
+            sx={{
+              padding: '4px',
+              minWidth: 'auto',
+              height: 'auto',
+              '& svg': {
+                width: '10px',    // ✅ Réduit la taille des SVG
+                height: '10px'
+              }
+            }}
+          >
+            {typeIcons.container}
+          </Button>
+        </OSTooltip>
+      )}
+    </Box>
+  )
+
+  return (
+    <Box layerStyle='menuconfigpanel_grid'>
+      <Box as='span' layerStyle='menuconfigpanel_row_droplist_simple'>
+        {/* Filtres de type */}
+        {renderFilters()}
+
+        {/* Dropdown */}
+        <OSTooltip label={t('Menu.select_elements') || 'Sélectionner des éléments'}>
+          {renderDropdown()}
+        </OSTooltip>
+
+        {/* Bouton visibilité */}
+        <OSTooltip label={t('Menu.toggle_visibility') || 'Basculer la visibilité'}>
+          <Button
+            variant='menuconfigpanel_option_button'
+            onClick={toggleAllVisibility}
+          >
+            {hasAnyOnlyVisible ? icon_element_visible : icon_element_invisible}
+          </Button>
+        </OSTooltip>
+      </Box>
+    </Box>
+  )
+}
+
+// ==================================================================================
+// COMPOSANT GÉNÉRIQUE DE SÉLECTION SINGLE-TYPE
 // ==================================================================================
 
 interface GenericSelectionProps<T extends ElementInstance> {
@@ -183,19 +436,17 @@ function GenericElementSelection<T extends ElementInstance>({
   dropdownWidth
 }: GenericSelectionProps<T>) {
 
-  const { t, icon_library, menu_configuration, drawing_area, history } = app_data
+  const { t, icon_library, menu_configuration, history } = app_data
   const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible } = icon_library
 
-  // Récupération des éléments selon le mode de visibilité
-  const elements = config.getIsOnlyVisible(app_data)
+  const elements = app_data.menu_configuration.is_selector_only_for_visible_elements
     ? config.getVisibleElements(app_data)
     : config.getAllElements(app_data)
 
-  const selectedElements = config.getIsOnlyVisible(app_data)
+  const selectedElements = app_data.menu_configuration.is_selector_only_for_visible_elements
     ? config.getVisibleAndSelectedElements(app_data)
     : config.getSelectedElements(app_data)
 
-  // Préparation des options pour MultiSelect
   const options = elements.map((element) => ({
     label: element.name,
     value: element.id
@@ -206,11 +457,9 @@ function GenericElementSelection<T extends ElementInstance>({
     value: element.id
   }))
 
-  // State pour forcer le re-render
   const [, setCount] = useState(0)
   const refTextInput = useRef((_: string | null | undefined) => null)
 
-  // Lier la fonction d'update
   config.getUpdateRef(app_data).current = () => {
     if (config.hasNameInput) {
       const valueToShow = (selectedElements.length !== 1) ? '' : selectedElements[0].name
@@ -219,7 +468,6 @@ function GenericElementSelection<T extends ElementInstance>({
     setCount(a => a + 1)
   }
 
-  // Fonctions de rafraîchissement
   const refreshAndToggleSaving = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (config.hasNameInput) {
@@ -233,7 +481,6 @@ function GenericElementSelection<T extends ElementInstance>({
     refreshAndToggleSaving()
   }
 
-  // MultiSelect dropdown
   const renderDropdown = () => {
     const width = dropdownWidth || (mode === 'simple' ? '14vw' : '11vw')
 
@@ -248,9 +495,9 @@ function GenericElementSelection<T extends ElementInstance>({
 
             elements.forEach(element => {
               if (newSelection.includes(element.id)) {
-                config.addToSelection(app_data, element)
+                app_data.drawing_area.addElementToSelection(element)
               } else {
-                config.removeFromSelection(app_data, element)
+                app_data.drawing_area.removeElementFromSelection(element)
               }
             })
 
@@ -266,7 +513,6 @@ function GenericElementSelection<T extends ElementInstance>({
     )
   }
 
-  // Création d'un nouvel élément
   const handleCreate = () => {
     if (!config.createNewElement) return
 
@@ -274,13 +520,12 @@ function GenericElementSelection<T extends ElementInstance>({
 
     const execute = () => {
       newElement = config.createNewElement!(app_data)
-      config.purgeSelection(app_data)
-      config.addToSelection(app_data, newElement)
+      app_data.drawing_area.purgeSelectionOfElement()
+      app_data.drawing_area.addElementToSelection(newElement)
       refreshAndUpdateRelated()
     }
 
     const undo = () => {
-      // Supprimer l'élément créé
       if ('deleteNode' in app_data.drawing_area && newElement instanceof Class_NodeElement) {
         app_data.drawing_area.deleteNode(newElement)
       } else if ('deleteLink' in app_data.drawing_area && newElement instanceof Class_LinkElement) {
@@ -296,7 +541,6 @@ function GenericElementSelection<T extends ElementInstance>({
     execute()
   }
 
-  // Mise à jour du nom
   const handleNameUpdate = (newName: string | null | undefined) => {
     if (!config.hasNameInput || !newName || selectedElements.length !== 1) return
 
@@ -323,7 +567,6 @@ function GenericElementSelection<T extends ElementInstance>({
     execute()
   }
 
-  // Rendu MODE SIMPLE
   if (mode === 'simple') {
     return (
       <Box layerStyle='menuconfigpanel_grid'>
@@ -335,9 +578,9 @@ function GenericElementSelection<T extends ElementInstance>({
           <OSTooltip label={t(config.translationKeys.tooltipVisibility)}>
             <Button
               variant='menuconfigpanel_option_button'
-              onClick={() => config.toggleOnlyVisible(app_data)}
+              onClick={() => app_data.menu_configuration.toggle_selector_on_visible_elements()}
             >
-              {config.getIsOnlyVisible(app_data) ? icon_element_visible : icon_element_invisible}
+              {app_data.menu_configuration.is_selector_only_for_visible_elements ? icon_element_visible : icon_element_invisible}
             </Button>
           </OSTooltip>
         </Box>
@@ -345,7 +588,6 @@ function GenericElementSelection<T extends ElementInstance>({
     )
   }
 
-  // Rendu MODE FULL
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       <Box as='span' layerStyle='menuconfigpanel_row_droplist'>
@@ -372,7 +614,7 @@ function GenericElementSelection<T extends ElementInstance>({
               size='sizeConfigButton'
               isDisabled={selectedElements.length === 0}
               onClick={() => {
-                config.deleteSelected(app_data)
+                app_data.drawing_area.deleteSelectedElements()
                 refreshAndUpdateRelated()
               }}
             >
@@ -385,9 +627,9 @@ function GenericElementSelection<T extends ElementInstance>({
           <Button
             variant='menuconfigpanel_option_button'
             size='sizeConfigButton'
-            onClick={() => config.toggleOnlyVisible(app_data)}
+            onClick={() => app_data.menu_configuration.toggle_selector_on_visible_elements()}
           >
-            {config.getIsOnlyVisible(app_data) ? icon_element_visible : icon_element_invisible}
+            {app_data.menu_configuration.is_selector_only_for_visible_elements ? icon_element_visible : icon_element_invisible}
           </Button>
         </OSTooltip>
       </Box>
@@ -412,10 +654,7 @@ function GenericElementSelection<T extends ElementInstance>({
   )
 }
 
-// ==================================================================================
-// COMPOSANTS EXPORTÉS (compatibilité avec l'existant)
-// ==================================================================================
-
+// ✅ Sélecteurs single-type (compatibilité)
 export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => (
   <GenericElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
 )

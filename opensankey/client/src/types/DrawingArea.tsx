@@ -34,7 +34,6 @@ import {
   Type_Structure,
   default_main_sankey_id,
   getBooleanFromJSON,
-  getJSONFromJSON,
   getNumberFromJSON,
   getNumberOrUndefinedFromJSON,
   getStringFromJSON,
@@ -55,7 +54,7 @@ import {
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
-import { Class_BaseElement } from '../Elements/Element'
+import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
 import { Class_Sankey } from './Sankey'
@@ -101,6 +100,46 @@ const default_DA_marging = 50
  * @class Class_DrawingArea
  */
 export class Class_DrawingArea {
+  public application_data: Class_ApplicationData
+  public nodePositioning: NodePositioning
+
+  public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+
+  public static: boolean = !!window.sankey?.publish
+
+  public drawing_link = false
+  public bypass_redraws: boolean = false
+  public bypass_compute_positions: boolean = false
+  private _bypass_autofit: boolean = false
+
+  protected _height: number
+  protected _width: number
+  protected _color: string = default_background_color
+  protected _grid_color: string = default_grid_color
+  protected _grid_visible: boolean = default_grid_visible
+  protected _grid_size: number = default_grid_size
+
+  protected _magnetic_nodes: boolean = false
+
+  protected _sankey: Class_Sankey
+  protected _legend: ClassTemplate_Legend
+
+
+  private _fit_margin: number = 10
+  public _scale: number = default_scale
+  private starting_x_point = 0
+  private starting_y_point = 0
+
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
     return sankey
@@ -110,166 +149,7 @@ export class Class_DrawingArea {
     return new Class_ZoneSelection(this)
   }
 
-
-  /**
-   * Application object which relates to this drawing area
-   * @type {ClassAbstract_ApplicationData}
-   * @memberof Class_DrawingArea
-   */
-  public application_data: Class_ApplicationData
-  // Node positioning system
-  public nodePositioning: NodePositioning
-  /**
- * d3 svg element containing all sub svg elements, it is also wher we can zoom with scroll wheel
- * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof Class_DrawingArea
- */
-  public d3_selection_zoom_area: d3.Selection<SVGSVGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 svg groups for drawing area
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area background
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_bg_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
- * d3 selection of svg group that contains drawing area background
- * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
- * @memberof Class_DrawingArea
- */
-  public d3_selection_bg: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area grid
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_grid: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area elements
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_elements_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-  /**
-  * d3 selection of svg group that contains sankey elements (nodes,flows)
-  * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-  * @memberof Class_DrawingArea
-  */
-  public d3_selection_elements_sankey_group: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area legend elements
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area legend elements
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * d3 selection of svg group that contains drawing area zone of selection element
-   * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-   * @memberof Class_DrawingArea
-   */
-  public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
-
-  /**
-   * Is drawing area in publish _mode or not. If so, blocks all interactions with it
-   * @type {boolean}
-   * @memberof Class_DrawingArea
-   */
-  public static: boolean = !!window.sankey?.publish
-
-  public drawing_link = false
-  public bypass_redraws: boolean = false
-  public bypass_compute_positions: boolean = false
-  private _bypass_autofit: boolean = false
-
-  /**
-   * Height in px of drawing area in application
-   * @private
-   * @type {number}
-   * @memberof Class_DrawingArea
-   */
-  protected _height: number
-
-  /**
-   * Width in px of drawing area in application
-   * @private
-   * @type {number}
-   * @memberof Class_DrawingArea
-   */
-  protected _width: number
-
-  // Color
-  protected _color: string = default_background_color
-
-  // Grid
-  protected _grid_color: string = default_grid_color
-  protected _grid_visible: boolean = default_grid_visible
-  protected _grid_size: number = default_grid_size
-
-  protected _magnetic_nodes: boolean = false
-
-  // Objects containeds in drawing area -------------------------------------------------
-
-  protected _sankey: Class_Sankey
-  protected _legend: ClassTemplate_Legend
-  /**
-   * Contains dict of Free Labels elements
-   * @protected
-   * @type {{ [_: string]: Class_ContainerElement<Class_DrawingArea, Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>> }}
-   * @memberof Class_Sankey
-   */
-  protected _containers: { [_: string]: Class_ContainerElement } = {}
-  protected _container_activated: boolean = true
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  // Attributes that describe drawing area ----------------------------------------------
-
-  /**
-   * Distance to keep between drawing area & external windows sides (up, down, left & right)
-   * when calling window fit
-   * @private
-   * @type {number}
-   * @memberof Class_DrawingArea
-   */
-  private _fit_margin: number = 10
-
-  /**
-   * Scaling factor as value = scale * value in pixel
-   * @private
-   * @type {number}
-   * @memberof Class_DrawingArea
-   */
-  private _scale: number = default_scale
-
-  private starting_x_point = 0
-  private starting_y_point = 0
-
-  /**
-   * _scaleValueToPx transform a value to a proportional size in px according to data scale
-   *
-   * @private
-   * @memberof Class_DrawingArea
-   */
-  private _scaleValueToPx = d3.scaleLinear()
+  public _scaleValueToPx = d3.scaleLinear()
     .domain([0, this._scale])
     .range([0, 100])
 
@@ -302,38 +182,20 @@ export class Class_DrawingArea {
 
   protected _group_to_select: string = '.gg_nodes,.gg_links'
 
-  /**
-   * Interaction mode with drawing area
-   * @private
-   * @type {('edition' | 'selection')}
-   * @memberof Class_DrawingArea
-   */
   private _mode: 'edition' | 'selection' = 'edition'
 
-  /**
-   * Boolean to know if we are creating a link & another node at the release of the LMB
-   *
-   * @private
-   * @type {boolean}
-   * @memberof Class_DrawingArea
-   */
   private _ghost_link: Class_LinkElement | null = null
   private _ghost_link_source: Class_NodeElement | null = null
   private _ghost_link_target: Class_NodeElement | null = null
 
-  /**
-   *Elements that are selected in this area
-   *
-   * @protected
-   * @type {{ [id: string]: Class_ProtoElement }}
-   * @memberof Class_DrawingArea
-   */
-  protected _selection: { [id: string]: Class_BaseElement } = {}
+
+  protected _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Context menu
   private _pointer_pos: [number, number] = [0, 0]
   private _node_contextualied: Class_NodeElement | undefined = undefined
   private _link_contextualied: Class_LinkElement | undefined = undefined
+  private _contextualised_free_label: Class_ContainerElement | undefined = undefined
   private _is_drawing_area_contextualised: boolean = false
 
   /**
@@ -373,7 +235,7 @@ export class Class_DrawingArea {
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
     this._group_to_select += ',.gg_labels'
-    this._containers = {}
+
   }
 
   // CLEANING METHODS ===================================================================
@@ -387,13 +249,12 @@ export class Class_DrawingArea {
     // Unref contextualized elements -> will be deleted later
     this._link_contextualied = undefined
     this._node_contextualied = undefined
+    this._contextualised_free_label = undefined
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
     this._selection_zone.unDraw()
-    // Properly delete containers
-    this.containers_list.forEach(container => container.delete())
-    this._containers = {}
+
     // Clean drawing area
     this.unDraw()
   }
@@ -407,11 +268,7 @@ export class Class_DrawingArea {
     this._copyAttrFrom(drawing_area_to_copy)
     // Copy Sankey
     this._sankey.copyFrom(drawing_area_to_copy._sankey)
-    Object.entries(drawing_area_to_copy._containers)
-      .forEach(([idx, container_to_copy]) => {
-        this.addNewFreeLabel(idx)
-          .copyFrom(container_to_copy)
-      })
+
     //create new ClassTemplate_Legend after deleting previous in 'this.delete()'
     this._legend = new ClassTemplate_Legend(this, this._sankey)
     // Copy Legend
@@ -421,7 +278,7 @@ export class Class_DrawingArea {
     this._selection_zone = this.createNewSelectionZone()
   }
 
-  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
+  public _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Copy All attributes
     this.static = drawing_area_to_copy.static
     this._color = drawing_area_to_copy._color
@@ -458,47 +315,7 @@ export class Class_DrawingArea {
   }
 
 
-  public updateFrom(
-    other_drawing_area: Class_DrawingArea,
-    mode: string[]
-  ) {
-    // Transfert all attributes = Copy everything from other drawing area
-    const all = mode.includes('*')
-    // Transfer DA attributs
-    if (mode.includes('attrDrawingArea') || all) {
-      const scale_to_keep = this._scale
-      this._copyAttrFrom(other_drawing_area)
-      this._scale = scale_to_keep
-      this._scaleValueToPx.domain([0, this._scale])
-      if (other_drawing_area._legend)
-        this._legend.copyFrom(other_drawing_area._legend)
-    }
-    // Transfert Sankey Attributes
-    this.sankey.updateFrom(other_drawing_area.sankey, mode)
-    // Update Containers
-    const list_curr_container = this.containers_list
-    const list_new_container = other_drawing_area.containers_list
-    if (mode.includes('freeLabels') || all) {
-      // Add new container present in new but not current
-      list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
-        .forEach(cont => {
-          this.addNewFreeLabel(cont.id)
-          this.containers_dict[cont.id].copyFrom(cont)
-        })
 
-      // Delete container present in current but not new
-      list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
-        .forEach(cont => {
-          this.deleteContainer(cont)
-        })
-
-      // Update container in current that are also in new
-      list_new_container.filter(new_cont => list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
-        .forEach(cont => {
-          this.containers_dict[cont.id].copyFrom(cont)
-        })
-    }
-  }
 
   // SAVING METHODS =====================================================================
 
@@ -533,14 +350,7 @@ export class Class_DrawingArea {
 
     if (this._show_background_image) json_object['show_background_image'] = this._show_background_image
     if (this._show_background_image) json_object['background_image'] = this._background_image
-    if (this.containers_list.length > 0) {
-      const json_object_labels = {} as Type_JSON
-      json_object['labels'] = json_object_labels
-      this.containers_list.forEach(obj => {
-        json_object_labels[obj.id] = {}
-        obj.toJSON(json_object_labels[obj.id] as Type_JSON)
-      })
-    }
+
     // Dump with json of contained elements
     const out = {
       ...json_object,
@@ -571,7 +381,7 @@ export class Class_DrawingArea {
     ) {
       console.log('convert_data_legacy')
       convert_data_legacy(json_object)
-      this.sankey.link_styles_dict['default'].shape_color_rule = 'auto'
+      this.sankey.styles_dict['default'].shape_color_rule = 'auto'
 
       Object.values(json_object.style_node).forEach(s => {
         if (s.position == 'parametric') s.position = 'absolute'
@@ -607,19 +417,10 @@ export class Class_DrawingArea {
 
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
-    // Update legend
-    this._legend.fromJSON(json_object)
 
-    // Update Sankey
+    this._legend.fromJSON(json_object)
     this.sankey.fromJSON(json_object, match_and_update)
-    // Class container
-    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    Object.entries(json_container_object)
-      .forEach(([_, container_json]) => {
-        const container = this.addNewFreeLabel(_)
-        // Set container value to node from JSON
-        container.fromJSON(container_json as Type_JSON)
-      })
+
     this._list_g_element_id = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element_id)
 
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
@@ -628,12 +429,6 @@ export class Class_DrawingArea {
 
   }
 
-  // PUBLIC METHODS ====================================================================
-
-  /**
-   * Reset drawing area & add waiting toast
-   * @memberof Class_DrawingArea
-   */
   public draw(
   ) {
     // This function calls explictly for a redraw
@@ -762,14 +557,11 @@ export class Class_DrawingArea {
     // Draw legend
     this._legend.draw()
     this.drawBgImage()
-    this.containers_list.forEach(container => container.draw())
+
   }
 
   public drawSelected() {
-    // Draw links selected
-    this.selected_links_list.forEach(link => link.draw())
-    // Draw nodes selected
-    this.selected_nodes_list.forEach(node => node.draw())
+    this.selected_elements_list.forEach(el => el.draw())
   }
 
   public getZoomScale() {
@@ -785,10 +577,6 @@ export class Class_DrawingArea {
     this.closeAllContextMenus()
   }
 
-  /**
-   * Context menus are directly diplayed in drawing area when deal with them directly here
-   * @memberof Class_DrawingArea
-   */
   public closeAllContextMenus() {
     const just_closed = this.node_contextualised != undefined ||
       this.link_contextualised != undefined ||
@@ -797,24 +585,19 @@ export class Class_DrawingArea {
 
     this.node_contextualised = undefined
     this.link_contextualised = undefined
-    this.is_drawing_area_contextualised = false
     this.contextualised_container = undefined
-    // Update components
+    this.is_drawing_area_contextualised = false
+
     this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
+     this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
+
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
-    // Reset contextualised elements
-    this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
+
 
     return just_closed
   }
 
-
-  /**
-   * Checks if it is possible to directly deal with events
-   * @return {boolean}
-   * @memberof Class_DrawingArea
-   */
   public eventsEnabled(): boolean {
     // Deal with node events in priority
     let mouse_over_nodes = this.isMouseOverAnExistingNode()
@@ -830,9 +613,9 @@ export class Class_DrawingArea {
     if (this._legend.isMouseOver()) {
       return false
     }
-    if (!this.container_activated) return true
+    if (!this.sankey.container_activated) return true
 
-    mouse_over_nodes = this.isMouseOverAnExistingContainer()
+    mouse_over_nodes = this.sankey.isMouseOverAnExistingContainer()
     if (mouse_over_nodes === true) {
       return false
     }
@@ -840,33 +623,9 @@ export class Class_DrawingArea {
     return true
   }
 
-  /**
-   * Add a new default node to drawing area sankey
-   * @return {Class_NodeElement}
-   * @memberof Class_DrawingArea
-   */
-  public addNewDefaultNodeToSankey(): Class_NodeElement {
-    return this.sankey.addNewDefaultNode()
-  }
-
-  /**
-   * Retrieve node by id from sankey struct
-   * @param {string} id
-   * @return {Class_NodeElement | null}
-   * @memberof Class_DrawingArea
-   */
-  public getNodeFromSankey(id: string): Class_NodeElement | null {
-    return this.sankey.getNode(id)
-  }
-
-  /**
-   * Delete a given node -> node will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
-   */
   public deleteNode(node: Class_NodeElement) {
     // Remove from selection if necessary
-    this.removeNodeFromSelection(node)
+    this.removeElementFromSelection(node)
     // Remove node from sankey
     this.sankey.deleteNode(node)
     this._list_g_element_id = this._list_g_element_id.filter(id => id != node.id)
@@ -875,59 +634,43 @@ export class Class_DrawingArea {
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
-
-  /**
-   * Add a new default link to drawing area sankey
-   * @return {Class_LinkElement}
-   * @memberof Class_DrawingArea
-   */
-  public addNewDefaultLinkToSankey(): Class_LinkElement {
-    return this.sankey.addNewDefaultLink()
-  }
-  /**
-   * Add a new default link to drawing area sankey
-   * @return {Class_LinkElement}
-   * @memberof Class_DrawingArea
-   */
-  public addNewDefaultContainerToSankey(): Class_ContainerElement {
-    return this.addNewDefaultFreeLabel()
-  }
-  /**
-   * Retrieve node by id from sankey struct
-   * @param {string} id
-   * @return {Class_LinkElement | null}
-   * @memberof Class_DrawingArea
-   */
-  public getLinkFromSankey(id: string): Class_LinkElement | null { return this.sankey.getLink(id) }
-
-  /**
-   * Delete a given link -> link will not exist anymore
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
-   */
   public deleteLink(link: Class_LinkElement) {
     // Remove link from selection if necessary
-    this.removeLinkFromSelection(link)
+    this.removeElementFromSelection(link)
     // Remove link from sankey
-    this.sankey.removeLink(link)
+    this.sankey.deleteLink(link)
     this._list_g_element_id = this._list_g_element_id.filter(id => id != link.id)
     // Self delete node
     link.delete()
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
   }
+  public deleteContainer(c: Class_ContainerElement) {
+    // Remove link from selection if necessary
+    this.removeElementFromSelection(c)
+    // Remove link from sankey
+    this.sankey.deleteContainer(c)
+    this._list_g_element_id = this._list_g_element_id.filter(id => id != c.id)
+    // Self delete node
+    c.delete()
+    // Update related menus
+    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+  }
 
-  /**
-   * Add a node to selection set
-   * Update menu accordingly
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
-   */
-  public addNodeToSelection(node: Class_NodeElement) {
+  public addAllVisibleElementsToSelection() {
+    this.sankey.visible_nodes_list
+      .forEach(node => this.addElementToSelection(node))
+    this.sankey.visible_links_list
+      .forEach(node => this.addElementToSelection(node))
+    this.sankey.visible_containers_list
+      .forEach(node => this.addElementToSelection(node))
+  }
+
+  public addElementToSelection(element: Class_ProtoElement) {
     // Update selection list
-    this._selection[node.id] = node
+    this._selection[element.id] = element
     // Update selection attribute on given node
-    node.setSelected()
+    element.setSelected()
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
@@ -938,38 +681,17 @@ export class Class_DrawingArea {
     this._legend.setSelected()
   }
 
-  /**
-   * Add all nodes to selection set
-   * Update menu accordingly
-   * @memberof Class_DrawingArea
-   */
-  public addAllVisibleNodesToSelection() {
-    this.sankey.visible_nodes_list
-      .forEach(node => this.addNodeToSelection(node))
-  }
-
-  /**
-   * remove a node from a selection set
-   * Update menu accordingly
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
-   */
-  public removeNodeFromSelection(node: Class_NodeElement) {
-    if (this._selection[node.id] !== undefined) {
+  public removeElementFromSelection(element: Class_ProtoElement) {
+    if (this._selection[element.id] !== undefined) {
       // Update selection list
-      delete this._selection[node.id]
+      delete this._selection[element.id]
       // Update selection attribute on given node
-      node.setUnSelected()
+      element.setUnSelected()
       // Update related menus
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
   }
 
-  /**
-   * remove a legend from a selection set
-   * @param {Class_NodeElement} node
-   * @memberof Class_DrawingArea
-   */
   public removeLegendFromSelection() {
     if (this._selection['legend'] !== undefined) {
       // Update selection list
@@ -979,83 +701,15 @@ export class Class_DrawingArea {
     }
   }
 
-  /**
-   * Permanently delete selected nodes
-   * Update menu accordingly
-   * @memberof Class_DrawingArea
-   */
-  public deleteSelectedNodes() {
-    this.deleteSelection(true, false)
-    this.deleteSelectedContainers()
+  public deleteSelectedElements() {
+    this.deleteSelection()
   }
 
-  /**
-   * Add a link to selection set
-   * Update menu accordingly
-   * @param {Class_LinkElement} link
-   * @memberof Class_DrawingArea
-   */
-  public addLinkToSelection(link: Class_LinkElement) {
-    // Update selection list
-    this._selection[link.id] = link
-    // Update selection attribute on given link
-    link.setSelected()
-    // Update related menus
-    this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-  }
-
-  /**
-   * Add all links to selection set
-   * Update menu accordingly
-   * @memberof Class_DrawingArea
-   */
-  public addAllVisibleLinksToSelection() {
-    this.sankey.visible_links_list
-      .forEach(link => this.addLinkToSelection(link))
-  }
-
-  /**
-   * Remove given link from selection set
-   * @param {Class_LinkElement} link
-   * @memberof Class_DrawingArea
-   */
-  public removeLinkFromSelection(link: Class_LinkElement) {
-    if (this._selection[link.id] !== undefined) {
-      // Update selection list
-      delete this._selection[link.id]
-      // Update selection attribute on given link
-      link.setUnSelected()
-      // Update related menus
-      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-    }
-  }
-
-  /**
-   * Remove all link selected
-   * @memberof Class_DrawingArea
-   */
-  public purgeSelectionOfLinks(reset = true) {
+  public purgeSelectionOfElement(reset = true) {
     // Unselect elements
-    this.selected_links_list
-      .forEach(link => {
-        this.removeLinkFromSelection(link)
-      })
-    // Reset config menu
-    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
-    //  this mean that the hook referenced go from true -> false -> true before the rerender
-    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-  }
-
-  /**
- * Remove all node selected
- * @memberof Class_DrawingArea
- */
-  public purgeSelectionOfNode(reset = true) {
-    // Unselect elements
-    this.selected_nodes_list
+    this.selected_elements_list
       .forEach(node => {
-        this.removeNodeFromSelection(node)
+        this.removeElementFromSelection(node)
       })
     // Reset config menu
     // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
@@ -1064,26 +718,8 @@ export class Class_DrawingArea {
     if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
   }
 
-  public purgeSelectionOfContainers(reset = true) {
-    // Unselect elements
-    this.selected_containers_list
-      .forEach(c => {
-        this.removeContainerFromSelection(c)
-      })
-    // Reset config menu
-    // Sometime this function is used then updateAllComponentsRelatedToLinks is also called,
-    //  this mean that the hook referenced go from true -> false -> true before the rerender
-    // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToContainers()
-  }
-
-  /**
-   * Delete all selected links -> link will not exist anymore
-   *
-   * @memberof Class_DrawingArea
-   */
   public deleteSelectedLinks() {
-    this.deleteSelection(false, true)
+    this.deleteSelection()
   }
 
   /**
@@ -1104,12 +740,7 @@ export class Class_DrawingArea {
     this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
   }
 
-  /**
-   * Delete all selected elements
-   *
-   * @memberof Class_DrawingArea
-   */
-  public deleteSelection(deleteSelectedNodes: boolean, deleteSelectedLinks: boolean) {
+  public deleteSelection(/*deleteSelectedNodes: boolean, deleteSelectedLinks: boolean*/) {
 
     // Save undo --------------------------------------
     // --- Init
@@ -1117,7 +748,7 @@ export class Class_DrawingArea {
     const json_hist_links: { [_: string]: Type_JSON } = {}
     const json_hist_links_order: { [_: string]: string[] } = {}
     // --- Selected nodes
-    if (deleteSelectedNodes) {
+    //if (deleteSelectedNodes) {
       this.selected_nodes_list
         .forEach(node => {
           json_hist_nodes[node.id] = {}
@@ -1133,16 +764,16 @@ export class Class_DrawingArea {
             json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
           })
         })
-    }
+    //}
     // --- Selected links
-    if (deleteSelectedLinks) {
+    //if (deleteSelectedLinks) {
       this.selected_links_list.forEach(link => {
         json_hist_links[link.id] = {}
         link.toJSON(json_hist_links[link.id])
         json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
         json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
       })
-    }
+    //}
 
     // --- Undo function
     function undo(_: Class_DrawingArea) {
@@ -1158,9 +789,9 @@ export class Class_DrawingArea {
     // End Save undo -----------------------------------
 
 
-    if (deleteSelectedLinks) this.selected_links_list.forEach(link => { this.deleteLink(link) })
-    if (deleteSelectedNodes) this.selected_nodes_list.forEach(node => this.deleteNode(node))
-    this.deleteSelectedContainers()
+    this.selected_links_list.forEach(link => { this.deleteLink(link) })
+    this.selected_nodes_list.forEach(node => this.deleteNode(node))
+    this.selected_containers_list.forEach(c => this.deleteContainer(c))
     // Save Redo ---------------------------------------
     // -- Redo function
     function redo(_: Class_DrawingArea) {
@@ -1173,11 +804,6 @@ export class Class_DrawingArea {
     // End Save Redo -----------------------------------
   }
 
-  /**
-   * Function to use after setting link value, it check if there is only 1 link and if so update DA scale
-   *
-   * @memberof Class_DrawingArea
-   */
   public updateScaleAtLinkValueSetting() {
     // Update scaling if only one link
     const links = this.sankey.links_list.filter(l => l.valueCurrent)
@@ -1186,11 +812,6 @@ export class Class_DrawingArea {
     }
   }
 
-  /**
-   * Function to check if element are near drawing area border & update it size in consequence
-   *
-   * @memberof Class_DrawingArea
-   */
   public checkAndUpdateAreaSize(
     recenter: boolean = false
   ) {
@@ -1288,13 +909,6 @@ export class Class_DrawingArea {
     this.drawGrid()
   }
 
-  /**
-   * Recenter drawing area & make it fit the screen horizontally,
-   *
-   * (not recommended for vertical sankey)
-   *
-   * @memberof Class_DrawingArea
-   */
   public areaFitHorizontally(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
 
@@ -1313,13 +927,6 @@ export class Class_DrawingArea {
     }
   }
 
-  /**
-   * Recenter drawing area & make it fit the screen vertically,
-   *
-   * (not recommended for horizontal sankey)
-   *
-   * @memberof Class_DrawingArea
-   */
   public areaFitVertically(autocenter: boolean) {
     this.checkAndUpdateAreaSize(autocenter)
     if (this.d3_selection_zoom_area) {
@@ -1335,16 +942,7 @@ export class Class_DrawingArea {
         [x0, y0])
     }
   }
-  /**
- * Version corrigée de l'algorithme computeAutoSankey avec meilleure détection des flux de recyclage
- */
 
-
-  /**
-   *Inverse selected links and save undoing
-   *
-   * @memberof Class_DrawingArea
-   */
   public inverseSelectedLinks = () => {
     const _inverseSelectedLinks = () => {
       // Inverse link source & target
@@ -1519,27 +1117,7 @@ export class Class_DrawingArea {
 
 
 
-  /**
-   * Return an element (node,flow) given an id
-   *
-   * @param {string} id
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public elementFromId(id: string) {
-    if (id in this._sankey.nodes_dict) {
-      return this._sankey.nodes_dict[id]
-    }
-    if (id in this._sankey.links_dict) {
-      return this._sankey.links_dict[id]
-    }
-    if (id in this.containers_dict) {
-      return this.containers_dict[id]
-      //return { id: cont.id, name: cont.title, is_selected: cont.is_selected, is_visible: cont.is_visible }
-    }
 
-    return { name: id, is_selected: false, is_visible: false }
-  }
 
   /**
    * Swaps overlaps position of element on DA
@@ -1583,17 +1161,10 @@ export class Class_DrawingArea {
       .order()
   }
 
-  /**
-   * Swaps node style order for selected nodes
-   *
-   * @param {number} idx_src
-   * @param {number} idx_trgt
-   * @memberof Class_DrawingArea
-   */
-  public moveOrderStyleInSelectedNodes = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
+  public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
     // Save old value that can be used in undo
     const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
-    this.selected_nodes_list.forEach(n => list_old_style[n.id] = n.style)
+    this.selected_elements_list.forEach(n => list_old_style[n.id] = n.style)
 
     // Function undo
     const inv_changeStyleOrder = () => {
@@ -1606,7 +1177,7 @@ export class Class_DrawingArea {
 
     // Function original
     const _changeStyleOrder = () => {
-      this.selected_nodes_list.forEach(n => {
+      this.selected_elements_list.forEach(n => {
         const idx_src = n.style.indexOf(style_src)
         const idx_trgt = n.style.indexOf(style_trgt)
 
@@ -1630,107 +1201,7 @@ export class Class_DrawingArea {
     _changeStyleOrder()
   }
 
-  /**
-   * Swaps node style order for selected nodes
-   *
-   * @param {number} idx_src
-   * @param {number} idx_trgt
-   * @memberof Class_DrawingArea
-   */
-  public moveOrderStyleInSelectedContainers = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
-    // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
-    this.selected_containers_list.forEach(n => list_old_style[n.id] = n.style)
 
-    // Function undo
-    const inv_changeStyleOrder = () => {
-      this.selected_containers_list.forEach(n => {
-        n.style = list_old_style[n.id]
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateComponentRelatedToContainers()
-    }
-
-    // Function original
-    const _changeStyleOrder = () => {
-      this.selected_containers_list.forEach(n => {
-        const idx_src = n.style.indexOf(style_src)
-        const idx_trgt = n.style.indexOf(style_trgt)
-
-        // if node doesn't have both style, don't continue this iterations
-        if (idx_src == -1 || idx_trgt == -1)
-          return
-
-        // Remove element to move from the array of element order
-        const el_to_move = n.style.splice(idx_src, 1)
-        // Add the element  the element target in the order array
-        n.style.splice(idx_trgt, 0, el_to_move[0])
-
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateComponentRelatedToContainers()
-    }
-    // Save undo/redo
-    this.application_data.history.saveUndo(inv_changeStyleOrder)
-    this.application_data.history.saveRedo(_changeStyleOrder)
-    // Execute original function
-    _changeStyleOrder()
-  }
-
-  /**
-   * Swaps flow style order for selected flows
-   *
-   * @param {number} idx_src
-   * @param {number} idx_trgt
-   * @memberof Class_DrawingArea
-   */
-  public moveOrderStyleInSelectedFlows = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
-    // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
-    this.selected_links_list.forEach(n => list_old_style[n.id] = n.style)
-
-    // Function undo
-    const inv_changeStyleOrder = () => {
-      this.selected_links_list.forEach(n => {
-        n.style = list_old_style[n.id]
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-    }
-
-    // Function original
-    const _changeStyleOrder = () => {
-      this.selected_links_list.forEach(n => {
-        const idx_src = n.style.indexOf(style_src)
-        const idx_trgt = n.style.indexOf(style_trgt)
-
-        // if node doesn't have both style, don't continue this iterations
-        if (idx_src == -1 || idx_trgt == -1)
-          return
-
-        // Remove element to move from the array of element order
-        const el_to_move = n.style.splice(idx_src, 1)
-        // Add the element  the element target in the order array
-        n.style.splice(idx_trgt, 0, el_to_move[0])
-
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-    }
-    // Save undo/redo
-    this.application_data.history.saveUndo(inv_changeStyleOrder)
-    this.application_data.history.saveRedo(_changeStyleOrder)
-    // Execute original function
-    _changeStyleOrder()
-  }
-
-  // PRIVATE METHODS ==================================================================
-
-  /**
-   * Delete html element SVG containing drawing area
-   * @private
-   * @memberof Class_DrawingArea
-   */
   public unDraw() {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
@@ -1979,8 +1450,8 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -1995,8 +1466,8 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this._ghost_link.target as Class_NodeElement
           )
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
         // In case we get there still deref ghost link
@@ -2064,8 +1535,8 @@ export class Class_DrawingArea {
           )
           ghost_link_json = {}
           l.toJSON(ghost_link_json) //For undo/redo
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(l)
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -2084,8 +1555,8 @@ export class Class_DrawingArea {
           l.toJSON(ghost_link_json) //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
 
-          this.purgeSelectionOfLinks(false)
-          this.addLinkToSelection(l)
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
 
@@ -2161,7 +1632,7 @@ export class Class_DrawingArea {
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_node_style.position_type == 'parametric') {
+        if (this.sankey.default_style.position_type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
               this.nodePositioning.computeParametrization(false)
@@ -2361,10 +1832,12 @@ export class Class_DrawingArea {
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
-    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners()) // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners()) 
+    this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
-    this.containers_list.forEach(lab => lab.setEventsListeners())
+    //this.containers_list.forEach(lab => lab.setEventsListeners())
   }
 
   public setToModeEdition(_: boolean) {
@@ -2446,134 +1919,65 @@ export class Class_DrawingArea {
     }
   }
 
-  // PUBLIC METHODS =====================================================================
-
-  // New --------------------------------------------------------------------------------
-
-  /**
-   * Add a given zdt to Sankey
-   * @param {Class_ContainerElement<Class_DrawingArea, Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>>} node
-   * @memberof Class_Sankey
-   */
-  private _addLabel(zdt: Class_ContainerElement) {
-    this._containers[zdt.id] = zdt
-  }
-
-  /**
-   * Create and add a node for this Sankey
-   * @param {string} id
-   * @param {string} name
-   * @return {Class_Node}
-   * @memberof Class_Sankey
-   */
-  public addNewFreeLabel(id: string): Class_ContainerElement {
-    if (!this._containers[id]) {
-      // Create node
-      const zdt = new Class_ContainerElement(
-        id,
-        this)
-      // Set node to default position
-      zdt.draw()
-      // Update registry of nodes
-      this._addLabel(zdt)
-      return zdt
-    }
-    else {
-      return this.addNewFreeLabel(id + '_0')
-    }
-  }
-
-  /**
-   * Create and add a node for this Sankey with default name
-   * @return {*}
-   * @memberof Class_Sankey
-   */
-  public addNewDefaultFreeLabel() {
-    const n = String(Object.values(this._containers).length)
-    const id = 'free_label' + n
-    return this.addNewFreeLabel(id)
-  }
-
-  /**
-   * Permanently delete selected nodes
-   * @memberof Class_DrawingArea
-   */
-  public deleteSelectedFreeLabels() {
-    // Get copy of selected nodes
-    const selected_labels = this.selected_containers_list as Class_ContainerElement[]
-    // Delete each one of them
-    selected_labels.forEach(selected_label => { this.deleteContainer(selected_label) })
-    // Then let garbage collector do the rest...
-  }
-
-  // Free labels
-  public get containers_dict() { return this._containers }
-  public get containers_list() { return Object.values(this._containers) }
-  public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
-  public get visible_containers_list() {
-    return this.containers_list.filter(zdt => zdt.is_visible)
-  }
-
-  /**
-   * return sankey
-   *
-   * @readonly
-   * @return {Class_Sankey<any, Class_NodeElement, Class_LinkElement>}
-   * @memberof Class_DrawingArea
-   */
   public get sankey() { return this._sankey }
-
-  // Legend
   public get legend(): ClassTemplate_Legend { return this._legend }
   public set legend(value: ClassTemplate_Legend) { this._legend = value }
-
-  // Ghost link
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 
-  // Selections
+  public get selected_elements_list(): Class_ProtoElement[] {return Object.values(this._selection)}
+  public get selected_visible_elements_list(): Class_ProtoElement[] {return this.selected_elements_list.filter(el=>el.is_visible)}
+
   public get selected_nodes_list(): Class_NodeElement[] {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_NodeElement) as Class_NodeElement[]
   }
-
-  public get selected_nodes_list_sorted(): Class_NodeElement[] {
-    return this.selected_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
-  public get visible_and_selected_nodes_list(): Class_NodeElement[] {
-    return this.selected_nodes_list
-      .filter(node => node.is_visible)
-  }
-
-  public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
-    return this.visible_and_selected_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-
   public get selected_links_list(): Class_LinkElement[] {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_LinkElement) as Class_LinkElement[]
   }
-
+  public get selected_containers_list(): Class_ContainerElement[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_ContainerElement) as Class_ContainerElement[]
+  }
+  // selected sorted
+  public get selected_nodes_list_sorted(): Class_NodeElement[] {
+    return this.selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
   public get selected_links_list_sorted(): Class_LinkElement[] {
     return this.selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
-
+  public get selected_containers_list_sorted(): Class_ContainerElement[] {
+    return this.selected_containers_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
+  // selected visible
+  public get visible_and_selected_nodes_list(): Class_NodeElement[] {
+    return this.selected_nodes_list
+      .filter(node => node.is_visible)
+  }
   public get visible_and_selected_links_list(): Class_LinkElement[] {
     return this.selected_links_list
       .filter(link => link.is_visible)
   }
-
+  public get visible_and_selected_containers_list(): Class_ContainerElement[] {
+    return this.selected_containers_list
+      .filter(c => c.is_visible)
+  }
+  // selected visible sorted
+  public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
+    return this.visible_and_selected_nodes_list
+      .sort((a, b) => sortNodesElements(a, b))
+  }
   public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
     return this.visible_and_selected_links_list
       .sort((a, b) => sortLinksElementsByIds(a, b))
   }
-  public get visible_and_selected_containers_list(): Class_ContainerElement[] {
-    return this.selected_containers_list
-      .filter(c => c.is_visible)
+  public get visible_and_selected_containers_list_sorted(): Class_ContainerElement[] {
+    return this.visible_and_selected_containers_list
+      .sort((a, b) => sortNodesElements(a, b))
   }
 
   // Size
@@ -2644,13 +2048,13 @@ export class Class_DrawingArea {
 
   public get selection_zone(): Class_ZoneSelection { return this._selection_zone }
 
-  // Node Context menu
+  // Elements Context menu
   public get node_contextualised(): Class_NodeElement | undefined { return this._node_contextualied }
   public set node_contextualised(value: Class_NodeElement | undefined) { this._node_contextualied = value }
-
-  // Link Context menu
   public get link_contextualised(): Class_LinkElement | undefined { return this._link_contextualied }
   public set link_contextualised(value: Class_LinkElement | undefined) { this._link_contextualied = value }
+  public get contextualised_container(): Class_ContainerElement | undefined { return this._contextualised_free_label }
+  public set contextualised_container(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
 
   // Mouve pos when we right click an element
   public get pointer_pos(): [number, number] { return this._pointer_pos }
@@ -2694,139 +2098,11 @@ export class Class_DrawingArea {
   public get list_g_element() { return this._list_g_element_id }
   public set list_g_element(list) { this._list_g_element_id = list }
 
-  /**
-     * d3 selection of svg group that contains drawing area container
-     * @type {(d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null)}
-     * @memberof Class_DrawingArea
-     */
+
   public d3_selection_def_gradient: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  private _contextualised_free_label: Class_ContainerElement | undefined = undefined
-
-  // Attribute for background image
   private _show_background_image: boolean = false
   private _background_image: string = ''
-
-  private _number_of_containers: number = 0
-
-  /**
-   * Delete a given container -> container will not exist anymore
-   * @param {Class_ContainerElement} container
-   * @memberof Class_DrawingAreaOSP
-   */
-  public deleteContainer(container: Class_ContainerElement) { // eslint-disable-line
-    // Remove from selection if necessary
-    this.removeContainerFromSelection(container)
-    // Remove container from sankey
-    if (this._containers[container.id] !== undefined) {
-      // Delete node in sankey
-      const _ = this._containers[container.id]
-      delete this._containers[container.id]
-      _.delete()
-    }
-    // Self delete container
-    container.delete()
-    // Update related menus
-    this.application_data.menu_configuration.updateComponentRelatedToContainers()
-  }
-
-  public addContainerElement() {
-    // We increase by two, in order to easyly swap elements
-    // ie : element0 order = 0, element1 order = 2, element3 order = 4
-    // to increase element 0 order, juste add 3
-    // then : element0 order = 3, element1 order = 2, element3 order = 4
-    // then orderElement() method will display elements as wanted + update their order value
-    // ie : element1 order = 0, element0 order = 2, element3 order = 4
-    this._number_of_containers = this._number_of_containers + 2
-    return this._number_of_containers
-  }
-
-
-  /**
-   * Permanently delete selected containers
-   * Update menu accordingly
-   * @memberof Class_DrawingAreaOSP
-   */
-  public deleteSelectedContainers() {
-    // Get copy of selected nodes
-    const selected_containers = this.selected_containers_list
-    // Delete each one of them
-    selected_containers.forEach(container => { this.deleteContainer(container) })
-    // Then let garbage collector do the rest...
-  }
-
-  /**
-   *Function that save in history the undo of dragging free label
-   *
-   * @memberof Class_DrawingAreaOSP
-   */
-  public saveUndoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for undo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
-    })
-    // undo function
-    const undo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.checkAndUpdateAreaSize()
-    }
-    this.application_data.history.saveUndo(undo)
-  }
-
-  /**
-   *Function that save in history the redo of dragging free label
-   *
-   * @memberof Class_DrawingAreaOSP
-   */
-  public saveRedoLabelSelectedPos() {
-    const containers_selected = this.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for redo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
-    })
-    // redo function
-    const redo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.checkAndUpdateAreaSize()
-    }
-    this.application_data.history.saveRedo(redo)
-  }
-
-  // SAVING METHODS =====================================================================
-
-  /**
- * Functon that add an image in in the background of the svg,
- * the image is imported in the config menu
- *
- * @memberof Class_DrawingAreaOSP
- */
   public drawBgImage() {
     this.d3_selection_bg?.select('#bg_image').remove()
 
@@ -2842,108 +2118,6 @@ export class Class_DrawingArea {
     }
   }
 
-  /**
-   * add a container from a selection set
-   *
-   * @param {Class_ContainerElement} container
-   * @memberof Class_DrawingAreaOSP
-   */
-  public addContainerToSelection(container: Class_ContainerElement) { // eslint-disable-line
-    this._selection[container.id] = container
-    container.setSelected()
-  }
-
-  /**
-     * Add all nodes to selection set
-     * Update menu accordingly
-     * @memberof Class_DrawingArea
-     */
-  public addAllVisibleContainersToSelection() {
-    this.visible_containers_list
-      .forEach(container => this.addContainerToSelection(container))
-  }
-
-  /**
-   * remove a container from a selection set
-   * Update menu accordingly
-   * @param {Class_ContainerElement} container
-   * @memberof Class_DrawingAreaOSP
-   */
-  public removeContainerFromSelection(container: Class_ContainerElement) { // eslint-disable-line
-    if (this._selection[container.id] !== undefined) {
-      // Update selection list
-      delete this._selection[container.id]
-      // Update selection attribute on given container
-      container.setUnSelected()
-      // Update related menus
-      this.application_data.menu_configuration.updateComponentRelatedToContainers()
-    }
-  }
-
-
-  /**
-   * remove a container from a selection set
-   * @param {Class_ContainerElement<this, Class_Sankey>} node
-   * @memberof Class_DrawingAreaOSP
-   */
-  public removeFreeLabelFromSelection(container: Class_ContainerElement) {
-    if (this._selection[container.id] !== undefined) {
-      delete this._selection[container.id]
-      container.setUnSelected()
-    }
-  }
-
-  /**
-   * Remove all container selected
-   * @memberof Class_DrawingArea
-   */
-  public purgeSelectionOfContainer() {
-    // Unselect elements
-    this.selected_containers_list
-      .forEach(zdt => {
-        this.removeContainerFromSelection(zdt)
-      })
-    this.application_data.menu_configuration.updateComponentRelatedToContainers()
-  }
-
-  /**
-   * Function used to move selected nodes from another element drag event,
-   * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
-   *
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_DrawingAreaOSP
-   */
-  public moveSelectedNodesFromDragEvent(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    this.selected_nodes_list
-      .forEach(n => {
-        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-      })
-  }
-
-  /**
-   * Function used to move selected containers from another element drag event,
-   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
-   *
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_DrawingAreaOSP
-   */
-  public moveSelectedContainerFromDragEvent(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    this.selected_containers_list
-      .forEach(n => {
-        if (!n.tied_to_nodes) {
-          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-          n.drawDragHandlers()
-        }
-      })
-  }
-  /**
-   * Update background grid visibility & save it's undo
-   *
-   */
   public bgGrid = () => {
     const app_data = this.application_data
     const _bgGrid = () => {
@@ -2957,10 +2131,6 @@ export class Class_DrawingArea {
     _bgGrid()
   }
 
-  /**
-   * Update legend visibility & save it's undo
-   *
-   */
   public maskLegend = () => {
     const app_data = this.application_data
     const _maskLegend = () => {
@@ -2974,13 +2144,6 @@ export class Class_DrawingArea {
     _maskLegend()
   }
 
-
-
-  /**
-   * Update DA scale & save it's undo
-   *
-   * @param {(number | null | undefined)} evt
-   */
   public changeScale = (evt: number | null | undefined) => {
     const app_data = this.application_data
     if (evt) {
@@ -2994,7 +2157,7 @@ export class Class_DrawingArea {
   }
 
   public setParametricMode() {
-    const default_style = this.sankey.node_styles_dict['default']
+    const default_style = this.sankey.styles_dict['default']
     default_style.position_type = 'parametric'
     this.sankey.nodes_list.forEach(n => n.position_v = -1)
     if (default_style.position_type == 'parametric')
@@ -3002,7 +2165,7 @@ export class Class_DrawingArea {
   }
 
   public setAbsoluteMode() {
-    const default_style = this.sankey.node_styles_dict['default']
+    const default_style = this.sankey.styles_dict['default']
     default_style.position_type = 'absolute'
   }
 
@@ -3016,38 +2179,9 @@ export class Class_DrawingArea {
       )
   }
 
-  // PRIVATE METHODS =====================================================================
-
-  /**
-   * Test if mouse is over some containers
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_DrawingAreaOSP
-   */
-  private isMouseOverAnExistingContainer(): boolean {
-    let cont_id: string
-    for (cont_id in this.containers_dict) {
-      if (this.containers_dict[cont_id].isMouseOver())
-        return true
-    }
-    return false
-  }
-
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }
   public set name(name: string) { this._sankey.name = name }
-
-  public get selected_containers_list(): Class_ContainerElement[] {
-    return this.containers_list.filter(container => container.is_selected) as Class_ContainerElement[]
-  }
-  public get selected_containers_list_sorted() { return this.selected_containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
-  public get visible_and_selected_containers_list_sorted() {
-    return this.visible_and_selected_containers_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-  public get contextualised_container(): Class_ContainerElement | undefined { return this._contextualised_free_label }
-  public set contextualised_container(value: Class_ContainerElement | undefined) { this._contextualised_free_label = value }
 
   public get show_background_image(): boolean { return this._show_background_image }
   public set show_background_image(value: boolean) { this._show_background_image = value }
@@ -3055,8 +2189,6 @@ export class Class_DrawingArea {
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
 
-  public get container_activated() { return this._container_activated }
-  public set container_activated(_) { this._container_activated = _ }
   public get bypass_autofit() {
     if (window.sankey?.publish && this._bypass_autofit) {
       return true
@@ -3064,7 +2196,5 @@ export class Class_DrawingArea {
     return false
   }
 
-  public set bypass_autofit(value) {
-    this._bypass_autofit = value
-  }
+  public set bypass_autofit(value) {this._bypass_autofit = value}
 }

@@ -71,8 +71,8 @@ import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
-import { Class_NodeAttribute, Class_LinkAttribute } from '../../Elements/Element'
+import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { Class_NodeElement } from '../../Elements/Node'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -167,6 +167,62 @@ export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, chi
     </Collapse>
   </>
 }
+// Version refactorisée de MenuSectionCheckbox
+export const MenuSectionCheckbox = <
+  CONFIG extends Record<string, AttributeConfig<unknown>>,
+  K extends keyof CONFIG
+>({
+  app_data, elements, attributePath, attributeKey, config,
+  prefix = '', refreshParentComponent, children
+}: React.PropsWithChildren<{
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  attributePath: string,
+  attributeKey: K
+  config: CONFIG
+  prefix?: string
+  refreshParentComponent: () => void
+  children: React.ReactNode
+}>) => {
+
+  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
+  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
+  return (
+    <Box layerStyle='menu_sub_section'>
+      <Box layerStyle='menu_sub_section_head'>
+        <Checkbox
+          isDisabled={!disable_attr_props[fullKey as K]}
+          isIndeterminate={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
+          variant='menuconfigpanel_part_title_1_checkbox'
+          icon={<CustomFaEyeCheckIcon />}
+          isChecked={attribute_values[attributeKey] as boolean}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            attribute_values[attributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
+          }}
+        >
+          <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
+            {t(`${String(attributePath)}.${fullKey}`) + ' '}
+          </OSTooltip>
+          {!menu_for_style && (
+            <TooltipElementOverloaded
+              attributeKey={attributeKey}
+              config={config}
+              prefix={prefix}
+              elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+              t={t}
+            />
+          )}
+        </Checkbox>
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+      >
+        {children}
+      </Box>
+    </Box>
+  )
+}
 
 /**
  * Wrapper for content of each sub-menus  
@@ -198,11 +254,9 @@ export const WrapperContentConfig = ({ title, children, hide = false }: React.Pr
 export const MenuResetAttrLocal = (
   {
     new_data,
-    nodesOrLinks,
     dict_overwritted_attr
   }: {
     new_data: Class_ApplicationData,
-    nodesOrLinks: 'nodes' | 'links' | 'zdt',
     dict_overwritted_attr: { [x: string]: { overloaded: boolean, name: string } }
   }) => {
   const { t, icon_library, drawing_area } = new_data
@@ -210,13 +264,11 @@ export const MenuResetAttrLocal = (
   const { icon_undo } = icon_library
 
   // Delete all local attributes of selected elements
-  const resetAll = () => nodesOrLinks == 'nodes' ? new_data.drawing_area.sankey.resetAttrSelectedNodes() : new_data.drawing_area.sankey.resetAttrSelectedLinks()
+  const resetAll = () => new_data.drawing_area.sankey.resetAttrSelectedElements()
   // Delete local attributes 'k' of selected elements
-  const resetLocal = (k: string) => nodesOrLinks == 'nodes' ?
-    sankey.deleteLocalAttrSelectedNodes(k as (keyof typeof NODES_ATTRIBUTES_CONFIG), drawing_area.selected_nodes_list) :
-    nodesOrLinks == 'links' ?
-      sankey.deleteLocalAttrSelectedLinks(k as (keyof typeof LINKS_ATTRIBUTES_CONFIG), drawing_area.selected_links_list) :
-      sankey.deleteLocalAttrSelectedContainers(k as (keyof typeof NODES_ATTRIBUTES_CONFIG), drawing_area.selected_containers_list)
+  const resetLocal = (k: string) =>
+    sankey.deleteLocalAttrSelectedElements(k as (keyof typeof ALL_ATTRIBUTES_CONFIG), drawing_area.selected_elements_list)
+
   return <Menu direction='rtl' placement='left' closeOnSelect={false}>
     <MenuButton as={Button} variant='menuconfigpanel_option_button'>
       {icon_undo}
@@ -699,89 +751,24 @@ export const TooltipElementOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  attributeKey, elements, tooltipPrefix, config, t
+  attributeKey, config, prefix, elements, t
 }: {
   attributeKey: K,
   config: CONFIG,
-  prefix?: string,
-  elements: Class_LinkElement[] | Class_NodeBase[] // Éléments à vérifier
-  t: TFunction // Fonction de traduction
-  tooltipPrefix?: string // Préfixe pour le tooltip (par défaut 'el_var_')
+  prefix: string,
+  elements: ElementsType
+  t: TFunction
 }): JSX.Element => {
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle )
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   if (menu_for_style) {
     return <></>
   }
-  const isOverwritted = isElementAttributeOverloaded(elements, attributeKey, config)
+  const isOverwritted = isElementAttributeOverloaded(elements as (Class_NodeBase | Class_LinkElement | Class_ContainerElement)[], prefix + '_' + String(attributeKey), config)
   return isOverwritted ? (
     <>{TooltipValueSurcharge('el_var_', t)}</>
   ) : <></>
 }
 
-// Version refactorisée de MenuSectionCheckbox
-export const MenuSectionCheckbox = <
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  K extends keyof CONFIG
->({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent, children
-}: React.PropsWithChildren<{
-  app_data: Class_ApplicationData
-  elements: ElementsType
-  attributePath: string,
-  attributeKey: K
-  config: CONFIG
-  prefix?: string
-  refreshParentComponent: () => void
-  children: React.ReactNode
-}>) => {
-
-  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
-  const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
-  const { isOpen, onToggle } = useDisclosure({ defaultIsOpen: true })
-  return (
-    <Box layerStyle='menu_sub_section'>
-      <Box layerStyle='menu_sub_section_head'>
-        <Button variant='menu_sub_section_collapse_button'
-          size='sizeCollapseButton'
-          onClick={onToggle}>
-          {isOpen ? icon_collapse_up : icon_collapse_down}
-        </Button>
-        <Checkbox
-          isDisabled={!disable_attr_props[fullKey as K]}
-          isIndeterminate={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
-          variant='menuconfigpanel_part_title_1_checkbox'
-          icon={<CustomFaEyeCheckIcon />}
-          isChecked={attribute_values[attributeKey] as boolean}
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-            attribute_values[attributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
-          }}
-        >
-          <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
-            {t(`${String(attributePath)}.${fullKey}`) + ' '}
-          </OSTooltip>
-          {!menu_for_style && (
-            <TooltipElementOverloaded
-              attributeKey={attributeKey}
-              config={config}
-              prefix={prefix}
-              elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-              t={t}
-            />
-          )}
-        </Checkbox>
-      </Box>
-      <Collapse in={isOpen} animateOpacity>
-        <Box
-          layerStyle='menuconfigpanel_grid'
-        >
-          {children}
-        </Box>
-      </Collapse>
-    </Box>
-  )
-}
 
 export const ConditionalCheckboxWithInput = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
@@ -795,7 +782,7 @@ export const ConditionalCheckboxWithInput = <
   checkboxAttributeKey: K,
   inputAttributeKey: K
   config: CONFIG
-  prefix?: string
+  prefix: string
   refreshParentComponent: () => void,
   minimum_value?: number,
   stepper?: boolean,
@@ -843,7 +830,7 @@ export const ConditionalCheckboxWithInput = <
             function_on_blur={(value) => {
               attribute_values[inputAttributeKey] = value as ExtractConfigValue<CONFIG[K]>
             }}
-            multiValue={isConfigValueIndeterminate(elements, config, inputAttributeKey, prefix??'')}
+            multiValue={isConfigValueIndeterminate(elements, config, inputAttributeKey, prefix ?? '')}
           />
         </OSTooltip>
       )}
@@ -865,7 +852,7 @@ export const CheckboxWithColorPicker = <
   checkboxAttributeKey: K,
   inputAttributeKey: K
   config: CONFIG
-  prefix?: string,
+  prefix: string,
   refreshParentComponent: () => void,
   children?: React.ReactNode
 }) => {
@@ -924,7 +911,7 @@ export const SimpleElementCheckbox = <
   elements: ElementsType
   attributeKey: K
   config: CONFIG
-  prefix?: string,
+  prefix: string,
   refreshParentComponent: () => void
   variant?: string
 }) => {
@@ -1124,7 +1111,7 @@ const LinkTooltipEditor: FC<{
 
 export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
   let selected_nodes
-  if (!new_data.menu_configuration.is_selector_only_for_visible_nodes) {
+  if (!new_data.menu_configuration.is_selector_only_for_visible_elements) {
     selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
   } else {
     selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
@@ -1144,7 +1131,7 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
 
 export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
   let selected_links
-  if (!app_data.menu_configuration.is_selector_only_for_visible_links) {
+  if (!app_data.menu_configuration.is_selector_only_for_visible_elements) {
     selected_links = app_data.drawing_area.selected_links_list_sorted
   } else {
     selected_links = app_data.drawing_area.visible_and_selected_links_list_sorted
@@ -1639,6 +1626,34 @@ export const getButtonVariant = (
 
   return `menuconfigpanel_option_button${suffix}`
 }
+
+/**
+ * Helper pour les checkboxes - retourne les props communes
+ * Similaire à getButtonVariant mais pour les Checkbox
+ * 
+ * @param isIndeterminate - Si la checkbox a des valeurs multiples
+ * @param variant - Variant Chakra UI à utiliser (par défaut: 'menuconfigpanel_option_checkbox')
+ * @returns Objet avec variant, iconColor et isIndeterminate
+ * 
+ * @example
+ * <Checkbox
+ *   {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
+ *   isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'color_visible')]}
+ *   isChecked={shapeValues.color_visible}
+ *   onChange={(evt) => { shapeValues.color_visible = evt.target.checked }}
+ * >
+ *   Fond visible
+ * </Checkbox>
+ */
+export const getCheckboxProps = (
+  isIndeterminate: boolean,
+  variant: string = 'menuconfigpanel_option_checkbox'
+) => ({
+  variant,
+  iconColor: isIndeterminate ? '#78C2AD' : 'white',
+  isIndeterminate
+})
+
 /**
  * ✅ Wrapper qui combine un composant avec l'icône de surcharge
  */
@@ -1657,8 +1672,9 @@ export const LabelWithOverload = ({
       {children}
       <TooltipElementOverloaded
         attributeKey={`${prefix}_${attributeKey}` as any}
-        elements={elements as any}
+        elements={elements}
         config={config}
+        prefix={prefix}
         t={t} />
     </Box>
   )

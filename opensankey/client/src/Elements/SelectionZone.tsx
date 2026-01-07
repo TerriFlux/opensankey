@@ -67,19 +67,19 @@ export class Class_ZoneSelection extends Class_BaseElement {
       })
       .forEach(n => {
         newly_selected.push(n)
-        this.drawing_area.addNodeToSelection(n)
+        this.drawing_area.addElementToSelection(n)
       })
 
     const newly_selected_links = []
     this.drawing_area.sankey.visible_links_list.forEach(link => {
       // Select links that have their source and target selected
       if (link.source.is_selected && newly_selected.includes(link.source) && link.target.is_selected && newly_selected.includes(link.target)) {
-        this.drawing_area.addLinkToSelection(link)
+        this.drawing_area.addElementToSelection(link)
         newly_selected_links.push(link)
       }
     })
   
-    this.drawing_area.containers_list
+    this.drawing_area.sankey.containers_list
       .filter(container => {
         // Check if node is horizontally in selection zone
         const is_node_horizontally_in_zone = (
@@ -97,7 +97,7 @@ export class Class_ZoneSelection extends Class_BaseElement {
         return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
       })
       .forEach(container => {
-        this.drawing_area.addContainerToSelection(container as Class_ContainerElement)
+        this.drawing_area.addElementToSelection(container)
       })
 
     //return nbtype

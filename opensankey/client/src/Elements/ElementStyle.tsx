@@ -1,9 +1,11 @@
 
-import { LinkAttributeKey, LinkAttributeTypes, NodeAttributeKey, NodeAttributeTypes} from "./ElementsAttributesConfig"
+// import { LinkAttributeKey, LinkAttributeTypes, NodeAttributeKey, NodeAttributeTypes} from "./ElementsAttributesConfig"
+
+import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from "./ElementsAttributesConfig"
 
 
 type NodeStyleConfig = Partial<{
-  [K in NodeAttributeKey]: NodeAttributeTypes[K]
+  [K in keyof typeof ALL_ATTRIBUTES_CONFIG]: ExtractConfigValue<typeof ALL_ATTRIBUTES_CONFIG[K]>
 }>
 
 // Type pour les propriétés de position
@@ -155,26 +157,25 @@ export const node_unitary_styles: readonly NodeStyleKey[] = [
 
 // Vous aurez besoin d'un équivalent de LINKS_ATTRIBUTES_CONFIG pour les liens
 // En supposant qu'il existe, sinon remplacez par le type approprié
-type LinkStyleConfig = Partial<{
-  [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
-}>
+// type LinkStyleConfig = Partial<{
+//   [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
+// }>
 
 // Type pour un élément de configuration de style de lien (sans id)
-interface LinkStyleConfigItem {
-  config: LinkStyleConfig
-}
 
 // Type pour le dictionnaire complet
-export type LinkStyleConfigsDict = Record<string, LinkStyleConfigItem>
+export type LinkStyleConfigsDict = Record<string, NodeStyleConfigItem>
 
 export const linkStyleConfigs: LinkStyleConfigsDict = {
   LinkImportExportCloseStyle: {
+    name: 'close import export',
     config: {
       'value_label_is_visible': true,
       'value_label_on_path': true,
     }
   },
   LinkImportCloseStyle: {
+    name: 'close import',
     config: {
       'shape_orientation': 'vh',
       'shape_starting_tangeant': 1,
@@ -182,6 +183,7 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
     }
   },
   LinkExportCloseStyle: {
+    name: 'close import',
     config: {
       'shape_orientation': 'hv',
       'shape_starting_tangeant': 0.25,
@@ -189,6 +191,7 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
     }
   },
   LinkImportExportAboveBelowStyle: {
+    name: 'close import',
     config: {
       'shape_starting_curve': 0.25,
       'shape_starting_tangeant': 0.50,
@@ -199,12 +202,15 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
     }
   },
   LinkImportAboveStyle: {
+    name: 'close import',
     config: {}
   },
   LinkExportBelowStyle: {
+    name: 'close import',
     config: {}
   },
   LinkInUnitaryStyle: {
+    name: 'close import',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,
@@ -217,6 +223,7 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
     }
   },
   LinkOutUnitaryStyle: {
+    name: 'close import',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,

@@ -38,9 +38,8 @@ import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
-import { NODES_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 import { NodeAttributeMappings } from '../Persistence/SankeyPersistence'
-import { Class_NodeAttribute } from './Element'
+import { Class_BaseShape } from './Element'
 
 export const default_selected_stroke_width = 3
 export const label_margin = 0
@@ -54,21 +53,12 @@ export function sortNodesElements(
   else return 0
 }
 
-// export function isPositionOverloaded(
-//   nodes: Class_NodeBase[],
-//   attr: keyof Type_ElementPosition
-// ) {
-//   let overloaded = false
-//   nodes.forEach(node => overloaded = (overloaded || node.isPositionOverloaded(attr)))
-//   return overloaded
-// }
-
-export class Class_NodeBase extends Class_NodeAttribute {
+export class Class_NodeBase extends Class_BaseShape {
   private _drag_handler: {
-    top: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>,
-    bottom: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>,
-    left: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>,
-    right: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>,
+    top: Class_Handler,
+    bottom: Class_Handler,
+    left: Class_Handler,
+    right: Class_Handler,
   }
 
   public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -97,7 +87,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
     // Init parent class attributes
     super(
       id, drawing_area, 'g_elements_sankey',
-      new NodeAttributeMappings(), drawing_area.sankey.default_node_style
+      drawing_area.sankey.default_style, new NodeAttributeMappings() 
     )
 
     this._name = name
@@ -203,7 +193,7 @@ export class Class_NodeBase extends Class_NodeAttribute {
   }
 
   public useDefaultStyle() {
-    this.style = [this.sankey.default_node_style as Class_ElementStyle]
+    this.style = [this.sankey.default_style as Class_ElementStyle]
   }
 
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
@@ -277,22 +267,6 @@ export class Class_NodeBase extends Class_NodeAttribute {
     return { dx: this._node_current_dx, dy: this._node_current_dy }
   }
 
-  // public get internalDrawingElements() {
-  //   return {
-  //     d3_selection_g_shape: this.d3_selection_g_shape,
-  //     d3_selection_g_name_label: this.d3_selection_g_name_label,
-  //     d3_selection_g_FO_illustration: this.d3_selection_g_FO_illustration
-  //   }
-  // }
-  // public setInternalDrawingElements(elements: {
-  //   d3_selection_g_shape?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-  //   d3_selection_g_name_label?: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null,
-  //   d3_selection_g_FO_illustration?: d3.Selection<SVGForeignObjectElement, unknown, SVGGElement, unknown> | null,
-  // }) {
-  //   if (elements.d3_selection_g_shape !== undefined) this.d3_selection_g_shape = elements.d3_selection_g_shape
-  //   if (elements.d3_selection_g_name_label !== undefined) this.d3_selection_g_name_label = elements.d3_selection_g_name_label
-  //   if (elements.d3_selection_g_FO_illustration !== undefined) this.d3_selection_g_FO_illustration = elements.d3_selection_g_FO_illustration
-  // }
   /**
    * Activate the control points alignement guide
    *

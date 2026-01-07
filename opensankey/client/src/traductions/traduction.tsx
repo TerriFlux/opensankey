@@ -13,7 +13,7 @@ import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
-import { LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 
 interface TranslationItem {
   en: string
@@ -184,7 +184,7 @@ export const use_context_config = (
 }
 
 const use_link_config = (resources: I18nResources): void => {
-  const linksConfig = LINKS_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  const linksConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
   
   // Génération automatique des traductions pour chaque attribut
   Object.entries(linksConfig).forEach(([attributeKey, config]) => {
@@ -227,7 +227,7 @@ const use_link_config = (resources: I18nResources): void => {
 }
 
 const use_node_config = (resources: I18nResources): void => {
-  const nodesConfig = NODES_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  const nodesConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
   
   // Génération automatique des traductions pour chaque attribut
   Object.entries(nodesConfig).forEach(([attributeKey, config]) => {

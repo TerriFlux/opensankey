@@ -51,8 +51,7 @@ import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElem
 import { DrawingAreaConfig, GraphElementsOrdoner, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
-import { MenuConfigurationNodeShape, MenuConfigurationLinkShape, MenuConfigurationContainerShape } from '../configmenus/MenuElementsShape'
-import { MenuConfigurationNodeLabel, MenuConfigurationLinkLabel, MenuConfigurationContainersLabel } from '../configmenus/MenuElementsLabel'
+import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
@@ -407,14 +406,14 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     >
       {t('Menu.Config.type_style')}
     </Button>
-    <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
+    {/* <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
         app_data.menu_configuration.type_menu_configuration_selected = 'context'
         ref_to_menu_config_updater.current()
       }}
     >
       {t('Menu.Config.type_context')}
-    </Button>
+    </Button> */}
     {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
       const keyType = el[0] as keyTypeConfig
       return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
@@ -445,71 +444,69 @@ const ConfigContent = ({ app_data, additional_menus }:
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
-      'data': <WrapperContentConfig title={t('Menu.Config.title_table')}>
+      data: <WrapperContentConfig title={t('Menu.Config.title_table')}>
         <SpreadSheet app_data={app_data} />
       </WrapperContentConfig>,
 
-      'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
+      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
           <DrawingAreaConfig new_data={app_data} />
           <GraphElementsOrdoner new_data={app_data} />
         </>
       </WrapperContentConfig>,
-      'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
+      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyNodeSelection app_data={app_data} />
       </WrapperContentConfig>,
 
-      'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
+      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
         <MenuConfigurationLinksData app_data={app_data} />
       </WrapperContentConfig>,
 
-      'object': <WrapperContentConfig title={t('Menu.Config.element_object')}>
+      object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
         <SankeyContainerSelection app_data={app_data} />
       </WrapperContentConfig>,
 
       ...additional_menus.current.additional_menu_config_content.data
 
     },
-
-
-
-    // Menus related to style config
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
           <LegendConfig new_data={app_data} />
         </>
       </WrapperContentConfig>,
-      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
-        <MenuConfigurationLinkShape new_data={app_data} menu_for_style={false} />
+      element: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
+         <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
+      // flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
 
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeShape app_data={app_data} additional_menus={additional_menus} menu_for_style={false} />
-      </WrapperContentConfig>,
-      object: <WrapperContentConfig title={t('Menu.Config.title_object')}>
-        <MenuConfigurationContainerShape app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
-      ...additional_menus.current.additional_menu_config_content.style
+      // node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
+      // object: <WrapperContentConfig title={t('Menu.Config.title_object')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
     },
     // Menus related to context config
-    context: {
-      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkLabel app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
+    // context: {
+    //   flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
 
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeLabel app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
+    //   node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
 
-      'object': <WrapperContentConfig title={t('Menu.Config.element_object')}>
-        <MenuConfigurationContainersLabel app_data={app_data} menu_for_style={false} />
-      </WrapperContentConfig>,
+    //   object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
 
 
-      ...additional_menus.current.additional_menu_config_content.context
+    //   ...additional_menus.current.additional_menu_config_content.context
 
-    },
+    // },
     presentation: {
       ...additional_menus.current.additional_new_menu_config_content.presentation
     }
@@ -543,10 +540,13 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
+    'element': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_element'), disabled: false },
+    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false },
     'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
     'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
     'node': { icon: app_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
     'data': { icon: app_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
+
     ...additional_menus.current.additional_menu_button_element_configurable
   }
 

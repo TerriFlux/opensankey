@@ -42,6 +42,7 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
+import { updateFrom } from '../Algorithms/UpdateFrom'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -661,7 +662,8 @@ export class Class_ApplicationData {
       drawing_area_from_layout.fromJSON(json_layout)
       drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
-      this.drawing_area.updateFrom(
+      updateFrom(
+        this.drawing_area,
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
       )
@@ -920,7 +922,7 @@ export class Class_ApplicationData {
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection(true, true)
+      app_ref.drawing_area.deleteSelection()
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -938,8 +940,7 @@ export class Class_ApplicationData {
       evt.preventDefault()
 
       // Select all node & links
-      app_ref.drawing_area.addAllVisibleNodesToSelection()
-      app_ref.drawing_area.addAllVisibleLinksToSelection()
+      app_ref.drawing_area.addAllVisibleElementsToSelection()
       app_ref.drawing_area.addLegendToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------

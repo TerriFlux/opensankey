@@ -43,9 +43,10 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import {
   AttributeConfig, 
   IconLabelAttributeTypes,
-  LinkLabelSpecificValues, LINKS_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
-  NameLabelAttributeTypes, NODES_ATTRIBUTES_CONFIG, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
-  Type_Orientation, Type_PathLabelHPosition, Type_PathLabelVPosition, Type_TextHPos, Type_TextVPos, ValueLabelAttributeTypes
+  LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
+  NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
+  Type_Orientation, ValueLabelAttributeTypes,
+  ConfigType
 } from './ElementsAttributesConfig'
 import { AttributeMappings } from '../Persistence/SankeyPersistence'
 
@@ -314,24 +315,20 @@ export abstract class Class_BaseElement {
     /* TODO définir  */
   }
 }
-export abstract class Class_ProtoElement<
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  STYLE_TYPE extends Class_ElementStyle = Class_ElementStyle
-> extends Class_BaseElement {
+export abstract class Class_ProtoElement extends Class_BaseElement {
 
-  private _storage: StorageType<CONFIG> = {}
-  private _config: CONFIG
+  private _storage: StorageType<ConfigType> = {}
+  protected _config: ConfigType
   protected _jsonMapping: AttributeMappings
 
   protected _position: Type_BaseElementPosition
-  protected _style: STYLE_TYPE[]
+  protected _style: Class_ElementStyle[]
 
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
-    config: CONFIG,
-    default_style: STYLE_TYPE,
+    default_style: Class_ElementStyle,
     jsonMapping: AttributeMappings
   ) {
     super(id, drawing_area, true, svg_parent_group)
@@ -342,16 +339,16 @@ export abstract class Class_ProtoElement<
       y: const_default_position_y
     }
     this._style = [default_style]
-    this._config = config
-    this.style[0].addReference(this)
+    this._config = ALL_ATTRIBUTES_CONFIG
+    this._style[0].addReference(this)
     this.createDynamicProperties()
   }
 
   protected createDynamicProperties() {
-    (Object.keys(this._config) as Array<keyof CONFIG>).forEach(key => {
+    (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
       Object.defineProperty(this, key, {
-        get: () => this.getElementProperty(key as keyof CONFIG),
-        set: (value: ExtractAttributeValue<CONFIG[typeof key]>) => {
+        get: () => this.getElementProperty(key as keyof ConfigType),
+        set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
           const attribute = this._config[key]
 
           if (attribute.setter) {
@@ -390,18 +387,18 @@ export abstract class Class_ProtoElement<
   public set attributes(_) {
     this._storage = _
   }
-  public getStyleWithAttr(k: keyof CONFIG) {
-    return this._style.slice().reverse().find(s => s[k as keyof STYLE_TYPE] !== undefined) ?? this._style[0]
+  public getStyleWithAttr(k: keyof ConfigType) {
+    return this._style.slice().reverse().find(s => s[k as keyof Class_ElementStyle] !== undefined) ?? this._style[0]
   }
 
-  public getStyleProperty(k: keyof CONFIG) {
+  public getStyleProperty(k: keyof ConfigType) {
     const valueOfStyle = this.getStyleWithAttr(k)
-    if (valueOfStyle[k as keyof STYLE_TYPE] !== undefined) {
-      return valueOfStyle[k as keyof STYLE_TYPE]
+    if (valueOfStyle[k as keyof Class_ElementStyle] !== undefined) {
+      return valueOfStyle[k as keyof Class_ElementStyle]
     }
     return this._config[k].default
   }
-  public getElementProperty(k: keyof CONFIG) {
+  public getElementProperty(k: keyof ConfigType) {
     if (this._storage[k] !== undefined) {
       return this._storage[k]
     }
@@ -412,7 +409,7 @@ export abstract class Class_ProtoElement<
     return this._style
   }
 
-  public set style(_: STYLE_TYPE[]) {
+  public set style(_: Class_ElementStyle[]) {
     if (!_) return
     this._style.forEach(style => style.removeReference(this))
     this._style = _
@@ -427,7 +424,7 @@ export abstract class Class_ProtoElement<
   }
 
   protected shouldSaveAttribute(
-    key: keyof CONFIG,
+    key: keyof ConfigType,
     value: string | number | boolean | undefined
   ): boolean {
     return value !== undefined && value !== '' && value !== this.getStyleProperty(key)
@@ -438,13 +435,13 @@ export abstract class Class_ProtoElement<
   public useDefaultStyle() {
   }
 
-  public isAttributeOverloaded(attr: keyof CONFIG) {
+  public isAttributeOverloaded(attr: keyof ConfigType) {
     if (this._storage[attr] === undefined) return false
-    if (this._storage[attr] === this.getStyleWithAttr(attr)[attr as keyof STYLE_TYPE]) return false
+    if (this._storage[attr] === this.getStyleWithAttr(attr)[attr as keyof Class_ElementStyle]) return false
     return true
   }
 
-  public delete_attribute(k: keyof CONFIG) {
+  public delete_attribute(k: keyof ConfigType) {
     delete this._storage[k]
   }
 
@@ -453,18 +450,18 @@ export abstract class Class_ProtoElement<
   }
 
   public isEqual(_: this) {
-    return Object.keys(this._config).every(attr => this[attr as keyof Class_ProtoElement<CONFIG>] === _[attr as keyof Class_ProtoElement<CONFIG>])
+    return Object.keys(this._config).every(attr => this[attr as keyof Class_ProtoElement] === _[attr as keyof Class_ProtoElement])
   }
 
-  public copyAttrFrom(element_to_copy: Class_ProtoElement<CONFIG>) {
+  public copyAttrFrom(element_to_copy: Class_ProtoElement) {
     this._storage = {};
-    (Object.keys(element_to_copy._storage) as Array<keyof CONFIG>).forEach(key => {
-      if (element_to_copy._storage[key] !== this.getStyleProperty(key as keyof CONFIG)) {
+    (Object.keys(element_to_copy._storage) as Array<keyof ConfigType>).forEach(key => {
+      if (element_to_copy._storage[key] !== this.getStyleProperty(key as keyof ConfigType)) {
         this._storage[key] = element_to_copy._storage[key]
       }
     })
   }
-  protected _copyFrom(element_to_copy: Class_ProtoElement<CONFIG>) {
+  protected _copyFrom(element_to_copy: Class_ProtoElement) {
     super._copyFrom(element_to_copy)
     this.copyAttrFrom(element_to_copy)
     this.updateVisibilityFingerprint()
@@ -483,8 +480,8 @@ export abstract class Class_ProtoElement<
     if (Object.keys(this._storage).length > 0) {
       json_object['local'] = {} as Type_JSON
       const toJsonMapping = this._jsonMapping.getToJsonMapping();
-      (Object.entries(this._storage) as Array<[keyof CONFIG, any]>).forEach(([key, value]) => {
-        if (this.shouldSaveAttribute(key as keyof CONFIG, value)) {
+      (Object.entries(this._storage) as Array<[keyof ConfigType, any]>).forEach(([key, value]) => {
+        if (this.shouldSaveAttribute(key as keyof ConfigType, value)) {
           const jsonKey = toJsonMapping[key as string] || (key as string);
           (json_object['local'] as Type_JSON)[jsonKey] = value
         }
@@ -502,13 +499,13 @@ export abstract class Class_ProtoElement<
 
     const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
 
-    // this.style = style_id.map(s_id => this.sankey.link_styles_dict[s_id])
+    // this.style = style_id.map(s_id => this.sankey.styles_dict[s_id])
     // if (!Array.isArray(json_object.style)) {
     //   const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    //   this.style = [this.sankey.node_styles_dict[style_id]]
+    //   this.style = [this.sankey.styles_dict[style_id]]
     // } else {
     //   const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-    //   this.style = style_id.map(s_id => this.sankey.node_styles_dict[s_id]) as Class_ElementStyle[]
+    //   this.style = style_id.map(s_id => this.sankey.styles_dict[s_id]) as Class_ElementStyle[]
     // }
 
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
@@ -522,18 +519,18 @@ export abstract class Class_ProtoElement<
       // ✅ Typage correct
       Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
         if (json_object[jsonKey] !== undefined) {
-          const key = attrKey as keyof CONFIG
-          if (json_object[jsonKey] !== this.getStyleProperty(key as keyof CONFIG)) {
-            this._storage[key] = json_object[jsonKey] as ExtractAttributeValue<CONFIG[typeof key]>
+          const key = attrKey as keyof ConfigType
+          if (json_object[jsonKey] !== this.getStyleProperty(key as keyof ConfigType)) {
+            this._storage[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
           }
         }
       });
 
       // Traitement des attributs directs (même nom)
-      (Object.keys(this._config) as Array<keyof CONFIG>).forEach(key => {
+      (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
         if (json_object[key as string] !== undefined) {
-          if (json_object[key as string] !== this.getStyleProperty(key as keyof CONFIG)) {
-            this._storage[key] = json_object[key as string] as ExtractAttributeValue<CONFIG[typeof key]>
+          if (json_object[key as string] !== this.getStyleProperty(key as keyof ConfigType)) {
+            this._storage[key] = json_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
           }
         }
       })
@@ -563,18 +560,15 @@ export abstract class Class_ProtoElement<
     process_func()
   }
 
-  public saveUndo(f: (_: Class_ProtoElement<CONFIG>) => void) {
+  public saveUndo(f: (_: Class_ProtoElement) => void) {
     this.drawing_area.application_data.history.saveUndo(() => { f(this) })
   }
 
-  public saveRedo(f: (_: Class_ProtoElement<CONFIG>) => void) {
+  public saveRedo(f: (_: Class_ProtoElement) => void) {
     this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
 }
-export abstract class Class_BaseShape<
-  CONFIG extends Record<string, AttributeConfig<any>>,
-  STYLE_TYPE extends Class_ElementStyle = Class_ElementStyle
-> extends Class_ProtoElement<CONFIG, STYLE_TYPE> {
+export abstract class Class_BaseShape extends Class_ProtoElement {
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
@@ -691,6 +685,21 @@ export abstract class Class_BaseShape<
   value_label_unit!: ValueLabelAttributeTypes['unit']
   value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
 
+  value_label_on_path!: LinkLabelSpecificValues['on_path']
+  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  name_label_on_path!: LinkLabelSpecificValues['on_path']
+  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+   orphan_node_visible!: boolean
+  position_type!: NodeShapeSpecificAttributeTypes['position_type']
+  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
+  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
+  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
+  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
+  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+
   // =================== ICON ATTRIBUTES (icon_*) ===================
   icon_color!: IconLabelAttributeTypes['color']
   icon_is_visible!: IconLabelAttributeTypes['is_visible']
@@ -705,34 +714,7 @@ export abstract class Class_BaseShape<
   icon_image_src!: IconLabelAttributeTypes['image_src']
 
   hyperlink!: string | undefined
-}
 
-export abstract class Class_NodeAttribute extends Class_BaseShape<typeof NODES_ATTRIBUTES_CONFIG, Class_ElementStyle> {
-  orphan_node_visible!: boolean
-  position_type!: NodeShapeSpecificAttributeTypes['position_type']
-  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
-  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
-  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
-  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
-  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
-  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
-
-  constructor(
-    id: string,
-    drawing_area: Class_DrawingArea,
-    svg_parent_group: string,
-    attributeMappings: AttributeMappings,
-    default_style: Class_ElementStyle
-  ) {
-    super(
-      id, drawing_area, svg_parent_group,
-      NODES_ATTRIBUTES_CONFIG, default_style, attributeMappings
-    )
-  }
-
-}
-
-export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_ATTRIBUTES_CONFIG, Class_ElementStyle> {
   shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
   shape_is_curved!: LinkShapeSpecificValues['is_curved']
   shape_curvature!: LinkShapeSpecificValues['curvature']
@@ -748,13 +730,9 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+}
 
-  value_label_on_path!: LinkLabelSpecificValues['on_path']
-  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
-
-  name_label_on_path!: LinkLabelSpecificValues['on_path']
-  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
-
+export abstract class Class_LinkAttribute extends Class_BaseShape {
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
@@ -764,7 +742,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
   ) {
     super(
       id, drawing_area, svg_parent_group,
-      LINKS_ATTRIBUTES_CONFIG, default_style, attributeMappings
+      default_style, attributeMappings
     )
   }
 
@@ -787,7 +765,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
         if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
           this.attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
         } else {
-          const endingCurve = this.shape_ending_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_ending_curve.default
+          const endingCurve = this.shape_ending_curve ?? this._config.shape_ending_curve.default
           this.attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
         }
       } else {
@@ -804,7 +782,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape<typeof LINKS_A
         if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
           this.attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
         } else {
-          const startingCurve = this.shape_starting_curve ?? LINKS_ATTRIBUTES_CONFIG.shape_starting_curve.default
+          const startingCurve = this.shape_starting_curve ?? this._config.shape_starting_curve.default
           this.attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
         }
       } else {
@@ -1050,15 +1028,26 @@ export class Class_ElementStyle {
         this._storage[key] = config.default
       })
     }
+    this.createDynamicProperties()
   }
-  // Getter typé
-  public get(key: string) {
-    return this._storage[key]
+  public getElementProperty(k: keyof ConfigType) {
+    if (this._storage[k] !== undefined) {
+      return this._storage[k]
+    }
+    return undefined
   }
-
-  // Setter typé
-  public set(key:string,value: string): void {
-    this._storage[key] = value
+  protected createDynamicProperties() {
+    (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: () => this.getElementProperty(key as keyof ConfigType),
+        set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
+          this._storage[key] = value
+          Object.values(this._references).forEach(ref => ref.draw())
+        },
+        enumerable: true,
+        configurable: true
+      })
+    })
   }
 
   public deleteAttribute(key: string): void {
@@ -1102,9 +1091,7 @@ export class Class_ElementStyle {
     }
   }
 
-  protected update() {
-    Object.values(this._references).forEach(ref => ref.draw())
-  }
+
 
   public get id() { return this._id }
   public get name() { return this._name }

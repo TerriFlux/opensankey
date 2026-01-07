@@ -1,7 +1,7 @@
 import { MenuConfig } from './SankeyMenuContext'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkAttribute, Class_ProtoElement, StorageType } from '../../Elements/Element'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 export const LINK_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -185,7 +185,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     // Style actions
     resetAttr: () => {
-      const dict_old_value: { [x: string]: StorageType<typeof NODES_ATTRIBUTES_CONFIG> } = {}
+      const dict_old_value: { [x: string]: StorageType<typeof ALL_ATTRIBUTES_CONFIG> } = {}
       selected_links.forEach(l => {
         dict_old_value[l.id] = l.attributes
       })
@@ -222,7 +222,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     // Visibility toggles
     toggleNameVisibility: () => {
-      const dict_old_name: { [x: string]: Class_LinkAttribute } = {}
+      const dict_old_name: { [x: string]: typeof ALL_ATTRIBUTES_CONFIG } = {}
       selected_links.forEach(l => {
         dict_old_name[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.attributes)), l.attributes)
       })
@@ -252,7 +252,7 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     },
 
     toggleValueVisibility: () => {
-      const dict_old_value: { [x: string]: Class_LinkAttribute } = {}
+      const dict_old_value: { [x: string]: typeof ALL_ATTRIBUTES_CONFIG } = {}
       selected_links.forEach(l => {
         dict_old_value[l.id] = Object.assign(Object.create(Object.getPrototypeOf(l.attributes)), l.attributes)
       })

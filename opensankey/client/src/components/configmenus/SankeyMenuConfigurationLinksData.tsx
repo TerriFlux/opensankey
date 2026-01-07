@@ -38,7 +38,7 @@ import { getLinkShapeValues, getElementsLabelValues } from '../../Elements/Eleme
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { BASE_LABEL_CONFIG, isLinkShapeSpecificValueIndeterminate, LINKS_SHAPE_SPECIFIC_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { BASE_LABEL_CONFIG, isLinkShapeSpecificValueIndeterminate, LINK_SHAPE_SPECIFIC_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 interface LinkValueTypeSelectorProps {
   t: TFunction,
@@ -255,21 +255,21 @@ export const default_value_option = 'value'
 export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
-  const { ref_selected_style_link } = menu_configuration
-  const { link_styles_dict } = sankey
+  const { ref_selected_style } = menu_configuration
+  const { styles_dict } = sankey
   const { data_taggs_list } = sankey
   const {
-    is_selector_only_for_visible_links,
+    is_selector_only_for_visible_elements,
     ref_to_menu_config_links_data_updater,
     ref_to_save_in_cache_indicator
   } = menu_configuration
 
   const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
 
-  const selected_links = is_selector_only_for_visible_links ?
+  const selected_links = is_selector_only_for_visible_elements ?
     drawing_area.visible_and_selected_links_list_sorted :
     drawing_area.selected_links_list_sorted
-  const disable_attr_props = link_styles_dict[ref_selected_style_link.current].customisable_attribute
+  const disable_attr_props = styles_dict[ref_selected_style.current].customisable_attribute
 
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
@@ -295,8 +295,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const shapeValues = selected_links.length > 0
     ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)
     : Object.fromEntries(
-      Object.entries(LINKS_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
-    ) as { -readonly [K in keyof typeof LINKS_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINKS_SHAPE_SPECIFIC_CONFIG[K]['type']> }
+      Object.entries(LINK_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINK_SHAPE_SPECIFIC_CONFIG[K]['type']> }
 
   type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image'
 
@@ -451,55 +451,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       </Box>
     </Box>
 
-    {/* Structure checkbox and local scale */}
-    <Box layerStyle='options_2cols'>
-      <Checkbox
-        isDisabled={!disable_attr_props['shape_is_structure']}
-        variant='menuconfigpanel_option_checkbox'
-        isIndeterminate={isLinkShapeSpecificValueIndeterminate(selected_links, 'is_structure')}
-        isChecked={shapeValues.is_structure}
-        onChange={(evt) => {
-          shapeValues.is_structure = evt.target.checked
-        }}>
-        <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
-          {t('Flux.apparence.shape_is_structure')}
-          <TooltipElementOverloaded
-            elements={selected_links}
-            t={t}
-            attributeKey={'is_structure'}
-            config={LINKS_SHAPE_SPECIFIC_CONFIG}
-            prefix={'shape'}
-          />
-        </OSTooltip>
-      </Checkbox>
 
-      {/* Value of link local scale to override scale from DA, can be undefined */}
-      <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-        <>
-          <Box as='span' layerStyle='options_2cols' >
-            <Box layerStyle='menuconfigpanel_option_name' >
-              {t('Flux.apparence.shape_local_link_scale')}
-              <TooltipElementOverloaded
-                elements={selected_links}
-                t={t}
-                attributeKey={'local_link_scale'}
-                config={LINKS_SHAPE_SPECIFIC_CONFIG}
-                prefix={'shape'}
-              />
-            </Box>
-            <ConfigMenuNumberOrUndefinedInput
-              disabled={!disable_attr_props['shape_local_link_scale']}
-              default_value={shapeValues.local_link_scale}
-              function_on_blur={(_) => {
-                shapeValues.local_link_scale = _ ?? shapeValues.local_link_scale
-              }}
-              minimum_value={0}
-              stepper={true}
-              step={1}
-            />
-          </Box>
-        </>
-      </OSTooltip>
-    </Box>
   </Box>
 }

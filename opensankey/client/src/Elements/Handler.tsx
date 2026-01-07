@@ -29,14 +29,13 @@ import * as d3 from 'd3'
 
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { AttributeConfig } from './ElementsAttributesConfig'
 
-export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> extends Class_BaseElement{
+export class Class_Handler extends Class_BaseElement{
   private _size: number = 5
   private _color: string = 'black'
   private _filled: boolean = true
   private _custom_class: string | undefined
-  private _ref_element: Class_ProtoElement<CONFIG>
+  private _ref_element: Class_ProtoElement
   private _ref_element_optional?: Class_BaseElement | undefined
   private _custom_html_grp: boolean
   protected _is_visible: boolean = true
@@ -44,7 +43,7 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    ref: Class_ProtoElement<CONFIG>,
+    ref: Class_ProtoElement,
     dragStart_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     drag_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
     dragEnd_function: (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => void,
@@ -85,7 +84,7 @@ export class Class_Handler<CONFIG extends Record<string, AttributeConfig<any>>> 
   }
 
 
-  protected _copyFrom(element: Class_Handler<CONFIG>) {
+  protected _copyFrom(element: Class_Handler) {
     super._copyFrom(element)
     this._size = element._size
     this._color = element._color
