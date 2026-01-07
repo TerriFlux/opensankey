@@ -19,6 +19,7 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 
 declare const window: Window &
   typeof globalThis & {
@@ -434,7 +435,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
       // Select all node & links
-      app_ref.drawing_area.addAllVisibleContainersToSelection()
+      app_ref.drawing_area.addAllVisibleElementsToSelection()
     }
 
     // Event to clone current sankey into a new view --------------------------------------------
@@ -562,7 +563,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.name = name
 
     node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, nodeStyleConfigs))
-    link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_link_internal_style(style_id, linkStyleConfigs))
+    //link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, linkStyleConfigs))
 
     new_drawing_area.removeMinimumLinkThickness()
     new_drawing_area.removeMaximumLinkThickness()
@@ -570,7 +571,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.filter_label = 0
     new_drawing_area.filter_link_value = 0
 
-    new_drawing_area.containers_list.forEach(cont => {
+    new_drawing_area.sankey.containers_list.forEach(cont => {
       new_drawing_area.deleteContainer(cont)
     })
 
@@ -587,9 +588,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style = [new_drawing_area.sankey.link_styles_dict['LinkOutUnitaryStyle']]
+            link.style = [new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle']]
           } else {
-            link.style = [new_drawing_area.sankey.link_styles_dict['LinkInUnitaryStyle']]
+            link.style = [new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle']]
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -611,15 +612,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           return
         }
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
         node.resetAttributes()
         //node.resetPositionAttributes()
       })
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeStyle']]
-    new_drawing_area.sankey.default_node_style.position_type = 'parametric'
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
+    new_drawing_area.sankey.default_style.position_type = 'parametric'
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
       tagg.use_colors = false
@@ -629,7 +630,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       .forEach(node => { node.position_v = -1 })
 
     new_drawing_area.nodePositioning.computeParametrization(true)
-    new_drawing_area.container_activated = false
+    new_drawing_area.sankey.container_activated = false
     // Remove tag group
 
     new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
@@ -650,9 +651,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.resetAttributes()
         // Affect style depending on IO
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
         //node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
         //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
@@ -667,7 +668,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.position_x -= 100
       })
     new_drawing_area.legend.stick_to_drawing = false
-    const cont = new_drawing_area.addNewFreeLabel('unitary_container_')
+    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_')
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
@@ -720,7 +721,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       if (id !== default_main_sankey_id) {
         // Update view with attr heredited from master
         this._drawing_area.bypass_redraws = true
-        this._drawing_area.updateFrom(this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+        updateFrom(this._drawing_area,this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
         // Create a clone of current view's DA
         if (!this.is_static) {
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))

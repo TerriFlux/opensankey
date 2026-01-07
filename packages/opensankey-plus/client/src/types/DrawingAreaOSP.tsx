@@ -65,7 +65,7 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
 
   // COPY METHODS =======================================================================
 
-  protected _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
+  public _copyAttrFrom(drawing_area_to_copy: Class_DrawingArea) {
     // Call heredited method
     super._copyAttrFrom(drawing_area_to_copy as Class_DrawingArea)
     // Name
@@ -113,22 +113,6 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
     // New attributes
     this.name = getStringFromJSON(json_object, 'name', this.name)
     this._heredited_attr = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]
-  }
-
-  /**
-   * Function used to move selected nodes from another element drag event,
-   * we created this function and moveSelectedContainerFromDragEvent to avoid recursive call of eventMouseDrag
-   *
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_DrawingAreaOSP
-   */
-  public moveSelectedNodesFromDragEvent(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    this.selected_nodes_list
-      .forEach(n => {
-        n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-      })
   }
 
   // GETTERS / SETTERS ==================================================================

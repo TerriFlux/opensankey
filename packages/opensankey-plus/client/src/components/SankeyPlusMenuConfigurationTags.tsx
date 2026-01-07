@@ -28,7 +28,6 @@ import {
 
 // Local functions / components
 import {
-  default_grey_color,
   GetRandomInt,
   Type_MacroTagGroup
 } from '../deps/OpenSankey/types/Utils'
@@ -39,6 +38,7 @@ import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_Node
 
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { default_grey_color } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,

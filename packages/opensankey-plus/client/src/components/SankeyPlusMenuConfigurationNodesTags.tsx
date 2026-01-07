@@ -6,7 +6,7 @@ import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuSelectionElements'
+import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuElementsSelection'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
 export interface BaseComponentProps {
@@ -36,7 +36,7 @@ export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) 
   // Selected nodes ---------------------------------------------------------------------
 
   let selected_nodes: Class_NodeElement[]
-  if (!app_data.menu_configuration.is_selector_only_for_visible_nodes) {
+  if (!app_data.menu_configuration.is_selector_only_for_visible_elements) {
     // All availables nodes
     selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
   }

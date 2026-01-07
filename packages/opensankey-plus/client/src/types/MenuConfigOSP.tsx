@@ -102,12 +102,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     //this._elements_configurable_selected['presentation']= []
   }
 
-  // PUBLIC METHODS ====================================================================
-  /**
-   * Override updateAllMenuComponents to take into account menu for OSP
-   *
-   * @memberof Class_MenuConfigOSP
-   */
   updateAllMenuComponents(): void {
     super.updateAllMenuComponents()
     this.updateComponentRelatedToContainers()
@@ -129,44 +123,11 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this.ref_to_load_diagram_only_view_updater.current()
   }
 
-
-
-
-  /**
-   * Update Components related to views (BannerView, AccordionView,...)
-   *
-   * @memberof Class_MenuConfigOSP
-   */
   public updateComponentRelatedToViews() {
     this._ref_to_banner_views_updater.current()
     this._ref_to_views_config_updater.current()
     this.updateComponentSaveDiagramJSON()
     this.updateComponentLoadDiagramJSON()
-  }
-
-  /**
-   * Create a timed out process - Used to avoid multiple reloading of components
-   *
-   * The process_func is meant to be use by setTimeout(),
-   * and inside setTimeOut 'this' keyword has another meaning,
-   * so the current object must be passed directly as an argument.
-   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
-   *
-   * @public
-   * @param {string} process_id
-   * @param {(_: Class_MenuConfig) => void} process_func
-   * @memberof Class_MenuConfig
-   */
-  public _add_waiting_process(
-    process_id: string,
-    process_func: (_: Class_MenuConfigOSP) => void
-  ) {
-    this._cancel_waiting_process(process_id)
-    this._waiting_processes[process_id] = setTimeout(
-      (_this) => { process_func(_this) },
-      this._waiting_time_for_processes,
-      this
-    )
   }
 
   // Override closeAllMenus so it take into account filter drawer
@@ -179,16 +140,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     super.updateAllComponentsRelatedToNodesConfig()
 
     this._ref_to_node_hyperlink_updater.current()
-  }
-  public override updateComponentRelatedToLinksApparence() {
-    this._add_waiting_process(
-      'updateComponentRelatedToLinksApparence',
-      (_this: Class_MenuConfig) => {
-        _this.ref_to_menu_config_links_apparence_visual_updater.current()
-        _this.ref_to_menu_config_links_apparence_context_updater.current()
-
-      }
-    )
   }
 
   public override updateAllComponentsRelatedToNodeTags() {
@@ -208,7 +159,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public updateComponentRelatedToLinksData() {
     this._add_waiting_process(
       'updateComponentRelatedToLinksData',
-      (_this: Class_MenuConfigOSP) => {
+      (_this: Class_MenuConfig) => {
         _this.ref_to_menu_config_links_data_updater.current()
         _this.ref_to_spreadsheet.current()
         _this.ref_to_menu_contextual_config_links_data_updater.current()
@@ -223,8 +174,6 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   }
 
-  // GETTERS / SETTERS ==================================================================
-
   public get dict_setter_show_dialog_plus(): OSPShowMenuComponentsVarType { return this._dict_setter_show_dialog_plus }
   public get ref_to_banner_views_updater(): MutableRefObject<() => void> { return this._ref_to_banner_views_updater }
   public get ref_to_banner_views_opened(){return this._ref_to_banner_views_opened}
@@ -238,10 +187,5 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_node_hyperlink_updater(): MutableRefObject<(() => void)> { return this._ref_to_node_hyperlink_updater }
 
   public get ref_to_config_DA_bg_image_updater() { return this._ref_to_config_DA_bg_image_updater }
-
   public get ref_to_btn_top_pref_updater() { return this._ref_to_btn_top_pref_updater }
-  
-  // public get action_type() { return this._action_type}
-  // public set action_type(_) { this._action_type = _}
-  // public get dict_setter_show_dialog_afm() { return this._dict_setter_show_dialog_afm }
 }

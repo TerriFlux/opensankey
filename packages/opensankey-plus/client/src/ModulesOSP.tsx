@@ -44,7 +44,7 @@ import {
 
 
 import {
-  MenuConfigurationFreeLabelsOSP,
+  MenuConfigurationContainersOSP,
 } from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
 import {
@@ -163,7 +163,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
-  additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false }
+ 
   additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
@@ -173,7 +173,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // Add menu for new menu type 'Présentation'
   additionalMenus.current.additional_new_menu_config_content['presentation'] = {
     'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP app_data={new_data_plus} />
+      <MenuConfigurationContainersOSP app_data={new_data_plus} />
     </WrapperContentConfig>,
 
     'node': <WrapperContentConfig title={t('Flux.IS')}><>
@@ -251,7 +251,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   const new_data_plus = new_data as Class_ApplicationDataOSP
   const { t } = new_data_plus
   // Add new_menus
-  const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
+  const content_draggable_menu_zdt = <MenuConfigurationContainersOSP
     app_data={new_data_plus}
     menu_for_style={false}
   />

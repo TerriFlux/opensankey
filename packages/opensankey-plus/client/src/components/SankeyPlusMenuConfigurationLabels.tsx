@@ -1,17 +1,17 @@
 import React, { useState, useRef, useMemo } from 'react'
 import ReactQuill from 'react-quill'
-import {Box,Checkbox,Button,ButtonGroup} from '@chakra-ui/react'
+import { Box, Checkbox, Button, ButtonGroup } from '@chakra-ui/react'
 
 import { Type_JSON, default_style_id } from '../deps/OpenSankey/types/Utils'
 import { Class_ContainerElement } from '../deps/OpenSankey/Elements/TextZone'
-import { ConfigMenuStyleElementContainer } from '../deps/OpenSankey/components/dialogs/SankeyStyle'
-import { Class_NodeStyle } from '../deps/OpenSankey/Elements/Element'
+import { ConfigMenuStyleElement } from '../deps/OpenSankey/components/dialogs/SankeyStyle'
+import { Class_ElementStyle } from '../deps/OpenSankey/Elements/Element'
 import { ConfigMenuNumberInput, ConfigMenuTextInput, OSMultiSelect } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { Class_ProtoElement } from '../deps/OpenSankey/Elements/Element'
-import { NODES_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 export const sep = <hr style={{ borderStyle: 'none', margin: '0px', color: 'grey', backgroundColor: 'grey', height: 2 }} />
 
@@ -20,21 +20,21 @@ export interface selected_type { 'label': string; 'value': string }
 // 🆕 Hook pour gérer la configuration des attributs disable (comme pour nodes/links)
 const useContainerAttributeConfig = (
   app_data: Class_ApplicationData,
-  elements: (Class_ContainerElement | Class_NodeStyle)[]
+  elements: (Class_ContainerElement | Class_ElementStyle)[]
 ) => {
   return useMemo(() => {
     const { drawing_area, menu_configuration } = app_data
     const { sankey } = drawing_area
-    const { ref_selected_style_container } = menu_configuration
-    const { container_styles_dict } = sankey
+    const { ref_selected_style } = menu_configuration
+    const { styles_dict } = sankey
 
     const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ProtoElement)
 
     // En mode style : utiliser customisable_attribute du style sélectionné
     // En mode direct : utiliser customisable_attribute du style par défaut
     const disable_attr_props = menu_for_style ?
-      container_styles_dict[ref_selected_style_container.current]?.customisable_attribute :
-      container_styles_dict[default_style_id]?.customisable_attribute
+      styles_dict[ref_selected_style.current]?.customisable_attribute :
+      styles_dict[default_style_id]?.customisable_attribute
 
     return {
       menu_for_style,
@@ -52,15 +52,15 @@ const useContainerAttributeConfig = (
  * Returns the value if all elements have the same value, otherwise returns defaultValue
  */
 const getCommonValue = <T,>(
-  selected_elements: (Class_ContainerElement | Class_NodeStyle)[],
-  propertyGetter: (element: Class_ContainerElement | Class_NodeStyle) => T,
+  selected_elements: (Class_ContainerElement | Class_ElementStyle)[],
+  propertyGetter: (element: Class_ContainerElement | Class_ElementStyle) => T,
   defaultValue: T
 ): T => {
   if (selected_elements.length === 0) return defaultValue
-  
+
   const firstValue = propertyGetter(selected_elements[0])
   const allSame = selected_elements.every(d => propertyGetter(d) === firstValue)
-  
+
   return allSame && firstValue ? firstValue : defaultValue
 }
 
@@ -69,11 +69,11 @@ const getCommonValue = <T,>(
  * This is the core factorization for all update functions
  */
 const createUpdateFunction = <T,>(
-  selected_elements: (Class_ContainerElement | Class_NodeStyle)[],
+  selected_elements: (Class_ContainerElement | Class_ElementStyle)[],
   propertyName: string,
-  propertyGetter: (element: Class_ContainerElement | Class_NodeStyle) => T,
-  propertySetter: (element: Class_ContainerElement | Class_NodeStyle, value: T) => void,
-  history:  Class_ApplicationHistory,
+  propertyGetter: (element: Class_ContainerElement | Class_ElementStyle) => T,
+  propertySetter: (element: Class_ContainerElement | Class_ElementStyle, value: T) => void,
+  history: Class_ApplicationHistory,
   redrawCallback: () => void
 ) => {
   return (newValue: T | null | undefined) => {
@@ -101,7 +101,7 @@ const createUpdateFunction = <T,>(
 
 // ============= MAIN COMPONENT WITH STYLE PATTERN =============
 
-export const MenuConfigurationFreeLabelsOSP = ({
+export const MenuConfigurationContainersOSP = ({
   app_data,
   menu_for_style = false
 }: {
@@ -122,16 +122,16 @@ export const MenuConfigurationFreeLabelsOSP = ({
   if (!menu_for_style) {
     app_data.menu_configuration.ref_to_menu_config_containers_updater.current = () => setCount(a => a + 1)
   } else {
-    app_data.menu_configuration.ref_to_menu_config_container_styles_updater.current = () => setCountStyle(a => a + 1)
+    app_data.menu_configuration.ref_to_menu_config_styles_updater.current = () => setCountStyle(a => a + 1)
   }
 
   // Elements on which this menu applies
-  let elements: Class_NodeStyle[] | Class_ContainerElement[]
+  let elements: Class_ElementStyle[] | Class_ContainerElement[]
 
   if (menu_for_style) {
     // MODE STYLE: editing the selected style
-    const { ref_selected_style_container } = app_data.menu_configuration
-    elements = [app_data.drawing_area.sankey.container_styles_dict[ref_selected_style_container.current]]
+    const { ref_selected_style } = app_data.menu_configuration
+    elements = [app_data.drawing_area.sankey.styles_dict[ref_selected_style.current]]
   } else {
     // MODE DIRECT: editing selected containers
     elements = app_data.drawing_area.selected_containers_list
@@ -141,20 +141,20 @@ export const MenuConfigurationFreeLabelsOSP = ({
 
 
   // =================== REFRESH FUNCTIONS ===================
-  
+
   /**
    * Function used to reset menu UI
    */
   const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    
+
     if (menu_for_style) {
       app_data.menu_configuration.updateAllComponentsRelatedToContainers()
       // Update menus for container's appearance in case we use this for style
       app_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
       // Redraw all visible containers if we modify container style
-      app_data.drawing_area.containers_list.forEach(container => container.draw())
+      app_data.drawing_area.sankey.containers_list.forEach(container => container.draw())
     }
     // And update this menu also
     app_data.menu_configuration.updateAllComponentsRelatedToContainers()
@@ -171,11 +171,11 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Options selector only for direct mode (not for style editing)
-  const options_selector = !menu_for_style 
-    ? app_data.drawing_area.containers_list_sorted.map((d) => ({ 
-      'label': d.name, 
-      'value': d.id, 
-      selected: d.is_selected 
+  const options_selector = !menu_for_style
+    ? app_data.drawing_area.sankey.containers_list_sorted.map((d) => ({
+      'label': d.name,
+      'value': d.id,
+      selected: d.is_selected
     }))
     : []
 
@@ -193,36 +193,36 @@ export const MenuConfigurationFreeLabelsOSP = ({
   }
 
   // =================== DROPDOWN FOR CONTAINER SELECTION ===================
-  
-  const dropdownMultiLabel = () => {
-    if (menu_for_style) return <></> // No dropdown in style mode
-    
-    return (
-      <Box layerStyle='submenuconfig_droplist' width='11vw'>
-        <OSMultiSelect
-          t={app_data.t}
-          elements={options_selector}
-          onClick={(entries) => {
-            const entries_values = entries.map(d => d.value)
-            app_data.drawing_area.containers_list.forEach(zdt => {
-              if (entries_values.includes(zdt.id)) {
-                app_data.drawing_area.addContainerToSelection(zdt)
-              } else {
-                app_data.drawing_area.removeFreeLabelFromSelection(zdt)
-              }
-            })
-            redrawAndRefresh()
-          }}
-        />
-      </Box>
-    )
-  }
+
+  // const dropdownMultiLabel = () => {
+  //   if (menu_for_style) return <></> // No dropdown in style mode
+
+  //   return (
+  //     <Box layerStyle='submenuconfig_droplist' width='11vw'>
+  //       <OSMultiSelect
+  //         t={app_data.t}
+  //         elements={options_selector}
+  //         onClick={(entries) => {
+  //           const entries_values = entries.map(d => d.value)
+  //           app_data.drawing_area.sankey.containers_list.forEach(zdt => {
+  //             if (entries_values.includes(zdt.id)) {
+  //               app_data.drawing_area.addContainerToSelection(zdt)
+  //             } else {
+  //               app_data.drawing_area.removeContainerFromSelection(zdt)
+  //             }
+  //           })
+  //           redrawAndRefresh()
+  //         }}
+  //       />
+  //     </Box>
+  //   )
+  // }
 
   const allLabelTiedToNodes = () => {
     if (menu_for_style) return false // Styles don't have tied_to_nodes
     return getCommonValue(
-      elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[], 
-      d => (d as Class_ContainerElement).tied_to_nodes, 
+      elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[],
+      d => (d as Class_ContainerElement).tied_to_nodes,
       false
     )
   }
@@ -230,8 +230,8 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const allLabelTiedToNodesAtExtremity = () => {
     if (menu_for_style) return false
     return getCommonValue(
-      elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[], 
-      d => (d as Class_ContainerElement).at_extremity_of_attached_nodes, 
+      elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[],
+      d => (d as Class_ContainerElement).at_extremity_of_attached_nodes,
       false
     )
   }
@@ -249,18 +249,18 @@ export const MenuConfigurationFreeLabelsOSP = ({
     return firstElement instanceof Class_ContainerElement ? firstElement.attached_node : []
   }
 
-  const allLabelMarginLeft = () => 
+  const allLabelMarginLeft = () =>
     getCommonValue(elements, d => d.margin_left, 0)
 
-  const allLabelMarginRight = () => 
+  const allLabelMarginRight = () =>
     getCommonValue(elements, d => d.margin_right, 0)
 
-  const allLabelMarginTop = () => 
+  const allLabelMarginTop = () =>
     getCommonValue(elements, d => d.margin_top, 0)
 
-  const allLabelMarginBottom = () => 
+  const allLabelMarginBottom = () =>
     getCommonValue(elements, d => d.margin_bottom, 0)
-  
+
   const updateTitle = createUpdateFunction(
     elements,
     'title',
@@ -274,7 +274,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
     if (menu_for_style) return // Can't tie styles to nodes
     const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
     const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.tied_to_nodes]))
-    
+
     const _update = () => {
       containerElements.forEach(d => d.tied_to_nodes = value)
       redrawAndRefresh()
@@ -292,7 +292,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
     if (menu_for_style) return
     const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
     const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.at_extremity_of_attached_nodes]))
-    
+
     const _update = () => {
       containerElements.forEach(d => d.at_extremity_of_attached_nodes = value)
       redrawAndRefresh()
@@ -310,7 +310,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
     if (menu_for_style) return
     const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
     const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.extremity_position]))
-    
+
     const _update = () => {
       containerElements.forEach(d => d.extremity_position = value)
       redrawAndRefresh()
@@ -360,71 +360,71 @@ export const MenuConfigurationFreeLabelsOSP = ({
     redrawAndRefresh
   )
 
-  const addFreeLAbel = () => {
-    if (menu_for_style) return // Can't add labels in style mode
-    
-    let new_element: Class_ContainerElement
-    const _addFreeLAbel = () => {
-      new_element = app_data.drawing_area.addNewDefaultFreeLabel()
-      app_data.drawing_area.purgeSelectionOfContainer()
-      app_data.drawing_area.addContainerToSelection(new_element)
-      redrawAndRefresh()
-    }
-    const inv_addFreeLAbel = () => {
-      app_data.drawing_area.purgeSelectionOfContainer()
-      new_element.delete()
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_addFreeLAbel)
-    app_data.history.saveRedo(_addFreeLAbel)
-    _addFreeLAbel()
-  }
+  // const addFreeLAbel = () => {
+  //   if (menu_for_style) return // Can't add labels in style mode
 
-  const deleteSelectedLabels = () => {
-    if (menu_for_style) return // Can't delete in style mode
-    
-    let dict_old_element: Type_JSON
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    
-    const _deleteSelectedLabels = () => {
-      const json_object = {}
-      dict_old_element = Object.fromEntries(containerElements.map(cont => [cont.id, cont.toJSON(json_object)]))
-      app_data.drawing_area.deleteSelectedFreeLabels()
-      redrawAndRefresh()
-    }
-    const inv_deleteSelectedLabels = () => {
-      Object.values(dict_old_element).forEach(cont => {
-        const n_id = (cont as Type_JSON)['id'] as string
-        const new_element = app_data.drawing_area.addNewFreeLabel(n_id)
-        new_element.fromJSON(cont as Type_JSON)
-        app_data.drawing_area.addContainerToSelection(new_element)
-      })
-      redrawAndRefresh()
-    }
-    app_data.history.saveUndo(inv_deleteSelectedLabels)
-    app_data.history.saveRedo(_deleteSelectedLabels)
-    _deleteSelectedLabels()
-  }
+  //   let new_element: Class_ContainerElement
+  //   const _addFreeLAbel = () => {
+  //     new_element = app_data.drawing_area.addNewDefaultContainer()
+  //     app_data.drawing_area.purgeSelectionOfContainer()
+  //     app_data.drawing_area.addContainerToSelection(new_element)
+  //     redrawAndRefresh()
+  //   }
+  //   const inv_addFreeLAbel = () => {
+  //     app_data.drawing_area.purgeSelectionOfContainer()
+  //     new_element.delete()
+  //     redrawAndRefresh()
+  //   }
+  //   app_data.history.saveUndo(inv_addFreeLAbel)
+  //   app_data.history.saveRedo(_addFreeLAbel)
+  //   _addFreeLAbel()
+  // }
+
+  // const deleteSelectedLabels = () => {
+  //   if (menu_for_style) return // Can't delete in style mode
+
+  //   let dict_old_element: Type_JSON
+  //   const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
+
+  //   const _deleteSelectedLabels = () => {
+  //     const json_object = {}
+  //     dict_old_element = Object.fromEntries(containerElements.map(cont => [cont.id, cont.toJSON(json_object)]))
+  //     app_data.drawing_area.deleteSelectedContainers()
+  //     redrawAndRefresh()
+  //   }
+  //   const inv_deleteSelectedLabels = () => {
+  //     Object.values(dict_old_element).forEach(cont => {
+  //       const n_id = (cont as Type_JSON)['id'] as string
+  //       const new_element = app_data.drawing_area.addNewContainer(n_id)
+  //       new_element.fromJSON(cont as Type_JSON)
+  //       app_data.drawing_area.addContainerToSelection(new_element)
+  //     })
+  //     redrawAndRefresh()
+  //   }
+  //   app_data.history.saveUndo(inv_deleteSelectedLabels)
+  //   app_data.history.saveRedo(_deleteSelectedLabels)
+  //   _deleteSelectedLabels()
+  // }
 
   // =================== UI VARIABLES ===================
 
   const list_node_tied = allNodesTiedToZDTRef()
   const is_all_zdt_node_tied = allLabelTiedToNodes()
   const is_all_node_tied_to_extremity = allLabelTiedToNodesAtExtremity()
-  const options_selector_node_tied = !menu_for_style 
-    ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({ 
-      'label': node.name, 
-      'value': node.id, 
-      selected: list_node_tied.includes(node) 
+  const options_selector_node_tied = !menu_for_style
+    ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
+      'label': node.name,
+      'value': node.id,
+      selected: list_node_tied.includes(node)
     }))
     : []
- 
+
   const valAllLabeTiedToNode = elements[0] instanceof Class_ContainerElement ? elements[0].tied_to_nodes : false
   const valAllLabelTiedToNodeIndeterminate = !elements
     .filter(e => e instanceof Class_ContainerElement)
     .every(zdt => (zdt as Class_ContainerElement).tied_to_nodes == valAllLabeTiedToNode)
 
-  const disable_options = menu_for_style 
+  const disable_options = menu_for_style
     ? false // Always enabled in style mode
     : (has_sankey_plus ? (elements.length === 0) : true)
 
@@ -440,7 +440,7 @@ export const MenuConfigurationFreeLabelsOSP = ({
       onClick={(entries) => {
         const entries_values = entries.map(d => d.value)
         const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-        
+
         app_data.drawing_area.sankey.nodes_list.forEach(node => {
           if (entries_values.includes(node.id)) {
             containerElements.forEach(zdt => { app_data.drawing_area.attachNodeToCont(node, zdt) })
@@ -497,13 +497,13 @@ export const MenuConfigurationFreeLabelsOSP = ({
   const content_menu_zdt = <OSTooltip label={!has_sankey_plus && !menu_for_style ? t('Menu.sankeyOSPDisabled') : ''} >
     <Box layerStyle='menuconfigpanel_grid'>
       {/* Add/Delete buttons only in direct mode */}
-      {!menu_for_style && (
+      {/* {!menu_for_style && (
         <Box as='span' layerStyle='menuconfigpanel_zdt_row_droplist'>
           <Button isDisabled={!has_sankey_plus} variant='menuconfigpanel_add_button' size='sizeConfigButton' onClick={addFreeLAbel}>{icon_add_element}</Button>
           {dropdownMultiLabel()}
           <Button variant='menuconfigpanel_del_button' size='sizeConfigButton' isDisabled={disable_options} onClick={deleteSelectedLabels}>{icon_remove_element}</Button>
         </Box>
-      )}
+      )} */}
 
       {/* Title only for direct mode */}
       {!menu_for_style && (
@@ -512,10 +512,11 @@ export const MenuConfigurationFreeLabelsOSP = ({
           <ConfigMenuTextInput disabled={disable_options} default_value={'tutu'} function_on_blur={updateTitle} />
         </Box>
       )}
-      {menu_for_style ? <></> : <ConfigMenuStyleElementContainer
+      {menu_for_style ? <></> : <ConfigMenuStyleElement
         app_data={app_data}
         selected_elements={selected_containers}
-        config={NODES_ATTRIBUTES_CONFIG}
+        config={ALL_ATTRIBUTES_CONFIG}
+        categories={['value_label', 'name_label']}
       />}
 
 

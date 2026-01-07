@@ -22,10 +22,9 @@ import {
 
 import SankeyListIcons from '../icons/lib_of_icons.json'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { getElementsLabelValues } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_NodeBase } from '../deps/OpenSankey/Elements/NodeBase'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
-import { BASE_LABEL_CONFIG, isConfigValueIndeterminate } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
+import { getElementsLabelValues, BASE_LABEL_CONFIG, isConfigValueIndeterminate } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 type KeysOfIcon = keyof typeof SankeyListIcons
 

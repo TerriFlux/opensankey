@@ -8,7 +8,7 @@ import {
 
 // Local types
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
-import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuSelectionElements'
+import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuElementsSelection'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
@@ -27,7 +27,7 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   // Selected links ---------------------------------------------------------------------
 
   let selected_links: Class_LinkElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
+  if (!new_data.menu_configuration.is_selector_only_for_visible_elements) {
     // All availables links
     selected_links = new_data.drawing_area.selected_links_list_sorted
   }

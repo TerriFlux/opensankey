@@ -38,7 +38,7 @@ import {
   Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
 
-
+import {updateFrom} from '../deps/OpenSankey/Algorithms/UpdateFrom'
 import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
@@ -1179,7 +1179,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
             onClick={() => {
               const master_view = new_data_plus.master_view
               if (master_view) {
-                drawing_area_plus.updateFrom(master_view, drawing_area_plus.heredited_attr)
+                updateFrom(drawing_area_plus,master_view, drawing_area_plus.heredited_attr)
                 new_data_plus.draw()
               }
             }}
