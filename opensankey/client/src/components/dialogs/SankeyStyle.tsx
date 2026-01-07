@@ -42,12 +42,10 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   CutName
 } from '../../types/Utils'
-import { MenuConfigurationLinkShape, MenuConfigurationContainerShape } from '../configmenus/MenuElementsShape'
 
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { default_style_id } from '../../types/Utils'
-import { MenuConfigurationNodeShape } from '../configmenus/MenuElementsShape'
-import { MenuConfigurationNodeLabel, MenuConfigurationLinkLabel, MenuConfigurationContainersLabel } from '../configmenus/MenuElementsLabel'
+import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 
 import { checked } from './SankeyMenuContext'
 import { isElementAttributeOverloaded, MenuResetAttrLocal, OSMultiSelect, OSTooltip, typeElementSelectable, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
@@ -57,72 +55,44 @@ import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ElementStyle } from '../../Elements/Element'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { Class_ContainerElement } from '../../Elements/TextZone'
-import { LINKS_ATTRIBUTES_CONFIG, NODES_ATTRIBUTES_CONFIG, Type_customisable_flow_style_attr, Type_customisable_node_style_attr } from '../../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 // ✅ COMPOSANT GÉNÉRIQUE POUR LES MODALES DE STYLE
-const GenericModalStyle = ({
-  new_data,
-  elementType,
-  additionalMenus
+export const GenericModalStyle = ({
+  new_data
 }: {
   new_data: Class_ApplicationData
-  elementType: 'nodes' | 'links' | 'containers'
-  additionalMenus?: MutableRefObject<Type_AdditionalMenus>
 }) => {
   const { t } = new_data
   const [, setForceUpdate] = useBoolean()
   const [selectedStyleId, setSelectedStyleId] = useState(default_style_id)
 
-  // ✅ Configuration selon le type
-  const config = elementType === 'nodes' ? {
-    stylesDict: new_data.drawing_area.sankey.node_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_node,
-    attributesConfig: NODES_ATTRIBUTES_CONFIG,
-    updateStyleRef: new_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater,
-    updateStyle: () => new_data.menu_configuration.updateComponentRelatedToNodesStyles(),
-    attributePrefix: 'Noeud',
-    ShapeComponent: MenuConfigurationNodeShape,
-    LabelComponent: MenuConfigurationNodeLabel,
-    dialogShapeName: 'ref_setter_show_modal_styles_nodes_visual' as const,
-    dialogLabelName: 'ref_setter_show_modal_styles_nodes_labels' as const,
-    titleShape: 'Menu.esn',
-    titleLabel: 'Menu.esn_labels'
-  } : elementType === 'containers' ? {
-    stylesDict: new_data.drawing_area.sankey.container_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_container,
-    attributesConfig: NODES_ATTRIBUTES_CONFIG, // Containers utilisent la même config que nodes
-    updateStyleRef: new_data.menu_configuration.ref_to_menu_config_containers_styles_updater,
-    updateStyle: () => new_data.menu_configuration.updateComponentRelatedToContainersStyles(),
-    attributePrefix: 'Container',
-    ShapeComponent: MenuConfigurationContainerShape,
-    LabelComponent: MenuConfigurationContainersLabel,
-    dialogShapeName: 'ref_setter_show_modal_styles_containers_visual' as const,
-    dialogLabelName: 'ref_setter_show_modal_styles_containers_labels' as const,
-    titleShape: 'Menu.esc',
-    titleLabel: 'Menu.esc_labels'
-  } : {
-    stylesDict: new_data.drawing_area.sankey.link_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_link,
-    attributesConfig: LINKS_ATTRIBUTES_CONFIG,
-    updateStyleRef: new_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater,
-    updateStyle: () => new_data.menu_configuration.updateComponentRelatedToLinksStyles(),
-    attributePrefix: 'Flux',
-    ShapeComponent: MenuConfigurationLinkShape,
-    LabelComponent: MenuConfigurationLinkLabel,
-    dialogShapeName: 'ref_setter_show_modal_styles_links_visual' as const,
-    dialogLabelName: 'ref_setter_show_modal_styles_links_labels' as const,
-    titleShape: 'Menu.esf',
-    titleLabel: 'Menu.esf_labels'
-  }
+  // // ✅ Configuration selon le type
+  // const config = elementType === 'nodes' ? {
+  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
+  //   attributePrefix: 'Noeud',
+  //   titleShape: 'Menu.esn',
+  //   titleLabel: 'Menu.esn_labels'
+  // } : elementType === 'containers' ? {
+  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
+  //   attributePrefix: 'Container',
+  //   titleShape: 'Menu.esc',
+  //   titleLabel: 'Menu.esc_labels'
+  // } : {
+  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
+  //   attributePrefix: 'Flux',
+  //   titleShape: 'Menu.esf',
+  //   titleLabel: 'Menu.esf_labels'
+  // }
 
-  config.updateStyleRef.current = setForceUpdate.toggle
+  new_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = setForceUpdate.toggle
 
   // Failsafe
-  if (!(selectedStyleId in config.stylesDict)) {
+  if (!(selectedStyleId in new_data.drawing_area.sankey.styles_dict)) {
     setSelectedStyleId(default_style_id)
   }
 
-  const style_select = config.stylesDict[config.selectedRef.current]
+  const style_select = new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current]
 
   // ✅ Menu des attributs personnalisables pour la forme
   const content_customisable_attribute_style = (
@@ -141,16 +111,16 @@ const GenericModalStyle = ({
             <MenuItem
               key={ent[0]}
               style={{ display: 'flex' }}
-              isDisabled={config.selectedRef.current == default_style_id}
+              isDisabled={new_data.menu_configuration.ref_selected_style.current == default_style_id}
               onClick={() => {
                 if (ent[1]) {
-                  style_select.deleteAttribute(ent[0] as keyof typeof config.attributesConfig)
+                  style_select.deleteAttribute(ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG)
                 }
-                style_select.customisable_attribute[ent[0] as keyof typeof config.attributesConfig] = !ent[1]
-                config.updateStyle()
+                style_select.customisable_attribute[ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG] = !ent[1]
+                new_data.menu_configuration.updateComponentRelatedToStyles()
               }}
             >
-              {t(`${config.attributePrefix}.apparence.${ent[0]}`)}
+              {t(`Noeud.apparence.${ent[0]}`)}
               {checked(ent[1])}
             </MenuItem>
           )
@@ -178,17 +148,17 @@ const GenericModalStyle = ({
             <MenuItem
               key={ent[0]}
               style={{ display: 'flex' }}
-              isDisabled={config.selectedRef.current == default_style_id}
+              isDisabled={new_data.menu_configuration.ref_selected_style.current == default_style_id}
               onClick={() => {
                 if (ent[1]) {
                   //@ts-expect-error xxx
                   delete style_select[ent[0] as Type_customisable_node_style_attr | Type_customisable_flow_style_attr]
                 }
-                style_select.customisable_attribute[ent[0] as keyof typeof config.attributesConfig] = !ent[1]
-                config.updateStyle()
+                style_select.customisable_attribute[ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG] = !ent[1]
+                new_data.menu_configuration.updateComponentRelatedToStyles()
               }}
             >
-              {t('Noeud.labels.' + labelOrValue)} {t(`${config.attributePrefix}.labels.${ent[0]}`)}
+              {t('Noeud.labels.' + labelOrValue)} {t(`Noeud.labels.${ent[0]}`)}
               {checked(ent[1])}
             </MenuItem>
           )
@@ -197,50 +167,42 @@ const GenericModalStyle = ({
     </Menu>
   )
 
-  const WrapperComponent = elementType === 'nodes'
-    ? WrapperNodeStyleSelector
-    : elementType === 'containers'
-      ? WrapperContainerStyleSelector
-      : WrapperLinkStyleSelector
-
   const content_style_shape = (
-    <WrapperComponent new_data={new_data}>
+    <GenericStyleSelector new_data={new_data}>
       <>
         {content_customisable_attribute_style}
-        <config.ShapeComponent
+        <MenuConfigurationAppearance
           app_data={new_data}
-          new_data={new_data}
           menu_for_style={true}
-          additional_menus={additionalMenus!}
         />
       </>
-    </WrapperComponent>
+    </GenericStyleSelector>
   )
 
   const content_style_labels = (
-    <WrapperComponent new_data={new_data}>
+    <GenericStyleSelector new_data={new_data}>
       <>
         {content_customisable_attribute_labels}
-        <config.LabelComponent app_data={new_data} menu_for_style={true} />
+        <MenuConfigurationAppearance app_data={new_data} menu_for_style={true} />
       </>
-    </WrapperComponent>
+    </GenericStyleSelector>
   )
 
   return (
     <>
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={config.dialogShapeName}
+        dialog_name={'ref_setter_show_modal_styles_visual'}
         content={content_style_shape}
-        title={t(config.titleShape)}
+        title={t('Menu.esn')}
         maxW='20%'
         customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
       />
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={config.dialogLabelName}
+        dialog_name={'ref_setter_show_modal_styles_labels'}
         content={content_style_labels}
-        title={t(config.titleLabel)}
+        title={t('Menu.esn_labels')}
         maxW='20%'
         customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
       />
@@ -248,63 +210,23 @@ const GenericModalStyle = ({
   )
 }
 
-// ✅ WRAPPERS POUR COMPATIBILITÉ
-export const SankeyModalStyleNode = (props: {
-  new_data: Class_ApplicationData
-  additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}) => <GenericModalStyle {...props} elementType='nodes' />
-
-export const SankeyModalStyleLink = (props: {
-  new_data: Class_ApplicationData
-  additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}) => <GenericModalStyle {...props} elementType='links' />
-
-export const SankeyModalStyleContainer = (props: {
-  new_data: Class_ApplicationData
-  additionalMenus: MutableRefObject<Type_AdditionalMenus>
-}) => <GenericModalStyle {...props} elementType='containers' />
-
 // ✅ COMPOSANT GÉNÉRIQUE POUR LE WRAPPER DE SÉLECTEUR DE STYLE
-const GenericStyleSelector = ({
-  new_data,
-  children,
-  elementType
-}: {
+export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildren<{
   new_data: Class_ApplicationData
   children: JSX.Element
-  elementType: 'nodes' | 'links' | 'containers'
-}) => {
+}>) => {
   const { t, icon_library } = new_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
-  const config = elementType === 'nodes' ? {
-    stylesDict: new_data.drawing_area.sankey.node_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_node,
-    addNewStyle: () => new_data.drawing_area.sankey.addNewDefaultNodeStyle(),
-    deleteStyle: (style: Class_ElementStyle) => new_data.drawing_area.sankey.deleteNodeStyle(style),
-    updateAll: () => {
+  // const config = elementType === 'nodes' ? {
+  //   selectedRef: new_data.menu_configuration.ref_selected_style,
+  const updateAll = () => {
       new_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      new_data.menu_configuration.updateComponentRelatedToNodesStyles()
-    }
-  } : elementType === 'containers' ? {
-    stylesDict: new_data.drawing_area.sankey.container_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_container,
-    addNewStyle: () => new_data.drawing_area.sankey.addNewDefaultContainerStyle(),
-    deleteStyle: (style: Class_ElementStyle) => new_data.drawing_area.sankey.deleteContainerStyle(style),
-    updateAll: () => {
+      new_data.menu_configuration.updateComponentRelatedToStyles()
       new_data.menu_configuration.updateAllComponentsRelatedToContainers()
-      new_data.menu_configuration.updateComponentRelatedToContainersStyles()
-    }
-  } : {
-    stylesDict: new_data.drawing_area.sankey.link_styles_dict,
-    selectedRef: new_data.menu_configuration.ref_selected_style_link,
-    addNewStyle: () => new_data.drawing_area.sankey.addNewDefaultLinkStyle(),
-    deleteStyle: (style: Class_ElementStyle) => new_data.drawing_area.sankey.deleteLinkStyle(style),
-    updateAll: () => {
       new_data.menu_configuration.updateComponentRelatedToLinksApparence()
-      new_data.menu_configuration.updateComponentRelatedToLinksStyles()
     }
-  }
+  
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
@@ -314,9 +236,9 @@ const GenericStyleSelector = ({
           variant='menuconfigpanel_add_button'
           size='sizeConfigButton'
           onClick={() => {
-            const new_style = config.addNewStyle()
-            config.selectedRef.current = new_style.id
-            config.updateAll()
+            const new_style = new_data.drawing_area.sankey.addNewDefaultElementStyle()
+            new_data.menu_configuration.ref_selected_style.current = new_style.id
+            updateAll()
             new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
           }}
         >
@@ -330,20 +252,20 @@ const GenericStyleSelector = ({
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {config.selectedRef.current !== ''
-              ? CutName(config.stylesDict[config.selectedRef.current].name, 30)
+            {new_data.menu_configuration.ref_selected_style.current !== ''
+              ? CutName(new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name, 30)
               : 'Choix Style'}
           </MenuButton>
           <MenuList>
-            {Object.keys(config.stylesDict).map(id => (
+            {Object.keys(new_data.drawing_area.sankey.styles_dict).map(id => (
               <MenuItem
                 key={id}
                 onClick={() => {
-                  config.selectedRef.current = id
-                  config.updateAll()
+                  new_data.menu_configuration.ref_selected_style.current = id
+                  updateAll()
                 }}
               >
-                {config.stylesDict[id].name}
+                {new_data.drawing_area.sankey.styles_dict[id].name}
               </MenuItem>
             ))}
           </MenuList>
@@ -353,11 +275,11 @@ const GenericStyleSelector = ({
         <Button
           variant='menuconfigpanel_del_button'
           size='sizeConfigButton'
-          isDisabled={config.selectedRef.current === default_style_id}
+          isDisabled={new_data.menu_configuration.ref_selected_style.current === default_style_id}
           onClick={() => {
-            config.deleteStyle(config.stylesDict[config.selectedRef.current])
-            config.selectedRef.current = default_style_id
-            config.updateAll()
+            new_data.drawing_area.sankey.deleteElementStyle(new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current])
+            new_data.menu_configuration.ref_selected_style.current = default_style_id
+            updateAll()
             new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
           }}
         >
@@ -373,11 +295,11 @@ const GenericStyleSelector = ({
           <InputGroup variant='menuconfigpanel_option_input'>
             <Input
               variant='menuconfigpanel_option_input'
-              disabled={config.selectedRef.current === default_style_id}
-              value={config.stylesDict[config.selectedRef.current].name}
+              disabled={new_data.menu_configuration.ref_selected_style.current === default_style_id}
+              value={new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name}
               onChange={(evt) => {
-                config.stylesDict[config.selectedRef.current].name = evt.target.value
-                config.updateAll()
+                new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name = evt.target.value
+                updateAll()
                 new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
               }}
             />
@@ -390,81 +312,34 @@ const GenericStyleSelector = ({
   )
 }
 
-// ✅ WRAPPERS POUR COMPATIBILITÉ
-export const WrapperNodeStyleSelector = (props: {
-  new_data: Class_ApplicationData
-  children: JSX.Element
-}) => <GenericStyleSelector {...props} elementType='nodes' />
-
-export const WrapperLinkStyleSelector = (props: {
-  new_data: Class_ApplicationData
-  children: JSX.Element
-}) => <GenericStyleSelector {...props} elementType='links' />
-
-export const WrapperContainerStyleSelector = (props: {
-  new_data: Class_ApplicationData
-  children: JSX.Element
-}) => <GenericStyleSelector {...props} elementType='containers' />
-
 // ✅ COMPOSANT GÉNÉRIQUE UNIFIÉ POUR LA CONFIGURATION DES STYLES
 export const ConfigMenuStyleElement = ({ 
   app_data, 
   selected_elements, 
   config, 
-  categories, 
-  nodesOrLinks 
+  categories
 }: {
   app_data: Class_ApplicationData
   selected_elements: Class_LinkElement[] | Class_NodeElement[] | Class_ContainerElement[]
-  config: typeof LINKS_ATTRIBUTES_CONFIG | typeof NODES_ATTRIBUTES_CONFIG
+  config: typeof ALL_ATTRIBUTES_CONFIG
   categories: string[]
-  nodesOrLinks: 'nodes' | 'links' | 'zdt'
 }) => {
   const { t, icon_library, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
   const { 
-    ref_selected_style_link, 
-    ref_selected_style_node, 
-    ref_selected_style_container, 
+    ref_selected_style,
     dict_setter_show_dialog 
   } = menu_configuration
   
   const {
-    ref_setter_show_modal_styles_links_visual, 
-    ref_setter_show_modal_styles_nodes_visual, 
-    ref_setter_show_modal_styles_containers_visual,
-    ref_setter_show_modal_styles_links_labels, 
-    ref_setter_show_modal_styles_nodes_labels, 
-    ref_setter_show_modal_styles_containers_labels
+    ref_setter_show_modal_styles_visual, 
+    ref_setter_show_modal_styles_labels, 
   } = dict_setter_show_dialog
 
   const element_ref = selected_elements[0]
 
-  // ✅ Configuration selon le type
-  const typeConfig = nodesOrLinks === 'nodes' ? {
-    stylesList: sankey.node_styles_list,
-    selectedRef: ref_selected_style_node,
-    updateStyles: () => menu_configuration.updateComponentRelatedToNodesStyles(),
-    switchStyle: (style: Class_ElementStyle, selected: boolean) => 
-      sankey.switchNodeStyle(style as Class_ElementStyle, selected),
-    visualModal: ref_setter_show_modal_styles_nodes_visual,
-    labelsModal: ref_setter_show_modal_styles_nodes_labels
-  } : nodesOrLinks === 'links' ? {
-    stylesList: sankey.link_styles_list,
-    selectedRef: ref_selected_style_link,
-    updateStyles: () => menu_configuration.updateComponentRelatedToLinksStyles(),
-    switchStyle: (style: Class_ElementStyle, selected: boolean) => 
-      sankey.switchLinkStyle(style as Class_ElementStyle, selected),
-    visualModal: ref_setter_show_modal_styles_links_visual,
-    labelsModal: ref_setter_show_modal_styles_links_labels
-  } : {
-    stylesList: sankey.container_styles_list,
-    selectedRef: ref_selected_style_container,
-    updateStyles: () => menu_configuration.updateComponentRelatedToContainersStyles(),
-    switchStyle: (style: Class_ElementStyle, selected: boolean) => 
-      sankey.switchContainerStyle(style as Class_ElementStyle, selected),
-    visualModal: ref_setter_show_modal_styles_containers_visual,
-    labelsModal: ref_setter_show_modal_styles_containers_labels
+  const updateStyles = () => {
+    menu_configuration.updateComponentRelatedToStyles()
   }
 
   const dict_overwritted_attr: { [_: string]: { overloaded: boolean, name: string } } = {}
@@ -479,7 +354,7 @@ export const ConfigMenuStyleElement = ({
     }
   })
 
-  const options_selector: typeElementSelectable = typeConfig.stylesList.map(style => {
+  const options_selector: typeElementSelectable = sankey.styles_list.map(style => {
     return {
       value: style.id,
       label: style.name,
@@ -494,8 +369,7 @@ export const ConfigMenuStyleElement = ({
         <Box layerStyle='menuconfigpanel_row_stylechoice'>
           <OSTooltip label={t('Noeud.tooltips.AS')}>
             <MenuResetAttrLocal 
-              new_data={app_data} 
-              nodesOrLinks={nodesOrLinks} 
+              new_data={app_data}
               dict_overwritted_attr={dict_overwritted_attr} 
             />
           </OSTooltip>
@@ -513,15 +387,15 @@ export const ConfigMenuStyleElement = ({
                 })
                 
                 if (unchanged) {
-                  typeConfig.selectedRef.current = [...style].reverse()[0].id
+                  ref_selected_style.current = [...style].reverse()[0].id
                 }
               }
               
-              typeConfig.updateStyles()
+              updateStyles()
               if (categories.includes('shape')) {
-                typeConfig.visualModal.current(true)
+                ref_setter_show_modal_styles_visual.current(true)
               } else {
-                typeConfig.labelsModal.current(true)
+                ref_setter_show_modal_styles_labels.current(true)
               }
             }}
           >
@@ -533,21 +407,18 @@ export const ConfigMenuStyleElement = ({
             elements={options_selector}
             onClick={(entries) => {
               const entries_values = entries.map(d => d.value)
-              typeConfig.stylesList.forEach(style => {
-                typeConfig.switchStyle(style, entries_values.includes(style.id))
+              sankey.styles_list.forEach(style => {
+                sankey.switchElementStyle(style, entries_values.includes(style.id))
               })
             }}
           />
         </Box>
         
-        <MenuOrderStylesOfSelectedElements app_data={app_data} nodesOrLinks={nodesOrLinks} />
+        <MenuOrderStylesOfSelectedElements app_data={app_data} />
       </>
     </WrapperBoxSubSectionMenu>
   )
 }
-
-// ✅ WRAPPER POUR COMPATIBILITÉ (maintenant juste un alias)
-export const ConfigMenuStyleElementContainer = ConfigMenuStyleElement
 
 const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined) => ({
   background: isDisabled ? 'lightgrey' : 'unset',
@@ -557,22 +428,12 @@ const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingSt
 /**
  * ✅ Composant unifié pour modifier l'ordre des styles (nodes, links, containers)
  */
-export const MenuOrderStylesOfSelectedElements = ({ 
-  app_data, 
-  nodesOrLinks 
-}: {
-  app_data: Class_ApplicationData
-  nodesOrLinks: 'nodes' | 'links' | 'zdt'
-}) => {
+export const MenuOrderStylesOfSelectedElements = ({ app_data}: {app_data: Class_ApplicationData}) => {
   const { drawing_area, t, icon_library, menu_configuration } = app_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
   
   // ✅ Sélection des éléments selon le type
-  const elements = nodesOrLinks === 'nodes' 
-    ? drawing_area.selected_nodes_list
-    : nodesOrLinks === 'links'
-    ? drawing_area.selected_links_list
-    : drawing_area.selected_containers_list
+  const elements = drawing_area.selected_elements_list
 
   const style_list_to_use = elements[0]?.style?.slice().reverse() ?? []
 
@@ -582,16 +443,10 @@ export const MenuOrderStylesOfSelectedElements = ({
 
   // ✅ Configuration des fonctions selon le type
   const moveOrderStyle = (style_src: any, style_trgt: any) => {
-    if (nodesOrLinks === 'nodes') {
-      drawing_area.moveOrderStyleInSelectedNodes(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
-      menu_configuration.updateComponentRelatedToNodesApparence()
-    } else if (nodesOrLinks === 'links') {
-      drawing_area.moveOrderStyleInSelectedFlows(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
-      menu_configuration.updateComponentRelatedToLinksApparence()
-    } else if (nodesOrLinks === 'zdt') {
-      drawing_area.moveOrderStyleInSelectedContainers(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
-      menu_configuration.updateComponentRelatedToContainersApparence()
-    }
+    drawing_area.moveOrderStyleInSelectedElements(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
+    menu_configuration.updateComponentRelatedToNodesApparence()
+    menu_configuration.updateComponentRelatedToLinksApparence()
+    menu_configuration.updateComponentRelatedToContainersApparence()
   }
 
   return (
@@ -675,7 +530,3 @@ export const MenuOrderStylesOfSelectedElements = ({
     </WrapperBoxSubSectionMenu>
   )
 }
-
-// ✅ WRAPPER POUR COMPATIBILITÉ (maintenant juste un alias)
-export const MenuOrderStylesOfSelectedContainers = ({ app_data }: { app_data: Class_ApplicationData }) => 
-  <MenuOrderStylesOfSelectedElements app_data={app_data} nodesOrLinks='zdt' />

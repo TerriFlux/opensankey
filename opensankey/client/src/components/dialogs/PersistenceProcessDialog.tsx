@@ -283,9 +283,9 @@ export const retrieveJSONResults = (
         const sector_tag = tagg.tags_dict['secteur']
         //const echange_tag = tagg.tags_dict['echange']
         if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeProductStyle']]
+          n.style = [app_data.drawing_area.sankey.styles_dict['NodeProductStyle']]
         } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.node_styles_dict['NodeSectorStyle']]
+          n.style = [app_data.drawing_area.sankey.styles_dict['NodeSectorStyle']]
         }
       })
       app_data.drawing_area.legend.masked = false
@@ -296,8 +296,8 @@ export const retrieveJSONResults = (
       }
       const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
       if (unit_taggs.length > 0) {
-        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_type = 'unit_tag'
-        app_data.drawing_area.sankey.link_styles_dict['default'].value_label_unit_visible = true
+        app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
+        app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
       }
 
       // Case 1 : Apply extracted layout if present -> contains positions

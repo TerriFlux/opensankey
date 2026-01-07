@@ -45,7 +45,7 @@ import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
-import { NODES_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
 import { Class_ElementStyle } from './Element'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
@@ -102,8 +102,8 @@ export class Class_NodeElement extends Class_NodeBase {
   private _links_order: Class_LinkElement[] = []
   private _input_links_ending_point: { [id: string]: { x: number, y: number } } = {}
   private _output_links_starting_point: { [id: string]: { x: number, y: number } } = {}
-  private _input_links_handle: { [x: string]: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG> } = {}
-  private _output_links_handle: { [x: string]: Class_Handler<typeof NODES_ATTRIBUTES_CONFIG> } = {}
+  private _input_links_handle: { [x: string]: Class_Handler } = {}
+  private _output_links_handle: { [x: string]: Class_Handler } = {}
   private _link_dragged: Class_LinkElement | undefined
 
   public resetLinkVisibilitiesMemorization() {
@@ -1194,7 +1194,7 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private dragStartHandlerMoveLink = (_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-    const handler = _event.subject as Class_Handler<typeof NODES_ATTRIBUTES_CONFIG>
+    const handler = _event.subject as Class_Handler
     const link_ref = handler.ref_element_optional
     if (link_ref && link_ref instanceof Class_LinkElement) {
       this._link_dragged = link_ref as Class_LinkElement
@@ -1375,18 +1375,18 @@ export class Class_NodeElement extends Class_NodeBase {
       const link_importexport_style = this.position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
-        new_node.sankey.node_styles_dict['NodeSectorStyle'],
-        new_node.sankey.node_styles_dict[node_importexport_style],
+        new_node.sankey.styles_dict['NodeSectorStyle'],
+        new_node.sankey.styles_dict[node_importexport_style],
         importation ?
-          new_node.sankey.node_styles_dict[node_importation_style] :
-          new_node.sankey.node_styles_dict[node_exportation_style]
+          new_node.sankey.styles_dict[node_importation_style] :
+          new_node.sankey.styles_dict[node_exportation_style]
       ]
 
       input_or_output_link.style = [
-        new_node.sankey.link_styles_dict[link_importexport_style],
+        new_node.sankey.styles_dict[link_importexport_style],
         importation ?
-          new_node.sankey.link_styles_dict[link_importation_style] :
-          new_node.sankey.link_styles_dict[link_exportation_style]
+          new_node.sankey.styles_dict[link_importation_style] :
+          new_node.sankey.styles_dict[link_exportation_style]
       ]
 
       input_or_output_link.shape_is_recycling = false
@@ -1428,10 +1428,29 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeEventsHandler.handleMouseDragStart(event)
   }
 
+  /**
+   * Function used to move selected containers from another element drag event,
+   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
+   *
+   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
+   * @memberof Class_DrawingAreaOSP
+   */
+  public moveSelectedContainerFromDragEvent(
+    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  ) {
+    this.sankey.drawing_area.selected_containers_list
+      .forEach(n => {
+        if (!n.tied_to_nodes) {
+          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+          n.drawDragHandlers()
+        }
+      })
+  }
+
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
     if (this.drawing_area.isInSelectionMode()) {
-      this.drawing_area.moveSelectedContainerFromDragEvent(event)
+      this.moveSelectedContainerFromDragEvent(event)
     }
     this._nodeEventsHandler.handleMouseDrag(event)
   }

@@ -17,8 +17,8 @@ import {
 } from '../../Algorithms/Hierarchies'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
-import { Class_NodeAttribute, StorageType } from '../../Elements/Element'
-import { NODES_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { StorageType } from '../../Elements/Element'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -468,7 +468,7 @@ export class NodeActions {
   }
 
   resetAttr = () => {
-    const dict_old_value: { [x: string]: StorageType<typeof NODES_ATTRIBUTES_CONFIG> } = {}
+    const dict_old_value: { [x: string]: StorageType<typeof ALL_ATTRIBUTES_CONFIG> } = {}
     this.selected_nodes.forEach(n => {
       dict_old_value[n.id] = n.attributes
     })
@@ -511,7 +511,7 @@ export class NodeActions {
   }
 
   createTiedZdt = () => {
-    const cont = this.drawing_area.addNewDefaultFreeLabel()
+    const cont = this.drawing_area.sankey.addNewDefaultContainer()
     cont.tied_to_nodes = true
     this.drawing_area.selected_nodes_list.forEach(node => {
       node.getListDescendantOfNode().forEach(n => {
@@ -540,14 +540,14 @@ export class NodeActions {
 
   selectOutputLinks = () => {
     this.selected_nodes.forEach(n => {
-      n.output_links_list.forEach(l => this.drawing_area.addLinkToSelection(l))
+      n.output_links_list.forEach(l => this.drawing_area.addElementToSelection(l))
     })
     this.refreshAndSave()
   }
 
   selectInputLinks = () => {
     this.selected_nodes.forEach(n => {
-      n.input_links_list.forEach(l => this.drawing_area.addLinkToSelection(l))
+      n.input_links_list.forEach(l => this.drawing_area.addElementToSelection(l))
     })
     this.refreshAndSave()
   }

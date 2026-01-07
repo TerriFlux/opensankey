@@ -28,7 +28,7 @@
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
-import { LINKS_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
 /**
  * Class that handles all drawing and rendering operations for LinkElement
@@ -39,11 +39,11 @@ export class LinkDrawShape {
   private _link_control_points: LinkControlPoints
   private _link_control_points_internal: {
     readonly controlPoints: {
-      starting_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      ending_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      starting_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      ending_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      middle_recycling_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      starting_curve_point: Class_Handler
+      ending_curve_point: Class_Handler
+      starting_bezier_point: Class_Handler
+      ending_bezier_point: Class_Handler
+      middle_recycling_point: Class_Handler
       is_dragged: boolean;
     };
   }

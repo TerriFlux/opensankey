@@ -3,18 +3,16 @@
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import {
-  AttributeConfig, BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,
+  BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,
   getNameLabelValues, getShapeValue,
   getValueLabelValues, LinkLabelSpecificValues,
   NameLabelAttributeTypes,
-  NODES_ATTRIBUTES_CONFIG, ShapePrefix,
+  ShapePrefix,
   ValueLabelAttributeTypes
 } from './ElementsAttributesConfig'
 import { Class_Handler } from './Handler'
 import {
-  LINKS_ATTRIBUTES_CONFIG,
-  Type_PathLabelHPosition, Type_PathLabelVPosition,
-  Type_TextHPos, Type_TextVPos
+  Type_PathLabelHPosition
 } from './ElementsAttributesConfig'
 import { Class_NodeBase, label_margin, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
@@ -31,11 +29,8 @@ type d3_selection_type = d3.Selection<SVGGElement, unknown, SVGGElement, unknown
 /**
  * Classe de base abstraite pour tous les labels (nodes et links)
  */
-export abstract class DrawLabelBase<
-  CONFIG extends Record<string, AttributeConfig<any>>,
-  TElement extends Class_BaseShape<CONFIG>
-> {
-  protected _element: TElement
+export abstract class DrawLabelBase {
+  protected _element: Class_BaseShape
   protected readonly prefix: LabelPrefix
   protected _label_values!: NameLabelAttributeTypes | ValueLabelAttributeTypes
 
@@ -46,7 +41,7 @@ export abstract class DrawLabelBase<
 
   protected abstract createLabelGroup(): d3_selection_type | null
 
-  constructor(element: TElement, prefix: LabelPrefix) {
+  constructor(element: Class_BaseShape, prefix: LabelPrefix) {
     this._element = element
     this.prefix = prefix
   }
@@ -640,10 +635,7 @@ export abstract class DrawLabelBase<
 /**
  * Classe de base pour les labels de nodes
  */
-export abstract class NodeDrawLabelBase extends DrawLabelBase<
-  typeof NODES_ATTRIBUTES_CONFIG,
-  Class_BaseShape<typeof NODES_ATTRIBUTES_CONFIG>
-> {
+export abstract class NodeDrawLabelBase extends DrawLabelBase {
   protected get node(): Class_NodeBase {
     return this._element as Class_NodeBase
   }
@@ -978,19 +970,16 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
   }
 }
 
-export abstract class LinkDrawLabelBase extends DrawLabelBase<
-  typeof LINKS_ATTRIBUTES_CONFIG,
-  Class_BaseShape<typeof LINKS_ATTRIBUTES_CONFIG>
-> {
+export abstract class LinkDrawLabelBase extends DrawLabelBase {
   protected readonly displayPrefix: DisplayPrefix
   protected _link_control_points: LinkControlPoints
   protected _link_control_points_internal: {
     readonly controlPoints: {
-      starting_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      ending_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      starting_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      ending_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
-      middle_recycling_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>
+      starting_curve_point: Class_Handler
+      ending_curve_point: Class_Handler
+      starting_bezier_point: Class_Handler
+      ending_bezier_point: Class_Handler
+      middle_recycling_point: Class_Handler
       is_dragged: boolean
     }
   }

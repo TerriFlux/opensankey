@@ -256,7 +256,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Init parent class attributes
     super(
-      id, drawing_area, 'g_elements_sankey', new LinkAttributeMappings(), drawing_area.sankey.default_link_style
+      id, drawing_area, 'g_elements_sankey', new LinkAttributeMappings(), drawing_area.sankey.default_style
     )
     // LinkSetterGenerator.generateSetters(this)
 
@@ -329,7 +329,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._values.delete()
   }
 
-  //public copyFrom(_: Class_ProtoElement<typeof LINKS_ATTRIBUTES_CONFIG>) {
+  //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
   public copyFrom(_: Class_LinkElement) {
     super.copyFrom(_)
     // Source relations
@@ -998,7 +998,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (event.shiftKey) {
         if (!this.drawing_area.selected_links_list.includes(this)) {
           // add link to selection
-          this.drawing_area.addLinkToSelection(this)
+          this.drawing_area.addElementToSelection(this)
         }
         // Open related menu
         this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
@@ -1017,7 +1017,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
         // Purge selection list
         drawing_area.purgeSelection()
         // Add link to selection
-        drawing_area.addLinkToSelection(this)
+        drawing_area.addElementToSelection(this)
       }
     }
   }
@@ -1035,7 +1035,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event.preventDefault()
     this.drawing_area.pointer_pos = [event.pageX, event.pageY]
     if (!this.drawing_area.selected_links_list.includes(this)) {
-      this.drawing_area.addLinkToSelection(this)
+      this.drawing_area.addElementToSelection(this)
     }
     this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
     this.drawing_area.link_contextualised = this
@@ -1046,10 +1046,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected addOrRemoveLinkFromSelection() {
     if (this.drawing_area.selected_links_list.includes(this)) {
       // Remove link from selection
-      this.drawing_area.removeLinkFromSelection(this)
+      this.drawing_area.removeElementFromSelection(this)
     } else {
       // Add link to selection
-      this.drawing_area.addLinkToSelection(this)
+      this.drawing_area.addElementToSelection(this)
     }
   }
 
@@ -1443,8 +1443,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public formatValueWithOption(value: number | string, option: ValueOptionType) {
     if (
-      this.style.includes(this.sankey.link_styles_dict['LinkInUnitaryStyle']) ||
-      this.style.includes(this.sankey.link_styles_dict['LinkOutUnitaryStyle'])
+      this.style.includes(this.sankey.styles_dict['LinkInUnitaryStyle']) ||
+      this.style.includes(this.sankey.styles_dict['LinkOutUnitaryStyle'])
     ) {
       return value + '%'
     }

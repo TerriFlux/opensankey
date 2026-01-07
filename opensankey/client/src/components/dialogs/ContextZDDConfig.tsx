@@ -18,7 +18,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
             }
           }]
         },
@@ -29,7 +29,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
             }
           }]
         },
@@ -38,7 +38,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.node_styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
             }
           }]
         },
@@ -92,10 +92,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'Style',
       children: [
-        { type: 'button', actionName: 'openNodeVisualStyleModal' },
-        { type: 'button', actionName: 'openNodeLabelsStyleModal' },
-        { type: 'button', actionName: 'openLinkVisualStyleModal' },
-        { type: 'button', actionName: 'openLinkLabelsStyleModal' }
+        { type: 'button', actionName: 'openVisualStyleModal' },
+        { type: 'button', actionName: 'openLabelsStyleModal' },
+        { type: 'button', actionName: 'openVisualStyleModal' },
+        { type: 'button', actionName: 'openLabelsStyleModal' }
       ]
     },
     {
@@ -104,7 +104,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       visibilityConditions: [{
         type: 'custom',
         customCheck: (app_data) => {
-          return app_data.drawing_area.containers_list.length > 0
+          return app_data.drawing_area.sankey.containers_list.length > 0
         }
       }]
     }
@@ -355,7 +355,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    openNodeVisualStyleModal: {
+    openVisualStyleModal: {
       type: 'action',
       labels: {
         en: 'Node appearance',
@@ -367,7 +367,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    openNodeLabelsStyleModal: {
+    openLabelsStyleModal: {
       type: 'action',
       labels: {
         en: 'Node labels',
@@ -379,29 +379,29 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    openLinkVisualStyleModal: {
-      type: 'action',
-      labels: {
-        en: 'Flow appearance',
-        fr: 'Formes des flux'
-      },
-      tooltips: {
-        en: 'Open the link visual style configuration dialog',
-        fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des flux'
-      }
-    },
+    // openVisualStyleModal: {
+    //   type: 'action',
+    //   labels: {
+    //     en: 'Flow appearance',
+    //     fr: 'Formes des flux'
+    //   },
+    //   tooltips: {
+    //     en: 'Open the link visual style configuration dialog',
+    //     fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des flux'
+    //   }
+    // },
 
-    openLinkLabelsStyleModal: {
-      type: 'action',
-      labels: {
-        en: 'Flow labels',
-        fr: 'Libellés des flux'
-      },
-      tooltips: {
-        en: 'Open the link labels style configuration dialog',
-        fr: 'Ouvrir la boîte de dialogue de configuration du style des libellés des flux'
-      }
-    }
+    // openLabelsStyleModal: {
+    //   type: 'action',
+    //   labels: {
+    //     en: 'Flow labels',
+    //     fr: 'Libellés des flux'
+    //   },
+    //   tooltips: {
+    //     en: 'Open the link labels style configuration dialog',
+    //     fr: 'Ouvrir la boîte de dialogue de configuration du style des libellés des flux'
+    //   }
+    // }
   },
 
   sectionTitles: {
@@ -430,11 +430,9 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const { nodePositioning } = drawing_area
   const { dict_setter_show_dialog } = menu_configuration
   const {
-    ref_setter_show_modal_styles_nodes_visual, ref_setter_show_modal_styles_nodes_labels,
-    ref_setter_show_modal_styles_links_visual, ref_setter_show_modal_styles_links_labels
-  } = dict_setter_show_dialog
+    ref_setter_show_modal_styles_visual, ref_setter_show_modal_styles_labels} = dict_setter_show_dialog
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
-  const getNodeStyle = () => sankey.node_styles_dict['default']
+  const getNodeStyle = () => sankey.styles_dict['default']
   const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   return {
     fromNew: () => app_data.reinitialization(),
@@ -457,17 +455,15 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
     applyRandomLinkColors: () => { applyRandomColors(app_data, sankey.links_list); saveToCache() },
-    resetNodeColors: () => { sankey.deleteLocalAttrSelectedNodes('shape_color', sankey.nodes_list); saveToCache() },
-    resetLinkColors: () => { sankey.deleteLocalAttrSelectedLinks('shape_color', sankey.links_list); saveToCache() },
-    openNodeVisualStyleModal: () => ref_setter_show_modal_styles_nodes_visual.current(true),
-    openNodeLabelsStyleModal: () => ref_setter_show_modal_styles_nodes_labels.current(true),
-    openLinkVisualStyleModal: () => ref_setter_show_modal_styles_links_visual.current(true),
-    openLinkLabelsStyleModal: () => ref_setter_show_modal_styles_links_labels.current(true),
+    resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
+    resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
+    openNodeVisualStyleModal: () => ref_setter_show_modal_styles_visual.current(true),
+    openNodeLabelsStyleModal: () => ref_setter_show_modal_styles_labels.current(true),
     toggleZDTActivated: () => {
-      app_data.drawing_area.container_activated = !app_data.drawing_area.container_activated
+      app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated
       app_data.drawing_area.draw()
     },
-    toggleZDTActivatedValue: () => app_data.drawing_area.container_activated
+    toggleZDTActivatedValue: () => app_data.drawing_area.sankey.container_activated
   }
 }
 export type ZDDModifierType = ReturnType<typeof createZDDModifier>

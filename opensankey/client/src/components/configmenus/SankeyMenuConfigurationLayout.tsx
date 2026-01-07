@@ -715,7 +715,7 @@ export const GraphElementsOrdoner = ({ new_data }: { new_data: Class_Application
             {
               new_data.drawing_area.list_g_element
                 .map((id_element, element_idx) => {
-                  const element = new_data.drawing_area.elementFromId(id_element)
+                  const element = new_data.drawing_area.sankey.elementFromId(id_element)
                   if (!element.is_visible)
                     return <></>
                   return (

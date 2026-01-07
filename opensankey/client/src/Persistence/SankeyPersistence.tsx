@@ -26,8 +26,7 @@
 
 import FileSaver from 'file-saver'
 import { getBooleanFromJSON, type Type_JSON } from '../types/Utils'
-import { Class_ApplicationData } from '../types/ApplicationData'
-import { NodeAttributeKey, LinkAttributeKey } from '../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 
 declare global {
   interface Window {
@@ -287,7 +286,7 @@ async function _testDecompression(fileName: string): Promise<void> {
 }
 export abstract class AttributeMappings {
   abstract getToJsonMapping(): { [key: string]: string} 
-  abstract getFromJsonMapping(): { [key: string]: NodeAttributeKey | LinkAttributeKey} 
+  abstract getFromJsonMapping(): { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG} 
 }
 export class NodeAttributeMappings extends AttributeMappings {
   // Mapping principal: attribut interne -> clé JSON
@@ -370,12 +369,12 @@ export class NodeAttributeMappings extends AttributeMappings {
    * Combine legacy + main mapping inversé
    */
   public getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey} 
+    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG} 
   }
 }
 
 export class LinkAttributeMappings extends AttributeMappings {
-  private readonly LEGACY_MAPPING: { [key: string]: LinkAttributeKey}  = {
+  private readonly LEGACY_MAPPING: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG}  = {
     'user_scale': 'shape_local_link_scale',
     'curved': 'shape_is_curved',
     'curvature': 'shape_curvature',
@@ -427,7 +426,7 @@ export class LinkAttributeMappings extends AttributeMappings {
    * Combine legacy + main mapping inversé
    */
   public getFromJsonMapping() {
-    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: NodeAttributeKey} 
+    return { ...this.LEGACY_MAPPING } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG} 
   }
 
 
