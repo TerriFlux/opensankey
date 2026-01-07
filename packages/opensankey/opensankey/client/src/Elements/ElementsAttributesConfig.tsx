@@ -25,31 +25,6 @@
 // ==================================================================================================
 
 import { TFunction } from 'i18next'
-// ==================================================================================================
-// The MIT License (MIT)
-// ==================================================================================================
-// Copyright (c) 2025 TerriFlux
-// 
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-// 
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-// 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
-// ==================================================================================================
-// Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
-// ==================================================================================================
 import { useMemo } from 'react'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import {
@@ -64,7 +39,7 @@ import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
 export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path'
-export type Type_TextHPos = 'left' | 'middle' | 'right' 
+export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
 export type Type_VerticalAlignment = 'left' | 'right'
@@ -77,17 +52,13 @@ export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
 export type Type_PathLabelHPosition = 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'top' | 'middle' | 'bottom'
-export type Type_customisable_node_style_attr = keyof typeof NODES_ATTRIBUTES_CONFIG
-export type Type_customisable_flow_style_attr = keyof typeof LINKS_ATTRIBUTES_CONFIG
-// CONSTANTS ****************************************************************************
-
+export type Type_customisable_style_attr = keyof typeof ALL_ATTRIBUTES_CONFIG
 export const default_grey_color = 'grey'
 export const default_black_color = 'black'
 export const default_background_color = '#f2f2f2'
 export const default_grid_color = '#d3d3d3'
 export const default_element_color = '#a9a9a9'
 export const default_element_color_source = 'flow'
-
 export const default_font = 'Arial,sans-serif'
 export const font_families = [
   'Andale Mono,monospace',
@@ -171,6 +142,7 @@ export interface AttributeConfig<T> {
   setter?: string
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
 }
+export type ConfigType = Record<string, AttributeConfig<unknown>>
 
 export type ExtractConfigValue<T> = T extends AttributeConfig<infer V> ? V : never
 
@@ -179,6 +151,10 @@ export type ShapePrefix =
   | 'name_label_background'
   | 'value_label_background'
 
+export type LabelPrefix =
+  | 'value_label'
+  | 'name_label'
+  | 'icon'
 /**
  * Fonction générique pour vérifier si une valeur est indéterminée
  * (différente entre plusieurs éléments)
@@ -231,8 +207,8 @@ export const isNodeShapeSpecificValueIndeterminate = (
 
 export const isLinkShapeSpecificValueIndeterminate = (
   elements: Class_LinkElement[] | Class_ElementStyle[],
-  configKey: keyof typeof LINKS_SHAPE_SPECIFIC_CONFIG
-) => isConfigValueIndeterminate(elements, LINKS_SHAPE_SPECIFIC_CONFIG, configKey, 'shape')
+  configKey: keyof typeof LINK_SHAPE_SPECIFIC_CONFIG
+) => isConfigValueIndeterminate(elements, LINK_SHAPE_SPECIFIC_CONFIG, configKey, 'shape')
 
 export const isNameLabelValueIndeterminate = (
   elements: ElementsType,
@@ -260,6 +236,39 @@ export const isLinkLabelSpecificValueIndeterminate = (
 export function getShapeAttributeKey<
   T extends typeof BASE_SHAPE_CONFIG,
   P extends ShapePrefix,
+  K extends keyof T
+>(
+  prefix: P,
+  configKey: K
+): `${P}_${string & K}` {
+  return `${prefix}_${String(configKey)}` as `${P}_${string & K}`
+}
+
+export function getNodeShapeAttributeKey<
+  T extends typeof NODE_SHAPE_SPECIFIC_CONFIG,
+  P extends ShapePrefix,
+  K extends keyof T
+>(
+  prefix: P,
+  configKey: K
+): `${P}_${string & K}` {
+  return `${prefix}_${String(configKey)}` as `${P}_${string & K}`
+}
+
+export function getLinkShapeAttributeKey<
+  T extends typeof LINK_SHAPE_SPECIFIC_CONFIG,
+  P extends ShapePrefix,
+  K extends keyof T
+>(
+  prefix: P,
+  configKey: K
+): `${P}_${string & K}` {
+  return `${prefix}_${String(configKey)}` as `${P}_${string & K}`
+}
+
+export function getLabelAttributeKey<
+  T extends typeof BASE_LABEL_CONFIG,
+  P extends LabelPrefix,
   K extends keyof T
 >(
   prefix: P,
@@ -1280,18 +1289,10 @@ export type NodeShapeSpecificAttributeTypes = {
   [K in keyof typeof NODE_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof NODE_SHAPE_SPECIFIC_CONFIG[K]['type']>
 }
 export type LinkShapeSpecificValues = {
-  -readonly [K in keyof typeof LINKS_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINKS_SHAPE_SPECIFIC_CONFIG[K]['type']>
+  -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINK_SHAPE_SPECIFIC_CONFIG[K]['type']>
 }
 export type LinkLabelSpecificValues = {
   -readonly [K in keyof typeof LINKS_LABEL_SPECIFIC_CONFIG]: ReturnType<typeof LINKS_LABEL_SPECIFIC_CONFIG[K]['type']>
-}
-export type NodeAttributeKey = keyof typeof NODES_ATTRIBUTES_CONFIG
-export type NodeAttributeTypes = {
-  [K in NodeAttributeKey]: ReturnType<typeof NODES_ATTRIBUTES_CONFIG[K]['type']>
-}
-export type LinkAttributeKey = keyof typeof LINKS_ATTRIBUTES_CONFIG
-export type LinkAttributeTypes = {
-  [K in LinkAttributeKey]: ReturnType<typeof LINKS_ATTRIBUTES_CONFIG[K]['type']>
 }
 
 /**
@@ -1468,7 +1469,7 @@ export const getLinkShapeSpecificValue = (
   element: Class_LinkElement | Class_ElementStyle,
 ) => {
   const result = {} as LinkShapeSpecificValues
-  const config = LINKS_SHAPE_SPECIFIC_CONFIG
+  const config = LINK_SHAPE_SPECIFIC_CONFIG
   const prefix = 'shape'
 
   // Créer des getters/setters pour chaque propriété
@@ -1650,7 +1651,7 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<boolean>,
 } as const
 
-export const LINKS_SHAPE_SPECIFIC_CONFIG = {
+export const LINK_SHAPE_SPECIFIC_CONFIG = {
 
   // Attributs spécifiques aux liens (pas dans BASE_SHAPE_CONFIG)
   local_link_scale: {
@@ -1940,54 +1941,60 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
     })
 }
 
-export const NODES_ATTRIBUTES_CONFIG = {
-  ...createConfigWithPrefix(BASE_SHAPE_CONFIG, 'shape'), 
+export const ALL_ATTRIBUTES_CONFIG = {
+  ...createConfigWithPrefix(BASE_SHAPE_CONFIG, 'shape'),
   ...NODE_SHAPE_SPECIFIC_CONFIG,
+  ...createConfigWithPrefix(LINK_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
+
   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
+  ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
+  
   ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
+  ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
+
   ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
   ...HYPER_LINK_CONFIG,
 } as const
 
-export const LINKS_ATTRIBUTES_CONFIG = {
-  ...createConfigWithPrefixAndOverrides(
-    BASE_SHAPE_CONFIG,
-    'shape' as const,
-    'shape',
-    ['drawElements'] as BaseActionType[],
-    {
-      // Overrides pour les liens
-      type: {
-        default: 'bezier_path',
-        labels: {
-          en: 'Type',
-          fr: 'Type'
-        },
-        tooltips: {
-          en: 'Choose the shape type for the link',
-          fr: 'Choisir le type de forme pour le flux'
-        }
-      }
-    }
-  ),
-  ...createConfigWithPrefix(LINKS_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
-  ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
-  ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
-  ...createConfigWithPrefixAndOverrides(
-    VALUE_LABEL_CONFIG,
-    'value_label' as const,
-    'value_label',
-    ['drawValueLabel'] as BaseActionType[],
-    {
-      is_visible: { default: true },
-      font_size: { default: 20 },
-      vert: { default: 'middle' }
-    }
-  ),
-  ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
-  ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
-  ...HYPER_LINK_CONFIG,
-} as const
+// export const LINKS_ATTRIBUTES_CONFIG = {
+//   ...createConfigWithPrefixAndOverrides(
+//     BASE_SHAPE_CONFIG,
+//     'shape' as const,
+//     'shape',
+//     ['drawElements'] as BaseActionType[],
+//     {
+//       // Overrides pour les liens
+//       type: {
+//         default: 'bezier_path',
+//         labels: {
+//           en: 'Type',
+//           fr: 'Type'
+//         },
+//         tooltips: {
+//           en: 'Choose the shape type for the link',
+//           fr: 'Choisir le type de forme pour le flux'
+//         }
+//       }
+//     }
+//   ),
+//   ...createConfigWithPrefix(LINK_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
+//   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
+//   ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
+//   ...createConfigWithPrefixAndOverrides(
+//     VALUE_LABEL_CONFIG,
+//     'value_label' as const,
+//     'value_label',
+//     ['drawValueLabel'] as BaseActionType[],
+//     {
+//       is_visible: { default: true },
+//       font_size: { default: 20 },
+//       vert: { default: 'middle' }
+//     }
+//   ),
+//   ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
+//   ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
+//   ...HYPER_LINK_CONFIG,
+// } as const
 // ✅ Union de tous vos éléments
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]
 // Hook pour extraire la logique commune des composants ElementAttr*
@@ -2004,19 +2011,14 @@ export const useElementAttributeConfig = <
   return useMemo(() => {
     const { drawing_area, menu_configuration } = app_data
     const { sankey } = drawing_area
-    const { ref_selected_style_node, ref_selected_style_link } = menu_configuration
-    const { link_styles_dict, node_styles_dict } = sankey
+    const { ref_selected_style } = menu_configuration
+    const { styles_dict} = sankey
 
     const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
-    const nodeStyle = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
-    const nodeRelatedElement = elements.length > 0 && (elements[0] instanceof Class_ElementStyle || elements[0] instanceof Class_NodeElement)
-
-    const correct_dict_style_to_use = (nodeStyle || nodeRelatedElement) ? node_styles_dict : link_styles_dict
-    const correct_ref_style_to_use = nodeStyle ? ref_selected_style_node : ref_selected_style_link
 
     const disable_attr_props = menu_for_style ?
-      correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute :
-      correct_dict_style_to_use[default_style_id].customisable_attribute
+      styles_dict[ref_selected_style.current].customisable_attribute :
+      styles_dict[default_style_id].customisable_attribute
 
     return {
       menu_for_style,
@@ -2048,7 +2050,7 @@ export function updateElements<
 ) {
   const fullKey = prefix ? `${prefix}_${String(key)}` : String(key)
   // Create a dict of old val for each elements 
-  const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]>}  = {}
+  const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]> } = {}
   elements.forEach(element => {
     dict_old_val[element.id] = Reflect.get(element, fullKey)
   })
@@ -2102,6 +2104,7 @@ export function getConfigValues<
           return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
         },
         set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {
+          if (elements.length == 0) return 
           updateElements(
             elements[0].drawing_area.application_data,
             elements,
@@ -2135,7 +2138,7 @@ export const getElementsValueLabelValues = (
 ) => getConfigValues(elements, VALUE_LABEL_CONFIG, prefix, refreshParentComponent)
 
 export const getElementsNameLabelValues = (
-  elements: Class_NodeElement[] | Class_ElementStyle[],
+  elements: Class_NodeBase[] | Class_ElementStyle[],
   prefix: 'name_label' | 'value_label',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, NAME_LABEL_CONFIG, prefix, refreshParentComponent)
@@ -2146,8 +2149,6 @@ export const getLinksLabelValues = (
   refreshParentComponent: () => void
 ) => getConfigValues(elements, LINKS_LABEL_SPECIFIC_CONFIG, prefix, refreshParentComponent)
 
-
-
 export const getShapeValues = (
   elements: ElementsType,
   prefix: ShapePrefix,
@@ -2157,7 +2158,7 @@ export const getShapeValues = (
 export const getLinkShapeValues = (
   elements: ElementsType,
   refreshParentComponent: () => void
-) => getConfigValues(elements, LINKS_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
+) => getConfigValues(elements, LINK_SHAPE_SPECIFIC_CONFIG, 'shape', refreshParentComponent)
 
 export const getNodeShapeValues = (
   elements: ElementsType,

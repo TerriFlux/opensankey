@@ -272,7 +272,7 @@ const updateNodePositioning = (
 
   nodes.forEach((n, i) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
-    if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position_type === 'parametric' && i === 0) {
+    if (new_data.drawing_area.sankey.styles_dict[default_style_id].position_type === 'parametric' && i === 0) {
       n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
     }
   })
@@ -300,7 +300,7 @@ const updateAggregationExpansionPositioning = (
   const total_height = calculateTotalHeight(config.nodes_to_agregate as Class_NodeElement[], vertical_spacing)
   const center = total_height / 2
 
-  if (new_data.drawing_area.sankey.node_styles_dict[default_style_id].position_type === 'parametric') {
+  if (new_data.drawing_area.sankey.styles_dict[default_style_id].position_type === 'parametric') {
     aggregateNode.position_y = config.contextualised_node.position_y + center - aggregateNode.getShapeHeightToUse() / 2
   }
 }
@@ -925,7 +925,7 @@ export const disaggregate = (
 
     new_nodes.forEach((n, i) => {
       n.position_u = aggregateNode.position_u
-      if ((new_data.drawing_area.sankey.node_styles_dict[default_style_id] as Class_ElementStyle).position_type == 'parametric' && i == 0) {
+      if ((new_data.drawing_area.sankey.styles_dict[default_style_id] as Class_ElementStyle).position_type == 'parametric' && i == 0) {
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
     })

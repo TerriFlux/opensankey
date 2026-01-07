@@ -2544,7 +2544,7 @@ const layerStyles = {
   },
 
   // Grid layouts avec factory
-  ...(['2cols', '3cols', '4cols'] as const).reduce((acc, type) => {
+  ...(['2cols', '3cols', '4cols', '5cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
     acc[`options_${type}`] = {
       display: 'grid',
@@ -2592,7 +2592,7 @@ const layerStyles = {
   menuconfigpanel_row_droplist_simple: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    gridTemplateColumns: '8fr 1fr',
+    gridTemplateColumns: '2fr 4fr 1fr',
   },
 
   menuconfigpanel_zdt_row_droplist: {

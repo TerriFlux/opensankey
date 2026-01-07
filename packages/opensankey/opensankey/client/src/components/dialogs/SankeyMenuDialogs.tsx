@@ -31,6 +31,7 @@ import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { DecompressedJSONData, decompressUploadedFileUniversal, detectCompressionType } from '../../Persistence/UniversalJSONCompression'
+import { updateFrom } from '../../Algorithms/UpdateFrom'
 
 
 /**
@@ -417,7 +418,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       tmp_DA.fromJSON(json_object as Type_JSON)
       tmp_DA.afterFromJSON()
       app_data.drawing_area.bypass_redraws = true
-      app_data.drawing_area.updateFrom(tmp_DA, data_var_to_update)
+      updateFrom(app_data.drawing_area,tmp_DA, data_var_to_update)
       app_data.drawing_area.draw()
       console.log('✅ Données appliquées avec succès')
 

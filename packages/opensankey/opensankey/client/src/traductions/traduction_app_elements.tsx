@@ -458,7 +458,7 @@ export const resources_app_elements = {
         Aucun: 'Aucun',
         confSankey: 'Configuration du Sankey',
         MEP: 'Zone de dessin',
-        background: 'Arrière-plan',
+        background: 'Fond',
         Noeuds: 'Noeuds',
         EN: 'Étiquettes des noeuds',
         EdN: 'Édition des noeuds',
@@ -592,10 +592,10 @@ export const resources_app_elements = {
 
 
         Config: {
-          type_data: '1. Structure',
-          type_style: '2. Visuels',
-          type_context: '3. Libellés',
-          presentation: '4. Interactions',
+          type_data: 'Structure/Données',
+          type_style: 'Mise en forme',
+          // type_context: '3. Libellés',
+          presentation: 'Interactions',
 
           element_graph: 'Graphe',
           element_node: 'Noeuds',

@@ -28,7 +28,7 @@
 import { Class_LinkElement } from './Link'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { LINKS_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
 
 /**
@@ -52,11 +52,11 @@ export class LinkControlPoints {
    * @memberof Class_LinkElement
    */
   private _control_points: {
-    starting_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
-    ending_curve_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
-    starting_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
-    ending_bezier_point: Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
-    middle_recycling_point:Class_Handler<typeof LINKS_ATTRIBUTES_CONFIG>,
+    starting_curve_point: Class_Handler,
+    ending_curve_point: Class_Handler,
+    starting_bezier_point: Class_Handler,
+    ending_bezier_point: Class_Handler,
+    middle_recycling_point:Class_Handler,
     is_dragged: boolean
   }
 

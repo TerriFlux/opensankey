@@ -89,7 +89,7 @@ export class Class_ContainerElement extends Class_NodeBase {
   }
 
     public setEventsListeners() {
-    if (this.drawing_area.container_activated) {
+    if (this.drawing_area.sankey.container_activated) {
       super.setEventsListeners()
     }
   }
@@ -189,14 +189,14 @@ export class Class_ContainerElement extends Class_NodeBase {
       // SHIFT
       if (event.shiftKey) {
         // Add free label to selection
-        drawing_area.addContainerToSelection(this)
+        drawing_area.addElementToSelection(this)
         // Open related menu
         this.drawing_area.application_data.menu_configuration.openConfigMenuElementsContainers()
       }
       // CTRL
       else if (event.ctrlKey) {
         // Add free label to selection
-        drawing_area.addContainerToSelection(this)
+        drawing_area.addElementToSelection(this)
       }
       // OTHERS
       else {
@@ -204,7 +204,7 @@ export class Class_ContainerElement extends Class_NodeBase {
         // Purge selection list
         drawing_area.purgeSelection()
         // Add free label to selection
-        drawing_area.addContainerToSelection(this)
+        drawing_area.addElementToSelection(this)
       }
       // Update components related to free label edition
       this.drawing_area.application_data.menu_configuration.updateComponentRelatedToContainers()
@@ -239,7 +239,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       _event.preventDefault()
       this.drawing_area.pointer_pos = [_event.pageX, _event.pageY]
       if (!this.drawing_area.selected_containers_list.includes(this)) {
-        this.drawing_area.addContainerToSelection(this)
+        this.drawing_area.addElementToSelection(this)
       }
       this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
       this.drawing_area.contextualised_container = this
@@ -308,6 +308,65 @@ export class Class_ContainerElement extends Class_NodeBase {
   }
 
   /**
+   *Function that save in history the undo of dragging free label
+   *
+   * @memberof Class_DrawingAreaOSP
+   */
+  public saveUndoLabelSelectedPos() {
+    const containers_selected = this.sankey.drawing_area.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
+    const nodes_selected = this.sankey.drawing_area.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for undo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
+    })
+    // undo function
+    const undo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.sankey.drawing_area.checkAndUpdateAreaSize()
+    }
+    this.sankey.drawing_area.application_data.history.saveUndo(undo)
+  }
+
+  /**
+   *Function that save in history the redo of dragging free label
+   *
+   * @memberof Class_DrawingAreaOSP
+   */
+  public saveRedoLabelSelectedPos() {
+    const containers_selected = this.sankey.drawing_area.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
+    const nodes_selected = this.sankey.drawing_area.selected_nodes_list
+    const dict_old_pos_label: { [x: string]: [number, number] } = {}
+    const dict_old_pos_node: { [x: string]: [number, number] } = {}
+    // Memorize for redo
+    containers_selected.forEach(n => {
+      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
+    })
+    nodes_selected.forEach(n => {
+      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
+    })
+    // redo function
+    const redo = () => {
+      containers_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
+      })
+      nodes_selected.forEach(n => {
+        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
+      })
+      this.sankey.drawing_area.checkAndUpdateAreaSize()
+    }
+    this.sankey.drawing_area.application_data.history.saveRedo(redo)
+  }
+  /**
    * Define event when mouse drag starts
    * @protected
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
@@ -321,7 +380,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     const drawing_area = this.drawing_area
     const containers_selected = drawing_area.selected_containers_list
     if (containers_selected.includes(this)) {
-      drawing_area.saveUndoLabelSelectedPos()
+      this.saveUndoLabelSelectedPos()
       drawing_area.checkAndUpdateAreaSize()
     } else {
       // Memorize for undo
@@ -377,7 +436,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       const drawing_area = this.drawing_area
       const containers_selected = drawing_area.selected_containers_list
       if (containers_selected.includes(this)) {
-        drawing_area.saveRedoLabelSelectedPos()
+        this.saveRedoLabelSelectedPos()
       } else {
         // Memorize for redo
         const old_x = this.position_x
