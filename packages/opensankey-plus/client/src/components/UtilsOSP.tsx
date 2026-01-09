@@ -12,8 +12,6 @@ import {
   Input
 } from '@chakra-ui/react'
 
-
-// OpenSankey imports
 import {
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
@@ -25,10 +23,44 @@ import {
 import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
-
-import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { DiffType } from '../types/LegacyTypes'
+import { applyChange } from 'deep-diff'
+
+
+export const GetOldDataFromView  = (
+  master_data:OSPData|undefined,
+  id_view_to_see:string
+)=>{
+  // Copy master data
+  if (!master_data) {
+    alert('sankey master undefined')
+    return undefined
+  }
+  const copy_master_data= {...master_data}
+  copy_master_data.view = [];
+  (copy_master_data as unknown as Type_JSON).views = {}
+  //const view_of_master= master_data.view as unknown as ViewType[]
+  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as OSPData
+  // Get the difference from the view
+  if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
+    alert('view not found')
+    return data_init
+  }
+  const view_object=master_data.view.filter(v=>v.id === id_view_to_see)[0]
+
+  if((view_object.view_data as DiffType).diff){
+    const diff_view=(view_object.view_data as DiffType).diff
+    if (!diff_view) {
+      return data_init
+    }
+    diff_view.forEach((d) => applyChange(data_init, {}, d))
+  }else{
+    data_init=view_object.view_data as OSPData
+  }
+  return data_init
+}
 
 export const ImportImageAsSvgBg = ({
   new_data_plus,

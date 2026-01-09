@@ -277,13 +277,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     />,
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
-    />,
-    // <UniversalFileConverter
-    //   app_data={new_data_plus}
-    //   dialog_name={'ref_setter_show_modal_file_converter'}
-    //   input_config={INPUT_ATTRIBUTES_CONFIG}
-    //   output_config={OUTPUT_ATTRIBUTES_CONFIG}
-    // />
+    />
   ]
 
   return [

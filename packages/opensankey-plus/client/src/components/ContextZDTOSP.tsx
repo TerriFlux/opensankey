@@ -130,7 +130,7 @@ export const ContextZDT = (
   const button_detach_all_tied_nodes = <Button onClick={() => {
     // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
     for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
-      app_data.drawing_area.dettachNodeFromCont(zdt_to_contextualise.attached_node[i], zdt_to_contextualise)
+      zdt_to_contextualise.dettachNodeFromCont(zdt_to_contextualise.attached_node[i])
     }
     zdt_to_contextualise.tied_to_nodes = false
     zdt_to_contextualise.draw()
@@ -146,10 +146,10 @@ export const ContextZDT = (
     getNodeInsideContextZDT()
       .forEach(n => {
         n.getListDescendantOfNode().forEach(node => {
-          app_data.drawing_area.attachNodeToCont(node, zdt_to_contextualise)
+          zdt_to_contextualise.attachNodeToCont(node)
           //new_data_plus.drawing_area.addNodeToSelection(node)
         })
-        app_data.drawing_area.attachNodeToCont(n, zdt_to_contextualise)
+        zdt_to_contextualise.attachNodeToCont(n)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()

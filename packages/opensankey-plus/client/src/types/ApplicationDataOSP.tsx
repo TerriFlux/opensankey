@@ -426,7 +426,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         })
       }
       // Move all elements so none of them are outside the DA
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
     }
 
     // Event to add all visible containers to selection -----------------------------------------
@@ -673,7 +673,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
     new_drawing_area.sankey.nodes_list.forEach(node => {
-      new_drawing_area.attachNodeToCont(node, cont)
+      cont.attachNodeToCont(node)
     })
 
     //cont.fo_content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'

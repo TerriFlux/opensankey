@@ -152,7 +152,7 @@ export const MenuConfigurationContainersOSP = ({
     if (menu_for_style) {
       app_data.menu_configuration.updateAllComponentsRelatedToContainers()
       // Update menus for container's appearance in case we use this for style
-      app_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
+      //app_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
       // Redraw all visible containers if we modify container style
       app_data.drawing_area.sankey.containers_list.forEach(container => container.draw())
     }
@@ -160,14 +160,7 @@ export const MenuConfigurationContainersOSP = ({
     app_data.menu_configuration.updateAllComponentsRelatedToContainers()
   }
 
-  // =================== UI REFS AND STATE ===================
 
-  const r_editor_ZDT = useRef<ReactQuill>() as { current: ReactQuill }
-  const element_ref = elements[0]
-  // const zdt_or_image = (element_ref && element_ref instanceof Class_ContainerElement) 
-  //   ? (element_ref.is_image === true ? 'image' : 'text') 
-  //   : 'text'
-  // const [button_text_or_image, set_button_text_or_image] = useState<'text' | 'image'>(zdt_or_image)
   const ref_set_text_value_input = useRef((_: string | null | undefined) => null)
 
   // Options selector only for direct mode (not for style editing)
@@ -191,32 +184,6 @@ export const MenuConfigurationContainersOSP = ({
       refreshThisAndUpdateRelatedComponents()
     }
   }
-
-  // =================== DROPDOWN FOR CONTAINER SELECTION ===================
-
-  // const dropdownMultiLabel = () => {
-  //   if (menu_for_style) return <></> // No dropdown in style mode
-
-  //   return (
-  //     <Box layerStyle='submenuconfig_droplist' width='11vw'>
-  //       <OSMultiSelect
-  //         t={app_data.t}
-  //         elements={options_selector}
-  //         onClick={(entries) => {
-  //           const entries_values = entries.map(d => d.value)
-  //           app_data.drawing_area.sankey.containers_list.forEach(zdt => {
-  //             if (entries_values.includes(zdt.id)) {
-  //               app_data.drawing_area.addContainerToSelection(zdt)
-  //             } else {
-  //               app_data.drawing_area.removeContainerFromSelection(zdt)
-  //             }
-  //           })
-  //           redrawAndRefresh()
-  //         }}
-  //       />
-  //     </Box>
-  //   )
-  // }
 
   const allLabelTiedToNodes = () => {
     if (menu_for_style) return false // Styles don't have tied_to_nodes
@@ -443,9 +410,9 @@ export const MenuConfigurationContainersOSP = ({
 
         app_data.drawing_area.sankey.nodes_list.forEach(node => {
           if (entries_values.includes(node.id)) {
-            containerElements.forEach(zdt => { app_data.drawing_area.attachNodeToCont(node, zdt) })
+            containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
           } else {
-            containerElements.forEach(zdt => { app_data.drawing_area.dettachNodeFromCont(node, zdt) })
+            containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
           }
         })
         redrawAndRefresh()
