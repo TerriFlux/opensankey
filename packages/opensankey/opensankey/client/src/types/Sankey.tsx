@@ -53,7 +53,6 @@ import {
   ALL_ATTRIBUTES_CONFIG,
   Type_customisable_style_attr
 } from '../Elements/ElementsAttributesConfig'
-import { AttributeMappings, ContainerAttributeMappings, ContainerPersistence, LinkAttributeMappings, LinkElementPersistence, NodeAttributeMappings, NodeElementPersistence, StyledPersistence } from '../Persistence/SankeyPersistence'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
@@ -149,13 +148,6 @@ export class Class_Sankey {
     })
   }
 
-  // COPY METHODS =======================================================================
-
-  /**
-   * Copy everything from input sankey to copy
-   * @param {Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>} sankey_to_copy
-   * @memberof Class_Sankey
-   */
   public copyFrom(sankey_to_copy: Class_Sankey): void {
     // First clean everything
     this.delete()
@@ -232,20 +224,6 @@ export class Class_Sankey {
     return false
   }
 
-  /**
-   * Copy some of all the other sankey attributes to this sankey
-   * Modes list can contains all these options :
-   * - 'attrDrawingArea' - Copy Attributes related to display on drawing area (ie styles)
-   * - 'tagLevel' - Copy level tags
-   * - 'tagNode' - Copy node tags
-   * - 'tagFlux' - Copy flux tags
-   * - 'tagData' - Copy data tags
-   * @param {Class_Sankey<Class_DrawingArea, Class_NodeElement, Class_LinkElement>} other_sankey
-   * @param {string[]} mode
-   * @memberof Class_Sankey
-   */
-
-
   public create_child_links() {
     const data_tagg = Object.values(this._data_taggs).filter(tagg => tagg.banner == 'multi')[0]
     if (!data_tagg) return
@@ -297,119 +275,6 @@ export class Class_Sankey {
     }
     )
     this._styles[id] = new_style
-  }
-
-
-  public matchAndModifyJSONIds(
-    json_object: Type_JSON,
-    matching_taggs_id: { [_: string]: { [_: string]: string } } = {},
-    matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {},
-    matching_nodes_id: { [_: string]: string } = {},
-    matching_links_id: { [_: string]: string } = {}
-  ) {
-    // Loop on every tag group entries in JSON if there is data -------------------------
-    const loop_taggs = {
-      'levelTags': this._level_taggs,
-      'nodeTags': this._node_taggs,
-      'fluxTags': this._flux_taggs,
-      'dataTags': this._data_taggs,
-    }
-    Object.entries(loop_taggs)
-      .forEach(([tagg_type, tagg_dict]) => {
-        if (json_object[tagg_type] !== undefined) {
-          // Variable to save matching ids : old -> new
-          const curr_matching_taggs_id: { [id: string]: string } = {}
-          const curr_matching_tags_id: { [id: string]: { [id: string]: string } } = {}
-          // Cast type for linter
-          const json = json_object[tagg_type] as Type_JSON
-          // Loop on all entries to find tag group and then tags matchs
-          Object.entries(json)
-            .forEach(([tagg_id, _]) => {
-              // Cast type
-              const tagg_json = _ as Type_JSON
-              // Match tag groups between sankey and JSON that have the same name but different id
-              const matching_taggs = Object.values(tagg_dict)
-                .filter(tagg => {
-                  return (
-                    (tagg.name === getStringOrUndefinedFromJSON(tagg_json, 'name')) &&
-                    (tagg.id !== tagg_id))
-                })
-              // We need to find a unique matching entry in JSON
-              if (matching_taggs.length === 1) {
-                curr_matching_taggs_id[tagg_id] = matching_taggs[0].id
-              }
-              // Then match tags using the same methode
-              curr_matching_tags_id[tagg_id] = {}
-              Object.entries(tagg_json.tags)
-                .forEach(([tag_id, __]) => {
-                  // Get related tag group
-                  const new_tagg_id = curr_matching_taggs_id[tagg_id] ?? tagg_id
-                  const tagg = tagg_dict[new_tagg_id] ?? undefined
-                  if (tagg) {
-                    // Casting type
-                    const tag_json = __ as Type_JSON
-                    // Match tag group in json data with theses in sankey data using name
-                    const matching_tags = tagg.tags_list
-                      .filter(tag => {
-                        return (
-                          (tag.name === getStringOrUndefinedFromJSON(tag_json, 'name')) &&
-                          (tag.id !== tag_id))
-                      })
-                    // We need to find a unique matching entry in JSON
-                    if (matching_tags.length === 1) {
-                      curr_matching_tags_id[tagg_id][tag_id] = matching_tags[0].id
-                    }
-                  }
-                })
-            })
-          // Save results
-          matching_taggs_id[tagg_type] = curr_matching_taggs_id
-          matching_tags_id[tagg_type] = curr_matching_tags_id
-        }
-      })
-    // Loop on all nodes ------------------------------------------------------------
-    // Cast type for linter
-    const nodes_json = json_object['nodes'] as Type_JSON
-    Object.entries(nodes_json)
-      .forEach(([node_id, _]) => {
-        // Cast type for linter
-        const node_json = _ as Type_JSON
-        // Loop on all existing node and try to find match based on names
-        const matching_nodes = this.nodes_list
-          .filter(node => {
-            return (
-              (node.name === getStringOrUndefinedFromJSON(node_json, 'name')) &&
-              (node.id !== node_id))
-          })
-        // There must be only one matching node
-        if (matching_nodes.length === 1) {
-          matching_nodes_id[node_id] = matching_nodes[0].id
-        }
-      })
-    // Loop on all links ------------------------------------------------------------
-    // Cast type for linter
-    const links_json = json_object['links'] as Type_JSON
-    Object.entries(links_json)
-      .forEach(([link_id, _]) => {
-        // Cast type for linter
-        const link_json = _ as Type_JSON
-        // Loop on all existing link and try to find match based on names
-        const matching_links = this.links_list
-          .filter(link => {
-            let source_id = getStringFromJSON(link_json, 'idSource', '')
-            source_id = matching_nodes_id[source_id] ?? source_id
-            let target_id = getStringFromJSON(link_json, 'idTarget', '')
-            target_id = matching_nodes_id[target_id] ?? target_id
-            return (
-              (link.source.id === source_id) &&
-              (link.target.id === target_id) &&
-              (link.id !== link_id))
-          })
-        // There must be only one matching link
-        if (matching_links.length === 1) {
-          matching_links_id[link_id] = matching_links[0].id
-        }
-      })
   }
 
   public draw() {
