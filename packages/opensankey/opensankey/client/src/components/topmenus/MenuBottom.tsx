@@ -167,14 +167,14 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaFitHorizontally(true)}>
+        onClick={() => app_data.drawing_area.areaFitHorizontally()}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaFitVertically(true)}>
+        onClick={() => app_data.drawing_area.areaFitVertically()}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>
@@ -322,7 +322,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
   // Fucntion used when we click on a step to manually switch to clicked tag
   const switchCurrTag = (idx: number) => {
     DataGroup.selectTagsFromId(stepper_sequence[idx].id_tag)
-    new_data.drawing_area.checkAndUpdateAreaSize()
+    new_data.drawing_area.areaAutoFit()
     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   }
 

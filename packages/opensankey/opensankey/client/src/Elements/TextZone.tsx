@@ -4,6 +4,9 @@ import { Type_JSON, getBooleanFromJSON, getStringFromJSON } from '../types/Utils
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
+import { ConfigType } from './ElementsAttributesConfig'
+import { ExtractAttributeValue } from './Element'
+import { ContainerAttributeMappings } from '../Persistence/SankeyPersistence'
 
 
 export const default_container_content = 'Text Label ...'
@@ -18,7 +21,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
   ) {
     //super(id, id, drawing_area, 'g_elements_sankey')
-    super(id, id, drawing_area) //'g_elements_sankey')
+    super(id, id, drawing_area, drawing_area.sankey.default_style) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
     this._at_extremity_of_attached_nodes = false
@@ -48,59 +51,68 @@ export class Class_ContainerElement extends Class_NodeBase {
 
     cast_copy._attached_node.forEach(n => {
       const node = this.drawing_area.sankey.nodes_dict[n.id]
-      this.drawing_area.attachContToNode(this, node)
+      this.attachContToNode(node)
     })
   }
 
-  public toJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    super.toJSON(json_object, kwargs)
-    json_object['tiedToNode'] = this._tied_to_nodes
-    json_object['attachedNodes'] = this._attached_node.map(n => n.id)
-    json_object['attachedNodesExtremity'] = this._at_extremity_of_attached_nodes
-    json_object['extremityPos'] = this._extremity_position
 
-    return json_object
+  /**
+   * Add node ref to container attribute attached_node
+   *
+   * @param {Class_NodeElement} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof Class_Sankey
+   */
+  public attachNodeToCont(node: Class_NodeElement) {
+    if (!this.attached_node.includes(node)) {
+      this.attached_node.push(node)
+      this.attachContToNode(node)
+    }
   }
 
-  protected _fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ): void {
-    super.fromJSON(json_object, kwargs)
-    // this._title = getStringFromJSON(json_object, 'title', this.title)
-    // this._content = getStringFromJSON(json_object, 'content', this.content)
-    // this._is_image = getBooleanFromJSON(json_object, 'is_image', this.is_image)
-    // this._image_src = getStringFromJSON(json_object, 'image_src', this.image_src)
-    this._tied_to_nodes = getBooleanFromJSON(json_object, 'tiedToNode', this._tied_to_nodes)
-
-    // Load attached nodes
-    const list_id_nodes = (json_object['attachedNodes'] as string[]) || []
-    const present_node_id = this.drawing_area.sankey.nodes_dict
-    list_id_nodes.forEach(id_n => {
-      if (id_n in present_node_id) {
-        this.drawing_area.attachContToNode(this, this.drawing_area.sankey.nodes_dict[id_n])
-      }
-    })
-    this._at_extremity_of_attached_nodes = getBooleanFromJSON(json_object, 'attachedNodesExtremity', this._at_extremity_of_attached_nodes)
-    this._extremity_position = getStringFromJSON(json_object, 'extremityPos', this._extremity_position) as 'top' | 'bottom' | 'left' | 'right'
+  /**
+   * Add container ref to node attribute attached_container
+   *
+   * @param {Type_GenericContainerElement} cont
+   * @param {Class_NodeElement} node
+   * @memberof Class_Sankey
+   */
+  public attachContToNode(node: Class_NodeElement): void {
+    if (!node.attached_container.includes(this)) {
+      node.attached_container.push(this)
+      this.attachNodeToCont(node)
+    }
   }
 
-    public setEventsListeners() {
+  /**
+   * Remove ref of container in node attached_node attribute
+   *
+   * @param {Class_NodeElement} node
+   * @param {Type_GenericContainerElement} cont
+   * @memberof Class_SankeyOSP
+   */
+  public dettachNodeFromCont(node: Class_NodeElement) {
+    if (this.attached_node.includes(node)) {
+      const idx = this.attached_node.indexOf(node)
+      this.attached_node.splice(idx, 1)
+      this.dettachNodeFromCont(node)
+    }
+  }
+
+  public dettachContFromNode(node: Class_NodeElement): void {
+    if (node.attached_container.includes(this)) {
+      const idx = node.attached_container.indexOf(this)
+      node.attached_container.splice(idx, 1)
+      this.dettachContFromNode(node)
+    }
+  }
+
+  public setEventsListeners() {
     if (this.drawing_area.sankey.container_activated) {
       super.setEventsListeners()
     }
   }
 
-  /**
-   * Compute position & size of container according to nodes tied to it, 
-   * it also add a margin to compute size that can be modified 
-   *
-   * @private
-   * @memberof Class_ContainerElement
-   */
   public computeSizeAndPositionFromAttachedNodes() {
     let min_x = this.drawing_area.width, min_y = this.drawing_area.height, max_x = 0, max_y = 0
 
@@ -152,12 +164,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     }
   }
 
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventSimpleLMBCLick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -332,7 +338,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       nodes_selected.forEach(n => {
         n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
       })
-      this.sankey.drawing_area.checkAndUpdateAreaSize()
+      this.sankey.drawing_area.areaAutoFit()
     }
     this.sankey.drawing_area.application_data.history.saveUndo(undo)
   }
@@ -362,7 +368,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       nodes_selected.forEach(n => {
         n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
       })
-      this.sankey.drawing_area.checkAndUpdateAreaSize()
+      this.sankey.drawing_area.areaAutoFit()
     }
     this.sankey.drawing_area.application_data.history.saveRedo(redo)
   }
@@ -381,7 +387,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     const containers_selected = drawing_area.selected_containers_list
     if (containers_selected.includes(this)) {
       this.saveUndoLabelSelectedPos()
-      drawing_area.checkAndUpdateAreaSize()
+      drawing_area.areaAutoFit()
     } else {
       // Memorize for undo
       const old_x = this.position_x
@@ -389,7 +395,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       // Undo function
       const undo = () => {
         this.setPosXY(old_x, old_y)
-        drawing_area.checkAndUpdateAreaSize()
+        drawing_area.areaAutoFit()
       }
       this.drawing_area.application_data.history.saveUndo(undo)
     }
@@ -416,7 +422,7 @@ export class Class_ContainerElement extends Class_NodeBase {
         }
         n.applyPosition()
       })
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
     }
   }
 
@@ -430,7 +436,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     if (this.drawing_area.isInSelectionMode()) {
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
 
       // Save redo label pos
       const drawing_area = this.drawing_area

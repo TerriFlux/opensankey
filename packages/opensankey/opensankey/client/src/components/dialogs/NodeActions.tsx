@@ -211,7 +211,7 @@ export class NodeActions {
     addNewLinks(this.contextualised_node)
     this.drawing_area.purgeSelection()
     this.drawing_area.node_contextualised = undefined
-    this.drawing_area.areaAutoFit(false)
+    this.drawing_area.areaAutoFit()
     this.refreshAndSave()
   }
 
@@ -515,9 +515,9 @@ export class NodeActions {
     cont.tied_to_nodes = true
     this.drawing_area.selected_nodes_list.forEach(node => {
       node.getListDescendantOfNode().forEach(n => {
-        this.drawing_area.attachNodeToCont(n, cont)
+        cont.attachNodeToCont(n)
       })
-      this.drawing_area.attachNodeToCont(node, cont)
+      cont.attachNodeToCont(node)
     })
     this.drawing_area.draw()
   }

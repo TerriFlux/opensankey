@@ -256,7 +256,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Init parent class attributes
     super(
-      id, drawing_area, 'g_elements_sankey', new LinkAttributeMappings(), drawing_area.sankey.default_style
+      id, drawing_area, 'g_elements_sankey', drawing_area.sankey.default_style
     )
     // LinkSetterGenerator.generateSetters(this)
 
@@ -407,63 +407,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public toJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    super.toJSON(json_object, kwargs)
-    // Related nodes
-    json_object['idSource'] = this._source.sibling ? this._source.sibling.id : this._source.id
-    json_object['idTarget'] = this._target.sibling ? this._target.sibling.id : this._target.id
-
-    // Fill positions attributes
-    // if (this._position_offset_value !== undefined) json_object['position_offset_value'] = this._position_offset_value
-    // if (this._position_offset_name !== undefined) json_object['position_offset_label'] = this._position_offset_name
-    // if (this._position_x_value !== undefined) json_object['position_x_label'] = this._position_x_value
-    // if (this._position_y_value !== undefined) json_object['position_y_label'] = this._position_y_value
-    // if (this._position_x_name !== undefined) json_object['position_x_name'] = this._position_x_name
-    // if (this._position_y_name !== undefined) json_object['position_y_name'] = this._position_y_name
-
-    // Tooltips
-    if (this.tooltip_text) json_object['tooltip_text'] = this.tooltip_text
-    // Values
-    if (!kwargs || kwargs['with_values'] !== false)
-      json_object['value'] = this._values.toJSON(kwargs)
-    // Out
-    return json_object
-  }
-
-  /**
-   * Possible kwargs :
-   * - matching_nodes_id: { [_: string]: string } as "id in JSON" -> "id in model"
-   * - matching_taggs_id: { [_: string]: string } as "id in JSON" -> "id in model"
-   * - matching_tags_id: { [_: string]: { [_: string]: string } }  as "id in JSON" -> "id in model", sorted per "group id in JOSN"
-   * @protected
-   * @param {Type_JSON} json_object
-   * @param {Type_JSON} [kwargs]
-   * @memberof Class_LinkElement
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    super.fromJSON(json_object, kwargs)
-
-    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
-    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
-
-
-    if (this.shape_local_link_scale) {
-      this.setDomainLocalScale(this.shape_local_link_scale)
-    }
-
-    this._values.fromJSON(
-      getJSONFromJSON(json_object, 'value', {}),
-      matching_taggs_id,
-      matching_tags_id
-    )
-    this.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
-  }
 
   // PUBLIC METHODS =====================================================================
 

@@ -900,7 +900,7 @@ export class Class_ApplicationData {
         })
       }
       // Update drawing area size so none of elements are outside the DA
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
@@ -1068,7 +1068,7 @@ export class Class_ApplicationData {
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit(true)
+    this.drawing_area.areaAutoFit()
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
