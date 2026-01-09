@@ -15,7 +15,8 @@ export class Class_ContainerElement extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
   ) {
     //super(id, id, drawing_area, 'g_elements_sankey')
-    super(id, id, drawing_area, drawing_area.sankey.default_style) //'g_elements_sankey')
+    const container_style =  drawing_area.sankey.styles_dict['ContainerStyle']
+    super(id, id, drawing_area, container_style) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
     this._at_extremity_of_attached_nodes = false

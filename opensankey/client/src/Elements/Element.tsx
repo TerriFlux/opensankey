@@ -328,7 +328,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     id: string,
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
-    default_style: Class_ElementStyle
+    style: Class_ElementStyle
   ) {
     super(id, drawing_area, true, svg_parent_group)
 
@@ -336,7 +336,12 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
       x: const_default_position_x,
       y: const_default_position_y
     }
-    this._style = [default_style]
+    const default_style = drawing_area.sankey.default_style
+    if (style.id == default_style_id) {
+      this._style = [default_style]
+    } else {
+      this._style = [default_style,style]      
+    }
     this._config = ALL_ATTRIBUTES_CONFIG
     this._style[0].addReference(this)
     this.createDynamicProperties()

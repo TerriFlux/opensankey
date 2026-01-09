@@ -245,11 +245,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement,
     drawing_area: Class_DrawingArea
   ) {
-    // Init parent class attributes
-    super(
-      id, drawing_area, 'g_elements_sankey', drawing_area.sankey.default_style
-    )
-    // LinkSetterGenerator.generateSetters(this)
+    const link_style =  drawing_area.sankey.styles_dict['LinkStyle']
+    super(id, drawing_area, 'g_elements_sankey', link_style)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()

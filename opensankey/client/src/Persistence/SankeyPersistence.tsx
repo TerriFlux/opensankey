@@ -42,7 +42,7 @@ import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { link_exchanges_style, linkStyleConfigs, node_exchanges_style, nodeStyleConfigs, product_sector_styles } from '../Elements/ElementStyle'
+import { link_exchanges_style, node_exchanges_style, elementStyleConfigs, product_sector_styles } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
@@ -1235,9 +1235,9 @@ export class SankeyPersistence {
         })
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, nodeStyleConfigs))
-        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, nodeStyleConfigs))
-        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, linkStyleConfigs))
+        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
       }
     }
     json_entry = 'fluxTags'

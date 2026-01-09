@@ -25,21 +25,13 @@
 // ==================================================================================================
 
 import { Class_DrawingArea } from './DrawingArea'
-import {
-  nodeStyleConfigs, linkStyleConfigs, NodeStyleConfigsDict,
-  product_sector_styles, NodeStyleKey, node_exchanges_style,
-  link_exchanges_style
-} from '../Elements/ElementStyle'
+import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
-import { Class_DataTag, Class_Tag, } from '../types/Tag'
+import { Class_DataTag } from '../types/Tag'
 import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup } from './TagGroup'
 import {
-  Type_JSON,
-  getJSONFromJSON,
-  getStringFromJSON,
-  getStringOrUndefinedFromJSON,
   default_main_sankey_id,
   default_style_id,
   Type_MacroTagGroup,
@@ -88,7 +80,7 @@ export class Class_Sankey {
   ) {
     this.drawing_area = drawing_area
     this._id = id
-    this.name = this.id 
+    this.name = this.id
     this._node_tags_fingerprint = randomId()
     this._flux_tags_fingerprint = randomId()
     this._data_tags_fingerprint = randomId()
@@ -96,15 +88,16 @@ export class Class_Sankey {
     this._icon_catalog = {}
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
+    base_styles.forEach(style_id => this.create_node_internal_style(style_id, elementStyleConfigs))
   }
 
-    public get dimensions_list() {
+  public get dimensions_list() {
     return Object.values(this._nodes_dimensions)
   }
 
   public delete() {
     // Properly delete all nodes & link
-    this.nodes_list.forEach(n => {n.delete() /* Will also trigger delete() on links*/})
+    this.nodes_list.forEach(n => { n.delete() /* Will also trigger delete() on links*/ })
     this.containers_list.forEach(container => container.delete())
     this._containers = {}
 
@@ -261,7 +254,7 @@ export class Class_Sankey {
       })
     })
   }
-  public create_node_internal_style(id: NodeStyleKey, configs: NodeStyleConfigsDict) {
+  public create_node_internal_style(id: ElementStyleKey, configs: ElementStyleConfigsDict) {
     if (this._styles[id]) {
       return
     }
@@ -314,26 +307,26 @@ export class Class_Sankey {
   public get elements_list() { return [...this.nodes_list, ...this.links_list, ...this.containers_list] }
   public get visible_elements_list() { return this.elements_list.filter(el => el.is_visible) }
 
-  public get nodes_dict() {return this._nodes}
-  public get nodes_list(): Class_NodeElement[] {return Object.values(this._nodes)}
-  public get nodes_list_sorted(): Class_NodeElement[] {return this.nodes_list.sort((a, b) => sortNodesElements(a, b))}
-  public get visible_nodes_list(): Class_NodeElement[] {return Object.values(this._nodes).filter(node => node.is_visible)}
-  public get visible_nodes_list_sorted(): Class_NodeElement[] {return this.visible_nodes_list.sort((a, b) => sortNodesElements(a, b))}
+  public get nodes_dict() { return this._nodes }
+  public get nodes_list(): Class_NodeElement[] { return Object.values(this._nodes) }
+  public get nodes_list_sorted(): Class_NodeElement[] { return this.nodes_list.sort((a, b) => sortNodesElements(a, b)) }
+  public get visible_nodes_list(): Class_NodeElement[] { return Object.values(this._nodes).filter(node => node.is_visible) }
+  public get visible_nodes_list_sorted(): Class_NodeElement[] { return this.visible_nodes_list.sort((a, b) => sortNodesElements(a, b)) }
 
   public get links_dict() { return this._links }
   public get links_list(): Class_LinkElement[] { return Object.values(this._links) }
-  public get links_list_sorted(): Class_LinkElement[] {return this.links_list.sort((a, b) => sortLinksElementsByIds(a, b))}
-  public get visible_links_list(): Class_LinkElement[] {return Object.values(this._links).filter(node => node.is_visible)}
-  public get visible_links_list_sorted(): Class_LinkElement[] {return this.visible_links_list.sort((a, b) => sortLinksElementsByIds(a, b))}
+  public get links_list_sorted(): Class_LinkElement[] { return this.links_list.sort((a, b) => sortLinksElementsByIds(a, b)) }
+  public get visible_links_list(): Class_LinkElement[] { return Object.values(this._links).filter(node => node.is_visible) }
+  public get visible_links_list_sorted(): Class_LinkElement[] { return this.visible_links_list.sort((a, b) => sortLinksElementsByIds(a, b)) }
 
   public get containers_dict() { return this._containers }
   public get containers_list() { return Object.values(this._containers) }
   public get containers_list_sorted() { return this.containers_list.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)) }
-  public get visible_containers_list() {return this.containers_list.filter(zdt => zdt.is_visible)}
+  public get visible_containers_list() { return this.containers_list.filter(zdt => zdt.is_visible) }
 
-  private _addLabel(zdt: Class_ContainerElement) {this._containers[zdt.id] = zdt}
+  private _addLabel(zdt: Class_ContainerElement) { this._containers[zdt.id] = zdt }
   private _addNode(node: Class_NodeElement) { this._nodes[node.id] = node }
-  private _addLink(link: Class_LinkElement) {this._links[link.id] = link }
+  private _addLink(link: Class_LinkElement) { this._links[link.id] = link }
 
   protected createNewNode(id: string, name: string): Class_NodeElement {
     const node = new Class_NodeElement(id, name, this.drawing_area)
@@ -471,8 +464,8 @@ export class Class_Sankey {
       _.delete()
     }
   }
-  public deleteLink(link: Class_LinkElement) {delete this._links[link.id]}
-  public deleteContainer(container: Class_ContainerElement) {delete this._containers[container.id]}
+  public deleteLink(link: Class_LinkElement) { delete this._links[link.id] }
+  public deleteContainer(container: Class_ContainerElement) { delete this._containers[container.id] }
 
   /////////////////////////////////////////////////////////////////////////////
   // Gestion des styles
@@ -494,7 +487,7 @@ export class Class_Sankey {
     )
   }
 
-  public get default_style() {return this._styles[default_style_id]}
+  public get default_style() { return this._styles[default_style_id] }
 
   public addNewDefaultElementStyle() {
     const _ = String(this.styles_list.length)
@@ -608,9 +601,9 @@ export class Class_Sankey {
   }
 
 
-  public get styles_dict() {return this._styles}
-  public get element_default_style() {return this._styles[default_style_id]}
-  public get styles_list() {return Object.values(this._styles)}
+  public get styles_dict() { return this._styles }
+  public get element_default_style() { return this._styles[default_style_id] }
+  public get styles_list() { return Object.values(this._styles) }
   public get styles_list_sorted() {
     return this.styles_list
       .sort((a, b) => sortNodesElements(a, b))
@@ -782,9 +775,9 @@ export class Class_Sankey {
     }
   }
 
-  public nodeTagsUpdated() {this._node_tags_fingerprint = randomId()}
-  public fluxTagsUpdated() {this._flux_tags_fingerprint = randomId()}
-  public dataTagsUpdated() {this._data_tags_fingerprint = randomId()}
+  public nodeTagsUpdated() { this._node_tags_fingerprint = randomId() }
+  public fluxTagsUpdated() { this._flux_tags_fingerprint = randomId() }
+  public dataTagsUpdated() { this._data_tags_fingerprint = randomId() }
 
   public get selected_node_tags_links_list(): Class_LinkElement[] {
     return Object.values(this._links)
@@ -854,8 +847,8 @@ export class Class_Sankey {
     return list_tag_by_grp
   }
 
-  public get level_taggs_dict() {return this._level_taggs}
-  public get level_taggs_list() {return Object.values(this._level_taggs)}
+  public get level_taggs_dict() { return this._level_taggs }
+  public get level_taggs_list() { return Object.values(this._level_taggs) }
 
   // Icons
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
