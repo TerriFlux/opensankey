@@ -135,22 +135,23 @@ export const GenericModalStyle = ({
 }
 
 // ✅ COMPOSANT GÉNÉRIQUE POUR LE WRAPPER DE SÉLECTEUR DE STYLE
-export const GenericStyleSelector = ({app_data,children}: React.PropsWithChildren<{
+export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChildren<{
   app_data: Class_ApplicationData
   children: JSX.Element
 }>) => {
   const { t, icon_library } = app_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
+  const [update, setUpdate] = useState(false)
 
   // const config = elementType === 'nodes' ? {
   //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
-      app_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      app_data.menu_configuration.updateComponentRelatedToStyles()
-      app_data.menu_configuration.updateAllComponentsRelatedToContainers()
-      app_data.menu_configuration.updateComponentRelatedToApparence()
-    }
-  
+    app_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    app_data.menu_configuration.updateComponentRelatedToStyles()
+    app_data.menu_configuration.updateAllComponentsRelatedToContainers()
+    app_data.menu_configuration.updateComponentRelatedToApparence()
+  }
+
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
@@ -164,6 +165,7 @@ export const GenericStyleSelector = ({app_data,children}: React.PropsWithChildre
             app_data.menu_configuration.ref_selected_style.current = new_style.id
             updateAll()
             app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+            setUpdate(!update)
           }}
         >
           {icon_add_element}
@@ -187,6 +189,7 @@ export const GenericStyleSelector = ({app_data,children}: React.PropsWithChildre
                 onClick={() => {
                   app_data.menu_configuration.ref_selected_style.current = id
                   updateAll()
+                  setUpdate(!update)
                 }}
               >
                 {app_data.drawing_area.sankey.styles_dict[id].name}
@@ -236,10 +239,10 @@ export const GenericStyleSelector = ({app_data,children}: React.PropsWithChildre
   )
 }
 
-export const ConfigMenuStyleElement = ({ 
-  app_data, 
-  selected_elements, 
-  config, 
+export const ConfigMenuStyleElement = ({
+  app_data,
+  selected_elements,
+  config,
   categories
 }: {
   app_data: Class_ApplicationData
@@ -249,8 +252,8 @@ export const ConfigMenuStyleElement = ({
 }) => {
   const { t, icon_library, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
-  const { ref_selected_style,dict_setter_show_dialog } = menu_configuration
-  const {ref_setter_show_modal_styles} = dict_setter_show_dialog
+  const { ref_selected_style, dict_setter_show_dialog } = menu_configuration
+  const { ref_setter_show_modal_styles } = dict_setter_show_dialog
 
   const element_ref = selected_elements[0]
 
@@ -284,12 +287,12 @@ export const ConfigMenuStyleElement = ({
       <>
         <Box layerStyle='menuconfigpanel_row_stylechoice'>
           <OSTooltip label={t('Noeud.tooltips.AS')}>
-            <MenuResetAttrLocal 
+            <MenuResetAttrLocal
               new_data={app_data}
-              dict_overwritted_attr={dict_overwritted_attr} 
+              dict_overwritted_attr={dict_overwritted_attr}
             />
           </OSTooltip>
-          
+
           <Button
             variant='menuconfigpanel_option_button'
             onClick={() => {
@@ -297,23 +300,23 @@ export const ConfigMenuStyleElement = ({
                 const style = selected_elements[0].style
                 const list_id_style = style.map(s => s.id)
                 let unchanged = true
-                
+
                 selected_elements.forEach(el => {
                   unchanged = el.style.every(style => list_id_style.includes(style.id)) ? unchanged : false
                 })
-                
+
                 if (unchanged) {
                   ref_selected_style.current = [...style].reverse()[0].id
                 }
               }
-              
+
               updateStyles()
               ref_setter_show_modal_styles.current(true)
             }}
           >
             {icon_library.icon_edit_style}
           </Button>
-          
+
           <OSMultiSelect
             t={t}
             elements={options_selector}
@@ -325,7 +328,7 @@ export const ConfigMenuStyleElement = ({
             }}
           />
         </Box>
-        
+
         <MenuOrderStylesOfSelectedElements app_data={app_data} />
       </>
     </WrapperBoxSubSectionMenu>
@@ -340,10 +343,10 @@ const style_TableLineDragging = (isDisabled: boolean, draggableStyle: DraggingSt
 /**
  * ✅ Composant unifié pour modifier l'ordre des styles (nodes, links, containers)
  */
-export const MenuOrderStylesOfSelectedElements = ({ app_data}: {app_data: Class_ApplicationData}) => {
+export const MenuOrderStylesOfSelectedElements = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, t, icon_library, menu_configuration } = app_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
-  
+
   // ✅ Sélection des éléments selon le type
   const elements = drawing_area.selected_elements_list
 
@@ -385,16 +388,16 @@ export const MenuOrderStylesOfSelectedElements = ({ app_data}: {app_data: Class_
                 const draggDisabled = style.id == default_style_id
 
                 return (
-                  <Draggable 
-                    isDragDisabled={draggDisabled} 
-                    key={style.id} 
-                    index={element_idx} 
+                  <Draggable
+                    isDragDisabled={draggDisabled}
+                    key={style.id}
+                    index={element_idx}
                     draggableId={'line_drag_' + style.id}
                   >
                     {(provided) => (
-                      <Box 
-                        key={style.id} 
-                        layerStyle='drag_line_element_order' 
+                      <Box
+                        key={style.id}
+                        layerStyle='drag_line_element_order'
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}

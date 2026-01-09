@@ -343,7 +343,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
       this._style = [default_style,style]      
     }
     this._config = ALL_ATTRIBUTES_CONFIG
-    this._style[0].addReference(this)
+    this._style.forEach(s=>s.addReference(this))
     this.createDynamicProperties()
   }
 
