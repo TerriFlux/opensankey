@@ -548,7 +548,7 @@ export const UniversalFileConverter = ({
     const input_options = getCurrentInputOptions()
     form_data.append('input_options', JSON.stringify(input_options))
     if (input_format == 'blob') {
-      form_data.append('data', JSON.stringify(app_data.toJSON(output_options as Type_JSON)))
+      form_data.append('data', JSON.stringify(app_data.toJSON({...output_options_base,...output_options} as Type_JSON)))
     } else if (input_format == 'example_excel' || input_format == 'example_json') {
       form_data.append('file_name', file_path)
     } else {
@@ -558,7 +558,7 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
 
     if (input_format == 'blob' && output_format == 'json') {
-      app_data.saveToJSON(output_options as Type_JSON)
+      app_data.saveToJSON({...output_options_base,...output_options} as Type_JSON)
       setStarted(false)
       setProcessing(false)
       setFailure(false)

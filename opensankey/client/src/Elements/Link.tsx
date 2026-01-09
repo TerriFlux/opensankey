@@ -34,15 +34,7 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
-import {
-  Type_JSON,
-  getJSONFromJSON,
-  getStringFromJSON,
-  Type_Structure,
-  getNumberFromJSON,
-  Type_BaseElementPosition,
-  link_data_label
-} from '../types/Utils'
+import {Type_BaseElementPosition,link_data_label} from '../types/Utils'
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -50,7 +42,6 @@ import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Type_Side, } from './ElementsAttributesConfig'
-import { LinkAttributeMappings } from '../Persistence/SankeyPersistence'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'

@@ -43,6 +43,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../Algorithms/UpdateFrom'
+import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -513,7 +514,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     return {
       ...json_object,
-      ...this.drawing_area.toJSON(kwargs)
+      ...DrawingAreaPersistence.toJSON(this.drawing_area,kwargs)
     }
   }
 
@@ -561,7 +562,7 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON
   ) {
     // Update drawing area
-    this._drawing_area.fromJSON(json_object, kwargs)
+    DrawingAreaPersistence.fromJSON(this._drawing_area,json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
   }
@@ -659,7 +660,7 @@ export class Class_ApplicationData {
       const json_layout = json_object['layout'] as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
-      drawing_area_from_layout.fromJSON(json_layout)
+      DrawingAreaPersistence.fromJSON(drawing_area_from_layout,json_layout)
       drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
       updateFrom(

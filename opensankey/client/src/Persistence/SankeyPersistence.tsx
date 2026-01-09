@@ -24,8 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, type Type_JSON } from '../types/Utils'
-import { ALL_ATTRIBUTES_CONFIG, default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_width } from '../Elements/ElementsAttributesConfig'
+import {
+  default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON,
+  getNumberOrUndefinedFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, Type_Structure, type Type_JSON
+} from '../types/Utils'
+import {
+  ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
+  default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure
+} from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
@@ -37,246 +43,52 @@ import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { link_exchanges_style, linkStyleConfigs, node_exchanges_style, nodeStyleConfigs, product_sector_styles } from '../Elements/ElementStyle'
-export class AttributeMappings {
-  public getToJsonMapping(): { [key: string]: string } {
-    return {}
-  }
-  public getFromJsonMapping_0_91_to_0_92(): { [key: string]: string } {
-    return {}
-  }
-  public getFromJsonMapping_0_8_to_0_91(): { [key: string]: string } {
-    return {}
-  }
-}
-export class NodeAttributeMappings extends AttributeMappings {
-  // Mapping principal: attribut interne -> clé JSON
-  private static readonly MAIN_MAPPING: { [key: string]: string } = {
-    // Shape mappings
-    shape_type: 'shape',
-    shape_min_width: 'node_width',
-    shape_min_height: 'node_height',
-    shape_color: 'color',
-    shape_opacity: 'opacity',
-    shape_color_sustainable: 'colorSustainable',
-    // Icon attributes
-    'iconName': 'icon_name',
-    'iconColor': 'icon_color',
-    'iconVisible': 'icon_visible',
-    'iconViewBox': 'icon_view_box',
-    'iconColorSustainable': 'icon_color_sustainable',
-
-    // Foreign Object attributes
-    'has_FO': 'has_fo',
-    'is_FO_raw': 'is_fo_raw',
-    'FO_content': 'fo_content',
-
-    // Image attributes
-    'is_image': 'is_image',
-    'image_src': 'image_src',
-
-    // Hyperlink attribute
-    'hyperlink': 'hyperlink'
-  };
-
-  // Mapping legacy: ancienne clé JSON -> attribut interne
-  private static readonly LEGACY_MAPPING: { [key: string]: string } = {
-    // Name label legacy
-    'label_visible': 'name_label_is_visible',
-    'font_family': 'name_label_font_family',
-    'font_size': 'name_label_font_size',
-    'uppercase': 'name_label_uppercase',
-    'bold': 'name_label_bold',
-    'italic': 'name_label_italic',
-    'label_color': 'name_label_color',
-    'label_horiz': 'name_label_horiz',
-    'label_vert': 'name_label_vert',
-    'label_background': 'name_label_background',
-    'label_background_color': 'name_label_background_color',
-    'label_box_width': 'name_label_box_width',
-
-    // Value label legacy
-    'show_value': 'value_label_is_visible',
-    'value_font_size': 'value_label_font_size',
-    'label_horiz_valeur': 'value_label_horiz',
-    'label_vert_valeur': 'value_label_vert',
-    'to_precision': 'value_label_scientific_notation',
-    'scientific_precision': 'value_label_significant_digits',
-    'nb_scientific_precision': 'value_label_nb_significant_digits',
-    'custom_digit': 'value_label_custom_digit',
-    'nb_digit': 'value_label_nb_digit',
-    'label_unit_visible': 'value_label_unit_visible',
-    'label_unit': 'value_label_unit',
-    'label_unit_factor': 'value_label_unit_factor',
-
-    // Shape legacy (fusion avec MAIN_MAPPING)
-    'shape': 'shape_type',
-    'node_width': 'shape_min_width',
-    'node_height': 'shape_min_height',
-    'color': 'shape_color',
-    'opacity': 'shape_opacity',
-    'colorSustainable': 'shape_color_sustainable',
-  };
-
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...NodeAttributeMappings.MAIN_MAPPING }
-  }
-
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public getFromJsonMapping_0_8_to_0_91() {
-    return { ...NodeAttributeMappings.LEGACY_MAPPING } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
-  }
-}
-
-export class ContainerAttributeMappings extends AttributeMappings {
-  public getToJsonMapping() {
-    return {}
-  }
-  public getFromJsonMapping_0_91_to_0_92() {
-    return {
-      'label_height': 'shape_min_height',
-      'label_width': 'shape_min_width',
-      'has_fo': 'name_label_has_fo',
-      'fo_content': 'name_label_fo_content'
-    } as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
-  }
-}
-
-
-export class LinkAttributeMappings extends AttributeMappings {
-  private static readonly LEGACY_MAPPING: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
-    'user_scale': 'shape_local_link_scale',
-    'curved': 'shape_is_curved',
-    'curvature': 'shape_curvature',
-    'recycling': 'shape_is_recycling',
-    'is_structur': 'shape_is_structure',
-    'orientation': 'shape_orientation',
-    'left_horiz_shift': 'shape_starting_curve',
-    'right_horiz_shift': 'shape_ending_curve',
-    'starting_tangeant': 'shape_starting_tangeant',
-    'ending_tangeant': 'shape_ending_tangeant',
-    'vert_shift': 'shape_middle_recycling',
-    'arrow': 'shape_is_arrow',
-    'arrow_size': 'shape_arrow_size',
-    'dashed': 'shape_is_dashed',
-    'color': 'shape_color',
-    'color_rule': 'shape_color_rule',
-    'opacity': 'shape_opacity',
-  };
-
-  private static readonly MAIN_MAPPING: { [key: string]: string } = {
-    shape_local_link_scale: 'user_scale',
-    shape_is_curved: 'curved',
-    shape_type: 'shape_type',
-    shape_curvature: 'curvature',
-    shape_is_recycling: 'recycling',
-    shape_is_structure: 'is_structur',
-    shape_orientation: 'orientation',
-    shape_starting_curve: 'left_horiz_shift',
-    shape_ending_curve: 'right_horiz_shift',
-    shape_starting_tangeant: 'starting_tangeant',
-    shape_ending_tangeant: 'ending_tangeant',
-    shape_middle_recycling: 'vert_shift',
-    shape_is_arrow: 'arrow',
-    shape_arrow_size: 'arrow_size',
-    shape_is_dashed: 'dashed',
-    shape_color: 'color',
-    shape_color_rule: 'color_rule',
-    shape_opacity: 'opacity',
-  };
-  /**
-   * Retourne le mapping pour toJSON (attribut -> JSON)
-   */
-  public getToJsonMapping(): { [key: string]: string } {
-    return { ...LinkAttributeMappings.MAIN_MAPPING }
-  }
-
-  /**
-   * Retourne le mapping pour fromJSON (JSON -> attribut)
-   * Combine legacy + main mapping inversé
-   */
-  public getFromJsonMapping_0_8_to_0_91() {
-    return { ...LinkAttributeMappings.LEGACY_MAPPING } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
-  }
-
-
-  protected fromLegacyJSON(json_local_object: Type_JSON) {
-    if (json_local_object['version'] === undefined) {
-      // Mapping legacy simplifié
-      const legacyMapping: { [key: string]: string } = {
-        'label_visible': 'value_label_is_visible',
-        'font_family': 'value_label_font_family',
-        'label_font_size': 'value_label_font_size',
-        'text_color': 'value_label_color',
-        'label_position': 'value_label_horiz',
-        'orthogonal_label_position': 'value_label_vert',
-        'label_on_path': 'value_label_on_path',
-        'label_pos_auto': 'value_label_pos_auto',
-        'to_precision': 'value_label_scientific_notation',
-        'scientific_precision': 'value_label_significant_digits',
-        'nb_scientific_precision': 'value_label_nb_significant_digits',
-        'custom_digit': 'value_label_custom_digit',
-        'nb_digit': 'value_label_nb_digit',
-        'label_unit_visible': 'value_label_unit_visible',
-        'label_unit': 'value_label_unit',
-        'label_unit_factor': 'value_label_unit_factor',
-        'font_size': 'name_label_font_size',
-        'uppercase': 'name_label_uppercase',
-        'bold': 'name_label_bold',
-        'italic': 'name_label_italic',
-        'label_color': 'name_label_color',
-        'label_horiz': 'name_label_horiz',
-        'label_vert': 'name_label_vert'
-      }
-      const was_gradient = getBooleanFromJSON(json_local_object, 'gradient', false) as boolean
-      if (was_gradient) {
-        json_local_object['shape_color_rule'] = 'gradient'
-      }
-      Object.entries(legacyMapping).forEach(([oldKey, newKey]) => {
-        if (json_local_object[oldKey] !== undefined) {
-          //@ts-expect-error xxx
-          this[newKey as AttributeKey] = json_local_object[oldKey]
-        }
-      })
-    }
-  }
-}
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
 export class BaseElementPersistence {
-  protected _attributes_mapping: AttributeMappings
-  constructor(attributes_mapping: AttributeMappings) {
-    this._attributes_mapping = attributes_mapping
+  public static fromJSON_pre_0_9(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
-  public toJSON(
-    proto_element: Class_BaseElement,
+
+  public static fromJSON_0_9(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_91(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static toJSON(
+    base_element: Class_BaseElement,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ): Type_JSON {
-    json_object['x'] = proto_element.position_x
-    json_object['y'] = proto_element.position_y
+    json_object['x'] = base_element.position_x
+    json_object['y'] = base_element.position_y
     return json_object
   }
-  public fromJSON(
-    version: number,
-    proto_element: Class_ProtoElement,
+  public static fromJSON(
+    _version: number,
+    base_element: Class_ProtoElement,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ): void {
-    proto_element.position_x = getNumberFromJSON(json_object, 'x', proto_element.position_x)
-    proto_element.position_y = getNumberFromJSON(json_object, 'y', proto_element.position_y)
+    base_element.position_x = getNumberFromJSON(json_object, 'x', base_element.position_x)
+    base_element.position_y = getNumberFromJSON(json_object, 'y', base_element.position_y)
   }
 }
 export class ProtoElementPersistence extends BaseElementPersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
-
-  public toJSON(
+  public static toJSON(
     proto_element: Class_ProtoElement,
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -291,18 +103,41 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     //const attr_json = this._display.attributes.toJSON(this, null)
     if (Object.keys(proto_element.attributes).length > 0) {
       json_object['local'] = {} as Type_JSON
-      const toJsonMapping = this._attributes_mapping.getToJsonMapping();
       (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, any]>).forEach(([key, value]) => {
         if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value)) {
-          const jsonKey = toJsonMapping[key as string] || (key as string);
-          (json_object['local'] as Type_JSON)[jsonKey] = value
+          (json_object['local'] as Type_JSON)[key] = value
         }
       })
     }
 
     return json_object
   }
-  public fromJSON(
+
+  public static fromJSON_pre_0_9(
+    _base_element: ProtoElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _base_element: ProtoElementPersistence,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_91(
+    _base_element: ProtoElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON(
     version: number,
     proto_element: Class_ProtoElement,
     json_object: Type_JSON,
@@ -314,42 +149,18 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     // this._id = getStringFromJSON(json_object, 'id', this._id)
     proto_element['_is_visible'] = getBooleanFromJSON(json_object, 'is_visible', proto_element['_is_visible'])
 
-    const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
+    //const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
 
-    proto_element.style = style_id.map(s_id => proto_element.sankey.styles_dict[s_id])
+    //proto_element['_style'] = style_id.map(s_id => proto_element.sankey.styles_dict[s_id])
     if (!Array.isArray(json_object.style)) {
       const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-      proto_element.style = [proto_element.sankey.styles_dict[style_id]]
+      proto_element['_style'] = proto_element.sankey.styles_dict[style_id] ? [proto_element.sankey.styles_dict[style_id]] : []
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element.style = style_id.map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]
+      proto_element['_style'] = style_id.filter(s_id => proto_element.sankey.styles_dict[s_id]).map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]
     }
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
-      if (version <= 0.8) {
-        const fromJsonMapping = this._attributes_mapping.getFromJsonMapping_0_8_to_0_91()
-        Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-          if (json_object[jsonKey] !== undefined) {
-            const key = attrKey as keyof ConfigType
-            if (json_object[jsonKey] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
-              proto_element.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
-            }
-          }
-        })
-      }
-      if (version <= 0.91) {
-        const fromJsonMapping = this._attributes_mapping.getFromJsonMapping_0_91_to_0_92()
-        Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-          if (json_object[jsonKey] !== undefined) {
-            const key = attrKey as keyof ConfigType
-            if (json_object[jsonKey] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
-              proto_element.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
-            }
-          }
-        })
-      }
-
-      // Traitement des attributs directs (même nom)
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
         if (json_object[key as string] !== undefined) {
           if (json_object[key as string] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
@@ -363,10 +174,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
   }
 }
 export class NodeBasePersistence extends ProtoElementPersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
-  public toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
+  public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
     json_object['name'] = node_base.name
     if (node_base.sankey.default_style.position_type == 'parametric') {
@@ -376,7 +184,28 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     return json_object
   }
 
-  public fromJSON(version: number, node_base: Class_NodeBase, json_node_object: Type_JSON, kwargs?: Type_JSON) {
+  public static fromJSON_pre_0_9(
+    _base_element: Class_NodeBase,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _base_element: Class_NodeBase,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static Class_NodeBase(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON(version: number, node_base: Class_NodeBase, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
@@ -385,11 +214,7 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   }
 }
 export class ContainerPersistence extends NodeBasePersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
-
-  public toJSON(
+  public static toJSON(
     container: Class_ContainerElement,
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -402,61 +227,80 @@ export class ContainerPersistence extends NodeBasePersistence {
 
     return json_object
   }
+  public static fromJSON_pre_0_9(
+    _container: Class_ContainerElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _container: Class_ContainerElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_91(
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92 = {
+      'label_height': 'shape_min_height',
+      'label_width': 'shape_min_width',
+      //'has_fo': 'name_label_has_fo',
+      'content': 'name_label_fo_content'
+    } as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (json_object[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = container.getStyleProperty(key)
+        if (json_object[jsonKey] !== currentValue) {
+          container.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+    if (json_object['is_image']) {
+      // Image mode: configure as image container
+      container.attributes['name_label_is_visible'] = false
+      container.attributes['icon_is_visible'] = true
+      container.attributes['icon_is_image'] = true
+      container.attributes['icon_image_src'] = json_object['image_src']
+      container.attributes['icon_inside_vert'] = true
+      container.attributes['icon_inside_horiz'] = true
+      container.attributes['shape_border_visible'] = true
+      container.attributes['shape_color'] = 'white'
+      container.attributes['shape_border_radius'] = 5
+    } else {
+      // Text mode: configure as text container
+      container.attributes['name_label_has_fo'] = true
+      container.attributes['name_label_horiz'] = 'middle'
+      container.attributes['name_label_vert'] = 'middle'
+      container.attributes['name_label_inside_vert'] = true
+      container.attributes['name_label_inside_horiz'] = true
+      container.attributes['shape_border_visible'] = true
+      container.attributes['shape_color'] = 'white'
+      container.attributes['shape_border_radius'] = 5
+    }
+  }
 
   /**
    * Deserialize container from JSON
    */
-  public fromJSON(
+  public static fromJSON(
     version: number,
     container: Class_ContainerElement,
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
     super.fromJSON(version, container, json_object, kwargs)
-    if (version <= 0.91) {
-      // const fromJsonMapping_0_91_to_0_92 = this._attributes_mapping.getFromJsonMapping_0_91_to_0_92();
-      // Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
-      //   if (json_object[jsonKey] !== undefined) {
-      //     const key = attrKey as keyof ConfigType
-      //     const currentValue = container.getStyleProperty(key)
-
-      //     if (json_object[jsonKey] !== currentValue) {
-      //       container.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
-      //     }
-      //   }
-      // })
-      if (json_object['is_image']) {
-        // Image mode: configure as image container
-        container.attributes['name_label_is_visible'] = false
-        container.attributes['icon_is_visible'] = true
-        container.attributes['icon_is_image'] = true
-        container.attributes['icon_image_src'] = json_object['image_src']
-        container.attributes['icon_inside_vert'] = true
-        container.attributes['icon_inside_horiz'] = true
-        container.attributes['shape_border_visible'] = true
-        container.attributes['shape_color'] = 'white'
-        container.attributes['shape_border_radius'] = 5
-      } else {
-        // Text mode: configure as text container
-        container.attributes['name_label_has_fo'] = true
-        container.attributes['name_label_horiz'] = 'middle'
-        container.attributes['name_label_vert'] = 'middle'
-        container.attributes['name_label_inside_vert'] = true
-        container.attributes['name_label_inside_horiz'] = true
-        container.attributes['shape_border_visible'] = true
-        container.attributes['shape_color'] = 'white'
-        container.attributes['shape_border_radius'] = 5
-      }
-    }
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
-
     configKeys.forEach(key => {
       const jsonValue = json_object[key as string]
-
       if (jsonValue !== undefined) {
         const currentValue = container.getStyleProperty(key)
-
         if (jsonValue !== currentValue) {
           container.attributes[key] = jsonValue as ExtractAttributeValue<ConfigType[typeof key]>
         }
@@ -496,10 +340,7 @@ export class ContainerPersistence extends NodeBasePersistence {
 }
 
 export class LinkElementPersistence extends ProtoElementPersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
-  public toJSON(
+  public static toJSON(
     link: Class_LinkElement,
     json_object: Type_JSON,
     kwargs?: Type_JSON
@@ -525,18 +366,104 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // Out
     return json_object
   }
+  public static fromJSON_pre_0_9(
+    _link: Class_LinkElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
 
-  /**
-   * Possible kwargs :
-   * - matching_nodes_id: { [_: string]: string } as "id in JSON" -> "id in model"
-   * - matching_taggs_id: { [_: string]: string } as "id in JSON" -> "id in model"
-   * - matching_tags_id: { [_: string]: { [_: string]: string } }  as "id in JSON" -> "id in model", sorted per "group id in JOSN"
-   * @protected
-   * @param {Type_JSON} json_object
-   * @param {Type_JSON} [kwargs]
-   * @memberof Class_LinkElement
-   */
-  public fromJSON(
+  }
+
+  public static fromJSON_0_9(
+    _link: Class_LinkElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const local = json_object.local as Type_JSON
+    if (json_object.local !== undefined) {
+      if (local['label_position'] !== undefined) {
+        if (local['label_position'] == 'start') {
+          local['label_position'] = 'left'
+        } else if (local['label_position'] == 'end') {
+          local['label_position'] = 'right'
+        }
+      }
+      if (local['orthogonal_label_position'] !== undefined) {
+        if (local['orthogonal_label_position'] == 'above') {
+          local['orthogonal_label_position'] = 'top'
+        } else if (local['orthogonal_label_position'] == 'below') {
+          local['orthogonal_label_position'] = 'bottom'
+        }
+      }
+    }
+
+  }
+
+  public static fromJSON_0_91(
+    link: Class_LinkElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92 = {
+      'user_scale': 'shape_local_link_scale',
+      'curved': 'shape_is_curved',
+      'curvature': 'shape_curvature',
+      'recycling': 'shape_is_recycling',
+      'is_structur': 'shape_is_structure',
+      'orientation': 'shape_orientation',
+      'left_horiz_shift': 'shape_starting_curve',
+      'right_horiz_shift': 'shape_ending_curve',
+      'starting_tangeant': 'shape_starting_tangeant',
+      'ending_tangeant': 'shape_ending_tangeant',
+      'vert_shift': 'shape_middle_recycling',
+      'arrow': 'shape_is_arrow',
+      'arrow_size': 'shape_arrow_size',
+      'dashed': 'shape_is_dashed',
+      'color': 'shape_color',
+      'color_rule': 'shape_color_rule',
+      'opacity': 'shape_opacity',
+      // legacy
+      'label_visible': 'value_label_is_visible',
+      'font_family': 'value_label_font_family',
+      'label_font_size': 'value_label_font_size',
+      'text_color': 'value_label_color',
+      'label_position': 'value_label_horiz',
+      'orthogonal_label_position': 'value_label_vert',
+      'label_on_path': 'value_label_on_path',
+      'label_pos_auto': 'value_label_pos_auto',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert'
+
+    } as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+    const was_gradient = getBooleanFromJSON(json_object, 'gradient', false) as boolean
+    if (was_gradient) {
+      link.attributes['shape_color_rule'] = 'gradient'
+    }
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (json_object[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = link.getStyleProperty(key)
+        if (json_object[jsonKey] !== currentValue) {
+          link.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+  }
+
+  public static fromJSON(
     version: number,
     link: Class_LinkElement,
     json_object: Type_JSON,
@@ -560,15 +487,8 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     link.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
   }
 }
-export class NodeElementPersistence extends ProtoElementPersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
-
-  /**
-   * Convert node to JSON
-   */
-  public toJSON(node: Class_NodeElement, json_object: Type_JSON, kwargs?: Type_JSON) {
+export class NodeElementPersistence extends NodeBasePersistence {
+  public static toJSON(node: Class_NodeElement, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node, json_object, kwargs)
     node._nodeDimensionsManager.toJSON(json_object)
     if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
@@ -609,8 +529,8 @@ export class NodeElementPersistence extends ProtoElementPersistence {
     }
     return json_object
   }
-  // 🔄 LINKS JSON METHODS - RÉINTÉGRÉS DIRECTEMENT
-  public linksFromJSON(
+
+  public static linksFromJSON(
     version: number,
     node: Class_NodeElement,
     json_node_object: Type_JSON,
@@ -642,34 +562,96 @@ export class NodeElementPersistence extends ProtoElementPersistence {
         }) as Class_LinkElement[]
     }
   }
-  /**
-   * Assign to node implementation values from json
-   */
-  public fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
+  public static fromJSON_pre_0_9(
+    _node: Class_NodeElement,
+    _json_object: Type_JSON,
+    _$kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _node: Class_NodeElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+
+  }
+
+
+  public static fromJSON_0_91(
+    node: Class_NodeElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92 = {
+      // Name label legacy
+      'label_visible': 'name_label_is_visible',
+      'font_family': 'name_label_font_family',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      'label_background': 'name_label_background',
+      'label_background_color': 'name_label_background_color',
+      'label_box_width': 'name_label_box_width',
+
+      // Value label legacy
+      'show_value': 'value_label_is_visible',
+      'value_font_size': 'value_label_font_size',
+      'label_horiz_valeur': 'value_label_horiz',
+      'label_vert_valeur': 'value_label_vert',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+
+      // Shape legacy (fusion avec MAIN_MAPPING)
+      'shape': 'shape_type',
+      'node_width': 'shape_min_width',
+      'node_height': 'shape_min_height',
+      'color': 'shape_color',
+      'opacity': 'shape_opacity',
+      'colorSustainable': 'shape_color_sustainable'
+    } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (json_object[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = node.getStyleProperty(key)
+        if (json_object[jsonKey] !== currentValue) {
+          node.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+  }
+
+  public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node, json_node_object, kwargs)
-    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
-    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
 
     node['_tooltip_text'] = getStringFromJSON(json_node_object, 'tooltip_text', '')
 
     // Délégation aux managers
-    node._nodeTagsManager.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
+    node._nodeTagsManager.fromJSON(json_node_object)
   }
 }
 
 
 export class LegendPersistence extends ProtoElementPersistence {
-  constructor(attributes_mapping: AttributeMappings) {
-    super(attributes_mapping)
-  }
 
-  public toJSON(
+  public static toJSON(
     legend: ClassTemplate_Legend,
     json_object: Type_JSON
   ) {
     json_object['legend'] = {}
     const json_legend = json_object['legend']
-    super.toJSON(legend, json_legend)
+    ProtoElementPersistence.toJSON(legend, json_legend)
     //if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
     if (!legend.masked) json_legend['mask_legend'] = legend.masked
     if (legend.position_dx) json_legend['legend_dx'] = legend.position_dx
@@ -687,14 +669,37 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
     return json_object
   }
+  public static fromJSON_pre_0_9(
+    _legend: ClassTemplate_Legend,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
 
-  public fromJSON(
+  public static fromJSON_0_9(
+    _legend: ClassTemplate_Legend,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_91(
+    _legend: ClassTemplate_Legend,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON(
     version: number,
     legend: ClassTemplate_Legend,
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
-    super.fromJSON(version, legend, json_object, kwargs)
+    ProtoElementPersistence.fromJSON(version, legend, json_object, kwargs)
     const json_legend = getJSONFromJSON(json_object, 'legend', {})
 
     // const legend_position = getStringListFromJSON(
@@ -724,11 +729,118 @@ export class LegendPersistence extends ProtoElementPersistence {
 }
 
 export class StyledPersistence {
-  protected _attributes_mapping: AttributeMappings
-  constructor(attributes_mapping: AttributeMappings) {
-    this._attributes_mapping = attributes_mapping
+  public static fromJSON_pre_0_9(
+    _style: Class_ElementStyle,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
-  public toJSON(style: Class_ElementStyle): Type_JSON {
+  public static fromJSON_0_9(
+    _style: Class_ElementStyle,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+  public static fromJSON_0_91(
+    style: Class_ElementStyle,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92 : { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      // Nodes
+        'user_scale': 'shape_local_link_scale',
+      'curved': 'shape_is_curved',
+      'curvature': 'shape_curvature',
+      'recycling': 'shape_is_recycling',
+      'is_structur': 'shape_is_structure',
+      'orientation': 'shape_orientation',
+      'left_horiz_shift': 'shape_starting_curve',
+      'right_horiz_shift': 'shape_ending_curve',
+      'starting_tangeant': 'shape_starting_tangeant',
+      'ending_tangeant': 'shape_ending_tangeant',
+      'vert_shift': 'shape_middle_recycling',
+      'arrow': 'shape_is_arrow',
+      'arrow_size': 'shape_arrow_size',
+      'dashed': 'shape_is_dashed',
+      'color': 'shape_color',
+      'color_rule': 'shape_color_rule',
+      'opacity': 'shape_opacity',
+      // legacy
+      //'label_visible': 'value_label_is_visible',
+      //'font_family': 'value_label_font_family',
+      'label_font_size': 'value_label_font_size',
+      'text_color': 'value_label_color',
+      'label_position': 'value_label_horiz',
+      'orthogonal_label_position': 'value_label_vert',
+      'label_on_path': 'value_label_on_path',
+      'label_pos_auto': 'value_label_pos_auto',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      //'font_size': 'name_label_font_size',
+      //'uppercase': 'name_label_uppercase',
+      //'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      // Links
+      // Name label legacy
+      'label_visible': 'name_label_is_visible',
+      'font_family': 'name_label_font_family',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      //'italic': 'name_label_italic',
+      //'label_color': 'name_label_color',
+      //'label_horiz': 'name_label_horiz',
+      //'label_vert': 'name_label_vert',
+      'label_background': 'name_label_background_visible',
+      'label_background_color': 'name_label_background_color',
+      'label_box_width': 'name_label_box_width',
+
+      // Value label legacy
+      'show_value': 'value_label_is_visible',
+      'value_font_size': 'value_label_font_size',
+      'label_horiz_valeur': 'value_label_horiz',
+      'label_vert_valeur': 'value_label_vert',
+      //'to_precision': 'value_label_scientific_notation',
+      //'scientific_precision': 'value_label_significant_digits',
+      //'nb_scientific_precision': 'value_label_nb_significant_digits',
+      //'custom_digit': 'value_label_custom_digit',
+      //'nb_digit': 'value_label_nb_digit',
+      //'label_unit_visible': 'value_label_unit_visible',
+      //'label_unit': 'value_label_unit',
+      //'label_unit_factor': 'value_label_unit_factor',
+
+      // Shape legacy (fusion avec MAIN_MAPPING)
+      'shape': 'shape_type',
+      'node_width': 'shape_min_width',
+      'node_height': 'shape_min_height',
+      //'color': 'shape_color',
+      //'opacity': 'shape_opacity',
+      'colorSustainable': 'shape_color_sustainable'
+    }
+
+    const default_style = style.drawing_area.sankey.default_style
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (!ALL_ATTRIBUTES_CONFIG[attrKey]) {
+        return
+      }
+      if (default_style && json_object[jsonKey] !== default_style[attrKey as keyof Class_ElementStyle]) {
+        style['_storage'][attrKey] = json_object[jsonKey]
+      } else if (json_object[jsonKey] !== ALL_ATTRIBUTES_CONFIG[attrKey].default) {
+        style['_storage'][attrKey] = json_object[jsonKey]
+      }
+    })
+  }
+
+  public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     // const jsonMapping = this._attributeMappings.getToJsonMapping()
     // Object.entries(this).forEach(([key, value]) => {
@@ -740,33 +852,42 @@ export class StyledPersistence {
     return json_object
   }
 
-  public fromJSON(
-    version: number, style: Class_ElementStyle, json_local_object: Type_JSON
+  public static fromJSON(
+    version: number, style: Class_ElementStyle, json_object: Type_JSON, kwargs?: Type_JSON
   ) {
+
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      this.fromJSON_pre_0_9(style, json_object, kwargs)
+    }
+
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.91)
+    ) {
+      this.fromJSON_0_9(style, json_object, kwargs)
+    }
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.92)
+    ) {
+      this.fromJSON_0_91(style, json_object, kwargs)
+    }
+
+    const default_style = style.drawing_area.sankey.default_style
     Object.keys(style['_storage']).forEach(key => {
       if (style['_storage'][key] !== undefined) {
         style['_customisable_attribute'][key] = true
       }
     })
-    // const fromJsonMapping = this._attributeMappings.getFromJsonMapping()
-    // // Mapping principal depuis JSON (inclut OSP et legacy)
-    // Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-    //   if (this._default_style && json_local_object[jsonKey] !== this._default_style[attrKey as keyof Class_ElementStyle]) {
-    //     this._storage[attrKey] = json_local_object[jsonKey]
-    //   } else if (json_local_object[jsonKey] !== this._config[attrKey].default) {
-    //     this._storage[attrKey] = json_local_object[jsonKey]
-    //   }
-    // }
-    // )
-    const default_style = style.drawing_area.sankey.default_style
-
-    // Attributs directs (même nom)
     Object.keys(style['_config']).forEach(key => {
-      if (json_local_object[key] !== undefined) {
-        if (default_style && json_local_object[key] !== default_style[key as keyof Class_ElementStyle]) {
-          style['_storage'][key] = json_local_object[key]
-        } else if (json_local_object[key] !== style['_config'][key].default) {
-          style['_storage'][key] = json_local_object[key]
+      if (json_object[key] !== undefined) {
+        if (default_style && json_object[key] !== default_style[key as keyof Class_ElementStyle]) {
+          style['_storage'][key] = json_object[key]
+        } else if (json_object[key] !== style['_config'][key].default) {
+          style['_storage'][key] = json_object[key]
         }
       }
     })
@@ -775,7 +896,105 @@ export class StyledPersistence {
 
 
 export class SankeyPersistence {
-  public toJSON(
+  private static load_containers(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      container: Class_ContainerElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
+    Object.entries(json_container_object)
+      .forEach(([_, container_json]) => {
+        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_)
+        fromJSON(container, container_json as Type_JSON, kwargs)
+      })
+  }
+
+  private static load_nodes(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      node: Class_NodeElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+    const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
+    Object.entries(json_node_object)
+      .forEach(([_, node_json]) => {
+        // Get or Create a node
+        const node_id = _
+        const node = sankey.nodes_dict[node_id] ?? sankey.addNewNode(node_id, node_id)
+        // Set node value to node from JSON
+        fromJSON(
+          node,
+          node_json as Type_JSON,
+          kwargs)
+        // Order links io position in each nodes
+        NodeElementPersistence.linksFromJSON(
+          0, // TODO
+          node,
+          getJSONFromJSON(json_node_object, node.id, {}),
+          {}
+        )
+        // Set dimensions
+        node.dimensionsFromJSON(
+          node_json as Type_JSON,
+          {},
+          {},
+          {}
+        )
+      })
+  }
+
+  private static load_links(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      link: Class_LinkElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+
+    const json_link_object = getJSONFromJSON(json_object, 'links', {})
+    Object.entries(json_link_object)
+      .forEach(([_, link_json]) => {
+        // Get related nodes id
+        let source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
+        let target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
+        if (source_node_id && target_node_id) {
+          // Get or create related nodes
+          source_node_id = source_node_id
+          const source = sankey.nodes_dict[source_node_id] ?? sankey.addNewNode(source_node_id, source_node_id)
+          target_node_id = target_node_id
+          const target = sankey.nodes_dict[target_node_id] ?? sankey.addNewNode(target_node_id, target_node_id)
+          // Get or create link
+          const link_id = _
+          const link = sankey.links_dict[link_id] ?? sankey.addNewLinkWithId(link_id, source, target)
+          // Set link value to link from JSON
+          fromJSON(
+            link,
+            link_json as Type_JSON,
+            kwargs
+          )
+        }
+      })
+    let has_data = false
+    sankey.links_list.forEach(l => has_data = has_data || l.has_data)
+    if (!has_data) {
+      sankey.links_list.forEach(l => l.set_only_data())
+    }
+  }
+
+
+  public static toJSON(
     sankey: Class_Sankey,
     kwargs?: Type_JSON
   ) {
@@ -787,7 +1006,7 @@ export class SankeyPersistence {
     const json_object_dataTags = {} as Type_JSON
     const json_object_styles = {} as Type_JSON
     // const json_object_styles_links = {} as Type_JSON
-    const json_object_styles_containers = {} as Type_JSON
+    //const json_object_styles_containers = {} as Type_JSON
     const json_object_nodes = {} as Type_JSON
     const json_object_links = {} as Type_JSON
     // Id
@@ -818,10 +1037,9 @@ export class SankeyPersistence {
       })
     }
 
-    const style_persistence = new StyledPersistence(new AttributeMappings)
     json_object['style'] = json_object_styles
     sankey.styles_list.forEach(style => {
-      json_object_styles[style.id] = style_persistence.toJSON(style);
+      json_object_styles[style.id] = StyledPersistence.toJSON(style);
       (json_object_styles[style.id] as Type_JSON)['name'] = style.name
     })
     // json_object['style_link'] = json_object_styles_links
@@ -848,11 +1066,10 @@ export class SankeyPersistence {
 
     sankey.remove_child_links()
 
-    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
     nodes_list
       .forEach(node => {
         if (!(kwargs && kwargs['keep_siblings']) && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
-          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = node_persistence.toJSON(
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = NodeElementPersistence.toJSON(
             node.sibling,
             {
               'only_visible_elements': (kwargs && kwargs['save_only_visible_elements']) ?? false,
@@ -861,18 +1078,17 @@ export class SankeyPersistence {
           return
         }
         json_object_nodes[node.id] = {}
-        json_object_nodes[node.id] = node_persistence.toJSON(node, json_object_nodes[node.id] as Type_JSON, {
+        json_object_nodes[node.id] = NodeElementPersistence.toJSON(node, json_object_nodes[node.id] as Type_JSON, {
           'only_visible_elements': (kwargs && kwargs['save_only_visible_elements']) ?? false,
           'save_only_elements_with_tags': (kwargs && kwargs['save_only_elements_with_tags']) ?? false
         })
       })
-    const cont_persistence = new ContainerPersistence(new ContainerAttributeMappings)
     if (sankey.containers_list.length > 0) {
       const json_object_labels = {} as Type_JSON
       json_object['labels'] = json_object_labels
       sankey.containers_list.forEach(obj => {
         json_object_labels[obj.id] = {}
-        cont_persistence.toJSON(obj, json_object_labels[obj.id] as Type_JSON)
+        ContainerPersistence.toJSON(obj, json_object_labels[obj.id] as Type_JSON)
       })
     }
     // Add links
@@ -882,13 +1098,12 @@ export class SankeyPersistence {
         sankey.selected_node_tags_links_list :
         ((kwargs && kwargs['save_only_visible_elements']) ? sankey.visible_links_list : sankey.links_list)
     )
-    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
     let has_results = false
     links_list.forEach(l => has_results = has_results || l.has_result)
     links_list.filter(l => !l.is_multi_link)
       .forEach(link => {
         json_object_links[link.id] = {}
-        json_object_links[link.id] = link_persistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })
+        json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })
       })
 
 
@@ -899,6 +1114,74 @@ export class SankeyPersistence {
     // Out
     return json_object
   }
+  public static fromJSON_pre_0_9(
+    _sankey: Class_Sankey,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_0_9,
+      kwargs
+    )
+  }
+
+  public static fromJSON_0_91(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    ['style_link', 'style_node', 'style_zdt'].forEach(style_type => {
+      if (json_object[style_type] !== undefined) {
+        Object.entries(json_object[style_type])
+          .forEach(([style_id, style_json]) => {
+            const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+            StyledPersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+            new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+            sankey._styles[style_id] = new_style
+          })
+      }
+    })
+
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_0_91,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_0_91,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_0_91,
+      kwargs
+    )
+  }
 
   /**
    * Setting value of sankey and substructur from JSON
@@ -906,30 +1189,21 @@ export class SankeyPersistence {
    * @param {{[_:string]:any} json_object
    * @memberof ClassTemplate_Legend
   */
-  public fromJSON(
+  public static fromJSON(
     version: number,
     sankey: Class_Sankey,
     json_object: Type_JSON
   ) {
+
     // Id
     sankey.id = getStringFromJSON(json_object, 'id', sankey.id)
     // If we use json object only for updateing layout,
     // we need to find correspondances for tags, nodes and links ids
     // from input JSON to this Sankey
-    const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
-    const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
-    const matching_nodes_id: { [_: string]: string } = {}
-    const matching_links_id: { [_: string]: string } = {}
-    // if (match_and_update) {
-    //   sankey.matchAndModifyJSONIds(
-    //     json_object,
-    //     matching_taggs_id,
-    //     matching_tags_id,
-    //     matching_nodes_id,
-    //     matching_links_id
-    //   )
-    // }
-    const style_persistence = new StyledPersistence(new AttributeMappings)
+    // const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
+    // const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
+    // const matching_nodes_id: { [_: string]: string } = {}
+    // const matching_links_id: { [_: string]: string } = {}
     // First read styles
     if (json_object['style_element'] !== undefined) {
       // Set node styles from json data
@@ -938,7 +1212,7 @@ export class SankeyPersistence {
           // Create a node style
           const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
           // Set node style value to node from JSON
-          style_persistence.fromJSON(version, new_style, style_json as Type_JSON)
+          StyledPersistence.fromJSON(version, new_style, style_json as Type_JSON)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add node style to sankey
           sankey._styles[style_id] = new_style
@@ -951,12 +1225,12 @@ export class SankeyPersistence {
       Object.entries(json_object[json_entry])
         .forEach(([_, tagg_json]) => {
           // Get or Create a node tag group
-          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg_id = _
           const tagg = sankey._node_taggs[tagg_id] ?? sankey.addNodeTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
           // Set node tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
-            matching_tags_id[json_entry][_] ?? {}
+            {}
           )
         })
       // Create default style for 'Type de noeud' if they don't exist
@@ -972,12 +1246,13 @@ export class SankeyPersistence {
       Object.entries(json_object[json_entry])
         .forEach(([_, tagg_json]) => {
           // Get or Create a flux tag group
-          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg_id = _
           const tagg = sankey._flux_taggs[tagg_id] ?? sankey.addFluxTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
-            matching_tags_id[json_entry][_] ?? {})
+            {}
+          )
         })
     }
     json_entry = 'dataTags'
@@ -986,12 +1261,13 @@ export class SankeyPersistence {
       Object.entries(json_object[json_entry])
         .forEach(([_, tagg_json]) => {
           // Get or Create a flux tag group
-          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg_id = _
           const tagg = sankey._data_taggs[tagg_id] ?? sankey.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
           // Set flux tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
-            matching_tags_id[json_entry][_] ?? {})
+            {}
+          )
         })
     }
     json_entry = 'levelTags'
@@ -1000,95 +1276,180 @@ export class SankeyPersistence {
       Object.entries(json_object[json_entry])
         .forEach(([_, tagg_json]) => {
           // Get or create a level tag group
-          const tagg_id = matching_taggs_id[json_entry][_] ?? _
+          const tagg_id = _
           const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
           // Set level tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
-            matching_tags_id[json_entry][_] ?? {})
+            {}
+          )
         })
     }
 
     if (Object.keys(sankey._level_taggs).length > 1) {
       sankey.removeTagGroupWithId('level_taggs', 'Primaire')
     }
-    // Then read links
-    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
-    const json_link_object = getJSONFromJSON(json_object, 'links', {})
-    Object.entries(json_link_object)
-      .forEach(([_, link_json]) => {
-        // Get related nodes id
-        let source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
-        let target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
-        if (source_node_id && target_node_id) {
-          // Get or create related nodes
-          source_node_id = matching_nodes_id[source_node_id] ?? source_node_id
-          const source = sankey.nodes_dict[source_node_id] ?? sankey.addNewNode(source_node_id, source_node_id)
-          target_node_id = matching_nodes_id[target_node_id] ?? target_node_id
-          const target = sankey.nodes_dict[target_node_id] ?? sankey.addNewNode(target_node_id, target_node_id)
-          // Get or create link
-          const link_id = matching_links_id[_] ?? _
-          const link = sankey.links_dict[link_id] ?? sankey.addNewLinkWithId(link_id, source, target)
-          // Set link value to link from JSON
-          link_persistence.fromJSON(
-            version,
-            link,
-            link_json as Type_JSON,
-            {
-              'matching_taggs_id': matching_taggs_id['fluxTags'] ?? {},
-              'matching_tags_id': matching_tags_id['fluxTags'] ?? {}
-            }
-          )
-        }
-      })
-    let has_data = false
-    sankey.links_list.forEach(l => has_data = has_data || l.has_data)
-    if (!has_data) {
-      sankey.links_list.forEach(l => l.set_only_data())
-    }
-    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
-    // Then read nodes
-    const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
-    Object.entries(json_node_object)
-      .forEach(([_, node_json]) => {
-        // Get or Create a node
-        const node_id = matching_nodes_id[_] ?? _
-        const node = sankey.nodes_dict[node_id] ?? sankey.addNewNode(node_id, node_id)
-        // Set node value to node from JSON
-        node_persistence.fromJSON(
-          version,
-          node,
-          node_json as Type_JSON,
-          {
-            'matching_taggs_id': { ...matching_taggs_id['nodeTags'], ...matching_taggs_id['levelTags'] },
-            'matching_tags_id': { ...matching_tags_id['nodeTags'], ...matching_tags_id['levelTags'] }
-          })
-        // Order links io position in each nodes
-        node_persistence.linksFromJSON(
-          version,
-          node,
-          getJSONFromJSON(json_node_object, node.id, {}),
-          matching_links_id
-        )
-        // Set dimensions
-        node.dimensionsFromJSON(
-          node_json as Type_JSON,
-          matching_nodes_id,
-          matching_taggs_id['levelTags'] ?? {},
-          matching_tags_id['levelTags'] ?? {}
-        )
-      })
-
-    const container_persistence = new ContainerPersistence(new ContainerAttributeMappings)
-    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    Object.entries(json_container_object)
-      .forEach(([_, container_json]) => {
-        const container = sankey.addNewContainer(_)
-        container_persistence.fromJSON(version, container, container_json as Type_JSON)
-      })
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      (link: Class_LinkElement, link_json: Type_JSON, kwargs) => LinkElementPersistence.fromJSON(
+        version,
+        link,
+        link_json as Type_JSON,
+        kwargs
+      )
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      (node: Class_NodeElement, node_json: Type_JSON, kwargs) => NodeElementPersistence.fromJSON(
+        version,
+        node,
+        node_json as Type_JSON,
+        kwargs
+      )
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      (container: Class_ContainerElement, container_json: Type_JSON, kwargs) => ContainerPersistence.fromJSON(
+        version,
+        container,
+        container_json as Type_JSON,
+        kwargs
+      )
+    )
 
     sankey.create_child_links()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
+  }
+}
+
+export class DrawingAreaPersistence {
+  public static toJSON(
+    drawing_area: Class_DrawingArea,
+    kwargs?: Type_JSON
+  ) {
+    // Create json struct
+    const json_object = {} as Type_JSON
+    // Add current version of app
+    json_object['version'] = drawing_area.application_data.version
+    // Dump DA attributes
+    json_object['height'] = drawing_area.height
+    json_object['width'] = drawing_area.width
+
+    if (drawing_area.grid_visible != default_grid_visible) json_object['grid_visible'] = drawing_area.grid_visible
+    if (drawing_area.grid_size != default_grid_size) json_object['grid_square_size'] = drawing_area.grid_size
+    if (drawing_area.scale != default_scale) json_object['user_scale'] = drawing_area._scale
+    if (drawing_area.color != default_background_color) json_object['couleur_fond_sankey'] = drawing_area.color
+    if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
+    if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
+    if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
+    if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
+    if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
+    if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
+
+    if (drawing_area.show_background_image) json_object['show_background_image'] = drawing_area.show_background_image
+    if (drawing_area.show_background_image) json_object['background_image'] = drawing_area.background_image
+
+    const out = {
+      ...json_object,
+      ...LegendPersistence.toJSON(drawing_area.legend, json_object),
+      ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
+    }
+
+    out['order_g_elements'] = drawing_area.list_g_element // Order elements by id 
+    return out
+  }
+
+  public static fromJSON_pre_0_9(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    console.log('convert_data_legacy')
+    convert_data_legacy(json_object)
+    drawing_area.sankey.styles_dict['default'].shape_color_rule = 'auto'
+
+    Object.values(json_object.style_node).forEach(s => {
+      if (s.position == 'parametric') s.position = 'absolute'
+    })
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_9(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_91(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
+    SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
+  }
+
+  public static fromJSON(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      this.fromJSON_pre_0_9(drawing_area, json_object, kwargs)
+    }
+
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.91)
+    ) {
+      this.fromJSON_0_9(drawing_area, json_object, kwargs)
+    }
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.92)
+    ) {
+      this.fromJSON_0_91(drawing_area, json_object, kwargs)
+    }
+
+    drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
+    drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
+    drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
+    drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)
+    drawing_area['_grid_visible'] = getBooleanFromJSON(json_object, 'grid_visible', drawing_area.grid_visible)
+    drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)
+    drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
+    drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
+    drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
+    drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure
+    drawing_area['_width'] = getNumberFromJSON(json_object, 'width', drawing_area.width)
+    drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
+
+    drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
+    drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+
+    LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
+    SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
+
+    drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
+
+    drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
+    drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+    drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
+
   }
 }

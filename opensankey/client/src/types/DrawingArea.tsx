@@ -24,26 +24,18 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
-
-// Local types
-import {
-  Type_JSON,
-  Type_Structure,
-  default_main_sankey_id,
-  getBooleanFromJSON,
-  getNumberFromJSON,
-  getNumberOrUndefinedFromJSON,
-  getStringFromJSON,
-  getStringListFromJSON,
-  getStringOrUndefinedFromJSON,
-} from '../types/Utils'
+import { Type_JSON, Type_Structure, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
   default_black_color,
-  default_grid_color
+  default_DA_marging,
+  default_grid_color,
+  default_grid_size,
+  default_grid_visible,
+  default_scale,
+  initial_show_structure
 } from '../Elements/ElementsAttributesConfig'
 import {
   Class_NodeElement,
@@ -53,7 +45,6 @@ import {
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { convert_data_legacy, convert_pre_v_0_91 } from '../Persistence/Legacy'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -64,7 +55,9 @@ import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
-import { AttributeMappings, LegendPersistence, LinkAttributeMappings, LinkElementPersistence, NodeAttributeMappings, NodeElementPersistence, SankeyPersistence } from '../Persistence/SankeyPersistence'
+import {
+  LinkElementPersistence, NodeElementPersistence, SankeyPersistence
+} from '../Persistence/SankeyPersistence'
 
 
 declare const window: Window &
@@ -83,23 +76,6 @@ function sortElementByIdOrder(
   list: string[]) {
   return list.indexOf(el_a.id) - list.indexOf(el_b.id)
 }
-// CONSTANTS ****************************************************************************
-
-const initial_show_structure = 'free_value'
-const default_grid_size = 50
-const default_grid_visible = true
-const default_scale = 50
-const default_DA_marging = 50
-
-// CONSTANTS ****************************************************************************
-
-
-// CLASS DRAWING AREA *******************************************************************
-/**
- * Class to deal with drawing area properties and display
- *
- * @class Class_DrawingArea
- */
 export class Class_DrawingArea {
   public application_data: Class_ApplicationData
   public nodePositioning: NodePositioning
@@ -315,123 +291,6 @@ export class Class_DrawingArea {
     this.nodePositioning.arrangeTrade(true)
   }
 
-
-
-
-  // SAVING METHODS =====================================================================
-
-  /**
-   * Convert current drawing area & all substructure as JSON data
-   * @param {Type_JSON} [kwargs]
-   * @return {*}
-   * @memberof Class_DrawingArea
-   */
-  public toJSON(
-    kwargs?: Type_JSON
-  ) {
-    // Create json struct
-    const json_object = {} as Type_JSON
-    // Add current version of app
-    json_object['version'] = this.application_data.version
-    // Dump DA attributes
-    json_object['height'] = this._height
-    json_object['width'] = this._width
-
-    if (this._grid_visible != default_grid_visible) json_object['grid_visible'] = this._grid_visible
-    if (this._grid_size != default_grid_size) json_object['grid_square_size'] = this._grid_size
-    if (this._scale != default_scale) json_object['user_scale'] = this._scale
-    if (this._color != default_background_color) json_object['couleur_fond_sankey'] = this._color
-    if (this._grid_color != default_grid_color) json_object['default_grid_color'] = this._grid_color
-    if (this._maximum_flux) json_object['maximum_flux'] = this._maximum_flux
-    if (this._minimum_flux) json_object['minimum_flux'] = this._minimum_flux
-    if (this._filter_label > 0) json_object['filter_label'] = this._filter_label
-    if (this._filter_link_value > 0) json_object['filter_link_value'] = this._filter_link_value
-    if (this._type_data != initial_show_structure) json_object['show_structure'] = this._type_data
-    if (this._magnetic_nodes) json_object['magnetic_nodes'] = this._magnetic_nodes
-
-    if (this._show_background_image) json_object['show_background_image'] = this._show_background_image
-    if (this._show_background_image) json_object['background_image'] = this._background_image
-
-    const legend_persistence = new LegendPersistence(new AttributeMappings)
-    const sankey_persistence = new SankeyPersistence
-    // Dump with json of contained elements
-    const out = {
-      ...json_object,
-      ...legend_persistence.toJSON(this._legend,json_object),
-      ...sankey_persistence.toJSON(this._sankey,kwargs)
-    }
-
-    out['order_g_elements'] = this._list_g_element_id // Order elements by id 
-    return out
-  }
-
-  /**
-   * Export current drawing area & its contents as json struct
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_DrawingArea
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    const version = getStringOrUndefinedFromJSON(json_object, 'version')
-    // Only legacy convert old sankey
-    if (
-      (version === undefined) ||
-      (Number(version) < 0.9)
-    ) {
-      console.log('convert_data_legacy')
-      convert_data_legacy(json_object)
-      this.sankey.styles_dict['default'].shape_color_rule = 'auto'
-
-      Object.values(json_object.style_node).forEach(s => {
-        if (s.position == 'parametric') s.position = 'absolute'
-      })
-      console.log(json_object.version)
-    }
-
-    if (
-      (version !== undefined) &&
-      (Number(version) < 0.91)
-    ) {
-      console.log('convert_pre_v_0_91')
-      convert_pre_v_0_91(json_object)
-      console.log(json_object.version)
-    }
-
-    this.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
-
-    // Update direct attributes
-    this._color = getStringFromJSON(json_object, 'couleur_fond_sankey', this._color)
-    this._filter_label = getNumberFromJSON(json_object, 'filter_label', 0)
-    this._filter_link_value = getNumberFromJSON(json_object, 'filter_link_value', 0)
-    this._grid_size = getNumberFromJSON(json_object, 'grid_square_size', this._grid_size)
-    this._grid_visible = getBooleanFromJSON(json_object, 'grid_visible', this._grid_visible)
-    this._height = getNumberFromJSON(json_object, 'height', this._height)
-    this._maximum_flux = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
-    this._minimum_flux = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
-    this._scale = getNumberFromJSON(json_object, 'user_scale', this._scale)
-    this._scaleValueToPx.domain([0, this._scale])
-    this._type_data = getStringFromJSON(json_object, 'show_structure', this._type_data) as Type_Structure
-    this._width = getNumberFromJSON(json_object, 'width', this._width)
-    this._magnetic_nodes = getBooleanFromJSON(json_object, 'magnetic_nodes', this._magnetic_nodes)
-
-    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
-    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
-
-    const legend_persistence = new LegendPersistence(new AttributeMappings)
-    legend_persistence.fromJSON(+version!,this._legend, json_object)
-    const sankey_persistence = new SankeyPersistence
-    sankey_persistence.fromJSON(+version!,this.sankey, json_object)
-
-    this._list_g_element_id = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element_id)
-
-    this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
-    this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
-    this.name = getStringFromJSON(json_object, 'name', this.name)
-
-  }
 
   public draw(
   ) {
@@ -752,22 +611,20 @@ export class Class_DrawingArea {
     const json_hist_links: { [_: string]: Type_JSON } = {}
     const json_hist_links_order: { [_: string]: string[] } = {}
 
-    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
-    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
     // --- Selected nodes
     //if (deleteSelectedNodes) {
     this.selected_nodes_list
       .forEach(node => {
         json_hist_nodes[node.id] = {}
-        node_persistence.toJSON(node, json_hist_nodes[node.id])
+        NodeElementPersistence.toJSON(node, json_hist_nodes[node.id])
         node.input_links_list.forEach(link => {
           json_hist_links[link.id] = {}
-          link_persistence.toJSON(link, json_hist_links[link.id])
+          LinkElementPersistence.toJSON(link, json_hist_links[link.id])
           json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
         })
         node.output_links_list.forEach(link => {
           json_hist_links[link.id] = {}
-          link_persistence.toJSON(link, json_hist_links[link.id])
+          LinkElementPersistence.toJSON(link, json_hist_links[link.id])
           json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
         })
       })
@@ -776,7 +633,7 @@ export class Class_DrawingArea {
     //if (deleteSelectedLinks) {
     this.selected_links_list.forEach(link => {
       json_hist_links[link.id] = {}
-      link_persistence.toJSON(link, json_hist_links[link.id])
+      LinkElementPersistence.toJSON(link, json_hist_links[link.id])
       json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
       json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
     })
@@ -788,8 +645,7 @@ export class Class_DrawingArea {
         'nodes': json_hist_nodes,
         'links': json_hist_links
       }
-      const sankey_persistence = new SankeyPersistence
-      sankey_persistence.fromJSON(+this.application_data.version, _.sankey,json_hist)
+      SankeyPersistence.fromJSON(+this.application_data.version, _.sankey, json_hist)
       Object.entries(json_hist_links_order).forEach(ent => _.sankey.nodes_dict[ent[0]].reorganizeIOFromListIds(ent[1]))//Organise correctly nodes IO
       _.sankey.draw()
     }
@@ -1505,8 +1361,6 @@ export class Class_DrawingArea {
   private eventReleasedClick(
     event: MouseEvent
   ) {
-    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
-    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
     // EDITION MODE =============================================================
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
@@ -1536,7 +1390,7 @@ export class Class_DrawingArea {
             this.sankey.nodes_dict[node_id]
           )
           ghost_link_json = {}
-          link_persistence.toJSON(l, ghost_link_json) //For undo/redo
+          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
@@ -1554,7 +1408,7 @@ export class Class_DrawingArea {
             this._ghost_link.target as Class_NodeElement
           )
           ghost_link_json = {}
-          link_persistence.toJSON(l, ghost_link_json) //For undo/redo
+          LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
 
           this.purgeSelectionOfElement(false)
@@ -1569,7 +1423,7 @@ export class Class_DrawingArea {
           wasGhostSrc = true
           // For redo : save ghost source in json to recreate it correctly at redo
           ghost_src_json = {}
-          node_persistence.toJSON(this._ghost_link_source, ghost_src_json)
+          NodeElementPersistence.toJSON(this._ghost_link_source, ghost_src_json)
         }
 
         if (this._ghost_link_target) {
@@ -1577,7 +1431,7 @@ export class Class_DrawingArea {
           wasGhostTrgt = true
           // For redo : save ghost target in json to recreate it correctly at redo
           ghost_trgt_json = {}
-          node_persistence.toJSON(this._ghost_link_target, ghost_trgt_json)
+          NodeElementPersistence.toJSON(this._ghost_link_target, ghost_trgt_json)
 
         }
 
@@ -1606,19 +1460,19 @@ export class Class_DrawingArea {
             // Recreate delete element in undo
             if (ghost_trgt_json) {
               const new_n = this.sankey.addNewNode(ghost_trgt_json['id'] as string, ghost_trgt_json['name'] as string)
-              node_persistence.fromJSON(+this.application_data.version, new_n, ghost_trgt_json)
+              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_trgt_json)
               new_n.draw()
             }
             if (ghost_src_json) {
               const new_n = this.sankey.addNewNode(ghost_src_json['id'] as string, ghost_src_json['name'] as string)
-              node_persistence.fromJSON(+this.application_data.version, new_n, ghost_src_json)
+              NodeElementPersistence.fromJSON(+this.application_data.version, new_n, ghost_src_json)
               new_n.draw()
             }
             if (ghost_link_json) {
               const src = this.sankey.nodes_dict[ghost_link_json['idSource'] as string]
               const trgt = this.sankey.nodes_dict[ghost_link_json['idTarget'] as string]
               const new_l = this.sankey.addNewLink(src, trgt)
-              link_persistence.fromJSON(+this.application_data.version, new_l, ghost_link_json)
+              LinkElementPersistence.fromJSON(+this.application_data.version, new_l, ghost_link_json)
               new_l.draw()
             }
           })

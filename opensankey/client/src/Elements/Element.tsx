@@ -391,7 +391,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
 
   public getStyleProperty(k: keyof ConfigType) {
     const valueOfStyle = this.getStyleWithAttr(k)
-    if (valueOfStyle[k as keyof Class_ElementStyle] !== undefined) {
+    if (valueOfStyle && valueOfStyle[k as keyof Class_ElementStyle] !== undefined) {
       return valueOfStyle[k as keyof Class_ElementStyle]
     }
     return this._config[k].default

@@ -1,13 +1,7 @@
 import * as d3 from 'd3'
-
-import { Type_JSON, getBooleanFromJSON, getStringFromJSON } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
-import { ConfigType } from './ElementsAttributesConfig'
-import { ExtractAttributeValue } from './Element'
-import { ContainerAttributeMappings } from '../Persistence/SankeyPersistence'
-
 
 export const default_container_content = 'Text Label ...'
 export class Class_ContainerElement extends Class_NodeBase {

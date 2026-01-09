@@ -45,9 +45,7 @@ import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
-import { ALL_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
-import { Class_ElementStyle } from './Element'
-import { NodeAttributeMappings } from '../Persistence/SankeyPersistence'
+import { Type_Side } from './ElementsAttributesConfig'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
