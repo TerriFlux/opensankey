@@ -37,7 +37,8 @@ import {
   Type_BaseElementPosition,
   default_style_id,
   getStringListFromJSON,
-  getJSONOrUndefinedFromJSON
+  getJSONOrUndefinedFromJSON,
+  getNumberFromJSON
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import {
@@ -48,7 +49,6 @@ import {
   Type_Orientation, ValueLabelAttributeTypes,
   ConfigType
 } from './ElementsAttributesConfig'
-import { AttributeMappings } from '../Persistence/SankeyPersistence'
 
 export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
@@ -175,7 +175,7 @@ export abstract class Class_BaseElement {
     this._position.y = element.position_y
     this._svg_parent_group = element._svg_parent_group;
   }
-
+   
   public draw() {
     this.unDraw()
     if (this.is_visible && !this._is_currently_deleted)
@@ -317,9 +317,9 @@ export abstract class Class_BaseElement {
 }
 export abstract class Class_ProtoElement extends Class_BaseElement {
 
-  private _storage: StorageType<ConfigType> = {}
+  protected _storage: StorageType<ConfigType> = {}
   protected _config: ConfigType
-  protected _jsonMapping: AttributeMappings
+
 
   protected _position: Type_BaseElementPosition
   protected _style: Class_ElementStyle[]
@@ -328,12 +328,10 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     id: string,
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
-    default_style: Class_ElementStyle,
-    jsonMapping: AttributeMappings
+    default_style: Class_ElementStyle
   ) {
     super(id, drawing_area, true, svg_parent_group)
 
-    this._jsonMapping = jsonMapping
     this._position = {
       x: const_default_position_x,
       y: const_default_position_y
@@ -423,7 +421,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     this.draw()
   }
 
-  protected shouldSaveAttribute(
+  public shouldSaveAttribute(
     key: keyof ConfigType,
     value: string | number | boolean | undefined
   ): boolean {
@@ -464,78 +462,6 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   protected _copyFrom(element_to_copy: Class_ProtoElement) {
     super._copyFrom(element_to_copy)
     this.copyAttrFrom(element_to_copy)
-    this.updateVisibilityFingerprint()
-  }
-
-  public toJSON(
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    json_object['id'] = this._id
-    if (!this._is_visible) json_object['is_visible'] = this._is_visible;
-
-    // Fill style & local attributes
-    if (this.style.length > 0) json_object['style'] = this.style.map(s => s.id)
-    //const attr_json = this._display.attributes.toJSON(this, null)
-    if (Object.keys(this._storage).length > 0) {
-      json_object['local'] = {} as Type_JSON
-      const toJsonMapping = this._jsonMapping.getToJsonMapping();
-      (Object.entries(this._storage) as Array<[keyof ConfigType, any]>).forEach(([key, value]) => {
-        if (this.shouldSaveAttribute(key as keyof ConfigType, value)) {
-          const jsonKey = toJsonMapping[key as string] || (key as string);
-          (json_object['local'] as Type_JSON)[jsonKey] = value
-        }
-      })
-    }
-
-    return json_object
-  }
-
-  public fromJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
-    this.unDraw()
-
-    this._id = getStringFromJSON(json_object, 'id', this._id)
-    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-
-    const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-
-    // this.style = style_id.map(s_id => this.sankey.styles_dict[s_id])
-    // if (!Array.isArray(json_object.style)) {
-    //   const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-    //   this.style = [this.sankey.styles_dict[style_id]]
-    // } else {
-    //   const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-    //   this.style = style_id.map(s_id => this.sankey.styles_dict[s_id]) as Class_ElementStyle[]
-    // }
-
-    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
-    if (json_local_object) {
-      // this._display.attributes.fromJSON(json_local_object, this, null)
-      // If local attribute have key local_scale then update local scale domain
-
-
-      const fromJsonMapping = this._jsonMapping.getFromJsonMapping()
-
-      // ✅ Typage correct
-      Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-        if (json_object[jsonKey] !== undefined) {
-          const key = attrKey as keyof ConfigType
-          if (json_object[jsonKey] !== this.getStyleProperty(key as keyof ConfigType)) {
-            this._storage[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
-          }
-        }
-      });
-
-      // Traitement des attributs directs (même nom)
-      (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
-        if (json_object[key as string] !== undefined) {
-          if (json_object[key as string] !== this.getStyleProperty(key as keyof ConfigType)) {
-            this._storage[key] = json_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
-          }
-        }
-      })
-    }
-
     this.updateVisibilityFingerprint()
   }
 
@@ -710,6 +636,8 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   icon_vert!: IconLabelAttributeTypes['vert']
   icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
   icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_inside_horiz!: IconLabelAttributeTypes['inside_horiz']
+  icon_inside_vert!: IconLabelAttributeTypes['inside_vert']
   icon_is_image!: IconLabelAttributeTypes['is_image']
   icon_image_src!: IconLabelAttributeTypes['image_src']
 
@@ -737,12 +665,11 @@ export abstract class Class_LinkAttribute extends Class_BaseShape {
     id: string,
     drawing_area: Class_DrawingArea,
     svg_parent_group: string,
-    attributeMappings: AttributeMappings,
     default_style: Class_ElementStyle
   ) {
     super(
       id, drawing_area, svg_parent_group,
-      default_style, attributeMappings
+      default_style,
     )
   }
 
@@ -820,7 +747,7 @@ export abstract class Class_LinkAttribute extends Class_BaseShape {
 }
 
 // Type helper pour extraire le type de valeur d'un AttributeConfig
-type ExtractAttributeValue<T> = T extends AttributeConfig<infer U> ? U : never
+export type ExtractAttributeValue<T> = T extends AttributeConfig<infer U> ? U : never
 
 // Type pour le storage basé sur CONFIG
 export type StorageType<CONFIG extends Record<string, AttributeConfig<unknown>>> = {
@@ -954,6 +881,9 @@ export class Class_ElementStyle {
   icon_vert!: IconLabelAttributeTypes['vert']
   icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
   icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_inside_horiz!: IconLabelAttributeTypes['inside_horiz']
+  icon_inside_vert!: IconLabelAttributeTypes['inside_vert']
+
   icon_is_image!: IconLabelAttributeTypes['is_image']
   icon_image_src!: IconLabelAttributeTypes['image_src']
 
@@ -998,7 +928,7 @@ export class Class_ElementStyle {
   private _is_deletable: boolean
   private _references: { [_: string]: Class_BaseElement} = {}
   private _customisable_attribute: { -readonly [K in string]: boolean } = {}
-  private _attributeMappings: AttributeMappings
+
   private _default_style: Class_ElementStyle
   private _drawing_area: Class_DrawingArea
 
@@ -1007,7 +937,6 @@ export class Class_ElementStyle {
     id: string,
     name: string,
     is_deletable: boolean,
-    attributeMappings: AttributeMappings,
     default_style: Class_ElementStyle,
     drawing_area: Class_DrawingArea
   ) {
@@ -1015,7 +944,7 @@ export class Class_ElementStyle {
     this._id = id
     this._name = name
     this._is_deletable = is_deletable;
-    this._attributeMappings = attributeMappings
+    // this._attributeMappings = attributeMappings
     this._default_style = default_style;
     this._drawing_area = drawing_area;
       // Initialiser les attributs customisables
@@ -1091,54 +1020,11 @@ export class Class_ElementStyle {
     }
   }
 
-
-
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
   public get customisable_attribute() { return this._customisable_attribute }
 
-  public toJSON(): Type_JSON {
-    const json_object = {} as Type_JSON
-    const jsonMapping = this._attributeMappings.getToJsonMapping()
-    Object.entries(this).forEach(([key, value]) => {
-      if (this.shouldSaveAttribute(key, value, this._default_style)) {
-        const jsonKey = jsonMapping[key] || key
-        json_object[jsonKey] = value
-      }
-    })
-    return json_object
-  }
 
-  public fromJSON(
-    json_local_object: Type_JSON
-  ) {
-    Object.keys(this._storage).forEach(key => {
-      if (this._storage[key] !== undefined) {
-        this._customisable_attribute[key] = true
-      }
-    })
-    const fromJsonMapping = this._attributeMappings.getFromJsonMapping()
-    // Mapping principal depuis JSON (inclut OSP et legacy)
-    Object.entries(fromJsonMapping).forEach(([jsonKey, attrKey]) => {
-      if (this._default_style && json_local_object[jsonKey] !== this._default_style[attrKey as keyof Class_ElementStyle]) {
-        this._storage[attrKey] = json_local_object[jsonKey]
-      } else if (json_local_object[jsonKey] !== this._config[attrKey].default) {
-        this._storage[attrKey] = json_local_object[jsonKey]
-      }
-    }
-    )
-
-    // Attributs directs (même nom)
-    Object.keys(this._config).forEach(key => {
-      if (json_local_object[key] !== undefined) {
-        if (this._default_style && json_local_object[key] !== this._default_style[key as keyof Class_ElementStyle]) {
-          this._storage[key] = json_local_object[key]
-        } else if (json_local_object[key] !== this._config[key].default) {
-          this._storage[key] = json_local_object[key]
-        }
-      }
-    })
-  }
   public get drawing_area() { return this._drawing_area}
 }

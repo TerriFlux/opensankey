@@ -187,8 +187,10 @@ export class NodeEventsHandler {
     this._node.setDragState(false)
 
     // Move all elements so none of them are outside the DA
-    this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-    this._node.drawing_area.nodePositioning.computeParametricV()
+    if (this._node.sankey.default_style.position_type == 'parametric') {
+      this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      this._node.drawing_area.nodePositioning.computeParametricV()
+    }
 
     const drawing_area = this._node.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
@@ -230,7 +232,7 @@ export class NodeEventsHandler {
       }
     }
 
-    this._node.drawing_area.checkAndUpdateAreaSize()
+    this._node.drawing_area.areaAutoFit()
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
@@ -390,7 +392,7 @@ export class NodeEventsHandler {
         nodes_selected.forEach(n => {
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
         })
-        drawing_area.checkAndUpdateAreaSize()
+        drawing_area.areaAutoFit()
       }
       this._node.saveRedo(redo)
     } else {
@@ -400,7 +402,7 @@ export class NodeEventsHandler {
       // Redo function
       function redo(_: Class_ProtoElement) {
         _.setPosXY(old_x, old_y)
-        drawing_area.checkAndUpdateAreaSize()
+        drawing_area.areaAutoFit()
       }
       this._node.saveRedo(redo)
     }
