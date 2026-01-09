@@ -26,19 +26,12 @@
 
 import * as d3 from 'd3'
 
-import {
-  getStringFromJSON,
-  Type_JSON,
-  getNumberFromJSON,
-} from '../types/Utils'
-
 import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
 import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
-import { ContainerAttributeMappings, NodeAttributeMappings } from '../Persistence/SankeyPersistence'
 import { Class_BaseShape } from './Element'
 
 export const default_selected_stroke_width = 3

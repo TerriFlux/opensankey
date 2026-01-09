@@ -130,6 +130,11 @@ export const default_width = 180
 export const default_info_link_value_void = false
 export const default_legend_position_x = 300
 export const default_legend_position_y = 50
+export const initial_show_structure = 'free_value'
+export const default_grid_size = 50
+export const default_grid_visible = true
+export const default_scale = 50
+export const default_DA_marging = 50
 
 // Types d'actions disponibles
 export type BaseActionType =
