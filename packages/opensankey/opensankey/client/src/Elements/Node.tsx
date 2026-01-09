@@ -84,7 +84,8 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    super(id, name, drawing_area,drawing_area.sankey.default_style)
+    const default_node_style = drawing_area.sankey.styles_dict['NodeStyle']
+    super(id, name, drawing_area,default_node_style)
     this._nodeTooltip = new NodeTooltip(this)
     this._nodeEventsHandler = new NodeEventsHandler(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
