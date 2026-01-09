@@ -4,30 +4,53 @@
 import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from "./ElementsAttributesConfig"
 
 
-type NodeStyleConfig = Partial<{
+type ElementStyleConfig = Partial<{
   [K in keyof typeof ALL_ATTRIBUTES_CONFIG]: ExtractConfigValue<typeof ALL_ATTRIBUTES_CONFIG[K]>
 }>
 
 // Type pour les propriétés de position
-// interface NodeStylePosition {
+// interface ElementStylePosition {
 //   type?: 'relative' | 'parametric' | 'absolute'
 //   dx?: number
 //   dy?: number
 // }
 
 // Type pour un élément de configuration de style (sans id)
-interface NodeStyleConfigItem {
+interface ElementStyleConfigItem {
   name: string,
-  config: NodeStyleConfig
-  //position?: NodeStylePosition
+  config: ElementStyleConfig
+  //position?: ElementStylePosition
 }
 
 // Type pour le dictionnaire complet
-export type NodeStyleConfigsDict = Record<string, NodeStyleConfigItem>
+export type ElementStyleConfigsDict = Record<string, ElementStyleConfigItem>
 
 
 
-export const nodeStyleConfigs: NodeStyleConfigsDict = {
+export const elementStyleConfigs: ElementStyleConfigsDict = {
+  NodeStyle: {
+    name: 'Style de noeud par defaut',
+    config: { 
+      'name_label_is_visible': true,
+      'value_label_is_visible': false 
+    }
+  },
+  LinkStyle: {
+    name: 'Style de flux par defaut',
+    config: { 
+      'name_label_is_visible': false,
+      'value_label_is_visible': true 
+    }
+  },
+  ContainerStyle: {
+    name: 'Style de container par defaut',
+    config: { 
+      'name_label_is_visible': true,
+      'value_label_is_visible': false,
+      'shape_min_height': 100,
+      'shape_min_width': 100     
+    }
+  },  
   NodeProductStyle: {
     name: 'Produit',
     config: { 'shape_type': 'ellipse' }
@@ -104,7 +127,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'name_label_is_visible': false
     }
   },
-  SankeyUnitaryNodeStyle: {
+  SankeyUnitaryElementStyle: {
     name: 'Unitaire',
     config: {
       name_label_horiz: 'middle',
@@ -143,30 +166,33 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       name_label_box_width: 1000,
       position_dx: 300
     }
-  } as const
-}
-
-export type NodeStyleKey = keyof typeof nodeStyleConfigs
-export const product_sector_styles: readonly NodeStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
-export const node_exchanges_style: readonly NodeStyleKey[] = [
-  'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
-] as const
-export const node_unitary_styles: readonly NodeStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle'] as const
-
-// Vous aurez besoin d'un équivalent de LINKS_ATTRIBUTES_CONFIG pour les liens
-// En supposant qu'il existe, sinon remplacez par le type approprié
-// type LinkStyleConfig = Partial<{
-//   [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
-// }>
-
-// Type pour un élément de configuration de style de lien (sans id)
-
-// Type pour le dictionnaire complet
-export type LinkStyleConfigsDict = Record<string, NodeStyleConfigItem>
-
-export const linkStyleConfigs: LinkStyleConfigsDict = {
+  } as const,
+  LinkInUnitaryStyle: {
+    name: 'close import',
+    config: {
+      value_label_font_size: 40,
+      value_label_bold: true,
+      value_label_horiz: 'left',
+      value_label_pos_auto: true,
+      value_label_unit_visible: true,
+      value_label_unit_type: '%OD',
+      value_label_significant_digits: true,
+      value_label_nb_significant_digits: 3
+    }
+  } as const,
+  LinkOutUnitaryStyle: {
+    name: 'close import',
+    config: {
+      value_label_font_size: 40,
+      value_label_bold: true,
+      value_label_horiz: 'right',
+      value_label_pos_auto: true,
+      value_label_unit_visible: true,
+      value_label_unit_type: '%IS',
+      value_label_significant_digits: true,
+      value_label_nb_significant_digits: 3
+    }
+  } as const,
   LinkImportExportCloseStyle: {
     name: 'close import export',
     config: {
@@ -209,40 +235,24 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
     name: 'close import',
     config: {}
   },
-  LinkInUnitaryStyle: {
-    name: 'close import',
-    config: {
-      value_label_font_size: 40,
-      value_label_bold: true,
-      value_label_horiz: 'left',
-      value_label_pos_auto: true,
-      value_label_unit_visible: true,
-      value_label_unit_type: '%OD',
-      value_label_significant_digits: true,
-      value_label_nb_significant_digits: 3
-    }
-  },
-  LinkOutUnitaryStyle: {
-    name: 'close import',
-    config: {
-      value_label_font_size: 40,
-      value_label_bold: true,
-      value_label_horiz: 'right',
-      value_label_pos_auto: true,
-      value_label_unit_visible: true,
-      value_label_unit_type: '%IS',
-      value_label_significant_digits: true,
-      value_label_nb_significant_digits: 3
-    }
-  }
-} as const
 
-// Type des clés disponibles pour les liens
-export type LinkStyleKey = keyof typeof linkStyleConfigs
-export const link_exchanges_style: readonly NodeStyleKey[] = [
+}
+
+export type ElementStyleKey = keyof typeof elementStyleConfigs
+export const base_styles : readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle', 'ContainerStyle'] as const
+
+export const product_sector_styles: readonly ElementStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
+export const node_exchanges_style: readonly ElementStyleKey[] = [
+  'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
+  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
+] as const
+export const node_unitary_styles: readonly ElementStyleKey[] = [
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryElementStyle'] as const
+
+export const link_exchanges_style: readonly ElementStyleKey[] = [
   'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',
   'LinkImportAboveStyle', 'LinkExportBelowStyle'
 ] as const
-export const link_unitary_styles: readonly NodeStyleKey[] = [
+export const link_unitary_styles: readonly ElementStyleKey[] = [
   'LinkInUnitaryStyle', 'LinkOutUnitaryStyle'
 ] as const
