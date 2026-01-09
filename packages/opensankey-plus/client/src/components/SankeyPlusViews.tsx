@@ -47,6 +47,7 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -1362,7 +1363,7 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
   if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {
     list_selected_nodes_for_unitary.current = []
     const new_sel_key = Object.keys(list_data.current)[0]
-    local_app_data.current.drawing_area.fromJSON(list_data.current[new_sel_key].data)
+    DrawingAreaPersistence.fromJSON(local_app_data.current.drawing_area,list_data.current[new_sel_key].data)
     set_selected_data_id(new_sel_key)
   }
 

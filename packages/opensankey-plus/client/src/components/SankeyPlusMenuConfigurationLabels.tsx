@@ -152,7 +152,7 @@ export const MenuConfigurationContainersOSP = ({
     if (menu_for_style) {
       app_data.menu_configuration.updateAllComponentsRelatedToContainers()
       // Update menus for container's appearance in case we use this for style
-      //app_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
+      app_data.menu_configuration.updateAllComponentsRelatedToContainersStyles()
       // Redraw all visible containers if we modify container style
       app_data.drawing_area.sankey.containers_list.forEach(container => container.draw())
     }
