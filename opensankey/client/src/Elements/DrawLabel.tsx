@@ -177,8 +177,8 @@ export abstract class DrawLabelBase {
 
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
-      .style('width', 'max-content')
-      .style('max-width', '1000px')
+      // .style('width', 'max-content')
+      // .style('max-width', '1000px')
       .html(fo_content)
 
     const measureAndResize = () => {
@@ -225,18 +225,31 @@ export abstract class DrawLabelBase {
         }
       }
     }
+    if (this._label_values.inside_vert && this._label_values.inside_horiz) {
+      d3_selection_g_FO
+        .attr('width', this._element.shape_min_width)
+        .attr('height', this._element.shape_min_height)
+        .attr('x', 0)
+        .attr('y', 0)
+    } else {
+      measureAndResize()
+    }
 
-    measureAndResize()
+    if (this._element.name_label_has_fo && this._element.name_label_inside_horiz && this._element.name_label_inside_vert) {
+      return
+    }
 
     const isStatic = this._element.drawing_area?.static
-    if (!isStatic) {
-      d3_selection_g_FO.call(d3.drag<SVGForeignObjectElement, unknown>()
-        .filter(evt => (evt.which == 1))
-        .on('start', ev => this.dragGenericStart(ev))
-        .on('drag', ev => this.dragGenericMove(ev))
-        .on('end', ev => this.dragGenericEnd(ev))
-      )
+    if (isStatic) {
+      return
     }
+    d3_selection_g_FO.call(d3.drag<SVGForeignObjectElement, unknown>()
+      .filter(evt => (evt.which == 1))
+      .on('start', ev => this.dragGenericStart(ev))
+      .on('drag', ev => this.dragGenericMove(ev))
+      .on('end', ev => this.dragGenericEnd(ev))
+    )
+
   }
 
   protected abstract getIconPos(): [number, number]
@@ -253,20 +266,28 @@ export abstract class DrawLabelBase {
       .attr('id', `image_${this.prefix}_${this.getElementId()}`)
       .attr('class', 'illustration image')
       .attr('xlink:href', this._label_values.image_src)
-      .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
       .attr('x', icon_pos_x)
       .attr('y', icon_pos_y) as unknown as d3_selection_type
 
-    // ✅ Appliquer le drag générique unifié
-    const isStatic = this._element.drawing_area?.static
-    if (!isStatic) {
-      this.d3_selection?.call(d3.drag<any, unknown>()
-        .filter(evt => (evt.which == 1) && this._element.drawing_area?.isInSelectionMode())
-        .on('start', ev => this.dragGenericStart(ev))
-        .on('drag', ev => this.dragGenericMove(ev))
-        .on('end', ev => this.dragGenericEnd(ev))
-      )
+    if (this._label_values.inside_vert && this._label_values.inside_horiz)
+      this.d3_selection
+        .attr('x', 0)
+        .attr('y', 0)
+
+    if (this._element.icon_is_image && this._element.icon_inside_horiz && this._element.icon_inside_vert) {
+      return
     }
+
+    const isStatic = this._element.drawing_area?.static
+    if (isStatic) {
+      return
+    }
+    this.d3_selection?.call(d3.drag<any, unknown>()
+      .filter(evt => (evt.which == 1) && this._element.drawing_area?.isInSelectionMode())
+      .on('start', ev => this.dragGenericStart(ev))
+      .on('drag', ev => this.dragGenericMove(ev))
+      .on('end', ev => this.dragGenericEnd(ev))
+    )
   }
 
   /**
@@ -501,6 +522,9 @@ export abstract class DrawLabelBase {
     }
     if (this._label_values.icon_name != '') {
       return this.drawIcon()
+    }
+    if (this._label_values.is_visible && this._label_values.is_image) {
+      return this.drawImage()
     }
 
     if (!this.shouldDrawLabel()) return

@@ -47,6 +47,7 @@ import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { ALL_ATTRIBUTES_CONFIG, Type_Side } from './ElementsAttributesConfig'
 import { Class_ElementStyle } from './Element'
+import { NodeAttributeMappings } from '../Persistence/SankeyPersistence'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
@@ -59,7 +60,7 @@ import { Class_ElementStyle } from './Element'
 export class Class_NodeElement extends Class_NodeBase {
   public _nodeTooltip: NodeTooltip
   public _nodeEventsHandler: NodeEventsHandler
-  protected _nodeDimensionsManager: NodeDimensionsManager
+  public _nodeDimensionsManager: NodeDimensionsManager
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
   protected _leveltaggs_as_antitagged: Class_LevelTagGroup[] = []
@@ -85,7 +86,7 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    super(id, name, drawing_area)
+    super(id, name, drawing_area,drawing_area.sankey.default_style)
     this._nodeTooltip = new NodeTooltip(this)
     this._nodeEventsHandler = new NodeEventsHandler(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
@@ -224,50 +225,6 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeDimensionsManager.fromJSON(json_node_object, matching_nodes_id, matching_taggs_id, matching_tags_id)
   }
 
-  /**
-   * Convert node to JSON
-   */
-  public toJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    super.toJSON(json_object, kwargs)
-    this._nodeDimensionsManager.toJSON(json_object)
-    if (this._tooltip_text) json_object['tooltip_text'] = this._tooltip_text
-
-    // Délégation aux managers
-    this._nodeTagsManager.toJSON(json_object)
-
-    if (kwargs && kwargs['save_only_elements_with_tags']) {
-      if (this.input_links_list.length > 0) {
-        json_object['inputLinksId'] = this.input_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
-      }
-      if (this.output_links_list.length > 0) {
-        json_object['outputLinksId'] = this.output_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
-      }
-      if (this.links_order.length > 0) {
-        json_object['links_order'] = this._links_order.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
-      }
-    } else if (kwargs && kwargs['only_visible_elements']) {
-      if (this.input_links_list.length > 0) {
-        json_object['inputLinksId'] = this.input_links_list.filter(l => l.is_visible).map(l => l.id)
-      }
-      if (this.output_links_list.length > 0) {
-        json_object['outputLinksId'] = this.output_links_list.filter(l => l.is_visible).map(l => l.id)
-      }
-      if (this.links_order.length > 0) {
-        json_object['links_order'] = this._links_order.filter(l => l.is_visible).map(link => link.id)
-      }
-    } else {
-      if (this.input_links_list.length > 0) {
-        json_object['inputLinksId'] = this.input_links_list.map(l => l.id)
-      }
-      if (this.output_links_list.length > 0) {
-        json_object['outputLinksId'] = this.output_links_list.map(l => l.id)
-      }
-      if (this.links_order.length > 0) {
-        json_object['links_order'] = this._links_order.map(link => link.id)
-      }
-    }
-    return json_object
-  }
   public get master_node() { return this._master_node }
   public set master_node(_) {
     this._master_node = _
@@ -288,47 +245,6 @@ export class Class_NodeElement extends Class_NodeBase {
   public drawValueLabel() {
     this._nodeDrawValueLabel.drawGenericLabel()
     this._orderD3Elements()
-  }
-  // 🔄 LINKS JSON METHODS - RÉINTÉGRÉS DIRECTEMENT
-  public linksFromJSON(json_node_object: Type_JSON, matching_links_id: { [_: string]: string } = {}) {
-    // Input links
-    getStringListFromJSON(json_node_object, 'inputLinksId', [])
-      .forEach(l_id => {
-        if (l_id !== 'ghost_link') {
-          const link_id = matching_links_id[l_id] ?? l_id
-          this.addInputLink(this.sankey.links_dict[link_id] as Class_LinkElement)
-        }
-      })
-    // Output links
-    getStringListFromJSON(json_node_object, 'outputLinksId', [])
-      .forEach(l_id => {
-        if (l_id !== 'ghost_link') {
-          const link_id = matching_links_id[l_id] ?? l_id
-          this.addOutputLink(this.sankey.links_dict[link_id] as Class_LinkElement)
-        }
-      })
-    // Ordering
-    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
-    if (ordered_link_ids.length === this._links_order.length) {
-      this._links_order = ordered_link_ids
-        .map(_ => {
-          const link_id = matching_links_id[_] ?? _
-          return this.sankey.links_dict[link_id]
-        }) as Class_LinkElement[]
-    }
-  }
-  /**
-   * Assign to node implementation values from json
-   */
-  public fromJSON(json_node_object: Type_JSON, kwargs?: Type_JSON) {
-    super.fromJSON(json_node_object, kwargs)
-    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
-    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
-
-    this._tooltip_text = getStringFromJSON(json_node_object, 'tooltip_text', '')
-
-    // Délégation aux managers
-    this._nodeTagsManager.fromJSON(json_node_object, matching_taggs_id, matching_tags_id)
   }
 
   /**

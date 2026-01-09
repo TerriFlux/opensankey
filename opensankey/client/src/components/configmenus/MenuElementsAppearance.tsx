@@ -131,6 +131,20 @@ const LabelContentComponent = ({
     return 'simple_text'
   })
 
+  const setModeSimpleText = () => {
+    labelValues.has_fo = false
+    labelValues.icon_name = ''
+    setDisplayMode('simple_text')
+  }
+
+  const setModeRichText = () => {
+    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
+    app_data.menu_configuration.r_editor_content_set_elements.current(base_elements, 'name_label')
+    labelValues.has_fo = true
+    labelValues.icon_name = ''
+    setDisplayMode('rich_text')
+  }
+
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const links_elements = elements as Class_LinkElement[] | Class_ElementStyle[]
@@ -159,6 +173,20 @@ const LabelContentComponent = ({
       {prefix !== 'value_label' && (
         <Box layerStyle='menuconfigpanel_row_2cols'>
           <Box layerStyle='options_4cols'>
+            {prefix === 'name_label' && (
+              <>
+                <Button
+                  variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                  onClick={setModeSimpleText}
+                >
+                  Text
+                </Button>
+                <Button
+                  variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+                  onClick={setModeRichText}
+                >
+                  Rich
+                </Button></>)}
             {prefix === 'icon' && (
               <>
                 <Button
@@ -437,7 +465,7 @@ const LabelContentComponent = ({
         </>
       )}
 
-      <Divider/>
+      <Divider />
       <Box as='span' textStyle='title_sub_section'>Position, taille et décalages</Box>
 
       <Box layerStyle='options_2cols'>
@@ -577,7 +605,7 @@ const LabelContentComponent = ({
         <></>
       </Box>
 
-      <Divider/>
+      <Divider />
       <Box as='span' textStyle='title_sub_section'>Fond</Box>
       <MenuShapeAttributes
         app_data={app_data}
@@ -602,6 +630,7 @@ export const MenuConfigurationAppearance = ({
   const { t, drawing_area, menu_configuration, icon_library } = app_data
   const { sankey } = drawing_area
   const [, setCount] = useState(0)
+  const { ref_selected_style } = menu_configuration
 
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'background' | 'shape' | 'name' | 'value' | 'icon'
@@ -628,7 +657,7 @@ export const MenuConfigurationAppearance = ({
     return elements
   }
 
-  const allElements = (menu_for_style ? [sankey.default_style] : getAllSelectedElements())
+  const allElements = (menu_for_style ? [sankey.styles_dict[ref_selected_style.current]] : getAllSelectedElements())
   const selection = analyzeSelection(allElements)
   const elements = allElements as ElementsType
   const base_elements = allElements as Class_NodeElement[] | Class_LinkElement[] | Class_ContainerElement[]
@@ -640,21 +669,21 @@ export const MenuConfigurationAppearance = ({
   const refreshAll = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
     if (selection.hasNodes) {
-      menu_configuration.updateComponentRelatedToNodesApparence()
+      menu_configuration.updateComponentRelatedToApparence()
       selection.nodes.forEach(n => n.draw())
     }
     if (selection.hasLinks) {
-      menu_configuration.updateComponentRelatedToLinksApparence()
+      menu_configuration.updateComponentRelatedToApparence()
       selection.links.forEach(l => l.draw())
     }
     if (selection.hasContainers) {
-      menu_configuration.updateComponentRelatedToContainersApparence()
+      menu_configuration.updateComponentRelatedToApparence()
       selection.containers.forEach(c => c.draw())
     }
     setCount(a => a + 1)
   }
 
-  const disable_attr_props = sankey.styles_dict['default'].customisable_attribute
+  const disable_attr_props = sankey.styles_dict[ref_selected_style.current].customisable_attribute
 
   // ✅ Valeurs SHAPE
   const commonShapeValues = allElements.length > 0
@@ -1033,7 +1062,7 @@ export const MenuConfigurationAppearance = ({
                         <Box as='span' layerStyle='options_2cols' >
                           <Box layerStyle='menuconfigpanel_option_name' >
                             {t('Flux.apparence.shape_local_link_scale')}
-                              <TooltipElementOverloaded
+                            <TooltipElementOverloaded
                               elements={links_elements}
                               t={t}
                               attributeKey={'local_link_scale'}

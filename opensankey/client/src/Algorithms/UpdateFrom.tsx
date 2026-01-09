@@ -1,4 +1,5 @@
 import { Class_NodeElement } from "../Elements/Node"
+import { SankeyPersistence } from "../Persistence/SankeyPersistence"
 import { Class_DrawingArea } from "../types/DrawingArea"
 import { Class_Sankey } from "../types/Sankey"
 
@@ -47,12 +48,13 @@ export const updateFrom = (
       drawing_area.legend.copyFrom(other_drawing_area.legend)
   }
 
+  const sankey_persistence = new SankeyPersistence
   const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
   const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
   const matching_nodes_id: { [_: string]: string } = {}
   const matching_links_id: { [_: string]: string } = {}
   other_drawing_area.sankey.matchAndModifyJSONIds(
-    drawing_area.sankey.toJSON(),
+    sankey_persistence.toJSON(drawing_area.sankey),
     matching_taggs_id,
     matching_tags_id,
     matching_nodes_id,

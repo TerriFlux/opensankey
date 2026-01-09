@@ -38,7 +38,7 @@ import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
-import { NodeAttributeMappings } from '../Persistence/SankeyPersistence'
+import { ContainerAttributeMappings, NodeAttributeMappings } from '../Persistence/SankeyPersistence'
 import { Class_BaseShape } from './Element'
 
 export const default_selected_stroke_width = 3
@@ -82,12 +82,13 @@ export class Class_NodeBase extends Class_BaseShape {
   constructor(
     id: string,
     name: string,
-    drawing_area: Class_DrawingArea
+    drawing_area: Class_DrawingArea,
+    default_style: Class_ElementStyle
   ) {
     // Init parent class attributes
     super(
       id, drawing_area, 'g_elements_sankey',
-      drawing_area.sankey.default_style, new NodeAttributeMappings() 
+      default_style
     )
 
     this._name = name
@@ -142,22 +143,6 @@ export class Class_NodeBase extends Class_BaseShape {
     this._position_u = _._position_u
     this._position_v = _._position_v
 
-  }
-
-  public toJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    super.toJSON(json_object, kwargs)
-    json_object['name'] = this._name
-    json_object['u'] = this._position_u
-    json_object['v'] = this._position_v
-    return json_object
-  }
-
-  public fromJSON(json_node_object: Type_JSON, kwargs?: Type_JSON) {
-    super.fromJSON(json_node_object, kwargs)
-
-    this._name = getStringFromJSON(json_node_object, 'name', this._name)
-    this._position_u = getNumberFromJSON(json_node_object, 'u', this._position_u)
-    this._position_v = getNumberFromJSON(json_node_object, 'v', this._position_v)
   }
 
   public drawAsSelected() {
@@ -300,7 +285,7 @@ export class Class_NodeBase extends Class_BaseShape {
     */
   protected dragHandleEnd() {
     return () => {
-      this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
+      this.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence
 
       const old_val = {
         x: this.position_x,

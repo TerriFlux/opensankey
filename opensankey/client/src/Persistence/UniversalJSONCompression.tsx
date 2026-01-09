@@ -2,7 +2,60 @@
 import pako from 'pako'
 import JSZip from 'jszip'
 import { useState, useEffect } from 'react'
+declare global {
+  interface Window {
+    pako?: {
+      // Surcharges pour deflate
+      deflate(data: Uint8Array | string, options: PakoDeflateOptions & { to: 'string' }): string
+      deflate(data: Uint8Array | string, options?: PakoDeflateOptions): Uint8Array
 
+      // Surcharges pour inflate
+      inflate(data: Uint8Array, options: PakoInflateOptions & { to: 'string' }): string
+      inflate(data: Uint8Array, options?: PakoInflateOptions): Uint8Array
+
+      // Surcharges pour gzip
+      gzip(data: Uint8Array | string, options: PakoDeflateOptions & { to: 'string' }): string
+      gzip(data: Uint8Array | string, options?: PakoDeflateOptions): Uint8Array
+
+      // Surcharges pour ungzip (le plus important pour votre cas)
+      ungzip(data: Uint8Array, options: PakoInflateOptions & { to: 'string' }): string
+      ungzip(data: Uint8Array, options?: PakoInflateOptions): Uint8Array
+
+      // Fonctions de streaming
+      Deflate: new (options?: PakoDeflateOptions) => PakoDeflate
+      Inflate: new (options?: PakoInflateOptions) => PakoInflate
+    }
+  }
+}
+
+// Interfaces pour les options
+interface PakoDeflateOptions {
+  level?: number          // Niveau de compression (0-9)
+  windowBits?: number     // Taille de la fenêtre
+  memLevel?: number       // Niveau mémoire
+  strategy?: number       // Stratégie de compression
+  dictionary?: Uint8Array // Dictionnaire
+  raw?: boolean          // Mode raw
+  to?: 'string'          // Format de sortie
+}
+
+interface PakoInflateOptions {
+  windowBits?: number     // Taille de la fenêtre
+  raw?: boolean          // Mode raw
+  to?: 'string'          // Format de sortie ('string' pour text)
+  chunkSize?: number     // Taille des chunks
+}
+
+// Classes de streaming
+interface PakoDeflate {
+  push(data: Uint8Array | string, flush?: boolean): boolean
+  result: Uint8Array
+}
+
+interface PakoInflate {
+  push(data: Uint8Array, flush?: boolean): boolean
+  result: Uint8Array | string
+}
 // Types de compression supportés
 export type CompressionType = 'none' | 'gzip' | 'zip' | 'brotli' | 'deflate'
 
@@ -25,6 +78,175 @@ export const detectCompressionType = (filename: string): CompressionType => {
   return 'none'
 }
 
+export async function decompressGzipDataFixed(compressedData: ArrayBuffer): Promise<string> {
+  console.log('🗜️ Début décompression...')
+
+  // S'assurer que pako est chargé
+  if (!window.pako) {
+    console.log('📥 Chargement de pako...')
+    await loadPakoFromCDN()
+  }
+
+  // Méthode 1: Pako (recommandé)
+  if (window.pako) {
+    try {
+      console.log('🔧 Décompression avec pako...')
+      const uint8Array = new Uint8Array(compressedData)
+
+      // OPTION A: Décompression simple
+      const decompressed = window.pako.ungzip(uint8Array, { to: 'string' })
+      console.log('✅ Pako décompression réussie')
+      return decompressed
+
+    } catch (pakoError) {
+      // ✅ CORRECTION: Utiliser getErrorDetails au lieu d'accès direct
+      const errorDetails = getErrorDetails(pakoError)
+      console.error('❌ Erreur pako détaillée:', errorDetails)
+
+      // Essayer avec des options différentes
+      try {
+        console.log('🔄 Tentative pako avec options alternatives...')
+        const uint8Array = new Uint8Array(compressedData)
+        const decompressed = window.pako.inflate(uint8Array, { to: 'string' })
+        console.log('✅ Pako inflate réussi')
+        return decompressed
+      } catch (inflateError) {
+        console.error('❌ Pako inflate aussi échoué:', getErrorMessage(inflateError))
+      }
+    }
+  }
+
+  // Méthode 2: DecompressionStream (fallback)
+  if ('DecompressionStream' in window) {
+    try {
+      console.log('🔧 Fallback vers DecompressionStream...')
+
+      const readable = new Response(compressedData).body
+      if (!readable) {
+        throw new Error('Impossible de créer un stream lisible')
+      }
+
+      const decompressedStream = readable.pipeThrough(new DecompressionStream('gzip'))
+      const decompressed = await new Response(decompressedStream).text()
+
+      console.log('✅ DecompressionStream réussi')
+      return decompressed
+
+    } catch (streamError) {
+      console.error('❌ Erreur DecompressionStream:', getErrorMessage(streamError))
+    }
+  }
+
+  throw new Error('Toutes les méthodes de décompression ont échoué')
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message
+  }
+  if (typeof error === 'string') {
+    return error
+  }
+  return 'Erreur inconnue'
+}
+
+function logError(message: string, error: unknown): void {
+  console.error(message, error)
+  if (error instanceof Error) {
+    console.error('Stack trace:', error.stack)
+  }
+}
+
+function getErrorDetails(error: unknown): { name: string; message: string; toString: string } {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      toString: error.toString()
+    }
+  }
+  if (typeof error === 'string') {
+    return {
+      name: 'StringError',
+      message: error,
+      toString: error
+    }
+  }
+  return {
+    name: 'UnknownError',
+    message: 'Erreur de type inconnu',
+    toString: String(error)
+  }
+}
+
+function loadPakoFromCDN(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (window.pako) {
+      resolve()
+      return
+    }
+
+    console.log('📥 Chargement de pako depuis CDN...')
+    const script = document.createElement('script')
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js'
+
+    script.onload = () => {
+      if (window.pako) {
+        console.log('✅ Pako chargé avec succès')
+        resolve()
+      } else {
+        reject(new Error('Pako chargé mais non disponible'))
+      }
+    }
+
+    script.onerror = () => {
+      console.error('❌ Échec du chargement de pako')
+      reject(new Error('Impossible de charger pako depuis le CDN'))
+    }
+
+    document.head.appendChild(script)
+  })
+}
+
+// === FONCTION DE TEST SIMPLE ===
+
+async function _testDecompression(fileName: string): Promise<void> {
+  try {
+    console.log('🧪 Test de décompression pour:', fileName)
+
+    const response = await fetch('/example/upload', {
+      method: 'POST',
+      body: fileName
+    })
+
+    console.log('📊 Réponse:', {
+      status: response.status,
+      contentType: response.headers.get('content-type'),
+      contentEncoding: response.headers.get('content-encoding'),
+      contentLength: response.headers.get('content-length')
+    })
+
+    const arrayBuffer = await response.arrayBuffer()
+    const uint8Array = new Uint8Array(arrayBuffer)
+
+    console.log('📦 Données:', {
+      size: arrayBuffer.byteLength,
+      magicBytes: `0x${uint8Array[0]?.toString(16).padStart(2, '0')} 0x${uint8Array[1]?.toString(16).padStart(2, '0')}`,
+      isValidGzip: uint8Array[0] === 0x1f && uint8Array[1] === 0x8b
+    })
+
+    if (uint8Array[0] === 0x1f && uint8Array[1] === 0x8b) {
+      const decompressed = await decompressGzipDataFixed(arrayBuffer)
+      console.log('✅ Test réussi! Taille décompressée:', decompressed.length)
+      console.log('📄 Aperçu:', decompressed.substring(0, 100) + '...')
+    } else {
+      console.error('❌ Pas du GZIP valide')
+    }
+
+  } catch (error) {
+    console.error('❌ Test échoué:', error)
+  }
+}
 /**
  * Décompresse des données selon le type de compression
  */

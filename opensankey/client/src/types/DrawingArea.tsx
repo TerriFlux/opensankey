@@ -64,6 +64,7 @@ import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_ApplicationData } from './ApplicationData'
 import { TooltipEventManager } from '../Elements/TooltipsConfig'
 import { Class_NodeBase, sortNodesElements } from '../Elements/NodeBase'
+import { AttributeMappings, LegendPersistence, LinkAttributeMappings, LinkElementPersistence, NodeAttributeMappings, NodeElementPersistence, SankeyPersistence } from '../Persistence/SankeyPersistence'
 
 
 declare const window: Window &
@@ -351,11 +352,13 @@ export class Class_DrawingArea {
     if (this._show_background_image) json_object['show_background_image'] = this._show_background_image
     if (this._show_background_image) json_object['background_image'] = this._background_image
 
+    const legend_persistence = new LegendPersistence(new AttributeMappings)
+    const sankey_persistence = new SankeyPersistence
     // Dump with json of contained elements
     const out = {
       ...json_object,
-      ...this._legend.toJSON(json_object),
-      ...this._sankey.toJSON(kwargs)
+      ...legend_persistence.toJSON(this._legend,json_object),
+      ...sankey_persistence.toJSON(this._sankey,kwargs)
     }
 
     out['order_g_elements'] = this._list_g_element_id // Order elements by id 
@@ -370,8 +373,7 @@ export class Class_DrawingArea {
    */
   public fromJSON(
     json_object: Type_JSON,
-    kwargs?: Type_JSON,
-    match_and_update: boolean = true,
+    kwargs?: Type_JSON
   ) {
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     // Only legacy convert old sankey
@@ -418,8 +420,10 @@ export class Class_DrawingArea {
     this._show_background_image = getBooleanFromJSON(json_object, 'show_background_image', this._show_background_image)
     this._background_image = getStringFromJSON(json_object, 'background_image', this._background_image)
 
-    this._legend.fromJSON(json_object)
-    this.sankey.fromJSON(json_object, match_and_update)
+    const legend_persistence = new LegendPersistence(new AttributeMappings)
+    legend_persistence.fromJSON(+version!,this._legend, json_object)
+    const sankey_persistence = new SankeyPersistence
+    sankey_persistence.fromJSON(+version!,this.sankey, json_object)
 
     this._list_g_element_id = getStringListFromJSON(json_object, 'order_g_elements', this._list_g_element_id)
 
@@ -444,7 +448,7 @@ export class Class_DrawingArea {
     this.drawElements()
 
     // Fit area
-    this.areaAutoFit(true)
+    this.areaAutoFit()
     this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
@@ -590,7 +594,7 @@ export class Class_DrawingArea {
 
     this.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
-     this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
+    this.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
 
     this.application_data.menu_configuration.ref_to_menu_context_drawing_area_updater.current()
 
@@ -747,41 +751,45 @@ export class Class_DrawingArea {
     const json_hist_nodes: { [_: string]: Type_JSON } = {}
     const json_hist_links: { [_: string]: Type_JSON } = {}
     const json_hist_links_order: { [_: string]: string[] } = {}
+
+    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
+    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
     // --- Selected nodes
     //if (deleteSelectedNodes) {
-      this.selected_nodes_list
-        .forEach(node => {
-          json_hist_nodes[node.id] = {}
-          node.toJSON(json_hist_nodes[node.id])
-          node.input_links_list.forEach(link => {
-            json_hist_links[link.id] = {}
-            link.toJSON(json_hist_links[link.id])
-            json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
-          })
-          node.output_links_list.forEach(link => {
-            json_hist_links[link.id] = {}
-            link.toJSON(json_hist_links[link.id])
-            json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
-          })
+    this.selected_nodes_list
+      .forEach(node => {
+        json_hist_nodes[node.id] = {}
+        node_persistence.toJSON(node, json_hist_nodes[node.id])
+        node.input_links_list.forEach(link => {
+          json_hist_links[link.id] = {}
+          link_persistence.toJSON(link, json_hist_links[link.id])
+          json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
         })
+        node.output_links_list.forEach(link => {
+          json_hist_links[link.id] = {}
+          link_persistence.toJSON(link, json_hist_links[link.id])
+          json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+        })
+      })
     //}
     // --- Selected links
     //if (deleteSelectedLinks) {
-      this.selected_links_list.forEach(link => {
-        json_hist_links[link.id] = {}
-        link.toJSON(json_hist_links[link.id])
-        json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
-        json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
-      })
+    this.selected_links_list.forEach(link => {
+      json_hist_links[link.id] = {}
+      link_persistence.toJSON(link, json_hist_links[link.id])
+      json_hist_links_order[link.source.id] = link.source.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+      json_hist_links_order[link.target.id] = link.target.links_order.map(link => link.id)//save IO order of nodes affected by links suppression
+    })
     //}
 
     // --- Undo function
-    function undo(_: Class_DrawingArea) {
+    const undo = (_: Class_DrawingArea) => {
       const json_hist: Type_JSON = {
         'nodes': json_hist_nodes,
         'links': json_hist_links
       }
-      _.sankey.fromJSON(json_hist)
+      const sankey_persistence = new SankeyPersistence
+      sankey_persistence.fromJSON(+this.application_data.version, _.sankey,json_hist)
       Object.entries(json_hist_links_order).forEach(ent => _.sankey.nodes_dict[ent[0]].reorganizeIOFromListIds(ent[1]))//Organise correctly nodes IO
       _.sankey.draw()
     }
@@ -812,16 +820,14 @@ export class Class_DrawingArea {
     }
   }
 
-  public checkAndUpdateAreaSize(
-    recenter: boolean = false
-  ) {
+  public checkAndUpdateAreaSize() {
     // Get bounding box for all elements
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
     // No bounding box -> return
     if (bbox == undefined)
       return
-    if (this.legend.stick_to_drawing) {
+    if (this.legend.is_visible && this.legend.stick_to_drawing) {
       const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
         // Calculer la bounding box englobante
@@ -855,49 +861,49 @@ export class Class_DrawingArea {
     const fitting_height = this.window_fitting_height // acces speeding computation
 
     // Get current drawing zone dimensions
-    let width = this.width
-    let height = this.height
+    // let width = this.width
+    // let height = this.height
     // let lefter_x = this._background_d3_groups_shift_x
     // let upper_y= this._background_d3_groups_shift_y
 
     // Check horizontal fitting
-    let new_lefter_x = bbox.x - default_DA_marging
-    const new_righter_x = bbox.x + bbox.width + default_DA_marging
-    width = new_righter_x - new_lefter_x
+    let new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
+    const new_righter_x = Math.max(fitting_width, bbox.x + bbox.width + default_DA_marging)
+    this.width = new_righter_x - new_lefter_x
     //lefter_x = new_lefter_x
-    if (!recenter) {
-      new_lefter_x = 0
-      width = fitting_width
-    }
+    // if (!recenter) {
+    //   new_lefter_x = 0
+    //   width = fitting_width
+    // }
 
     // Check vertical fitting
-    let new_upper_y = bbox.y - default_DA_marging
-    const new_bottom_y = bbox.y + bbox.height + default_DA_marging
-    height = new_bottom_y - new_upper_y
+    let new_upper_y = Math.min(0, bbox.y - default_DA_marging)
+    const new_bottom_y = Math.max(fitting_height, bbox.y + bbox.height + default_DA_marging)
+    this.height = new_bottom_y - new_upper_y
     //upper_y = new_upper_y
-    if (!recenter) {
-      new_upper_y = 0
-      height = fitting_height
-    }
+    // if (!recenter) {
+    //   new_upper_y = 0
+    //   height = fitting_height
+    // }
 
     // Recenter elements
-    if (recenter && window.sankey?.recenter !== false) {
-      if (!this.bypass_autofit) {
-        this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (width - bbox.width) / 2
-        this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (height - bbox.height) / 2
-      }
-      this.d3_selection_elements_group?.attr(
-        'transform',
-        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-      this.d3_selection_legend?.attr(
-        'transform',
-        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-    }
+    // if (recenter && window.sankey?.recenter !== false) {
+    //   if (!this.bypass_autofit) {
+    //     this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (width - bbox.width) / 2
+    //     this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (height - bbox.height) / 2
+    //   }
+    //   this.d3_selection_elements_group?.attr(
+    //     'transform',
+    //     'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
+    //   this.d3_selection_legend?.attr(
+    //     'transform',
+    //     'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
+    // }
 
     if (!this.bypass_autofit) {
       // Save new dimensions
-      this._width = width
-      this._height = height
+      // this._width = width
+      // this._height = height
       this._background_d3_groups_shift_x = new_lefter_x
       this._background_d3_groups_shift_y = new_upper_y
       // And redraw
@@ -909,15 +915,15 @@ export class Class_DrawingArea {
     this.drawGrid()
   }
 
-  public areaFitHorizontally(autocenter: boolean) {
-    this.checkAndUpdateAreaSize(autocenter)
+  public areaFitHorizontally() {
+    this.checkAndUpdateAreaSize()
 
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_width / this.width
 
-      const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
-      const y0 = Math.max(this._fit_margin / 2, (this.window_fitting_height - this.height * k) / 2) + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
+      const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x
+      const y0 = Math.max(this._fit_margin / 2, (this.window_fitting_height - k * this.height) / 2) + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       //onst x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
       //const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
@@ -927,8 +933,8 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaFitVertically(autocenter: boolean) {
-    this.checkAndUpdateAreaSize(autocenter)
+  public areaFitVertically() {
+    this.checkAndUpdateAreaSize()
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
@@ -1099,25 +1105,19 @@ export class Class_DrawingArea {
    *
    * @memberof Class_DrawingArea
    */
-  public areaAutoFit(autocenter: boolean) {
-    this._process_or_bypass(() => {
-      if (this.application_data.is_static) this.areaFitVertically(autocenter)
-      // Ratios
-      const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
-      const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
-      // Fit from ratio
-      if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-        this.areaFitHorizontally(autocenter)
-      }
-      else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-        this.areaFitVertically(autocenter)
-      }
-    })
+  public areaAutoFit() {
+    if (this.application_data.is_static) this.areaFitVertically()
+    // Ratios
+    const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
+    const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
+    // Fit from ratio
+    if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
+      this.areaFitHorizontally()
+    }
+    else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
+      this.areaFitVertically()
+    }
   }
-
-
-
-
 
   /**
    * Swaps overlaps position of element on DA
@@ -1172,7 +1172,7 @@ export class Class_DrawingArea {
         n.style = list_old_style[n.id]
         n.draw()
       })
-      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+      this.application_data.menu_configuration.updateComponentRelatedToApparence()
     }
 
     // Function original
@@ -1192,7 +1192,7 @@ export class Class_DrawingArea {
 
         n.draw()
       })
-      this.application_data.menu_configuration.updateComponentRelatedToNodesApparence()
+      this.application_data.menu_configuration.updateComponentRelatedToApparence()
     }
     // Save undo/redo
     this.application_data.history.saveUndo(inv_changeStyleOrder)
@@ -1505,6 +1505,8 @@ export class Class_DrawingArea {
   private eventReleasedClick(
     event: MouseEvent
   ) {
+    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
+    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
     // EDITION MODE =============================================================
     if (this.isInEditionMode()) {
       // When we are creating a link with LMB
@@ -1534,7 +1536,7 @@ export class Class_DrawingArea {
             this.sankey.nodes_dict[node_id]
           )
           ghost_link_json = {}
-          l.toJSON(ghost_link_json) //For undo/redo
+          link_persistence.toJSON(l, ghost_link_json) //For undo/redo
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
@@ -1552,7 +1554,7 @@ export class Class_DrawingArea {
             this._ghost_link.target as Class_NodeElement
           )
           ghost_link_json = {}
-          l.toJSON(ghost_link_json) //For undo/redo
+          link_persistence.toJSON(l, ghost_link_json) //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
 
           this.purgeSelectionOfElement(false)
@@ -1567,7 +1569,7 @@ export class Class_DrawingArea {
           wasGhostSrc = true
           // For redo : save ghost source in json to recreate it correctly at redo
           ghost_src_json = {}
-          this._ghost_link_source.toJSON(ghost_src_json)
+          node_persistence.toJSON(this._ghost_link_source, ghost_src_json)
         }
 
         if (this._ghost_link_target) {
@@ -1575,7 +1577,7 @@ export class Class_DrawingArea {
           wasGhostTrgt = true
           // For redo : save ghost target in json to recreate it correctly at redo
           ghost_trgt_json = {}
-          this._ghost_link_target.toJSON(ghost_trgt_json)
+          node_persistence.toJSON(this._ghost_link_target, ghost_trgt_json)
 
         }
 
@@ -1604,19 +1606,19 @@ export class Class_DrawingArea {
             // Recreate delete element in undo
             if (ghost_trgt_json) {
               const new_n = this.sankey.addNewNode(ghost_trgt_json['id'] as string, ghost_trgt_json['name'] as string)
-              new_n.fromJSON(ghost_trgt_json)
+              node_persistence.fromJSON(+this.application_data.version, new_n, ghost_trgt_json)
               new_n.draw()
             }
             if (ghost_src_json) {
               const new_n = this.sankey.addNewNode(ghost_src_json['id'] as string, ghost_src_json['name'] as string)
-              new_n.fromJSON(ghost_src_json)
+              node_persistence.fromJSON(+this.application_data.version, new_n, ghost_src_json)
               new_n.draw()
             }
             if (ghost_link_json) {
               const src = this.sankey.nodes_dict[ghost_link_json['idSource'] as string]
               const trgt = this.sankey.nodes_dict[ghost_link_json['idTarget'] as string]
               const new_l = this.sankey.addNewLink(src, trgt)
-              new_l.fromJSON(ghost_link_json)
+              link_persistence.fromJSON(+this.application_data.version, new_l, ghost_link_json)
               new_l.draw()
             }
           })
@@ -1833,7 +1835,7 @@ export class Class_DrawingArea {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
     this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
-    this.sankey.visible_links_list.forEach(n => n.setEventsListeners()) 
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
@@ -1859,74 +1861,14 @@ export class Class_DrawingArea {
     this.d3_selection?.classed('selection_mode', !mode_edition)
   }
 
-
-
-  /**
-   * Add node ref to container attribute attached_node
-   *
-   * @param {Class_NodeElement} node
-   * @param {Type_GenericContainerElement} cont
-   * @memberof Class_Sankey
-   */
-  public attachNodeToCont(node: Class_NodeElement, cont: Class_ContainerElement) {
-    if (!cont.attached_node.includes(node)) {
-      cont.attached_node.push(node)
-      this.attachContToNode(cont, node)
-    }
-  }
-
-  /**
-   * Add container ref to node attribute attached_container
-   *
-   * @param {Type_GenericContainerElement} cont
-   * @param {Class_NodeElement} node
-   * @memberof Class_Sankey
-   */
-  public attachContToNode(cont: Class_ContainerElement, node: Class_NodeElement): void {
-    if (!node.attached_container.includes(cont)) {
-      node.attached_container.push(cont)
-      this.attachNodeToCont(node, cont)
-    }
-  }
-
-  /**
-   * Remove ref of container in node attached_node attribute
-   *
-   * @param {Class_NodeElement} node
-   * @param {Type_GenericContainerElement} cont
-   * @memberof Class_SankeyOSP
-   */
-  public dettachNodeFromCont(node: Class_NodeElement, cont: Class_ContainerElement) {
-    if (cont.attached_node.includes(node)) {
-      const idx = cont.attached_node.indexOf(node)
-      cont.attached_node.splice(idx, 1)
-      this.dettachNodeFromCont(node, cont)
-    }
-  }
-
-  /**
-   * Remove ref of container in node attached_container attribute
-   *
-   * @param {Type_GenericContainerElement} cont
-   * @param {Class_NodeElement} node
-   * @memberof Class_SankeyOSP
-   */
-  public dettachContFromNode(cont: Class_ContainerElement, node: Class_NodeElement): void {
-    if (node.attached_container.includes(cont)) {
-      const idx = node.attached_container.indexOf(cont)
-      node.attached_container.splice(idx, 1)
-      this.dettachContFromNode(cont, node)
-    }
-  }
-
   public get sankey() { return this._sankey }
   public get legend(): ClassTemplate_Legend { return this._legend }
   public set legend(value: ClassTemplate_Legend) { this._legend = value }
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 
-  public get selected_elements_list(): Class_ProtoElement[] {return Object.values(this._selection)}
-  public get selected_visible_elements_list(): Class_ProtoElement[] {return this.selected_elements_list.filter(el=>el.is_visible)}
+  public get selected_elements_list(): Class_ProtoElement[] { return Object.values(this._selection) }
+  public get selected_visible_elements_list(): Class_ProtoElement[] { return this.selected_elements_list.filter(el => el.is_visible) }
 
   public get selected_nodes_list(): Class_NodeElement[] {
     return Object.values(this._selection)
@@ -2028,7 +1970,7 @@ export class Class_DrawingArea {
       this._scaleValueToPx.domain([0, value])
       this.application_data.menu_configuration.updateComponentRelatedToLayoutApparence()
       this.drawElements()
-      this.areaAutoFit(false)
+      this.areaAutoFit()
     }
   }
 
@@ -2196,5 +2138,5 @@ export class Class_DrawingArea {
     return false
   }
 
-  public set bypass_autofit(value) {this._bypass_autofit = value}
+  public set bypass_autofit(value) { this._bypass_autofit = value }
 }

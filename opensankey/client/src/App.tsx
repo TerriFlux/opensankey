@@ -208,12 +208,7 @@ export const OpenSankeyApp = ({
       />
       <React.Fragment key={'modale_style_link'}>
         <GenericModalStyle
-          new_data={app_data}
-        />
-      </React.Fragment>
-      <React.Fragment key={'modale_style_node'}>
-        <GenericModalStyle
-          new_data={app_data}
+          app_data={app_data}
         />
       </React.Fragment>
     </div>

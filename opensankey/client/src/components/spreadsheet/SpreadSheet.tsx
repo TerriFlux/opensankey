@@ -38,6 +38,7 @@ import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
 import { applyRandomColors } from '../../Algorithms/Colors'
+import { LinkAttributeMappings, LinkElementPersistence, NodeAttributeMappings, NodeElementPersistence } from '../../Persistence/SankeyPersistence'
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
@@ -422,7 +423,8 @@ export const SpreadSheet = (
       app_data.history.saveRedo(redoNewFlux)
     }
   }
-
+    const node_persistence = new NodeElementPersistence(new NodeAttributeMappings)
+    const link_persistence = new LinkElementPersistence(new LinkAttributeMappings)
   /**
    * Function called in onChanges of Spreadsheet to change source/target of existing links,
    * then if previous source/target doesn't have IO links delete it 
@@ -456,7 +458,7 @@ export const SpreadSheet = (
 
         if (!prevNode.hasInputLinks() && !prevNode.hasOutputLinks()) {
           dict_old_id[l.id].deletedJSON = {}
-          prevNode.toJSON(dict_old_id[l.id].deletedJSON as Type_JSON)//save json of deleted node
+          node_persistence.toJSON(prevNode,dict_old_id[l.id].deletedJSON as Type_JSON)//save json of deleted node
           // Remove lone nodes
           drawing_area.deleteNode(prevNode)
         }
@@ -475,7 +477,7 @@ export const SpreadSheet = (
               const del_node_name = ent_l[1]?.deletedJSON?.name as string
               sankey.addNewNode(ent_l[1].source, del_node_name)
               if (ent_l[1].deletedJSON)
-                dict_n[ent_l[1].source].fromJSON(ent_l[1].deletedJSON) //restore node deleted with json
+                node_persistence.fromJSON(+drawing_area.application_data.version,dict_n[ent_l[1].source],ent_l[1].deletedJSON) //restore node deleted with json
             }
             dict_l[ent_l[0]].source = dict_n[ent_l[1].source]
           }
@@ -486,7 +488,7 @@ export const SpreadSheet = (
               const del_node_name = ent_l[1]?.deletedJSON?.name as string
               sankey.addNewNode(ent_l[1].target, del_node_name)
               if (ent_l[1].deletedJSON)
-                dict_n[ent_l[1].target].fromJSON(ent_l[1].deletedJSON) //restore node deleted with json
+                node_persistence.fromJSON(+drawing_area.application_data.version,dict_n[ent_l[1].target],ent_l[1].deletedJSON) //restore node deleted with json
             }
             dict_l[ent_l[0]].target = dict_n[ent_l[1].target]
           }
@@ -714,7 +716,7 @@ export const SpreadSheet = (
                     sankey.deleteNode(drawing_area.sankey.nodes_dict[node.id])
                   })
                 })
-                drawing_area.fromJSON(prevSankey,{}, false)
+                drawing_area.fromJSON(prevSankey,{})
 
                 // drawing_area.computeAutoSankey(true)
                 app_data.draw()
@@ -722,7 +724,7 @@ export const SpreadSheet = (
               }
 
               const redoPaste = () => {
-                drawing_area.fromJSON(nextSankey,{}, false)
+                drawing_area.fromJSON(nextSankey,{})
                 drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
                 app_data.draw()
                 menu_configuration.updateComponentRelatedToLinksData()

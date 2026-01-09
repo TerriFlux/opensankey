@@ -355,7 +355,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    openVisualStyleModal: {
+    openStyleModal: {
       type: 'action',
       labels: {
         en: 'Node appearance',
@@ -365,43 +365,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         en: 'Open the node visual style configuration dialog',
         fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des nœuds'
       }
-    },
-
-    openLabelsStyleModal: {
-      type: 'action',
-      labels: {
-        en: 'Node labels',
-        fr: 'Libellés des nœuds'
-      },
-      tooltips: {
-        en: 'Open the node labels style configuration dialog',
-        fr: 'Ouvrir la boîte de dialogue de configuration du style des libellés des nœuds'
-      }
-    },
-
-    // openVisualStyleModal: {
-    //   type: 'action',
-    //   labels: {
-    //     en: 'Flow appearance',
-    //     fr: 'Formes des flux'
-    //   },
-    //   tooltips: {
-    //     en: 'Open the link visual style configuration dialog',
-    //     fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des flux'
-    //   }
-    // },
-
-    // openLabelsStyleModal: {
-    //   type: 'action',
-    //   labels: {
-    //     en: 'Flow labels',
-    //     fr: 'Libellés des flux'
-    //   },
-    //   tooltips: {
-    //     en: 'Open the link labels style configuration dialog',
-    //     fr: 'Ouvrir la boîte de dialogue de configuration du style des libellés des flux'
-    //   }
-    // }
+    }
   },
 
   sectionTitles: {
@@ -429,8 +393,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const { sankey } = drawing_area
   const { nodePositioning } = drawing_area
   const { dict_setter_show_dialog } = menu_configuration
-  const {
-    ref_setter_show_modal_styles_visual, ref_setter_show_modal_styles_labels} = dict_setter_show_dialog
+  const {ref_setter_show_modal_styles} = dict_setter_show_dialog
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.styles_dict['default']
   const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
@@ -457,8 +420,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     applyRandomLinkColors: () => { applyRandomColors(app_data, sankey.links_list); saveToCache() },
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
-    openNodeVisualStyleModal: () => ref_setter_show_modal_styles_visual.current(true),
-    openNodeLabelsStyleModal: () => ref_setter_show_modal_styles_labels.current(true),
+    openStyleModal: () => ref_setter_show_modal_styles.current(true),
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated
       app_data.drawing_area.draw()

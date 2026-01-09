@@ -117,6 +117,19 @@ export const font_families = [
   'Verdana,sans-serif',
   'Zapf Chancery,cursive',
 ]
+export const default_stick_to_drawing = true
+export const default_masked = true
+export const default_display_legend_scale = false
+export const default_legend_police = 16
+export const default_legend_bg_border = false
+export const default_legend_bg_color = default_element_color
+export const default_legend_bg_opacity = 0
+export const default_legend_show_dataTags = true
+export const default_legend_show_constraints = false
+export const default_width = 180
+export const default_info_link_value_void = false
+export const default_legend_position_x = 300
+export const default_legend_position_y = 50
 
 // Types d'actions disponibles
 export type BaseActionType =
@@ -1948,7 +1961,7 @@ export const ALL_ATTRIBUTES_CONFIG = {
 
   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
   ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
-  
+
   ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
   ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
 
@@ -2012,7 +2025,7 @@ export const useElementAttributeConfig = <
     const { drawing_area, menu_configuration } = app_data
     const { sankey } = drawing_area
     const { ref_selected_style } = menu_configuration
-    const { styles_dict} = sankey
+    const { styles_dict } = sankey
 
     const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
 
@@ -2104,7 +2117,7 @@ export function getConfigValues<
           return (elements.length > 0 && Reflect.get(elements[0], fullKey)) ?? config[configKey].default
         },
         set: (value: ExtractConfigValue<CONFIG[typeof configKey]>) => {
-          if (elements.length == 0) return 
+          if (elements.length == 0) return
           updateElements(
             elements[0].drawing_area.application_data,
             elements,

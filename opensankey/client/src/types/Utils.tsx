@@ -305,37 +305,14 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
   new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
 
   new_data.menu_configuration.additionalMenus.current = {
-
-    // Top Menu
-    external_edition_item: [],
-    external_file_export_item: [],
-    externale_save_item: [],
     external_top_buttons_item: {},
-    externale_navbar_item: {},
-    footer: [],
 
-    // Menu config
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
     additional_menu_config_content: { data: {}, context: {}, style: {} },
     additional_new_menu_config_content: {},
-    additional_node_config_style: [],
 
-    // Mise en page
     extra_background_element: <></>,
-
-    // Nodes
-    advanced_appearence_content: [],
-    advanced_label_content: [],
-
-    additional_menu_configuration_links: {},
-    additional_data_element: [],
-    additional_link_visual_filter_content: [],
-
-    additional_preferences: [],
-
-    additional_file_export_item: [],
-
     additional_nav_item: [],
 
     formations_menu: {},

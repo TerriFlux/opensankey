@@ -53,48 +53,27 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ElementStyle } from '../../Elements/Element'
-import { Type_AdditionalMenus } from '../../types/MenuConfig'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
-// ✅ COMPOSANT GÉNÉRIQUE POUR LES MODALES DE STYLE
 export const GenericModalStyle = ({
-  new_data
+  app_data
 }: {
-  new_data: Class_ApplicationData
+  app_data: Class_ApplicationData
 }) => {
-  const { t } = new_data
+  const { t } = app_data
   const [, setForceUpdate] = useBoolean()
   const [selectedStyleId, setSelectedStyleId] = useState(default_style_id)
 
-  // // ✅ Configuration selon le type
-  // const config = elementType === 'nodes' ? {
-  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
-  //   attributePrefix: 'Noeud',
-  //   titleShape: 'Menu.esn',
-  //   titleLabel: 'Menu.esn_labels'
-  // } : elementType === 'containers' ? {
-  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
-  //   attributePrefix: 'Container',
-  //   titleShape: 'Menu.esc',
-  //   titleLabel: 'Menu.esc_labels'
-  // } : {
-  //   updateStyle: () => new_data.menu_configuration.updateComponentRelatedToStyles(),
-  //   attributePrefix: 'Flux',
-  //   titleShape: 'Menu.esf',
-  //   titleLabel: 'Menu.esf_labels'
-  // }
-
-  new_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = setForceUpdate.toggle
+  app_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = setForceUpdate.toggle
 
   // Failsafe
-  if (!(selectedStyleId in new_data.drawing_area.sankey.styles_dict)) {
+  if (!(selectedStyleId in app_data.drawing_area.sankey.styles_dict)) {
     setSelectedStyleId(default_style_id)
   }
 
-  const style_select = new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current]
+  const style_select = app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current]
 
-  // ✅ Menu des attributs personnalisables pour la forme
   const content_customisable_attribute_style = (
     <Menu direction='rtl' placement='left' closeOnSelect={false}>
       <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
@@ -111,13 +90,13 @@ export const GenericModalStyle = ({
             <MenuItem
               key={ent[0]}
               style={{ display: 'flex' }}
-              isDisabled={new_data.menu_configuration.ref_selected_style.current == default_style_id}
+              isDisabled={app_data.menu_configuration.ref_selected_style.current == default_style_id}
               onClick={() => {
                 if (ent[1]) {
                   style_select.deleteAttribute(ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG)
                 }
                 style_select.customisable_attribute[ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG] = !ent[1]
-                new_data.menu_configuration.updateComponentRelatedToStyles()
+                app_data.menu_configuration.updateComponentRelatedToStyles()
               }}
             >
               {t(`Noeud.apparence.${ent[0]}`)}
@@ -129,61 +108,14 @@ export const GenericModalStyle = ({
     </Menu>
   )
 
-  // ✅ Menu des attributs personnalisables pour les labels
-  const content_customisable_attribute_labels = (
-    <Menu direction='rtl' placement='left' closeOnSelect={false}>
-      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
-        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
-          {t('Menu.style_attr_applicated')}
-          <ChevronDownIcon />
-        </MenuButton>
-      </OSTooltip>
-      <MenuList maxH='40vh' overflow='auto'>
-        {Object.entries(style_select.customisable_attribute).map(ent => {
-          if (ent[0].includes('shape_')) return <></>
-
-          const labelOrValue = ent[0].includes('name_') ? 'name_label_is_visible' : 'value_label_is_visible'
-
-          return (
-            <MenuItem
-              key={ent[0]}
-              style={{ display: 'flex' }}
-              isDisabled={new_data.menu_configuration.ref_selected_style.current == default_style_id}
-              onClick={() => {
-                if (ent[1]) {
-                  //@ts-expect-error xxx
-                  delete style_select[ent[0] as Type_customisable_node_style_attr | Type_customisable_flow_style_attr]
-                }
-                style_select.customisable_attribute[ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG] = !ent[1]
-                new_data.menu_configuration.updateComponentRelatedToStyles()
-              }}
-            >
-              {t('Noeud.labels.' + labelOrValue)} {t(`Noeud.labels.${ent[0]}`)}
-              {checked(ent[1])}
-            </MenuItem>
-          )
-        })}
-      </MenuList>
-    </Menu>
-  )
-
   const content_style_shape = (
-    <GenericStyleSelector new_data={new_data}>
+    <GenericStyleSelector app_data={app_data}>
       <>
         {content_customisable_attribute_style}
         <MenuConfigurationAppearance
-          app_data={new_data}
+          app_data={app_data}
           menu_for_style={true}
         />
-      </>
-    </GenericStyleSelector>
-  )
-
-  const content_style_labels = (
-    <GenericStyleSelector new_data={new_data}>
-      <>
-        {content_customisable_attribute_labels}
-        <MenuConfigurationAppearance app_data={new_data} menu_for_style={true} />
       </>
     </GenericStyleSelector>
   )
@@ -191,18 +123,10 @@ export const GenericModalStyle = ({
   return (
     <>
       <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_modal_styles_visual'}
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_modal_styles'}
         content={content_style_shape}
         title={t('Menu.esn')}
-        maxW='20%'
-        customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
-      />
-      <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_modal_styles_labels'}
-        content={content_style_labels}
-        title={t('Menu.esn_labels')}
         maxW='20%'
         customPos={{ x: window.innerWidth * 0.59, y: window.innerHeight * 0.2 }}
       />
@@ -211,20 +135,20 @@ export const GenericModalStyle = ({
 }
 
 // ✅ COMPOSANT GÉNÉRIQUE POUR LE WRAPPER DE SÉLECTEUR DE STYLE
-export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildren<{
-  new_data: Class_ApplicationData
+export const GenericStyleSelector = ({app_data,children}: React.PropsWithChildren<{
+  app_data: Class_ApplicationData
   children: JSX.Element
 }>) => {
-  const { t, icon_library } = new_data
+  const { t, icon_library } = app_data
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
 
   // const config = elementType === 'nodes' ? {
-  //   selectedRef: new_data.menu_configuration.ref_selected_style,
+  //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
-      new_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      new_data.menu_configuration.updateComponentRelatedToStyles()
-      new_data.menu_configuration.updateAllComponentsRelatedToContainers()
-      new_data.menu_configuration.updateComponentRelatedToLinksApparence()
+      app_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      app_data.menu_configuration.updateComponentRelatedToStyles()
+      app_data.menu_configuration.updateAllComponentsRelatedToContainers()
+      app_data.menu_configuration.updateComponentRelatedToApparence()
     }
   
 
@@ -236,10 +160,10 @@ export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildre
           variant='menuconfigpanel_add_button'
           size='sizeConfigButton'
           onClick={() => {
-            const new_style = new_data.drawing_area.sankey.addNewDefaultElementStyle()
-            new_data.menu_configuration.ref_selected_style.current = new_style.id
+            const new_style = app_data.drawing_area.sankey.addNewDefaultElementStyle()
+            app_data.menu_configuration.ref_selected_style.current = new_style.id
             updateAll()
-            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+            app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
           }}
         >
           {icon_add_element}
@@ -252,20 +176,20 @@ export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildre
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {new_data.menu_configuration.ref_selected_style.current !== ''
-              ? CutName(new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name, 30)
+            {app_data.menu_configuration.ref_selected_style.current !== ''
+              ? CutName(app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name, 30)
               : 'Choix Style'}
           </MenuButton>
           <MenuList>
-            {Object.keys(new_data.drawing_area.sankey.styles_dict).map(id => (
+            {Object.keys(app_data.drawing_area.sankey.styles_dict).map(id => (
               <MenuItem
                 key={id}
                 onClick={() => {
-                  new_data.menu_configuration.ref_selected_style.current = id
+                  app_data.menu_configuration.ref_selected_style.current = id
                   updateAll()
                 }}
               >
-                {new_data.drawing_area.sankey.styles_dict[id].name}
+                {app_data.drawing_area.sankey.styles_dict[id].name}
               </MenuItem>
             ))}
           </MenuList>
@@ -275,12 +199,12 @@ export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildre
         <Button
           variant='menuconfigpanel_del_button'
           size='sizeConfigButton'
-          isDisabled={new_data.menu_configuration.ref_selected_style.current === default_style_id}
+          isDisabled={app_data.menu_configuration.ref_selected_style.current === default_style_id}
           onClick={() => {
-            new_data.drawing_area.sankey.deleteElementStyle(new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current])
-            new_data.menu_configuration.ref_selected_style.current = default_style_id
+            app_data.drawing_area.sankey.deleteElementStyle(app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current])
+            app_data.menu_configuration.ref_selected_style.current = default_style_id
             updateAll()
-            new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+            app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
           }}
         >
           {icon_remove_element}
@@ -295,12 +219,12 @@ export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildre
           <InputGroup variant='menuconfigpanel_option_input'>
             <Input
               variant='menuconfigpanel_option_input'
-              disabled={new_data.menu_configuration.ref_selected_style.current === default_style_id}
-              value={new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name}
+              disabled={app_data.menu_configuration.ref_selected_style.current === default_style_id}
+              value={app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name}
               onChange={(evt) => {
-                new_data.drawing_area.sankey.styles_dict[new_data.menu_configuration.ref_selected_style.current].name = evt.target.value
+                app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name = evt.target.value
                 updateAll()
-                new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+                app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
               }}
             />
           </InputGroup>
@@ -312,7 +236,6 @@ export const GenericStyleSelector = ({new_data,children}: React.PropsWithChildre
   )
 }
 
-// ✅ COMPOSANT GÉNÉRIQUE UNIFIÉ POUR LA CONFIGURATION DES STYLES
 export const ConfigMenuStyleElement = ({ 
   app_data, 
   selected_elements, 
@@ -326,15 +249,8 @@ export const ConfigMenuStyleElement = ({
 }) => {
   const { t, icon_library, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
-  const { 
-    ref_selected_style,
-    dict_setter_show_dialog 
-  } = menu_configuration
-  
-  const {
-    ref_setter_show_modal_styles_visual, 
-    ref_setter_show_modal_styles_labels, 
-  } = dict_setter_show_dialog
+  const { ref_selected_style,dict_setter_show_dialog } = menu_configuration
+  const {ref_setter_show_modal_styles} = dict_setter_show_dialog
 
   const element_ref = selected_elements[0]
 
@@ -392,11 +308,7 @@ export const ConfigMenuStyleElement = ({
               }
               
               updateStyles()
-              if (categories.includes('shape')) {
-                ref_setter_show_modal_styles_visual.current(true)
-              } else {
-                ref_setter_show_modal_styles_labels.current(true)
-              }
+              ref_setter_show_modal_styles.current(true)
             }}
           >
             {icon_library.icon_edit_style}
@@ -444,9 +356,7 @@ export const MenuOrderStylesOfSelectedElements = ({ app_data}: {app_data: Class_
   // ✅ Configuration des fonctions selon le type
   const moveOrderStyle = (style_src: any, style_trgt: any) => {
     drawing_area.moveOrderStyleInSelectedElements(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
-    menu_configuration.updateComponentRelatedToNodesApparence()
-    menu_configuration.updateComponentRelatedToLinksApparence()
-    menu_configuration.updateComponentRelatedToContainersApparence()
+    menu_configuration.updateComponentRelatedToApparence()
   }
 
   return (
