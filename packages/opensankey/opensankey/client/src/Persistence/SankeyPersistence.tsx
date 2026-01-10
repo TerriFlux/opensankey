@@ -244,12 +244,12 @@ export class ContainerPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92 = {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       'label_height': 'shape_min_height',
       'label_width': 'shape_min_width',
       //'has_fo': 'name_label_has_fo',
       'content': 'name_label_fo_content'
-    } as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+    }
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
@@ -402,7 +402,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92 = {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       'user_scale': 'shape_local_link_scale',
       'curved': 'shape_is_curved',
       'curvature': 'shape_curvature',
@@ -445,7 +445,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'label_horiz': 'name_label_horiz',
       'label_vert': 'name_label_vert'
 
-    } as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+    }
     const was_gradient = getBooleanFromJSON(json_object, 'gradient', false) as boolean
     if (was_gradient) {
       link.attributes['shape_color_rule'] = 'gradient'
@@ -581,7 +581,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92 = {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       // Name label legacy
       'label_visible': 'name_label_is_visible',
       'font_family': 'name_label_font_family',
@@ -592,7 +592,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
       'label_color': 'name_label_color',
       'label_horiz': 'name_label_horiz',
       'label_vert': 'name_label_vert',
-      'label_background': 'name_label_background',
+      'label_background': 'name_label_background_visible',
       'label_background_color': 'name_label_background_color',
       'label_box_width': 'name_label_box_width',
 
@@ -616,8 +616,14 @@ export class NodeElementPersistence extends NodeBasePersistence {
       'node_height': 'shape_min_height',
       'color': 'shape_color',
       'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable'
-    } as unknown as { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG }
+      'colorSustainable': 'shape_color_sustainable',
+
+      'iconName': 'icon_icon_name',
+      'iconColor': 'icon_color',
+      'iconVisible': 'icon_is_visible',
+      'iconViewBox': 'icon_view_box',
+      'iconColorSustainable': 'icon_color_sustainable'
+    }
 
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
