@@ -42,7 +42,7 @@ import {
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import {
-  AttributeConfig, 
+  AttributeConfig,
   IconLabelAttributeTypes,
   LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
   NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
@@ -81,6 +81,14 @@ export abstract class Class_BaseElement {
       y: const_default_position_y
     }
     this._visibility_fingerprint = randomId()
+  }
+  
+  protected _process_or_bypass(
+    process_func: () => void
+  ) {
+    if (this._drawing_area.bypass_redraws)
+      return
+    process_func()
   }
 
   public setEventsListeners() {
@@ -175,11 +183,13 @@ export abstract class Class_BaseElement {
     this._position.y = element.position_y
     this._svg_parent_group = element._svg_parent_group;
   }
-   
+
   public draw() {
-    this.unDraw()
-    if (this.is_visible && !this._is_currently_deleted)
-      this._draw()
+    this._process_or_bypass(() => {
+      this.unDraw()
+      if (this.is_visible && !this._is_currently_deleted)
+        this._draw()
+    })
   }
   protected _draw() {
     this._initDraw()
@@ -340,10 +350,10 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     if (style.id == default_style_id) {
       this._style = [default_style]
     } else {
-      this._style = [default_style,style]      
+      this._style = [default_style, style]
     }
     this._config = ALL_ATTRIBUTES_CONFIG
-    this._style.forEach(s=>s.addReference(this))
+    this._style.forEach(s => s.addReference(this))
     this.createDynamicProperties()
   }
 
@@ -622,7 +632,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
-   orphan_node_visible!: boolean
+  orphan_node_visible!: boolean
   position_type!: NodeShapeSpecificAttributeTypes['position_type']
   position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
@@ -926,12 +936,12 @@ export class Class_ElementStyle {
   margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
   margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
 
-  private _storage: Record<string,unknown> = {}
+  private _storage: Record<string, unknown> = {}
   private _config: Record<string, AttributeConfig<unknown>>
   private _id: string
   private _name: string
   private _is_deletable: boolean
-  private _references: { [_: string]: Class_BaseElement} = {}
+  private _references: { [_: string]: Class_BaseElement } = {}
   private _customisable_attribute: { -readonly [K in string]: boolean } = {}
 
   private _default_style: Class_ElementStyle
@@ -952,10 +962,10 @@ export class Class_ElementStyle {
     // this._attributeMappings = attributeMappings
     this._default_style = default_style;
     this._drawing_area = drawing_area;
-      // Initialiser les attributs customisables
-      Object.keys(this._config).forEach(key => {
-        this._customisable_attribute[key] = !is_deletable
-      })
+    // Initialiser les attributs customisables
+    Object.keys(this._config).forEach(key => {
+      this._customisable_attribute[key] = !is_deletable
+    })
 
     if (!is_deletable) {
       Object.entries(this._config).forEach(([key, config]) => {
@@ -1031,5 +1041,5 @@ export class Class_ElementStyle {
   public get customisable_attribute() { return this._customisable_attribute }
 
 
-  public get drawing_area() { return this._drawing_area}
+  public get drawing_area() { return this._drawing_area }
 }

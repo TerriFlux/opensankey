@@ -146,15 +146,13 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     super.fromJSON(version, proto_element, json_object, kwargs)
     proto_element.unDraw()
 
-    // this._id = getStringFromJSON(json_object, 'id', this._id)
     proto_element['_is_visible'] = getBooleanFromJSON(json_object, 'is_visible', proto_element['_is_visible'])
 
-    //const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-
-    //proto_element['_style'] = style_id.map(s_id => proto_element.sankey.styles_dict[s_id])
     if (!Array.isArray(json_object.style)) {
       const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-      proto_element['_style'] = proto_element.sankey.styles_dict[style_id] ? [proto_element.sankey.styles_dict[style_id]] : []
+      if (style_id != 'default' && proto_element.sankey.styles_dict[style_id]) {
+        proto_element['_style'].push(proto_element.sankey.styles_dict[style_id])
+      }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
       proto_element['_style'] = style_id.filter(s_id => proto_element.sankey.styles_dict[s_id]).map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]
@@ -162,9 +160,9 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
-        if (json_object[key as string] !== undefined) {
-          if (json_object[key as string] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
-            proto_element.attributes[key] = json_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+        if (json_local_object[key as string] !== undefined) {
+          if (json_local_object[key as string] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
+            proto_element.attributes[key] = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
           }
         }
       })
@@ -1403,6 +1401,8 @@ export class DrawingAreaPersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    drawing_area.bypass_redraws = true
+
     const version = getStringOrUndefinedFromJSON(json_object, 'version')
     if (
       (version === undefined) ||
