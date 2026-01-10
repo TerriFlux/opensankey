@@ -450,12 +450,13 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     if (was_gradient) {
       link.attributes['shape_color_rule'] = 'gradient'
     }
+    const json_local = json_object.local as Type_JSON
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
-      if (json_object[jsonKey] !== undefined) {
+      if (json_local[jsonKey] !== undefined) {
         const key = attrKey as keyof ConfigType
         const currentValue = link.getStyleProperty(key)
-        if (json_object[jsonKey] !== currentValue) {
-          link.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        if (json_local[jsonKey] !== currentValue) {
+          link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
         }
       }
     })
@@ -581,7 +582,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+    const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       // Name label legacy
       'label_visible': 'name_label_is_visible',
       'font_family': 'name_label_font_family',
@@ -616,14 +617,27 @@ export class NodeElementPersistence extends NodeBasePersistence {
       'node_height': 'shape_min_height',
       'color': 'shape_color',
       'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable',
-
+      'colorSustainable': 'shape_color_sustainable'
+    }
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       'iconName': 'icon_icon_name',
       'iconColor': 'icon_color',
       'iconVisible': 'icon_is_visible',
       'iconViewBox': 'icon_view_box',
-      'iconColorSustainable': 'icon_color_sustainable'
+      'iconColorSustainable': 'icon_color_sustainable',
+      'is_image': 'icon_is_image',
+      'image_src': 'icon_image_src'
     }
+    const json_local = json_object.local as Type_JSON
+    Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
+      if (json_local[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = node.getStyleProperty(key)
+        if (json_local[jsonKey] !== currentValue) {
+          node.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
 
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
@@ -634,6 +648,16 @@ export class NodeElementPersistence extends NodeBasePersistence {
         }
       }
     })
+
+    if (node.icon_is_image) {
+      node.icon_is_visible = true
+      node.icon_inside_horiz = true
+      node.icon_inside_vert = true
+    }
+    if (node.icon_is_visible) {
+      node.icon_vert = 'middle'
+      node.icon_horiz = 'middle'
+    }
   }
 
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
@@ -732,7 +756,7 @@ export class LegendPersistence extends ProtoElementPersistence {
   }
 }
 
-export class StyledPersistence {
+export class StylePersistence {
   public static fromJSON_pre_0_9(
     _style: Class_ElementStyle,
     _json_object: Type_JSON,
@@ -833,6 +857,9 @@ export class StyledPersistence {
 
     const default_style = style.drawing_area.sankey.default_style
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (!json_object[jsonKey]) {
+        return
+      }
       if (!ALL_ATTRIBUTES_CONFIG[attrKey]) {
         return
       }
@@ -1043,24 +1070,9 @@ export class SankeyPersistence {
 
     json_object['style'] = json_object_styles
     sankey.styles_list.forEach(style => {
-      json_object_styles[style.id] = StyledPersistence.toJSON(style);
+      json_object_styles[style.id] = StylePersistence.toJSON(style);
       (json_object_styles[style.id] as Type_JSON)['name'] = style.name
     })
-    // json_object['style_link'] = json_object_styles_links
-    // sankey.link_styles_list.forEach(style => {
-    //   json_object_styles_links[style.id] = style.toJSON();
-    //   (json_object_styles_links[style.id] as Type_JSON)['name'] = style.name
-    // })
-    // json_object['style_zdt'] = json_object_styles_containers
-    // this.container_styles_list.forEach(style => {
-    //   json_object_styles_containers[style.id] = {}
-    //   Object.entries(style.toJSON()).forEach(([key, value]) => {
-    //     //@ts-expect-error xxx
-    //     json_object_styles_containers[style.id][key] = value
-    //   });
-    //   (json_object_styles_containers[style.id] as Type_JSON)['name'] = style.name
-    // })
-    // Add nodes
     json_object['nodes'] = json_object_nodes
     const nodes_list = (
       (kwargs && kwargs['save_only_elements_with_tags']) ?
@@ -1156,14 +1168,25 @@ export class SankeyPersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    const old2new_name = {
+      'style_link': 'LinkStyle',
+      'style_node': 'NodeStyle',
+      'style_zdt': 'ContainerStyle'
+    };
     ['style_link', 'style_node', 'style_zdt'].forEach(style_type => {
       if (json_object[style_type] !== undefined) {
         Object.entries(json_object[style_type])
           .forEach(([style_id, style_json]) => {
-            const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
-            StyledPersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
-            new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
-            sankey._styles[style_id] = new_style
+            let new_style = sankey._styles[style_id]
+            if (style_id == 'default') {
+              new_style = sankey._styles[old2new_name[style_type as keyof typeof old2new_name]]
+              StylePersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+            } else {
+              new_style = sankey.createNewElementStyle(style_id, style_id, true)
+              StylePersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+              new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+              sankey._styles[style_id] = new_style
+            }
           })
       }
     })
@@ -1217,7 +1240,7 @@ export class SankeyPersistence {
           // Create a node style
           const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
           // Set node style value to node from JSON
-          StyledPersistence.fromJSON(version, new_style, style_json as Type_JSON)
+          StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
           new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
           // Add node style to sankey
           sankey._styles[style_id] = new_style
