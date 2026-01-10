@@ -178,7 +178,7 @@ export class Class_NodeBase extends Class_BaseShape {
     super.eventMouseOver(event)
   }
 
-  public getShapeColorToUse() { return this.shape_color }
+  //public getShapeColorToUse() { return this.shape_color }
 
   public setInputLabelVisible() { this._nodeDrawNameLabel.setInputLabelVisible() }
   public setInputLabelInvisible() { this._nodeDrawNameLabel.setInputLabelInvisible() }
