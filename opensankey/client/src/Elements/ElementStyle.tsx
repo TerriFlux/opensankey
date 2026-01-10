@@ -32,20 +32,31 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     name: 'Style de noeud par defaut',
     config: { 
       'name_label_is_visible': true,
-      'value_label_is_visible': false 
+      //'value_label_is_visible': false 
     }
   },
   LinkStyle: {
     name: 'Style de flux par defaut',
     config: { 
-      'name_label_is_visible': false,
-      'value_label_is_visible': true 
+      //'name_label_is_visible': false,
+      'name_label_background_visible': false,
+      'name_label_vert': 'top',
+      'name_label_font_size': 20,
+      'value_label_is_visible': true,
+      'value_label_vert': 'middle',
+      'value_label_font_size': 20
     }
   },
   ContainerStyle: {
     name: 'Style de container par defaut',
     config: { 
+      "name_label_font_family": "Arial,sans-serif",
       'name_label_is_visible': true,
+      'name_label_inside_vert': true,
+      'name_label_vert': 'top',      
+      'shape_color':'white',
+      'shape_border_visible': true,
+      'shape_border_radius': 5,      
       'value_label_is_visible': false,
       'shape_min_height': 100,
       'shape_min_width': 100     

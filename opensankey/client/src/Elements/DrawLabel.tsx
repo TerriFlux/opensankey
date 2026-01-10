@@ -1181,7 +1181,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
     let ortho_position = label_ortho_position
     let ratio = 1
-    const bezier_outline = this.link.shape_type == 'bezier_outline' || (this.link.shape_border_visible && !this.link.shape_color_visible)
+    const bezier_outline = this.link.shape_type == 'bezier_outline' || (this.link.shape_border_visible /*&& !this.link.shape_color_visible*/)
     if (bezier_outline) {
       ratio = 3
       ortho_position = this.link.thickness / 2

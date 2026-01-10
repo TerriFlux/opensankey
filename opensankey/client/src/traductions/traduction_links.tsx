@@ -21,8 +21,6 @@ export const resources_flux = {
         local_scale: 'Local link scale',
         changePlan: 'Change plan of flows',
         mask_attr: 'Change flow\'s attributes',
-        TS: 'Select all',
-        NS: 'No flow selected',
         tooltips: {
           src: 'Choice of the departure node for the selected link(s)',
           trgt: 'Choice of the arrival node for the selected link(s)',
@@ -162,8 +160,6 @@ export const resources_flux = {
         ajust_label: 'Position vertical ajusté',
         local_scale: 'Échelle propre au flux',
         FS: 'Flux',
-        TS: 'Tout sélectionner',
-        NS: 'Aucun flux sélectionné',
         changePlan: 'Modifier le plan des flux',
         mask_attr: 'Changer des attributs',
         tooltips: {

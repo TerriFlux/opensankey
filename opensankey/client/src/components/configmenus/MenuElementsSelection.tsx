@@ -49,9 +49,62 @@ interface ElementConfig<T extends ElementInstance> {
   sortElements?: boolean
 }
 
-// ==================================================================================
-// CONFIGURATIONS POUR CHAQUE TYPE
-// ==================================================================================
+// ElementsMenuConfig.ts
+export const ELEMENTS_MENU_CONFIG = {
+  node: {
+    labels: {
+      TS: { en: 'Selected nodes', fr: 'Noeuds sélectionnés' },
+      NS: { en: 'No selection', fr: 'Aucune sélection' },
+      Nom: { en: 'Name', fr: 'Nom' }
+    },
+    tooltips: {
+      plus: { en: 'Add a node, which will be automatically selected', fr: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.' },
+      slct: { en: 'Choose nodes to select via dropdown', fr: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante' },
+      rm: { en: 'Delete all currently selected nodes', fr: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)' },
+      dns: { en: 'Display only visible nodes in selector', fr: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles' },
+      Nom: { en: 'Rename the node', fr: 'Renommer le noeud' }
+    }
+  },
+  
+  link: {
+    labels: {
+      TS: { en: 'Selected links', fr: 'Flux sélectionnés' },
+      NS: { en: 'No selection', fr: 'Aucune sélection' }
+    },
+    tooltips: {
+      plus: { en: 'Add a new link', fr: 'Ajouter un flux' },
+      slct: { en: 'Choose links to select', fr: 'Choisir un / des / tous les flux à sélectionner' },
+      rm: { en: 'Delete selected links', fr: 'Supprimer les flux sélectionnés' },
+      dns: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles' },
+      dls: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles' }
+    }
+  },
+
+  container: {
+    labels: {
+      TS: { en: 'Selected containers', fr: 'Containers sélectionnés' },
+      NS: { en: 'No selection', fr: 'Aucune sélection' },
+      Nom: { en: 'Name', fr: 'Nom' }
+    },
+    tooltips: {
+      plus: { en: 'Add a container', fr: 'Ajouter un container' },
+      slct: { en: 'Choose containers to select', fr: 'Choisir les containers à sélectionner' },
+      rm: { en: 'Delete selected containers', fr: 'Supprimer les containers sélectionnés' },
+      dns: { en: 'Display only visible containers', fr: 'Afficher uniquement les containers visibles' },
+      Nom: { en: 'Rename the container', fr: 'Renommer le container' }
+    }
+  },
+
+  common: {
+    labels: {
+      filter_nodes: { en: 'Filter nodes', fr: 'Filtrer les nœuds' },
+      filter_links: { en: 'Filter links', fr: 'Filtrer les flux' },
+      filter_containers: { en: 'Filter containers', fr: 'Filtrer les containers' },
+      select_elements: { en: 'Select elements', fr: 'Sélectionner des éléments' },
+      toggle_visibility: { en: 'Toggle visibility', fr: 'Basculer la visibilité' }
+    }
+  }
+} as const
 
 const NODE_CONFIG: ElementConfig<Class_NodeElement> = {
   type: 'node',
@@ -66,12 +119,12 @@ const NODE_CONFIG: ElementConfig<Class_NodeElement> = {
   updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToNodesConfig(),
 
   translationKeys: {
-    labelSelect: 'Noeud.TS',
+    labelSelect: 'Noeud.TS',              // ✅ Chemin direct
     labelNoSelection: 'Noeud.NS',
-    tooltipAdd: 'Menu.tooltips.noeud.plus',
-    tooltipSelect: 'Menu.tooltips.noeud.slct',
-    tooltipRemove: 'Menu.tooltips.noeud.rm',
-    tooltipVisibility: 'Menu.tooltips.noeud.dns',
+    tooltipAdd: 'Noeud.tooltips.plus',
+    tooltipSelect: 'Noeud.tooltips.slct',
+    tooltipRemove: 'Noeud.tooltips.rm',
+    tooltipVisibility: 'Noeud.tooltips.dns',
     labelName: 'Noeud.Nom',
     tooltipName: 'Noeud.tooltips.Nom'
   },
@@ -97,10 +150,10 @@ const LINK_CONFIG: ElementConfig<Class_LinkElement> = {
   translationKeys: {
     labelSelect: 'Flux.TS',
     labelNoSelection: 'Flux.NS',
-    tooltipAdd: 'Menu.tooltips.flux.plus',
-    tooltipSelect: 'Menu.tooltips.flux.slct',
-    tooltipRemove: 'Menu.tooltips.flux.rm',
-    tooltipVisibility: 'Menu.tooltips.noeud.dns'
+    tooltipAdd: 'Flux.tooltips.plus',
+    tooltipSelect: 'Flux.tooltips.slct',
+    tooltipRemove: 'Flux.tooltips.rm',
+    tooltipVisibility: 'Flux.tooltips.dls'
   },
 
   hasCreateButton: true,
@@ -122,10 +175,10 @@ const CONTAINER_CONFIG: ElementConfig<Class_ContainerElement> = {
   translationKeys: {
     labelSelect: 'Container.TS',
     labelNoSelection: 'Container.NS',
-    tooltipAdd: 'Menu.tooltips.container.plus',
-    tooltipSelect: 'Menu.tooltips.container.slct',
-    tooltipRemove: 'Menu.tooltips.container.rm',
-    tooltipVisibility: 'Menu.tooltips.container.dns',
+    tooltipAdd: 'Container.tooltips.plus',
+    tooltipSelect: 'Container.tooltips.slct',
+    tooltipRemove: 'Container.tooltips.rm',
+    tooltipVisibility: 'Container.tooltips.dns',
     labelName: 'Container.Nom',
     tooltipName: 'Container.tooltips.Nom'
   },

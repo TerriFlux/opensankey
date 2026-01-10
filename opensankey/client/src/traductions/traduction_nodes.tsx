@@ -2,15 +2,16 @@ export const resources_nodes = {
   en: {
     translation: {
       Noeud: {
-        Nom: 'Name',
+        // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        // ❌ SUPPRIMÉ : TS (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        // ❌ SUPPRIMÉ : NS (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        
         Style: 'Stylesheet',
         OrderStyle: 'Order of styles associated',
         multi_style: 'Selected nodes have different style',
         editStyle: 'Assign a style',
         AS: 'Reset',
         SelectStyle: 'Select a style',
-        TS: 'Select all',
-        NS: 'No node selected',
         Reorg: 'Reorganize incoming/outgoing links',
         Reorg_title: 'Reorganization',
         Slct: 'Selection',
@@ -51,7 +52,7 @@ export const resources_nodes = {
         changePlan: 'Change plan of nodes',
         mask_attr: 'Elements display',
         tooltips: {
-          Nom: 'Change the name of the selected node. If several nodes are selected, this field is disabled',
+          // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG as tooltips.Nom)
           AS: 'Allow to apply a predefined style in the preference menu to the selected node(s)',
           Reorg: 'Allows automatic reorganization of incoming and outgoing links (up/down position)',
           SlctOutLink: 'Allow to select all outgoing links from the node(s)',
@@ -193,16 +194,16 @@ export const resources_nodes = {
   fr: {
     translation: {
       Noeud: {
-        Nom: 'Nom',
+        // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        // ❌ SUPPRIMÉ : TS (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        // ❌ SUPPRIMÉ : NS (maintenant dans ELEMENTS_SELECTION_CONFIG)
+        
         Style: 'Feuille de style',
         OrderStyle: 'Ordre des styles associés',
         editStyle: 'Assigner un style',
         multi_style: 'Multiple style sélectionné',
         SelectStyle: 'Sélectionner un style',
-
         AS: 'Réinitialiser',
-        TS: 'Tout sélectionner',
-        NS: 'Aucun noeud sélectionné',
         Reorg: 'Réorganiser automatiquement les flux E/S',
         Reorg_title: 'Réorganisation',
         Slct: 'Sélection',
@@ -243,7 +244,7 @@ export const resources_nodes = {
         changePlan: 'Modifier le plan des noeud',
         mask_attr: 'Affichage des éléments',
         tooltips: {
-          Nom: 'Changer le nom du noeud sélectionné. Si plusieurs noeuds sont sélectionnés, ce champ est désactivé',
+          // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG as tooltips.Nom)
           AS: 'Permettre d\'appliquer un style prédéfini dans le menu préférence au(x) noeud(s) selectionné(s)',
           Reorg: 'Permet de réorganiser automatiquement les flux entrant et sortant (position haut / bas)',
           SlctOutLink: 'Permettre de sélectionner tous les flux sortants du/des noeud(s)',
@@ -319,7 +320,6 @@ export const resources_nodes = {
           pos: 'Position',
           pos_v: 'Position de la valeur',
           tp: 'Taille de police',
-
           cl: 'Largeur zone de texte',
           vdv: 'Valeur',
           edit_node_label: 'Éditer le nom',

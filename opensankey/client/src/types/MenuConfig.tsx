@@ -58,7 +58,7 @@ export type Type_AdditionalMenus = {
   template_module_key: string[]
 }
 
-export type keyTypeConfig = 'data' | 'context' | 'style'
+export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object'
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
@@ -528,7 +528,7 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._type_menu_configuration_selected = 'presentation' as keyTypeConfig
+      this._type_menu_configuration_selected = 'style'
       this._elements_configurable_selected.data = ['node']
       this._elements_configurable_selected.style = ['element']
       this._ref_to_menu_config_updater.current()
