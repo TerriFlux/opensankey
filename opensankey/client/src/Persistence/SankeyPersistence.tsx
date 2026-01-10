@@ -744,9 +744,9 @@ export class StyledPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-    const fromJsonMapping_0_91_to_0_92 : { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       // Nodes
-        'user_scale': 'shape_local_link_scale',
+      'user_scale': 'shape_local_link_scale',
       'curved': 'shape_is_curved',
       'curvature': 'shape_curvature',
       'recycling': 'shape_is_recycling',
@@ -1124,6 +1124,7 @@ export class SankeyPersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
+    SankeyPersistence.load_tags(json_object, sankey)
     SankeyPersistence.load_links(
       sankey,
       json_object,
@@ -1160,7 +1161,7 @@ export class SankeyPersistence {
           })
       }
     })
-
+    SankeyPersistence.load_tags(json_object, sankey)
     SankeyPersistence.load_links(
       sankey,
       json_object,
@@ -1217,76 +1218,7 @@ export class SankeyPersistence {
         })
     }
 
-    let json_entry = 'nodeTags'
-    if (json_object[json_entry] !== undefined) {
-      // Set node tag & tag group from json data
-      Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => {
-          // Get or Create a node tag group
-          const tagg_id = _
-          const tagg = sankey._node_taggs[tagg_id] ?? sankey.addNodeTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
-          // Set node tag group value from JSON
-          tagg.fromJSON(
-            tagg_json as Type_JSON,
-            {}
-          )
-        })
-      // Create default style for 'Type de noeud' if they don't exist
-      if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
-        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
-        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
-      }
-    }
-    json_entry = 'fluxTags'
-    if (json_object[json_entry] !== undefined) {
-      // Set flux tag & tag group from json data
-      Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => {
-          // Get or Create a flux tag group
-          const tagg_id = _
-          const tagg = sankey._flux_taggs[tagg_id] ?? sankey.addFluxTagGroup(tagg_id, tagg_id, false)  // Will be renamed in fromJSON()
-          // Set flux tag group value from JSON
-          tagg.fromJSON(
-            tagg_json as Type_JSON,
-            {}
-          )
-        })
-    }
-    json_entry = 'dataTags'
-    if (json_object[json_entry] !== undefined) {
-      // Set data tag & tag group from json data
-      Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => {
-          // Get or Create a flux tag group
-          const tagg_id = _
-          const tagg = sankey._data_taggs[tagg_id] ?? sankey.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
-          // Set flux tag group value from JSON
-          tagg.fromJSON(
-            tagg_json as Type_JSON,
-            {}
-          )
-        })
-    }
-    json_entry = 'levelTags'
-    if (json_object[json_entry] !== undefined) {
-      // Set level tag & tag group from json data
-      Object.entries(json_object[json_entry])
-        .forEach(([_, tagg_json]) => {
-          // Get or create a level tag group
-          const tagg_id = _
-          const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id)  // Will be renamed in fromJSON()
-          // Set level tag group value from JSON
-          tagg.fromJSON(
-            tagg_json as Type_JSON,
-            {}
-          )
-        })
-    }
-
-    if (Object.keys(sankey._level_taggs).length > 1) {
-      sankey.removeTagGroupWithId('level_taggs', 'Primaire')
-    }
+    SankeyPersistence.load_tags(json_object, sankey)
     SankeyPersistence.load_links(
       sankey,
       json_object,
@@ -1321,6 +1253,83 @@ export class SankeyPersistence {
     sankey.create_child_links()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
+  }
+
+  private static load_tags(json_object: Type_JSON, sankey: Class_Sankey) {
+    let json_entry = 'nodeTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set node tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a node tag group
+          const tagg_id = _
+          const tagg = sankey._node_taggs[tagg_id] ?? sankey.addNodeTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set node tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+      // Create default style for 'Type de noeud' if they don't exist
+      if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
+        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+      }
+    }
+    json_entry = 'fluxTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set flux tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = _
+          const tagg = sankey._flux_taggs[tagg_id] ?? sankey.addFluxTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set flux tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+    json_entry = 'dataTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set data tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = _
+          const tagg = sankey._data_taggs[tagg_id] ?? sankey.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set flux tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+    json_entry = 'levelTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set level tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a level tag group
+          const tagg_id = _
+          const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
+
+          // Set level tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+
+    if (Object.keys(sankey._level_taggs).length > 1) {
+      sankey.removeTagGroupWithId('level_taggs', 'Primaire')
+    }
   }
 }
 
