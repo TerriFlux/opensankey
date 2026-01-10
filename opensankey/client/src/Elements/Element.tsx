@@ -82,7 +82,7 @@ export abstract class Class_BaseElement {
     }
     this._visibility_fingerprint = randomId()
   }
-  
+
   protected _process_or_bypass(
     process_func: () => void
   ) {
@@ -508,6 +508,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   public saveRedo(f: (_: Class_ProtoElement) => void) {
     this.drawing_area.application_data.history.saveRedo(() => { f(this) })
   }
+
 }
 export abstract class Class_BaseShape extends Class_ProtoElement {
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
@@ -673,6 +674,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
+
+  public getShapeColorToUse() {
+    return this.shape_color
+  }
 }
 
 export abstract class Class_LinkAttribute extends Class_BaseShape {
