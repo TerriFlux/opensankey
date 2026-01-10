@@ -211,156 +211,154 @@ const LabelContentComponent = ({
       )}
 
       {/* Section TEXT */}
-      {displayMode === 'simple_text' && (
-        <>
-          <Box layerStyle='options_2cols'>
-            <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-              <Select
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_family')]}
-                variant='menuconfigpanel_option_select'
-                value={labelValues.font_family}
-                onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                  labelValues.font_family = evt.target.value
-                }}
+
+      <Box layerStyle='options_2cols'>
+        <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+          <Select
+            isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_family')]}
+            variant='menuconfigpanel_option_select'
+            value={labelValues.font_family}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              labelValues.font_family = evt.target.value
+            }}
+          >
+            {font_families.map((d: string) => (
+              <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
+            ))}
+          </Select>
+        </LabelWithOverload>
+        {displayMode === 'simple_text' && (
+          <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+            <ConfigMenuNumberInput
+              disabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_size')]}
+              t={app_data.t}
+              default_value={labelValues.font_size}
+              menu_for_style={menu_for_style}
+              minimum_value={11}
+              stepper={true}
+              unit_text='px'
+              function_on_blur={(value) => { labelValues.font_size = value ?? labelValues.font_size }}
+              multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
+            />
+          </LabelWithOverload>)}
+      </Box>
+      {displayMode === 'simple_text' && (<>
+        <Box as='span' layerStyle='options_2cols'>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box layerStyle='options_3cols'>
+              <Button
+                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'bold')]}
+                variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+                onClick={() => { labelValues.bold = !labelValues.bold }}
               >
-                {font_families.map((d: string) => (
-                  <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
-                ))}
-              </Select>
-            </LabelWithOverload>
-
-            <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-              <ConfigMenuNumberInput
-                disabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_size')]}
-                t={app_data.t}
-                default_value={labelValues.font_size}
-                menu_for_style={menu_for_style}
-                minimum_value={11}
-                stepper={true}
-                unit_text='px'
-                function_on_blur={(value) => { labelValues.font_size = value ?? labelValues.font_size }}
-                multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
-              />
-            </LabelWithOverload>
-          </Box>
-
-          <Box as='span' layerStyle='options_2cols'>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Box layerStyle='options_3cols'>
-                <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'bold')]}
-                  variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                  onClick={() => { labelValues.bold = !labelValues.bold }}
-                >
-                  {app_data.icon_library.icon_text_bold}
-                </Button>
-                <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'uppercase')]}
-                  variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                  onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
-                >
-                  {svg_label_upper}
-                </Button>
-                <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'italic')]}
-                  variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                  onClick={() => { labelValues.italic = !labelValues.italic }}
-                >
-                  {app_data.icon_library.icon_text_italic}
-                </Button>
-              </Box>
-              <Box display="flex" gap={0}>
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'bold'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'uppercase'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              </Box>
+                {app_data.icon_library.icon_text_bold}
+              </Button>
+              <Button
+                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'uppercase')]}
+                variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+                onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
+              >
+                {svg_label_upper}
+              </Button>
+              <Button
+                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'italic')]}
+                variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+                onClick={() => { labelValues.italic = !labelValues.italic }}
+              >
+                {app_data.icon_library.icon_text_italic}
+              </Button>
             </Box>
-
-            <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-              <MenuColorPicker
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'color')]}
-                initialColor={labelValues.color}
-                onColorChange={(new_color) => { labelValues.color = new_color }}
-              />
-            </LabelWithOverload>
-          </Box>
-
-          <Box layerStyle='options_2cols'>
-            <Box display="flex" alignItems="center" gap={1}>
-              <Box layerStyle='options_3cols'>
-                <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.left_align')}>
-                  <Button
-                    isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
-                    onClick={() => { labelValues.text_align = 'left' }}
-                  >
-                    <FaAlignLeft />
-                  </Button>
-                </OSTooltip>
-                <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.center_align')}>
-                  <Button
-                    isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
-                    onClick={() => { labelValues.text_align = 'middle' }}
-                  >
-                    <FaAlignCenter />
-                  </Button>
-                </OSTooltip>
-                <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.right_align')}>
-                  <Button
-                    isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
-                    onClick={() => { labelValues.text_align = 'right' }}
-                  >
-                    <FaAlignRight />
-                  </Button>
-                </OSTooltip>
-              </Box>
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            </Box>
-
-            <Box display="flex" alignItems="center" gap={1}>
-              <Box layerStyle='options_3cols'>
-                <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || 'Vertical'}>
-                  <Button
-                    isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vertical_text')]}
-                    variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
-                  >
-                    {labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}
-                  </Button>
-                </OSTooltip>
-                <Button
-                  variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                  onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
-                >
-                  {app_data.icon_library.icon_label_on_path}
-                </Button>
-                <Button
-                  variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                  onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
-                >
-                  {app_data.icon_library.icon_label_auto_position}
-                </Button>
-              </Box>
-              <Box display="flex" gap={0}>
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'on_path'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-                <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-              </Box>
+            <Box display="flex" gap={0}>
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'bold'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'uppercase'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
             </Box>
           </Box>
-        </>
-      )}
+
+          <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+            <MenuColorPicker
+              isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'color')]}
+              initialColor={labelValues.color}
+              onColorChange={(new_color) => { labelValues.color = new_color }}
+            />
+          </LabelWithOverload>
+        </Box>
+
+        <Box layerStyle='options_2cols'>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box layerStyle='options_3cols'>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.left_align')}>
+                <Button
+                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
+                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                  variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
+                  onClick={() => { labelValues.text_align = 'left' }}
+                >
+                  <FaAlignLeft />
+                </Button>
+              </OSTooltip>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.center_align')}>
+                <Button
+                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
+                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                  variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
+                  onClick={() => { labelValues.text_align = 'middle' }}
+                >
+                  <FaAlignCenter />
+                </Button>
+              </OSTooltip>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.right_align')}>
+                <Button
+                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
+                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                  variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
+                  onClick={() => { labelValues.text_align = 'right' }}
+                >
+                  <FaAlignRight />
+                </Button>
+              </OSTooltip>
+            </Box>
+            <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+          </Box>
+
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box layerStyle='options_3cols'>
+              <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || 'Vertical'}>
+                <Button
+                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vertical_text')]}
+                  variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
+                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                  onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
+                >
+                  {labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}
+                </Button>
+              </OSTooltip>
+              <Button
+                variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+                onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+              >
+                {app_data.icon_library.icon_label_on_path}
+              </Button>
+              <Button
+                variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+                onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+              >
+                {app_data.icon_library.icon_label_auto_position}
+              </Button>
+            </Box>
+            <Box display="flex" gap={0}>
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'on_path'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
+            </Box>
+          </Box>
+        </Box></>)
+      }
 
       {/* Section ICON */}
       {displayMode === 'icon' && (
@@ -777,35 +775,40 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET FOND ========== */}
           {activeTab === 'background' && (
-            <WrapperBoxSubSectionMenu
-              new_data={app_data}
-              title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
-              is_open={true}
-            >
-              <Box layerStyle='menuconfigpanel_grid'>
-                <MenuShapeAttributes
-                  app_data={app_data}
-                  elements={elements}
-                  attributePath='Noeud.apparence'
-                  prefix='shape'
-                  disable_attr_props={disable_attr_props}
-                  refreshUI={refreshAll}
-                />
-              </Box>
-            </WrapperBoxSubSectionMenu>
+            // <WrapperBoxSubSectionMenu
+            //   new_data={app_data}
+            //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
+            //   is_open={true}
+            // >
+
+            <Box layerStyle='menu_sub_section'>
+              <MenuShapeAttributes
+                app_data={app_data}
+                elements={elements}
+                attributePath='Noeud.apparence'
+                prefix='shape'
+                disable_attr_props={disable_attr_props}
+                refreshUI={refreshAll}
+              />
+            </Box>
+            //</WrapperBoxSubSectionMenu>
           )}
 
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
             <>
               {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
-                <WrapperBoxSubSectionMenu
-                  new_data={app_data}
-                  title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
-                  is_open={!menu_for_style && selection.hasNodes}
-                >
+                // <WrapperBoxSubSectionMenu
+                //   new_data={app_data}
+                //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
+                //   is_open={!menu_for_style && selection.hasNodes}
+                // >
+
+                <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
-                    <Divider />
+                    <Box as='span' layerStyle='menu_sub_section_title'
+                      textStyle='title_sub_section'
+                    >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
                     <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         <Box layerStyle='options_2cols'>
@@ -908,16 +911,22 @@ export const MenuConfigurationAppearance = ({
                       </OSTooltip>
                     </Checkbox>
                   </Box>
-                </WrapperBoxSubSectionMenu>
+                </Box>
               )}
 
               {(menu_for_style || selection.hasLinks) && (
-                <WrapperBoxSubSectionMenu
-                  new_data={app_data}
-                  title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
-                  is_open={!menu_for_style && selection.hasLinks}
-                >
+                // <WrapperBoxSubSectionMenu
+                //   new_data={app_data}
+                //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
+                //   is_open={!menu_for_style && selection.hasLinks}
+                // >
+
+                <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
+                    <Box as='span' layerStyle='menu_sub_section_title'
+                      textStyle='title_sub_section'
+                    >{`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
+
                     <Divider />
                     <Box as='span' textStyle='title_sub_section'>Orientation</Box>
                     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
@@ -1084,7 +1093,7 @@ export const MenuConfigurationAppearance = ({
                       </>
                     </OSTooltip>
                   </Box>
-                </WrapperBoxSubSectionMenu>
+                </Box>
               )}
             </>
           )}
@@ -1177,7 +1186,7 @@ export const MenuShapeAttributes = ({
 
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const config = BASE_SHAPE_CONFIG
-  const base_elements = elements as Class_NodeBase[] | Class_LinkElement[] | Class_ContainerElement[]
+  const base_elements = elements as Class_NodeElement[] | Class_LinkElement[] | Class_ContainerElement[]
 
   const shapeValues = elements.length > 0
     ? getShapeValues(elements, prefix, refreshUI)
@@ -1186,10 +1195,46 @@ export const MenuShapeAttributes = ({
     ) as {
       -readonly [K in keyof typeof config]: ReturnType<(typeof config)[K]['type']>
     }
+  const linkShapeValues = elements.length > 0
+    ? getLinkShapeValues(elements, refreshUI)
+    : Object.fromEntries(Object.entries(LINK_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])) as {
+      -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]:
+      ReturnType<(typeof LINK_SHAPE_SPECIFIC_CONFIG)[K]['type']>
+    }
+
+  const selection = analyzeSelection(base_elements)
 
   return (
     <>
       {/* Fond visible + Couleur */}
+      {/* Choix de la source de la couleur */}
+      {/* <Box layerStyle='menuconfigpanel_grid'> */}
+      <Box as='span' layerStyle='menu_sub_section_title'
+        textStyle='title_sub_section'
+      >{`${'Fond Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {app_data.t('Flux.apparence.shape_color_rule')}
+          <TooltipElementOverloaded
+            prefix={prefix} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
+          />
+        </Box>
+        <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+          <Select
+            isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'color_rule')]}
+            value={linkShapeValues.color_rule}
+            onChange={(evt) => {
+              //@ts-expect-error xxx
+              linkShapeValues.color_rule = evt.target.value
+            }}
+          >
+            {app_data.menu_configuration.flow_color_origin_type.map(el => {
+              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+            })}
+          </Select>
+        </OSTooltip>
+      </Box>
+      <Divider />
       <Box as='span' layerStyle='options_2cols'>
         <Checkbox
           {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}

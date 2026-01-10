@@ -24,15 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Local modules
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
-import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
-/**
- * Class that handles all drawing and rendering operations for LinkElement
- */
 export class LinkDrawShape {
 
   private _link: Class_LinkElement
@@ -114,7 +109,7 @@ export class LinkDrawShape {
           .attr('stroke-width', '0')
       }
       else {
-        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.shape_color_visible)
+        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible /*&& !this._link.shape_color_visible*/)
         let path = ''
         if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
         else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
@@ -122,7 +117,7 @@ export class LinkDrawShape {
 
         const da = this._link.sankey.drawing_area
 
-        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.shape_color_visible))
+        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible /*&& !this._link.shape_color_visible*/))
 
         // =================== BORDURE (si visible) ===================
         // ✅ Ajout de la condition pour bezier_outline

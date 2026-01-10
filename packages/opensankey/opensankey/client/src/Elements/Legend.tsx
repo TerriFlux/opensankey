@@ -158,37 +158,39 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   }
 
   public draw() {
-    // Heritance of draw function
-    super.draw()
-    // UpdZte class attributes
-    this.d3_selection?.attr('class', 'gg_legend')
-    // Draw Background
-    this.drawLegendBg()
-    // Reset content positionning
-    this._dx = 0
-    this._dy = 0
-    // Rebounds text wrapper with width of legend when drawed at this moment
-    this._wrapper.bounds({ height: 100, width: this._width })
-    // Draw tag color pallette applied to sankey
-    this.drawTagDisplayed()
-    // Draw explication for data type
-    const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
-    if (sankey_has_interval_value) {
-      this.drawInfoDataType()
-    }
-    // Draw explication for dashed links
-    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.valueCurrent == null).length > 0
-    if (sankey_has_dashed_links && this._info_link_value_void) {
-      this.drawInfoDashedLink()
-    }
-    if (this._display_legend_scale) {
-      this.drawSankeyScale()
-    }
-    if (this._legend_show_constraints) {
-      this.drawInfoConstraintLink()
-    }
-    // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
-    this.updateDragZone()
+    this._process_or_bypass(() => {
+      // Heritance of draw function
+      super.draw()
+      // UpdZte class attributes
+      this.d3_selection?.attr('class', 'gg_legend')
+      // Draw Background
+      this.drawLegendBg()
+      // Reset content positionning
+      this._dx = 0
+      this._dy = 0
+      // Rebounds text wrapper with width of legend when drawed at this moment
+      this._wrapper.bounds({ height: 100, width: this._width })
+      // Draw tag color pallette applied to sankey
+      this.drawTagDisplayed()
+      // Draw explication for data type
+      const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
+      if (sankey_has_interval_value) {
+        this.drawInfoDataType()
+      }
+      // Draw explication for dashed links
+      const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.valueCurrent == null).length > 0
+      if (sankey_has_dashed_links && this._info_link_value_void) {
+        this.drawInfoDashedLink()
+      }
+      if (this._display_legend_scale) {
+        this.drawSankeyScale()
+      }
+      if (this._legend_show_constraints) {
+        this.drawInfoConstraintLink()
+      }
+      // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
+      this.updateDragZone()
+    })
   }
 
   public applyPosition() {
@@ -226,7 +228,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       // If shift key is pressed then open config menu to type config context & sub menu graph
       if (event.shiftKey) {
         this.drawing_area.application_data.menu_configuration.openConfigMenu()
-        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'context'
+        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
         this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['DA']
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
       }
