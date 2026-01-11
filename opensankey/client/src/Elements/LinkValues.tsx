@@ -626,12 +626,12 @@ export class Class_LinkValue {
       return total_target * (this.data_value) / (100 - this.data_value)
     } else if (this.value_option == '%PS') {
       const multiplier = this.data_value / 100
-      const parent_source = this.link!.source.dimensions_as_child_pure[0].parent!
+      const parent_source = this.link!.source.dimensions_as_child[0].parent!
       const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
       return parent_link?parent_link.valueCurrent!*multiplier : null
     } else if (this.value_option == '%PD') {
       const multiplier = this.data_value / 100
-      const parent_target = this.link!.target.dimensions_as_child_pure[0].parent!
+      const parent_target = this.link!.target.dimensions_as_child[0].parent!
       const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
       return parent_link? parent_link.valueCurrent!*multiplier: null
     }

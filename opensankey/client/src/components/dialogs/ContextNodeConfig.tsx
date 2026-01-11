@@ -166,11 +166,11 @@ export const NODE_MENU_CONFIG: MenuConfig = {
 
             // Vérifier s'il y a des dimensions child ou parent disponibles
             const child_dims = node.master_node ?
-              node.master_node.dimensions_as_child_pure :
-              node.dimensions_as_child_pure
+              node.master_node.dimensions_as_child :
+              node.dimensions_as_child
             const parent_dims = node.master_node ?
-              node.master_node.dimensions_as_parent_pure :
-              node.dimensions_as_parent_pure
+              node.master_node.dimensions_as_parent :
+              node.dimensions_as_parent
 
             return (child_dims?.length > 0) ||
               (parent_dims?.length > 0) ||

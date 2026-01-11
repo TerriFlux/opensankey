@@ -1623,8 +1623,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<Type_Position>,
   position_dx: {
-    default: 0,
-    type: (() => 0) as (() => number),
+    default: 200,
+    type: (() => 200) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 

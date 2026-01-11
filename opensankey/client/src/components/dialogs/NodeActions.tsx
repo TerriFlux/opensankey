@@ -84,8 +84,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const child_dims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     //let parent = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].parent
     // if (!dim_name) {
@@ -110,8 +110,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -123,8 +123,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -136,8 +136,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
       const child = childDims.filter(dim=>dim.children.filter(c=>c.id==dim_name).length>0)[0].children[0].id
@@ -155,8 +155,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
     //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]
@@ -168,8 +168,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
     //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]

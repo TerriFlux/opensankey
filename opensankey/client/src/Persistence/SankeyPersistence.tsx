@@ -451,15 +451,21 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       link.attributes['shape_color_rule'] = 'gradient'
     }
     const json_local = json_object.local as Type_JSON
-    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
-      if (json_local[jsonKey] !== undefined) {
-        const key = attrKey as keyof ConfigType
-        const currentValue = link.getStyleProperty(key)
-        if (json_local[jsonKey] !== currentValue) {
-          link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+    if (json_local) {
+      Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+        if (json_local[jsonKey] !== undefined) {
+          const key = attrKey as keyof ConfigType
+          const currentValue = link.getStyleProperty(key)
+          if (json_local[jsonKey] !== currentValue) {
+            link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+          }
         }
+      })
+      if (json_local.local_link_scale) {
+        link.attributes['shape_local_link_scale'] = +json_local.local_link_scale/link.sankey.drawing_area.scale
       }
-    })
+    }
+
   }
 
   public static fromJSON(
@@ -629,15 +635,17 @@ export class NodeElementPersistence extends NodeBasePersistence {
       'image_src': 'icon_image_src'
     }
     const json_local = json_object.local as Type_JSON
-    Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
-      if (json_local[jsonKey] !== undefined) {
-        const key = attrKey as keyof ConfigType
-        const currentValue = node.getStyleProperty(key)
-        if (json_local[jsonKey] !== currentValue) {
-          node.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+    if (json_local) {
+      Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
+        if (json_local[jsonKey] !== undefined) {
+          const key = attrKey as keyof ConfigType
+          const currentValue = node.getStyleProperty(key)
+          if (json_local[jsonKey] !== currentValue) {
+            node.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+          }
         }
-      }
-    })
+      })
+    }
 
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
       if (json_object[jsonKey] !== undefined) {
@@ -667,6 +675,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
 
     // Délégation aux managers
     node._nodeTagsManager.fromJSON(json_node_object)
+
   }
 }
 
@@ -1268,6 +1277,7 @@ export class SankeyPersistence {
         kwargs
       )
     )
+    sankey.nodes_list.forEach(node=>node.dimensions_as_child.forEach(dim=>dim.normalize()))
     SankeyPersistence.load_containers(
       sankey,
       json_object,

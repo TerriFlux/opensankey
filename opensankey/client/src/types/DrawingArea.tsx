@@ -676,7 +676,7 @@ export class Class_DrawingArea {
     }
   }
 
-  public checkAndUpdateAreaSize() {
+  public checkAndUpdateAreaSize(recenter: boolean = false) {
     // Get bounding box for all elements
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
@@ -729,7 +729,7 @@ export class Class_DrawingArea {
     //lefter_x = new_lefter_x
     // if (!recenter) {
     //   new_lefter_x = 0
-    //   width = fitting_width
+    //   this.width = fitting_width
     // }
 
     // Check vertical fitting
@@ -739,22 +739,22 @@ export class Class_DrawingArea {
     //upper_y = new_upper_y
     // if (!recenter) {
     //   new_upper_y = 0
-    //   height = fitting_height
+    //   this.height = fitting_height
     // }
 
     // Recenter elements
-    // if (recenter && window.sankey?.recenter !== false) {
-    //   if (!this.bypass_autofit) {
-    //     this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (width - bbox.width) / 2
-    //     this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (height - bbox.height) / 2
-    //   }
-    //   this.d3_selection_elements_group?.attr(
-    //     'transform',
-    //     'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-    //   this.d3_selection_legend?.attr(
-    //     'transform',
-    //     'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-    // }
+    if (recenter && window.sankey?.recenter !== false) {
+      if (!this.bypass_autofit) {
+        this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
+        this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
+      }
+      this.d3_selection_elements_group?.attr(
+        'transform',
+        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
+      this.d3_selection_legend?.attr(
+        'transform',
+        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
+    }
 
     if (!this.bypass_autofit) {
       // Save new dimensions
@@ -771,8 +771,8 @@ export class Class_DrawingArea {
     this.drawGrid()
   }
 
-  public areaFitHorizontally() {
-    this.checkAndUpdateAreaSize()
+  public areaFitHorizontally(recenter: boolean) {
+    this.checkAndUpdateAreaSize(recenter)
 
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
@@ -789,8 +789,8 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaFitVertically() {
-    this.checkAndUpdateAreaSize()
+  public areaFitVertically(recenter: boolean=false) {
+    this.checkAndUpdateAreaSize(recenter)
     if (this.d3_selection_zoom_area) {
       // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
       const k = this.window_fitting_height / this.height
@@ -961,17 +961,17 @@ export class Class_DrawingArea {
    *
    * @memberof Class_DrawingArea
    */
-  public areaAutoFit() {
-    if (this.application_data.is_static) this.areaFitVertically()
+  public areaAutoFit(recenter:boolean=false) {
+    if (this.application_data.is_static) this.areaFitVertically(recenter)
     // Ratios
     const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
     const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
     // Fit from ratio
     if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-      this.areaFitHorizontally()
+      this.areaFitHorizontally(recenter)
     }
     else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-      this.areaFitVertically()
+      this.areaFitVertically(recenter)
     }
   }
 

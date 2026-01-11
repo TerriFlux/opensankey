@@ -1743,7 +1743,7 @@ export class NodePositioning {
     // if (!nodeDimParent) {
     //   return
     // }
-    node.dimensions_as_child_pure.forEach(nodeDimParent => {
+    node.dimensions_as_child.forEach(nodeDimParent => {
       if (nodeDimParent.parent.position_v != -1) {
         // v is computed at the first path
         return
@@ -1772,7 +1772,7 @@ export class NodePositioning {
     }
     let new_current_v = current_v
     // let desagregated_nodes: Class_NodeElement[] = []
-    node.dimensions_as_parent_pure.forEach(d => {
+    node.dimensions_as_parent.forEach(d => {
       //const d = node.nodeDimensionAsParent(tagGroup)
       if (!d) return new_current_v + 1
       if (d.children.includes(node)) return new_current_v + 1
@@ -1820,7 +1820,7 @@ export class NodePositioning {
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.drawingArea.areaAutoFit()
+            this.drawingArea.areaAutoFit(true)
           }
           this.drawingArea.saveUndo(inv_computeAutoSankey)
         }
@@ -1854,7 +1854,7 @@ export class NodePositioning {
 
         this.drawingArea.draw()
         // Update area
-        this.drawingArea.areaAutoFit()
+        this.drawingArea.areaAutoFit(true)
         // Toggle saving indicator
         this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -1874,7 +1874,7 @@ export class NodePositioning {
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.drawingArea.areaAutoFit()
+            this.drawingArea.areaAutoFit(true)
           }
           this.drawingArea.saveRedo(_computeAutoSankey)
         }
