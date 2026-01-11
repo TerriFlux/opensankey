@@ -108,7 +108,7 @@ export class SankeyAnimation {
   public getDescendantNodes(node: Class_NodeElement): Class_NodeElement[] {
     let nodeList: Class_NodeElement[] = []
 
-    const dimensionsAsParentPure = node.dimensions_as_parent_pure || []
+    const dimensionsAsParentPure = node.dimensions_as_parent || []
     dimensionsAsParentPure.forEach((dimension: Class_NodeDimension) => {
       // Récupère les enfants directs
       const children = (dimension.children || []) as Class_NodeElement[]

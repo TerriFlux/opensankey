@@ -167,14 +167,14 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaFitHorizontally()}>
+        onClick={() => app_data.drawing_area.areaFitHorizontally(true)}>
         {app_data.icon_library.icon_area_fit_horiz}
       </Button>
     </OSTooltip>
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustV')}>
       <Button variant='toolbar_button_6'
         size={size}
-        onClick={() => app_data.drawing_area.areaFitVertically()}>
+        onClick={() => app_data.drawing_area.areaFitVertically(true)}>
         {app_data.icon_library.icon_area_fit_vert}
       </Button>
     </OSTooltip>

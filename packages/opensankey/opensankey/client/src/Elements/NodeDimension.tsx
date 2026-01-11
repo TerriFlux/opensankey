@@ -254,15 +254,15 @@ export class Class_NodeDimension {
   public get id() { return this._id }
 
   public get name() {
-    return this.parent.name + '->(' + this.children.map(c=>c.name+' ')+')'    
+    return this.parent.name + '->(' + this.children.map(c => c.name + ' ') + ')'
   }
 
   public get short_name() {
-    return '->(' + this.children.map(c=>c.name+' ')+')'.substring(0,30)
+    return '->(' + this.children.map(c => c.name + ' ') + ')'.substring(0, 30)
   }
 
   public get children_name() {
-    return this.children.map(c=>c.name+' ').join().substring(0,30)
+    return this.children.map(c => c.name + ' ').join().substring(0, 30)
   }
 
 
@@ -285,6 +285,29 @@ export class Class_NodeDimension {
 
 
   public get force_show_children() { return this._force_show_children }
+
+  public normalize() {
+    const group = this.parent.sankey.level_taggs_dict[this.id]
+    if (!group) {
+      return
+    }
+    const last_tag = group.tags_list.at(-1)
+    this.children.forEach(c => {
+      const dim_as_parent = c.dimensions_as_parent.filter(dim=>dim.id == this.id)[0]
+      if (dim_as_parent) {
+        dim_as_parent.normalize()
+        return
+      }
+      const last_child_tag = c.tags_list.filter(tag=>tag.group.id==this.id).at(-1)
+      if (last_child_tag == last_tag) {
+        return
+      }
+      const idx = group.tags_list.indexOf(last_child_tag!)
+      for (let i = idx; i < group.tags_list.length; i++) {
+        c.addTag(group.tags_list[i])
+      }
+    })
+  }
 }
 
 
@@ -535,17 +558,21 @@ export class NodeDimensionsManager {
                   childDim?.setForceToShowParent()
                 }
                 if (this._node.sankey.level_taggs_dict[_]) {
-                  let level = 1
+                  let level = 0
                   let ancestor = parent
                   while (ancestor) {
                     level++
-                    if (ancestor.dimensions_as_child_pure.length == 0) {
+                    if (ancestor.dimensions_as_child.length == 0) {
                       break
                     }
-                    ancestor = ancestor.dimensions_as_child_pure[0].parent
+                    if (!ancestor.dimensions_as_child.some(dim => dim.id == _ && dim.parent)) {
+                      break
+                    }
+                    ancestor = ancestor.dimensions_as_child.filter(dim => dim.id == _)[0].parent
+
                   }
-                  this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_dict[String(level)] as unknown as Class_Tag)
-                  if (level == 2) {
+                  this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_list[level] as unknown as Class_Tag)
+                  if (level == 1) {
                     parent.addTag(this._node.sankey.level_taggs_dict[_].tags_list[0] as unknown as Class_Tag)
                   }
                 }
@@ -679,7 +706,7 @@ export class NodeDimensionsManager {
    */
   public checkIfRelatedDimensionsAreSelected(): boolean {
     const dimensionsData = this._node.internalDimensionsData
-    const tagData =  this._node.internalTagsData
+    const tagData = this._node.internalTagsData
     // Draw by default if there is no dimensions
     // that relates to this node
     if (
@@ -708,7 +735,7 @@ export class NodeDimensionsManager {
     })
 
     // Check dimensions where node is tagged as a parent
-    this.dimensions_as_parent_pure
+    this.dimensions_as_parent
       .forEach(dim => {
         if (dim.force_show_parent || dim.force_show_children) {
           has_forced_dimensions = true
@@ -728,9 +755,9 @@ export class NodeDimensionsManager {
     const activated_tags = available_view_tags.filter(tag => (tag.group as Class_LevelTagGroup).activated)
     if (activated_tags.length == 0) return true
     let display = true
-    Object.entries(this._node.grouped_taggs_dict).filter(([key,_])=>
+    Object.entries(this._node.grouped_taggs_dict).filter(([key, _]) =>
       this._node.sankey.level_taggs_dict[key] && this._node.sankey.level_taggs_dict[key].activated
-    ).forEach(([_,tag_list]) => {
+    ).forEach(([_, tag_list]) => {
       display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
     })
     //let view_tag_display = activated_tags.every(view_tag => view_tag.is_selected)
@@ -738,6 +765,8 @@ export class NodeDimensionsManager {
 
 
   }
+
+
 
   // SPECIAL IMPORT/EXPORT METHODS =====================================================
 
@@ -800,13 +829,6 @@ export class NodeDimensionsManager {
   }
 
   /**
-   * Return list of dimensions where this node is the parent (pure - no self-references)
-   */
-  public get dimensions_as_parent_pure() {
-    return Object.values(this._node.internalDimensionsData.dimensions_as_parent).filter(dim => !dim.children.includes(dim.parent))
-  }
-
-  /**
    * Return true if node is in multiple nodeDimension as a child
    */
   public get is_multi_children() {
@@ -818,12 +840,5 @@ export class NodeDimensionsManager {
    */
   public get dimensions_as_child() {
     return Object.values(this._node.internalDimensionsData.dimensions_as_child)
-  }
-
-  /**
-   * Return list of dimensions where this node is a child (pure - no self-references)
-   */
-  public get dimensions_as_child_pure() {
-    return Object.values(this._node.internalDimensionsData.dimensions_as_child).filter(dim => !dim.children.includes(dim.parent))
   }
 }
