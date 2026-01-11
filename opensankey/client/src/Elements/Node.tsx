@@ -252,7 +252,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public getListDescendantOfNode(): Class_NodeElement[] {
     let nodeList: Class_NodeElement[] = []
 
-    this.dimensions_as_parent_pure.forEach(dim => {
+    this.dimensions_as_parent.forEach(dim => {
       nodeList = [...nodeList, ...(dim.children as Class_NodeElement[])]
       dim.children.forEach(child => {
         const castChild = child as Class_NodeElement
@@ -1407,10 +1407,8 @@ export class Class_NodeElement extends Class_NodeBase {
   public get is_parent() { return this._nodeDimensionsManager.is_parent }
   public get is_multi_parent() { return this._nodeDimensionsManager.is_multi_parent }
   public get dimensions_as_parent() { return this._nodeDimensionsManager.dimensions_as_parent }
-  public get dimensions_as_parent_pure() { return this._nodeDimensionsManager.dimensions_as_parent_pure }
   public get is_multi_children() { return this._nodeDimensionsManager.is_multi_children }
   public get dimensions_as_child() { return this._nodeDimensionsManager.dimensions_as_child }
-  public get dimensions_as_child_pure() { return this._nodeDimensionsManager.dimensions_as_child_pure }
 
   public get are_related_dimensions_selected(): boolean {
     if (this._are_related_dimensions_selected === undefined) {

@@ -64,7 +64,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey
   ) {
-    super('legend', 'legend', drawing_area, sankey.default_style)
+    super('legend', '', drawing_area, sankey.default_style)
   }
 
   public copyFrom(_: Class_NodeBase): void {
