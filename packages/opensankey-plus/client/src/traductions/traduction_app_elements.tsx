@@ -517,7 +517,6 @@ export const resources_app_elements = {
         flow_associated_tag: 'Flux associés',
         node_associated_tag: 'Noeuds associés',
 
-        ElOrder: 'Ordonner la superposition des éléments',
         Config: {
           element_object: 'Formes',
           element_element: 'Elements',
@@ -619,7 +618,7 @@ export const resources_app_elements = {
         'labels': 'Style police',
 
         'title': 'Name',
-        tiedToNodes: 'Lie la position et taille aux noeuds',
+        tiedToNodes: 'Cadre géométrique',
         margin: 'Marges',
         marginLeft: 'Gauche',
         marginRight: 'Droite',

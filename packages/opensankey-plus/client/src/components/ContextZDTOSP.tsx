@@ -1,11 +1,5 @@
-// 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
-// to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
-// Imported libs
-import {
-  Box, Button, ButtonGroup
-} from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Divider } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { sep } from './SankeyPlusMenuConfigurationLabels'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
@@ -116,17 +110,6 @@ export const ContextZDT = (
     </Button>
   </>
 
-
-  const button_open_layout = <Button onClick={() => {
-    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_zdt.current(true)
-    closeContextMenu()
-  }}
-  variant='contextmenu_button'
-  rightIcon={app_data.icon_library.icon_popup_menu}
-  >{t('Menu.LL')} </Button>
-
-
-  // Detach all nodes from ZDT 
   const button_detach_all_tied_nodes = <Button onClick={() => {
     // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
     for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
@@ -136,7 +119,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -154,7 +137,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 
@@ -181,15 +164,12 @@ export const ContextZDT = (
     }}>
     <ButtonGroup orientation='vertical' isAttached>
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
-      {sep}
-      {btn_mask_border}
-      {btn_change_color}
-      {sep}
-      {btn_move_to_first_plan}
-      {btn_move_to_last_plan}
-      {sep}
-      {sep}
-      {button_open_layout}
-    </ButtonGroup>
+      <Divider/>
+        {btn_mask_border}
+        {btn_change_color}
+        {<Divider/>}
+          {btn_move_to_first_plan}
+          {btn_move_to_last_plan}
+          </ButtonGroup>
   </Box> : <></>
 }

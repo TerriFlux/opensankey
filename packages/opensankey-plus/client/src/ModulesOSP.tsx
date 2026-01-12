@@ -43,9 +43,9 @@ import {
 } from './deps/OpenSankey/Modules'
 
 
-import {
-  MenuConfigurationContainersOSP,
-} from './components/SankeyPlusMenuConfigurationLabels'
+// import {
+//   MenuConfigurationContainersOSP,
+// } from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
 import {
   NodeHyperLinkOSP
@@ -172,19 +172,19 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Add menu for new menu type 'Présentation'
   additionalMenus.current.additional_new_menu_config_content['presentation'] = {
-    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationContainersOSP app_data={new_data_plus} />
-    </WrapperContentConfig>,
+    // 'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+    //   <MenuConfigurationContainersOSP app_data={new_data_plus} />
+    // </WrapperContentConfig>,
 
-    'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <MenuConfigurationNodesTooltip new_data={new_data_plus} />
-      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    </>
-    </WrapperContentConfig>,
+    // 'node': <WrapperContentConfig title={t('Flux.IS')}><>
+    //   <MenuConfigurationNodesTooltip new_data={new_data_plus} />
+    //   <NodeHyperLinkOSP new_data_plus={new_data_plus} />
+    // </>
+    // </WrapperContentConfig>,
 
-    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip app_data={new_data_plus} />
-    </WrapperContentConfig>,
+    // 'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+    //   <MenuConfigurationLinksTooltip app_data={new_data_plus} />
+    // </WrapperContentConfig>,
     'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
       <>
         <SankeySettingsEditionElementTags
@@ -205,7 +205,12 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       />
       </>
     </WrapperContentConfig>,
-
+    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
+      <SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='data_taggs'
+      />
+    </WrapperContentConfig>,
     'view': <WrapperContentConfig title={t('view.storytelling')}>
       <ViewsConfig app_data={new_data_plus}
       />
@@ -213,16 +218,16 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   }
 
   // Add menu for menu type 'data'
-  additionalMenus.current.additional_menu_config_content['data'] = {
-    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-      <SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='data_taggs'
-      />
-    </WrapperContentConfig>
-  }
+  // additionalMenus.current.additional_menu_config_content['data'] = {
+  //   'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
+  //     <SankeySettingsEditionElementTags
+  //       new_data={new_data_plus}
+  //       elementTagNameProp='data_taggs'
+  //     />
+  //   </WrapperContentConfig>
+  // }
   if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_menu_config_content['data']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
+    additionalMenus.current.additional_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
       <><SankeySettingsEditionElementTags
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
@@ -251,18 +256,11 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   const new_data_plus = new_data as Class_ApplicationDataOSP
   const { t } = new_data_plus
   // Add new_menus
-  const content_draggable_menu_zdt = <MenuConfigurationContainersOSP
-    app_data={new_data_plus}
-    menu_for_style={false}
-  />
+  // const content_draggable_menu_zdt = <MenuConfigurationContainersOSP
+  //   app_data={new_data_plus}
+  //   menu_for_style={false}
+  // />
   const modules_dialogs_OSP = [
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration_osp.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
-      content={content_draggable_menu_zdt}
-      title={t('Menu.LL')}
-      maxW='50%'
-    />,
     <ContextZDT
       app_data={new_data_plus}
     />,

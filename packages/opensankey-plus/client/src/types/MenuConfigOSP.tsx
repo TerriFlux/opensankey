@@ -38,8 +38,8 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
     this._dict_setter_show_dialog_plus = {ref_setter_show_menu_view_not_saved: useRef(() => null)}
 
-    this._style_config.data.elements_configurable.push('data_tag')
-    this._style_config.data.elements_configurable.push('level_tag')
+    //this._style_config.data.elements_configurable.push('data_tag')
+    this._style_config.presentation.elements_configurable.push('level_tag')
   }
 
   updateAllMenuComponents(): void {

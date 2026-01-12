@@ -672,7 +672,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.position_x -= 100
       })
     new_drawing_area.legend.stick_to_drawing = false
-    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_')
+    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_','Sankey Unitaire')
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
