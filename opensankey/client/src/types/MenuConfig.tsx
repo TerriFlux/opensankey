@@ -46,8 +46,8 @@ export type Type_AdditionalMenus = {
   additional_menu_button_element_configurable: typeButtonElementConfigurable
   additional_menu_config_content: {
     data: { [x: string]: JSX.Element },
-    context: { [x: string]: JSX.Element },
     style: { [x: string]: JSX.Element },
+    presentation: { [x: string]: JSX.Element }
   }
   additional_new_menu_config_content: { [x: string]: { [x: string]: JSX.Element } }
 
@@ -59,7 +59,7 @@ export type Type_AdditionalMenus = {
 }
 
 export type keyTypeConfig = 'data' | 'style'
-export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object'
+export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
   // Config menu - Layout
   // Modal - Welcome
@@ -73,6 +73,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_formatting_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_element_ordoner: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -90,7 +91,6 @@ export interface IType_DictHookRefSetterShowDialogComponents {
 
   ref_setter_show_menu_node_icon: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
   ref_setter_show_modal_import_icons: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
-  ref_setter_show_menu_zdt: MutableRefObject<Dispatch<SetStateAction<boolean>>>,
 }
 
 // CLASS MENU CONFIG *******************************************************************/
@@ -158,14 +158,13 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
-    'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'DA', 'flow', 'node', 'object'] },
-    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'element', 'tag_flow', 'tag_node'] },
-    'presentation': { 'theme': '#778a95', elements_configurable: ['flow', 'node', 'flow_tag', 'node_tag', 'object', 'view'] }
+    'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'flow', 'node', 'object'] },
+    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend','element', 'tag_flow', 'tag_node'] },
+    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag','flow_tag', 'data_tag','view'] }
   }
 
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
     'data': [],
-    // 'context': [],
     'style': [],
     'presentation': []
   }
@@ -204,16 +203,6 @@ export class Class_MenuConfig {
    ========================================*/
 
   private _refs_to_btn_toogle_top_menus: { [id: string]: RefObject<HTMLButtonElement> } = {}
-
-  /* ========================================
-   Ref to button on the configuration menu in the app
-   ========================================*/
-
-  /* ========================================
-    Updater of component in the configuration menu
-    ========================================*/
-
-  protected _ref_to_GraphElementsOrdoner_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationsMenus
   protected _ref_to_menu_config_updater: MutableRefObject<() => void>
@@ -287,7 +276,7 @@ export class Class_MenuConfig {
     // Menu config
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
-    additional_menu_config_content: { data: {}, context: {}, style: {} },
+    additional_menu_config_content: { data: {}, style:{}, presentation:{} },
     additional_new_menu_config_content: {},
     extra_background_element: <></>,
 
@@ -306,7 +295,6 @@ export class Class_MenuConfig {
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
-    this._ref_to_GraphElementsOrdoner_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
     // Layout
@@ -395,6 +383,7 @@ export class Class_MenuConfig {
       ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_formatting_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_element_ordoner: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -411,8 +400,7 @@ export class Class_MenuConfig {
       ref_setter_show_spreadsheet: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_menu_node_icon: useRef(() => null),
-      ref_setter_show_modal_import_icons: useRef(() => null),
-      ref_setter_show_menu_zdt: useRef(() => null),
+      ref_setter_show_modal_import_icons: useRef(() => null)
     }
 
     this._ref_to_menu_config_container_updater = useRef(() => null)
@@ -464,6 +452,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_element_ordoner.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
@@ -768,7 +757,6 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToApparence()
     this.updateComponentRelatedToNodesTags()
     this.updateComponentRelatedToNodesTooltips()
-    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -809,7 +797,6 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToStyles()
     this.updateComponentRelatedToLinksTags()
     this.updateComponentRelatedToLinksTooltips()
-    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   public updateAllComponentsRelatedToContainersConfig() {
@@ -818,7 +805,6 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToStyles()
     // this.updateComponentRelatedToLinksTags()
     // this.updateComponentRelatedToLinksTooltips()
-    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
   /**
@@ -1254,7 +1240,6 @@ export class Class_MenuConfig {
   public get ref_to_toolbar_bottom_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_bottom_updater
   }
-  public get ref_to_GraphElementsOrdoner_updater(): MutableRefObject<() => void> { return this._ref_to_GraphElementsOrdoner_updater }
 
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
 
@@ -1332,15 +1317,10 @@ export class Class_MenuConfig {
     _unit_data_tagg: Class_DataTagGroup,
     _refreshThis: () => void
   ) => void>
-  /**
- * Update component with timeOut to avoid multiple refreshs
- * @memberof Class_MenuConfig
- */
-  public updateComponentRelatedToContainers() {
 
+  public updateComponentRelatedToContainers() {
     this._ref_to_menu_config_container_updater.current()
     this._ref_to_menu_context_container_updater.current()
-    this._ref_to_GraphElementsOrdoner_updater.current()
   }
 
 }

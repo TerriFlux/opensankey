@@ -327,6 +327,14 @@ export const SankeyMenu = (
         minW={'25vw'}
         maxW={'25vw'}
       />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_element_ordoner'}
+        content={<GraphElementsOrdoner app_data={app_data} />}
+        title={t('Menu.ElOrder')}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
 
       {modal_support}
       {modal_resolution_png}
@@ -447,13 +455,6 @@ const ConfigContent = ({ app_data, additional_menus }:
       data: <WrapperContentConfig title={t('Menu.Config.title_table')}>
         <SpreadSheet app_data={app_data} />
       </WrapperContentConfig>,
-
-      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <>
-          <DrawingAreaConfig new_data={app_data} />
-          <GraphElementsOrdoner new_data={app_data} />
-        </>
-      </WrapperContentConfig>,
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyNodeSelection app_data={app_data} />
       </WrapperContentConfig>,
@@ -465,12 +466,14 @@ const ConfigContent = ({ app_data, additional_menus }:
       object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
         <SankeyContainerSelection app_data={app_data} />
       </WrapperContentConfig>,
-
-      ...additional_menus.current.additional_menu_config_content.data
-
     },
     style: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
+      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
+        <>
+          <DrawingAreaConfig new_data={app_data} />
+        </>
+      </WrapperContentConfig>,
+      legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
           <LegendConfig new_data={app_data} />
         </>
@@ -544,6 +547,7 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
     'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false },
     'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
     'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
+    'legend': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_legend'), disabled: false },
     'node': { icon: app_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
     'data': { icon: app_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
 

@@ -1002,8 +1002,8 @@ export const BASE_LABEL_CONFIG = {
 } as const
 
 function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
-  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Illustration'
-  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Illustration'
+  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Icon'
+  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Icon'
 
 
   return {

@@ -229,7 +229,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       if (event.shiftKey) {
         this.drawing_area.application_data.menu_configuration.openConfigMenu()
         this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
-        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['DA']
+        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['legend']
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
       }
     }

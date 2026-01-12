@@ -2544,7 +2544,7 @@ const layerStyles = {
   },
 
   // Grid layouts avec factory
-  ...(['2cols', '3cols', '4cols', '5cols'] as const).reduce((acc, type) => {
+  ...(['2cols', '3cols', '4cols', '5cols', '6cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
     acc[`options_${type}`] = {
       display: 'grid',

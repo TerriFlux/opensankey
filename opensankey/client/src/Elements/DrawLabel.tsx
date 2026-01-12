@@ -177,8 +177,8 @@ export abstract class DrawLabelBase {
 
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
-      // .style('width', 'max-content')
-      // .style('max-width', '1000px')
+      .style('width', 'max-content')
+      .style('max-width', '1000px')
       .html(fo_content)
 
     const measureAndResize = () => {

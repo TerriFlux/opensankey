@@ -161,6 +161,7 @@ export abstract class Class_BaseElement {
       this.unDraw()
       // Abstract method for cleaning relations between elements
       this.cleanForDeletion()
+      
     }
   }
   protected cleanForDeletion() {

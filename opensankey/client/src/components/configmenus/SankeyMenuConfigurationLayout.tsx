@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import {
   Box,
   Button,
@@ -53,9 +53,9 @@ const right_addon_pixel = (val: number) => {
 /**
  * ✅ Composant unifié pour la zone de dessin (style + échelle + limites)
  */
-export const DrawingAreaConfig = ({ 
-  new_data, 
-  extra_background_element 
+export const DrawingAreaConfig = ({
+  new_data,
+  extra_background_element
 }: {
   new_data: Class_ApplicationData
   extra_background_element?: JSX.Element
@@ -64,7 +64,7 @@ export const DrawingAreaConfig = ({
   // Data -------------------------------------------------------------------------------
   const { t } = new_data
   const [, setCount] = useState(0)
-  
+
   const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   const [selectedTag, setSelectedTag] = useState(unit_taggs.length > 0 ? unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id : '')
 
@@ -683,81 +683,109 @@ export const LegendConfig = ({ new_data }: { new_data: Class_ApplicationData }) 
     </Box>
   </Box>
 }
-
-export const GraphElementsOrdoner = ({ new_data }: { new_data: Class_ApplicationData }) => {
-  const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
-  const [, setUpdate] = useState(0)
-
-  new_data.menu_configuration.ref_to_GraphElementsOrdoner_updater.current = () => setUpdate(a => a + 1)
-
-  // Function that return style of element draggable depending on it's state (isDragging)
+export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { icon_move_element_down, icon_move_element_up } = app_data.icon_library
+  const [, forceUpdate] = useState(0)
+  
+  const triggerUpdate = () => forceUpdate(prev => prev + 1)
+  
   const style_TableLineDragging = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined, is_selected: boolean) => ({
-    // change background colour if dragging
-    // border:isDragging ? '1px solid #78A7C2' : 'unset',
     borderColor: is_selected ? 'red' : 'black',
-    // styles we need to apply on draggables
     ...draggableStyle
   })
-  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} is_open={false}>
-    <DragDropContext onDragEnd={(evt) => {
-      // Reorganise links order at drop event
-      if (evt.destination && evt.destination.index !== undefined) {
-        new_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
-      }
-    }}>
+  
+  const handleDragEnd = (evt: any) => {
+    if (evt.destination && evt.destination.index !== undefined && evt.source.index !== evt.destination.index) {
+      app_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
+      triggerUpdate()
+    }
+  }
+  
+  const handleMoveUp = (element_idx: number) => {
+    if (element_idx > 0) {
+      app_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
+      triggerUpdate()
+    }
+  }
+  
+  const handleMoveDown = (element_idx: number, maxIdx: number) => {
+    if (element_idx < maxIdx - 1) {
+      app_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
+      triggerUpdate()
+    }
+  }
+  
+  // Nettoyer la liste : enlever doublons, legend et ghost_link
+  const cleanedElements = [...new Set(
+    app_data.drawing_area.list_g_element.filter(id => 
+      id !== 'legend' && 
+      id !== 'ghost_link' &&
+      !id.includes('ghost')
+    )
+  )]
+  
+  console.log('Cleaned elements:', cleanedElements)
+  
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="droppable">
-        {(provided,) => (
+        {(provided) => (
           <Box
             {...provided.droppableProps}
             ref={provided.innerRef}
-            style={{ display: 'grid', gridRowGap: '0.2rem' }}
+            style={{ 
+              display: 'grid', 
+              gridRowGap: '0.2rem',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}
           >
-            {
-              new_data.drawing_area.list_g_element
-                .map((id_element, element_idx) => {
-                  const element = new_data.drawing_area.sankey.elementFromId(id_element)
-                  if (!element.is_visible)
-                    return <></>
-                  return (
-                    <Draggable key={id_element} index={element_idx} draggableId={'line_drag_' + id_element}>
-                      {(provided, snapshot) => (
-                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+            {cleanedElements.map((id_element, element_idx) => {
+              const element = app_data.drawing_area.sankey.elementFromId(id_element)
+              if (!element?.is_visible) return null
+              
+              return (
+                <Draggable 
+                  key={id_element}
+                  index={element_idx} 
+                  draggableId={id_element}
+                >
+                  {(provided, snapshot) => (
+                    <Box 
+                      layerStyle='drag_line_element_order' 
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+                    >
+                      <Box className='name_element'>{element.name}</Box>
+                      <Box layerStyle="options_2cols">
+                        <Button
+                          variant='menuconfigpanel_move_order_node_io'
+                          minWidth='0'
+                          disabled={element_idx === 0}
+                          onClick={() => handleMoveUp(element_idx)}
                         >
-                          <Box className='name_element'>{(element as Class_LinkElement).name}</Box>
-                          <Box layerStyle="options_2cols">
-                            <Button
-                              variant='menuconfigpanel_move_order_node_io'
-                              minWidth='0'
-                              onClick={() => {
-                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
-                                setUpdate(a => a + 1)
-                              }}
-                            >
-                              {icon_move_element_up}
-                            </Button>
-                            <Button
-                              variant='menuconfigpanel_move_order_node_io'
-                              minWidth='0'
-                              onClick={() => {
-                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
-                                setUpdate(a => a + 1)
-                              }}
-                            >
-                              {icon_move_element_down}
-                            </Button>
-                          </Box>
-                        </Box>)}
-                    </Draggable>
-                  )
-                })
-            }
+                          {icon_move_element_up}
+                        </Button>
+                        <Button
+                          variant='menuconfigpanel_move_order_node_io'
+                          minWidth='0'
+                          disabled={element_idx === cleanedElements.length - 1}
+                          onClick={() => handleMoveDown(element_idx, cleanedElements.length)}
+                        >
+                          {icon_move_element_down}
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Draggable>
+              )
+            })}
             {provided.placeholder}
           </Box>
         )}
       </Droppable>
     </DragDropContext>
-  </WrapperBoxSubSectionMenu>
+  )
 }

@@ -12,11 +12,12 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   constructor(
     id: string,
+    name: string,
     drawing_area: Class_DrawingArea,
   ) {
     //super(id, id, drawing_area, 'g_elements_sankey')
     const container_style =  drawing_area.sankey.styles_dict['ContainerStyle']
-    super(id, id, drawing_area, container_style) //'g_elements_sankey')
+    super(id, name, drawing_area, container_style) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
     this._at_extremity_of_attached_nodes = false
@@ -449,6 +450,14 @@ export class Class_ContainerElement extends Class_NodeBase {
         this.drawing_area.application_data.history.saveRedo(redo)
         this.drawing_area.orderElementOnDA()
       }
+    }
+  }
+
+  public draw() {
+    super.draw()
+    if (this.tied_to_nodes && this._attached_node.filter(node => node.is_visible).length > 0) {
+      this.computeSizeAndPositionFromAttachedNodes()
+      this.applyPosition()
     }
   }
 
