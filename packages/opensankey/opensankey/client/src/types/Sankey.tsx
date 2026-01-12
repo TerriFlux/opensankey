@@ -195,7 +195,7 @@ export class Class_Sankey {
       })
     Object.entries(sankey_to_copy._containers)
       .forEach(([idx, container_to_copy]) => {
-        this.addNewContainer(idx)
+        this.addNewContainer(idx,container_to_copy.name)
           .copyFrom(container_to_copy)
       })
     // Copy icon catalog fom sankey
@@ -362,11 +362,12 @@ export class Class_Sankey {
       target
     )
   }
-  public addNewContainer(id: string): Class_ContainerElement {
+  public addNewContainer(id: string, name: string): Class_ContainerElement {
     if (!this._containers[id]) {
       // Create node
       const zdt = new Class_ContainerElement(
         id,
+        name,
         this.drawing_area)
       // Set node to default position
       zdt.draw()
@@ -375,7 +376,7 @@ export class Class_Sankey {
       return zdt
     }
     else {
-      return this.addNewContainer(id + '_0')
+      return this.addNewContainer(id + '_0', name)
     }
   }
 
@@ -406,8 +407,9 @@ export class Class_Sankey {
   }
   public addNewDefaultContainer() {
     const n = String(Object.values(this._containers).length)
-    const id = 'free_label' + n
-    return this.addNewContainer(id)
+    const id = 'shape' + n
+    const name = 'Forme ' + n
+    return this.addNewContainer(id, name)
   }
 
   public addNewNodeWithName(name: string): Class_NodeElement {

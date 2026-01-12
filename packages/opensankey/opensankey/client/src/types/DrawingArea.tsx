@@ -982,30 +982,34 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-  public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
-    // Save old value that can be used in undo
-    const list_old_io: string[] = this.list_g_element ?? []
-    // Function undo
-    const inv_moveElement = () => {
-      this.list_g_element = list_old_io
-      this.orderElementOnDA()
-
-    }
-    // Function original
-    const _moveElement = () => {
-
-      // Remove element to move from the array of element order
-      const el_to_move = this.list_g_element.splice(idx_src, 1)
-      // Add the element  the element target in the order array
-      this.list_g_element.splice(idx_trgt, 0, el_to_move[0])
-      this.orderElementOnDA()
-    }
-    // Save undo/redo
-    this.application_data.history.saveUndo(inv_moveElement)
-    this.application_data.history.saveRedo(_moveElement)
-    // Execute original function
-    _moveElement()
+public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
+  // Nettoyer les doublons avant de commencer
+  const uniqueList = [...new Set(this._list_g_element_id)]
+  
+  // Validation
+  if (idx_src < 0 || idx_src >= uniqueList.length) return
+  if (idx_trgt < 0 || idx_trgt >= uniqueList.length) return
+  if (idx_src === idx_trgt) return
+  
+  const list_old_io = [...uniqueList]
+  
+  const inv_moveElement = () => {
+    this._list_g_element_id = [...list_old_io]
+    this.orderElementOnDA()
   }
+  
+  const _moveElement = () => {
+    const newList = [...uniqueList]
+    const [element] = newList.splice(idx_src, 1)
+    newList.splice(idx_trgt, 0, element)
+    this._list_g_element_id = newList
+    this.orderElementOnDA()
+  }
+  
+  this.application_data.history.saveUndo(inv_moveElement)
+  this.application_data.history.saveRedo(_moveElement)
+  _moveElement()
+}
 
   public orderElementOnDA() {
     const list_element_id = this._list_g_element_id
@@ -1483,6 +1487,7 @@ export class Class_DrawingArea {
 
         // In case we get there still deref ghost link
         this._ghost_link.delete()
+         this._list_g_element_id = this._list_g_element_id.filter(id => id != this._ghost_link!.id)
         this._ghost_link = null
         this._ghost_link_source = null
         this._ghost_link_target = null
