@@ -1100,18 +1100,18 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
           label_pos_y -= this.link.thickness / 2 - this.getFontSize() + this._label_values.vert_shift
           label_baseline = 'text-before-edge'
         } else {
-          label_pos_y -= this.link.thickness / 2 + this.getFontSize() / 2 + this._label_values.vert_shift
+          label_pos_y -= this.link.thickness / 2 + this.getFontSize() / 2
           label_baseline = 'text-after-edge'
         }
       } else if (this._label_values.vert === 'middle') {
-        label_pos_y += this.getFontSize() / 3 + this._label_values.vert_shift
+        label_pos_y += this.getFontSize() / 3
         label_baseline = 'middle'
       } else if (this._label_values.vert === 'bottom') {
         if (inside_vert) {
-          label_pos_y += this.link.thickness / 2 + this._label_values.vert_shift
+          label_pos_y += this.link.thickness / 2
           label_baseline = 'text-after-edge'
         } else {
-          label_pos_y += this.link.thickness / 2 + this.getFontSize() + this._label_values.vert_shift
+          label_pos_y += this.link.thickness / 2 + this.getFontSize()
           label_baseline = 'text-before-edge'
         }
       }
@@ -1124,6 +1124,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
     const textSelector = this.getTextSelector()
     this._element.d3_selection?.selectAll(textSelector)
+      .attr('x', label_pos_x)
       .attr('y', label_pos_y)
       .attr('text-anchor', label_anchor)
   }
@@ -1210,7 +1211,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   ): boolean {
     if (!this.link.source || !this.link.target) return false
 
-    if (this._specific_label_values.on_path && !this._label_values.has_fo) {
+    if (this._specific_label_values.on_path) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
