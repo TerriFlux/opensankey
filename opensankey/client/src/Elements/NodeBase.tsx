@@ -127,7 +127,7 @@ export class Class_NodeBase extends Class_BaseShape {
         { class: 'zdt_right_handle' }),
     }
 
-    drawing_area.list_g_element.unshift(this.id)
+    //drawing_area.list_g_element.unshift(this.id)
   }
 
   protected _copyFrom(_: Class_NodeBase): void {

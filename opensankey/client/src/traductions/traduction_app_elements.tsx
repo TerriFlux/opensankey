@@ -123,10 +123,9 @@ export const resources_app_elements = {
         LegBgColor: 'Color',
 
         Config: {
-          type_data: '1. Structure',
-          type_style: '2. Visuals',
-          type_context: '3. Labels',
-          presentation: '4. Interactions',
+          type_data: 'Structure/Data',
+          type_style: 'Formatting',
+          presentation: 'Tags/Views',
           element_graph: 'Graph',
           element_node: 'Node',
           element_flow: 'Flow',
@@ -429,7 +428,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
-        ElOrder:'Ordonner la superposition des éléments',
+        ElOrder:'Ordre d\'affichage',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -568,10 +567,10 @@ export const resources_app_elements = {
         Config: {
           type_data: 'Structure/Données',
           type_style: 'Mise en forme',
-          // type_context: '3. Libellés',
-          presentation: 'Interactions',
+          presentation: 'Etiquettes/Vues',
 
           element_graph: 'Graphe',
+          element_legend: 'Légende',
           element_node: 'Noeuds',
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',

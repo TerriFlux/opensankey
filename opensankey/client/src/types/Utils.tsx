@@ -309,7 +309,7 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
 
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
-    additional_menu_config_content: { data: {}, context: {}, style: {} },
+    additional_menu_config_content: { data: {}, style: {}, presentation:{} },
     additional_new_menu_config_content: {},
 
     extra_background_element: <></>,

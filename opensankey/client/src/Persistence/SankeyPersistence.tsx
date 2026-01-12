@@ -259,6 +259,7 @@ export class ContainerPersistence extends NodeBasePersistence {
         }
       }
     })
+    container.name = json_object['title'] as string
     if (json_object['is_image']) {
       // Image mode: configure as image container
       container.attributes['name_label_is_visible'] = false
@@ -949,7 +950,8 @@ export class SankeyPersistence {
     const json_container_object = getJSONFromJSON(json_object, 'labels', {})
     Object.entries(json_container_object)
       .forEach(([_, container_json]) => {
-        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_)
+        const name = (container_json as Type_JSON)['name'] as string
+        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_,name)
         fromJSON(container, container_json as Type_JSON, kwargs)
       })
   }

@@ -842,11 +842,10 @@ export class Class_LinkValue {
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([_id_tagg, list]) => {
-        if (matching_tags_id[_id_tagg] === undefined) //Sanity check, it is possible that json_object link have ref to tag that fluxTags doesn't have (it can occurs with legecy view)
-          return false
 
-        const tagg_id = matching_taggs_id[_id_tagg] ?? _id_tagg
-        const tag_ids = (list as string[]).map(_ => (matching_tags_id[_id_tagg][_] ?? _))
+
+        const tagg_id = _id_tagg
+        const tag_ids = list
         return (
           (tagg_id in flux_taggs_dict) &&
           (tag_ids.length > 0))
@@ -854,7 +853,7 @@ export class Class_LinkValue {
       .forEach(([id, list]) => {
         const tagg_id = matching_taggs_id[id] ?? id
         const tagg = flux_taggs_dict[tagg_id] as Class_TagGroup
-        const tag_ids = (list as string[]).map(_ => matching_tags_id[id][_] ?? _)
+        const tag_ids = list
         tagg.tags_list
           .filter(tag => tag_ids.includes(tag.id))
           .forEach(tag => this.addTag(tag))
