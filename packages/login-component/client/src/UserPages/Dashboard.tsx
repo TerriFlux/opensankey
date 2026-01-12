@@ -24,8 +24,8 @@ export type SankeyLabelTypes = {
   color_border: string,
   transparent_border: boolean,
 
-  label_width: number,
-  label_height: number,
+  shape_min_width: number,
+  shape_min_height: number,
 
   x: number,
   y: number,
