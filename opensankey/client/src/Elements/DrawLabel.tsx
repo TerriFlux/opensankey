@@ -1210,7 +1210,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   ): boolean {
     if (!this.link.source || !this.link.target) return false
 
-    if (this._specific_label_values.on_path) {
+    if (this._specific_label_values.on_path && !this._label_values.has_fo) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
