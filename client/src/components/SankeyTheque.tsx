@@ -228,10 +228,12 @@ const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> 
 
 const table_replace: [string, string][] = [
   ['.json.gz', ''],
+    ['.gz', ''],
   ['_layout.json', ''],
   ['.json', ''],
   ['_reconciled.xlsx', ''],
   ['.xlsx', ''],
+
 ]
 
 // try to compare to_determine & name without suffix to know if they have the same name & that this is a json
@@ -240,7 +242,7 @@ const is_json = (to_determine: string, name: string) => {
   table_replace.forEach(rep => {
     to_determine_name = to_determine_name.replaceAll(rep[0], rep[1])
   })
-  return to_determine.includes('.json') && to_determine_name == name
+  return (to_determine.includes('.json') || to_determine.includes('.gz')) && to_determine_name == name
 }
 
 // try to compare to_determine & name without suffix to know if they have the same name & that this is an excel file

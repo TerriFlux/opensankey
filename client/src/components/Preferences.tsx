@@ -7,15 +7,13 @@ import * as d3 from 'd3'
 import { TFunction } from 'i18next'
 import { SankeySettingsEditionElementTags } from '../deps/OpenSankey+/components/SankeyPlusMenuConfigurationTags'
 import { WrapperBoxSubSectionMenu, OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
-import { MenuConfigurationLinkLabel } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksLabel'
-import { MenuConfigurationLinkShape } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinksShape'
-import { MenuConfigurationNodeContext } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesLabel'
-import { MenuConfigurationNodeStyle } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/SankeyMenuConfigurationNodesShape'
-import { WrapperNodeStyleSelector, WrapperLinkStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
-import { Class_NodeStyle, Class_LinkStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/ElementStyle'
+import { MenuConfigurationAppearance} from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuElementsAppearance'
+import { GenericStyleSelector } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/SankeyStyle'
+import { Class_ElementStyle } from '../deps/OpenSankey+/deps/OpenSankey/Elements/Element'
 import { Type_AdditionalMenus } from '../deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { getJSONFromJSON, Type_MacroTagGroup } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { Class_ApplicationDataOSP } from '../deps/OpenSankey+/types/ApplicationDataOSP'
+import { SankeyPersistence } from '../deps/OpenSankey+/deps/OpenSankey/Persistence/SankeyPersistence'
 
 const paddingBoxPreference = '0.6rem'
 
@@ -65,8 +63,7 @@ export const ModalPreference = ({new_data, additionalMenus}:{
             nodes: {},
             links: {},
           }
-
-          ghost_data.current.drawing_area.sankey.fromJSON(formated_json, true)
+          SankeyPersistence.fromJSON(+ghost_data.current.version,ghost_data.current.drawing_area.sankey,formated_json)
           if (json_dump['palette']) {
             list_palette.current = json_dump['palette']
           }
@@ -139,7 +136,7 @@ export const ModalPreference = ({new_data, additionalMenus}:{
       setOpeningRender(true)
       const path = window.location.origin
       const url = path + '/user/set_preference'
-      const sankey_user = ghost_data.current.drawing_area.sankey.toJSON()
+      const sankey_user = SankeyPersistence.toJSON(ghost_data.current.drawing_area.sankey)
       const user_pref = {
         palette: list_palette.current,
         icon_catalog: ghost_data.current.drawing_area.sankey.icon_catalog,
@@ -303,8 +300,8 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
   const { t } = app_data
   user_data.t = t
   const [, setUpdate] = useState(0)
-  user_data.menu_configuration.ref_to_menu_config_nodes_styles_editor_updater.current = () => setUpdate(a => a + 1)
-  user_data.menu_configuration.ref_to_menu_config_links_styles_editor_updater.current = () => setUpdate(a => a + 1)
+  user_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = () => setUpdate(a => a + 1)
+  user_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current = () => setUpdate(a => a + 1)
 
   return <Box layerStyle='menuconfigpanel_grid'>
     <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_head')}>
@@ -329,17 +326,16 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
       <TabPanels>
         <TabPanel>
           <Box layerStyle='menuconfigpanel_grid'>
-            <WrapperNodeStyleSelector new_data={user_data}><></></WrapperNodeStyleSelector>
+            <GenericStyleSelector app_data={user_data}><></></GenericStyleSelector>
 
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_visual')} is_open={false}>
-              <MenuConfigurationNodeStyle
+              <MenuConfigurationAppearance
                 app_data={user_data}
                 menu_for_style={true}
-                additional_menus={additionalMenus}
               />
             </WrapperBoxSubSectionMenu>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_node_styles_context')} is_open={false}>
-              <MenuConfigurationNodeContext
+              <MenuConfigurationAppearance
                 app_data={user_data}
                 menu_for_style={true}
               />
@@ -352,17 +348,16 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
         </TabPanel>
         <TabPanel>
           <Box layerStyle='menuconfigpanel_grid'>
-            <WrapperLinkStyleSelector new_data={user_data}><></></WrapperLinkStyleSelector>
+            <GenericStyleSelector app_data={user_data}><></></GenericStyleSelector>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_visual')} is_open={false}>
-              <MenuConfigurationLinkShape
-                new_data={user_data}
+              <MenuConfigurationAppearance
+                app_data={user_data}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
             <WrapperBoxSubSectionMenu new_data={user_data} title={t('Menu.preference_content.style_edit_head_flow_styles_context')} is_open={false}>
-              <MenuConfigurationLinkLabel
-                new_data={user_data}
-                additionMenus={additionalMenus}
+              <MenuConfigurationAppearance
+                app_data={user_data}
                 menu_for_style={true}
               />
             </WrapperBoxSubSectionMenu>
@@ -384,8 +379,8 @@ const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
  */
 const TansferStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, elementStyleType: '_node_styles' | '_link_styles' }> = ({ user_data, app_data, elementStyleType: elementTagNameProp }) => {
   const { t } = app_data
-  const style_dict = user_data.drawing_area.sankey[elementTagNameProp]
-  const app_style_dict = app_data.drawing_area.sankey[elementTagNameProp]
+  const style_dict = user_data.drawing_area.sankey._styles
+  const app_style_dict = app_data.drawing_area.sankey._styles
   const style_list = Object.values(style_dict)
 
   const [style_entry_id, setStyleEntryId] = useState(style_list[0]?.id ?? '')
@@ -428,29 +423,29 @@ const TansferStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_Ap
       onClick={() => {
         // Update correct element style
         if (elementTagNameProp == '_node_styles') {
-          let new_style: Class_NodeStyle
+          let new_style: Class_ElementStyle
 
           // Update style if existing in application data, else create a new one
-          if (style_entry_id in app_data.drawing_area.sankey.node_styles_dict)
-            new_style = app_data.drawing_area.sankey.node_styles_dict[style_entry_id]
+          if (style_entry_id in app_data.drawing_area.sankey.styles_dict)
+            new_style = app_data.drawing_area.sankey.styles_dict[style_entry_id]
           else
-            new_style = app_data.drawing_area.sankey.addNewNodeStyle(style_entry_id, style_dict[style_entry_id].name)
+            new_style = app_data.drawing_area.sankey.addNewElementStyle(style_entry_id, style_dict[style_entry_id].name)
 
-          new_style.copyFrom(undefined,style_dict[style_entry_id] as Class_NodeStyle)
+          new_style.copyFrom(style_dict[style_entry_id] as Class_ElementStyle)
           // Update tags menu in application
-          app_data.menu_configuration.updateComponentRelatedToNodesStyles()
+          app_data.menu_configuration.updateComponentRelatedToStyles()
 
         } else {
-          let new_style: Class_LinkStyle
+          let new_style: Class_ElementStyle
 
           // Update style if existing in application data, else create a new one
-          if (style_entry_id in app_data.drawing_area.sankey.node_styles_dict)
-            new_style = app_data.drawing_area.sankey.link_styles_dict[style_entry_id]
+          if (style_entry_id in app_data.drawing_area.sankey.styles_dict)
+            new_style = app_data.drawing_area.sankey.styles_dict[style_entry_id]
           else
-            new_style = app_data.drawing_area.sankey.addNewLinkStyle(style_entry_id, style_dict[style_entry_id].name)
+            new_style = app_data.drawing_area.sankey.addNewElementStyle(style_entry_id, style_dict[style_entry_id].name)
 
-          new_style.copyFrom(style_dict[style_entry_id] as Class_LinkStyle)
-          app_data.menu_configuration.updateComponentRelatedToLinksStyles()
+          new_style.copyFrom(style_dict[style_entry_id] as Class_ElementStyle)
+          app_data.menu_configuration.updateComponentRelatedToStyles()
         }
 
         // Redraw application sankey with updated style

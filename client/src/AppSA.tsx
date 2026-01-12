@@ -57,7 +57,6 @@ import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/component
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
 import { STATIC_NODE_MENU_CONFIG } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextNodeConfig'
-import { SankeyModalStyleContainer } from './deps/OpenSankey+/components/SankeyPlusStyle'
 import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey+/components/UniversalConverterDialogConfig'
 import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
 
@@ -164,8 +163,7 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
   if (new_data_SA.has_sankey_plus) {
     moduleDialogsSA.push(
       <ModalSankeyTheque new_data={new_data_SA} />,
-      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />,
-      <SankeyModalStyleContainer new_data={new_data_SA} />
+      <ModalPreference new_data={new_data_SA} additionalMenus={additional_menus} />
     )
   }
 
