@@ -475,7 +475,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'left')}
-                onClick={() => { labelValues.horiz = 'left' }}
+                onClick={() => { labelValues.horiz = 'left'; labelValues.horiz_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_align_left}
               </Button>
@@ -485,7 +485,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'middle')}
-                onClick={() => { labelValues.horiz = 'middle' }}
+                onClick={() => { labelValues.horiz = 'middle'; labelValues.horiz_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_align_center}
               </Button>
@@ -495,7 +495,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'right')}
-                onClick={() => { labelValues.horiz = 'right' }}
+                onClick={() => { labelValues.horiz = 'right'; labelValues.horiz_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_align_right}
               </Button>
@@ -524,7 +524,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'bottom')}
-                onClick={() => { labelValues.vert = 'bottom' }}
+                onClick={() => { labelValues.vert = 'bottom'; labelValues.vert_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_vert_pos_bottom}
               </Button>
@@ -534,7 +534,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'middle')}
-                onClick={() => { labelValues.vert = 'middle' }}
+                onClick={() => { labelValues.vert = 'middle'; labelValues.vert_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_vert_pos_center}
               </Button>
@@ -544,7 +544,7 @@ const LabelContentComponent = ({
                 isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'top')}
-                onClick={() => { labelValues.vert = 'top' }}
+                onClick={() => { labelValues.vert = 'top'; labelValues.vert_shift = 0 }}
               >
                 {app_data.icon_library.icon_text_vert_pos_top}
               </Button>
@@ -1142,111 +1142,111 @@ export const MenuConfigurationAppearance = ({
               )}
               {(selection.hasContainers) && (
                 <>
-                                <Box layerStyle='menu_sub_section'>
-                  <Checkbox
-                    variant='menuconfigpanel_option_checkbox'
-                    iconColor={'white'}
-                    isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
-                    onChange={(evt) => {
-                      container_element.tied_to_nodes = evt.target.checked
-                      refreshAll()
-                    }}>
-                    <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                  </Checkbox>
-
-                  {elements.length > 0 && container_element.tied_to_nodes ? <Box>
-                    <OSMultiSelect
-                      t={app_data.t}
-                      elements={options_selector_node_tied}
-                      onClick={(entries) => {
-                        const entries_values = entries.map(d => d.value)
-                        const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-
-                        app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                          if (entries_values.includes(node.id)) {
-                            containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
-                          } else {
-                            containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
-                          }
-                        })
-                        refreshAll()
-                      }}
-                    />
-                    <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
-                    <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            disabled={!disable_attr_props['margin_left']}
-                            default_value={nodeShapeValues.margin_left}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Top'}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            disabled={!disable_attr_props['margin_right']}
-                            default_value={nodeShapeValues.margin_right}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                      </Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            disabled={!disable_attr_props['margin_top']}
-                            default_value={nodeShapeValues.margin_top}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            disabled={!disable_attr_props['margin_bottom']}
-                            default_value={nodeShapeValues.margin_bottom}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                      </Box>
-                    </OSTooltip>
-
+                  <Box layerStyle='menu_sub_section'>
                     <Checkbox
                       variant='menuconfigpanel_option_checkbox'
                       iconColor={'white'}
-                      isChecked={elements.length > 0 ? container_element.at_extremity_of_attached_nodes : false}
-                      onChange={(evt) => updateLabelTiedToNodesAtExtremity(evt.target.checked)}>
-                      <OSTooltip label={t('LL.tooltips.tiedToNodesExtremity')} placement='left'>{t('LL.tiedToNodesExtremity')}</OSTooltip>
+                      isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
+                      onChange={(evt) => {
+                        container_element.tied_to_nodes = evt.target.checked
+                        refreshAll()
+                      }}>
+                      <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
                     </Checkbox>
 
-                    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                      <Box layerStyle='menuconfigpanel_option_name'>{t('LL.extremityPos')}</Box>
-                      <ButtonGroup isAttached>
-                        <Button
-                          variant={elements.length > 0 && container_element.extremity_position === 'top' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                          onClick={() => { updateLabelExtremityPos('top') }}>{icon_text_vert_pos_top}</Button>
-                        <Button
-                          variant={elements.length > 0 && container_element.extremity_position === 'bottom' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                          onClick={() => { updateLabelExtremityPos('bottom') }}>{icon_text_vert_pos_bottom}</Button>
-                        <Button
-                          variant={elements.length > 0 && container_element.extremity_position === 'left' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                          onClick={() => { updateLabelExtremityPos('left') }}>{icon_to_the_left}</Button>
-                        <Button
-                          variant={elements.length > 0 && container_element.extremity_position === 'right' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                          onClick={() => { updateLabelExtremityPos('right') }}>{icon_to_the_right}</Button>
-                      </ButtonGroup>
-                    </Box>
-                  </Box> : <></>}
-                </Box></>
+                    {elements.length > 0 && container_element.tied_to_nodes ? <Box>
+                      <OSMultiSelect
+                        t={app_data.t}
+                        elements={options_selector_node_tied}
+                        onClick={(entries) => {
+                          const entries_values = entries.map(d => d.value)
+                          const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
+
+                          app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                            if (entries_values.includes(node.id)) {
+                              containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
+                            } else {
+                              containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
+                            }
+                          })
+                          refreshAll()
+                        }}
+                      />
+                      <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
+                      <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              disabled={!disable_attr_props['margin_left']}
+                              default_value={nodeShapeValues.margin_left}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
+                              minimum_value={0}
+                              stepper={true} />
+                          </Box>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Top'}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              disabled={!disable_attr_props['margin_right']}
+                              default_value={nodeShapeValues.margin_right}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
+                              minimum_value={0}
+                              stepper={true} />
+                          </Box>
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              disabled={!disable_attr_props['margin_top']}
+                              default_value={nodeShapeValues.margin_top}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
+                              minimum_value={0}
+                              stepper={true} />
+                          </Box>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              disabled={!disable_attr_props['margin_bottom']}
+                              default_value={nodeShapeValues.margin_bottom}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
+                              minimum_value={0}
+                              stepper={true} />
+                          </Box>
+                        </Box>
+                      </OSTooltip>
+
+                      <Checkbox
+                        variant='menuconfigpanel_option_checkbox'
+                        iconColor={'white'}
+                        isChecked={elements.length > 0 ? container_element.at_extremity_of_attached_nodes : false}
+                        onChange={(evt) => updateLabelTiedToNodesAtExtremity(evt.target.checked)}>
+                        <OSTooltip label={t('LL.tooltips.tiedToNodesExtremity')} placement='left'>{t('LL.tiedToNodesExtremity')}</OSTooltip>
+                      </Checkbox>
+
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <Box layerStyle='menuconfigpanel_option_name'>{t('LL.extremityPos')}</Box>
+                        <ButtonGroup isAttached>
+                          <Button
+                            variant={elements.length > 0 && container_element.extremity_position === 'top' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                            onClick={() => { updateLabelExtremityPos('top') }}>{icon_text_vert_pos_top}</Button>
+                          <Button
+                            variant={elements.length > 0 && container_element.extremity_position === 'bottom' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                            onClick={() => { updateLabelExtremityPos('bottom') }}>{icon_text_vert_pos_bottom}</Button>
+                          <Button
+                            variant={elements.length > 0 && container_element.extremity_position === 'left' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                            onClick={() => { updateLabelExtremityPos('left') }}>{icon_to_the_left}</Button>
+                          <Button
+                            variant={elements.length > 0 && container_element.extremity_position === 'right' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                            onClick={() => { updateLabelExtremityPos('right') }}>{icon_to_the_right}</Button>
+                        </ButtonGroup>
+                      </Box>
+                    </Box> : <></>}
+                  </Box></>
               )}
             </>
           )}
