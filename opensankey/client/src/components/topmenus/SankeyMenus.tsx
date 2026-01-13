@@ -245,6 +245,7 @@ export const SankeyMenu = (
               className='drawer_menu_config'
               style={{
                 width: menu_config_width + '%',
+                height: 50 + '%',
                 right: app_data.drawing_area.fit_margin / 2,
                 marginTop: posTopMenuConfig
               }}
