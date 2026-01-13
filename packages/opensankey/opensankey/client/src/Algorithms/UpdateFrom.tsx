@@ -154,9 +154,9 @@ export const updateFrom = (
   const all = mode.includes('*')
   // Transfer DA attributs
   if (mode.includes('attrDrawingArea') || all) {
-    const scale_to_keep = drawing_area.scale
+    // const scale_to_keep = drawing_area.scale
     drawing_area._copyAttrFrom(other_drawing_area)
-    drawing_area._scale = scale_to_keep
+    // drawing_area._scale = scale_to_keep
     drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
     if (other_drawing_area.legend)
       drawing_area.legend.copyFrom(other_drawing_area.legend)
