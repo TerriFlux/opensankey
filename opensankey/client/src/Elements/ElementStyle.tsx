@@ -29,14 +29,14 @@ export type ElementStyleConfigsDict = Record<string, ElementStyleConfigItem>
 
 export const elementStyleConfigs: ElementStyleConfigsDict = {
   NodeStyle: {
-    name: 'Style de noeud par defaut',
+    name: 'Style de noeud par défaut',
     config: { 
       'name_label_is_visible': true,
       //'value_label_is_visible': false 
     }
   },
   LinkStyle: {
-    name: 'Style de flux par defaut',
+    name: 'Style de flux par défaut',
     config: { 
       //'name_label_is_visible': false,
       'name_label_background_visible': false,
@@ -48,7 +48,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     }
   },
   ContainerStyle: {
-    name: 'Style de container par defaut',
+    name: 'Style de container par défaut',
     config: { 
       "name_label_font_family": "Arial,sans-serif",
       'name_label_is_visible': true,
