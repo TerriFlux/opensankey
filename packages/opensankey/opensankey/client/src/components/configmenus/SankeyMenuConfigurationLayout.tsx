@@ -47,18 +47,8 @@ const right_addon_pixel = (val: number) => {
   return 'px'
 }
 
-/**
- * ✅ Composant unifié pour la zone de dessin (style + échelle + limites)
- */
-export const DrawingAreaConfig = ({
-  app_data,
-  extra_background_element
-}: {
-  app_data: Class_ApplicationData
-  extra_background_element?: JSX.Element
-}) => {
 
-  // Data -------------------------------------------------------------------------------
+export const DrawingAreaConfig = ({app_data,}: {app_data: Class_ApplicationData}) => {
   const { t } = app_data
   const [, setCount] = useState(0)
 
@@ -79,18 +69,11 @@ export const DrawingAreaConfig = ({
   ref_minimum_flux.current(String(app_data.drawing_area.minimum_flux ?? ''))
   ref_maximum_flux.current(String(app_data.drawing_area.maximum_flux ?? ''))
 
-  // Components updaters ---------------------------------------------------------------
-  /**
-   * Function used to reset menu UI
-   */
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setCount(a => a + 1)
     app_data.menu_configuration.updateComponentRelatedToLayoutApparence()
   }
-
-  // Event functions -------------------------------------------------------------------
-  // ✅ SECTION STYLE FOND & GRILLE
 
   const eventBgColor = (evt: string) => {
     const f = (_: string) => {
@@ -125,8 +108,6 @@ export const DrawingAreaConfig = ({
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'magnetic_nodes', evt.target.checked, f)
   }
-
-  // ✅ SECTION ÉCHELLE & LIMITES
 
   const eventScale = (evt: number | null | undefined) => {
     if (evt) {
@@ -173,12 +154,7 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_flux', evt, f)
   }
 
-  return <WrapperBoxSubSectionMenu title={t('Menu.background')} new_data={app_data}>
-    <>
-      {/* ✅ SECTION STYLE */}
-      <Box as='span' textStyle='title_sub_section'>{t('Menu.style') || 'Style'}</Box>
-
-      {/* Couleur du fond de la page */}
+  return <>
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>
           {t('Menu.BgC')}
@@ -192,13 +168,6 @@ export const DrawingAreaConfig = ({
           </Box>
         </OSTooltip>
       </Box>
-
-      {extra_background_element}
-
-      {/* ✅ SECTION GRILLE */}
-      <Box as='span' textStyle='title_sub_section'>{t('Menu.grid') || 'Grille'}</Box>
-
-      {/* Afficher le quadrillage + Taille */}
       <Box layerStyle='menuconfigpanel_row_2cols'>
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
@@ -235,10 +204,6 @@ export const DrawingAreaConfig = ({
         </OSTooltip>
       </Checkbox>
 
-      {/* ✅ SECTION ÉCHELLE & LIMITES DES FLUX */}
-      <Box as='span' textStyle='title_sub_section'>{t('MEP.links_size') || 'Taille des flux'}</Box>
-
-      {/* Sélecteur d'unité (si tags unitaires présents) */}
       {unit_taggs.length > 0 && (
         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
           <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
@@ -352,7 +317,6 @@ export const DrawingAreaConfig = ({
         {t('Menu.ElOrder')}
       </Button>
     </>
-  </WrapperBoxSubSectionMenu>
 }
 
 /**
