@@ -1755,31 +1755,31 @@ public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
       .sort((a, b) => sortNodesElements(a, b))
   }
   // selected visible
-  public get visible_and_selected_nodes_list(): Class_NodeElement[] {
-    return this.selected_nodes_list
-      .filter(node => node.is_visible)
-  }
-  public get visible_and_selected_links_list(): Class_LinkElement[] {
-    return this.selected_links_list
-      .filter(link => link.is_visible)
-  }
-  public get visible_and_selected_containers_list(): Class_ContainerElement[] {
-    return this.selected_containers_list
-      .filter(c => c.is_visible)
-  }
-  // selected visible sorted
-  public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
-    return this.visible_and_selected_nodes_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
-  public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
-    return this.visible_and_selected_links_list
-      .sort((a, b) => sortLinksElementsByIds(a, b))
-  }
-  public get visible_and_selected_containers_list_sorted(): Class_ContainerElement[] {
-    return this.visible_and_selected_containers_list
-      .sort((a, b) => sortNodesElements(a, b))
-  }
+  // public get visible_and_selected_nodes_list(): Class_NodeElement[] {
+  //   return this.selected_nodes_list
+  //     .filter(node => node.is_visible)
+  // }
+  // public get visible_and_selected_links_list(): Class_LinkElement[] {
+  //   return this.selected_links_list
+  //     .filter(link => link.is_visible)
+  // }
+  // public get visible_and_selected_containers_list(): Class_ContainerElement[] {
+  //   return this.selected_containers_list
+  //     .filter(c => c.is_visible)
+  // }
+  // // selected visible sorted
+  // public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
+  //   return this.visible_and_selected_nodes_list
+  //     .sort((a, b) => sortNodesElements(a, b))
+  // }
+  // public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
+  //   return this.visible_and_selected_links_list
+  //     .sort((a, b) => sortLinksElementsByIds(a, b))
+  // }
+  // public get visible_and_selected_containers_list_sorted(): Class_ContainerElement[] {
+  //   return this.visible_and_selected_containers_list
+  //     .sort((a, b) => sortNodesElements(a, b))
+  // }
 
   // Size
   public get width() { return this._width }

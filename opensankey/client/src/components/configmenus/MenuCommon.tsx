@@ -1090,12 +1090,7 @@ const LinkTooltipEditor: FC<{
 }> = (props) => <TooltipEditor {...props} />
 
 export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
-  let selected_nodes
-  if (!new_data.menu_configuration.is_selector_only_for_visible_elements) {
-    selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
-  } else {
-    selected_nodes = new_data.drawing_area.visible_and_selected_nodes_list_sorted
-  }
+  let selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
 
   return (
     <>
@@ -1110,13 +1105,8 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
 }
 
 export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  let selected_links
-  if (!app_data.menu_configuration.is_selector_only_for_visible_elements) {
-    selected_links = app_data.drawing_area.selected_links_list_sorted
-  } else {
-    selected_links = app_data.drawing_area.visible_and_selected_links_list_sorted
-  }
-
+  let selected_links = app_data.drawing_area.selected_links_list_sorted
+  
   return (
     <>
       <SankeyLinkSelectionSimple app_data={app_data} />

@@ -1204,12 +1204,6 @@ export class Class_MenuConfig {
     return this._ref_to_datatag_filter_updater
   }
 
-  // Nodes / links selectors ------------------------------------------------------------
-
-  public get is_selector_only_for_visible_elements() {
-    return this._selector_only_visible_elements
-  }
-
   // Getter dict of ref setter show dialog
   public get dict_setter_show_dialog(): IType_DictHookRefSetterShowDialogComponents {
     return this._dict_setter_show_dialog

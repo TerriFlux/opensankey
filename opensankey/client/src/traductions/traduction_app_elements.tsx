@@ -138,6 +138,7 @@ export const resources_app_elements = {
           title_legend: 'Legend',
           title_node: 'Nodes',
           title_flow: 'Flows',
+                    title_elements: 'Elements',
           title_node_tag: 'Node Label Editing',
           title_flow_tag: 'Flow Label Editing'
         },
@@ -585,6 +586,7 @@ export const resources_app_elements = {
           title_legend: 'Légende',
           title_node: 'Noeuds',
           title_flow: 'Flux',
+                    title_elements: 'Elements',
           title_node_tag: 'Édition des étiquettes de noeuds',
           title_flow_tag: 'Édition des étiquettes de flux',
 

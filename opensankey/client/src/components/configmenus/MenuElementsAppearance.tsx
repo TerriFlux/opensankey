@@ -15,13 +15,8 @@ import { Class_ElementStyle } from '../../Elements/Element'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { Type_Position } from '../../types/Utils'
 import { svg_label_upper } from '../../css/IconLibrairie'
-import { default_style_id } from '../../types/Utils'
-
-// Imports des composants et helpers
-import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import {
-  WrapperBoxSubSectionMenu,
   ElementAttrSetterNumberInput2Cols,
   ConfigMenuNumberInput,
   OSTooltip,
@@ -67,6 +62,7 @@ import {
   getNodeShapeAttributeKey,
   getLabelAttributeKey
 } from '../../Elements/ElementsAttributesConfig'
+import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 
 // ✅ Analyse de la sélection
 interface SelectionAnalysis {
@@ -614,19 +610,13 @@ export const MenuConfigurationAppearance = ({
   // ✅ Récupération éléments
   const getAllSelectedElements = (): (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] => {
     const elements: (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] = []
-    const selectedNodes = menu_configuration.is_selector_only_for_visible_elements
-      ? drawing_area.visible_and_selected_nodes_list_sorted
-      : drawing_area.selected_nodes_list_sorted
+    const selectedNodes = drawing_area.selected_nodes_list_sorted
     elements.push(...selectedNodes)
 
-    const selectedLinks = menu_configuration.is_selector_only_for_visible_elements
-      ? drawing_area.visible_and_selected_links_list_sorted
-      : drawing_area.selected_links_list_sorted
+    const selectedLinks =  drawing_area.selected_links_list_sorted
     elements.push(...selectedLinks)
 
-    const selectedContainers = menu_configuration.is_selector_only_for_visible_elements
-      ? drawing_area.visible_and_selected_containers_list_sorted
-      : drawing_area.selected_containers_list_sorted
+    const selectedContainers = drawing_area.selected_containers_list_sorted
     elements.push(...selectedContainers)
 
     return elements
