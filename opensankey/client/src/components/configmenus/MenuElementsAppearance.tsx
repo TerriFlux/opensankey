@@ -914,6 +914,16 @@ export const MenuConfigurationAppearance = ({
                       </OSTooltip>
                     </Checkbox>
                   </Box>
+                  {selection.hasNodes ?
+                  <Button
+                    variant={'menuconfigpanel_option_button'}
+                    onClick={() => {
+                      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
+                      app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
+                    }}
+                  >
+                    {t('Noeud.Reorg_title')}
+                  </Button>:<></>}
                 </Box>
               )}
 

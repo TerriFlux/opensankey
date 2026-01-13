@@ -205,7 +205,7 @@ export const resources_nodes = {
         SelectStyle: 'Sélectionner un style',
         AS: 'Réinitialiser',
         Reorg: 'Réorganiser automatiquement les flux E/S',
-        Reorg_title: 'Réorganisation',
+        Reorg_title: 'Ordre des flux E/S',
         Slct: 'Sélection',
         SlctOutLink: 'Sélectionner flux sortants',
         SlctInLink: 'Sélectionner flux entrants',

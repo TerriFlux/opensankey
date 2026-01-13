@@ -59,6 +59,7 @@ import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
+import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -336,6 +337,14 @@ export const SankeyMenu = (
         minW={'25vw'}
         maxW={'25vw'}
       />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_node_reorganizer_editor'}
+        content={<NodeIOReorganizer app_data={app_data} />}
+        title={t('Noeud.Reorg_title')}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
 
       {modal_support}
       {modal_resolution_png}
@@ -471,12 +480,12 @@ const ConfigContent = ({ app_data, additional_menus }:
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <DrawingAreaConfig new_data={app_data} />
+          <DrawingAreaConfig app_data={app_data} />
         </>
       </WrapperContentConfig>,
       legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
-          <LegendConfig new_data={app_data} />
+          <LegendConfig app_data={app_data} />
         </>
       </WrapperContentConfig>,
       element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
@@ -559,8 +568,8 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
     border: 'none',
     borderRadius: '4px',
     background: 'white',
-    width: '3.5rem',
-    padding: '0.2rem',
+    width: '2.7rem',
+    padding: '0.1rem',
   }}>
     {
       elements_buttons.filter(el => el in dict_buttons_element_to_config).map((el, i) => {
@@ -577,8 +586,9 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
         >
           {dict_buttons_element_to_config[el].icon}
           <Box
+          style={{ fontSize: '0.5rem'}}
             as='span'
-            padding='0.2rem 0.1rem 0rem 0.1rem'
+            padding='0rem 0.0rem 0rem 0.0rem'
           >
             {dict_buttons_element_to_config[el].text}
           </Box>
