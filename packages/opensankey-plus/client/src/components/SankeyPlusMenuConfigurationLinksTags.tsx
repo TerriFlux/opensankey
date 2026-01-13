@@ -21,22 +21,8 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   const [flux_tagg_entry_index, setFluxTaggEntryIndex] = useState(0)
   const flux_tagg_entry = list_flux_taggs[flux_tagg_entry_index]
 
-  // Data tag groups
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
-
-  // Selected links ---------------------------------------------------------------------
-
-  let selected_links: Class_LinkElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_elements) {
-    // All availables links
-    selected_links = new_data.drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
-  }
-
-  // Menu updaters ----------------------------------------------------------------------
+  let selected_links = new_data.drawing_area.selected_links_list_sorted
 
   const [, setCount] = useState(0)
   const updateThis = () => {

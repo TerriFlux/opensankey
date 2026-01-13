@@ -33,19 +33,7 @@ export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) 
   const [node_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
   const node_tagg_entry = list_node_taggs[node_tagg_entry_index]
 
-  // Selected nodes ---------------------------------------------------------------------
-
-  let selected_nodes: Class_NodeElement[]
-  if (!app_data.menu_configuration.is_selector_only_for_visible_elements) {
-    // All availables nodes
-    selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
-  }
-  else {
-    // Only visible nodes
-    selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list_sorted
-  }
-
-  // Menu updaters ----------------------------------------------------------------------
+  let selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
 
   const [, setCount] = useState(0)
   const updateThis = () => {
