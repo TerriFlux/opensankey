@@ -267,20 +267,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._source_visibility_fingerprint = source.visibility_fingerprint
     this._target = target
     this._target_visibility_fingerprint = target.visibility_fingerprint
-
-    drawing_area.list_g_element.push(this.id)
-
-    // Display
-
-    this._position_ending = {
-      x: 0,
-      y: 0
+    if (this.id != 'ghost_link') {
+      drawing_area.list_g_element.push(this.id)
     }
 
+    this._position_ending = {x: 0,y: 0}
 
     this.source.addOutputLink(this)
-    this.target.addInputLink(this)// Target
-    // Instanciate display on svg
+    this.target.addInputLink(this)
     if (!this.sankey.drawing_area.bypass_redraws) {
       this._link_control_points.computeControlPoints()
     }
