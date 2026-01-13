@@ -160,6 +160,7 @@ export const updateFrom = (
     drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
     if (other_drawing_area.legend)
       drawing_area.legend.copyFrom(other_drawing_area.legend)
+    drawing_area.list_g_element = other_drawing_area.list_g_element
   }
 
   const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
