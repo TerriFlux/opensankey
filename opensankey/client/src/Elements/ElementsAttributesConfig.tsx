@@ -2021,32 +2021,16 @@ export const useElementAttributeConfig = <
   CONFIG extends Record<string, AttributeConfig<unknown>>
 >(app_data: Class_ApplicationData, elements: ElementsType): {
   menu_for_style: boolean
-  disable_attr_props: {
-    -readonly [K in keyof CONFIG]?: boolean
-  }
   t: TFunction
 } => {
   return useMemo(() => {
-    const { drawing_area, menu_configuration } = app_data
-    const { sankey } = drawing_area
-    const { ref_selected_style } = menu_configuration
-    const { styles_dict } = sankey
-
     const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
-
-    const disable_attr_props = menu_for_style ?
-      styles_dict[ref_selected_style.current].customisable_attribute :
-      styles_dict[default_style_id].customisable_attribute
 
     return {
       menu_for_style,
-      disable_attr_props,
       t: app_data.t
     } as {
       menu_for_style: boolean
-      disable_attr_props: {
-        -readonly [K in keyof CONFIG]?: boolean
-      }
       t: TFunction
     }
   }, [app_data, elements])

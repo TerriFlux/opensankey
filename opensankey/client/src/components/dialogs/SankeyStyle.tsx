@@ -38,7 +38,6 @@ import {
   useBoolean
 } from '@chakra-ui/react'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
-import { ChevronDownIcon } from '@chakra-ui/icons'
 import {
   CutName
 } from '../../types/Utils'
@@ -47,7 +46,6 @@ import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { default_style_id } from '../../types/Utils'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 
-import { checked } from './SankeyMenuContext'
 import { isElementAttributeOverloaded, MenuResetAttrLocal, OSMultiSelect, OSTooltip, typeElementSelectable, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -72,46 +70,9 @@ export const GenericModalStyle = ({
     setSelectedStyleId(default_style_id)
   }
 
-  const style_select = app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current]
-
-  const content_customisable_attribute_style = (
-    <Menu direction='rtl' placement='left' closeOnSelect={false}>
-      <OSTooltip label={t('Menu.tooltips.style_attr_applicated')}>
-        <MenuButton as={Button} variant='menuconfigpanel_option_button'>
-          {t('Menu.style_attr_applicated')}
-          <ChevronDownIcon />
-        </MenuButton>
-      </OSTooltip>
-      <MenuList maxH='40vh' overflow='auto'>
-        {Object.entries(style_select.customisable_attribute).map(ent => {
-          if (!ent[0].includes('shape_')) return <></>
-
-          return (
-            <MenuItem
-              key={ent[0]}
-              style={{ display: 'flex' }}
-              isDisabled={app_data.menu_configuration.ref_selected_style.current == default_style_id}
-              onClick={() => {
-                if (ent[1]) {
-                  style_select.deleteAttribute(ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG)
-                }
-                style_select.customisable_attribute[ent[0] as keyof typeof ALL_ATTRIBUTES_CONFIG] = !ent[1]
-                app_data.menu_configuration.updateComponentRelatedToStyles()
-              }}
-            >
-              {t(`Noeud.apparence.${ent[0]}`)}
-              {checked(ent[1])}
-            </MenuItem>
-          )
-        })}
-      </MenuList>
-    </Menu>
-  )
-
   const content_style_shape = (
     <GenericStyleSelector app_data={app_data}>
       <>
-        {content_customisable_attribute_style}
         <MenuConfigurationAppearance
           app_data={app_data}
           menu_for_style={true}

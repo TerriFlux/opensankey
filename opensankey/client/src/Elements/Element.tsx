@@ -946,9 +946,7 @@ export class Class_ElementStyle {
   private _config: Record<string, AttributeConfig<unknown>>
   private _id: string
   private _name: string
-  private _is_deletable: boolean
   private _references: { [_: string]: Class_BaseElement } = {}
-  private _customisable_attribute: { -readonly [K in string]: boolean } = {}
 
   private _default_style: Class_ElementStyle
   private _drawing_area: Class_DrawingArea
@@ -964,14 +962,8 @@ export class Class_ElementStyle {
     this._config = config
     this._id = id
     this._name = name
-    this._is_deletable = is_deletable;
-    // this._attributeMappings = attributeMappings
     this._default_style = default_style;
     this._drawing_area = drawing_area;
-    // Initialiser les attributs customisables
-    Object.keys(this._config).forEach(key => {
-      this._customisable_attribute[key] = !is_deletable
-    })
 
     if (!is_deletable) {
       Object.entries(this._config).forEach(([key, config]) => {
@@ -1008,25 +1000,22 @@ export class Class_ElementStyle {
     Object.keys(element._storage).forEach(key => {
       this._storage[key] = element._storage[key]
     })
-    this._customisable_attribute = { ...element._customisable_attribute }
   }
 
-  protected shouldSaveAttribute(
-    key: string,
-    value: number | string | boolean | undefined,
-    default_style: Class_ElementStyle | null
+  protected isAttributeOverloaded(
+    attr: keyof ConfigType
   ) {
-    if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key as keyof Class_ElementStyle]
+    if (this._default_style) {
+      return this._storage[attr] !== undefined && this._storage[attr] !== this._default_style[attr as keyof Class_ElementStyle]
     }
-    return value !== undefined && this._customisable_attribute[key] && value !== this._config[key].default
+    return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
   }
 
   public delete() {
-    if (this._is_deletable) {
-      //Object.values(this._references).forEach(ref => ref.useDefaultStyle())
-      this._references = {}
-    }
+    // if (this._is_deletable) {
+    //   //Object.values(this._references).forEach(ref => ref.useDefaultStyle())
+       this._references = {}
+    // }
   }
 
   public addReference(ref: Class_BaseElement) {
@@ -1044,8 +1033,6 @@ export class Class_ElementStyle {
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
-  public get customisable_attribute() { return this._customisable_attribute }
-
 
   public get drawing_area() { return this._drawing_area }
 }

@@ -48,13 +48,11 @@ import { isValueLabelIndeterminate, VALUE_LABEL_CONFIG } from '../../Elements/El
 export const MenuUnit = ({
   app_data,
   attributePath: initialAttributePath,
-  elements: initialElements,
-  disable_attr_props: initialDisableAttrProps,
+  elements: initialElements
 }: {
   app_data: Class_ApplicationData,
   attributePath?: string
-  elements?: Class_ElementStyle[] | Class_LinkElement[] | Class_NodeBase[],
-  disable_attr_props?: Record<string, boolean>
+  elements?: Class_ElementStyle[] | Class_LinkElement[] | Class_NodeBase[]
 }) => {
   const { drawing_area } = app_data
   const { sankey } = drawing_area
@@ -62,23 +60,20 @@ export const MenuUnit = ({
   const refreshUI = () => setCount(a => a + 1)
   const [state, setState] = useState({
     elements: initialElements,
-    attributePath: initialAttributePath,
-    disable_attr_props: initialDisableAttrProps
+    attributePath: initialAttributePath
   })
   if (!initialElements) {
     app_data.menu_configuration.r_value_formatting_set_elements.current = (
       _elements: Class_NodeBase[] | Class_LinkElement[] | Class_ElementStyle[],
-      _attributePath: string,
-      _disable_attr_props: Record<string, boolean>) => {
+      _attributePath: string) => {
       setState({
         elements: _elements,
-        attributePath: _attributePath,
-        disable_attr_props: _disable_attr_props
+        attributePath: _attributePath
       })
     }
   }
-  const { elements, attributePath, disable_attr_props } = state
-  if (!elements || !attributePath || !disable_attr_props) return <></>
+  const { elements, attributePath } = state
+  if (!elements || !attributePath) return <></>
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const unit_tagg = sankey.data_taggs_list.find(tagg => tagg.is_unit)
@@ -95,7 +90,6 @@ export const MenuUnit = ({
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
       iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
-      isDisabled={!disable_attr_props['value_label_unit_visible']}
       isIndeterminate={isValueLabelIndeterminate(elements, 'unit_visible')}
       isChecked={labelValues.unit_visible}
       onChange={(evt) => {
@@ -104,14 +98,13 @@ export const MenuUnit = ({
     >
       <OSTooltip label={t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || 'Afficher le fond'}>
         {t(`${attributePath}.${'value_label_unit_visible'}`) || 'Fond visible'}
-        {!menu_for_style ?
-          <TooltipElementOverloaded
-            elements={base_elements}
-            t={t}
-            attributeKey={'unit_visible'}
-            config={VALUE_LABEL_CONFIG}
-            prefix={'value_label'}
-          /> : <></>}
+        <TooltipElementOverloaded
+          elements={base_elements}
+          t={t}
+          attributeKey={'unit_visible'}
+          config={VALUE_LABEL_CONFIG}
+          prefix={'value_label'}
+        />
       </OSTooltip>
     </Checkbox>
     {/* Select pour unit type (seulement pour les liens) */}

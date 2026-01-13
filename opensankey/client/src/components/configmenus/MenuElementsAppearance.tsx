@@ -149,12 +149,6 @@ const LabelContentComponent = ({
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const links_elements = elements as Class_LinkElement[] | Class_ElementStyle[]
-  const correct_dict_style_to_use = app_data.drawing_area.sankey.styles_dict
-  const correct_ref_style_to_use = app_data.menu_configuration.ref_selected_style
-
-  const disable_attr_props = menu_for_style
-    ? correct_dict_style_to_use[correct_ref_style_to_use.current].customisable_attribute
-    : correct_dict_style_to_use[default_style_id].customisable_attribute
 
   const linkLabelValues = elements.length > 0
     ? getLinksLabelValues(links_elements, prefix, refreshParentComponent)
@@ -216,7 +210,6 @@ const LabelContentComponent = ({
       <Box layerStyle='options_2cols'>
         <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
           <Select
-            isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_family')]}
             variant='menuconfigpanel_option_select'
             value={labelValues.font_family}
             onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
@@ -231,7 +224,6 @@ const LabelContentComponent = ({
         {displayMode === 'simple_text' && (
           <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ConfigMenuNumberInput
-              disabled={!disable_attr_props[getLabelAttributeKey(prefix, 'font_size')]}
               t={app_data.t}
               default_value={labelValues.font_size}
               menu_for_style={menu_for_style}
@@ -248,7 +240,6 @@ const LabelContentComponent = ({
           <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_3cols'>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'bold')]}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 onClick={() => { labelValues.bold = !labelValues.bold }}
@@ -256,7 +247,6 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_bold}
               </Button>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'uppercase')]}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
@@ -264,7 +254,6 @@ const LabelContentComponent = ({
                 {svg_label_upper}
               </Button>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'italic')]}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 onClick={() => { labelValues.italic = !labelValues.italic }}
@@ -281,7 +270,6 @@ const LabelContentComponent = ({
 
           <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <MenuColorPicker
-              isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'color')]}
               initialColor={labelValues.color}
               onColorChange={(new_color) => { labelValues.color = new_color }}
             />
@@ -293,7 +281,6 @@ const LabelContentComponent = ({
             <Box layerStyle='options_3cols'>
               <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.left_align')}>
                 <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
                   onClick={() => { labelValues.text_align = 'left' }}
@@ -303,7 +290,6 @@ const LabelContentComponent = ({
               </OSTooltip>
               <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.center_align')}>
                 <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
                   onClick={() => { labelValues.text_align = 'middle' }}
@@ -313,7 +299,6 @@ const LabelContentComponent = ({
               </OSTooltip>
               <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.right_align')}>
                 <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'text_align')]}
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
                   onClick={() => { labelValues.text_align = 'right' }}
@@ -329,7 +314,6 @@ const LabelContentComponent = ({
             <Box layerStyle='options_3cols'>
               <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || 'Vertical'}>
                 <Button
-                  isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vertical_text')]}
                   variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
@@ -472,7 +456,6 @@ const LabelContentComponent = ({
           <Box layerStyle='options_4cols'>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.deb')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'left')}
                 onClick={() => { labelValues.horiz = 'left'; labelValues.horiz_shift = 0 }}
@@ -482,7 +465,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.milieu_h')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'middle')}
                 onClick={() => { labelValues.horiz = 'middle'; labelValues.horiz_shift = 0 }}
@@ -492,7 +474,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.fin')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'right')}
                 onClick={() => { labelValues.horiz = 'right'; labelValues.horiz_shift = 0 }}
@@ -502,7 +483,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? "Valeurs multiples" : (labelValues.inside_horiz ? "Extérieur" : "Intérieur")}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'inside_horiz')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
                 onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
@@ -521,7 +501,6 @@ const LabelContentComponent = ({
           <Box layerStyle='options_4cols'>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.dessous')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'bottom')}
                 onClick={() => { labelValues.vert = 'bottom'; labelValues.vert_shift = 0 }}
@@ -531,7 +510,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.milieu_v')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'middle')}
                 onClick={() => { labelValues.vert = 'middle'; labelValues.vert_shift = 0 }}
@@ -541,7 +519,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.dessus')}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'top')}
                 onClick={() => { labelValues.vert = 'top'; labelValues.vert_shift = 0 }}
@@ -551,7 +528,6 @@ const LabelContentComponent = ({
             </OSTooltip>
             <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? "Valeurs multiples" : (labelValues.inside_vert ? "Extérieur" : "Intérieur")}>
               <Button
-                isDisabled={!disable_attr_props[getLabelAttributeKey(prefix, 'inside_vert')]}
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
                 onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
@@ -611,7 +587,6 @@ const LabelContentComponent = ({
         elements={elements}
         attributePath={attributePath}
         prefix={prefix + '_background' as ShapePrefix}
-        disable_attr_props={disable_attr_props}
         refreshUI={refreshParentComponent}
       />
     </Box>
@@ -682,8 +657,6 @@ export const MenuConfigurationAppearance = ({
     }
     setCount(a => a + 1)
   }
-
-  const disable_attr_props = sankey.styles_dict[ref_selected_style.current].customisable_attribute
 
   // ✅ Valeurs SHAPE
   const commonShapeValues = allElements.length > 0
@@ -832,7 +805,6 @@ export const MenuConfigurationAppearance = ({
                 elements={elements}
                 attributePath='Noeud.apparence'
                 prefix='shape'
-                disable_attr_props={disable_attr_props}
                 refreshUI={refreshAll}
               />
             </Box>
@@ -858,14 +830,12 @@ export const MenuConfigurationAppearance = ({
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         <Box layerStyle='options_2cols'>
                           <Button
-                            isDisabled={!disable_attr_props[getShapeAttributeKey('shape', 'type')]}
                             variant={getButtonVariant('left', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'ellipse')}
                             onClick={() => { commonShapeValues.type = 'ellipse' }}
                           >
                             {icon_library.icon_ellipse_shape}
                           </Button>
                           <Button
-                            isDisabled={!disable_attr_props[getShapeAttributeKey('shape', 'type')]}
                             variant={getButtonVariant('right', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'rect')}
                             onClick={() => { commonShapeValues.type = 'rect' }}
                           >
@@ -915,7 +885,6 @@ export const MenuConfigurationAppearance = ({
                           {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
                             <Button
                               key={type}
-                              isDisabled={!disable_attr_props['position_type']}
                               variant={getButtonVariant(
                                 idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
                                 isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
@@ -940,7 +909,6 @@ export const MenuConfigurationAppearance = ({
                     </OSTooltip>
                     <Checkbox
                       {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
-                      isDisabled={!disable_attr_props['orphan_node_visible']}
                       isChecked={nodeShapeValues.orphan_node_visible}
                       onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
                     >
@@ -978,7 +946,6 @@ export const MenuConfigurationAppearance = ({
                       <Box layerStyle='options_4cols'>
                         <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling')}>
                           <Button
-                            isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'is_recycling')]}
                             variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
                             onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
                           >
@@ -1000,7 +967,6 @@ export const MenuConfigurationAppearance = ({
                         {['hh', 'vv', 'vh', 'hv'].map((orientation, idx) => (
                           <OSTooltip key={orientation} label={t(`Flux.apparence.tooltips.of_${orientation}`)}>
                             <Button
-                              isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'orientation')]}
                               variant={getButtonVariant(
                                 idx === 0 ? 'left' : idx === 3 ? 'right' : 'center',
                                 isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation'),
@@ -1027,7 +993,6 @@ export const MenuConfigurationAppearance = ({
                     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                       <Checkbox
                         {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'))}
-                        isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'is_curved')]}
                         isChecked={linkShapeValues.is_curved}
                         onChange={(evt) => { linkShapeValues.is_curved = evt.target.checked }}
                       >
@@ -1044,7 +1009,6 @@ export const MenuConfigurationAppearance = ({
                       </Checkbox>
                       {linkShapeValues.is_curved && (
                         <Select
-                          isDisabled={!disable_attr_props[getShapeAttributeKey('shape', 'type')]}
                           value={commonShapeValues.type}
                           onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
                         >
@@ -1058,7 +1022,6 @@ export const MenuConfigurationAppearance = ({
                     <Box layerStyle='menuconfigpanel_row_2cols'>
                       <Checkbox
                         {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'))}
-                        isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'is_arrow')]}
                         isChecked={linkShapeValues.is_arrow}
                         onChange={(evt) => { linkShapeValues.is_arrow = evt.target.checked }}
                       >
@@ -1076,7 +1039,6 @@ export const MenuConfigurationAppearance = ({
                       {linkShapeValues.is_arrow && (
                         <InputGroup variant='menuconfigpanel_option_input'>
                           <ConfigMenuNumberInput
-                            disabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'arrow_size')]}
                             t={t}
                             default_value={linkShapeValues.arrow_size}
                             menu_for_style={menu_for_style}
@@ -1093,7 +1055,6 @@ export const MenuConfigurationAppearance = ({
                     <Box as='span' textStyle='title_sub_section'>Options</Box>
                     <Checkbox
                       {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'))}
-                      isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'is_structure')]}
                       isChecked={linkShapeValues.is_structure}
                       onChange={(evt) => {
                         linkShapeValues.is_structure = evt.target.checked
@@ -1125,7 +1086,6 @@ export const MenuConfigurationAppearance = ({
                             />
                           </Box>
                           <ConfigMenuNumberOrUndefinedInput
-                            disabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'local_link_scale')]}
                             default_value={linkShapeValues.local_link_scale}
                             function_on_blur={(_) => {
                               linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
@@ -1179,7 +1139,6 @@ export const MenuConfigurationAppearance = ({
                             <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
-                              disabled={!disable_attr_props['margin_left']}
                               default_value={nodeShapeValues.margin_left}
                               function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
                               minimum_value={0}
@@ -1189,7 +1148,6 @@ export const MenuConfigurationAppearance = ({
                             <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Top'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
-                              disabled={!disable_attr_props['margin_right']}
                               default_value={nodeShapeValues.margin_right}
                               function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
                               minimum_value={0}
@@ -1201,7 +1159,6 @@ export const MenuConfigurationAppearance = ({
                             <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
-                              disabled={!disable_attr_props['margin_top']}
                               default_value={nodeShapeValues.margin_top}
                               function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
                               minimum_value={0}
@@ -1211,7 +1168,6 @@ export const MenuConfigurationAppearance = ({
                             <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
-                              disabled={!disable_attr_props['margin_bottom']}
                               default_value={nodeShapeValues.margin_bottom}
                               function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
                               minimum_value={0}
@@ -1325,17 +1281,16 @@ interface MenuShapeAttributesProps {
   elements: Class_NodeBase[] | Class_LinkElement[] | Class_ElementStyle[] | Class_ContainerElement[]
   attributePath: string
   prefix: ShapePrefix
-  disable_attr_props: Record<string, boolean>
   refreshUI: () => void
 }
 
 export const MenuShapeAttributes = ({
-  app_data, elements, attributePath, prefix, disable_attr_props, refreshUI
+  app_data, elements, attributePath, prefix, refreshUI
 }: MenuShapeAttributesProps) => {
   const { t, icon_library } = app_data
   const { icon_locked, icon_unlocked } = icon_library
 
-  if (!elements || !attributePath || !disable_attr_props || !prefix || !refreshUI) return <></>
+  if (!elements || !attributePath || !prefix || !refreshUI) return <></>
 
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const config = BASE_SHAPE_CONFIG
@@ -1374,11 +1329,9 @@ export const MenuShapeAttributes = ({
         </Box>
         <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
           <Select
-            isDisabled={!disable_attr_props[getLinkShapeAttributeKey('shape', 'color_rule')]}
             value={linkShapeValues.color_rule}
             onChange={(evt) => {
-              //@ts-expect-error xxx
-              linkShapeValues.color_rule = evt.target.value
+              linkShapeValues.color_rule = evt.target.value as "flow" | "source" | "target" | "gradient" | "auto"
             }}
           >
             {app_data.menu_configuration.flow_color_origin_type.map(el => {
@@ -1391,7 +1344,6 @@ export const MenuShapeAttributes = ({
       <Box as='span' layerStyle='options_2cols'>
         <Checkbox
           {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
-          isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'color_visible')]}
           isChecked={shapeValues.color_visible}
           onChange={(evt) => {
             shapeValues.color_visible = evt.target.checked
@@ -1399,20 +1351,18 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Afficher le fond'}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Fond visible'}
-            {!menu_for_style ?
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
                 attributeKey={'color_visible'}
                 config={config}
-                prefix={prefix} /> : <></>}
+                prefix={prefix} />
           </OSTooltip>
         </Checkbox>
         <Box layerStyle='option_with_activation'>
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color')}`)}>
             <Box>
               <MenuColorPicker
-                isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'color')]}
                 initialColor={shapeValues.color}
                 onColorChange={(new_color) => {
                   shapeValues.color = new_color
@@ -1421,7 +1371,6 @@ export const MenuShapeAttributes = ({
           </OSTooltip>
           <OSTooltip label={t(`${attributePath}.tooltips.color_sustainable`)}>
             <Button
-              isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'color_sustainable')]}
               variant={shapeValues.color_sustainable ?
                 'menuconfigpanel_option_button_activated' :
                 'menuconfigpanel_option_button'}
@@ -1430,13 +1379,12 @@ export const MenuShapeAttributes = ({
               }}
             >
               {shapeValues.color_sustainable ? icon_locked : icon_unlocked}
-              {!menu_for_style ?
                 <TooltipElementOverloaded
                   elements={base_elements}
                   t={t}
                   attributeKey={'color_sustainable'}
                   config={config}
-                  prefix={prefix} /> : <></>}
+                  prefix={prefix} />
             </Button>
           </OSTooltip>
         </Box>
@@ -1476,7 +1424,6 @@ export const MenuShapeAttributes = ({
       <Box as='span' layerStyle='options_2cols'>
         <Checkbox
           {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_visible'))}
-          isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'border_visible')]}
           isChecked={shapeValues.border_visible}
           onChange={(evt) => {
             shapeValues.border_visible = evt.target.checked
@@ -1484,19 +1431,17 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Afficher la bordure'}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Bordure visible'}
-            {!menu_for_style ?
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
                 attributeKey={'border_visible'}
                 config={config}
-                prefix={prefix} /> : <></>}
+                prefix={prefix} />
           </OSTooltip>
         </Checkbox>
 
         <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
           <MenuColorPicker
-            isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'border_color')]}
             initialColor={shapeValues.border_color}
             onColorChange={(new_color) => {
               shapeValues.border_color = new_color
@@ -1522,7 +1467,6 @@ export const MenuShapeAttributes = ({
         {/* Pointillés */}
         <Checkbox
           {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_dashed'))}
-          isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'border_dashed')]}
           isChecked={shapeValues.border_dashed}
           onChange={(evt) => {
             shapeValues.border_dashed = evt.target.checked
@@ -1530,13 +1474,12 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-            {!menu_for_style ?
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
                 attributeKey={'border_dashed'}
                 config={config}
-                prefix={prefix} /> : <></>}
+                prefix={prefix} />
           </OSTooltip>
         </Checkbox>
         <Box />

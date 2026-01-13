@@ -418,8 +418,7 @@ export class Class_MenuConfig {
 
     this._r_value_formatting_set_elements = useRef<(
       elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
-      attributePath: string,
-      disable_attr_props: Record<string, boolean>,
+      attributePath: string
     ) => void>(() => null)
     this._r_value_type_set_elements = useRef<(
       _selected_links: Class_LinkElement[],
@@ -1309,8 +1308,7 @@ export class Class_MenuConfig {
   ) => void)>
   private _r_value_formatting_set_elements: MutableRefObject<(
     elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
-    attributePath: string,
-    disable_attr_props: Record<string, boolean>
+    attributePath: string
   ) => void>
   private _r_value_type_set_elements: MutableRefObject<(
     _selected_links: Class_LinkElement[],

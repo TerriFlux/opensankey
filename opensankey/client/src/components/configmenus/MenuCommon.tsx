@@ -185,14 +185,13 @@ export const MenuSectionCheckbox = <
   children: React.ReactNode
 }>) => {
 
-  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
   return (
     <Box layerStyle='menu_sub_section'>
       <Box layerStyle='menu_sub_section_head'>
         <Checkbox
-          isDisabled={!disable_attr_props[fullKey as K]}
           isIndeterminate={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
           variant='menuconfigpanel_part_title_1_checkbox'
           icon={<CustomFaEyeCheckIcon />}
@@ -204,15 +203,13 @@ export const MenuSectionCheckbox = <
           <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
             {t(`${String(attributePath)}.${fullKey}`) + ' '}
           </OSTooltip>
-          {!menu_for_style && (
-            <TooltipElementOverloaded
-              attributeKey={attributeKey}
-              config={config}
-              prefix={prefix}
-              elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-              t={t}
-            />
-          )}
+          <TooltipElementOverloaded
+            attributeKey={attributeKey}
+            config={config}
+            prefix={prefix}
+            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+            t={t}
+          />
         </Checkbox>
       </Box>
       <Box
@@ -491,7 +488,7 @@ export const ElementAttrSetterSelect2Cols = <
     label: string
   }>
 }) => {
-  const { disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
 
@@ -504,7 +501,6 @@ export const ElementAttrSetterSelect2Cols = <
       t={t}
       elements={elements}>
       <Select
-        isDisabled={!disable_attr_props[fullKey]}
         value={attribute_values[attributeKey] as string}
         onChange={(evt) => {
           updateElements(
@@ -549,9 +545,8 @@ export const ElementAttrSetterTextInput2Cols = <
   prefix?: string,
   refreshParentComponent: () => void
 }) => {
-  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
   return (
     <ElementAttrSetter2Cols
       attributePath={attributePath}
@@ -561,7 +556,6 @@ export const ElementAttrSetterTextInput2Cols = <
       t={t}
       elements={elements}>
       <ConfigMenuTextInput
-        disabled={!disable_attr_props[fullKey]}
         default_value={attribute_values[attributeKey] as string}
         function_on_blur={(value) => {
           attribute_values[attributeKey] = (value ?? attribute_values[attributeKey]) as ExtractConfigValue<CONFIG[K]>
@@ -601,11 +595,9 @@ export const ElementAttrSetterNumberInput2Cols = <
   unit_text?: string
 }) => {
 
-  const { menu_for_style, disable_attr_props, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
 
-  const geometry_attributes = ['position_dx', 'position_dy', 'position_u']
   return (
     <ElementAttrSetter2Cols
       attributePath={attributePath}
@@ -615,7 +607,6 @@ export const ElementAttrSetterNumberInput2Cols = <
       t={t}
       elements={elements}>
       <ConfigMenuNumberInput
-        disabled={!disable_attr_props[fullKey] && !geometry_attributes.includes(attributeKey as string)}
         t={t}
         default_value={percent ? +attribute_values[attributeKey] * 100 : +attribute_values[attributeKey]}
         function_on_blur={(value) => {
@@ -719,7 +710,7 @@ export const isElementAttributeOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-  elements: (Class_LinkElement | Class_NodeBase | Class_ContainerElement)[],
+  elements: ElementsType,
   attr: K,
   config: CONFIG
 ) => {
@@ -759,11 +750,11 @@ export const TooltipElementOverloaded = <
   elements: ElementsType
   t: TFunction
 }): JSX.Element => {
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
-  if (menu_for_style) {
-    return <></>
-  }
-  const isOverwritted = isElementAttributeOverloaded(elements as (Class_NodeBase | Class_LinkElement | Class_ContainerElement)[], prefix + '_' + String(attributeKey), config)
+  // const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+  // if (menu_for_style) {
+  //   return <></>
+  // }
+  const isOverwritted = isElementAttributeOverloaded(elements, prefix + '_' + String(attributeKey), config)
   return isOverwritted ? (
     <>{TooltipValueSurcharge('el_var_', t)}</>
   ) : <></>
@@ -788,7 +779,7 @@ export const ConditionalCheckboxWithInput = <
   stepper?: boolean,
   children?: React.ReactNode
 }) => {
-  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
@@ -797,7 +788,6 @@ export const ConditionalCheckboxWithInput = <
   return (
     <Box as='span' layerStyle={layoutStyle}>
       <Checkbox
-        isDisabled={!disable_attr_props[fullcheckboxAttributeKey as K]}
         variant='menuconfigpanel_option_checkbox'
         isChecked={attribute_values[checkboxAttributeKey] as boolean}
         onChange={(evt) => {
@@ -807,21 +797,18 @@ export const ConditionalCheckboxWithInput = <
         <OSTooltip label={t(`Flux.labels.tooltips.${fullcheckboxAttributeKey}`)}>
           {t(`Flux.labels.${fullcheckboxAttributeKey}`) + ' '}
         </OSTooltip>
-        {!menu_for_style && (
-          <TooltipElementOverloaded
-            attributeKey={fullcheckboxAttributeKey}
-            config={config}
-            prefix={prefix}
-            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-            t={t}
-          />
-        )}
+        <TooltipElementOverloaded
+          attributeKey={fullcheckboxAttributeKey}
+          config={config}
+          prefix={prefix}
+          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+          t={t}
+        />
       </Checkbox>
 
       {attribute_values[checkboxAttributeKey] && inputAttributeKey && (
         <OSTooltip label={t(`Flux.labels.tooltips.${fullinputAttributeKey}`)}>
           <ConfigMenuNumberInput
-            disabled={!disable_attr_props[fullinputAttributeKey as K]}
             t={t}
             default_value={attribute_values[inputAttributeKey] as number}
             menu_for_style={menu_for_style}
@@ -856,7 +843,7 @@ export const CheckboxWithColorPicker = <
   refreshParentComponent: () => void,
   children?: React.ReactNode
 }) => {
-  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
@@ -865,7 +852,6 @@ export const CheckboxWithColorPicker = <
   return (
     <Box as='span' layerStyle={layoutStyle}>
       <Checkbox
-        isDisabled={!disable_attr_props[fullcheckboxAttributeKey as K]}
         variant='menuconfigpanel_option_checkbox'
         isChecked={attribute_values[checkboxAttributeKey] as boolean}
         onChange={(evt) => {
@@ -875,21 +861,18 @@ export const CheckboxWithColorPicker = <
         <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullcheckboxAttributeKey}`)}>
           {t(`${String(attributePath)}.${fullcheckboxAttributeKey}`) + ' '}
         </OSTooltip>
-        {!menu_for_style && (
-          <TooltipElementOverloaded
-            attributeKey={fullcheckboxAttributeKey}
-            config={config}
-            prefix={prefix}
-            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-            t={t}
-          />
-        )}
+        <TooltipElementOverloaded
+          attributeKey={fullcheckboxAttributeKey}
+          config={config}
+          prefix={prefix}
+          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+          t={t}
+        />
       </Checkbox>
 
       {attribute_values[checkboxAttributeKey] && (
         <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(fullinputAttributeKey)}`)}>
           <MenuColorPicker
-            isDisabled={!disable_attr_props[fullinputAttributeKey as K]}
             initialColor={attribute_values[inputAttributeKey] as string}
             onColorChange={(new_color) => {
               attribute_values[inputAttributeKey] = new_color as ExtractConfigValue<CONFIG[K]>
@@ -915,12 +898,11 @@ export const SimpleElementCheckbox = <
   refreshParentComponent: () => void
   variant?: string
 }) => {
-  const { disable_attr_props, t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
+  const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
   return (
     <Checkbox
-      isDisabled={!disable_attr_props[fullKey as K]}
       variant={variant}
       isChecked={attribute_values[attributeKey] as boolean}
       onChange={(evt) => {
@@ -930,15 +912,13 @@ export const SimpleElementCheckbox = <
       <OSTooltip label={t(`Flux.labels.tooltips.${fullKey}`)}>
         {t(`Flux.labels.${fullKey}`) + ' '}
       </OSTooltip>
-      {!menu_for_style && (
-        <TooltipElementOverloaded
-          attributeKey={attributeKey}
-          config={config}
-          prefix={prefix}
-          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-          t={t}
-        />
-      )}
+      <TooltipElementOverloaded
+        attributeKey={attributeKey}
+        config={config}
+        prefix={prefix}
+        elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+        t={t}
+      />
     </Checkbox>
   )
 }
@@ -1638,7 +1618,6 @@ export const getButtonVariant = (
  * @example
  * <Checkbox
  *   {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
- *   isDisabled={!disable_attr_props[getShapeAttributeKey(prefix, 'color_visible')]}
  *   isChecked={shapeValues.color_visible}
  *   onChange={(evt) => { shapeValues.color_visible = evt.target.checked }}
  * >

@@ -262,7 +262,6 @@ export class Class_Sankey {
     const config = configs[id].config
 
     Object.keys(config).forEach(key => {
-      new_style.customisable_attribute[key as Type_customisable_style_attr] = true
       //@ts-expect-error xxx
       new_style[key] = config[key]
     }
