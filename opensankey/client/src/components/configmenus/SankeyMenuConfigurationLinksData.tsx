@@ -259,16 +259,13 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const { styles_dict } = sankey
   const { data_taggs_list } = sankey
   const {
-    is_selector_only_for_visible_elements,
     ref_to_menu_config_links_data_updater,
     ref_to_save_in_cache_indicator
   } = menu_configuration
 
   const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
 
-  const selected_links = is_selector_only_for_visible_elements ?
-    drawing_area.visible_and_selected_links_list_sorted :
-    drawing_area.selected_links_list_sorted
+  const selected_links = drawing_area.selected_links_list_sorted
 
   const first_link = selected_links[0]
   const first_link_value = first_link?.value

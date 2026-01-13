@@ -36,7 +36,7 @@ export class NodeActions {
     this.drawing_area = app_data.drawing_area
     this.history = app_data.history
     this.contextualised_node = this.drawing_area.node_contextualised
-    this.selected_nodes = this.drawing_area.visible_and_selected_nodes_list
+    this.selected_nodes = this.drawing_area.selected_nodes_list
   }
 
   // ==================================================================================================
