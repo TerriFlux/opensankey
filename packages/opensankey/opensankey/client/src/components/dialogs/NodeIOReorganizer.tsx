@@ -26,7 +26,7 @@
 
 import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd'
-import {Box,Button,Checkbox,Select,Table,Tbody,Th,Thead,Tr,} from '@chakra-ui/react'
+import { Box, Button, Checkbox, Select, Table, Tbody, Th, Thead, Tr, } from '@chakra-ui/react'
 
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -36,63 +36,67 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 
 interface NodeIOReorganizerProps {
   app_data: Class_ApplicationData,
-  node: Class_NodeElement
 }
 
 export const NodeIOReorganizer = ({
   app_data,
-  node,
-}:NodeIOReorganizerProps) => {
+}: NodeIOReorganizerProps) => {
   // ✅ Constantes
   const { t, icon_library } = app_data
   const { icon_move_element_down, icon_move_element_up } = icon_library
-  const [count,setCount] = useState(0)
-
-  const output_direction = 'o'
-  const input_direction = 'i'
-
-  const has_input_links = node.hasInputLinks()
-  const has_output_links = node.hasOutputLinks()
-
-  // ✅ States - Direction
-  const [direction_selected, setSelectedDirection] = useState<string | undefined>(() => {
-    if (has_input_links) return input_direction
-    if (has_output_links) return output_direction
-    return undefined
-  })
-
-  // Synchronisation de la direction
-  if (direction_selected !== undefined) {
-    if (!has_input_links && direction_selected === input_direction) {
-      setSelectedDirection(undefined)
-    } else if (!has_output_links && direction_selected === output_direction) {
-      setSelectedDirection(undefined)
-    }
-  }
-
-  // ✅ States - Side
-  const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(() => {
-    if (!direction_selected) return undefined
-    if (direction_selected === input_direction) {
-      return node.input_links_list[0]?.target_side ?? undefined
-    }
-    return node.output_links_list[0]?.source_side ?? undefined
-  })
-
-  // Synchronisation du side
-  if (direction_selected && side_selected === undefined) {
-    if (direction_selected === input_direction) {
-      setSelectedSide(node.input_links_list[0]?.target_side ?? undefined)
-    } else {
-      setSelectedSide(node.output_links_list[0]?.source_side ?? undefined)
-    }
-  } else if (direction_selected === undefined && side_selected) {
-    setSelectedSide(undefined)
-  }
-
-  // ✅ States - Table coloring
+  
+  // ✅ TOUS LES HOOKS D'ABORD (avant tout return)
+  const [count, setCount] = useState(0)
+  const [node, setNode] = useState<Class_NodeElement | undefined>(undefined)
+  const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
+  const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
   const [tab_colored, setTabColored] = useState(false)
 
+  // Configuration du setter
+  app_data.menu_configuration.set_node_io_reorganizer.current = (
+    _node: Class_NodeElement | undefined) => {
+    setNode(_node)
+  }
+
+
+  // ✅ TOUS LES useEffect AVANT le return
+  const output_direction = 'o'
+  const input_direction = 'i'
+  const has_input_links = node?.hasInputLinks() ?? false
+  const has_output_links = node?.hasOutputLinks() ?? false
+
+  // ✅ Synchronisation de direction_selected (utilise useEffect ou logique dans le rendu)
+  React.useEffect(() => {
+    if (direction_selected === undefined) {
+      if (has_input_links) {
+        setSelectedDirection(input_direction)
+      } else if (has_output_links) {
+        setSelectedDirection(output_direction)
+      }
+    } else {
+      // Vérification de cohérence
+      if (!has_input_links && direction_selected === input_direction) {
+        setSelectedDirection(has_output_links ? output_direction : undefined)
+      } else if (!has_output_links && direction_selected === output_direction) {
+        setSelectedDirection(has_input_links ? input_direction : undefined)
+      }
+    }
+  }, [node, has_input_links, has_output_links, direction_selected])
+
+  // ✅ Synchronisation de side_selected
+  React.useEffect(() => {
+    if (direction_selected && side_selected === undefined) {
+      if (direction_selected === input_direction) {
+        setSelectedSide(node?.input_links_list[0]?.target_side ?? undefined)
+      } else {
+        setSelectedSide(node?.output_links_list[0]?.source_side ?? undefined)
+      }
+    } else if (direction_selected === undefined && side_selected !== undefined) {
+      setSelectedSide(undefined)
+    }
+  }, [direction_selected, side_selected, node])
+  // ✅ Early return APRÈS tous les hooks
+  if (!node) return <></>
   // ✅ Calcul des liens à réorganiser
   const links_to_reorganize: { [_ in Type_Side]: Class_LinkElement[] } = {
     'right': [], 'left': [], 'top': [], 'bottom': []
@@ -117,6 +121,8 @@ export const NodeIOReorganizer = ({
     }
   }
 
+  // ... le reste du code reste identique
+
   const filtered_links_to_reorganize_length = side_selected
     ? links_to_reorganize[side_selected].filter(link => link.is_visible).length
     : 0
@@ -128,12 +134,12 @@ export const NodeIOReorganizer = ({
     const inv_moveLinkBefore = () => {
       node.reorganizeIOFromListIds(list_old_io)
       node.draw()
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     const _moveLinkBefore = () => {
       node.moveLinkToPositionInOrderBefore(link, link_target)
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     app_data.history.saveUndo(inv_moveLinkBefore)
@@ -147,12 +153,12 @@ export const NodeIOReorganizer = ({
     const inv_moveLinkAfter = () => {
       node.reorganizeIOFromListIds(list_old_io)
       node.draw()
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     const _moveLinkAfter = () => {
       node.moveLinkToPositionInOrderAfter(link, link_target)
-      setCount(a=>a+1)
+      setCount(a => a + 1)
     }
 
     app_data.history.saveUndo(inv_moveLinkAfter)

@@ -37,6 +37,7 @@ import {
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
+import { Class_NodeElement } from '../Elements/Node'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -74,6 +75,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_value_formatting_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_element_ordoner: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+  ref_setter_show_node_reorganizer_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -384,6 +386,7 @@ export class Class_MenuConfig {
       ref_setter_show_value_formatting_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_element_ordoner: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
+      ref_setter_show_node_reorganizer_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -415,7 +418,7 @@ export class Class_MenuConfig {
       elements: Class_NodeBase[] | Class_LinkElement[],
       prefix: 'name_label' | 'value_label' | 'icon'
     ) => void>(() => null)
-
+    this._set_node_io_reorganizer = useRef<(node:Class_NodeElement)=>void>(() => null)
     this._r_value_formatting_set_elements = useRef<(
       elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
       attributePath: string
@@ -452,6 +455,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_element_ordoner.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
     // -- Style & Layout
@@ -1248,6 +1252,8 @@ export class Class_MenuConfig {
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   public get r_value_formatting_set_elements() { return this._r_value_formatting_set_elements }
+  public get set_node_io_reorganizer() { return this._set_node_io_reorganizer}
+  
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
@@ -1304,6 +1310,10 @@ export class Class_MenuConfig {
     elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
     attributePath: string
   ) => void>
+  private _set_node_io_reorganizer: MutableRefObject<(
+    node: Class_NodeElement
+  ) => void>
+  
   private _r_value_type_set_elements: MutableRefObject<(
     _selected_links: Class_LinkElement[],
     _unit_data_tagg: Class_DataTagGroup,
