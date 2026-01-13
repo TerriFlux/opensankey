@@ -244,7 +244,7 @@ export abstract class DrawLabelBase {
       return
     }
     d3_selection_g_FO.call(d3.drag<SVGForeignObjectElement, unknown>()
-      .filter(evt => (evt.which == 1))
+      .filter(evt => (evt.which == 1 && evt.altKey ))
       .on('start', ev => this.dragGenericStart(ev))
       .on('drag', ev => this.dragGenericMove(ev))
       .on('end', ev => this.dragGenericEnd(ev))
@@ -283,7 +283,7 @@ export abstract class DrawLabelBase {
       return
     }
     this.d3_selection?.call(d3.drag<any, unknown>()
-      .filter(evt => (evt.which == 1) && this._element.drawing_area?.isInSelectionMode())
+      .filter(evt => (evt.which == 1) && evt.altKey &&this._element.drawing_area?.isInSelectionMode())
       .on('start', ev => this.dragGenericStart(ev))
       .on('drag', ev => this.dragGenericMove(ev))
       .on('end', ev => this.dragGenericEnd(ev))
@@ -335,7 +335,7 @@ export abstract class DrawLabelBase {
     const isStatic = this._element.drawing_area?.static
     if (!isStatic) {
       this.d3_selection?.call(d3.drag<any, unknown>()
-        .filter(evt => (evt.which == 1) && this._element.drawing_area?.isInSelectionMode())
+        .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area?.isInSelectionMode())
         .on('start', ev => this.dragGenericStart(ev))
         .on('drag', ev => this.dragGenericMove(ev))
         .on('end', ev => this.dragGenericEnd(ev))
@@ -497,7 +497,7 @@ export abstract class DrawLabelBase {
   ): void {
     if (!(this._element.drawing_area?.static)) {
       this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
-        .filter(evt => (evt.which == 1) && (this._element.drawing_area?.isInSelectionMode()))
+        .filter(evt => (evt.which == 1) && evt.altKey && (this._element.drawing_area?.isInSelectionMode()))
         .on('start', ev => this.dragGenericStart(ev))
         .on('drag', ev => this.dragGenericMove(ev))
         .on('end', ev => this.dragGenericEnd(ev))
@@ -1228,7 +1228,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       // ✅ Drag spécial pour textPath
       if (!this._element.drawing_area.static) {
         d3_textpath_selection.call(d3.drag<SVGTextPathElement, unknown>()
-          .filter(evt => (evt.which == 1) && this._element.drawing_area.isInSelectionMode())
+          .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area.isInSelectionMode())
           .on('start', ev => this.dragTextPathStart(ev))
           .on('drag', ev => this.dragTextPathMove(ev))
           .on('end', ev => this.dragTextPathEnd(ev))
@@ -1248,7 +1248,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
     if (!this._element.drawing_area.static) {
       textElement.call(d3.drag<SVGTextElement, unknown>()
-        .filter(evt => (evt.which == 1) && this._element.drawing_area.isInSelectionMode())
+        .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area.isInSelectionMode())
         .on('start', ev => this.dragGenericStart(ev))
         .on('drag', ev => this.dragGenericMove(ev))
         .on('end', ev => this.dragGenericEnd(ev))
