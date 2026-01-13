@@ -161,7 +161,7 @@ export const LINK_MENU_CONFIG: MenuConfig = {
 export const createLinkModifier = (app_data: Class_ApplicationData) => {
   const { drawing_area, menu_configuration, history } = app_data
   const contextualised_link = drawing_area.link_contextualised
-  const selected_links = drawing_area.visible_and_selected_links_list
+  const selected_links = drawing_area.selected_links_list
 
   const refreshThisAndToggleSaving = () => {
     menu_configuration.ref_to_save_in_cache_indicator.current(false)

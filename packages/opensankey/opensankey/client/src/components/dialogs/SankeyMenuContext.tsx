@@ -128,7 +128,7 @@ export class MenuConditionEvaluator {
   ): boolean {
     const { drawing_area } = app_data
     const contextualised_node = drawing_area.node_contextualised
-    const selected_nodes = drawing_area.visible_and_selected_nodes_list
+    const selected_nodes = drawing_area.selected_nodes_list
 
     switch (condition.type) {
       case 'nodeCount': {

@@ -9,7 +9,7 @@ export const STATIC_NODE_MENU_CONFIG: MenuConfig = {
       visibilityConditions: [{
         type: 'custom',
         customCheck: (app_data) => {
-          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          const selected_nodes = app_data.drawing_area.selected_nodes_list
           return selected_nodes.length === 1 && selected_nodes[0].is_child
         }
       }]
@@ -20,7 +20,7 @@ export const STATIC_NODE_MENU_CONFIG: MenuConfig = {
       visibilityConditions: [{
         type: 'custom',
         customCheck: (app_data) => {
-          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          const selected_nodes = app_data.drawing_area.selected_nodes_list
           return selected_nodes.length === 1 && selected_nodes[0].is_parent
         }
       }]
@@ -29,7 +29,7 @@ export const STATIC_NODE_MENU_CONFIG: MenuConfig = {
       visibilityConditions: [{
         type: 'custom',
         customCheck: (app_data) => {
-          const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+          const selected_nodes = app_data.drawing_area.selected_nodes_list
           return selected_nodes.length === 1 && selected_nodes[0].hasOutputLinks()
         }
       }]
@@ -104,7 +104,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             {
               type: 'custom',
               customCheck: (app_data) => {
-                const selected_nodes = app_data.drawing_area.visible_and_selected_nodes_list
+                const selected_nodes = app_data.drawing_area.selected_nodes_list
                 const expand_left = selected_nodes.length > 0 ? selected_nodes[0].output_links_list.length == 0 : true
                 const input_or_output_attr = expand_left ? 'input_links_list' : 'output_links_list'
                 const source_or_target_attr = expand_left ? 'source' : 'target'

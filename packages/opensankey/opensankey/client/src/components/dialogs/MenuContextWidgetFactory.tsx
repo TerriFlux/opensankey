@@ -50,15 +50,13 @@ export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto'
  */
 export const MenuContextLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
-  const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
+  const { selected_links_list_sorted } = drawing_area
   const {
     ref_to_menu_contextual_config_links_data_updater,
     ref_to_save_in_cache_indicator
   } = menu_configuration
 
-  const selected_links = menu_configuration.is_selector_only_for_visible_elements ?
-    visible_and_selected_links_list_sorted :
-    selected_links_list_sorted
+  const selected_links = selected_links_list_sorted
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
   const value_option = first_link_value?.value_option ?? default_value_option

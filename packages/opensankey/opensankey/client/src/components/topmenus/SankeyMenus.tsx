@@ -479,7 +479,7 @@ const ConfigContent = ({ app_data, additional_menus }:
           <LegendConfig new_data={app_data} />
         </>
       </WrapperContentConfig>,
-      element: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
+      element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
          <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
       // flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
