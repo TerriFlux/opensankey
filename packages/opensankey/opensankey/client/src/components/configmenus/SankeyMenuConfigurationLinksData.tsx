@@ -29,16 +29,16 @@ import { Select } from '@chakra-ui/react'
 import { TFunction } from 'i18next'
 import { ValueOptionType, value_option_percent_constants_source, value_option_percent_constants_target } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Box, Checkbox, Button } from '@chakra-ui/react'
+import { Box, Button } from '@chakra-ui/react'
 import {
   RowSetter2Cols, DataTagSelector, OSTooltip,
-  BOX2COLSTITLEH4, TooltipElementOverloaded,
-  ConfigMenuNumberInput, ConfigMenuTextInput, ConfigMenuNumberOrUndefinedInput} from './MenuCommon'
+  BOX2COLSTITLEH4,
+  ConfigMenuNumberInput, ConfigMenuTextInput} from './MenuCommon'
 import { getLinkShapeValues, getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { BASE_LABEL_CONFIG, isLinkShapeSpecificValueIndeterminate, LINK_SHAPE_SPECIFIC_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { BASE_LABEL_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 interface LinkValueTypeSelectorProps {
   t: TFunction,
@@ -269,7 +269,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   const selected_links = is_selector_only_for_visible_elements ?
     drawing_area.visible_and_selected_links_list_sorted :
     drawing_area.selected_links_list_sorted
-  const disable_attr_props = styles_dict[ref_selected_style.current].customisable_attribute
 
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
@@ -398,8 +397,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(true)
           app_data.menu_configuration.r_value_formatting_set_elements.current(
             selected_links,
-            'Flux.labels',
-            disable_attr_props
+            'Flux.labels'
           )
         }}
       >

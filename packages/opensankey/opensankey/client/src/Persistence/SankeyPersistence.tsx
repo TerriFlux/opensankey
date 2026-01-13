@@ -918,11 +918,6 @@ export class StylePersistence {
     }
 
     const default_style = style.drawing_area.sankey.default_style
-    Object.keys(style['_storage']).forEach(key => {
-      if (style['_storage'][key] !== undefined) {
-        style['_customisable_attribute'][key] = true
-      }
-    })
     Object.keys(style['_config']).forEach(key => {
       if (json_object[key] !== undefined) {
         if (default_style && json_object[key] !== default_style[key as keyof Class_ElementStyle]) {
