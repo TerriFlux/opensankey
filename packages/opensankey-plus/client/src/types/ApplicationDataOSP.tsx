@@ -12,14 +12,15 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { Class_IconLibraryOSP } from './IconLibrairieOSP'
-import { nodeStyleConfigs, linkStyleConfigs, node_unitary_styles, link_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+import { elementStyleConfigs, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
-import { Class_DrawingAreaOSP } from './DrawingAreaOSP'
+import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
+import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 
 declare const window: Window &
   typeof globalThis & {
@@ -206,16 +207,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     )
     return drawing_area
   }
-  public createNewIconLibrary() {
-    return new Class_IconLibraryOSP()
-  }
 
   /**
    * Override function from Class_ApplicationData, to reset views before reseting normally
    *
    * @memberof Class_ApplicationDataOSP
    */
-  protected _reset(kwargs?: Type_JSON): void {
+  public reset(kwargs?: Type_JSON): void {
     if ((kwargs && kwargs['only_current_view']) && this.has_views && this._master_drawing_area != undefined && this._drawing_area.id != default_main_sankey_id) {
       this.drawing_area.purgeSelection()
       this.drawing_area.unDraw()
@@ -224,7 +222,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       delete this._master_drawing_area
       this._views = {}
       this._views_order = []
-      super._reset(kwargs)
+      super.reset(kwargs)
     }
   }
 
@@ -262,7 +260,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     //save current view
     if (!this.is_view_master) {
-      this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON())
+      this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP,kwargs))
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
 
@@ -275,7 +273,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return json_entry
     }
     // Herited toJSON to save master data
-    json_entry = this._master_drawing_area!.toJSON(kwargs)
+    json_entry = DrawingAreaPersistence.toJSON(this._master_drawing_area!,kwargs)
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
@@ -285,7 +283,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       (json_entry_views[id] as Type_JSON)['name'] = this._views[id].name
       if (kwargs && kwargs['save_only_visible_elements']) {
         this.extractViewFromJSON(this._views[id].json, id)
-        json_entry_views[id] = this._drawing_area.toJSON(kwargs)
+        json_entry_views[id] = DrawingAreaPersistence.toJSON(this._drawing_area,kwargs)
       }
     })
 
@@ -303,7 +301,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         this.views_dict[current_view_id].json = compressJSONToGzip(json_object)
       }
     }
-    super._fromJSON(json_object, kwargs)
+    //super._fromJSON(json_object, kwargs)
+    DrawingAreaPersistenceOSP.fromJSON(this._drawing_area as Class_DrawingAreaOSP,json_object, kwargs)
+    this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
+
     if (kwargs && kwargs['only_current_view']) {
       return
     }
@@ -343,7 +344,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._updateFromJSON(json_object)
     if (this.drawing_area.id != default_main_sankey_id && (kwargs && kwargs['only_current_view'])) {
-      this._views[this.drawing_area.id].json = compressJSONToGzip(this.drawing_area.toJSON())
+      this._views[this.drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistence.toJSON(this.drawing_area))
     }
   }
 
@@ -358,7 +359,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const drawing_area_view = this.createNewDrawingArea(view_id)
     drawing_area_view.bypass_redraws = true
     const decompressed_string = pako.inflate(new Uint8Array(json_object), { to: 'string' })
-    drawing_area_view.fromJSON(JSON.parse(decompressed_string))
+    DrawingAreaPersistence.fromJSON(drawing_area_view,JSON.parse(decompressed_string))
     //const visible_json = drawing_area_view.toJSON(false,true,false)
     //this._views[view_id].json = compressJSONToGzip(visible_json)
     //drawing_area_view.fromJSON(visible_json)
@@ -429,7 +430,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         })
       }
       // Move all elements so none of them are outside the DA
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
     }
 
     // Event to add all visible containers to selection -----------------------------------------
@@ -438,7 +439,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Prevent default event on ctrl + a
       evt.preventDefault()
       // Select all node & links
-      app_ref.drawing_area.addAllVisibleContainersToSelection()
+      app_ref.drawing_area.addAllVisibleElementsToSelection()
     }
 
     // Event to clone current sankey into a new view --------------------------------------------
@@ -519,13 +520,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(view_id/*makeId('view')*/)
     new_drawing_area.bypass_redraws = true
-    if (copy) new_drawing_area.fromJSON(this.drawing_area.toJSON()) // /!\ CopyFrom overwrites drawing area's name
+    if (copy) DrawingAreaPersistence.fromJSON(new_drawing_area,DrawingAreaPersistence.toJSON(this.drawing_area)) // /!\ CopyFrom overwrites drawing area's name
     new_drawing_area.name = 'Copie de ' + this.drawing_area.name
     new_drawing_area.sankey.id = view_id
     // Add new sankey to views
     this._views[view_id] = {
       'name': view_name,
-      'json': compressJSONToGzip(new_drawing_area.toJSON())
+      'json': compressJSONToGzip(DrawingAreaPersistence.toJSON(new_drawing_area))
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this._drawing_area.sankey.setInvisible()
@@ -560,13 +561,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
-    const copy = base_drawing_area.toJSON({ keep_siblings: true })
+    const copy = DrawingAreaPersistence.toJSON(base_drawing_area,{ keep_siblings: true })
     copy.id = id
-    new_drawing_area.fromJSON(copy)
+    DrawingAreaPersistence.fromJSON(new_drawing_area,copy)
     new_drawing_area.name = name
 
-    node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, nodeStyleConfigs))
-    link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_link_internal_style(style_id, linkStyleConfigs))
+    node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, elementStyleConfigs))
+    //link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, linkStyleConfigs))
 
     new_drawing_area.removeMinimumLinkThickness()
     new_drawing_area.removeMaximumLinkThickness()
@@ -574,7 +575,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.filter_label = 0
     new_drawing_area.filter_link_value = 0
 
-    new_drawing_area.containers_list.forEach(cont => {
+    new_drawing_area.sankey.containers_list.forEach(cont => {
       new_drawing_area.deleteContainer(cont)
     })
 
@@ -591,9 +592,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style = [new_drawing_area.sankey.link_styles_dict['LinkOutUnitaryStyle']]
+            link.style = [new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle']]
           } else {
-            link.style = [new_drawing_area.sankey.link_styles_dict['LinkInUnitaryStyle']]
+            link.style = [new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle']]
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -615,15 +616,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           return
         }
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
         node.resetAttributes()
         //node.resetPositionAttributes()
       })
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeStyle']]
-    new_drawing_area.sankey.default_node_style.position_type = 'parametric'
+    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
+    new_drawing_area.sankey.default_style.position_type = 'parametric'
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
       tagg.use_colors = false
@@ -633,7 +634,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       .forEach(node => { node.position_v = -1 })
 
     new_drawing_area.nodePositioning.computeParametrization(true)
-    new_drawing_area.container_activated = false
+    new_drawing_area.sankey.container_activated = false
     // Remove tag group
 
     new_drawing_area.sankey.flux_taggs_list.forEach(tagg => {
@@ -654,9 +655,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.resetAttributes()
         // Affect style depending on IO
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.node_styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
         //node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
         //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
@@ -671,20 +672,20 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.position_x -= 100
       })
     new_drawing_area.legend.stick_to_drawing = false
-    const cont = new_drawing_area.addNewFreeLabel('unitary_container_')
+    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_','Sankey Unitaire')
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
     new_drawing_area.sankey.nodes_list.forEach(node => {
-      new_drawing_area.attachNodeToCont(node, cont)
+      cont.attachNodeToCont(node)
     })
 
-    cont.content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
+    //cont.fo_content = '<p class="ql-align-center" style="font-size:40px">' + this.t('view.default_unit_view_name') + ' : <strong>' + node_ref.name + '</strong></p>'
 
     // Add new sankey to views
     this._views[new_drawing_area.id] = {
       'name': new_drawing_area.name,
-      'json': compressJSONToGzip(new_drawing_area.toJSON())
+      'json': compressJSONToGzip(DrawingAreaPersistence.toJSON(new_drawing_area))
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this.setCurrentView(new_drawing_area.id)
@@ -724,7 +725,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       if (id !== default_main_sankey_id) {
         // Update view with attr heredited from master
         this._drawing_area.bypass_redraws = true
-        this._drawing_area.updateFrom(this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+        updateFrom(this._drawing_area,this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
         // Create a clone of current view's DA
         if (!this.is_static) {
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
@@ -870,7 +871,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // if (ev.onkeydown) {
     //   ev.onkeydown(tmp)
     // }
-    this._views[this._drawing_area.id].json = compressJSONToGzip(this._drawing_area.toJSON())
+    this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistence.toJSON(this._drawing_area))
     this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     this.setCurrentView(this?._waiting_to_set_view ?? default_main_sankey_id)
     delete this._waiting_to_set_view
@@ -904,9 +905,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get menu_configuration_osp(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
   public set menu_configuration_osp(_) { this._menu_configuration = _ }
 
-  public get icon_library(): Class_IconLibraryOSP { return this._icon_library as Class_IconLibraryOSP }
 
-  // Views
   public get views_dict() {
     return this._views
   }

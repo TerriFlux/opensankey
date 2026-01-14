@@ -24,17 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import React from 'react'
-
-// OpenSankey imports
-import {
-  MenuDraggable
-} from './deps/OpenSankey/components/topmenus/SankeyMenus'
-import { WrapperContentConfig,MenuConfigurationLinksTooltip,MenuConfigurationNodesTooltip } from './deps/OpenSankey/components/configmenus/MenuCommon'
-import {
-  IType_DictHookRefSetterShowDialogComponents
-} from './deps/OpenSankey/types/MenuConfig'
+import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -42,15 +33,7 @@ import {
   moduleDialogs
 } from './deps/OpenSankey/Modules'
 
-
-import {
-  MenuConfigurationFreeLabelsOSP,
-} from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
-import {
-  NodeHyperLinkOSP,
-  NodeIconOSP
-} from './components/SankeyPlusNodes'
 
 import {
   ModalTransparentViewAttrOSP,
@@ -61,27 +44,14 @@ import {
 } from './components/SankeyPlusViews'
 
 import {
-  ModalSelectionIconsOSP
+  ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
-import {
-  NodeForeignObjectOSP
-} from './components/SankeyPlusForeignObject'
-import {
-  SankeyMenuConfigurationNodesTags
-} from './components/SankeyPlusMenuConfigurationNodesTags'
-import {
-  MenuConfigurationLinksTags
-} from './components/SankeyPlusMenuConfigurationLinksTags'
-import {
-  SankeySettingsEditionElementTags
-} from './components/SankeyPlusMenuConfigurationTags'
-import {
-  ImportImageAsSvgBg,
-} from './components/UtilsOSP'
+import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
+import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
+import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
+import {ImportImageAsSvgBg} from './components/UtilsOSP'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
-import { UniversalFileConverter } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
-import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -160,15 +130,14 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   // const idx_sep_3 = additionalMenus.current.context_node_order.indexOf('sep_3')
   // additionalMenus.current.context_node_order.splice(idx_sep_3, 0, 'osp_context')
 
-  additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
-  additionalMenus.current.additional_node_config_style.push(<NodeForeignObjectOSP new_data_plus={new_data_plus} />)
+  // additionalMenus.current.additional_node_config_style.push(<NodeIconOSP new_data_plus={new_data_plus} />)
 
   additionalMenus.current.template_module_key.push('intermediary')
   additionalMenus.current.template_module_key.push('advanced')
 
 
   additionalMenus.current.additional_menu_type['presentation'] = 'presentation'
-  additionalMenus.current.additional_menu_button_element_configurable['object'] = { icon: icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: !has_sankey_plus }
+ 
   additionalMenus.current.additional_menu_button_element_configurable['view'] = { icon: icon_library.icon_view, text: t('Menu.Config.element_view'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['data_tag'] = { icon: has_sankey_plus ? icon_library.icon_data_tag_unselected : icon_library.icon_data_tag_diabled, text: t('Menu.Config.element_data_tag'), disabled: !has_sankey_plus }
   additionalMenus.current.additional_menu_button_element_configurable['flow_tag'] = { icon: has_sankey_plus ? icon_library.icon_flow_tag : icon_library.icon_flow_tag_diabled, text: t('Menu.Config.element_flow_tag'), disabled: !has_sankey_plus }
@@ -177,19 +146,19 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   // Add menu for new menu type 'Présentation'
   additionalMenus.current.additional_new_menu_config_content['presentation'] = {
-    'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
-      <MenuConfigurationFreeLabelsOSP app_data={new_data_plus} />
-    </WrapperContentConfig>,
+    // 'object': <WrapperContentConfig title={t('Menu.Config.element_object')} hide={!has_sankey_plus}>
+    //   <MenuConfigurationContainersOSP app_data={new_data_plus} />
+    // </WrapperContentConfig>,
 
-    'node': <WrapperContentConfig title={t('Flux.IS')}><>
-      <MenuConfigurationNodesTooltip new_data={new_data_plus} />
-      <NodeHyperLinkOSP new_data_plus={new_data_plus} />
-    </>
-    </WrapperContentConfig>,
+    // 'node': <WrapperContentConfig title={t('Flux.IS')}><>
+    //   <MenuConfigurationNodesTooltip new_data={new_data_plus} />
+    //   <NodeHyperLinkOSP new_data_plus={new_data_plus} />
+    // </>
+    // </WrapperContentConfig>,
 
-    'flow': <WrapperContentConfig title={t('Noeud.IS')}>
-      <MenuConfigurationLinksTooltip app_data={new_data_plus} />
-    </WrapperContentConfig>,
+    // 'flow': <WrapperContentConfig title={t('Noeud.IS')}>
+    //   <MenuConfigurationLinksTooltip app_data={new_data_plus} />
+    // </WrapperContentConfig>,
     'node_tag': <WrapperContentConfig title={t('Menu.EN')} >
       <>
         <SankeySettingsEditionElementTags
@@ -197,7 +166,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
           elementTagNameProp='node_taggs'
         />
         <SankeyMenuConfigurationNodesTags
-          new_data={new_data_plus}
+          app_data={new_data_plus}
         /></>
     </WrapperContentConfig>,
     'flow_tag': <WrapperContentConfig title={t('Menu.EF')} >
@@ -210,7 +179,12 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
       />
       </>
     </WrapperContentConfig>,
-
+    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
+      <SankeySettingsEditionElementTags
+        new_data={new_data_plus}
+        elementTagNameProp='data_taggs'
+      />
+    </WrapperContentConfig>,
     'view': <WrapperContentConfig title={t('view.storytelling')}>
       <ViewsConfig app_data={new_data_plus}
       />
@@ -218,16 +192,16 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   }
 
   // Add menu for menu type 'data'
-  additionalMenus.current.additional_menu_config_content['data'] = {
-    'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
-      <SankeySettingsEditionElementTags
-        new_data={new_data_plus}
-        elementTagNameProp='data_taggs'
-      />
-    </WrapperContentConfig>
-  }
+  // additionalMenus.current.additional_menu_config_content['data'] = {
+  //   'data_tag': <WrapperContentConfig title={t('Menu.ED')} >
+  //     <SankeySettingsEditionElementTags
+  //       new_data={new_data_plus}
+  //       elementTagNameProp='data_taggs'
+  //     />
+  //   </WrapperContentConfig>
+  // }
   if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_menu_config_content['data']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
+    additionalMenus.current.additional_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
       <><SankeySettingsEditionElementTags
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
@@ -254,20 +228,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
 
   // Cast type
   const new_data_plus = new_data as Class_ApplicationDataOSP
-  const { t } = new_data_plus
-  // Add new_menus
-  const content_draggable_menu_zdt = <MenuConfigurationFreeLabelsOSP
-    app_data={new_data_plus}
-    menu_for_style={true}
-  />
   const modules_dialogs_OSP = [
-    <MenuDraggable
-      dict_hook_ref_setter_show_dialog_components={new_data_plus.menu_configuration_osp.dict_setter_show_dialog}
-      dialog_name={'ref_setter_show_menu_zdt' as keyof IType_DictHookRefSetterShowDialogComponents}
-      content={content_draggable_menu_zdt}
-      title={t('Menu.LL')}
-      maxW='20%'
-    />,
     <ContextZDT
       app_data={new_data_plus}
     />,
@@ -277,17 +238,11 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     <ModalViewNotSavedOSP
       new_data_plus={new_data_plus}
     />,
-    <ModalSelectionIconsOSP
-      new_data_plus={new_data_plus}
+    <ModalSelectionIcon
+      app_data={new_data_plus}
     />,
     <ModalCreateUnitaryViewOSP
       new_data_plus={new_data_plus}
-    />,
-    <UniversalFileConverter
-      app_data={new_data_plus}
-      dialog_name={'ref_setter_show_modal_file_converter'}
-      input_config={INPUT_ATTRIBUTES_CONFIG}
-      output_config={OUTPUT_ATTRIBUTES_CONFIG}
     />
   ]
 

@@ -28,18 +28,17 @@ import {
 
 // Local functions / components
 import {
-  default_grey_color,
   GetRandomInt,
   Type_MacroTagGroup
 } from '../deps/OpenSankey/types/Utils'
 
-import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { MenuColorPicker, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_LinkValue } from '../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../deps/OpenSankey/types/TagGroup'
 
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
+import { default_grey_color } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 export type FType_SankeySettingsEditionElementTags = {
   new_data: Class_ApplicationDataOSP,

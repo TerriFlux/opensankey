@@ -1,13 +1,7 @@
-// 'react-quill' seem to not be updated anymore, for new it doesn't create problem but it make a warning error in console
-// to solve it when time will come we can use 'react-quill-new' wich solve this issu (https://github.com/zenoamaro/react-quill/issues/988#issuecomment-2241533429)
-// Imported libs
-import {
-  Box, Button, ButtonGroup
-} from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Divider } from '@chakra-ui/react'
 import React, { useState } from 'react'
-import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuColorPicker'
-import { sep } from './SankeyPlusMenuConfigurationLabels'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
+import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }
@@ -66,14 +60,14 @@ export const ContextZDT = (
       // Check if node is horizontally in zdt
       const is_node_horizontally_in_zone = (
         (n.position_x >= zdt_to_contextualise.position_x) &&
-        (n.position_x <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width)) &&
-        ((n.position_x + n.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.label_width))
+        (n.position_x <= (zdt_to_contextualise.position_x + zdt_to_contextualise.shape_min_width)) &&
+        ((n.position_x + n.getShapeWidthToUse()) <= (zdt_to_contextualise.position_x + zdt_to_contextualise.shape_min_width))
       )
       // Check if node is vertically in zdt
       const is_node_vertically_in_zone = (
         (n.position_y >= zdt_to_contextualise.position_y) &&
-        (n.position_y <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height)) &&
-        ((n.position_y + n.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.label_height))
+        (n.position_y <= (zdt_to_contextualise.position_y + zdt_to_contextualise.shape_min_height)) &&
+        ((n.position_y + n.getShapeHeightToUse()) <= (zdt_to_contextualise.position_y + zdt_to_contextualise.shape_min_height))
       )
       // Must be in zdt
       return (is_node_horizontally_in_zone && is_node_vertically_in_zone)
@@ -94,10 +88,10 @@ export const ContextZDT = (
   }
 
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
-  const valAllLabelBorderTransparent = selected_zdt[0]?.transparent_border ?? false
+  const valAllLabelBorderTransparent = selected_zdt[0]?.shape_border_visible ?? true
 
   const btn_mask_border = <Button onClick={() => {
-    selected_zdt.forEach(zdt => zdt.transparent_border = !valAllLabelBorderTransparent)
+    selected_zdt.forEach(zdt => zdt.shape_border_visible = !valAllLabelBorderTransparent)
     redrawAndRefresh()
   }} variant='contextmenu_button'>{valAllLabelBorderTransparent ? t('LL.display_border') : t('LL.hide_border')}</Button>
 
@@ -107,30 +101,19 @@ export const ContextZDT = (
       <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
         <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
         <MenuColorPicker
-          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].color : '#ffffff'}
+          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].shape_color : '#ffffff'}
           onColorChange={(new_color) => {
-            selected_zdt.map(d => d.color = new_color)
+            selected_zdt.map(d => d.shape_color = new_color)
             redrawAndRefresh()
           }} />
       </Box>
     </Button>
   </>
 
-
-  const button_open_layout = <Button onClick={() => {
-    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_menu_zdt.current(true)
-    closeContextMenu()
-  }}
-  variant='contextmenu_button'
-  rightIcon={app_data.icon_library.icon_popup_menu}
-  >{t('Menu.LL')} </Button>
-
-
-  // Detach all nodes from ZDT 
   const button_detach_all_tied_nodes = <Button onClick={() => {
     // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
     for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
-      app_data.drawing_area.dettachNodeFromCont(zdt_to_contextualise.attached_node[i], zdt_to_contextualise)
+      zdt_to_contextualise.dettachNodeFromCont(zdt_to_contextualise.attached_node[i])
     }
     zdt_to_contextualise.tied_to_nodes = false
     zdt_to_contextualise.draw()
@@ -146,10 +129,10 @@ export const ContextZDT = (
     getNodeInsideContextZDT()
       .forEach(n => {
         n.getListDescendantOfNode().forEach(node => {
-          app_data.drawing_area.attachNodeToCont(node, zdt_to_contextualise)
+          zdt_to_contextualise.attachNodeToCont(node)
           //new_data_plus.drawing_area.addNodeToSelection(node)
         })
-        app_data.drawing_area.attachNodeToCont(n, zdt_to_contextualise)
+        zdt_to_contextualise.attachNodeToCont(n)
       })
     zdt_to_contextualise.draw()
     closeContextMenu()
@@ -181,15 +164,12 @@ export const ContextZDT = (
     }}>
     <ButtonGroup orientation='vertical' isAttached>
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
-      {sep}
+      <Divider/>
       {btn_mask_border}
       {btn_change_color}
-      {sep}
+      {<Divider/>}
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}
-      {sep}
-      {sep}
-      {button_open_layout}
     </ButtonGroup>
   </Box> : <></>
 }

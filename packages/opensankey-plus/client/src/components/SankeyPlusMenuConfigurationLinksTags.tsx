@@ -8,9 +8,8 @@ import {
 
 // Local types
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
-import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/SankeyMenuConfigurationLinks'
+import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuElementsSelection'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
@@ -21,22 +20,8 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   const [flux_tagg_entry_index, setFluxTaggEntryIndex] = useState(0)
   const flux_tagg_entry = list_flux_taggs[flux_tagg_entry_index]
 
-  // Data tag groups
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
-
-  // Selected links ---------------------------------------------------------------------
-
-  let selected_links: Class_LinkElement[]
-  if (!new_data.menu_configuration.is_selector_only_for_visible_links) {
-    // All availables links
-    selected_links = new_data.drawing_area.selected_links_list_sorted
-  }
-  else {
-    // Only visible links
-    selected_links = new_data.drawing_area.visible_and_selected_links_list_sorted
-  }
-
-  // Menu updaters ----------------------------------------------------------------------
+  const selected_links = new_data.drawing_area.selected_links_list_sorted
 
   const [, setCount] = useState(0)
   const updateThis = () => {
@@ -180,7 +165,7 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   return <WrapperBoxSubSectionMenu new_data={new_data} title={t('Menu.flow_associated_tag')}>
     <OSTooltip label={new_data.has_sankey_plus ? '' : t('Menu.sankeyOSPDisabled')}>
       <>
-        <SankeyLinkSelectionSimple new_data={new_data} />
+        <SankeyLinkSelectionSimple app_data={new_data} />
         {content}
       </>
     </OSTooltip>

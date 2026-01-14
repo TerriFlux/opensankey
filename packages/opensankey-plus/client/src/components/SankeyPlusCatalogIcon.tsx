@@ -1,6 +1,6 @@
 
 import * as d3 from 'd3'
-import React, { FC, useState, useRef, ChangeEvent } from 'react'
+import React, { useState, useRef, ChangeEvent } from 'react'
 import {
   Box,
   Card,
@@ -22,17 +22,17 @@ import {
 
 import SankeyListIcons from '../icons/lib_of_icons.json'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_NodeBase } from '../deps/OpenSankey/Elements/NodeBase'
+import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
+import { getElementsLabelValues, BASE_LABEL_CONFIG, isConfigValueIndeterminate } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
 type KeysOfIcon = keyof typeof SankeyListIcons
-interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
-}
 
-export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+export const ModalSelectionIcon = (
+  { app_data }: { app_data: Class_ApplicationDataOSP }
 ) => {
-  const list_nodes_selected = new_data_plus.drawing_area.selected_nodes_list
-  const { t } = new_data_plus
+  //const list_nodes_selected = [...app_data.drawing_area.selected_nodes_list,...app_data.drawing_area.selected_links_list]
+  const { t } = app_data
   const imported_icon = localStorage.getItem('icon_imported')
   const init_imported_svg: { [s: string]: { path: string, Vb: string } } = imported_icon != null && imported_icon !== '' ? JSON.parse(imported_icon) : {}
   const [filter_name, set_filter_name] = useState('')
@@ -41,81 +41,34 @@ export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
   const [s_show_modal, sShowModal] = useState(false)
   const [forceUpdate, setForceUpdate] = useState(false)
 
-  new_data_plus.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons.current = sShowModal
+  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons.current = sShowModal
+  const [elements, setElements] = useState<Class_NodeBase[] | Class_LinkElement[]>([])
+  const [prefix, setPrefix] = useState<'name_label' | 'value_label' | 'icon'>('name_label')
 
-
-  const isAllIconVisible = () => {
-    let selected_icon = list_nodes_selected.length > 0 ? list_nodes_selected[0].icon_name : ''
-
-    list_nodes_selected.map(d => selected_icon = (d.icon_name === selected_icon) ? selected_icon : '')
-    return selected_icon
+  app_data.menu_configuration.icon_selector_set_elements.current = (
+    _elements: Class_NodeBase[] | Class_LinkElement[],
+    _prefix: 'name_label' | 'value_label' | 'icon'
+  ) => {
+    setElements(_elements)
+    setPrefix(_prefix)
   }
-  const allSelectedNodeHasSameicon = isAllIconVisible()
 
-  list_nodes_selected.length > 0 ? list_nodes_selected[0].icon_name : 'None'
-
-  // Functions we can undo ====================================================
+  const labelValues = elements.length > 0
+    ? getElementsLabelValues(elements, prefix, () => setForceUpdate(!forceUpdate))
+    : Object.fromEntries(
+      Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])
+    ) as { -readonly [K in keyof typeof BASE_LABEL_CONFIG]: ReturnType<typeof BASE_LABEL_CONFIG[K]['type']> }
 
   const updateNodeIcon = (iconName: string) => {
-    const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
-    list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.icon_name!, n.icon_color!, n.icon_view_box!]
-    })
-    const _updateNodeIcon = () => {
-      list_nodes_selected.forEach(n => {
-        n.icon_name = iconName
-        if (!n.icon_color) n.icon_color = '#000000'
-        delete n.icon_view_box
-        n.draw()
-      })
-      setForceUpdate(!forceUpdate)
-    }
-
-    const inv_updateNodeIcon = () => {
-      list_nodes_selected.forEach(n => {
-        n.icon_name = dict_old_value[n.id][0]
-        n.icon_color = dict_old_value[n.id][1]
-        n.icon_view_box = dict_old_value[n.id][2]
-        n.draw()
-      })
-      setForceUpdate(!forceUpdate)
-    }
-    // Save undo/redo in data history
-    new_data_plus.history.saveUndo(inv_updateNodeIcon)
-    new_data_plus.history.saveRedo(_updateNodeIcon)
-    // Execute original attr mutation
-    _updateNodeIcon()
+    labelValues.icon_name = iconName
+    if (!labelValues.color) labelValues.color = '#000000'
+    delete labelValues.view_box
   }
 
   const updateNodeIconImported = (ki: string) => {
-    const dict_old_value: { [x: string]: [name: string, color: string, viewBox: string | undefined] } = {}
-    list_nodes_selected.forEach(n => {
-      dict_old_value[n.id] = [n.icon_name!, n.icon_color!, n.icon_view_box!]
-    })
-    const _updateNodeIconImported = () => {
-      list_nodes_selected.forEach(n => {
-        n.icon_name = 'icon_imported_' + ki
-        n.icon_view_box = import_svg.current[ki].Vb
-        n.icon_color = '#000000'
-        n.draw()
-      })
-      setForceUpdate(!forceUpdate)
-    }
-
-    const inv_updateNodeIconImported = () => {
-      list_nodes_selected.forEach(n => {
-        n.icon_name = dict_old_value[n.id][0]
-        n.icon_color = dict_old_value[n.id][1]
-        n.icon_view_box = dict_old_value[n.id][2]
-        n.draw()
-      })
-      setForceUpdate(!forceUpdate)
-    }
-    // Save undo/redo in data history
-    new_data_plus.history.saveUndo(inv_updateNodeIconImported)
-    new_data_plus.history.saveRedo(_updateNodeIconImported)
-    // Execute original attr mutation
-    _updateNodeIconImported()
+    labelValues.icon_name = 'icon_imported_' + ki
+    labelValues.view_box = import_svg.current[ki].Vb
+    labelValues.color = '#000000'
   }
 
   // Create object containing list of card elements regrouped by the icon themes
@@ -133,9 +86,9 @@ export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
 
         return <Card
           key={'card_' + icon[0] + '_' + i}
-          variant={allSelectedNodeHasSameicon === NameIcon ? 'card_icon_selected' : 'card_icon_not_selected'}
+          variant={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'icon_name', prefix) ? 'card_icon_selected' : 'card_icon_not_selected'}
           onClick={() => {
-            new_data_plus.drawing_area.sankey.icon_catalog[NameIcon] = icon[1]
+            app_data.drawing_area.sankey.icon_catalog[NameIcon] = icon[1]
             updateNodeIcon(NameIcon)
             sShowModal(false)
           }}
@@ -220,16 +173,16 @@ export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
   const card_imported = Object.keys(import_svg.current).sort(([a,], [b,]) => (a > b) ? 1 : ((b > a) ? -1 : 0)).map((ki, i) => {
     return <Card
       key={'card_icon_' + i}
-      variant={allSelectedNodeHasSameicon === 'icon_imported_' + ki ? 'card_icon_selected' : 'card_icon_not_selected'}
+      variant={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'icon_name', prefix) ? 'card_icon_selected' : 'card_icon_not_selected'}
       onClick={() => {
-        new_data_plus.drawing_area.sankey.icon_catalog['icon_imported_' + ki] = import_svg.current[ki].path
+        app_data.drawing_area.sankey.icon_catalog['icon_imported_' + ki] = import_svg.current[ki].path
         updateNodeIconImported(ki)
         sShowModal(false)
       }}
     >
       <CardBody>
         <Heading>{ki}</Heading>
-        <Divider/>
+        <Divider />
         <svg viewBox={import_svg.current[ki].Vb} width={50} height={50}><g><path fill='black' d={import_svg.current[ki].path}></path></g></svg>
       </CardBody>
     </Card>
@@ -317,4 +270,4 @@ export const ModalSelectionIconsOSP: FC<BaseComponentPropsPlus> = (
   </>
 }
 
-export default ModalSelectionIconsOSP
+export default ModalSelectionIcon

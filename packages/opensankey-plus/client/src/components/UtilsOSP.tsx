@@ -12,8 +12,6 @@ import {
   Input
 } from '@chakra-ui/react'
 
-
-// OpenSankey imports
 import {
   getBooleanFromJSON,
   getJSONOrUndefinedFromJSON,
@@ -25,10 +23,44 @@ import {
 import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
-
-import { GetOldDataFromView } from './ConvertOSP'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { DiffType } from '../types/LegacyTypes'
+import { applyChange } from 'deep-diff'
+
+
+export const GetOldDataFromView  = (
+  master_data:OSPData|undefined,
+  id_view_to_see:string
+)=>{
+  // Copy master data
+  if (!master_data) {
+    alert('sankey master undefined')
+    return undefined
+  }
+  const copy_master_data= {...master_data}
+  copy_master_data.view = [];
+  (copy_master_data as unknown as Type_JSON).views = {}
+  //const view_of_master= master_data.view as unknown as ViewType[]
+  let data_init=JSON.parse(JSON.stringify(copy_master_data)) as OSPData
+  // Get the difference from the view
+  if (master_data.view.filter(v=>v.id === id_view_to_see).length === 0) {
+    alert('view not found')
+    return data_init
+  }
+  const view_object=master_data.view.filter(v=>v.id === id_view_to_see)[0]
+
+  if((view_object.view_data as DiffType).diff){
+    const diff_view=(view_object.view_data as DiffType).diff
+    if (!diff_view) {
+      return data_init
+    }
+    diff_view.forEach((d) => applyChange(data_init, {}, d))
+  }else{
+    data_init=view_object.view_data as OSPData
+  }
+  return data_init
+}
 
 export const ImportImageAsSvgBg = ({
   new_data_plus,
@@ -112,23 +144,23 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       const cont = el as Type_JSON
 
       if (cont.name !== undefined) {
-        cont.content = cont.name as string
-        if (!cont.content.includes('<p')) {
-          if (cont.font_uppercase && !cont.content.includes('ql-align-center')) {
-            cont.content = cont.content.toUpperCase()
+        cont.fo_content = cont.name as string
+        if (!cont.fo_content.includes('<p')) {
+          if (cont.font_uppercase && !cont.fo_content.includes('ql-align-center')) {
+            cont.fo_content = cont.fo_content.toUpperCase()
           }
 
           if (cont.font_weight) {
-            cont.content = cont.content ? '<strong>' + cont.content + '</strong>' : ''
+            cont.fo_content = cont.fo_content ? '<strong>' + cont.fo_content + '</strong>' : ''
           }
           if (cont.position_horiz === 'gauche') {
-            cont.content = cont.content ? '<p class="ql-align-left">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-left">' + cont.fo_content + '</p>' : ''
           }
           if (cont.position_horiz === 'centre') {
-            cont.content = cont.content ? '<p class="ql-align-center">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-center">' + cont.fo_content + '</p>' : ''
           }
           if (cont.position_horiz === 'droite') {
-            cont.content = cont.content ? '<p class="ql-align-right">' + cont.content + '</p>' : ''
+            cont.fo_content = cont.fo_content ? '<p class="ql-align-right">' + cont.fo_content + '</p>' : ''
           }
         }
       }
@@ -143,7 +175,7 @@ export const convert_data_plus_legacy = (json_object: Type_JSON) => {
       } else {
         cont['opacity'] = 100
       }
-      cont['content'] = container_content
+      cont['fo_content'] = container_content
 
     })
     json_object.labels = Object.fromEntries(
@@ -200,15 +232,3 @@ export function getOldViewsFromJSON(
   return undefined
 }
 
-/**
- * Create an array of string, it return a list from start to stop (at a pace of step)
- * with suffix 'px'
- *
- * @param {number} start
- * @param {number} stop
- * @param {number} step
- */
-const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px')
-
-// Exported variable for Quill editor
-export const listOptionSizeQuill = arrayRangePx(9, 120, 1)

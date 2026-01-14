@@ -37,11 +37,9 @@ import {
   makeId,
   Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
-import {
-  ConfigMenuTextInput
-} from '../deps/OpenSankey/components/configmenus/SankeyMenuConfiguration'
 
-import { OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import {updateFrom} from '../deps/OpenSankey/Algorithms/UpdateFrom'
+import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
@@ -49,6 +47,7 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -1181,7 +1180,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
             onClick={() => {
               const master_view = new_data_plus.master_view
               if (master_view) {
-                drawing_area_plus.updateFrom(master_view, drawing_area_plus.heredited_attr)
+                updateFrom(drawing_area_plus,master_view, drawing_area_plus.heredited_attr)
                 new_data_plus.draw()
               }
             }}
@@ -1364,7 +1363,7 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
   if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {
     list_selected_nodes_for_unitary.current = []
     const new_sel_key = Object.keys(list_data.current)[0]
-    local_app_data.current.drawing_area.fromJSON(list_data.current[new_sel_key].data)
+    DrawingAreaPersistence.fromJSON(local_app_data.current.drawing_area,list_data.current[new_sel_key].data)
     set_selected_data_id(new_sel_key)
   }
 
