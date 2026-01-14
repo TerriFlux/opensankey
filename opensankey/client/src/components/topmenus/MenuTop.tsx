@@ -416,7 +416,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_save_sankey_excel}
         {t('Menu.open_excel')}
       </MenuItem>
-      {additionalMenus.current.externale_save_item}
     </MenuList>
   </ChakraMenu>
 
@@ -467,7 +466,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         {new_data.icon_library.icon_export_sankey_pdf}
         PDF
       </MenuItem>
-      {additionalMenus.current.external_file_export_item}
     </MenuList>
   </ChakraMenu>
 

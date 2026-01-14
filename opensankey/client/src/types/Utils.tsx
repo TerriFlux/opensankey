@@ -28,6 +28,10 @@ import React, { useState } from 'react'
 import * as d3 from 'd3'
 import { Class_ApplicationData } from './ApplicationData'
 import { FType_InitializeAdditionalMenus } from '../Modules'
+import { value_option_percent_constants, ValueOptionType } from '../Elements/LinkValues'
+import { Class_NodeBase } from '../Elements/NodeBase'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_DataTagGroup } from './TagGroup'
 
 declare const window: Window &
   typeof globalThis & {
@@ -43,37 +47,11 @@ export const default_toast_duration: number = 1000 // 1sec
 export const default_toast_waiting_delay: number = 500 // 500ms
 export const toast_bypass: boolean = window.sankey?.publish??false
 
-/**
- * Define necessary properties for a position
- * @type Type_ElementPosition
- */
-export type Type_ElementPosition = {
-  type?: Type_Position
+export type Type_BaseElementPosition = {
   x: number
   y: number
-  u: number
-  v: number
-  dx?: number
-  dy?: number
-  relative_dx?: number
-  relative_dy?: number
-  auto_x?: boolean
-  auto_y?: boolean
 }
 
-export type Type_ElementPositionOptionnal = {
-  type?: Type_Position
-  x?: number
-  y?: number
-  u?: number
-  v?: number
-  dx?: number
-  dy?: number
-  relative_dx?: number
-  relative_dy?: number
-  auto_x?: boolean
-  auto_y?: boolean
-}
 export type Type_Position = 'absolute' | 'relative' | 'parametric'
 
 /**
@@ -90,87 +68,17 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
  */
 export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }
 
-// CONSTANTS ****************************************************************************
-
-export const default_grey_color = 'grey'
-export const default_black_color = 'black'
-export const default_background_color = '#f2f2f2'
-export const default_grid_color = '#d3d3d3'
-export const default_element_color = '#a9a9a9'
-export const default_element_color_source = 'flow'
-
-export const default_font = 'Arial,sans-serif'
-export const font_families = [
-  'Andale Mono,monospace',
-  'Apple Chancery,cursive',
-  'Arial,sans-serif',
-  'Avanta Garde,sans-serif',
-  'Baskerville,serif',
-  'Big Caslon,serif',
-  'Bodoni MT,serif',
-  'Book Antiqua,serif',
-  'Bookman,serif',
-  'Bradley Hand,cursive',
-  'Brush Script MT,cursive',
-  'Brush Script Std,cursive',
-  'Calibri,sans-serif',
-  'Calisto MT,serif',
-  'Cambria,serif',
-  'Candara,sans-serif',
-  'Century Gothic,sans-serif',
-  'Comic Sans MS,cursive',
-  'Comic Sans,cursive',
-  'Consolas,monospace',
-  'Coronet script,cursive',
-  'Courier New,monospace',
-  'Courier,monospace',
-  'Didot,serif',
-  'Florence,cursive',
-  'Franklin Gothic Medium,sans-serif',
-  'Futara,sans-serif',
-  'Garamond,serif',
-  'Geneva,sans-serif',
-  'Georgia,serif',
-  'Gill Sans,sans-serif',
-  'Goudy Old Style,serif',
-  'Helvetica,sans-serif',
-  'Hoefler Text,serif',
-  'Lucida Bright,serif',
-  'Lucida Console,monospace',
-  'Lucida Sans Typewriter,monospace',
-  'Lucida Sans,sans-serif',
-  'Lucidatypewriter,monospace',
-  'Monaco,monospace',
-  'New Century Schoolbook,serif',
-  'Noto,sans-serif',
-  'Optima,sans-serif',
-  'Palatino,serif',
-  'Parkavenue,cursive',
-  'Perpetua,serif',
-  'Rockwell Extra Bold,serif',
-  'Rockwell,serif',
-  'Segoe UI,sans-serif',
-  'Snell Roundhan,cursive',
-  'Times New Roman,serif',
-  'Trebuchet MS,sans-serif',
-  'URW Chancery,cursive',
-  'Verdana,sans-serif',
-  'Zapf Chancery,cursive',
-]
-
 export const default_main_sankey_id = 'sankey_maitre'
 
 export const const_default_position_x = 50
 export const const_default_position_y = 50
-export const default_element_position: Type_ElementPosition = {
-  x: const_default_position_x,
-  y: const_default_position_y,
-  u: 0,
-  v: -1
-}
+// export const default_element_position: Type_ElementPosition = {
+//   x: const_default_position_x,
+//   y: const_default_position_y,
+// }
 
 export const default_style_id = 'default'
-export const default_style_name = 'Style par default'
+export const default_style_name = 'Style par défaut'
 
 
 // DEDICATED TYPES **********************************************************************
@@ -397,38 +305,14 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
   new_data.menu_configuration.ref_rerender_submodules_menus.current = () => setUpdate(a => a + 1)
 
   new_data.menu_configuration.additionalMenus.current = {
-
-    // Top Menu
-    external_edition_item: [],
-    external_file_export_item: [],
-    externale_save_item: [],
     external_top_buttons_item: {},
-    externale_navbar_item: {},
-    footer: [],
 
-    // Menu config
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
-    additional_menu_config_content: { data: {}, context: {}, style: {} },
+    additional_menu_config_content: { data: {}, style: {}, presentation:{} },
     additional_new_menu_config_content: {},
-    additional_node_config_style: [],
 
-    // Mise en page
     extra_background_element: <></>,
-
-    // Nodes
-    advanced_appearence_content: [],
-    advanced_label_content: [],
-
-    additional_menu_configuration_links: {},
-    additional_data_element: [],
-    additional_link_appearence_value: [],
-    additional_link_visual_filter_content: [],
-
-    additional_preferences: [],
-
-    additional_file_export_item: [],
-
     additional_nav_item: [],
 
     formations_menu: {},
@@ -454,4 +338,120 @@ export function checkForUrlToJSON() {
   const url_var = urlParams.get('url')
   return url_var
 
+}
+
+
+export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement) => {
+  if (type_data == 'data' || type_data == 'data_label') {
+    if (!link.value?.valueData) return ''
+    return link.formatValueWithOption(format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+        return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
+      }*/
+  }
+  if (link.value?.result_min !== null) {
+    if (type_data === 'free_interval') {
+      return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name) + ']'
+    }
+    if (type_data === 'free_value') {
+      return format_value(type_data, link.valueCurrent!, link, link.unit_name)
+    }
+    return ''
+  }
+
+  return format_value(type_data, link.valueCurrent!, link, link.unit_name)
+}
+
+export const format_value = (
+  data_type: Type_Structure,
+  data_value: number | undefined | null,
+  element: Class_LinkElement | Class_NodeBase,
+  unit_name: string
+) => {
+  /*==========================================================================*/
+  // First step. value transformation
+  const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const link = element as Class_LinkElement
+  if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const tag = unit_taggs[0].tags_dict[element.value_label_unit]
+    const new_value = link.valueForTag(tag)
+    data_value = new_value?.valueResult ?? new_value?.valueData
+  }
+
+  if (element.value_label_unit_type == '%IS') {
+    let total_source = 0
+    // if (unit_taggs.length > 0) {
+    //   link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    // }
+    link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_source * 100 : null
+  } else if (element.value_label_unit_type == '%OD') {
+    let total_target = 0
+    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%OS') {
+    let total_target = 0
+    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_target * 100 : null
+  } else if (element.value_label_unit_type == '%ID') {
+    let total_source = 0
+    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    data_value = data_value ? data_value / total_source * 100 : null
+  } else if (element.value_label_unit_type == 'normalized') {
+    data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
+  }
+
+  /*==========================================================================*/
+  // Second step. value formatting
+  let text_value = ''
+  // Create data label
+  if (data_value !== null && data_value !== undefined && element.value_label_is_visible) {
+    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
+    if (element.value_label_unit_visible && element.value_label_unit != '' && element.value_label_unit_factor > 1) {
+      data_value /= element.value_label_unit_factor
+    }
+
+    // Convert
+    if (element.value_label_scientific_notation) {
+      // 12345.67 avec nb_sign = 4 devient 1,234*e+04
+      if (element.value_label_significant_digits) {
+        text_value = data_value.toExponential(element.value_label_nb_significant_digits! - 1)
+      } else {
+        text_value = data_value.toExponential()
+      }
+    } else if (element.value_label_significant_digits == true) {
+      // Do we need to keep only N significant numbers ?
+      // 12345.67 avec nb_sign = 4 devient 12340
+      text_value = String(parseFloat(data_value.toPrecision(element.value_label_nb_significant_digits)))
+      if (element.value_label_custom_digit) {
+        text_value = String(parseFloat(parseFloat(text_value).toFixed(element.value_label_nb_digit)))
+      }
+      if (text_value[text_value.length - 1] == '0' && text_value.length == element.value_label_nb_significant_digits && text_value == String(data_value)) {
+        text_value += '.'
+      }
+    } else if (element.value_label_custom_digit) {
+      text_value = String(parseFloat(data_value.toFixed(element.value_label_nb_digit)))
+    }
+    else {
+      text_value = String(data_value)
+    }
+  }
+  text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+  if (!element.value_label_unit_visible) {
+    return text_value
+  }
+  // Add unit suffix
+  if (data_type == 'data' || data_type == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
+  if (element.value_label_unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
+  else if (element.value_label_unit_type == 'unit_name') text_value = text_value + ' ' + element.value_label_unit
+  else if (element.value_label_unit_type == 'unit_tag' && unit_taggs.length > 0) {
+    //const label_unit = unit_taggs[0].first_selected_tags!.name
+    text_value = text_value + ' ' + unit_name
+  } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
+    const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
+    text_value = text_value + ' ' + label_unit
+  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0) {
+    text_value = link.formatValueWithOption(text_value, element.value_label_unit_type as ValueOptionType)
+  } else if (element.value_label_unit_type == 'normalized') return text_value
+
+  return text_value
 }

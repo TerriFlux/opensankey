@@ -24,265 +24,1485 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import FileSaver from 'file-saver'
-import { type Type_JSON } from '../types/Utils'
-import { Class_ApplicationData } from '../types/ApplicationData'
+import {
+  default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON,
+  getNumberOrUndefinedFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, Type_Structure, type Type_JSON
+} from '../types/Utils'
+import {
+  ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
+  default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure
+} from '../Elements/ElementsAttributesConfig'
+import { getStringFromJSON } from '../types/Utils'
+import { Class_ContainerElement } from '../Elements/TextZone'
+import { Class_NodeElement } from '../Elements/Node'
+import { ConfigType } from '../Elements/ElementsAttributesConfig'
+import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
+import { Class_LinkElement } from '../Elements/Link'
+import { Class_NodeBase } from '../Elements/NodeBase'
+import { ClassTemplate_Legend } from '../Elements/Legend'
+import { Class_Sankey } from '../types/Sankey'
+import { Class_Tag } from '../types/Tag'
+import { link_exchanges_style, node_exchanges_style, elementStyleConfigs, product_sector_styles } from '../Elements/ElementStyle'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
-declare global {
-  interface Window {
-    pako?: {
-      // Surcharges pour deflate
-      deflate(data: Uint8Array | string, options: PakoDeflateOptions & { to: 'string' }): string
-      deflate(data: Uint8Array | string, options?: PakoDeflateOptions): Uint8Array
+export class BaseElementPersistence {
+  public static fromJSON_pre_0_9(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
 
-      // Surcharges pour inflate
-      inflate(data: Uint8Array, options: PakoInflateOptions & { to: 'string' }): string
-      inflate(data: Uint8Array, options?: PakoInflateOptions): Uint8Array
+  public static fromJSON_0_9(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
 
-      // Surcharges pour gzip
-      gzip(data: Uint8Array | string, options: PakoDeflateOptions & { to: 'string' }): string
-      gzip(data: Uint8Array | string, options?: PakoDeflateOptions): Uint8Array
+  public static fromJSON_0_91(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
 
-      // Surcharges pour ungzip (le plus important pour votre cas)
-      ungzip(data: Uint8Array, options: PakoInflateOptions & { to: 'string' }): string
-      ungzip(data: Uint8Array, options?: PakoInflateOptions): Uint8Array
+  public static toJSON(
+    base_element: Class_BaseElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): Type_JSON {
+    json_object['x'] = base_element.position_x
+    json_object['y'] = base_element.position_y
+    return json_object
+  }
+  public static fromJSON(
+    _version: number,
+    base_element: Class_ProtoElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ): void {
+    base_element.position_x = getNumberFromJSON(json_object, 'x', base_element.position_x)
+    base_element.position_y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+  }
+}
+export class ProtoElementPersistence extends BaseElementPersistence {
+  public static toJSON(
+    proto_element: Class_ProtoElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): Type_JSON {
 
-      // Fonctions de streaming
-      Deflate: new (options?: PakoDeflateOptions) => PakoDeflate
-      Inflate: new (options?: PakoInflateOptions) => PakoInflate
+    //json_object['id'] = this._id
+    super.toJSON(proto_element, json_object, kwargs)
+    if (!proto_element['_is_visible']) json_object['is_visible'] = proto_element['_is_visible']
+
+    // Fill style & local attributes
+    if (proto_element.style.length > 0) json_object['style'] = proto_element.style.map(s => s.id)
+    //const attr_json = this._display.attributes.toJSON(this, null)
+    if (Object.keys(proto_element.attributes).length > 0) {
+      json_object['local'] = {} as Type_JSON
+      (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, boolean | number | string]>).forEach(([key, value]) => {
+        if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value)) {
+          (json_object['local'] as Type_JSON)[key] = value
+        }
+      })
     }
+
+    return json_object
   }
-}
 
-// Interfaces pour les options
-interface PakoDeflateOptions {
-  level?: number          // Niveau de compression (0-9)
-  windowBits?: number     // Taille de la fenêtre
-  memLevel?: number       // Niveau mémoire
-  strategy?: number       // Stratégie de compression
-  dictionary?: Uint8Array // Dictionnaire
-  raw?: boolean          // Mode raw
-  to?: 'string'          // Format de sortie
-}
-
-interface PakoInflateOptions {
-  windowBits?: number     // Taille de la fenêtre
-  raw?: boolean          // Mode raw
-  to?: 'string'          // Format de sortie ('string' pour text)
-  chunkSize?: number     // Taille des chunks
-}
-
-// Classes de streaming
-interface PakoDeflate {
-  push(data: Uint8Array | string, flush?: boolean): boolean
-  result: Uint8Array
-}
-
-interface PakoInflate {
-  push(data: Uint8Array, flush?: boolean): boolean
-  result: Uint8Array | string
-}
-
-/**
- * Download examples from server
- *
- * @param {string} file_name
- * @param {string} the_url_prefix
- * @param {string} filetype
- */
-
-export const DownloadExamples = (
-  file_name: string,
-  filetype: string
-): void => {
-  const root = window.location.origin
-  const url = root + '/opensankey/example/download'
-  const fetchData = {
-    method: 'POST',
-    body: file_name
+  public static fromJSON_pre_0_9(
+    _base_element: ProtoElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: filetype })
-    FileSaver.saveAs(newBlob, file_name)
+
+  public static fromJSON_0_9(
+    _base_element: ProtoElementPersistence,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
   }
-  fetch(url, fetchData).then(
-    response => {
-      if (response.ok) {
-        response.blob().then(showFile)
+
+  public static fromJSON_0_91(
+    _base_element: ProtoElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON(
+    version: number,
+    proto_element: Class_ProtoElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super.fromJSON(version, proto_element, json_object, kwargs)
+    proto_element.unDraw()
+
+    proto_element['_is_visible'] = getBooleanFromJSON(json_object, 'is_visible', proto_element['_is_visible'])
+
+    if (!Array.isArray(json_object.style)) {
+      const style_id = getStringFromJSON(json_object, 'style', default_style_id)
+      if (style_id != 'default' && proto_element.sankey.styles_dict[style_id]) {
+        proto_element['_style'].push(proto_element.sankey.styles_dict[style_id])
       }
-    })
-}
-
-
-function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message
-  }
-  if (typeof error === 'string') {
-    return error
-  }
-  return 'Erreur inconnue'
-}
-
-function logError(message: string, error: unknown): void {
-  console.error(message, error)
-  if (error instanceof Error) {
-    console.error('Stack trace:', error.stack)
-  }
-}
-
-function getErrorDetails(error: unknown): { name: string; message: string; toString: string } {
-  if (error instanceof Error) {
-    return {
-      name: error.name,
-      message: error.message,
-      toString: error.toString()
-    }
-  }
-  if (typeof error === 'string') {
-    return {
-      name: 'StringError',
-      message: error,
-      toString: error
-    }
-  }
-  return {
-    name: 'UnknownError',
-    message: 'Erreur de type inconnu',
-    toString: String(error)
-  }
-}
-
-
-export async function decompressGzipDataFixed(compressedData: ArrayBuffer): Promise<string> {
-  console.log('🗜️ Début décompression...')
-
-  // S'assurer que pako est chargé
-  if (!window.pako) {
-    console.log('📥 Chargement de pako...')
-    await loadPakoFromCDN()
-  }
-
-  // Méthode 1: Pako (recommandé)
-  if (window.pako) {
-    try {
-      console.log('🔧 Décompression avec pako...')
-      const uint8Array = new Uint8Array(compressedData)
-
-      // OPTION A: Décompression simple
-      const decompressed = window.pako.ungzip(uint8Array, { to: 'string' })
-      console.log('✅ Pako décompression réussie')
-      return decompressed
-
-    } catch (pakoError) {
-      // ✅ CORRECTION: Utiliser getErrorDetails au lieu d'accès direct
-      const errorDetails = getErrorDetails(pakoError)
-      console.error('❌ Erreur pako détaillée:', errorDetails)
-
-      // Essayer avec des options différentes
-      try {
-        console.log('🔄 Tentative pako avec options alternatives...')
-        const uint8Array = new Uint8Array(compressedData)
-        const decompressed = window.pako.inflate(uint8Array, { to: 'string' })
-        console.log('✅ Pako inflate réussi')
-        return decompressed
-      } catch (inflateError) {
-        console.error('❌ Pako inflate aussi échoué:', getErrorMessage(inflateError))
-      }
-    }
-  }
-
-  // Méthode 2: DecompressionStream (fallback)
-  if ('DecompressionStream' in window) {
-    try {
-      console.log('🔧 Fallback vers DecompressionStream...')
-
-      const readable = new Response(compressedData).body
-      if (!readable) {
-        throw new Error('Impossible de créer un stream lisible')
-      }
-
-      const decompressedStream = readable.pipeThrough(new DecompressionStream('gzip'))
-      const decompressed = await new Response(decompressedStream).text()
-
-      console.log('✅ DecompressionStream réussi')
-      return decompressed
-
-    } catch (streamError) {
-      console.error('❌ Erreur DecompressionStream:', getErrorMessage(streamError))
-    }
-  }
-
-  throw new Error('Toutes les méthodes de décompression ont échoué')
-}
-
-function loadPakoFromCDN(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.pako) {
-      resolve()
-      return
-    }
-
-    console.log('📥 Chargement de pako depuis CDN...')
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js'
-
-    script.onload = () => {
-      if (window.pako) {
-        console.log('✅ Pako chargé avec succès')
-        resolve()
-      } else {
-        reject(new Error('Pako chargé mais non disponible'))
-      }
-    }
-
-    script.onerror = () => {
-      console.error('❌ Échec du chargement de pako')
-      reject(new Error('Impossible de charger pako depuis le CDN'))
-    }
-
-    document.head.appendChild(script)
-  })
-}
-
-// === FONCTION DE TEST SIMPLE ===
-
-async function _testDecompression(fileName: string): Promise<void> {
-  try {
-    console.log('🧪 Test de décompression pour:', fileName)
-
-    const response = await fetch('/example/upload', {
-      method: 'POST',
-      body: fileName
-    })
-
-    console.log('📊 Réponse:', {
-      status: response.status,
-      contentType: response.headers.get('content-type'),
-      contentEncoding: response.headers.get('content-encoding'),
-      contentLength: response.headers.get('content-length')
-    })
-
-    const arrayBuffer = await response.arrayBuffer()
-    const uint8Array = new Uint8Array(arrayBuffer)
-
-    console.log('📦 Données:', {
-      size: arrayBuffer.byteLength,
-      magicBytes: `0x${uint8Array[0]?.toString(16).padStart(2, '0')} 0x${uint8Array[1]?.toString(16).padStart(2, '0')}`,
-      isValidGzip: uint8Array[0] === 0x1f && uint8Array[1] === 0x8b
-    })
-
-    if (uint8Array[0] === 0x1f && uint8Array[1] === 0x8b) {
-      const decompressed = await decompressGzipDataFixed(arrayBuffer)
-      console.log('✅ Test réussi! Taille décompressée:', decompressed.length)
-      console.log('📄 Aperçu:', decompressed.substring(0, 100) + '...')
     } else {
-      console.error('❌ Pas du GZIP valide')
+      const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
+      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && proto_element.sankey.styles_dict[s_id])
+        .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
+    }
+    const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
+    if (json_local_object) {
+      (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
+        if (json_local_object[key as string] !== undefined) {
+          if (json_local_object[key as string] !== proto_element.getStyleProperty(key as keyof ConfigType)) {
+            proto_element.attributes[key] = json_local_object[key as string] as ExtractAttributeValue<ConfigType[typeof key]>
+          }
+        }
+      })
     }
 
-  } catch (error) {
-    console.error('❌ Test échoué:', error)
+    proto_element.updateVisibilityFingerprint()
+  }
+}
+export class NodeBasePersistence extends ProtoElementPersistence {
+  public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
+    super.toJSON(node_base, json_object, kwargs)
+    json_object['name'] = node_base.name
+    if (node_base.sankey.default_style.position_type == 'parametric') {
+      json_object['u'] = node_base.position_u
+      json_object['v'] = node_base.position_v
+    }
+    return json_object
+  }
+
+  public static fromJSON_pre_0_9(
+    _base_element: Class_NodeBase,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _base_element: Class_NodeBase,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static Class_NodeBase(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON(version: number, node_base: Class_NodeBase, json_node_object: Type_JSON, kwargs?: Type_JSON) {
+    super.fromJSON(version, node_base, json_node_object, kwargs)
+
+    node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
+    node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
+    node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
+  }
+}
+export class ContainerPersistence extends NodeBasePersistence {
+  public static toJSON(
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): Type_JSON {
+    super.toJSON(container, json_object, kwargs)
+    json_object['tiedToNode'] = container.tied_to_nodes
+    json_object['attachedNodes'] = container.attached_node.map(n => n.id)
+    json_object['attachedNodesExtremity'] = container.at_extremity_of_attached_nodes
+    json_object['extremityPos'] = container.extremity_position
+
+    return json_object
+  }
+  public static fromJSON_pre_0_9(
+    _container: Class_ContainerElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _container: Class_ContainerElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_91(
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      'label_height': 'shape_min_height',
+      'label_width': 'shape_min_width',
+      //'has_fo': 'name_label_has_fo',
+      'content': 'name_label_fo_content'
+    }
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (json_object[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = container.getStyleProperty(key)
+        if (json_object[jsonKey] !== currentValue) {
+          container.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+    container.name = json_object['title'] as string
+    if (json_object['is_image']) {
+      // Image mode: configure as image container
+      container.attributes['name_label_is_visible'] = false
+      container.attributes['icon_is_visible'] = true
+      container.attributes['icon_is_image'] = true
+      container.attributes['icon_image_src'] = json_object['image_src']
+      container.attributes['icon_inside_vert'] = true
+      container.attributes['icon_inside_horiz'] = true
+      container.attributes['shape_border_visible'] = true
+      container.attributes['shape_color'] = 'white'
+      container.attributes['shape_border_radius'] = 5
+    } else {
+      // Text mode: configure as text container
+      container.attributes['name_label_has_fo'] = true
+      container.attributes['shape_color_visible'] = json_object['color_visible']
+      container.attributes['name_label_horiz'] = 'middle'
+      container.attributes['name_label_vert'] = 'middle'
+      container.attributes['name_label_inside_vert'] = true
+      container.attributes['name_label_inside_horiz'] = true
+      container.attributes['shape_border_visible'] = true
+      container.attributes['shape_color'] = 'white'
+      container.attributes['shape_border_radius'] = 5
+    }
+  }
+
+  /**
+   * Deserialize container from JSON
+   */
+  public static fromJSON(
+    version: number,
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+    super.fromJSON(version, container, json_object, kwargs)
+
+    const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
+    configKeys.forEach(key => {
+      const jsonValue = json_object[key as string]
+      if (jsonValue !== undefined) {
+        const currentValue = container.getStyleProperty(key)
+        if (jsonValue !== currentValue) {
+          container.attributes[key] = jsonValue as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+
+    // Load tied_to_nodes flag
+    container['_tied_to_nodes'] = getBooleanFromJSON(
+      json_object,
+      'tiedToNode',
+      container.tied_to_nodes
+    )
+
+    const list_id_nodes = (json_object['attachedNodes'] as string[]) || []
+    const nodes_dict = container.drawing_area.sankey.nodes_dict
+
+    list_id_nodes.forEach(node_id => {
+      if (node_id in nodes_dict) {
+        const node = nodes_dict[node_id]
+        container.attachContToNode(node)
+      }
+    })
+
+    // Load extremity positioning
+    container['_at_extremity_of_attached_nodes'] = getBooleanFromJSON(
+      json_object,
+      'attachedNodesExtremity',
+      container.at_extremity_of_attached_nodes
+    )
+
+    container['_extremity_position'] = getStringFromJSON(
+      json_object,
+      'extremityPos',
+      container.extremity_position
+    ) as 'top' | 'bottom' | 'left' | 'right'
+  }
+}
+
+export class LinkElementPersistence extends ProtoElementPersistence {
+  public static toJSON(
+    link: Class_LinkElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super.toJSON(link, json_object, kwargs)
+    // Related nodes
+    json_object['idSource'] = link.source.sibling ? link.source.sibling.id : link.source.id
+    json_object['idTarget'] = link.target.sibling ? link.target.sibling.id : link.target.id
+
+    // Fill positions attributes
+    // if (this._position_offset_value !== undefined) json_object['position_offset_value'] = this._position_offset_value
+    // if (this._position_offset_name !== undefined) json_object['position_offset_label'] = this._position_offset_name
+    // if (this._position_x_value !== undefined) json_object['position_x_label'] = this._position_x_value
+    // if (this._position_y_value !== undefined) json_object['position_y_label'] = this._position_y_value
+    // if (this._position_x_name !== undefined) json_object['position_x_name'] = this._position_x_name
+    // if (this._position_y_name !== undefined) json_object['position_y_name'] = this._position_y_name
+
+    // Tooltips
+    if (link.tooltip_text) json_object['tooltip_text'] = link.tooltip_text
+    // Values
+    if (!kwargs || kwargs['with_values'] !== false)
+      json_object['value'] = link['_values'].toJSON(kwargs)
+    // Out
+    return json_object
+  }
+  public static fromJSON_pre_0_9(
+    _link: Class_LinkElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+
+  }
+
+  public static fromJSON_0_9(
+    _link: Class_LinkElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const local = json_object.local as Type_JSON
+    if (json_object.local !== undefined) {
+      if (local['label_position'] !== undefined) {
+        if (local['label_position'] == 'start') {
+          local['label_position'] = 'left'
+        } else if (local['label_position'] == 'end') {
+          local['label_position'] = 'right'
+        }
+      }
+      if (local['orthogonal_label_position'] !== undefined) {
+        if (local['orthogonal_label_position'] == 'above') {
+          local['orthogonal_label_position'] = 'top'
+        } else if (local['orthogonal_label_position'] == 'below') {
+          local['orthogonal_label_position'] = 'bottom'
+        }
+      }
+    }
+
+  }
+
+  public static fromJSON_0_91(
+    link: Class_LinkElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      'user_scale': 'shape_local_link_scale',
+      'curved': 'shape_is_curved',
+      'curvature': 'shape_curvature',
+      'recycling': 'shape_is_recycling',
+      'is_structur': 'shape_is_structure',
+      'orientation': 'shape_orientation',
+      'left_horiz_shift': 'shape_starting_curve',
+      'right_horiz_shift': 'shape_ending_curve',
+      'starting_tangeant': 'shape_starting_tangeant',
+      'ending_tangeant': 'shape_ending_tangeant',
+      'vert_shift': 'shape_middle_recycling',
+      'arrow': 'shape_is_arrow',
+      'arrow_size': 'shape_arrow_size',
+      'dashed': 'shape_is_dashed',
+      'color': 'shape_color',
+      'color_rule': 'shape_color_rule',
+      'opacity': 'shape_opacity',
+      // legacy
+      'label_visible': 'value_label_is_visible',
+      'font_family': 'value_label_font_family',
+      'label_font_size': 'value_label_font_size',
+      'text_color': 'value_label_color',
+      'label_position': 'value_label_horiz',
+      'orthogonal_label_position': 'value_label_vert',
+      'label_on_path': 'value_label_on_path',
+      'label_pos_auto': 'value_label_pos_auto',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert'
+
+    }
+    const was_gradient = getBooleanFromJSON(json_object, 'gradient', false) as boolean
+    if (was_gradient) {
+      link.attributes['shape_color_rule'] = 'gradient'
+    }
+    const json_local = json_object.local as Type_JSON
+    if (json_local) {
+      Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+        if (json_local[jsonKey] !== undefined) {
+          const key = attrKey as keyof ConfigType
+          const currentValue = link.getStyleProperty(key)
+          if (json_local[jsonKey] !== currentValue) {
+            link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+          }
+        }
+      })
+      if (json_local.local_link_scale) {
+        link.attributes['shape_local_link_scale'] = +json_local.local_link_scale / link.sankey.drawing_area.scale
+      }
+    }
+
+  }
+
+  public static fromJSON(
+    version: number,
+    link: Class_LinkElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    super.fromJSON(version, link, json_object, kwargs)
+
+    const matching_taggs_id: { [_: string]: string } = (kwargs && kwargs['matching_taggs_id']) ? kwargs['matching_taggs_id'] as { [_: string]: string } : {}
+    const matching_tags_id: { [_: string]: { [_: string]: string } } = (kwargs && kwargs['matching_tags_id']) ? kwargs['matching_tags_id'] as { [_: string]: { [_: string]: string } } : {}
+
+
+    if (link.shape_local_link_scale) {
+      link.setDomainLocalScale(link.shape_local_link_scale)
+    }
+
+    link['_values'].fromJSON(
+      getJSONFromJSON(json_object, 'value', {}),
+      matching_taggs_id,
+      matching_tags_id
+    )
+    link.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
+  }
+}
+export class NodeElementPersistence extends NodeBasePersistence {
+  public static toJSON(node: Class_NodeElement, json_object: Type_JSON, kwargs?: Type_JSON) {
+    super.toJSON(node, json_object, kwargs)
+    node._nodeDimensionsManager.toJSON(json_object)
+    if (node.tooltip_text) json_object['tooltip_text'] = node.tooltip_text
+
+    // Délégation aux managers
+    node._nodeTagsManager.toJSON(json_object)
+
+    if (kwargs && kwargs['save_only_elements_with_tags']) {
+      if (node.input_links_list.length > 0) {
+        json_object['inputLinksId'] = node.input_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+      }
+      if (node.output_links_list.length > 0) {
+        json_object['outputLinksId'] = node.output_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
+      }
+      if (node.links_order.length > 0) {
+        json_object['links_order'] = node.links_order.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(link => link.id)
+      }
+    } else if (kwargs && kwargs['only_visible_elements']) {
+      if (node.input_links_list.length > 0) {
+        json_object['inputLinksId'] = node.input_links_list.filter(l => l.is_visible).map(l => l.id)
+      }
+      if (node.output_links_list.length > 0) {
+        json_object['outputLinksId'] = node.output_links_list.filter(l => l.is_visible).map(l => l.id)
+      }
+      if (node.links_order.length > 0) {
+        json_object['links_order'] = node.links_order.filter(l => l.is_visible).map(link => link.id)
+      }
+    } else {
+      if (node.input_links_list.length > 0) {
+        json_object['inputLinksId'] = node.input_links_list.map(l => l.id)
+      }
+      if (node.output_links_list.length > 0) {
+        json_object['outputLinksId'] = node.output_links_list.map(l => l.id)
+      }
+      if (node.links_order.length > 0) {
+        json_object['links_order'] = node.links_order.map(link => link.id)
+      }
+    }
+    return json_object
+  }
+
+  public static linksFromJSON(
+    version: number,
+    node: Class_NodeElement,
+    json_node_object: Type_JSON,
+    matching_links_id: { [_: string]: string } = {}
+  ) {
+    // Input links
+    getStringListFromJSON(json_node_object, 'inputLinksId', [])
+      .forEach(l_id => {
+        if (l_id !== 'ghost_link') {
+          const link_id = matching_links_id[l_id] ?? l_id
+          node.addInputLink(node.sankey.links_dict[link_id] as Class_LinkElement)
+        }
+      })
+    // Output links
+    getStringListFromJSON(json_node_object, 'outputLinksId', [])
+      .forEach(l_id => {
+        if (l_id !== 'ghost_link') {
+          const link_id = matching_links_id[l_id] ?? l_id
+          node.addOutputLink(node.sankey.links_dict[link_id] as Class_LinkElement)
+        }
+      })
+    // Ordering
+    const ordered_link_ids = getStringListFromJSON(json_node_object, 'links_order', [])
+    if (ordered_link_ids.length === node.links_order.length) {
+      node['_links_order'] = ordered_link_ids
+        .map(_ => {
+          const link_id = matching_links_id[_] ?? _
+          return node.sankey.links_dict[link_id]
+        }) as Class_LinkElement[]
+    }
+  }
+  public static fromJSON_pre_0_9(
+    _node: Class_NodeElement,
+    _json_object: Type_JSON,
+    _$kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _node: Class_NodeElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+
+  }
+
+
+  public static fromJSON_0_91(
+    node: Class_NodeElement,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      // Name label legacy
+      'label_visible': 'name_label_is_visible',
+      'font_family': 'name_label_font_family',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      'label_background': 'name_label_background_visible',
+      'label_background_color': 'name_label_background_color',
+      'label_box_width': 'name_label_box_width',
+
+      // Value label legacy
+      'show_value': 'value_label_is_visible',
+      'value_font_size': 'value_label_font_size',
+      'label_horiz_valeur': 'value_label_horiz',
+      'label_vert_valeur': 'value_label_vert',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+
+      // Shape legacy (fusion avec MAIN_MAPPING)
+      'shape': 'shape_type',
+      'node_width': 'shape_min_width',
+      'node_height': 'shape_min_height',
+      'color': 'shape_color',
+      'opacity': 'shape_opacity',
+      'colorSustainable': 'shape_color_sustainable'
+    }
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      'iconName': 'icon_icon_name',
+      'iconColor': 'icon_color',
+      'iconVisible': 'icon_is_visible',
+      'iconViewBox': 'icon_view_box',
+      'iconColorSustainable': 'icon_color_sustainable',
+      'is_image': 'icon_is_image',
+      'image_src': 'icon_image_src'
+    }
+    const json_local = json_object.local as Type_JSON
+    if (json_local) {
+      Object.entries(fromJsonMapping_0_91_to_0_92Local).forEach(([jsonKey, attrKey]) => {
+        if (json_local[jsonKey] !== undefined) {
+          const key = attrKey as keyof ConfigType
+          const currentValue = node.getStyleProperty(key)
+          if (json_local[jsonKey] !== currentValue) {
+            node.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+          }
+        }
+      })
+    }
+
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (json_object[jsonKey] !== undefined) {
+        const key = attrKey as keyof ConfigType
+        const currentValue = node.getStyleProperty(key)
+        if (json_object[jsonKey] !== currentValue) {
+          node.attributes[key] = json_object[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+        }
+      }
+    })
+
+    if (node.icon_is_image) {
+      node.icon_is_visible = true
+      node.icon_inside_horiz = true
+      node.icon_inside_vert = true
+    }
+    if (node.icon_is_visible) {
+      node.icon_vert = 'middle'
+      node.icon_horiz = 'middle'
+    }    
+    node.name_label_text_align = 'middle'
+    if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
+    if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
+  }
+
+  public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
+    super.fromJSON(version, node, json_node_object, kwargs)
+
+    node['_tooltip_text'] = getStringFromJSON(json_node_object, 'tooltip_text', '')
+
+    // Délégation aux managers
+    node._nodeTagsManager.fromJSON(json_node_object)
+
   }
 }
 
 
+export class LegendPersistence extends ProtoElementPersistence {
+
+  public static toJSON(
+    legend: ClassTemplate_Legend,
+    json_object: Type_JSON
+  ) {
+    json_object['legend'] = {}
+    const json_legend = json_object['legend']
+    ProtoElementPersistence.toJSON(legend, json_legend)
+    //if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
+    if (!legend.masked) json_legend['mask_legend'] = legend.masked
+    if (legend.position_dx) json_legend['legend_dx'] = legend.position_dx
+    if (legend.position_dy) json_legend['legend_dy'] = legend.position_dy
+    if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
+    if (legend.width != default_width) json_legend['legend_width'] = legend.width
+    if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
+    if (legend.legend_police != default_legend_police) json_legend['legend_police'] = legend.legend_police
+    if (legend.legend_bg_border) json_legend['legend_bg_border'] = legend.legend_bg_border
+    if (legend.legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = legend.legend_bg_color
+    if (legend.legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = legend.legend_bg_opacity
+    if (legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
+    if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
+    if (legend.stick_to_drawing) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
+    if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
+    return json_object
+  }
+  public static fromJSON_pre_0_9(
+    _legend: ClassTemplate_Legend,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    _legend: ClassTemplate_Legend,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_91(
+    _legend: ClassTemplate_Legend,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const json_legend = json_object['legend'] as Type_JSON
+    json_legend['x'] =  +(json_legend['legend_position'] as Type_JSON)[0]
+    json_legend['y'] =  +(json_legend['legend_position'] as Type_JSON)[1]
+  }
+
+  public static fromJSON(
+    version: number,
+    legend: ClassTemplate_Legend,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ): void {
+
+    const json_legend = getJSONFromJSON(json_object, 'legend', {})
+    ProtoElementPersistence.fromJSON(version, legend, json_legend, kwargs)
+    // const legend_position = getStringListFromJSON(
+    //   json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
+    // )
+    // this._position_x = +legend_position[0]
+    // legend.position_y = +legend_position[1]
+    legend['_masked'] = getBooleanFromJSON(json_legend, 'mask_legend', legend.masked)
+    legend['_dx'] = getNumberFromJSON(json_legend, 'legend_dx', legend.position_dx)
+    legend['_dy'] = getNumberFromJSON(json_legend, 'legend_dy', legend.position_dy)
+    legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
+    legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
+    legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)
+    legend['_legend_police'] = getNumberFromJSON(json_legend, 'legend_police', legend.legend_police)
+    legend['_legend_bg_border'] = getBooleanFromJSON(json_legend, 'legend_bg_border', legend.legend_bg_border)
+    legend['_legend_bg_color'] = getStringFromJSON(json_legend, 'legend_bg_color', legend.legend_bg_color)
+    legend['_legend_bg_opacity'] = getNumberFromJSON(json_legend, 'legend_bg_opacity', legend.legend_bg_opacity)
+    legend['_legend_show_dataTags'] = getBooleanFromJSON(json_legend, 'legend_show_dataTags', legend.legend_show_dataTags)
+    legend['_legend_show_constraints'] = getBooleanFromJSON(json_legend, 'legend_show_constraints', legend.legend_show_constraints)
+    legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
+    legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
+    // Var only present if json is legacy
+    if (!legend.stick_to_drawing) {
+      legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legacy_legend', legend.stick_to_drawing)
+    }
+  }
+}
+
+export class StylePersistence {
+  public static fromJSON_pre_0_9(
+    _style: Class_ElementStyle,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+  public static fromJSON_0_9(
+    _style: Class_ElementStyle,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+  public static fromJSON_0_91(
+    style: Class_ElementStyle,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    const fromJsonMapping_0_91_to_0_92: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
+      // Nodes
+      'user_scale': 'shape_local_link_scale',
+      'curved': 'shape_is_curved',
+      'curvature': 'shape_curvature',
+      'recycling': 'shape_is_recycling',
+      'is_structur': 'shape_is_structure',
+      'orientation': 'shape_orientation',
+      'left_horiz_shift': 'shape_starting_curve',
+      'right_horiz_shift': 'shape_ending_curve',
+      'starting_tangeant': 'shape_starting_tangeant',
+      'ending_tangeant': 'shape_ending_tangeant',
+      'vert_shift': 'shape_middle_recycling',
+      'arrow': 'shape_is_arrow',
+      'arrow_size': 'shape_arrow_size',
+      'dashed': 'shape_is_dashed',
+      'color': 'shape_color',
+      'color_rule': 'shape_color_rule',
+      'opacity': 'shape_opacity',
+      // legacy
+      //'label_visible': 'value_label_is_visible',
+      //'font_family': 'value_label_font_family',
+      'label_font_size': 'value_label_font_size',
+      'text_color': 'value_label_color',
+      'label_position': 'value_label_horiz',
+      'orthogonal_label_position': 'value_label_vert',
+      'label_on_path': 'value_label_on_path',
+      'label_pos_auto': 'value_label_pos_auto',
+      'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_significant_digits',
+      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'custom_digit': 'value_label_custom_digit',
+      'nb_digit': 'value_label_nb_digit',
+      'label_unit_visible': 'value_label_unit_visible',
+      'label_unit': 'value_label_unit',
+      'label_unit_factor': 'value_label_unit_factor',
+      //'font_size': 'name_label_font_size',
+      //'uppercase': 'name_label_uppercase',
+      //'bold': 'name_label_bold',
+      'italic': 'name_label_italic',
+      'label_color': 'name_label_color',
+      'label_horiz': 'name_label_horiz',
+      'label_vert': 'name_label_vert',
+      // Links
+      // Name label legacy
+      'label_visible': 'name_label_is_visible',
+      'font_family': 'name_label_font_family',
+      'font_size': 'name_label_font_size',
+      'uppercase': 'name_label_uppercase',
+      'bold': 'name_label_bold',
+      //'italic': 'name_label_italic',
+      //'label_color': 'name_label_color',
+      //'label_horiz': 'name_label_horiz',
+      //'label_vert': 'name_label_vert',
+      'label_background': 'name_label_background_visible',
+      'label_background_color': 'name_label_background_color',
+      'label_box_width': 'name_label_box_width',
+
+      // Value label legacy
+      'show_value': 'value_label_is_visible',
+      'value_font_size': 'value_label_font_size',
+      'label_horiz_valeur': 'value_label_horiz',
+      'label_vert_valeur': 'value_label_vert',
+      //'to_precision': 'value_label_scientific_notation',
+      //'scientific_precision': 'value_label_significant_digits',
+      //'nb_scientific_precision': 'value_label_nb_significant_digits',
+      //'custom_digit': 'value_label_custom_digit',
+      //'nb_digit': 'value_label_nb_digit',
+      //'label_unit_visible': 'value_label_unit_visible',
+      //'label_unit': 'value_label_unit',
+      //'label_unit_factor': 'value_label_unit_factor',
+
+      // Shape legacy (fusion avec MAIN_MAPPING)
+      'shape': 'shape_type',
+      'node_width': 'shape_min_width',
+      'node_height': 'shape_min_height',
+      //'color': 'shape_color',
+      //'opacity': 'shape_opacity',
+      'colorSustainable': 'shape_color_sustainable'
+    }
+
+    const default_style = style.drawing_area.sankey.default_style
+    Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
+      if (!json_object[jsonKey]) {
+        return
+      }
+      if (!ALL_ATTRIBUTES_CONFIG[attrKey]) {
+        return
+      }
+      if (default_style && json_object[jsonKey] !== default_style[attrKey as keyof Class_ElementStyle]) {
+        style['_storage'][attrKey] = json_object[jsonKey]
+      } else if (json_object[jsonKey] !== ALL_ATTRIBUTES_CONFIG[attrKey].default) {
+        style['_storage'][attrKey] = json_object[jsonKey]
+      }
+    })
+  }
+
+  public static toJSON(style: Class_ElementStyle): Type_JSON {
+    const json_object = {} as Type_JSON
+    // const jsonMapping = this._attributeMappings.getToJsonMapping()
+    // Object.entries(this).forEach(([key, value]) => {
+    //   if (this.shouldSaveAttribute(key, value, this._default_style)) {
+    //     const jsonKey = jsonMapping[key] || key
+    //     json_object[jsonKey] = value
+    //   }
+    // })
+    return json_object
+  }
+
+  public static fromJSON(
+    version: number, style: Class_ElementStyle, json_object: Type_JSON, kwargs?: Type_JSON
+  ) {
+
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      this.fromJSON_pre_0_9(style, json_object, kwargs)
+    }
+
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.91)
+    ) {
+      this.fromJSON_0_9(style, json_object, kwargs)
+    }
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.92)
+    ) {
+      this.fromJSON_0_91(style, json_object, kwargs)
+    }
+
+    const default_style = style.drawing_area.sankey.default_style
+    Object.keys(style['_config']).forEach(key => {
+      if (json_object[key] !== undefined) {
+        if (default_style && json_object[key] !== default_style[key as keyof Class_ElementStyle]) {
+          style['_storage'][key] = json_object[key]
+        } else if (json_object[key] !== style['_config'][key].default) {
+          style['_storage'][key] = json_object[key]
+        }
+      }
+    })
+  }
+}
+
+
+export class SankeyPersistence {
+  private static load_containers(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      container: Class_ContainerElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+    const json_container_object = getJSONFromJSON(json_object, 'labels', {})
+    Object.entries(json_container_object)
+      .forEach(([_, container_json]) => {
+        const name = (container_json as Type_JSON)['name'] as string
+        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
+        fromJSON(container, container_json as Type_JSON, kwargs)
+      })
+  }
+
+  private static load_nodes(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      node: Class_NodeElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+    const json_node_object = getJSONFromJSON(json_object, 'nodes', {})
+    Object.entries(json_node_object)
+      .forEach(([_, node_json]) => {
+        // Get or Create a node
+        const node_id = _
+        const node = sankey.nodes_dict[node_id] ?? sankey.addNewNode(node_id, node_id)
+        // Set node value to node from JSON
+        fromJSON(
+          node,
+          node_json as Type_JSON,
+          kwargs)
+        // Order links io position in each nodes
+        NodeElementPersistence.linksFromJSON(
+          0, // TODO
+          node,
+          getJSONFromJSON(json_node_object, node.id, {}),
+          {}
+        )
+        // Set dimensions
+        node.dimensionsFromJSON(
+          node_json as Type_JSON,
+          {},
+          {},
+          {}
+        )
+      })
+  }
+
+  private static load_links(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    fromJSON: (
+      link: Class_LinkElement,
+      json_object: Type_JSON,
+      kwargs?: Type_JSON
+    ) => void,
+    kwargs?: Type_JSON
+  ) {
+
+    const json_link_object = getJSONFromJSON(json_object, 'links', {})
+    Object.entries(json_link_object)
+      .forEach(([_, link_json]) => {
+        // Get related nodes id
+        const source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
+        const target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
+        if (source_node_id && target_node_id) {
+          // Get or create related nodes
+          //source_node_id = source_node_id
+          const source = sankey.nodes_dict[source_node_id] ?? sankey.addNewNode(source_node_id, source_node_id)
+          //target_node_id = target_node_id
+          const target = sankey.nodes_dict[target_node_id] ?? sankey.addNewNode(target_node_id, target_node_id)
+          // Get or create link
+          const link_id = _
+          const link = sankey.links_dict[link_id] ?? sankey.addNewLinkWithId(link_id, source, target)
+          // Set link value to link from JSON
+          fromJSON(
+            link,
+            link_json as Type_JSON,
+            kwargs
+          )
+        }
+      })
+    let has_data = false
+    sankey.links_list.forEach(l => has_data = has_data || l.has_data)
+    if (!has_data) {
+      sankey.links_list.forEach(l => l.set_only_data())
+    }
+  }
+
+
+  public static toJSON(
+    sankey: Class_Sankey,
+    kwargs?: Type_JSON
+  ) {
+    // Create json struct
+    const json_object = {} as Type_JSON
+    const json_object_levelTags = {} as Type_JSON
+    const json_object_nodeTags = {} as Type_JSON
+    const json_object_fluxTags = {} as Type_JSON
+    const json_object_dataTags = {} as Type_JSON
+    const json_object_styles = {} as Type_JSON
+    // const json_object_styles_links = {} as Type_JSON
+    //const json_object_styles_containers = {} as Type_JSON
+    const json_object_nodes = {} as Type_JSON
+    const json_object_links = {} as Type_JSON
+    // Id
+    json_object['id'] = sankey.id
+    // Add tag groups
+    if (sankey.level_taggs_list.length > 0) {
+      json_object['levelTags'] = json_object_levelTags
+      sankey.level_taggs_list.forEach(tagg => {
+        json_object_levelTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (sankey.node_taggs_list.length > 0) {
+      json_object['nodeTags'] = json_object_nodeTags
+      sankey.node_taggs_list.forEach(tagg => {
+        json_object_nodeTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (sankey.flux_taggs_list.length > 0) {
+      json_object['fluxTags'] = json_object_fluxTags
+      sankey.flux_taggs_list.forEach(tagg => {
+        json_object_fluxTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (sankey.data_taggs_list.length > 0) {
+      json_object['dataTags'] = json_object_dataTags
+      sankey.data_taggs_list.forEach(tagg => {
+        json_object_dataTags[tagg.id] = tagg.toJSON()
+      })
+    }
+
+    json_object['style'] = json_object_styles
+    sankey.styles_list.forEach(style => {
+      json_object_styles[style.id] = StylePersistence.toJSON(style);
+      (json_object_styles[style.id] as Type_JSON)['name'] = style.name
+    })
+    json_object['nodes'] = json_object_nodes
+    const nodes_list = (
+      (kwargs && kwargs['save_only_elements_with_tags']) ?
+        sankey.selected_tags_nodes_list :
+        (kwargs && kwargs['save_only_visible_elements']) ? sankey.visible_nodes_list : sankey.nodes_list)
+    const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+
+    sankey.remove_child_links()
+
+    nodes_list
+      .forEach(node => {
+        if (!(kwargs && kwargs['keep_siblings']) && node.hasGivenTag(echangeTag as Class_Tag) && node.sibling) {
+          if (!json_object_nodes[node.sibling.id]) json_object_nodes[node.sibling.id] = NodeElementPersistence.toJSON(
+            node.sibling,
+            {
+              'only_visible_elements': (kwargs && kwargs['save_only_visible_elements']) ?? false,
+              'save_only_elements_with_tags': (kwargs && kwargs['save_only_elements_with_tags']) ?? false
+            })
+          return
+        }
+        json_object_nodes[node.id] = {}
+        json_object_nodes[node.id] = NodeElementPersistence.toJSON(node, json_object_nodes[node.id] as Type_JSON, {
+          'only_visible_elements': (kwargs && kwargs['save_only_visible_elements']) ?? false,
+          'save_only_elements_with_tags': (kwargs && kwargs['save_only_elements_with_tags']) ?? false
+        })
+      })
+    if (sankey.containers_list.length > 0) {
+      const json_object_labels = {} as Type_JSON
+      json_object['labels'] = json_object_labels
+      sankey.containers_list.forEach(obj => {
+        json_object_labels[obj.id] = {}
+        ContainerPersistence.toJSON(obj, json_object_labels[obj.id] as Type_JSON)
+      })
+    }
+    // Add links
+    json_object['links'] = json_object_links
+    const links_list = (
+      (kwargs && kwargs['save_only_elements_with_tags']) ?
+        sankey.selected_node_tags_links_list :
+        ((kwargs && kwargs['save_only_visible_elements']) ? sankey.visible_links_list : sankey.links_list)
+    )
+    let has_results = false
+    links_list.forEach(l => has_results = has_results || l.has_result)
+    links_list.filter(l => !l.is_multi_link)
+      .forEach(link => {
+        json_object_links[link.id] = {}
+        json_object_links[link.id] = LinkElementPersistence.toJSON(link, json_object_links[link.id] as Type_JSON, { ...kwargs, 'has_results': has_results })
+      })
+
+
+    // Icon catalog
+    if (Object.keys(sankey.icon_catalog).length > 0) json_object['icon_catalog'] = sankey.icon_catalog as Type_JSON
+
+    sankey.create_child_links()
+    // Out
+    return json_object
+  }
+  public static fromJSON_pre_0_9(
+    _sankey: Class_Sankey,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_0_9(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    SankeyPersistence.load_tags(json_object, sankey)
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_0_9,
+      kwargs
+    )
+  }
+
+  public static fromJSON_0_91(
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    const old2new_name = {
+      'style_link': 'LinkStyle',
+      'style_node': 'NodeStyle',
+      'style_zdt': 'ContainerStyle'
+    };
+    ['style_link', 'style_node', 'style_zdt'].forEach(style_type => {
+      if (json_object[style_type] !== undefined) {
+        Object.entries(json_object[style_type])
+          .forEach(([style_id, style_json]) => {
+            let new_style = sankey._styles[style_id]
+            if (style_id == 'default') {
+              new_style = sankey._styles[old2new_name[style_type as keyof typeof old2new_name]]
+              StylePersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+            } else {
+              new_style = sankey.createNewElementStyle(style_id, style_id, true)
+              StylePersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+              new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+              sankey._styles[style_id] = new_style
+            }
+          })
+      }
+    })
+    SankeyPersistence.load_tags(json_object, sankey)
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_0_91,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_0_91,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_0_91,
+      kwargs
+    )
+  }
+
+  /**
+   * Setting value of sankey and substructur from JSON
+   *
+   * @param {{[_:string]:any} json_object
+   * @memberof ClassTemplate_Legend
+  */
+  public static fromJSON(
+    version: number,
+    sankey: Class_Sankey,
+    json_object: Type_JSON
+  ) {
+
+    // Id
+    sankey.id = getStringFromJSON(json_object, 'id', sankey.id)
+    // If we use json object only for updateing layout,
+    // we need to find correspondances for tags, nodes and links ids
+    // from input JSON to this Sankey
+    // const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
+    // const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
+    // const matching_nodes_id: { [_: string]: string } = {}
+    // const matching_links_id: { [_: string]: string } = {}
+    // First read styles
+    if (json_object['style_element'] !== undefined) {
+      // Set node styles from json data
+      Object.entries(json_object['style_element'])
+        .forEach(([style_id, style_json]) => {
+          // Create a node style
+          const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+          // Set node style value to node from JSON
+          StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
+          new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+          // Add node style to sankey
+          sankey._styles[style_id] = new_style
+        })
+    }
+
+    SankeyPersistence.load_tags(json_object, sankey)
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      (link: Class_LinkElement, link_json: Type_JSON, kwargs) => LinkElementPersistence.fromJSON(
+        version,
+        link,
+        link_json as Type_JSON,
+        kwargs
+      )
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      (node: Class_NodeElement, node_json: Type_JSON, kwargs) => NodeElementPersistence.fromJSON(
+        version,
+        node,
+        node_json as Type_JSON,
+        kwargs
+      )
+    )
+    sankey.nodes_list.forEach(node => node.dimensions_as_child.forEach(dim => dim.normalize()))
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      (container: Class_ContainerElement, container_json: Type_JSON, kwargs) => ContainerPersistence.fromJSON(
+        version,
+        container,
+        container_json as Type_JSON,
+        kwargs
+      )
+    )
+
+    sankey.create_child_links()
+    // Icon catalog
+    sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
+  }
+
+  private static load_tags(json_object: Type_JSON, sankey: Class_Sankey) {
+    let json_entry = 'nodeTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set node tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a node tag group
+          const tagg_id = _
+          const tagg = sankey._node_taggs[tagg_id] ?? sankey.addNodeTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set node tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+      // Create default style for 'Type de noeud' if they don't exist
+      if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
+        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+      }
+    }
+    json_entry = 'fluxTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set flux tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = _
+          const tagg = sankey._flux_taggs[tagg_id] ?? sankey.addFluxTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set flux tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+    json_entry = 'dataTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set data tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or Create a flux tag group
+          const tagg_id = _
+          const tagg = sankey._data_taggs[tagg_id] ?? sankey.addDataTagGroup(tagg_id, tagg_id, false) // Will be renamed in fromJSON()
+
+          // Set flux tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+    json_entry = 'levelTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set level tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a level tag group
+          const tagg_id = _
+          const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
+
+          // Set level tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+
+    if (Object.keys(sankey._level_taggs).length > 1) {
+      sankey.removeTagGroupWithId('level_taggs', 'Primaire')
+    }
+  }
+}
+
+export class DrawingAreaPersistence {
+  public static toJSON(
+    drawing_area: Class_DrawingArea,
+    kwargs?: Type_JSON
+  ) {
+    // Create json struct
+    const json_object = {} as Type_JSON
+    // Add current version of app
+    json_object['version'] = drawing_area.application_data.version
+    // Dump DA attributes
+    json_object['height'] = drawing_area.height
+    json_object['width'] = drawing_area.width
+
+    if (drawing_area.grid_visible != default_grid_visible) json_object['grid_visible'] = drawing_area.grid_visible
+    if (drawing_area.grid_size != default_grid_size) json_object['grid_square_size'] = drawing_area.grid_size
+    if (drawing_area.scale != default_scale) json_object['user_scale'] = drawing_area._scale
+    if (drawing_area.color != default_background_color) json_object['couleur_fond_sankey'] = drawing_area.color
+    if (drawing_area.grid_color != default_grid_color) json_object['default_grid_color'] = drawing_area.grid_color
+    if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
+    if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
+    if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
+    if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
+    if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
+    if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
+
+    if (drawing_area.show_background_image) json_object['show_background_image'] = drawing_area.show_background_image
+    if (drawing_area.show_background_image) json_object['background_image'] = drawing_area.background_image
+
+    const out = {
+      ...json_object,
+      ...LegendPersistence.toJSON(drawing_area.legend, json_object),
+      ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
+    }
+
+    out['order_g_elements'] = drawing_area.list_g_element // Order elements by id 
+    return out
+  }
+
+  public static fromJSON_pre_0_9(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_data_legacy')
+    convert_data_legacy(json_object)
+    drawing_area.sankey.styles_dict['default'].shape_color_rule = 'auto'
+
+    Object.values(json_object.style_node).forEach(s => {
+      if (s.position == 'parametric') s.position = 'absolute'
+    })
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_9(
+    _drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    console.log('convert_pre_v_0_91')
+    convert_pre_v_0_91(json_object)
+    console.log(json_object.version)
+  }
+
+  public static fromJSON_0_91(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+    LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
+    SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
+  }
+
+  public static fromJSON(
+    drawing_area: Class_DrawingArea,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
+  ) {
+    drawing_area.bypass_redraws = true
+
+    const version = getStringOrUndefinedFromJSON(json_object, 'version')
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.9)
+    ) {
+      this.fromJSON_pre_0_9(drawing_area, json_object, kwargs)
+    }
+
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.91)
+    ) {
+      this.fromJSON_0_9(drawing_area, json_object, kwargs)
+    }
+    if (
+      (version !== undefined) &&
+      (Number(version) < 0.92)
+    ) {
+      this.fromJSON_0_91(drawing_area, json_object, kwargs)
+    }
+
+    drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
+    drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
+    drawing_area['_filter_label'] = getNumberFromJSON(json_object, 'filter_label', 0)
+    drawing_area['_filter_link_value'] = getNumberFromJSON(json_object, 'filter_link_value', 0)
+    drawing_area['_grid_size'] = getNumberFromJSON(json_object, 'grid_square_size', drawing_area.grid_size)
+    drawing_area['_grid_visible'] = getBooleanFromJSON(json_object, 'grid_visible', drawing_area.grid_visible)
+    drawing_area['_height'] = getNumberFromJSON(json_object, 'height', drawing_area.height)
+    drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
+    drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
+    drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
+    drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
+    drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure
+    drawing_area['_width'] = getNumberFromJSON(json_object, 'width', drawing_area.width)
+    drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
+
+    drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
+    drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+
+    LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
+    SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
+
+    drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
+
+    drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
+    drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+    drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
+
+  }
+}

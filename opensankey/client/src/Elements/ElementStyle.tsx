@@ -1,322 +1,74 @@
-import { default_style_id, getNumberFromJSON, getNumberOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_ElementPositionOptionnal, Type_JSON, Type_Position } from '../types/Utils'
-import { Class_ContainerAttribute, AttributeKey as ZDTAttributeKey } from './ContainerAttributes'
-import { CONTAINERS_ATTRIBUTES_CONFIG } from './ContainerAttributesConfig'
-import { Class_LinkElement } from './Link'
-import { Class_LinkAttribute, AttributeKey as LinkAttributeKey } from './LinkAttributes'
-import { AttributeTypes as LinkAttributeTypes, LINKS_ATTRIBUTES_CONFIG } from './LinkAttributesConfig'
-import { Class_NodeElement } from './Node'
-import { Class_NodeAttribute, default_dx, default_dy } from './NodeAttributes'
-import { AttributeTypes as NodeAttributeTypes, AttributeKey as NodeAttributeKey, NODES_ATTRIBUTES_CONFIG } from './NodeAttributesConfig'
-import { Class_ContainerElement } from './TextZone'
+
+// import { LinkAttributeKey, LinkAttributeTypes, NodeAttributeKey, NodeAttributeTypes} from "./ElementsAttributesConfig"
+
+import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from './ElementsAttributesConfig'
 
 
-export class Class_LinkStyle extends Class_LinkAttribute {
-  private _id: string
-  private _name: string
-  private _is_deletable: boolean
-  private _references: { [_: string]: Class_LinkElement } = {}
-  private _customisable_attribute: {
-    [K in LinkAttributeKey]: boolean
-  }
-
-  constructor(id: string, name: string, is_deletable: boolean = true) {
-    super()
-    this._id = id
-    this._name = name
-    this._is_deletable = is_deletable
-
-    // Initialiser les attributs customisables
-    this._customisable_attribute = {} as {
-      [K in LinkAttributeKey]: boolean
-    }
-    Object.keys(LINKS_ATTRIBUTES_CONFIG).forEach(key => {
-      this._customisable_attribute[key as LinkAttributeKey] = !is_deletable
-    })
-
-    // Initialiser les valeurs par défaut si non deletable
-    if (!is_deletable) {
-      Object.entries(LINKS_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
-        //@ts-expect-error xxx
-        this._attributes[key as AttributeKey] = config.default
-      })
-    }
-  }
-
-  public copyFrom(element: Class_LinkStyle) {
-    Object.keys(element._attributes).forEach(key => {
-      //@ts-expect-error xxx
-      this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
-    })
-    this._customisable_attribute = {...element._customisable_attribute}
-  }
-
-
-  protected shouldSaveAttribute(
-    key: LinkAttributeKey,
-    value: number | string | boolean | undefined,
-    link: Class_LinkElement | null,
-    default_style: Class_LinkStyle | null
-  ) {
-    if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
-    }
-    return value !== undefined && this._customisable_attribute[key] && value !== LINKS_ATTRIBUTES_CONFIG[key].default
-  }
-
-  public delete() {
-    if (this._is_deletable) {
-      Object.values(this._references).forEach(ref => ref.useDefaultStyle())
-      this._references = {}
-    }
-  }
-
-  public addReference(ref: Class_LinkElement) {
-    if (!this._references[ref.id]) {
-      this._references[ref.id] = ref
-    }
-  }
-
-  public removeReference(ref: Class_LinkElement) {
-    if (this._references[ref.id] !== undefined) {
-      delete this._references[ref.id]
-    }
-  }
-
-  public fromJSON(json_local_object: Type_JSON, link: Class_LinkElement | null, default_style: Class_LinkStyle | null) {
-    super.fromJSON(json_local_object, link, default_style)
-    Object.keys(this._attributes).forEach(key => {
-      if (this._attributes[key as LinkAttributeKey] !== undefined) {
-        this._customisable_attribute[key as LinkAttributeKey] = true
-      }
-    })
-  }
-
-  protected update() {
-    this.updateReferencesDraw()
-  }
-
-  protected updateLinkAndSourceTarget() {
-    this.updateNodeReferencesDraw()
-  }
-
-  private updateReferencesDraw() {
-    Object.values(this._references).forEach(ref => ref.drawElements())
-  }
-
-  private updateNodeReferencesDraw() {
-    Object.values(this._references).forEach(ref => {
-      ref.setDomainLocalScale(ref.shape_local_link_scale)
-      ref.source.draw()
-      ref.target.draw()
-    })
-  }
-
-  public get id() { return this._id }
-  public get name() { return this._name }
-  public set name(value: string) { this._name = value }
-  public get customisable_attribute() { return this._customisable_attribute }
-}
-// ==================================================================================================
-// CLASSE STYLE RATIONALISÉE
-// ==================================================================================================
-
-export class Class_NodeStyle extends Class_NodeAttribute {
-  private _id: string
-  private _name: string
-  private _is_deletable: boolean
-  private _references: { [_: string]: Class_NodeElement } = {}
-  private _customisable_attribute: {
-    [K in NodeAttributeKey]: boolean
-  }
-  private _position: Type_ElementPositionOptionnal = {}
-
-  constructor(id: string, name: string, is_deletable: boolean = true) {
-    super()
-    this._id = id
-    this._name = name
-    this._is_deletable = is_deletable
-
-    // Initialiser les attributs customisables
-    this._customisable_attribute = {} as {
-      [K in NodeAttributeKey]: boolean
-    }
-    Object.keys(NODES_ATTRIBUTES_CONFIG).forEach(key => {
-      this._customisable_attribute[key as NodeAttributeKey] = !is_deletable
-    })
-
-    // Initialiser les valeurs par défaut si non deletable
-    if (!is_deletable) {
-      this._position = {
-        type: 'absolute',
-        x: 10,
-        y: 10,
-        u: 0,
-        v: 0,
-        dx: default_dx,
-        dy: default_dy
-      }
-
-      Object.entries(NODES_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
-        //@ts-expect-error Default initialization
-        this._attributes[key as NodeAttributeKey] = config.default
-      })
-    }
-  }
-
-  public copyFrom(_: Class_NodeElement|undefined,element: Class_NodeStyle) {
-    Object.keys(element._attributes).forEach(key => {
-      //@ts-expect-error xxx
-      this._attributes[key as NodeAttributeKey] = element._attributes[key as NodeAttributeKey]
-    })
-    this._customisable_attribute = {...element._customisable_attribute}
-
-    this._position.type = element.position.type
-    this._position.dx = element.position.dx
-    this._position.dy = element.position.dy
-  }
-
-  // =================== OVERRIDE METHODS ===================
-  /**
-   * Override: condition spécifique pour les styles
-   */
-  protected shouldSaveAttribute(
-    key: NodeAttributeKey,
-    value: string | number | boolean | undefined,
-    node: Class_NodeElement | null,
-    default_style: Class_NodeStyle | null
-  ) {
-    if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] //&& value !== default_style[key]
-    }
-    return value !== undefined && this._customisable_attribute[key] && value !== NODES_ATTRIBUTES_CONFIG[key].default
-  }
-
-  /**
-   * Override: fromJSON avec gestion des customisable_attribute + position
-   */
-  public fromJSON(json_local_object: Type_JSON, node: Class_NodeElement | null, default_style: Class_NodeStyle | null): void {
-    // 1. Appeler la logique parente (fait tout le mapping)
-    super.fromJSON(
-      json_local_object,
-      null,
-      default_style
-    )
-
-    // 2. Gestion spécifique des positions
-    const pos_type = getStringOrUndefinedFromJSON(json_local_object, 'position') as Type_Position
-    if (this.id == default_style_id) {
-      this._position.type = pos_type
-    } else if (pos_type != default_style?.position_type) {
-      this._position.type = pos_type      
-    }
-    if (this.id == default_style_id) {
-      this._position.dx = getNumberFromJSON(json_local_object, 'dx',default_dx)
-      this._position.dy = getNumberFromJSON(json_local_object, 'dy',default_dy)
-    } else {
-      this._position.dx = getNumberOrUndefinedFromJSON(json_local_object, 'dx')
-      this._position.dy = getNumberOrUndefinedFromJSON(json_local_object, 'dy')
-    }
-
-    // 3. Marquer comme customisables les attributs chargés
-    Object.keys(this._attributes).forEach(key => {
-      if (this._attributes[key as NodeAttributeKey] !== undefined) {
-        this._customisable_attribute[key as NodeAttributeKey] = true
-      }
-    })
-  }
-
-  /**
-   * Override: toJSON avec ajout des informations de position
-   */
-  public toJSON(node: Class_NodeElement | null, default_style: Class_NodeStyle | null): Type_JSON {
-    const json_object = super.toJSON(null, default_style)
-
-    // Ajouter les informations de position
-    if (this.position.type != undefined) json_object['position'] = this.position.type
-    if (this.position.dx != undefined) json_object['dx'] = this.position.dx
-    if (this.position.dy != undefined ) json_object['dy'] = this.position.dy
-    if (this.position.auto_x != undefined) json_object['auto_x'] = this.position.auto_x
-    if (this.position.auto_y != undefined) json_object['auto_y'] = this.position.auto_y
-
-    return json_object
-  }
-
-  // =================== SPECIFIC METHODS ===================
-  public delete() {
-    if (this._is_deletable) {
-      Object.values(this._references).forEach(ref => ref.useDefaultStyle())
-      this._references = {}
-    }
-  }
-
-  public addReference(ref: Class_NodeElement) {
-    if (!this._references[ref.id]) {
-      this._references[ref.id] = ref
-    }
-  }
-
-  public removeReference(ref: Class_NodeElement) {
-    if (this._references[ref.id] !== undefined) {
-      delete this._references[ref.id]
-    }
-  }
-
-  protected update() {
-    this.updateReferencesDraw()
-  }
-
-  private updateReferencesDraw() {
-    Object.values(this._references).forEach(ref => ref.draw())
-  }
-
-  // Getters/Setters
-  public get id() { return this._id }
-  public get name() { return this._name }
-  public set name(value: string) { this._name = value }
-  public get customisable_attribute() { return this._customisable_attribute }
-  public get position() { return this._position }
-  public set position(value: Type_ElementPositionOptionnal) { this._position = value }
-  public get position_type() { return this._position.type }
-  public set position_type(_) { this._position.type = _ }
-  public get position_dx() { return this._position.dx }
-  public set position_dx(_) { this._position.dx = _ }
-  public get position_dy() { return this._position.dy }
-  public set position_dy(_) { this._position.dy = _ }
-}
-
-type NodeStyleConfig = Partial<{
-  [K in NodeAttributeKey]: NodeAttributeTypes[K]
+type ElementStyleConfig = Partial<{
+  [K in keyof typeof ALL_ATTRIBUTES_CONFIG]: ExtractConfigValue<typeof ALL_ATTRIBUTES_CONFIG[K]>
 }>
 
 // Type pour les propriétés de position
-interface NodeStylePosition {
-  type?: 'relative' | 'parametric' | 'absolute'
-  dx?: number
-  dy?: number
-}
+// interface ElementStylePosition {
+//   type?: 'relative' | 'parametric' | 'absolute'
+//   dx?: number
+//   dy?: number
+// }
 
 // Type pour un élément de configuration de style (sans id)
-interface NodeStyleConfigItem {
+interface ElementStyleConfigItem {
   name: string,
-  config: NodeStyleConfig
-  position?: NodeStylePosition
+  config: ElementStyleConfig
+  //position?: ElementStylePosition
 }
 
 // Type pour le dictionnaire complet
-export type NodeStyleConfigsDict = Record<string, NodeStyleConfigItem>
+export type ElementStyleConfigsDict = Record<string, ElementStyleConfigItem>
 
 
 
-export const nodeStyleConfigs: NodeStyleConfigsDict = {
+export const elementStyleConfigs: ElementStyleConfigsDict = {
+  NodeStyle: {
+    name: 'Style de noeud par défaut',
+    config: { 
+      'name_label_is_visible': true,
+      //'value_label_is_visible': false 
+    }
+  },
+  LinkStyle: {
+    name: 'Style de flux par défaut',
+    config: { 
+      //'name_label_is_visible': false,
+      'name_label_background_visible': false,
+      'name_label_vert': 'top',
+      'name_label_font_size': 20,
+      'value_label_is_visible': true,
+      'value_label_vert': 'middle',
+      'value_label_font_size': 20
+    }
+  },
+  ContainerStyle: {
+    name: 'Style de container par défaut',
+    config: { 
+      'name_label_font_family': 'Arial,sans-serif',
+      'name_label_is_visible': true,
+      'name_label_inside_vert': true,
+      'name_label_vert': 'top',      
+      'shape_color':'white',
+      'shape_border_visible': true,
+      'shape_border_radius': 5,      
+      'value_label_is_visible': false,
+      'shape_min_height': 100,
+      'shape_min_width': 100     
+    }
+  },  
   NodeProductStyle: {
     name: 'Produit',
-    config: { 'shape_type': 'ellipse' },
-    position: {}
+    config: { 'shape_type': 'ellipse' }
   },
   NodeSectorStyle: {
     name: 'Secteur',
-    config: { 'shape_type': 'rect' },
-    position: {}
+    config: { 'shape_type': 'rect' }
   },
   NodeImportExportCloseStyle: {
     name: 'Import export collés',
@@ -326,11 +78,9 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'shape_min_width': 1,
       'name_label_box_width': 300,
       'name_label_separator': ' - ',
-      'name_label_separator_part': 'before'
-    },
-    position: {
-      'type': 'relative',
-      'dy': 20,
+      'name_label_separator_part': 'before',
+      'position_type': 'relative',
+      'position_dy': 20,
     }
   },
   NodeImportExportAboveBelowStyle: {
@@ -343,40 +93,33 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'value_label_is_visible': true,
       'value_label_vert': 'middle',
       'name_label_vert': 'middle',
-      'name_label_separator': ' - '
-    },
-    position: {
-      'type': 'parametric'
+      'name_label_separator': ' - ',
+      'position_type': 'parametric'
     }
   },
   NodeImportCloseStyle: {
     name: 'Import collés',
-    config: {},
-    position: {
-      'dx': -100,
-      'dy': -50
+    config: {
+      'position_dx': -100,
+      'position_dy': -50
     }
   },
-  NodeImportAboveStyle: {    
+  NodeImportAboveStyle: {
     name: 'Import au dessus',
     config: {
       'name_label_horiz': 'left',
       'value_label_horiz': 'left',
       'value_label_horiz_shift': 40,
-    },
-    position: {
-      'dx': -200,
-      'dy': 20
+      'position_dx': -200,
+      'position_dy': 20
     }
   },
   NodeExportCloseStyle: {
     name: 'Export collés',
     config: {
-      'name_label_vert': 'bottom'
-    },
-    position: {
-      'dx': 100,
-      'dy': 50
+      'name_label_vert': 'bottom',
+      'position_dx': 100,
+      'position_dy': 50
     }
   },
   NodeExportBelowStyle: {
@@ -385,10 +128,8 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'name_label_horiz': 'right',
       'value_label_horiz': 'right',
       'value_label_horiz_shift': -40,
-    },
-    position: {
-      'dx': 200,
-      'dy': 20
+      'position_dx': 200,
+      'position_dy': 20
     }
   },
   NodeUnitaryStyle: {
@@ -397,7 +138,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       'name_label_is_visible': false
     }
   },
-  SankeyUnitaryNodeStyle: {    
+  SankeyUnitaryElementStyle: {
     name: 'Unitaire',
     config: {
       name_label_horiz: 'middle',
@@ -408,9 +149,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       name_label_bold: true,
       name_label_uppercase: true,
       name_label_box_width: 1000,
-    },
-    position: {
-      dx: 300
+      position_dx: 300
     }
   },
   SankeyUnitaryNodeInputStyle: {
@@ -423,9 +162,7 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       shape_min_height: 1,
       shape_visible: false,
       name_label_box_width: 1000,
-    },
-    position: {
-      dx: 300
+      position_dx: 300
     }
   },
   SankeyUnitaryNodeOutputStyle: {
@@ -437,75 +174,12 @@ export const nodeStyleConfigs: NodeStyleConfigsDict = {
       shape_min_width: 1,
       shape_min_height: 1,
       shape_visible: false,
-      name_label_box_width: 1000
-    },
-    position: {
-      dx: 300
+      name_label_box_width: 1000,
+      position_dx: 300
     }
-  } as const
-}
-
-export type NodeStyleKey = keyof typeof nodeStyleConfigs
-export const product_sector_styles: readonly NodeStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
-export const node_exchanges_style: readonly NodeStyleKey[] = [
-  'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
-] as const
-export const node_unitary_styles: readonly NodeStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle'] as const
-
-// Vous aurez besoin d'un équivalent de LINKS_ATTRIBUTES_CONFIG pour les liens
-// En supposant qu'il existe, sinon remplacez par le type approprié
-type LinkStyleConfig = Partial<{
-  [K in LinkAttributeKey]: LinkAttributeTypes[K] // Adaptez selon votre config de liens
-}>
-
-// Type pour un élément de configuration de style de lien (sans id)
-interface LinkStyleConfigItem {
-  config: LinkStyleConfig
-}
-
-// Type pour le dictionnaire complet
-export type LinkStyleConfigsDict = Record<string, LinkStyleConfigItem>
-
-export const linkStyleConfigs: LinkStyleConfigsDict = {
-  LinkImportExportCloseStyle: {
-    config: {
-      'value_label_is_visible': true,
-      'value_label_on_path': true,
-    }
-  },
-  LinkImportCloseStyle: {
-    config: {
-      'shape_orientation': 'vh',
-      'shape_starting_tangeant': 1,
-      'shape_ending_tangeant': 0.25
-    }
-  },
-  LinkExportCloseStyle: {
-    config: {
-      'shape_orientation': 'hv',
-      'shape_starting_tangeant': 0.25,
-      'shape_ending_tangeant': 1
-    }
-  },
-  LinkImportExportAboveBelowStyle: {
-    config: {
-      'shape_starting_curve': 0.25,
-      'shape_starting_tangeant': 0.50,
-      'shape_ending_tangeant': 0.50,
-      'shape_ending_curve': 0.25,
-      'value_label_is_visible': false,
-      'value_label_on_path': true
-    }
-  },
-  LinkImportAboveStyle: {
-    config: {}
-  },
-  LinkExportBelowStyle: {
-    config: {}
-  },
+  } as const,
   LinkInUnitaryStyle: {
+    name: 'close import',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,
@@ -516,8 +190,9 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
       value_label_significant_digits: true,
       value_label_nb_significant_digits: 3
     }
-  },
+  } as const,
   LinkOutUnitaryStyle: {
+    name: 'close import',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,
@@ -528,145 +203,67 @@ export const linkStyleConfigs: LinkStyleConfigsDict = {
       value_label_significant_digits: true,
       value_label_nb_significant_digits: 3
     }
-  }
-} as const
+  } as const,
+  LinkImportExportCloseStyle: {
+    name: 'close import export',
+    config: {
+      'value_label_is_visible': true,
+      'value_label_on_path': true,
+    }
+  },
+  LinkImportCloseStyle: {
+    name: 'close import',
+    config: {
+      'shape_orientation': 'vh',
+      'shape_starting_tangeant': 1,
+      'shape_ending_tangeant': 0.25
+    }
+  },
+  LinkExportCloseStyle: {
+    name: 'close import',
+    config: {
+      'shape_orientation': 'hv',
+      'shape_starting_tangeant': 0.25,
+      'shape_ending_tangeant': 1
+    }
+  },
+  LinkImportExportAboveBelowStyle: {
+    name: 'close import',
+    config: {
+      'shape_starting_curve': 0.25,
+      'shape_starting_tangeant': 0.50,
+      'shape_ending_tangeant': 0.50,
+      'shape_ending_curve': 0.25,
+      'value_label_is_visible': false,
+      'value_label_on_path': true
+    }
+  },
+  LinkImportAboveStyle: {
+    name: 'close import',
+    config: {}
+  },
+  LinkExportBelowStyle: {
+    name: 'close import',
+    config: {}
+  },
 
-// Type des clés disponibles pour les liens
-export type LinkStyleKey = keyof typeof linkStyleConfigs
-export const link_exchanges_style: readonly NodeStyleKey[] = [
+}
+
+export type ElementStyleKey = keyof typeof elementStyleConfigs
+export const base_styles : readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle', 'ContainerStyle'] as const
+
+export const product_sector_styles: readonly ElementStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
+export const node_exchanges_style: readonly ElementStyleKey[] = [
+  'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
+  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
+] as const
+export const node_unitary_styles: readonly ElementStyleKey[] = [
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryElementStyle'] as const
+
+export const link_exchanges_style: readonly ElementStyleKey[] = [
   'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',
   'LinkImportAboveStyle', 'LinkExportBelowStyle'
 ] as const
-export const link_unitary_styles: readonly NodeStyleKey[] = [
+export const link_unitary_styles: readonly ElementStyleKey[] = [
   'LinkInUnitaryStyle', 'LinkOutUnitaryStyle'
 ] as const
-/**
- * Classe représentant un style de container pouvant être partagé entre plusieurs containers
- */
-
-export class Class_ContainerStyle extends Class_ContainerAttribute {
-  private _id: string
-  private _name: string
-  private _is_deletable: boolean
-  private _references: { [_: string]: Class_ContainerElement}  = {}
-  private _customisable_attribute: {
-    [K in ZDTAttributeKey]: boolean
-  }
-
-  constructor(id: string, name: string, is_deletable: boolean = true) {
-    super()
-    this._id = id
-    this._name = name
-    this._is_deletable = is_deletable
-
-    // Initialiser les attributs customisables
-    this._customisable_attribute = {} as {
-      [K in ZDTAttributeKey]: boolean
-    }
-    Object.keys(CONTAINERS_ATTRIBUTES_CONFIG).forEach(key => {
-      this._customisable_attribute[key as ZDTAttributeKey] = !is_deletable
-    })
-
-    // Initialiser les valeurs par défaut si non deletable (style par défaut)
-    if (!is_deletable) {
-      Object.entries(CONTAINERS_ATTRIBUTES_CONFIG).forEach(([key, config]) => {
-        //@ts-expect-error xxx
-        this._attributes[key as AttributeKey] = config.default
-      })
-    }
-  }
-
-  public copyFrom(element: Class_ContainerStyle) {
-    Object.keys(element._attributes).forEach(key => {
-      //@ts-expect-error xxx
-      this._attributes[key as AttributeKey] = element._attributes[key as AttributeKey]
-    })
-    this._customisable_attribute = { ...element._customisable_attribute }
-  }
-
-  protected shouldSaveAttribute(
-    key: ZDTAttributeKey,
-    value: number | string | boolean | undefined,
-    default_style: Class_ContainerStyle | null
-  ): boolean {
-    if (default_style) {
-      return value !== undefined && this._customisable_attribute[key] && value !== default_style[key]
-    }
-    return value !== undefined && this._customisable_attribute[key] && value !== CONTAINERS_ATTRIBUTES_CONFIG[key].default
-  }
-
-  public delete() {
-    if (this._is_deletable) {
-      // Faire en sorte que tous les containers utilisant ce style reviennent au style par défaut
-      Object.values(this._references).forEach(_ => {
-        // Implémenter useDefaultStyle dans Class_ContainerElement
-        // ref.useDefaultStyle()
-      })
-      this._references = {}
-    }
-  }
-
-  public addReference(ref: Class_ContainerElement) {
-    if (!this._references[ref.id]) {
-      this._references[ref.id] = ref
-    }
-  }
-
-  public removeReference(ref: Class_ContainerElement) {
-    if (this._references[ref.id] !== undefined) {
-      delete this._references[ref.id]
-    }
-  }
-
-  public fromJSON(
-    json_local_object: Type_JSON,
-    container: Class_ContainerElement | null,
-    default_style: Class_ContainerStyle | null
-  ) {
-    super.fromJSON(json_local_object, container, default_style)
-
-    // Marquer comme customisable tous les attributs qui ont été chargés
-    Object.keys(this._attributes).forEach(key => {
-      if (this._attributes[key as ZDTAttributeKey] !== undefined) {
-        this._customisable_attribute[key as ZDTAttributeKey] = true
-      }
-    })
-  }
-
-  protected update() {
-    this.updateReferencesDraw()
-  }
-
-  protected updateSizeAndPosition() {
-    this.updateReferencesPosition()
-  }
-
-  protected updateLabelDimensions() {
-    this.updateReferencesDraw()
-  }
-
-  private updateReferencesDraw() {
-    Object.values(this._references).forEach(ref => {
-      ref.draw()
-    })
-  }
-
-  private updateReferencesPosition() {
-    Object.values(this._references).forEach(ref => {
-      if (ref.tied_to_nodes) {
-        // Recalculer la position depuis les nœuds attachés
-        ref.computeSizeAndPositionFromAttachedNodes()
-      }
-      ref.draw()
-    })
-  }
-
-  // Getters
-  public get id() { return this._id }
-  public get name() { return this._name }
-  public set name(value: string) { this._name = value }
-  public get customisable_attribute() { return this._customisable_attribute }
-  public get is_deletable() { return this._is_deletable }
-  public get references() { return this._references }
-  public get reference_count() { return Object.keys(this._references).length }
-}

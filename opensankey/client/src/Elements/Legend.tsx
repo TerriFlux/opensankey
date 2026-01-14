@@ -24,58 +24,22 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
-import {
-  ClassTemplate_Element
-} from '../Elements/Element'
-import {
-  default_element_color,
-  getBooleanFromJSON,
-  getNumberFromJSON,
-  getStringFromJSON,
-  Type_JSON,
-  getStringListFromJSON,
-  getJSONFromJSON,
-  const_default_position_x,
-  const_default_position_y,
-} from '../types/Utils'
+import { 
+  default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border, 
+  default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_legend_show_constraints, 
+  default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width 
+} from './ElementsAttributesConfig'
 
-import {
-  ClassTemplate_Handler
-} from './Handler'
 import { Class_DataTag, Class_Tag } from '../types/Tag'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_NodeElement } from './Node'
-
-const default_stick_to_drawing = true
-const default_masked = true
-const default_display_legend_scale = false
-const default_legend_police = 16
-const default_legend_bg_border = false
-const default_legend_bg_color = default_element_color
-const default_legend_bg_opacity = 0
-const default_legend_show_dataTags = true
-const default_legend_show_constraints = false
-const default_width = 180
-const default_info_link_value_void = false
-const default_legend_position_x = 300
-const default_legend_position_y = 50
-// CLASS LEGEND *************************************************************************
-
-/**
- * Class that define how we draw legend for a Sankey
- *
- * @export
- * @class ClassTemplate_Legend
- * @extends {ClassTemplate_Element}
- */
-export class ClassTemplate_Legend extends ClassTemplate_Element {
-
+import { Class_NodeBase } from './NodeBase'
+export class ClassTemplate_Legend extends Class_NodeBase {
   private _stick_to_drawing = default_stick_to_drawing
   private _masked: boolean = default_masked
   private _display_legend_scale: boolean = default_display_legend_scale
@@ -88,284 +52,77 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
 
-  private _drag_handler: {
-    left: ClassTemplate_Handler,
-    right: ClassTemplate_Handler,
-  }
-
-  /**
-   * Attribute for legend content positionning.
-   * Souldn't have getter & setter public because the variable is only use & computed when we draw the legend
-   * @private
-   * @type {number}
-   * @memberof ClassTemplate_Legend
-   */
   private _dx: number = 0
-
-  /**
-   * Attribute for legend content positionning.
-   * Souldn't have getter & setter public because the variable is only use & computed when we draw the legend
-   * @private
-   * @type {number}
-   * @memberof ClassTemplate_Legend
-   */
   private _dy: number = 0
-
-  /**
-   * Attribute used for the scale of the legend
-   * so the legend can still be visible when we de-zoom DA.
-   * The attr is automaticaly updated when we zoom/de-zooom on the DA (see setter)
-   *
-   * @private
-   * @type {number}
-   * @memberof ClassTemplate_Legend
-   */
   private _scale: number = 1
 
-  /**
-   * Text wrapper function
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
   private _wrapper = textwrap()
     .bounds({ height: 100, width: this._width })
     .method('tspans')
-
-  // PROTECTED ATTRIBUTES ===============================================================
-
-  // /**
-  //  * Display attributes for legend
-  //  * @protected
-  //  * @type {{
-  //  *     drawing_area: Class_DrawingArea,
-  //  *     position: Type_ElementPosition,
-  //  *   }}
-  //  * @memberof ClassTemplate_Legend
-  //  */
-  // protected _display: {
-  //   drawing_area: Class_DrawingArea,
-  //   sankey: Class_Sankey,
-  //   position: Type_ElementPosition,
-  // }
-
-  // CONSTRUCTOR ========================================================================
 
   constructor(
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey
   ) {
-    // Init parent class attributes
-
-    //TODO : rename grp_legend to g_legend when legacy code will be deleted as for now some legacy functions might be tirgered when interactiong with DA and look for g_legend
-    super('legend', drawing_area, sankey, 'grp_legend')
-    // Init other class attributes
-    this._display = {
-      position: {
-        x: default_legend_position_x,
-        y: default_legend_position_y,
-        u: 0,
-        v: 0
-      }
-    }
-
-    this._drag_handler = {
-      left: new ClassTemplate_Handler(
-        'legend_left_handle_' + this.id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragLeftHandler(),
-        this.dragHandleEnd(),
-        { class: 'legend_left_handle' },
-        undefined,
-        'grp_legend'
-      ),
-      right: new ClassTemplate_Handler(
-        'legend_right_handle_' + this.id,
-        drawing_area,
-        this,
-        this.dragHandleStart(),
-        this.dragRightHandler(),
-        this.dragHandleEnd(),
-        { class: 'legend_right_handle' },
-        undefined,
-        'grp_legend'
-      ),
-
-    }
+    super('legend', '', drawing_area, sankey.default_style)
   }
 
-  // COPY METHODS =======================================================================
-
-  protected _copyFrom(_: ClassTemplate_Legend): void {
-    super._copyFrom(_)
-    this._masked = _._masked
-    this._dx = _._dx
-    this._dy = _._dy
-    this._scale = _._scale
-    this._width = _._width
-    this._display_legend_scale = _._display_legend_scale
-    this._legend_police = _._legend_police
-    this._legend_bg_border = _._legend_bg_border
-    this._legend_bg_color = _._legend_bg_color
-    this._legend_bg_opacity = _._legend_bg_opacity
-    this._legend_show_dataTags = _._legend_show_dataTags
-    this._legend_show_constraints = _._legend_show_constraints
-    this._info_link_value_void = _._info_link_value_void
-    this._stick_to_drawing = _._stick_to_drawing
+  public copyFrom(_: Class_NodeBase): void {
+    super.copyFrom(_)
+    const cast_copy = _ as unknown as ClassTemplate_Legend
+    this._masked = cast_copy._masked
+    this._dx = cast_copy._dx
+    this._dy = cast_copy._dy
+    this._scale = cast_copy._scale
+    this._width = cast_copy._width
+    this._display_legend_scale = cast_copy._display_legend_scale
+    this._legend_police = cast_copy._legend_police
+    this._legend_bg_border = cast_copy._legend_bg_border
+    this._legend_bg_color = cast_copy._legend_bg_color
+    this._legend_bg_opacity = cast_copy._legend_bg_opacity
+    this._legend_show_dataTags = cast_copy._legend_show_dataTags
+    this._legend_show_constraints = cast_copy._legend_show_constraints
+    this._info_link_value_void = cast_copy._info_link_value_void
+    this._stick_to_drawing = cast_copy._stick_to_drawing
   }
 
-  // SAVING METHODS =====================================================================
-
-  protected _toJSON(
-    json_object: Type_JSON
-  ): void {
-    json_object['legend'] = {}
-    const json_legend = json_object['legend']
-    if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
-    if (!this._masked) json_legend['mask_legend'] = this._masked
-    if (this._dx) json_legend['legend_dx'] = this._dx
-    if (this._dy) json_legend['legend_dy'] = this._dy
-    if (this._display_legend_scale) json_legend['legend_scale'] = this._scale
-    if (this._width != default_width) json_legend['legend_width'] = this._width
-    if (this._display_legend_scale) json_legend['display_legend_scale'] = this._display_legend_scale
-    if (this._legend_police != default_legend_police) json_legend['legend_police'] = this._legend_police
-    if (this._legend_bg_border) json_legend['legend_bg_border'] = this._legend_bg_border
-    if (this._legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = this._legend_bg_color
-    if (this._legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = this._legend_bg_opacity
-    if (this._legend_show_dataTags) json_legend['legend_show_dataTags'] = this._legend_show_dataTags
-    if (this._legend_show_constraints) json_legend['legend_show_constraints'] = this._legend_show_constraints
-    if (this._stick_to_drawing) json_legend['legend_stick_to_drawing'] = this._stick_to_drawing
-    if (this._info_link_value_void) json_legend['info_link_value_void'] = this._info_link_value_void
-  }
-
-  protected _fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ): void {
-    super._fromJSON(json_object, kwargs)
-    const json_legend = getJSONFromJSON(json_object, 'legend', {})
-
-    const legend_position = getStringListFromJSON(
-      json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
-    )
-    this._display.position.x = +legend_position[0]
-    this._display.position.y = +legend_position[1]
-    this._masked = getBooleanFromJSON(json_legend, 'mask_legend', this._masked)
-    this._dx = getNumberFromJSON(json_legend, 'legend_dx', this._dx)
-    this._dy = getNumberFromJSON(json_legend, 'legend_dy', this._dy)
-    this._scale = getNumberFromJSON(json_legend, 'legend_scale', this._scale)
-    this._width = getNumberFromJSON(json_legend, 'legend_width', this._width)
-    this._display_legend_scale = getBooleanFromJSON(json_legend, 'display_legend_scale', this._display_legend_scale)
-    this._legend_police = getNumberFromJSON(json_legend, 'legend_police', this._legend_police)
-    this._legend_bg_border = getBooleanFromJSON(json_legend, 'legend_bg_border', this._legend_bg_border)
-    this._legend_bg_color = getStringFromJSON(json_legend, 'legend_bg_color', this._legend_bg_color)
-    this._legend_bg_opacity = getNumberFromJSON(json_legend, 'legend_bg_opacity', this._legend_bg_opacity)
-    this._legend_show_dataTags = getBooleanFromJSON(json_legend, 'legend_show_dataTags', this._legend_show_dataTags)
-    this._legend_show_constraints = getBooleanFromJSON(json_legend, 'legend_show_constraints', this._legend_show_constraints)
-    this._info_link_value_void = getBooleanFromJSON(json_legend, 'info_link_value_void', this._info_link_value_void)
-    this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', this._stick_to_drawing)
-    // Var only present if json is legacy
-    if (!this._stick_to_drawing) {
-      this._stick_to_drawing = getBooleanFromJSON(json_legend, 'legacy_legend', this._stick_to_drawing)
-    }
-  }
-
-  // /**
-  //  * _drawLegendBg with timeout
-  //  *
-  //  * @private
-  //  * @memberof ClassTemplate_Legend
-  //  */
-  public drawLegendBg() {
-    this._drawLegendBg()
-  }
-
-  /**
-   * _drawTagDisplayed with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  public drawTagDisplayed() {
-    this._drawTagDisplayed()
-  }
-
-  /**
-   * _drawInfoDataType with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  public drawInfoDataType() {
-    this._drawInfoDataType()
-  }
-
-  /**
-   * _drawInfoDashedLink with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  public drawInfoDashedLink() {
-    this._drawInfoDashedLink()
-  }
-
-  /**
-   * _drawSankeyScale with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  public drawSankeyScale() {
-    this._drawSankeyScale()
-  }
-
-  /**
-     * Function triggered when element is (un)selected
-     *
-     * @memberof Class_ContainerElement
-     */
   public drawAsSelected() {
     this.draw()
     this.drawDragHandlers()
   }
 
-
-  // PROTECTED METHODS ==================================================================
-
-  protected eventMouseOver(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+  public eventMouseOver(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', '6,6')
     this.d3_selection?.select('.zone_for_dragging').attr('stroke', this._legend_bg_color)
   }
 
-  protected eventMouseOut(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
+  public eventMouseOut(_event: MouseEvent<HTMLButtonElement, MouseEvent<Element, globalThis.MouseEvent>>): void {
     this.d3_selection?.select('.zone_for_dragging').attr('stroke-dasharray', this.is_selected ? '6,6' : 'unherit')
     this.d3_selection?.select('.zone_for_dragging').attr('stroke', (this._legend_bg_border || this.is_selected) ? this._legend_bg_color : 'none')
   }
 
-  protected eventMouseDragStart(
+  public eventMouseDragStart(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
   }
 
-  protected eventMouseDrag(
+  public eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ): void {
-    this._display.position.x += (event.dx)
+    this._position.x += (event.dx)
     if (!this.stick_to_drawing) {
-      if (this._display.position.x < 0) this._display.position.x = 0
+      if (this._position.x < 0) this._position.x = 0
     }
-    this._display.position.y += (event.dy)
+    this._position.y += (event.dy)
     if (!this.stick_to_drawing) {
-      if (this._display.position.y < 0) this._display.position.y = 0
+      if (this._position.y < 0) this._position.y = 0
     }
 
-    this.setPosXY(this._display.position.x, this._display.position.y)
+    this.setPosXY(this._position.x, this._position.y)
     this.drawDragHandlers()
   }
 
-  protected eventMouseDragEnd(
+  public eventMouseDragEnd(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     this.draw()
@@ -394,57 +151,55 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         const scale_da = this.drawing_area.getZoomScale()
         this.d3_selection = d3_drawing_area_selection.append('g')
         this.d3_selection.attr('id', this.svg_group)
-        //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
+          .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
       }
     }
 
   }
 
-  protected _draw() {
-    // Heritance of draw function
-    super._draw()
-    // Update class attributes
-    this.d3_selection?.attr('class', 'gg_legend')
-    // Draw Background
-    this._drawLegendBg()
-    // Reset content positionning
-    this._dx = 0
-    this._dy = 0
-    // Rebounds text wrapper with width of legend when drawed at this moment
-    this._wrapper.bounds({ height: 100, width: this._width })
-    // Draw tag color pallette applied to sankey
-    this._drawTagDisplayed()
-    // Draw explication for data type
-    const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
-    if (sankey_has_interval_value) {
-      this._drawInfoDataType()
-    }
-    // Draw explication for dashed links
-    const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.valueCurrent == null).length > 0
-    if (sankey_has_dashed_links && this._info_link_value_void) {
-      this._drawInfoDashedLink()
-    }
-    if (this._display_legend_scale) {
-      this._drawSankeyScale()
-    }
-    if (this._legend_show_constraints) {
-      this._drawInfoConstraintLink()
-    }
-    // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
-    this.updateDragZone()
+  public draw() {
+    this._process_or_bypass(() => {
+      // Heritance of draw function
+      super.draw()
+      // UpdZte class attributes
+      this.d3_selection?.attr('class', 'gg_legend')
+      // Draw Background
+      this.drawLegendBg()
+      // Reset content positionning
+      this._dx = 0
+      this._dy = 0
+      // Rebounds text wrapper with width of legend when drawed at this moment
+      this._wrapper.bounds({ height: 100, width: this._width })
+      // Draw tag color pallette applied to sankey
+      this.drawTagDisplayed()
+      // Draw explication for data type
+      const sankey_has_interval_value = d3.selectAll('.link_value').nodes().filter(lv => d3.select(lv).html().includes('*')).length > 0
+      if (sankey_has_interval_value) {
+        this.drawInfoDataType()
+      }
+      // Draw explication for dashed links
+      const sankey_has_dashed_links = this.drawing_area.sankey.links_list.filter(l => l.valueCurrent == null).length > 0
+      if (sankey_has_dashed_links && this._info_link_value_void) {
+        this.drawInfoDashedLink()
+      }
+      if (this._display_legend_scale) {
+        this.drawSankeyScale()
+      }
+      if (this._legend_show_constraints) {
+        this.drawInfoConstraintLink()
+      }
+      // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
+      this.updateDragZone()
+    })
   }
 
-  /**
- * Override applyPosition for legend so it take into accound scale transformation
- * @protected
- * @return {*}
- * @memberof Class_Node
- */
-  protected override _applyPosition() {
+  public applyPosition() {
     if (this.d3_selection !== null) {
+      const position_y = this.position_y + this.drawing_area.getNavBarHeight()
+      const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')'
+        'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')'
       )
     }
     this.drawDragHandlers()
@@ -475,110 +230,14 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       // If shift key is pressed then open config menu to type config context & sub menu graph
       if (event.shiftKey) {
         this.drawing_area.application_data.menu_configuration.openConfigMenu()
-        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'context'
-        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['DA']
+        this.drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
+        this.drawing_area.application_data.menu_configuration.elements_configurable_selected.context = ['legend']
         this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
       }
     }
   }
 
-  // PRIVATE METHODS ====================================================================
-
-  /**
-   * Activate the control points alignement guide
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_ContainerElement
-   */
-  private dragHandleStart() {
-    return () => {
-    }
-  }
-
-  /**
-    * Deactivate the control points alignement guide
-    * @private
-    * @return {*}
-    * @memberof Class_ContainerElement
-    */
-  private dragHandleEnd() {
-    return () => {
-    }
-  }
-
-  /**
-   * Event when we drag the left handle
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_ContainerElement
-   */
-  private dragLeftHandler() {
-    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-      this._width -= event.dx
-      this.setPosXY(this.position_x + event.dx, this.position_y)
-      this.draw()
-
-      // Reposition drag handler with updated with & pos of the free label
-      this.drawDragHandlers()
-    }
-  }
-
-  /**
-   * Event when we drag the right handle
-   *
-   * @private
-   * @return {*}
-   * @memberof Class_ContainerElement
-   */
-  private dragRightHandler() {
-    return (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-      this._width += event.dx
-      this.draw()
-
-      // Reposition drag handler with updated with & pos of the free label
-      this.drawDragHandlers()
-    }
-  }
-
-  /**
- * Draw all control points
- *
- * @private
- * @memberof Class_ContainerElement
- */
-  public drawDragHandlers() {
-    // Compute positions
-    this.computeLeftHandlerPos()
-    this.computeRightHandlerPos()
-    // Draw
-    this._drag_handler.left.draw()
-    this._drag_handler.right.draw()
-  }
-
-  private computeLeftHandlerPos() {
-    // left handle pos
-    this._drag_handler.left.position_x = this.position_x + -5
-    this._drag_handler.left.position_y = this.position_y + this._dy / 2
-  }
-
-  private computeRightHandlerPos() {
-    // right handle pos
-    if (!this.d3_selection) {
-      return
-    }
-    this._drag_handler.right.position_x = this.position_x + this.width
-    this._drag_handler.right.position_y = this.position_y + this._dy / 2
-  }
-
-  /**
-   * Function that draw the background of the legend, it is also used as draggable
-   * element to move the legend
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  private _drawLegendBg() {
+  public drawLegendBg() {
     this.d3_selection?.select('.g_drag_zone_leg').remove()
     const legendBbox = this.drawing_area.d3_selection_legend?.node()?.getBBox()
     this.d3_selection?.append('g')
@@ -603,7 +262,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @private
    * @memberof ClassTemplate_Legend
    */
-  private _drawTagDisplayed() {
+  public drawTagDisplayed() {
     const node_taggs = this.drawing_area.sankey.node_taggs_list
     const flux_taggs = this.drawing_area.sankey.flux_taggs_list
     const data_taggs = this.drawing_area.sankey.data_taggs_list
@@ -731,7 +390,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @private
    * @memberof ClassTemplate_Legend
    */
-  private _drawInfoDataType() {
+  public drawInfoDataType() {
     // Write information in the legend depending to the diagram representation:
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
     // - when diagramme type is : data collected or data reconciled, we explain the meaning of dashed links
@@ -759,7 +418,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @private
    * @memberof ClassTemplate_Legend
    */
-  private _drawInfoDashedLink() {
+  public drawInfoDashedLink() {
     this._dy += this._legend_police
 
     // Create info zone
@@ -785,7 +444,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
       .attr('y', this._legend_police / 2)
   }
 
-  private _drawInfoConstraintLink() {
+  public drawInfoConstraintLink() {
     this._dy += this._legend_police
 
     const dashed_link = this.d3_selection?.append('g')
@@ -905,7 +564,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
    * @private
    * @memberof ClassTemplate_Legend
    */
-  private _drawSankeyScale() {
+  public drawSankeyScale() {
     // Update vertical offset
     this._dy += this._legend_police + 15 //(50 is the height of the draggable scale)
     // Remove previous info zone for scale
@@ -978,15 +637,15 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   //   })
   // }
 
-  /**
-   * _updateLegendHeight with timeout
-   *
-   * @private
-   * @memberof ClassTemplate_Legend
-   */
-  private updateLegendHeight() {
-    this.updateLegendHeight()
-  }
+  // /**
+  //  * _updateLegendHeight with timeout
+  //  *
+  //  * @private
+  //  * @memberof ClassTemplate_Legend
+  //  */
+  // private updateLegendHeight() {
+  //   this.updateLegendHeight()
+  // }
 
   /**
  * Met à jour la taille de la zone de dragging après le rendu complet
@@ -1030,7 +689,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
   }
 
   public get masked(): boolean { return this._masked }
-  public set masked(_) { this._masked = _; this.draw(); this.drawing_area.checkAndUpdateAreaSize() }
+  public set masked(_) { this._masked = _; this.draw(); this.drawing_area.areaAutoFit() }
 
   public get display_legend_scale(): boolean { return this._display_legend_scale }
   public set display_legend_scale(_) { this._display_legend_scale = _; this.draw() }
@@ -1074,8 +733,8 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         }
         // Convertit la position actuelle vers le format legacy
         // Position legacy = (position actuelle - offset) / scale
-        this.display.position.x = (this.display.position.x - x) / k
-        this.display.position.y = (this.display.position.y - y) / k
+        this._position.x = (this._position.x - x) / k
+        this._position.y = (this._position.y - y) / k
       }
     } else if (this.drawing_area.d3_selection_zoom_area) {
       this.drawing_area.d3_selection?.select('#grp_legend').remove()
@@ -1088,7 +747,7 @@ export class ClassTemplate_Legend extends ClassTemplate_Element {
         k = d3.zoomTransform(tmp).k
       }
       //Set pos of legend like it was in legacy (so we have to take into account old pos of legend & scale of DA)
-      this.setPosXY((this.display.position.x * k) + x, (this.display.position.y * k) + y)
+      this.setPosXY((this._position.x * k) + x, (this._position.y * k) + y)
     }
     this._stick_to_drawing = stick; this.draw()
   }

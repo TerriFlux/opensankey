@@ -1,4 +1,3 @@
-
 export const resources_app_elements = {
   en: {
     translation: {
@@ -34,8 +33,7 @@ export const resources_app_elements = {
         exporter: 'Export',
         exporter_to: 'To ',
         preference: 'Preferences',
-        esn: 'Edit nodes style',
-        esf: 'Edit links style',
+        esn: 'Edit style',
         rc: 'Keyboard Shortcuts',
         as: 'Additional Help',
         doc: 'Doc.',
@@ -47,8 +45,6 @@ export const resources_app_elements = {
         ad: 'Apply the layout',
         ns: 'Style name',
         BgC: 'Color',
-        dns: 'Display only visible nodes in the nodes selector',
-        dls: 'Display only visible links in the links selector',
         Tags: 'Tags',
         PosNoeud: 'Node geometry',
         PosFlux: 'Flux Geometry',
@@ -82,35 +78,25 @@ export const resources_app_elements = {
         Etiquettes: 'Editing tags',
         reinit: 'Reset',
         amp_short: 'Layout',
-
         ajustH: 'Adjust. H',
         ajustV: 'Adjust. V',
-
         multiValue: 'Multiple values among seleced elements',
-
-
         undo: 'Undo',
         redo: 'Redo',
         reset_all_attr: 'Reset all attributes overwrite',
         reset_attr: 'Del. overwrite : ',
-
         empty_config: 'Click on a button on the right to configure diagram elements',
-
         style_attr_applicated: 'Style attributes applicated',
-
         sankey_file_name: 'File name',
         support: 'Contact',
         c_support: 'Contact the support',
         rth_support: 'We are here to help you',
         support_explication: 'If you encounter a technical problem, write to us at [] and we will deal with your request as quickly as possible.',
         suppr: 'Delete',
-        rand_node_color: 'Random node colors',
-        rand_link_color: 'Random link colors',
         load_file: 'Load file',
         compute_file: 'Computing',
         loaded_file: 'File loaded',
         failure_file: 'Loading failed',
-        choseTransforDifficulty: 'Types d\'éléments',
         selectNodeAttrubutedToTag: 'Select all nodes having this tag',
         selectLinkAttrubutedToTag: 'Select all links having this tag',
         node_label_sep: 'Name delimiter',
@@ -137,27 +123,27 @@ export const resources_app_elements = {
         LegBgColor: 'Color',
 
         Config: {
-          type_data: '1. Structure',
-          type_style: '2. Visuals',
-          type_context: '3. Labels',
-          presentation: '4. Interactions',
-
+          type_data: 'Structure/Data',
+          type_style: 'Formatting',
+          presentation: 'Tags/Views',
           element_graph: 'Graph',
           element_node: 'Node',
           element_flow: 'Flow',
           element_node_tag: 'Node Label',
           element_flow_tag: 'Flow Label',
-
           element_data: 'Data',
           element_data_tag: 'Data Label',
-
           title_table: 'Flow Table',
           title_graph: 'Graph',
+          title_legend: 'Legend',
           title_node: 'Nodes',
           title_flow: 'Flows',
+          title_elements: 'Elements',
           title_node_tag: 'Node Label Editing',
           title_flow_tag: 'Flow Label Editing'
         },
+
+        // ✅ Transformation reste car non géré par une config spécifique
         Transformation: {
           amp_short: 'Layout',
           amp: 'Change the layout',
@@ -207,20 +193,9 @@ export const resources_app_elements = {
           }
         },
 
-
         tooltips: {
-          noeud: {
-            slct: 'Choose one / some / all nodes to select via a drop-down list',
-            plus: 'Add a node, which will be automatically selected.',
-            rm: 'Allow to delete all currently selected nodes',
-            dns: 'Display in the node selection list, only the node(s) that is/are currently visible in the graphic space'
-          },
-          flux: {
-            slct: 'Choose one / some / all link(s) to select via a drop-down list',
-            plus: 'Add a new link. This one will be automatically selected.',
-            rm: 'Allow to delete currently selected link(s)',
-            dls: 'Display in the list of selection of link(s), only the link(s) that is/are currently visible on the graphic space',
-          },
+          // ❌ SUPPRIMÉ : noeud.* et flux.* (maintenant dans ELEMENTS_SELECTION_CONFIG)
+          
           LegX: 'Horizontal distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth: 'Width (in px) for the legend space',
@@ -248,12 +223,13 @@ export const resources_app_elements = {
           ConfigMenu: 'Editing the diagram through a configuration menu',
           sankey_file_name: 'Name of diagram : ',
           style_attr_applicated: 'Select which attributes in the style can be applicated, it also unlock the corresponding input',
-
         },
       },
+      
       SpreadSheet: {
         paste: 'Paste'
       },
+      
       MEP: {
         onBlur: 'Value is applied when we leave the input or we press enter',
         Echelle: 'Scale',
@@ -265,7 +241,6 @@ export const resources_app_elements = {
         leg_show_dataTags: 'DataTags',
         leg_show_constraints: 'Constraints doc',
         leg_show_info_link_void: 'Show info concerning null link',
-
         links_size: 'Links size',
         MaxFlux: 'Max',
         MinFlux: 'Min',
@@ -330,6 +305,7 @@ export const resources_app_elements = {
           importExportAboveBelow: 'Import/export at the top and bottom of the diagram',
         }
       },
+      
       Tags: {
         Nom: 'Name',
         Leg: 'Legend',
@@ -366,6 +342,7 @@ export const resources_app_elements = {
           down: 'Move the tag group down in the node filter menu'
         }
       },
+      
       Banner: {
         title_data_type: 'Data displayed',
         data: 'Data',
@@ -420,6 +397,7 @@ export const resources_app_elements = {
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
         open_configuration_menu: 'Open configuration menu.'
       },
+      
       useTemplate: 'Use this template',
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
@@ -451,13 +429,13 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
-        ElOrder:'Ordonner la superposition des éléments',
+        ElOrder:'Ordre d\'affichage',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
         confSankey: 'Configuration du Sankey',
         MEP: 'Zone de dessin',
-        background: 'Arrière-plan',
+        background: 'Fond',
         Noeuds: 'Noeuds',
         EN: 'Étiquettes des noeuds',
         EdN: 'Édition des noeuds',
@@ -498,8 +476,7 @@ export const resources_app_elements = {
         undo: 'Annuler',
         redo: 'Refaire',
 
-        esn: 'Fonds et formes des noeuds',
-        esf: 'Fonds et formes des flux',
+        esn: 'Editions des styles',
         esn_labels: 'Libellés des noeuds',
         esf_labels: 'Libellés des flux',
         container_style: 'Style des zones de textes',
@@ -515,8 +492,6 @@ export const resources_app_elements = {
         ad: 'Appliquer la transformation',
         ns: 'Nom du Style',
         BgC: 'Couleur',
-        dns: 'N\'affiche que les noeuds visibles dans le sélecteur de noeuds',
-        dls: 'N\'affiche que les flux visibles dans le sélecteur de flux',
         Tags: 'Etiquettes',
         Values: 'Valeurs',
         topoNode: 'des Noeuds',
@@ -591,13 +566,13 @@ export const resources_app_elements = {
 
 
         Config: {
-          type_data: '1. Structure',
-          type_style: '2. Visuels',
-          type_context: '3. Libellés',
-          presentation: '4. Interactions',
+          type_data: 'Structure/Données',
+          type_style: 'Mise en forme',
+          presentation: 'Etiquettes/Vues',
 
           element_graph: 'Graphe',
-          element_node: 'Noeud',
+          element_legend: 'Légende',
+          element_node: 'Noeuds',
           element_flow: 'Flux',
           element_node_tag: 'Étiq. Noeud',
           element_flow_tag: 'Étiq. Flux',
@@ -608,8 +583,10 @@ export const resources_app_elements = {
 
           title_table: 'Tableau des flux  ',
           title_graph: 'Graphe',
+          title_legend: 'Légende',
           title_node: 'Noeuds',
           title_flow: 'Flux',
+          title_elements: 'Elements',
           title_node_tag: 'Édition des étiquettes de noeuds',
           title_flow_tag: 'Édition des étiquettes de flux',
 
@@ -669,18 +646,6 @@ export const resources_app_elements = {
           }
         },
         tooltips: {
-          noeud: {
-            slct: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante',
-            plus: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.',
-            rm: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)',
-            dns: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles sur l\'espace graphique'
-          },
-          flux: {
-            slct: 'Choisir un / des / tous les flux à sélectionner via une liste déroulante',
-            plus: 'Ajouter un flux. Celui-ci sera automatiquement selectionné.',
-            rm: 'Permettre de supprimer tous les flux actuellement sélectionné(s)',
-            dls: 'Afficher dans la liste de selection des flux, uniquement ceux actuellement visibles sur l\'espace graphique',
-          },
           LegX: 'Ecart horizontal (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegWidth: 'Largeur (en px) de l\'espace de la légende',
