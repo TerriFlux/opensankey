@@ -274,6 +274,7 @@ export class ContainerPersistence extends NodeBasePersistence {
     } else {
       // Text mode: configure as text container
       container.attributes['name_label_has_fo'] = true
+      container.attributes['shape_color_visible'] = json_object['color_visible']
       container.attributes['name_label_horiz'] = 'middle'
       container.attributes['name_label_vert'] = 'middle'
       container.attributes['name_label_inside_vert'] = true
