@@ -78,7 +78,7 @@ export const const_default_position_y = 50
 // }
 
 export const default_style_id = 'default'
-export const default_style_name = 'Style par default'
+export const default_style_name = 'Style par défaut'
 
 
 // DEDICATED TYPES **********************************************************************
