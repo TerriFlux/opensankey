@@ -34,11 +34,11 @@ import {
   RowSetter2Cols, DataTagSelector, OSTooltip,
   BOX2COLSTITLEH4,
   ConfigMenuNumberInput, ConfigMenuTextInput} from './MenuCommon'
-import { getLinkShapeValues, getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
+import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { BASE_LABEL_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { BASE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 interface LinkValueTypeSelectorProps {
   t: TFunction,
@@ -52,9 +52,9 @@ export const LinkValueTypeSelector = ({
     selected_links: Class_LinkElement[],
     unit_data_tagg?: Class_DataTagGroup,
     refreshThis: ()=>void}>({
-    selected_links:[],
-    refreshThis: ()=>null
-  })
+      selected_links:[],
+      refreshThis: ()=>null
+    })
 
   app_data.menu_configuration.r_value_type_set_elements.current = (
     _selected_links: Class_LinkElement[],
@@ -255,8 +255,6 @@ export const default_value_option = 'value'
 export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t, drawing_area, menu_configuration } = app_data
   const { sankey } = drawing_area
-  const { ref_selected_style } = menu_configuration
-  const { styles_dict } = sankey
   const { data_taggs_list } = sankey
   const {
     ref_to_menu_config_links_data_updater,
@@ -288,11 +286,11 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   
   ref_to_menu_config_links_data_updater.current = refreshThis
 
-  const shapeValues = selected_links.length > 0
-    ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)
-    : Object.fromEntries(
-      Object.entries(LINK_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
-    ) as { -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINK_SHAPE_SPECIFIC_CONFIG[K]['type']> }
+  // const shapeValues = selected_links.length > 0
+  //   ? getLinkShapeValues(selected_links, refreshThisAndUpdateRelatedComponents)
+  //   : Object.fromEntries(
+  //     Object.entries(LINK_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])
+  //   ) as { -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]: ReturnType<typeof LINK_SHAPE_SPECIFIC_CONFIG[K]['type']> }
 
   type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image'
 
@@ -388,31 +386,31 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         />
       </RowSetter2Cols>
       <Box layerStyle='options_2cols'>
-      <Button
-        variant={'menuconfigpanel_option_button'}
-        onClick={() => {
-          app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(true)
-          app_data.menu_configuration.r_value_formatting_set_elements.current(
-            selected_links,
-            'Flux.labels'
-          )
-        }}
-      >
+        <Button
+          variant={'menuconfigpanel_option_button'}
+          onClick={() => {
+            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(true)
+            app_data.menu_configuration.r_value_formatting_set_elements.current(
+              selected_links,
+              'Flux.labels'
+            )
+          }}
+        >
         Format
-      </Button>
-      <Button
-        variant={'menuconfigpanel_option_button'}
-        onClick={() => {
-          app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
-          app_data.menu_configuration.r_value_type_set_elements.current(
-            selected_links,
+        </Button>
+        <Button
+          variant={'menuconfigpanel_option_button'}
+          onClick={() => {
+            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
+            app_data.menu_configuration.r_value_type_set_elements.current(
+              selected_links,
             unit_data_tagg!,
             refreshThisAndUpdateRelatedComponents
-          )
-        }}
-      >
+            )
+          }}
+        >
         Type
-      </Button>
+        </Button>
       </Box>
     </Box>
 

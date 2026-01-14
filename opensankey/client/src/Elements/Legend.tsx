@@ -151,7 +151,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
         const scale_da = this.drawing_area.getZoomScale()
         this.d3_selection = d3_drawing_area_selection.append('g')
         this.d3_selection.attr('id', this.svg_group)
-        .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
+          .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
       }
     }
 

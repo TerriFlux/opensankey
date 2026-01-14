@@ -239,15 +239,15 @@ const LabelContentComponent = ({
       {displayMode === 'simple_text' && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
           <LabelWithOverload attributeKey="separator" elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-          <ElementAttrSetterTextInput2Cols
-            app_data={app_data}
-            elements={elements}
-            config={NAME_LABEL_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            attributeKey={'separator'}
-            refreshParentComponent={refreshParentComponent}
-          />
+            <ElementAttrSetterTextInput2Cols
+              app_data={app_data}
+              elements={elements}
+              config={NAME_LABEL_CONFIG}
+              prefix={prefix}
+              attributePath={attributePath}
+              attributeKey={'separator'}
+              refreshParentComponent={refreshParentComponent}
+            />
           </LabelWithOverload>
           <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
             <Box layerStyle='options_2cols'>
@@ -310,7 +310,7 @@ const LabelContentComponent = ({
         <Box layerStyle='options_2cols'>
           <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_3cols'>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.left_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.left_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
@@ -319,7 +319,7 @@ const LabelContentComponent = ({
                   <FaAlignLeft />
                 </Button>
               </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.center_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.center_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
@@ -328,7 +328,7 @@ const LabelContentComponent = ({
                   <FaAlignCenter />
                 </Button>
               </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.right_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.right_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
@@ -485,7 +485,7 @@ const LabelContentComponent = ({
       <Box layerStyle='options_2cols'>
         <Box display="flex" alignItems="center" gap={1}>
           <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.deb')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.deb')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'left')}
@@ -494,7 +494,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_left}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.milieu_h')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.milieu_h')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'middle')}
@@ -503,7 +503,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_center}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.fin')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.fin')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'right')}
@@ -512,7 +512,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_right}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? "Valeurs multiples" : (labelValues.inside_horiz ? "Extérieur" : "Intérieur")}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? 'Valeurs multiples' : (labelValues.inside_horiz ? 'Extérieur' : 'Intérieur')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
@@ -530,7 +530,7 @@ const LabelContentComponent = ({
 
         <Box display="flex" alignItems="center" gap={1}>
           <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.dessous')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.dessous')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'bottom')}
@@ -539,7 +539,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_bottom}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.milieu_v')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.milieu_v')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'middle')}
@@ -548,7 +548,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_center}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? "Valeurs multiples" : app_data.t(attributePath + '.tooltips.dessus')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.dessus')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'top')}
@@ -557,7 +557,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_top}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? "Valeurs multiples" : (labelValues.inside_vert ? "Extérieur" : "Intérieur")}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? 'Valeurs multiples' : (labelValues.inside_vert ? 'Extérieur' : 'Intérieur')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
@@ -818,11 +818,11 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET FOND ========== */}
           {activeTab === 'background' && (
-            // <WrapperBoxSubSectionMenu
-            //   new_data={app_data}
-            //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
-            //   is_open={true}
-            // >
+          // <WrapperBoxSubSectionMenu
+          //   new_data={app_data}
+          //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
+          //   is_open={true}
+          // >
 
             <Box layerStyle='menu_sub_section'>
               <MenuShapeAttributes
@@ -840,11 +840,11 @@ export const MenuConfigurationAppearance = ({
           {activeTab === 'shape' && (
             <>
               {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
-                // <WrapperBoxSubSectionMenu
-                //   new_data={app_data}
-                //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
-                //   is_open={!menu_for_style && selection.hasNodes}
-                // >
+              // <WrapperBoxSubSectionMenu
+              //   new_data={app_data}
+              //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
+              //   is_open={!menu_for_style && selection.hasNodes}
+              // >
 
                 <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
@@ -963,11 +963,11 @@ export const MenuConfigurationAppearance = ({
               )}
 
               {(menu_for_style || selection.hasLinks) && (
-                // <WrapperBoxSubSectionMenu
-                //   new_data={app_data}
-                //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
-                //   is_open={!menu_for_style && selection.hasLinks}
-                // >
+              // <WrapperBoxSubSectionMenu
+              //   new_data={app_data}
+              //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
+              //   is_open={!menu_for_style && selection.hasLinks}
+              // >
 
                 <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
@@ -1245,7 +1245,6 @@ export const MenuConfigurationAppearance = ({
           {/* ========== ONGLETS LABELS ========== */}
           {activeTab === 'name' && (
             <MenuSectionCheckbox
-              app_data={app_data}
               elements={elements}
               attributePath='Noeud.labels'
               attributeKey={'is_visible'}
@@ -1266,7 +1265,6 @@ export const MenuConfigurationAppearance = ({
 
           {activeTab === 'value' && (
             <MenuSectionCheckbox
-              app_data={app_data}
               elements={elements}
               attributePath='Noeud.labels'
               attributeKey={'is_visible'}
@@ -1287,7 +1285,6 @@ export const MenuConfigurationAppearance = ({
 
           {activeTab === 'icon' && (
             <MenuSectionCheckbox
-              app_data={app_data}
               elements={elements}
               attributePath='Noeud.labels'
               attributeKey={'is_visible'}
@@ -1366,7 +1363,7 @@ export const MenuShapeAttributes = ({
           <Select
             value={linkShapeValues.color_rule}
             onChange={(evt) => {
-              linkShapeValues.color_rule = evt.target.value as "flow" | "source" | "target" | "gradient" | "auto"
+              linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
             }}
           >
             {app_data.menu_configuration.flow_color_origin_type.map(el => {

@@ -1,6 +1,6 @@
 import { MenuConfig } from './SankeyMenuContext'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_LinkAttribute, Class_ProtoElement, StorageType } from '../../Elements/Element'
+import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 export const LINK_MENU_CONFIG: MenuConfig = {

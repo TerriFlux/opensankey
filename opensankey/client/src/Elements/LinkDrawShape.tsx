@@ -74,7 +74,6 @@ export class LinkDrawShape {
       const border_visible = this._link.shape_border_visible
       const border_color = this._link.shape_border_color
       const border_dashed = this._link.shape_border_dashed
-      const border_radius = this._link.shape_border_radius
       const border_thickness = this._link.shape_border_thickness
 
       // Avoid recomputations

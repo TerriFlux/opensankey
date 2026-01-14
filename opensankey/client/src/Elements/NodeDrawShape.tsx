@@ -147,7 +147,7 @@ export const draw_arrow_part: draw_arrow_partFType = (
   revert,
   arrow_length,
   node_arrow_shift,
-  node_arrow_shift2
+  _node_arrow_shift2
 ) => {
   // Il est possible que arrowSizeAlreadyComputed,linkSize et arrowHalfHeight soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
   // Donc on assume que ca vaut 0

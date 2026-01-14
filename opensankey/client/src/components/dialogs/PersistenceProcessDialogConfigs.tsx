@@ -1,4 +1,4 @@
-import { MenuCondition } from "./SankeyMenuContext";
+import { MenuCondition } from './SankeyMenuContext'
 
 export const translations = {
   ProcessDialog: {
@@ -205,7 +205,7 @@ export interface FormatAttributeConfig<T> {
   tooltips: { en: string; fr: string }
   visibilityConditions?: MenuCondition[]
 }
-export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | {}> 
+export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object> 
 // ==================================================================================================
 // OPTIONS D'ENTRÉE (INPUT)
 // ==================================================================================================
@@ -451,7 +451,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
 export type FormatType = 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
 
 // Valeurs par défaut pour chaque format
-export const getDefaultOutputOptions = (config:FormatAttributeConfig<boolean | number | string>|{} ): Record<string,unknown> => {
+export const getDefaultOutputOptions = (config:FormatAttributeConfig<boolean | number | string>|object ): Record<string,unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default
@@ -459,7 +459,7 @@ export const getDefaultOutputOptions = (config:FormatAttributeConfig<boolean | n
   }, {} as Record<string,unknown>)
 }
 
-export const getDefaultInputOptions = (config: FormatAttributeConfig<boolean | number | string>|{}): Record<string,unknown> => {
+export const getDefaultInputOptions = (config: FormatAttributeConfig<boolean | number | string>|object): Record<string,unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default

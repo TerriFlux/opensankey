@@ -24,16 +24,10 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// Local modules
 import { Class_LinkElement } from './Link'
 import { Class_Handler } from './Handler'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { ALL_ATTRIBUTES_CONFIG } from './ElementsAttributesConfig'
 
-
-/**
- * Class that handles all drawing and rendering operations for LinkElement
- */
 export class LinkControlPoints {
 
   private link: Class_LinkElement

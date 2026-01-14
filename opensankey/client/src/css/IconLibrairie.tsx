@@ -1303,7 +1303,7 @@ export class Class_IconLibrary {
   protected _icon_filter_tags = <FaFilter />
 
   protected _icon_label_inside_horiz = logo_label_inside_horiz
-protected _icon_label_inside_vert = logo_label_inside_vert
+  protected _icon_label_inside_vert = logo_label_inside_vert
 
 
   protected _icon_open_modal_icon = <FontAwesomeIcon icon={faIcons} />
@@ -1442,15 +1442,15 @@ protected _icon_label_inside_vert = logo_label_inside_vert
 
 
 
-// Dans la section "Define icon"
-protected _icon_label_on_path = logo_label_on_path
-protected _icon_label_auto_position = logo_label_auto_position
+  // Dans la section "Define icon"
+  protected _icon_label_on_path = logo_label_on_path
+  protected _icon_label_auto_position = logo_label_auto_position
 
-// Dans la section "Getters"
-public get icon_label_on_path() { return this._icon_label_on_path }
-public get icon_label_auto_position() { return this._icon_label_auto_position }
-public get icon_label_inside_horiz() { return this._icon_label_inside_horiz }
-public get icon_label_inside_vert() { return this._icon_label_inside_vert }
+  // Dans la section "Getters"
+  public get icon_label_on_path() { return this._icon_label_on_path }
+  public get icon_label_auto_position() { return this._icon_label_auto_position }
+  public get icon_label_inside_horiz() { return this._icon_label_inside_horiz }
+  public get icon_label_inside_vert() { return this._icon_label_inside_vert }
 
 
   // Getters ===================================

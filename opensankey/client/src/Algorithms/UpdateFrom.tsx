@@ -1,8 +1,8 @@
-import { Class_NodeElement } from "../Elements/Node"
-import { SankeyPersistence } from "../Persistence/SankeyPersistence"
-import { Class_DrawingArea } from "../types/DrawingArea"
-import { Class_Sankey } from "../types/Sankey"
-import { getStringFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from "../types/Utils"
+import { Class_NodeElement } from '../Elements/Node'
+import { SankeyPersistence } from '../Persistence/SankeyPersistence'
+import { Class_DrawingArea } from '../types/DrawingArea'
+import { Class_Sankey } from '../types/Sankey'
+import { getStringFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 
 const matchAndModifyJSONIds = (
   sankey: Class_Sankey,

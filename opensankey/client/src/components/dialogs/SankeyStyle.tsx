@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, MutableRefObject } from 'react'
+import React, { useState } from 'react'
 
 import {
   Box,
@@ -318,8 +318,8 @@ export const MenuOrderStylesOfSelectedElements = ({ app_data }: { app_data: Clas
   }
 
   // ✅ Configuration des fonctions selon le type
-  const moveOrderStyle = (style_src: any, style_trgt: any) => {
-    drawing_area.moveOrderStyleInSelectedElements(style_src as Class_ElementStyle, style_trgt as Class_ElementStyle)
+  const moveOrderStyle = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
+    drawing_area.moveOrderStyleInSelectedElements(style_src, style_trgt)
     menu_configuration.updateComponentRelatedToApparence()
   }
 

@@ -1,7 +1,7 @@
 
 // import { LinkAttributeKey, LinkAttributeTypes, NodeAttributeKey, NodeAttributeTypes} from "./ElementsAttributesConfig"
 
-import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from "./ElementsAttributesConfig"
+import { ALL_ATTRIBUTES_CONFIG, ExtractConfigValue } from './ElementsAttributesConfig'
 
 
 type ElementStyleConfig = Partial<{
@@ -50,7 +50,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
   ContainerStyle: {
     name: 'Style de container par défaut',
     config: { 
-      "name_label_font_family": "Arial,sans-serif",
+      'name_label_font_family': 'Arial,sans-serif',
       'name_label_is_visible': true,
       'name_label_inside_vert': true,
       'name_label_vert': 'top',      

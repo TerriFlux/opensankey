@@ -150,12 +150,12 @@ function getErrorMessage(error: unknown): string {
   return 'Erreur inconnue'
 }
 
-function logError(message: string, error: unknown): void {
-  console.error(message, error)
-  if (error instanceof Error) {
-    console.error('Stack trace:', error.stack)
-  }
-}
+// function logError(message: string, error: unknown): void {
+//   console.error(message, error)
+//   if (error instanceof Error) {
+//     console.error('Stack trace:', error.stack)
+//   }
+// }
 
 function getErrorDetails(error: unknown): { name: string; message: string; toString: string } {
   if (error instanceof Error) {

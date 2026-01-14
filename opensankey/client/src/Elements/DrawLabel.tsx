@@ -70,7 +70,7 @@ export abstract class DrawLabelBase {
    * ✅ Dessine un background générique (texte, icône, FO)
    */
   protected drawGenericBackground(
-    parent: d3.Selection<any, unknown, any, unknown>,
+    parent: d3_selection_type,
     x: number,
     y: number,
     width: number,
@@ -80,7 +80,7 @@ export abstract class DrawLabelBase {
       padding?: number
       className?: string
     }
-  ): d3.Selection<SVGRectElement | SVGEllipseElement, unknown, any, unknown> | null {
+  ) {
 
     const bgPrefix = options?.bgPrefix ?? `${this.prefix}_background` as ShapePrefix
     const padding = options?.padding ?? 0
@@ -123,7 +123,7 @@ export abstract class DrawLabelBase {
     }
 
     bgElement.lower()
-    return bgElement as any
+    return bgElement
   }
 
   /**
@@ -147,6 +147,7 @@ export abstract class DrawLabelBase {
     )
 
     if (bgElement) {
+      //@ts-expect-error xxx
       this.verticalText(tspanWidths, bgElement)
     }
   }
@@ -283,7 +284,7 @@ export abstract class DrawLabelBase {
     if (isStatic) {
       return
     }
-    this.d3_selection?.call(d3.drag<any, unknown>()
+    this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
       .filter(evt => (evt.which == 1) && evt.altKey &&this._element.drawing_area?.isInSelectionMode())
       .on('start', ev => this.dragGenericStart(ev))
       .on('drag', ev => this.dragGenericMove(ev))
@@ -335,7 +336,7 @@ export abstract class DrawLabelBase {
     // ✅ Appliquer le drag générique unifié
     const isStatic = this._element.drawing_area?.static
     if (!isStatic) {
-      this.d3_selection?.call(d3.drag<any, unknown>()
+      this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
         .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area?.isInSelectionMode())
         .on('start', ev => this.dragGenericStart(ev))
         .on('drag', ev => this.dragGenericMove(ev))
@@ -349,7 +350,7 @@ export abstract class DrawLabelBase {
   /**
    * ✅ Drag générique unifié pour tous les types (text, FO, icon, image)
    */
-  protected dragGenericStart(_event: d3.D3DragEvent<any, unknown, unknown>) {
+  protected dragGenericStart(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     if (this._label_values.position_absolute) {
       // MODE ABSOLU : sauvegarder position_x/position_y
       const old_val: [number, number, boolean] = [
@@ -383,7 +384,7 @@ export abstract class DrawLabelBase {
     }
   }
 
-  protected dragGenericMove(event: d3.D3DragEvent<any, unknown, unknown>) {
+  protected dragGenericMove(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     if (this._label_values.position_absolute) {
       // MODE ABSOLU : éditer position_x/position_y
       this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
@@ -398,7 +399,7 @@ export abstract class DrawLabelBase {
     this.updateGenericPosition()
   }
 
-  protected dragGenericEnd(_event: d3.D3DragEvent<any, unknown, unknown>) {
+  protected dragGenericEnd(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     if (this._label_values.position_absolute) {
       const new_val: [number, number, boolean] = [
         this._label_values.position_x,
@@ -487,14 +488,14 @@ export abstract class DrawLabelBase {
   protected abstract getTextElementId(): string
 
   protected applySpecialTextContent(
-    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
-    labelText: string
+    _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
+    _labelText: string
   ): boolean {
     return false
   }
 
   protected applyTextDragHandlers(
-    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
+    _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
     if (!(this._element.drawing_area?.static)) {
       this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
@@ -588,7 +589,7 @@ export abstract class DrawLabelBase {
     this.finalizeLabelCreation(textElement)
   }
 
-  protected verticalText(tspanWidths: number[], textElement: any): number | undefined {
+  protected verticalText(_tspanWidths: number[], _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
     return undefined
   }
 
@@ -651,7 +652,7 @@ export abstract class DrawLabelBase {
   }
 
   protected finalizeLabelCreation(
-    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
+    _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
     // Override dans les sous-classes si nécessaire
   }
@@ -677,10 +678,10 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     }
   }
 
-  protected override verticalText(tspanWidths: number[], textElement: any): number | undefined {
+  protected override verticalText(tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
     if (!this._label_values.vertical_text) return undefined
 
-    let [label_pos_x, label_pos_y] = this.getLabelPos()
+    const [label_pos_x, label_pos_y] = this.getLabelPos()
     const dx = this._label_values.font_size / 2
     const vert = this._label_values.vert
     const textWidth = tspanWidths[0] || 0
@@ -894,7 +895,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     box_pos_x: number,
     box_pos_y: number,
     box_width: number,
-    label_text: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
+    _label_text: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
     if (!this._element.drawing_area.static) {
       d3_selection?.append('foreignObject')
@@ -1033,10 +1034,10 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     }
   }
 
-  protected override verticalText(tspanWidths: number[], textElement: any): number | undefined {
+  protected override verticalText(_tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
     if (!this._label_values.vertical_text) return undefined
 
-    let [label_pos_x, label_pos_y] = this.getLabelPos()
+    const [label_pos_x, label_pos_y] = this.getLabelPos()
     const dx = this._label_values.font_size / 2
 
     textElement.attr('transform', `translate(${-dx}, 0) rotate(-90, ${label_pos_x}, ${label_pos_y})`)
@@ -1268,7 +1269,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   protected override finalizeLabelCreation(
-    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
+    _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
     this.drawFO()
   }
@@ -1339,7 +1340,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       icon_pos_x = label_pos_x - icon_width
     }
 
-    let icon_pos_y = label_pos_y - icon_height / 2
+    const icon_pos_y = label_pos_y - icon_height / 2
 
     return [icon_pos_x, icon_pos_y]
   }

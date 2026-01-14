@@ -1,7 +1,6 @@
 import * as d3 from 'd3'
 
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_NodeElement } from '../Elements/Node'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { GetRandomInt, list_palette_color } from '../types/Utils'
 import { Class_NodeBase } from '../Elements/NodeBase'

@@ -56,7 +56,7 @@ export const MenuUnit = ({
 }) => {
   const { drawing_area } = app_data
   const { sankey } = drawing_area
-  const [count, setCount] = useState(0)
+  const [_, setCount] = useState(0)
   const refreshUI = () => setCount(a => a + 1)
   const [state, setState] = useState({
     elements: initialElements,
@@ -74,7 +74,6 @@ export const MenuUnit = ({
   }
   const { elements, attributePath } = state
   if (!elements || !attributePath) return <></>
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const unit_tagg = sankey.data_taggs_list.find(tagg => tagg.is_unit)
 
@@ -194,7 +193,6 @@ export const MenuUnit = ({
 
       {/* Checkbox simple pour notation scientifique */}
       <SimpleElementCheckbox
-        app_data={app_data}
         elements={elements}
         attributeKey={'scientific_notation'}
         config={VALUE_LABEL_CONFIG}

@@ -103,7 +103,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     //const attr_json = this._display.attributes.toJSON(this, null)
     if (Object.keys(proto_element.attributes).length > 0) {
       json_object['local'] = {} as Type_JSON
-      (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, any]>).forEach(([key, value]) => {
+      (Object.entries(proto_element.attributes) as Array<[keyof ConfigType, boolean | number | string]>).forEach(([key, value]) => {
         if (proto_element.shouldSaveAttribute(key as keyof ConfigType, value)) {
           (json_object['local'] as Type_JSON)[key] = value
         }
@@ -156,7 +156,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
       proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && proto_element.sankey.styles_dict[s_id])
-      .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
+        .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
@@ -578,7 +578,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
   }
 
   public static fromJSON_0_9(
-    node: Class_NodeElement,
+    _node: Class_NodeElement,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
@@ -1012,13 +1012,13 @@ export class SankeyPersistence {
     Object.entries(json_link_object)
       .forEach(([_, link_json]) => {
         // Get related nodes id
-        let source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
-        let target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
+        const source_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idSource')
+        const target_node_id = getStringOrUndefinedFromJSON(link_json as Type_JSON, 'idTarget')
         if (source_node_id && target_node_id) {
           // Get or create related nodes
-          source_node_id = source_node_id
+          //source_node_id = source_node_id
           const source = sankey.nodes_dict[source_node_id] ?? sankey.addNewNode(source_node_id, source_node_id)
-          target_node_id = target_node_id
+          //target_node_id = target_node_id
           const target = sankey.nodes_dict[target_node_id] ?? sankey.addNewNode(target_node_id, target_node_id)
           // Get or create link
           const link_id = _
@@ -1418,7 +1418,7 @@ export class DrawingAreaPersistence {
   public static fromJSON_pre_0_9(
     drawing_area: Class_DrawingArea,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ) {
     console.log('convert_data_legacy')
     convert_data_legacy(json_object)
@@ -1431,9 +1431,9 @@ export class DrawingAreaPersistence {
   }
 
   public static fromJSON_0_9(
-    drawing_area: Class_DrawingArea,
+    _drawing_area: Class_DrawingArea,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ) {
     console.log('convert_pre_v_0_91')
     convert_pre_v_0_91(json_object)
@@ -1443,7 +1443,7 @@ export class DrawingAreaPersistence {
   public static fromJSON_0_91(
     drawing_area: Class_DrawingArea,
     json_object: Type_JSON,
-    kwargs?: Type_JSON
+    _kwargs?: Type_JSON
   ) {
     LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)

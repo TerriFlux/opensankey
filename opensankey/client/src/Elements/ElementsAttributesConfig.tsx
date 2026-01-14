@@ -27,14 +27,10 @@
 import { TFunction } from 'i18next'
 import { useMemo } from 'react'
 import { Class_ApplicationData } from '../types/ApplicationData'
-import {
-  default_style_id,
-  Type_Position,
-} from '../types/Utils'
+import { Type_Position } from '../types/Utils'
 import { Class_ElementStyle } from './Element'
 import { Class_LinkElement } from './Link'
 import { UnitType } from './LinkValues'
-import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
@@ -198,11 +194,11 @@ export const isConfigValueIndeterminate = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-  elements: ElementsType,
-  config: CONFIG,
-  configKey: K,
-  prefix: string
-): boolean => {
+    elements: ElementsType,
+    config: CONFIG,
+    configKey: K,
+    prefix: string
+  ): boolean => {
   if (elements.length === 0) return false
 
   const fullKey = prefix ? `${prefix}_${String(configKey)}` : String(configKey)
@@ -299,18 +295,18 @@ export function getLabelAttributeKey<
 // HELPER POUR CRÉER DES CONFIGS AVEC PRÉFIXES
 // ==================================================================================================
 
-type ConfigWithPrefix<T extends Record<string, AttributeConfig<any>>, P extends string> = {
+type ConfigWithPrefix<T extends Record<string, AttributeConfig<any>>, P extends string> = {// eslint-disable-line @typescript-eslint/no-explicit-any
   [K in keyof T as P extends '' ? K : `${P}_${string & K}`]: T[K]
 }
 
 export function createConfigWithPrefix<
-  T extends Record<string, AttributeConfig<any>>,
+  T extends Record<string, AttributeConfig<any>>,// eslint-disable-line @typescript-eslint/no-explicit-any
   P extends string
 >(
   baseConfig: T,
   prefix: P
 ): ConfigWithPrefix<T, P> {
-  const result: any = {}
+  const result: any = {}// eslint-disable-line @typescript-eslint/no-explicit-any
 
   for (const [key, config] of Object.entries(baseConfig)) {
     const newKey = prefix ? `${prefix}_${key}` : key
@@ -331,7 +327,7 @@ export function createConfigWithPrefix<
 }
 
 
-type PrefixKeys<T extends Record<string, any>, P extends string> = {
+type PrefixKeys<T extends Record<string, AttributeConfig<boolean | number | string>>, P extends string> = {
   [K in keyof T as P extends '' ? K : `${P}_${string & K}`]: T[K]
 }
 
@@ -355,14 +351,14 @@ export type ConfigOverrides<T extends Record<string, AttributeConfig<unknown>>> 
   }
 }>
 
-export function createConfigWithPrefixAndOverrides<T extends Record<string, AttributeConfig<any>>, P extends string>(
+export function createConfigWithPrefixAndOverrides<T extends Record<string, AttributeConfig<any>>, P extends string>(// eslint-disable-line @typescript-eslint/no-explicit-any
   baseConfig: T,
   prefix: P,
   category: string,
   actions: BaseActionType[],
   overrides?: ConfigOverrides<T>
 ): PrefixKeys<T, P> {
-  const result: any = {}
+  const result: any = {}// eslint-disable-line @typescript-eslint/no-explicit-any
 
   for (const [key, config] of Object.entries(baseConfig)) {
     const newKey = prefix !== '' ? `${prefix}_${key}` : key
@@ -372,7 +368,7 @@ export function createConfigWithPrefixAndOverrides<T extends Record<string, Attr
       ...config,
       default: override.default !== undefined ? override.default : config.default,
       type: override.default !== undefined
-        ? (() => override.default) as any
+        ? (() => override.default) as any// eslint-disable-line @typescript-eslint/no-explicit-any
         : config.type,
       category: category,
       actions: actions,
@@ -1350,7 +1346,7 @@ export function getShapeValue<T extends typeof BASE_SHAPE_CONFIG>(
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1379,7 +1375,7 @@ export function getLabelValues<T extends typeof BASE_LABEL_CONFIG>(
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: number | boolean | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1407,7 +1403,7 @@ export function getValueLabelValues(
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: number | string | boolean) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1435,7 +1431,7 @@ export function getNameLabelValues(
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1467,7 +1463,7 @@ export function getNodeShapeSpecificValues(
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1500,7 +1496,7 @@ export const getLinkShapeSpecificValue = (
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -1528,7 +1524,7 @@ export const getLinkLabelSpecificValue = (
           //@ts-expect-error xxx
           return Reflect.get(element, fullKey) ?? config[key].default
         },
-        set: (value: any) => {
+        set: (value: boolean | number | string) => {
           Reflect.set(element, fullKey, value)
         },
         enumerable: true,
@@ -2018,7 +2014,7 @@ export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_Elemen
 // Hook pour extraire la logique commune des composants ElementAttr*
 
 export const useElementAttributeConfig = <
-  CONFIG extends Record<string, AttributeConfig<unknown>>
+  _CONFIG extends Record<string, AttributeConfig<unknown>>
 >(app_data: Class_ApplicationData, elements: ElementsType): {
   menu_for_style: boolean
   t: TFunction
@@ -2141,7 +2137,7 @@ export const getElementsValueLabelValues = (
 
 export const getElementsNameLabelValues = (
   elements: Class_NodeBase[] | Class_ElementStyle[],
-  prefix: 'name_label' | 'value_label'| 'icon',
+  prefix: 'name_label' | 'value_label' | 'icon',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, NAME_LABEL_CONFIG, prefix, refreshParentComponent)
 

@@ -41,10 +41,7 @@ import {
   default_style_name,
 } from '../types/Utils'
 import { sortNodesElements } from '../Elements/NodeBase'
-import {
-  ALL_ATTRIBUTES_CONFIG,
-  Type_customisable_style_attr
-} from '../Elements/ElementsAttributesConfig'
+import {ALL_ATTRIBUTES_CONFIG} from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 

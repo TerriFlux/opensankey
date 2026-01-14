@@ -28,17 +28,11 @@ import * as d3 from 'd3'
 import { MouseEvent } from 'react'
 
 import {
-  getBooleanFromJSON,
-  Type_JSON,
   const_default_position_x,
   const_default_position_y,
-  getStringFromJSON,
   randomId,
   Type_BaseElementPosition,
-  default_style_id,
-  getStringListFromJSON,
-  getJSONOrUndefinedFromJSON,
-  getNumberFromJSON
+  default_style_id
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import {
@@ -182,7 +176,7 @@ export abstract class Class_BaseElement {
     this._is_selected = element._is_selected
     this._position.x = element.position_x
     this._position.y = element.position_y
-    this._svg_parent_group = element._svg_parent_group;
+    this._svg_parent_group = element._svg_parent_group
   }
 
   public draw() {
@@ -962,8 +956,8 @@ export class Class_ElementStyle {
     this._config = config
     this._id = id
     this._name = name
-    this._default_style = default_style;
-    this._drawing_area = drawing_area;
+    this._default_style = default_style
+    this._drawing_area = drawing_area
 
     if (!is_deletable) {
       Object.entries(this._config).forEach(([key, config]) => {
@@ -1014,7 +1008,7 @@ export class Class_ElementStyle {
   public delete() {
     // if (this._is_deletable) {
     //   //Object.values(this._references).forEach(ref => ref.useDefaultStyle())
-       this._references = {}
+    this._references = {}
     // }
   }
 

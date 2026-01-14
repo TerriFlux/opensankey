@@ -35,7 +35,7 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import {Type_BaseElementPosition,link_data_label} from '../types/Utils'
-import { Class_LinkValueTree, Class_LinkValue, ValueOptionType, value_option_percent_constants } from './LinkValues'
+import { Class_LinkValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
@@ -409,7 +409,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawValueLabel() {
-    this._link_draw_value.drawGenericLabel();
+    this._link_draw_value.drawGenericLabel()
     this._orderD3Elements()
   }
 

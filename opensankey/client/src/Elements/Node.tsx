@@ -32,7 +32,7 @@ import {
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
-import { format_value, getStringFromJSON, getStringListFromJSON, Type_JSON } from '../types/Utils'
+import { format_value,Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
@@ -744,7 +744,6 @@ export class Class_NodeElement extends Class_NodeBase {
     let cum_h_bottom = 0
     const node_height = this.getShapeHeightToUse()
     const node_width = this.getShapeWidthToUse()
-    const node_shape = this.shape_type
 
     // Vars to keep track of sum of stacking links
     const sumLinkLeft = this.getSumOfLinksThickness('left')
@@ -757,15 +756,14 @@ export class Class_NodeElement extends Class_NodeBase {
       .forEach(link => {
         // Some variable parameters for arrow
         const arrow_length = link.shape_arrow_size
-        let node_arrow_shift = 0
-        let arrows_adjustment = 0
+        const node_arrow_shift = 0
+        const arrows_adjustment = 0
 
         // Get side of target node from which arrow as to be drawn
         const link_arrow_side_right = link.target_side == 'right'
         const link_arrow_side_left = link.target_side == 'left'
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
-        const link_direction_same_as_node_arrow = link_arrow_side_right || link_arrow_side_left || link_arrow_side_top || link_arrow_side_bottom
 
         // Thickness of the link influence arrow size
         const link_value = link.thickness

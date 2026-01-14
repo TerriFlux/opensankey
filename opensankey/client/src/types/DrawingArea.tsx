@@ -723,7 +723,7 @@ export class Class_DrawingArea {
     // let upper_y= this._background_d3_groups_shift_y
 
     // Check horizontal fitting
-    let new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
+    const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
     const new_righter_x = Math.max(fitting_width, bbox.x + bbox.width + default_DA_marging)
     this.width = new_righter_x - new_lefter_x
     //lefter_x = new_lefter_x
@@ -733,7 +733,7 @@ export class Class_DrawingArea {
     // }
 
     // Check vertical fitting
-    let new_upper_y = Math.min(0, bbox.y - default_DA_marging)
+    const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
     const new_bottom_y = Math.max(fitting_height, bbox.y + bbox.height + default_DA_marging)
     this.height = new_bottom_y - new_upper_y
     //upper_y = new_upper_y
@@ -982,34 +982,34 @@ export class Class_DrawingArea {
    * @param {number} idx_trgt
    * @memberof Class_DrawingArea
    */
-public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
+  public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
   // Nettoyer les doublons avant de commencer
-  const uniqueList = [...new Set(this._list_g_element_id)]
+    const uniqueList = [...new Set(this._list_g_element_id)]
   
-  // Validation
-  if (idx_src < 0 || idx_src >= uniqueList.length) return
-  if (idx_trgt < 0 || idx_trgt >= uniqueList.length) return
-  if (idx_src === idx_trgt) return
+    // Validation
+    if (idx_src < 0 || idx_src >= uniqueList.length) return
+    if (idx_trgt < 0 || idx_trgt >= uniqueList.length) return
+    if (idx_src === idx_trgt) return
   
-  const list_old_io = [...uniqueList]
+    const list_old_io = [...uniqueList]
   
-  const inv_moveElement = () => {
-    this._list_g_element_id = [...list_old_io]
-    this.orderElementOnDA()
+    const inv_moveElement = () => {
+      this._list_g_element_id = [...list_old_io]
+      this.orderElementOnDA()
+    }
+  
+    const _moveElement = () => {
+      const newList = [...uniqueList]
+      const [element] = newList.splice(idx_src, 1)
+      newList.splice(idx_trgt, 0, element)
+      this._list_g_element_id = newList
+      this.orderElementOnDA()
+    }
+  
+    this.application_data.history.saveUndo(inv_moveElement)
+    this.application_data.history.saveRedo(_moveElement)
+    _moveElement()
   }
-  
-  const _moveElement = () => {
-    const newList = [...uniqueList]
-    const [element] = newList.splice(idx_src, 1)
-    newList.splice(idx_trgt, 0, element)
-    this._list_g_element_id = newList
-    this.orderElementOnDA()
-  }
-  
-  this.application_data.history.saveUndo(inv_moveElement)
-  this.application_data.history.saveRedo(_moveElement)
-  _moveElement()
-}
 
   public orderElementOnDA() {
     const list_element_id = this._list_g_element_id
@@ -1487,7 +1487,7 @@ public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
 
         // In case we get there still deref ghost link
         this._ghost_link.delete()
-         this._list_g_element_id = this._list_g_element_id.filter(id => id != this._ghost_link!.id)
+        this._list_g_element_id = this._list_g_element_id.filter(id => id != this._ghost_link!.id)
         this._ghost_link = null
         this._ghost_link_source = null
         this._ghost_link_target = null

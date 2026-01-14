@@ -131,31 +131,31 @@ export class MenuConditionEvaluator {
     const selected_nodes = drawing_area.selected_nodes_list
 
     switch (condition.type) {
-      case 'nodeCount': {
-        const count = selected_nodes.length
-        return this.compareValues(count, condition.operator!, condition.value)
+    case 'nodeCount': {
+      const count = selected_nodes.length
+      return this.compareValues(count, condition.operator!, condition.value)
+    }
+    case 'nodeProperty': {
+      if (!contextualised_node || !condition.property) return false
+      const propValue = this.getNestedProperty(contextualised_node, condition.property)
+      return this.compareValues(propValue, condition.operator!, condition.value)
+    }
+    case 'optionProperty': {
+      if (!options || !condition.property) return false
+      const optionValue = options[condition.property]
+      return this.compareValues(optionValue, condition.operator!, condition.value)
+    }
+    case 'custom':
+      if (condition.customCheck) {
+        return condition.customCheck(app_data)
       }
-      case 'nodeProperty': {
-        if (!contextualised_node || !condition.property) return false
-        const propValue = this.getNestedProperty(contextualised_node, condition.property)
-        return this.compareValues(propValue, condition.operator!, condition.value)
+      if (condition.optionCheck && options) {
+        return condition.optionCheck(options)
       }
-      case 'optionProperty': {
-        if (!options || !condition.property) return false
-        const optionValue = options[condition.property]
-        return this.compareValues(optionValue, condition.operator!, condition.value)
-      }
-      case 'custom':
-        if (condition.customCheck) {
-          return condition.customCheck(app_data)
-        }
-        if (condition.optionCheck && options) {
-          return condition.optionCheck(options)
-        }
-        return false
+      return false
 
-      default:
-        return true
+    default:
+      return true
     }
   }
 
@@ -169,14 +169,14 @@ export class MenuConditionEvaluator {
 
   private static compareValues(actual: unknown, operator: MenuConditionOperator, expected: unknown): boolean {
     switch (operator) {
-      case '==': return actual === expected
-      case '!=': return actual !== expected
-      case '>': return (actual as number) > (expected as number)
-      case '<': return (actual as number) < (expected as number)
-      case '>=': return (actual as number) >= (expected as number)
-      case '<=': return (actual as number) <= (expected as number)
-      case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
-      default: return true
+    case '==': return actual === expected
+    case '!=': return actual !== expected
+    case '>': return (actual as number) > (expected as number)
+    case '<': return (actual as number) < (expected as number)
+    case '>=': return (actual as number) >= (expected as number)
+    case '<=': return (actual as number) <= (expected as number)
+    case 'includes': return Array.isArray(actual) ? actual.includes(expected) : false
+    default: return true
     }
   }
 
@@ -501,79 +501,79 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     }
 
     switch (item.type) {
-      case 'separator':
-        return (
-          <hr
-            key={`sep-${index}`}
-            style={{
-              margin: '8px 0',
-              border: 'none',
-              borderTop: '1px solid #e2e8f0'
-            }}
-          />
-        )
+    case 'separator':
+      return (
+        <hr
+          key={`sep-${index}`}
+          style={{
+            margin: '8px 0',
+            border: 'none',
+            borderTop: '1px solid #e2e8f0'
+          }}
+        />
+      )
 
-      case 'button':
-        if (item.actionName) {
-          let title_name = ''
-          if (item.titleName) title_name = item.titleName
-          else title_name = item.actionName.includes('_')
-            ? t(`${path}.${item.actionName.split('_')[0]}`)
-            : t(`${path}.${item.actionName}`)
-
-          return (
-            <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
-          )
-        }
-        return <React.Fragment key={`btn-empty-${index}`} />
-
-      case 'widget':
-        if (!item.widgetName) return null
+    case 'button':
+      if (item.actionName) {
+        let title_name = ''
+        if (item.titleName) title_name = item.titleName
+        else title_name = item.actionName.includes('_')
+          ? t(`${path}.${item.actionName.split('_')[0]}`)
+          : t(`${path}.${item.actionName}`)
 
         return (
-          <Box key={`widget-${index}`} p={2}>
-            <WidgetRenderer
-              widgetName={item.widgetName}
-              widgetProps={item.widgetProps}
-              app_data={app_data}
-              refreshCallback={refreshCallback}
-            />
-          </Box>
-        )
-
-      case 'submenu': {
-        if ((!item.titleName && !item.titleKey) || !item.children) return null
-
-        // Filtrer les enfants visibles après génération dynamique
-        const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
-        const visibleChildren = processedChildren.filter(child => isItemVisible(child))
-
-        if (visibleChildren.length === 0) return null
-
-        const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
-          ? t(item.titleKey!)
-          : t(`${path}.${item.titleKey}`))
-
-        return (
-          <Menu key={`submenu-${index}`} placement='end'>
-            <MenuButton
-              variant='contextmenu_button'
-              as={Button}
-              rightIcon={<ChevronRightIcon />}
-              className="dropdown-basic"
-            >
-              {sectionTitle}
-            </MenuButton>
-            <MenuList as={Box} layerStyle='context_menu'>
-              {visibleChildren.map((child, childIndex) =>
-                renderStructureItem(child, childIndex, depth + 1)
-              )}
-            </MenuList>
-          </Menu>
+          <ActionButton key={`btn-${index}`} actionName={item.actionName} titleName={title_name} />
         )
       }
-      default:
-        return null
+      return <React.Fragment key={`btn-empty-${index}`} />
+
+    case 'widget':
+      if (!item.widgetName) return null
+
+      return (
+        <Box key={`widget-${index}`} p={2}>
+          <WidgetRenderer
+            widgetName={item.widgetName}
+            widgetProps={item.widgetProps}
+            app_data={app_data}
+            refreshCallback={refreshCallback}
+          />
+        </Box>
+      )
+
+    case 'submenu': {
+      if ((!item.titleName && !item.titleKey) || !item.children) return null
+
+      // Filtrer les enfants visibles après génération dynamique
+      const processedChildren = item.children.flatMap(child => generateDynamicItems(child))
+      const visibleChildren = processedChildren.filter(child => isItemVisible(child))
+
+      if (visibleChildren.length === 0) return null
+
+      const sectionTitle = item.titleName ?? (item.titleKey!.includes('.')
+        ? t(item.titleKey!)
+        : t(`${path}.${item.titleKey}`))
+
+      return (
+        <Menu key={`submenu-${index}`} placement='end'>
+          <MenuButton
+            variant='contextmenu_button'
+            as={Button}
+            rightIcon={<ChevronRightIcon />}
+            className="dropdown-basic"
+          >
+            {sectionTitle}
+          </MenuButton>
+          <MenuList as={Box} layerStyle='context_menu'>
+            {visibleChildren.map((child, childIndex) =>
+              renderStructureItem(child, childIndex, depth + 1)
+            )}
+          </MenuList>
+        </Menu>
+      )
+    }
+    default:
+      return null
     }
   }
 
