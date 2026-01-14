@@ -4,7 +4,6 @@ import { Class_MenuConfigSA } from './MenuConfigSA'
 import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationHistory'
 import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
 import { LoginComponent } from './deps/LoginComponent/LoginComponent'
-import { Class_MenuConfig } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 
 declare const window: Window &
   typeof globalThis & {

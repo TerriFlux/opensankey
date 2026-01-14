@@ -228,7 +228,7 @@ const SankeyThequeAccordionGenerator: FC<FCType_SankeyThequeAccordionGenerator> 
 
 const table_replace: [string, string][] = [
   ['.json.gz', ''],
-    ['.gz', ''],
+  ['.gz', ''],
   ['_layout.json', ''],
   ['.json', ''],
   ['_reconciled.xlsx', ''],

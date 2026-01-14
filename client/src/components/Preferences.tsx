@@ -296,7 +296,7 @@ const TansferTags: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_App
   </WrapperBoxSubSectionMenu>
 }
 
-const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP, additionalMenus: MutableRefObject<Type_AdditionalMenus> }> = ({ user_data, app_data, additionalMenus }) => {
+const TabUserStyle: FC<{ user_data: Class_ApplicationDataOSP, app_data: Class_ApplicationDataOSP }> = ({ user_data, app_data }) => {
   const { t } = app_data
   user_data.t = t
   const [, setUpdate] = useState(0)
