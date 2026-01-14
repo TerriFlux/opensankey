@@ -730,9 +730,12 @@ export class LegendPersistence extends ProtoElementPersistence {
 
   public static fromJSON_0_91(
     _legend: ClassTemplate_Legend,
-    _json_object: Type_JSON,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    const json_legend = json_object['legend'] as Type_JSON
+    json_legend['x'] =  +(json_legend['legend_position'] as Type_JSON)[0]
+    json_legend['y'] =  +(json_legend['legend_position'] as Type_JSON)[1]
   }
 
   public static fromJSON(
@@ -741,9 +744,9 @@ export class LegendPersistence extends ProtoElementPersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ): void {
-    ProtoElementPersistence.fromJSON(version, legend, json_object, kwargs)
-    const json_legend = getJSONFromJSON(json_object, 'legend', {})
 
+    const json_legend = getJSONFromJSON(json_object, 'legend', {})
+    ProtoElementPersistence.fromJSON(version, legend, json_legend, kwargs)
     // const legend_position = getStringListFromJSON(
     //   json_legend, 'legend_position', [String(default_legend_position_x), String(default_legend_position_y)]
     // )
