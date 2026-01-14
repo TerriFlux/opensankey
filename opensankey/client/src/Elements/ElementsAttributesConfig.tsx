@@ -194,11 +194,11 @@ export const isConfigValueIndeterminate = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-    elements: ElementsType,
-    config: CONFIG,
-    configKey: K,
-    prefix: string
-  ): boolean => {
+  elements: ElementsType,
+  config: CONFIG,
+  configKey: K,
+  prefix: string
+): boolean => {
   if (elements.length === 0) return false
 
   const fullKey = prefix ? `${prefix}_${String(configKey)}` : String(configKey)
@@ -294,19 +294,21 @@ export function getLabelAttributeKey<
 // ==================================================================================================
 // HELPER POUR CRÉER DES CONFIGS AVEC PRÉFIXES
 // ==================================================================================================
-
-type ConfigWithPrefix<T extends Record<string, AttributeConfig<any>>, P extends string> = {// eslint-disable-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line
+type ConfigWithPrefix<T extends Record<string, AttributeConfig<any>>, P extends string> = {
   [K in keyof T as P extends '' ? K : `${P}_${string & K}`]: T[K]
 }
 
 export function createConfigWithPrefix<
-  T extends Record<string, AttributeConfig<any>>,// eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line
+  T extends Record<string, AttributeConfig<any>>,
   P extends string
 >(
   baseConfig: T,
   prefix: P
 ): ConfigWithPrefix<T, P> {
-  const result: any = {}// eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line
+  const result: any = {}
 
   for (const [key, config] of Object.entries(baseConfig)) {
     const newKey = prefix ? `${prefix}_${key}` : key
@@ -350,15 +352,16 @@ export type ConfigOverrides<T extends Record<string, AttributeConfig<unknown>>> 
     actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
   }
 }>
-
-export function createConfigWithPrefixAndOverrides<T extends Record<string, AttributeConfig<any>>, P extends string>(// eslint-disable-line @typescript-eslint/no-explicit-any
+// eslint-disable-next-line
+export function createConfigWithPrefixAndOverrides<T extends Record<string, AttributeConfig<any>>, P extends string>(
   baseConfig: T,
   prefix: P,
   category: string,
   actions: BaseActionType[],
   overrides?: ConfigOverrides<T>
 ): PrefixKeys<T, P> {
-  const result: any = {}// eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line
+  const result: any = {}
 
   for (const [key, config] of Object.entries(baseConfig)) {
     const newKey = prefix !== '' ? `${prefix}_${key}` : key
@@ -368,7 +371,8 @@ export function createConfigWithPrefixAndOverrides<T extends Record<string, Attr
       ...config,
       default: override.default !== undefined ? override.default : config.default,
       type: override.default !== undefined
-        ? (() => override.default) as any// eslint-disable-line @typescript-eslint/no-explicit-any
+        // eslint-disable-next-line
+        ? (() => override.default) as any
         : config.type,
       category: category,
       actions: actions,
