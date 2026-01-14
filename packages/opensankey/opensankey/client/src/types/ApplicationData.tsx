@@ -42,6 +42,8 @@ import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
+import { updateFrom } from '../Algorithms/UpdateFrom'
+import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 
 // SPECIFIC TYPES **********************************************************************/
 
@@ -109,7 +111,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '0.91'
+  public version: string = '0.92'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -185,23 +187,8 @@ export class Class_ApplicationData {
     'attrDrawingArea'
   ]
 
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  /**
-   * Traduction function
-   * @private
-   * @type {TFunction}
-   * @memberof Class_ApplicationData
-   */
   //@ts-expect-error xxx
   protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
-
-  /**
-   * i18n saved
-   * @private
-   * @memberof Class_ApplicationData
-   */
   //@ts-expect-error xxx
   protected _i18n: i18n = () => null//useTranslation('translation', { useSuspense: false }).i18n //traductor
 
@@ -321,36 +308,22 @@ export class Class_ApplicationData {
     document.onkeydown = this._keyboardEventListener(this)
   }
 
-  // CLEANING METHODS ===================================================================
-  /**
-   * Reset drawing area -> clean data & undraw
-   * Use a waiting spinner
-   * @memberof Class_ApplicationData
-   */
-  public reset(kwargs: Type_JSON) {
-    this.sendWaitingToast(
-      () => {
-        // Reset
-        this._reset(kwargs)
-      },
-      {
-        success: {
-          title: this.t('toast.reset.success.title'),
-          desc: this.t('toast.reset.success.desc')
-        },
-        loading: {
-          title: this.t('toast.reset.loading.title'),
-          desc: this.t('toast.reset.loading.desc')
-        }
-      })
-  }
+  // // CLEANING METHODS ===================================================================
+  // /**
+  //  * Reset drawing area -> clean data & undraw
+  //  * Use a waiting spinner
+  //  * @memberof Class_ApplicationData
+  //  */
+  // public reset(kwargs: Type_JSON) {
+  //   this._reset(kwargs)
+  // }
 
   /**
    * Reset drawing area -> clean data & undraw
    * @protected
    * @memberof Class_ApplicationData
    */
-  protected _reset(_?: Type_JSON) {
+  public reset(_?: Type_JSON) {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
@@ -541,7 +514,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     return {
       ...json_object,
-      ...this.drawing_area.toJSON(kwargs)
+      ...DrawingAreaPersistence.toJSON(this.drawing_area,kwargs)
     }
   }
 
@@ -564,7 +537,7 @@ export class Class_ApplicationData {
         // Always bypass redrawings
         this._drawing_area.bypass_redraws = true
         // Reset everything
-        this._reset(kwargs)
+        this.reset(kwargs)
         this._drawing_area.bypass_redraws = true
         // Read json file
         this._fromJSON(json_object,kwargs)
@@ -589,7 +562,7 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON
   ) {
     // Update drawing area
-    this._drawing_area.fromJSON(json_object, kwargs)
+    DrawingAreaPersistence.fromJSON(this._drawing_area,json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
   }
@@ -687,10 +660,11 @@ export class Class_ApplicationData {
       const json_layout = json_object['layout'] as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
-      drawing_area_from_layout.fromJSON(json_layout)
+      DrawingAreaPersistence.fromJSON(drawing_area_from_layout,json_layout)
       drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
       this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
-      this.drawing_area.updateFrom(
+      updateFrom(
+        this.drawing_area,
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
       )
@@ -927,7 +901,7 @@ export class Class_ApplicationData {
         })
       }
       // Update drawing area size so none of elements are outside the DA
-      this.drawing_area.checkAndUpdateAreaSize()
+      this.drawing_area.areaAutoFit()
     }
     // Open config menu ---------------------------------------------------------------
     else if (evtKeyTab) {
@@ -949,7 +923,7 @@ export class Class_ApplicationData {
     // Event to delete all selected elements ------------------------------------------
     else if (evtKeyDel) {
       // Delete selected elements
-      app_ref.drawing_area.deleteSelection(true, true)
+      app_ref.drawing_area.deleteSelection()
     }
     // Event to blur the input we are currently focused on ----------------------------
     // (It's in adequation with event on input that update drawing area when we blur input)
@@ -967,8 +941,7 @@ export class Class_ApplicationData {
       evt.preventDefault()
 
       // Select all node & links
-      app_ref.drawing_area.addAllVisibleNodesToSelection()
-      app_ref.drawing_area.addAllVisibleLinksToSelection()
+      app_ref.drawing_area.addAllVisibleElementsToSelection()
       app_ref.drawing_area.addLegendToSelection()
     }
     // Event to save current diagram in cache -----------------------------------------
@@ -1096,7 +1069,7 @@ export class Class_ApplicationData {
    */
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
-    this.drawing_area.areaAutoFit(true)
+    this.drawing_area.areaAutoFit()
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
@@ -1166,7 +1139,7 @@ export class Class_ApplicationData {
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
 
-  public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
+  //public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }

@@ -26,14 +26,11 @@
 
 import * as d3 from 'd3'
 
-// Local modules
 import { Class_NodeElement } from './Node'
-import { ClassTemplate_GhostLinkElement } from './LinkGhostElement'
 import { TooltipEventManager } from './TooltipsConfig'
+import { Class_LinkElement } from './Link'
+import { Class_ProtoElement } from './Element'
 
-/**
- * Class that handles all event operations for NodeElement
- */
 export class NodeEventsHandler {
 
   private _node: Class_NodeElement
@@ -65,7 +62,7 @@ export class NodeEventsHandler {
       if (event.shiftKey) {
         if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
           // add node to selection
-          this._node.drawing_area.addNodeToSelection(this._node)
+          this._node.drawing_area.addElementToSelection(this._node)
         }
         // Open related menu
         this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
@@ -84,7 +81,7 @@ export class NodeEventsHandler {
         // Purge selection list
         drawing_area.purgeSelection()
         // Add node to selection
-        drawing_area.addNodeToSelection(this._node)
+        drawing_area.addElementToSelection(this._node)
       }
     }
   }
@@ -106,11 +103,11 @@ export class NodeEventsHandler {
     if (nodes_selected.includes(this._node)) {
       // Memorize for undo
       nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+        dict_old_pos[n.id] = [n.position_x, n.position_y]
       })
     } else {
       // Undo function
-      dict_old_pos[this._node.id] = [this._node.display.position.x, this._node.display.position.y]
+      dict_old_pos[this._node.id] = [this._node.position_x, this._node.position_y]
     }
 
     // ✅ Utiliser les nouvelles méthodes d'accès
@@ -176,7 +173,7 @@ export class NodeEventsHandler {
     // If we moved 'this' node then we save nodes dragged previous pos in undo & current pos in redo
     // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
     if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
-      function undo(_: Class_NodeElement) {
+      function undo(_: Class_ProtoElement) {
         Object.keys(dict_old_pos).forEach(k => {
           const n = _.drawing_area.sankey.nodes_dict[k]
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
@@ -190,8 +187,10 @@ export class NodeEventsHandler {
     this._node.setDragState(false)
 
     // Move all elements so none of them are outside the DA
-    this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
-    this._node.drawing_area.nodePositioning.computeParametricV()
+    if (this._node.sankey.default_style.position_type == 'parametric') {
+      this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      this._node.drawing_area.nodePositioning.computeParametricV()
+    }
 
     const drawing_area = this._node.drawing_area
     const nodes_selected = drawing_area.selected_nodes_list
@@ -233,7 +232,7 @@ export class NodeEventsHandler {
       }
     }
 
-    this._node.drawing_area.checkAndUpdateAreaSize()
+    this._node.drawing_area.areaAutoFit()
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
@@ -256,7 +255,7 @@ export class NodeEventsHandler {
       this._node.drawing_area.closeAllMenus()
 
       // Ref newly created link this var to be used in other mouse event
-      this._node.drawing_area.ghost_link = new ClassTemplate_GhostLinkElement(
+      this._node.drawing_area.ghost_link = new Class_LinkElement(
         'ghost_link',
         this._node,
         target,
@@ -272,7 +271,7 @@ export class NodeEventsHandler {
     event.preventDefault()
     this._node.drawing_area.pointer_pos = [event.pageX, event.pageY]
     if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
-      this._node.drawing_area.addNodeToSelection(this._node)
+      this._node.drawing_area.addElementToSelection(this._node)
     }
     this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     this._node.drawing_area.node_contextualised = this._node
@@ -327,10 +326,10 @@ export class NodeEventsHandler {
   private addOrRemoveNodeFromSelection() {
     if (this._node.drawing_area.selected_nodes_list.includes(this._node)) {
       // Remove node from selection
-      this._node.drawing_area.removeNodeFromSelection(this._node)
+      this._node.drawing_area.removeElementFromSelection(this._node)
     } else {
       // Add node to selection
-      this._node.drawing_area.addNodeToSelection(this._node)
+      this._node.drawing_area.addElementToSelection(this._node)
     }
   }
 
@@ -386,24 +385,24 @@ export class NodeEventsHandler {
       const dict_old_pos: { [x: string]: [number, number] } = {}
       // Memorize for redo
       nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.display.position.x, n.display.position.y]
+        dict_old_pos[n.id] = [n.position_x, n.position_y]
       })
       // Redo function
       function redo() {
         nodes_selected.forEach(n => {
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
         })
-        drawing_area.checkAndUpdateAreaSize()
+        drawing_area.areaAutoFit()
       }
       this._node.saveRedo(redo)
     } else {
       // Memorize for redo
-      const old_x = this._node.display.position.x
-      const old_y = this._node.display.position.y
+      const old_x = this._node.position_x
+      const old_y = this._node.position_y
       // Redo function
-      function redo(_: Class_NodeElement) {
+      function redo(_: Class_ProtoElement) {
         _.setPosXY(old_x, old_y)
-        drawing_area.checkAndUpdateAreaSize()
+        drawing_area.areaAutoFit()
       }
       this._node.saveRedo(redo)
     }

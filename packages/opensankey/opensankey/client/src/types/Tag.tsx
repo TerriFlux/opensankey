@@ -30,12 +30,12 @@ import { Class_LinkValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import {
   Type_JSON,
-  default_grey_color,
   getBooleanFromJSON,
   getNumberFromJSON,
   getStringFromJSON,
   makeId
 } from '../types/Utils'
+import { default_grey_color } from '../Elements/ElementsAttributesConfig'
 import { Class_Sankey } from './Sankey'
 import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup } from './TagGroup'
 
@@ -203,7 +203,7 @@ export abstract class Class_ProtoTag {
     _kwargs?: Type_JSON
   ): void {
     this._name = getStringFromJSON(json_object, 'name', this._name)
-    this._is_selected = getBooleanFromJSON(json_object, 'selected', false)
+    this._is_selected = getBooleanFromJSON(json_object, 'selected', true)
     this._color = getStringFromJSON(json_object, 'color', this._color)
   }
 

@@ -58,10 +58,8 @@ import {
   ConvertSankeyValue,
   TagsCatalog
 } from './LegacyType'
-import {
-  default_dx,
-  default_dy
-} from '../Elements/NodeAttributes'
+import { default_dx, default_dy } from '../Elements/ElementsAttributesConfig'
+
 
 const default_element_color = '#a9a9a9'
 

@@ -4,7 +4,6 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
-import { Class_NodeAttribute } from '../../Elements/NodeAttributes'
 import {
   aggregate,
   disaggregate,
@@ -18,6 +17,8 @@ import {
 } from '../../Algorithms/Hierarchies'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
+import { StorageType } from '../../Elements/Element'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -35,7 +36,7 @@ export class NodeActions {
     this.drawing_area = app_data.drawing_area
     this.history = app_data.history
     this.contextualised_node = this.drawing_area.node_contextualised
-    this.selected_nodes = this.drawing_area.visible_and_selected_nodes_list
+    this.selected_nodes = this.drawing_area.selected_nodes_list
   }
 
   // ==================================================================================================
@@ -83,8 +84,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const child_dims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     //let parent = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].parent
     // if (!dim_name) {
@@ -109,8 +110,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -122,8 +123,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child_pure :
-      this.contextualised_node.dimensions_as_child_pure
+      this.contextualised_node.master_node.dimensions_as_child :
+      this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -135,8 +136,8 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
       const child = childDims.filter(dim=>dim.children.filter(c=>c.id==dim_name).length>0)[0].children[0].id
@@ -154,22 +155,22 @@ export class NodeActions {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
-    this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
+    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]
       disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
     }
   }
 
-  expandRight = (dim_name: string) => {
+  expandRight = (_: string) => {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent_pure :
-      this.contextualised_node.dimensions_as_parent_pure
-    this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
+      this.contextualised_node.master_node.dimensions_as_parent :
+      this.contextualised_node.dimensions_as_parent
+    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
     if (childDims.length > 0) {
       const child = childDims[0].children[0]
       disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
@@ -210,7 +211,7 @@ export class NodeActions {
     addNewLinks(this.contextualised_node)
     this.drawing_area.purgeSelection()
     this.drawing_area.node_contextualised = undefined
-    this.drawing_area.areaAutoFit(false)
+    this.drawing_area.areaAutoFit()
     this.refreshAndSave()
   }
 
@@ -467,9 +468,9 @@ export class NodeActions {
   }
 
   resetAttr = () => {
-    const dict_old_value: { [x: string]: Class_NodeAttribute } = {}
+    const dict_old_value: { [x: string]: StorageType<typeof ALL_ATTRIBUTES_CONFIG> } = {}
     this.selected_nodes.forEach(n => {
-      dict_old_value[n.id] = n.display.attributes
+      dict_old_value[n.id] = n.attributes
     })
 
     const doReset = () => {
@@ -479,7 +480,7 @@ export class NodeActions {
 
     const undoReset = () => {
       this.selected_nodes.forEach(n => {
-        n.display.attributes = dict_old_value[n.id]
+        n.attributes = dict_old_value[n.id]
       })
       this.refreshAndSave()
     }
@@ -510,13 +511,13 @@ export class NodeActions {
   }
 
   createTiedZdt = () => {
-    const cont = this.drawing_area.addNewDefaultFreeLabel()
+    const cont = this.drawing_area.sankey.addNewDefaultContainer()
     cont.tied_to_nodes = true
     this.drawing_area.selected_nodes_list.forEach(node => {
       node.getListDescendantOfNode().forEach(n => {
-        this.drawing_area.attachNodeToCont(n, cont)
+        cont.attachNodeToCont(n)
       })
-      this.drawing_area.attachNodeToCont(node, cont)
+      cont.attachNodeToCont(node)
     })
     this.drawing_area.draw()
   }
@@ -539,14 +540,14 @@ export class NodeActions {
 
   selectOutputLinks = () => {
     this.selected_nodes.forEach(n => {
-      n.output_links_list.forEach(l => this.drawing_area.addLinkToSelection(l))
+      n.output_links_list.forEach(l => this.drawing_area.addElementToSelection(l))
     })
     this.refreshAndSave()
   }
 
   selectInputLinks = () => {
     this.selected_nodes.forEach(n => {
-      n.input_links_list.forEach(l => this.drawing_area.addLinkToSelection(l))
+      n.input_links_list.forEach(l => this.drawing_area.addElementToSelection(l))
     })
     this.refreshAndSave()
   }

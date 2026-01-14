@@ -48,18 +48,18 @@ import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
-import { DrawingAreaStyle, GraphElementsOrdoner, LayoutConfigDAScaleAndLimit, LegendContextConfig, LegendStyleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
-import { SankeyMenuConfigurationNodesIO } from '../configmenus/SankeyMenuConfigurationNodesIO'
-import { MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
-import { MenuConfigurationLinkShape } from '../configmenus/SankeyMenuConfigurationLinksShape'
-import { MenuConfigurationNodeStyle } from '../configmenus/SankeyMenuConfigurationNodesShape'
-import { MenuConfigurationNodeContext } from '../configmenus/SankeyMenuConfigurationNodesLabel'
+import { DrawingAreaConfig, GraphElementsOrdoner, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
+import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
+import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
 import { WrapperContentConfig } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { OSTooltip } from '../configmenus/MenuCommon'
-import { MenuConfigurationLinkLabel } from '../configmenus/SankeyMenuConfigurationLinksLabel'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
-import { FormatConfigStructure,} from '../dialogs/PersistenceProcessDialogConfigs'
+import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
+import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
+import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
+import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export declare const window: Window &
   typeof globalThis & {
@@ -93,8 +93,8 @@ export const SankeyMenu = (
   }: {
     app_data: Class_ApplicationData,
     additionalMenus: MutableRefObject<Type_AdditionalMenus>,
-    input_config:FormatConfigStructure,
-    output_config:FormatConfigStructure
+    input_config: FormatConfigStructure,
+    output_config: FormatConfigStructure
   }
 ) => {
   const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
@@ -181,39 +181,39 @@ export const SankeyMenu = (
             (!app_data.is_static) ||
             (window.sankey && window.sankey.footer)
           ) ? <Box
-            display='grid'
-            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-            margin='0.2rem'
-          >
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='start'
+              display='grid'
+              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+              margin='0.2rem'
             >
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='start'
+              >
               ©
-              <img
-                width={75}
-                src={logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
+                <img
+                  width={75}
+                  src={logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
               - {t('tdr')}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              {app_name}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-            </Box>
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='end'
-              paddingRight='1.5rem'
-            >
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                {app_name}
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+              </Box>
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='end'
+                paddingRight='1.5rem'
+              >
               12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-            </Box>
-          </Box> :
+              </Box>
+            </Box> :
             <></>
           }
         </Box>
@@ -246,6 +246,7 @@ export const SankeyMenu = (
               className='drawer_menu_config'
               style={{
                 width: menu_config_width + '%',
+                height: 50 + '%',
                 right: app_data.drawing_area.fit_margin / 2,
                 marginTop: posTopMenuConfig
               }}
@@ -300,6 +301,49 @@ export const SankeyMenu = (
         dialog_name={'ref_setter_show_modal_file_converter'}
         input_config={input_config}
         output_config={output_config}
+      />
+      <LabelRichTextEditor
+        app_data={app_data}
+      />
+      {/* <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_shape_attribute_editor'}
+        content={<MenuShapeAttributes app_data={app_data} />}
+        title={'Fond de Label'}
+        minW={'25vw'}
+        maxW={'25vw'}
+      /> */}
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_value_formatting_editor'}
+        content={<MenuUnit app_data={app_data} />}
+        title={'Formattage des valeurs'}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_value_type_editor'}
+        content={<LinkValueTypeSelector app_data={app_data} t={t}/>}
+        title={'Type de valeur'}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_element_ordoner'}
+        content={<GraphElementsOrdoner app_data={app_data} />}
+        title={t('Menu.ElOrder')}
+        minW={'25vw'}
+        maxW={'25vw'}
+      />
+      <MenuDraggable
+        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+        dialog_name={'ref_setter_show_node_reorganizer_editor'}
+        content={<NodeIOReorganizer app_data={app_data} />}
+        title={t('Noeud.Reorg_title')}
+        minW={'25vw'}
+        maxW={'25vw'}
       />
 
       {modal_support}
@@ -380,14 +424,14 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     >
       {t('Menu.Config.type_style')}
     </Button>
-    <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
+    {/* <Button variant={type_menu_configuration_selected == 'context' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
         app_data.menu_configuration.type_menu_configuration_selected = 'context'
         ref_to_menu_config_updater.current()
       }}
     >
       {t('Menu.Config.type_context')}
-    </Button>
+    </Button> */}
     {Object.entries(additional_menus.current.additional_menu_type).map((el, id) => {
       const keyType = el[0] as keyTypeConfig
       return <Button key={'additional_type_config_' + id} variant={type_menu_configuration_selected == keyType ? 'button_type_config_activated' : 'button_type_config'}
@@ -418,64 +462,64 @@ const ConfigContent = ({ app_data, additional_menus }:
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
-      'data': <WrapperContentConfig title={t('Menu.Config.title_table')}>
+      data: <WrapperContentConfig title={t('Menu.Config.title_table')}>
         <SpreadSheet app_data={app_data} />
       </WrapperContentConfig>,
-
-      'DA': <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <>
-          <LayoutConfigDAScaleAndLimit new_data={app_data} />
-          <GraphElementsOrdoner new_data={app_data} />
-        </>
-      </WrapperContentConfig>,
-      'node': <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <SankeyMenuConfigurationNodesIO new_data={app_data} />
-      </WrapperContentConfig>,
-
-      'flow': <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinksData app_data={app_data} />
-      </WrapperContentConfig>,
-
-      ...additional_menus.current.additional_menu_config_content.data
-
-    },
-
-    // Menus related to context config
-    context: {
-      DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
-        <LegendContextConfig new_data={app_data} />
+      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+        <SankeyNodeSelection app_data={app_data} />
       </WrapperContentConfig>,
 
       flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-        <MenuConfigurationLinkLabel new_data={app_data} additionMenus={additional_menus} menu_for_style={false} />
+        <MenuConfigurationLinksData app_data={app_data} />
       </WrapperContentConfig>,
 
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeContext app_data={app_data} menu_for_style={false} />
+      object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
+        <SankeyContainerSelection app_data={app_data} />
       </WrapperContentConfig>,
-
-      ...additional_menus.current.additional_menu_config_content.context
-
     },
-
-    // Menus related to style config
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <DrawingAreaStyle new_data={app_data} extra_background_element={additional_menus.current.extra_background_element} />
-          <LegendStyleConfig new_data={app_data} />
+          <DrawingAreaConfig app_data={app_data} />
         </>
       </WrapperContentConfig>,
-
-      flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
-        <MenuConfigurationLinkShape new_data={app_data} menu_for_style={false} />
+      legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
+        <>
+          <LegendConfig app_data={app_data} />
+        </>
       </WrapperContentConfig>,
-
-      node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-        <MenuConfigurationNodeStyle app_data={app_data} additional_menus={additional_menus} menu_for_style={false} />
+      element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
+        <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
-      ...additional_menus.current.additional_menu_config_content.style
+      // flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
+
+      // node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
+      // object: <WrapperContentConfig title={t('Menu.Config.title_object')}>
+      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+      // </WrapperContentConfig>,
     },
+    // Menus related to context config
+    // context: {
+    //   flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
+
+    //   node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
+
+    //   object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
+    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+    //   </WrapperContentConfig>,
+
+
+    //   ...additional_menus.current.additional_menu_config_content.context
+
+    // },
     presentation: {
       ...additional_menus.current.additional_new_menu_config_content.presentation
     }
@@ -509,10 +553,14 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
   const elements_buttons = style_config[type_menu_configuration_selected].elements_configurable
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
+    'element': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_element'), disabled: false },
+    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false },
     'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
     'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
+    'legend': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_legend'), disabled: false },
     'node': { icon: app_data.icon_library.icon_node, text: t('Menu.Config.element_node'), disabled: false },
     'data': { icon: app_data.icon_library.icon_tableau, text: t('Menu.Config.element_data'), disabled: false },
+
     ...additional_menus.current.additional_menu_button_element_configurable
   }
 
@@ -520,8 +568,8 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
     border: 'none',
     borderRadius: '4px',
     background: 'white',
-    width: '3.5rem',
-    padding: '0.2rem',
+    width: '2.7rem',
+    padding: '0.1rem',
   }}>
     {
       elements_buttons.filter(el => el in dict_buttons_element_to_config).map((el, i) => {
@@ -538,8 +586,9 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
         >
           {dict_buttons_element_to_config[el].icon}
           <Box
+            style={{ fontSize: '0.5rem'}}
             as='span'
-            padding='0.2rem 0.1rem 0rem 0.1rem'
+            padding='0rem 0.0rem 0rem 0.0rem'
           >
             {dict_buttons_element_to_config[el].text}
           </Box>
