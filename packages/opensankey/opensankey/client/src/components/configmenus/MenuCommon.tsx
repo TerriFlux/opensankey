@@ -58,7 +58,6 @@ import {
   PlacementWithLogical,
   Textarea
 } from '@chakra-ui/react'
-import { FaCaretDown, FaCaretUp } from 'react-icons/fa'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ElementStyle } from '../../Elements/Element'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -69,10 +68,8 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
-import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
-import { Class_NodeElement } from '../../Elements/Node'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -121,18 +118,7 @@ export const WrapperBoxSubSectionMenu: FC<FCType_WrapperBoxSubSectionMenu> = ({
     </Collapse>
   </Box>
 }
-const icon_collapse_up = <FaCaretUp />
-const icon_collapse_down = <FaCaretDown />
-/**
- * Wrapper to create a box collapsable to reduce size of sub-section in configuration sub-menus 
- *
- * @param {*} {
- *   app_data,
- *   title,
- *   children
- * }
- * @return {*} 
- */
+
 export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, children }: {
   title: string,
   open?: boolean,
@@ -155,16 +141,16 @@ export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, chi
     </Checkbox>
 
   </Box>
-    <Collapse in={isOpen} animateOpacity>
-      <Box
-        layerStyle='menuconfigpanel_grid'
-        marginLeft='1rem'
-        borderLeft='lightgray 1px solid'
-        paddingLeft='0.2rem'
-      >
-        {children}
-      </Box>
-    </Collapse>
+  <Collapse in={isOpen} animateOpacity>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      marginLeft='1rem'
+      borderLeft='lightgray 1px solid'
+      paddingLeft='0.2rem'
+    >
+      {children}
+    </Box>
+  </Collapse>
   </>
 }
 // Version refactorisée de MenuSectionCheckbox
@@ -172,10 +158,9 @@ export const MenuSectionCheckbox = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent, children
-}: React.PropsWithChildren<{
-  app_data: Class_ApplicationData
+    elements, attributePath, attributeKey, config,
+    prefix = '', refreshParentComponent, children
+  }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
   attributeKey: K
@@ -184,8 +169,6 @@ export const MenuSectionCheckbox = <
   refreshParentComponent: () => void
   children: React.ReactNode
 }>) => {
-
-  const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
   return (
@@ -421,9 +404,9 @@ export const ElementAttrSetter2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  elements, attributePath, attributeKey, config,
-  prefix = '', t, showTooltipOverload = true, children
-}: React.PropsWithChildren<{
+    elements, attributePath, attributeKey, config,
+    prefix = '', t, showTooltipOverload = true, children
+  }: React.PropsWithChildren<{
   elements: (Class_LinkElement | Class_NodeBase | Class_ElementStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: K
@@ -466,15 +449,15 @@ export const ElementAttrSetterSelect2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data,
-  elements,
-  attributePath,
-  attributeKey,
-  config,
-  prefix = '',
-  refreshParentComponent,
-  options
-}: {
+    app_data,
+    elements,
+    attributePath,
+    attributeKey,
+    config,
+    prefix = '',
+    refreshParentComponent,
+    options
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -490,7 +473,6 @@ export const ElementAttrSetterSelect2Cols = <
 }) => {
   const { t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey)) as K
 
   return (
     <ElementAttrSetter2Cols
@@ -534,9 +516,9 @@ export const ElementAttrSetterTextInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent
-}: {
+    app_data, elements, attributePath, attributeKey, config,
+    prefix = '', refreshParentComponent
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -576,10 +558,10 @@ export const ElementAttrSetterNumberInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent = () => null,
-  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
-}: {
+    app_data, elements, attributePath, attributeKey, config,
+    prefix = '', refreshParentComponent = () => null,
+    minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string,
@@ -710,10 +692,10 @@ export const isElementAttributeOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-  elements: ElementsType,
-  attr: K,
-  config: CONFIG
-) => {
+    elements: ElementsType,
+    attr: K,
+    _config: CONFIG
+  ) => {
   return elements.some(element => {
     //if (element instanceof Class_LinkElement) {
     //@ts-expect-error xxx
@@ -727,23 +709,12 @@ export const isElementAttributeOverloaded = <
   })
 }
 
-/**
-   * Local component that add a icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
-   *
-   * @param {*} {k}
-   * @return {*}
-   */
-/**
- * Local component that adds an icon with a tooltip to show attribute value is managed by element attribute (and not style as by default)
- * @template TElement - Type of elements (Class_LinkElement | Class_NodeBase)
- * @template TElementAttribute - Type of element attributes (Class_LinkAttribute | Class_NodeAttribute)
- */
 export const TooltipElementOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  attributeKey, config, prefix, elements, t
-}: {
+    attributeKey, config, prefix, elements, t
+  }: {
   attributeKey: K,
   config: CONFIG,
   prefix: string,
@@ -765,9 +736,9 @@ export const ConditionalCheckboxWithInput = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
-  minimum_value = 0, stepper = true, children
-}: {
+    app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
+    minimum_value = 0, stepper = true, children
+  }: {
   app_data: Class_ApplicationData,
   elements: ElementsType,
   checkboxAttributeKey: K,
@@ -831,9 +802,8 @@ export const CheckboxWithColorPicker = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent, children
-}: {
-  app_data: Class_ApplicationData,
+    elements, attributePath, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent, children
+  }: {
   elements: ElementsType,
   attributePath: string,
   checkboxAttributeKey: K,
@@ -843,7 +813,6 @@ export const CheckboxWithColorPicker = <
   refreshParentComponent: () => void,
   children?: React.ReactNode
 }) => {
-  const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
@@ -888,9 +857,8 @@ export const SimpleElementCheckbox = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributeKey, config, prefix, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
-}: {
-  app_data: Class_ApplicationData
+    elements, attributeKey, config, prefix, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
+  }: {
   elements: ElementsType
   attributeKey: K
   config: CONFIG
@@ -898,7 +866,6 @@ export const SimpleElementCheckbox = <
   refreshParentComponent: () => void
   variant?: string
 }) => {
-  const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
   return (
@@ -1090,7 +1057,7 @@ const LinkTooltipEditor: FC<{
 }> = (props) => <TooltipEditor {...props} />
 
 export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_ApplicationData }) => {
-  let selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
+  const selected_nodes = new_data.drawing_area.selected_nodes_list_sorted
 
   return (
     <>
@@ -1105,7 +1072,7 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
 }
 
 export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  let selected_links = app_data.drawing_area.selected_links_list_sorted
+  const selected_links = app_data.drawing_area.selected_links_list_sorted
   
   return (
     <>
@@ -1394,7 +1361,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
       }}
     />
   </InputGroup>
-    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+  <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
   </FormControl>
 }
 
@@ -1640,7 +1607,8 @@ export const LabelWithOverload = ({
     <Box display="flex" alignItems="center" gap={1}>
       {children}
       <TooltipElementOverloaded
-        attributeKey={`${prefix}_${attributeKey}` as any}
+      //@ts-expect-error xxx
+        attributeKey={`${prefix}_${attributeKey}`}
         elements={elements}
         config={config}
         prefix={prefix}

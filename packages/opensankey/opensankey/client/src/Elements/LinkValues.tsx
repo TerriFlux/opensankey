@@ -811,7 +811,7 @@ export class Class_LinkValue {
   public fromJSON(
     json_object: Type_JSON,
     matching_taggs_id: { [_: string]: string; } = {},
-    matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
+    _matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
     // Update attributes

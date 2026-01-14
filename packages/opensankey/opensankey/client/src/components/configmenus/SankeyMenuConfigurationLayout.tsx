@@ -32,8 +32,8 @@ import {
   Select
 } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from './MenuCommon'
-import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
+import { ConfigMenuNumberInput, MenuColorPicker } from './MenuCommon'
+import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
@@ -155,168 +155,168 @@ export const DrawingAreaConfig = ({app_data,}: {app_data: Class_ApplicationData}
   }
 
   return <>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.BgC')}
-        </Box>
-        <OSTooltip label={t('MEP.tooltips.BgC')}>
-          <Box>
-            <MenuColorPicker
-              initialColor={app_data.drawing_area.color}
-              onColorChange={eventBgColor}
-            />
-          </Box>
-        </OSTooltip>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.BgC')}
       </Box>
-      <Box layerStyle='menuconfigpanel_row_2cols'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={app_data.drawing_area.grid_visible}
-          icon={<CustomFaEyeCheckIcon />}
-          onChange={eventGridVisible}
-        >
-          <OSTooltip label={t('MEP.tooltips.GV')}>
-            {t('MEP.TCG')}
-          </OSTooltip>
-        </Checkbox>
-
-        <OSTooltip label={t('MEP.tooltips.TCG')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.grid_size}
-            function_on_blur={eventGridSize}
-            minimum_value={10}
-            stepper={true}
-            unit_text={right_addon_pixel(app_data.drawing_area.grid_size)}
+      <OSTooltip label={t('MEP.tooltips.BgC')}>
+        <Box>
+          <MenuColorPicker
+            initialColor={app_data.drawing_area.color}
+            onColorChange={eventBgColor}
           />
-        </OSTooltip>
-      </Box>
-
-      {/* Nodes move by steps */}
+        </Box>
+      </OSTooltip>
+    </Box>
+    <Box layerStyle='menuconfigpanel_row_2cols'>
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.magnetic_nodes}
+        isChecked={app_data.drawing_area.grid_visible}
         icon={<CustomFaEyeCheckIcon />}
-        onChange={eventMagneticNodes}
+        onChange={eventGridVisible}
       >
-        <OSTooltip label={t('MEP.tooltips.MN')}>
-          {t('MEP.MN')}
+        <OSTooltip label={t('MEP.tooltips.GV')}>
+          {t('MEP.TCG')}
         </OSTooltip>
       </Checkbox>
 
-      {unit_taggs.length > 0 && (
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
-            {unit_taggs[0].name}
-          </Box>
-          <Select
-            name={unit_taggs[0].id}
-            variant='menuconfigpanel_option_select'
-            value={selectedTag}
-            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              setSelectedTag(evt.target.value)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {unit_taggs[0].tags_list.map(tag => (
-              <option key={tag.id} value={tag.id}>{tag.name}</option>
-            ))}
-          </Select>
-        </Box>
-      )}
+      <OSTooltip label={t('MEP.tooltips.TCG')}>
+        <ConfigMenuNumberInput
+          t={app_data.t}
+          default_value={app_data.drawing_area.grid_size}
+          function_on_blur={eventGridSize}
+          minimum_value={10}
+          stepper={true}
+          unit_text={right_addon_pixel(app_data.drawing_area.grid_size)}
+        />
+      </OSTooltip>
+    </Box>
 
-      {/* Échelle */}
+    {/* Nodes move by steps */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={app_data.drawing_area.magnetic_nodes}
+      icon={<CustomFaEyeCheckIcon />}
+      onChange={eventMagneticNodes}
+    >
+      <OSTooltip label={t('MEP.tooltips.MN')}>
+        {t('MEP.MN')}
+      </OSTooltip>
+    </Checkbox>
+
+    {unit_taggs.length > 0 && (
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('MEP.Echelle')}
+        <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+          {unit_taggs[0].name}
         </Box>
-        <Box>
+        <Select
+          name={unit_taggs[0].id}
+          variant='menuconfigpanel_option_select'
+          value={selectedTag}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            setSelectedTag(evt.target.value)
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        >
+          {unit_taggs[0].tags_list.map(tag => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </Select>
+      </Box>
+    )}
+
+    {/* Échelle */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.Echelle')}
+      </Box>
+      <Box>
+        <ConfigMenuNumberInput
+          t={app_data.t}
+          default_value={unit_taggs.length > 0 ? unit_taggs[0].tags_dict[selectedTag].scale : app_data.drawing_area.scale}
+          function_on_blur={eventScale}
+          minimum_value={1}
+          stepper={true}
+          unit_text={'unit. / 100 pixels'}
+        />
+      </Box>
+    </Box>
+
+    {/* Limites min/max */}
+    <Box layerStyle='menuconfigpanel_2row_3cols'>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='1'
+        gridColumnEnd='2'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        {t('MEP.link_size_limit')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MinFlux')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MaxFlux')}
+      </Box>
+      <Box
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MinFlux')}>
           <ConfigMenuNumberInput
             t={app_data.t}
-            default_value={unit_taggs.length > 0 ? unit_taggs[0].tags_dict[selectedTag].scale : app_data.drawing_area.scale}
-            function_on_blur={eventScale}
-            minimum_value={1}
+            default_value={app_data.drawing_area.minimum_flux}
+            function_on_blur={eventMinLinkThickness}
+            maximum_value={app_data.drawing_area.maximum_flux}
             stepper={true}
-            unit_text={'unit. / 100 pixels'}
           />
-        </Box>
+        </OSTooltip>
       </Box>
-
-      {/* Limites min/max */}
-      <Box layerStyle='menuconfigpanel_2row_3cols'>
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='1'
-          gridColumnEnd='2'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          {t('MEP.link_size_limit')}
-        </Box>
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='2'
-          gridColumnEnd='3'
-          gridRowStart='1'
-          gridRowEnd='2'
-          alignItems='flex-end'
-        >
-          {t('MEP.MinFlux')}
-        </Box>
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='3'
-          gridColumnEnd='4'
-          gridRowStart='1'
-          gridRowEnd='2'
-          alignItems='flex-end'
-        >
-          {t('MEP.MaxFlux')}
-        </Box>
-        <Box
-          gridColumnStart='2'
-          gridColumnEnd='3'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          <OSTooltip label={t('MEP.tooltips.MinFlux')}>
-            <ConfigMenuNumberInput
-              t={app_data.t}
-              default_value={app_data.drawing_area.minimum_flux}
-              function_on_blur={eventMinLinkThickness}
-              maximum_value={app_data.drawing_area.maximum_flux}
-              stepper={true}
-            />
-          </OSTooltip>
-        </Box>
-        <Box
-          gridColumnStart='3'
-          gridColumnEnd='4'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
-            <ConfigMenuNumberInput
-              t={app_data.t}
-              default_value={app_data.drawing_area.maximum_flux}
-              function_on_blur={eventMaxLinkThickness}
-              minimum_value={app_data.drawing_area.minimum_flux}
-              stepper={true}
-              unit_text={right_addon_pixel(app_data.drawing_area.maximum_flux!)}
-            />
-          </OSTooltip>
-        </Box>
-
-      </Box>
-      <Button
-        variant={'menuconfigpanel_option_button'}
-        onClick={() => {
-          app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_element_ordoner.current(true)
-        }}
+      <Box
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='2'
+        gridRowEnd='3'
       >
-        {t('Menu.ElOrder')}
-      </Button>
-    </>
+        <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.maximum_flux}
+            function_on_blur={eventMaxLinkThickness}
+            minimum_value={app_data.drawing_area.minimum_flux}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.maximum_flux!)}
+          />
+        </OSTooltip>
+      </Box>
+
+    </Box>
+    <Button
+      variant={'menuconfigpanel_option_button'}
+      onClick={() => {
+        app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_element_ordoner.current(true)
+      }}
+    >
+      {t('Menu.ElOrder')}
+    </Button>
+  </>
 }
 
 /**
@@ -665,7 +665,7 @@ export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_Application
     ...draggableStyle
   })
 
-  const handleDragEnd = (evt: any) => {
+  const handleDragEnd:OnDragEndResponder = (evt) => {
     if (evt.destination && evt.destination.index !== undefined && evt.source.index !== evt.destination.index) {
       app_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
       triggerUpdate()

@@ -26,7 +26,6 @@
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Class_BaseElement } from './Element'
-import { Class_ContainerElement } from './TextZone'
 
 export class Class_ZoneSelection extends Class_BaseElement {
 

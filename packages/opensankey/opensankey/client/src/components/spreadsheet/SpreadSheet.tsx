@@ -38,7 +38,7 @@ import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
 import { applyRandomColors } from '../../Algorithms/Colors'
-import { DrawingAreaPersistence, LinkElementPersistence, NodeElementPersistence } from '../../Persistence/SankeyPersistence'
+import { DrawingAreaPersistence, NodeElementPersistence } from '../../Persistence/SankeyPersistence'
 
 // Define the structure of a flux (flow) row in the spreadsheet
 interface IType_SpreadSheetFlux {
