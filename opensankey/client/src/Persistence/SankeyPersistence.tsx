@@ -463,7 +463,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
         }
       })
       if (json_local.local_link_scale) {
-        link.attributes['shape_local_link_scale'] = +json_local.local_link_scale/link.sankey.drawing_area.scale
+        link.attributes['shape_local_link_scale'] = +json_local.local_link_scale / link.sankey.drawing_area.scale
       }
     }
 
@@ -576,7 +576,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
   }
 
   public static fromJSON_0_9(
-    _node: Class_NodeElement,
+    node: Class_NodeElement,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
@@ -667,6 +667,8 @@ export class NodeElementPersistence extends NodeBasePersistence {
       node.icon_vert = 'middle'
       node.icon_horiz = 'middle'
     }
+    if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
+    if (json_local.name_label_horiz == 'middle') node.name_label_text_align = 'middle'
   }
 
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
@@ -946,7 +948,7 @@ export class SankeyPersistence {
     Object.entries(json_container_object)
       .forEach(([_, container_json]) => {
         const name = (container_json as Type_JSON)['name'] as string
-        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_,name)
+        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
         fromJSON(container, container_json as Type_JSON, kwargs)
       })
   }
@@ -1274,7 +1276,7 @@ export class SankeyPersistence {
         kwargs
       )
     )
-    sankey.nodes_list.forEach(node=>node.dimensions_as_child.forEach(dim=>dim.normalize()))
+    sankey.nodes_list.forEach(node => node.dimensions_as_child.forEach(dim => dim.normalize()))
     SankeyPersistence.load_containers(
       sankey,
       json_object,
