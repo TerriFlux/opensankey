@@ -181,39 +181,39 @@ export const SankeyMenu = (
             (!app_data.is_static) ||
             (window.sankey && window.sankey.footer)
           ) ? <Box
-            display='grid'
-            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-            margin='0.2rem'
-          >
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='start'
+              display='grid'
+              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+              margin='0.2rem'
             >
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='start'
+              >
               ©
-              <img
-                width={75}
-                src={logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
+                <img
+                  width={75}
+                  src={logo_terriflux}
+                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+                />
               - {t('tdr')}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              {app_name}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-            </Box>
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='end'
-              paddingRight='1.5rem'
-            >
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                {app_name}
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+              </Box>
+              <Box layerStyle='menubottom_item_style'>
+                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+              </Box>
+              <Box
+                layerStyle='menubottom_item_style'
+                justifySelf='end'
+                paddingRight='1.5rem'
+              >
               12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
-            </Box>
-          </Box> :
+              </Box>
+            </Box> :
             <></>
           }
         </Box>
@@ -489,7 +489,7 @@ const ConfigContent = ({ app_data, additional_menus }:
         </>
       </WrapperContentConfig>,
       element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
-         <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
+        <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
       // flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
       //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
@@ -586,7 +586,7 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
         >
           {dict_buttons_element_to_config[el].icon}
           <Box
-          style={{ fontSize: '0.5rem'}}
+            style={{ fontSize: '0.5rem'}}
             as='span'
             padding='0rem 0.0rem 0rem 0.0rem'
           >

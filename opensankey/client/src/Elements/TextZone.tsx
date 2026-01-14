@@ -130,26 +130,26 @@ export class Class_ContainerElement extends Class_NodeBase {
     // Appliquer les marges selon la position
     if (this.at_extremity_of_attached_nodes) {
       switch (this.extremity_position) {
-        case 'top':
-          this.position_y = min_y - this.shape_min_height - this.margin_bottom
-          this.position_x = min_x - this.margin_left
-          this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-          break
-        case 'bottom':
-          this.position_y = max_y + this.margin_top
-          this.position_x = min_x - this.margin_left
-          this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-          break
-        case 'left':
-          this.position_x = min_x - this.shape_min_width - this.margin_right
-          this.position_y = min_y - this.margin_top
-          this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-          break
-        case 'right':
-          this.position_x = max_x + this.margin_left
-          this.position_y = min_y - this.margin_top
-          this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-          break
+      case 'top':
+        this.position_y = min_y - this.shape_min_height - this.margin_bottom
+        this.position_x = min_x - this.margin_left
+        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
+        break
+      case 'bottom':
+        this.position_y = max_y + this.margin_top
+        this.position_x = min_x - this.margin_left
+        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
+        break
+      case 'left':
+        this.position_x = min_x - this.shape_min_width - this.margin_right
+        this.position_y = min_y - this.margin_top
+        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
+        break
+      case 'right':
+        this.position_x = max_x + this.margin_left
+        this.position_y = min_y - this.margin_top
+        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
+        break
       }
     } else {
       // Mode englobant : appliquer les marges sur tous les côtés

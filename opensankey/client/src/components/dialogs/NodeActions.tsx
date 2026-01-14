@@ -164,7 +164,7 @@ export class NodeActions {
     }
   }
 
-  expandRight = (dim_name: string) => {
+  expandRight = (_: string) => {
     if (!this.contextualised_node) return
 
     const childDims = this.contextualised_node.master_node ?

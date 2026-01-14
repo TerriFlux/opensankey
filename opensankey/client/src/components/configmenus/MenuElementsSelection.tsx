@@ -6,6 +6,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_NodeBase } from '../../Elements/NodeBase'
 
 // ==================================================================================
 // TYPES & CONFIGURATION
@@ -201,7 +202,7 @@ export const ALL_CONFIGS = {
 interface UnifiedSelectionProps {
   app_data: Class_ApplicationData
   // Configuration
-  config?: ElementConfig<any>  // Pour single-type
+  config?: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement>  // Pour single-type
   enabledTypes?: ElementType[]  // Pour multi-type
   // Mode
   mode?: 'full' | 'simple'
@@ -255,7 +256,7 @@ export const UnifiedElementSelection = ({
   const getAllFilteredElements = () => {
     if (!isMultiType) return []
 
-    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<any> }[] = []
+    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -276,7 +277,7 @@ export const UnifiedElementSelection = ({
   const getAllSelectedElements = () => {
     if (!isMultiType) return []
 
-    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<any> }[] = []
+    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -385,15 +386,14 @@ export const UnifiedElementSelection = ({
   const toggleVisibility = () => {
     setOnlyVisible(!only_visible)
   }
+type DropdownOption = SingleTypeOption | MultiTypeOption
+// ==================================================================================
+// HANDLERS
+// ==================================================================================
+const handleDropdownChange = (selected: DropdownOption[]) => {
+  const newSelection = selected.map(d => d.value)
 
-  // ==================================================================================
-  // HANDLERS
-  // ==================================================================================
-
-  const handleDropdownChange = (selected: any[]) => {
-    const newSelection = selected.map(d => d.value)
-
-    if (isMultiType) {
+  if (isMultiType) {
       // Multi-type : traiter chaque type
       enabledTypes!.forEach(type => {
         if (!activeFilters.has(type)) return
@@ -412,80 +412,80 @@ export const UnifiedElementSelection = ({
           }
         })
       })
-    } else {
-      // Single-type
-      singleTypeElements.forEach(element => {
-        if (newSelection.includes(element.id)) {
-          app_data.drawing_area.addElementToSelection(element)
-        } else {
-          app_data.drawing_area.removeElementFromSelection(element)
-        }
-      })
-    }
+  } else {
+    // Single-type
+    singleTypeElements.forEach(element => {
+      if (newSelection.includes(element.id)) {
+        app_data.drawing_area.addElementToSelection(element)
+      } else {
+        app_data.drawing_area.removeElementFromSelection(element)
+      }
+    })
+  }
 
+  refreshAndUpdateRelated()
+}
+
+const handleCreate = () => {
+  if (!singleConfig?.createNewElement) return
+
+  let newElement: Class_NodeElement | Class_LinkElement | Class_ContainerElement
+
+  const execute = () => {
+    newElement = singleConfig.createNewElement!(app_data)
+    app_data.drawing_area.purgeSelectionOfElement()
+    app_data.drawing_area.addElementToSelection(newElement)
     refreshAndUpdateRelated()
   }
 
-  const handleCreate = () => {
-    if (!singleConfig?.createNewElement) return
-
-    let newElement: any
-
-    const execute = () => {
-      newElement = singleConfig.createNewElement!(app_data)
-      app_data.drawing_area.purgeSelectionOfElement()
-      app_data.drawing_area.addElementToSelection(newElement)
-      refreshAndUpdateRelated()
+  const undo = () => {
+    if ('deleteNode' in app_data.drawing_area && newElement instanceof Class_NodeElement) {
+      app_data.drawing_area.deleteNode(newElement)
+    } else if ('deleteLink' in app_data.drawing_area && newElement instanceof Class_LinkElement) {
+      app_data.drawing_area.deleteLink(newElement)
+    } else if ('deleteContainer' in app_data.drawing_area && newElement instanceof Class_ContainerElement) {
+      app_data.drawing_area.deleteContainer(newElement)
     }
-
-    const undo = () => {
-      if ('deleteNode' in app_data.drawing_area && newElement instanceof Class_NodeElement) {
-        app_data.drawing_area.deleteNode(newElement)
-      } else if ('deleteLink' in app_data.drawing_area && newElement instanceof Class_LinkElement) {
-        app_data.drawing_area.deleteLink(newElement)
-      } else if ('deleteContainer' in app_data.drawing_area && newElement instanceof Class_ContainerElement) {
-        app_data.drawing_area.deleteContainer(newElement)
-      }
-      refreshAndUpdateRelated()
-    }
-
-    history.saveUndo(undo)
-    history.saveRedo(execute)
-    execute()
-  }
-
-  const handleDelete = () => {
-    app_data.drawing_area.deleteSelectedElements()
     refreshAndUpdateRelated()
   }
 
-  const handleNameUpdate = (newName: string | null | undefined) => {
-    if (!singleConfig?.hasNameInput || !newName || singleTypeSelectedElements.length !== 1) return
+  history.saveUndo(undo)
+  history.saveRedo(execute)
+  execute()
+}
 
-    const oldName = singleTypeSelectedElements[0].name
+const handleDelete = () => {
+  app_data.drawing_area.deleteSelectedElements()
+  refreshAndUpdateRelated()
+}
 
-    const execute = () => {
-      if (singleTypeSelectedElements.length === 1) {
-        singleTypeSelectedElements[0].name = newName
-        refreshAndToggleSaving()
-      }
+const handleNameUpdate = (newName: string | null | undefined) => {
+  if (!singleConfig?.hasNameInput || !newName || singleTypeSelectedElements.length !== 1) return
+
+  const oldName = singleTypeSelectedElements[0].name
+
+  const execute = () => {
+    if (singleTypeSelectedElements.length === 1) {
+      (singleTypeSelectedElements[0] as Class_NodeBase).name = newName
+      refreshAndToggleSaving()
     }
-
-    const undo = () => {
-      if (singleTypeSelectedElements.length === 1) {
-        singleTypeSelectedElements[0].name = oldName
-        refreshAndToggleSaving()
-      }
-    }
-
-    history.saveUndo(undo)
-    history.saveRedo(execute)
-    execute()
   }
 
-  // ==================================================================================
-  // TYPES POUR LES OPTIONS DU DROPDOWN
-  // ==================================================================================
+  const undo = () => {
+    if (singleTypeSelectedElements.length === 1) {
+      (singleTypeSelectedElements[0] as Class_NodeBase).name = oldName
+      refreshAndToggleSaving()
+    }
+  }
+
+  history.saveUndo(undo)
+  history.saveRedo(execute)
+  execute()
+}
+
+// ==================================================================================
+// TYPES POUR LES OPTIONS DU DROPDOWN
+// ==================================================================================
 
   interface SingleTypeOption {
     label: string
@@ -498,12 +498,12 @@ export const UnifiedElementSelection = ({
     type: ElementType
   }
 
-  type DropdownOption = SingleTypeOption | MultiTypeOption
+  // type DropdownOption = SingleTypeOption | MultiTypeOption
 
-  // Dans la fonction isMultiTypeOption pour le type guard
-  const isMultiTypeOption = (option: DropdownOption): option is MultiTypeOption => {
-    return 'type' in option
-  }
+  // // Dans la fonction isMultiTypeOption pour le type guard
+  // const isMultiTypeOption = (option: DropdownOption): option is MultiTypeOption => {
+  //   return 'type' in option
+  // }
 
   // ==================================================================================
   // Dans le composant UnifiedElementSelection
@@ -537,13 +537,13 @@ export const UnifiedElementSelection = ({
           ? selected.map(opt => opt.label).join(', ')
           : t(singleConfig!.translationKeys.labelNoSelection) || 'Aucune sélection'
       }
-  const multiSelectStrings = {
-    selectSomeItems: 'Sélectionner...',
-    allItemsAreSelected: 'Tous sélectionnés',
-    selectAll: 'Tout sélectionner',
-    search: 'Rechercher',
-    clearSearch: 'Effacer',
-  }
+    const multiSelectStrings = {
+      selectSomeItems: 'Sélectionner...',
+      allItemsAreSelected: 'Tous sélectionnés',
+      selectAll: 'Tout sélectionner',
+      search: 'Rechercher',
+      clearSearch: 'Effacer',
+    }
     return (
       <Box layerStyle='submenuconfig_droplist' width={width}>
         <MultiSelect

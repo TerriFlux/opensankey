@@ -46,7 +46,7 @@ export const NodeIOReorganizer = ({
   const { icon_move_element_down, icon_move_element_up } = icon_library
   
   // ✅ TOUS LES HOOKS D'ABORD (avant tout return)
-  const [count, setCount] = useState(0)
+  const [_, setCount] = useState(0)
   const [node, setNode] = useState<Class_NodeElement | undefined>(undefined)
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
