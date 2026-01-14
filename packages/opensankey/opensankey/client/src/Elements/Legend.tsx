@@ -151,7 +151,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
         const scale_da = this.drawing_area.getZoomScale()
         this.d3_selection = d3_drawing_area_selection.append('g')
         this.d3_selection.attr('id', this.svg_group)
-        //.attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
+        .attr('transform', 'translate(' + 0 + ',' + this.drawing_area.getNavBarHeight() + ') scale(' + 1 / scale_da + ')')  // init drawing area zone with a margin for taking into account the navbar
       }
     }
 
@@ -195,9 +195,11 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public applyPosition() {
     if (this.d3_selection !== null) {
+      const position_y = this.position_y + this.drawing_area.getNavBarHeight()
+      const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',
-        'translate(' + this.position_x + ', ' + this.position_y + ')'
+        'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')'
       )
     }
     this.drawDragHandlers()
