@@ -666,9 +666,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.icon_is_visible) {
       node.icon_vert = 'middle'
       node.icon_horiz = 'middle'
-    }
+    }    
+    node.name_label_text_align = 'middle'
     if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
-    if (json_local.name_label_horiz == 'middle') node.name_label_text_align = 'middle'
+    if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
   }
 
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
