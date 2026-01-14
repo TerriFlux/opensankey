@@ -124,10 +124,15 @@ def handle_json_or_compressed(exemple_file_path):
     """
     try:
         # Déterminer les chemins des fichiers JSON et JSON.GZ
+
         if exemple_file_path.endswith(".json.gz"):
             # Cas 1: Fichier .json.gz demandé
             json_gz_path = exemple_file_path
             json_path = exemple_file_path.replace(".json.gz", ".json")
+        elif exemple_file_path.endswith(".gz"):
+            # Cas 1: Fichier .json.gz demandé
+            json_gz_path = exemple_file_path
+            json_path = exemple_file_path.replace(".gz", ".json")
         elif exemple_file_path.endswith(".json"):
             # Cas 2: Fichier .json demandé, mais on veut retourner du .json.gz
             json_path = exemple_file_path
@@ -270,7 +275,7 @@ def parse_folder(current_dir, menus, key=None):
             menus[key]["Files"].sort()
             exemple_found = True
             continue
-        if ".json" in file_or_folder or ".json.gz" in file_or_folder:
+        if ".json" in file_or_folder or ".json.gz" in file_or_folder or ".gz" in file_or_folder:
             if key not in menus:
                 menus[key] = {}
             if "Files" not in menus[key]:

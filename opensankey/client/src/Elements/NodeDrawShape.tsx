@@ -24,9 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import { Class_NodeElement } from './Node'
-import { default_element_color } from '../types/Utils'
-import { default_selected_stroke_width } from './Node'
+import { Class_NodeBase } from './NodeBase'
 
 type draw_arrow_partFType = (
   node_face_size: number,
@@ -37,17 +35,16 @@ type draw_arrow_partFType = (
   revert: boolean,
   arrow_length: number,
   node_arrow_shift: number,
-  node_arrow_shift2: number,
-  node_is_arrow: boolean
+  node_arrow_shift2: number
 ) => string
 /**
  * Class that handles all drawing and rendering operations for NodeElement shapes
  */
 export class NodeDrawShape {
 
-  private _node: Class_NodeElement
+  private _node: Class_NodeBase
 
-  constructor(node: Class_NodeElement) {
+  constructor(node: Class_NodeBase) {
     this._node = node
   }
 
@@ -59,27 +56,28 @@ export class NodeDrawShape {
     if (!this._node.d3_selection)
       return
 
-    const drawingElements = this._node.internalDrawingElements
+    //const drawingElements = this._node.internalDrawingElements
 
     // Clean previous shape
-    drawingElements.d3_selection_g_shape?.selectAll('.node_shape').remove()
+    this._node.d3_selection_g_shape?.selectAll('.node_shape').remove()
 
     // Do the rest only if shape is visible
     // Compute shape attributes
     const width = this._node.getShapeWidthToUse()
     const height = this._node.getShapeHeightToUse()
-    const color = this.getShapeColorToUse()
+    const color = this._node.getShapeColorToUse()
 
     // Apply shape value
     if (this._node.shape_type === 'rect') {
-      drawingElements.d3_selection_g_shape?.append('rect')
+      this._node.d3_selection_g_shape?.append('rect')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('width', width)
         .attr('height', height)
+        .attr('rx', this._node.shape_border_radius)
     }
     else if (this._node.shape_type === 'ellipse') {
-      drawingElements.d3_selection_g_shape?.append('ellipse')
+      this._node.d3_selection_g_shape?.append('ellipse')
         .classed('node', true)
         .classed('node_shape', true)
         .attr('cx', width / 2)
@@ -87,124 +85,28 @@ export class NodeDrawShape {
         .attr('rx', width / 2)
         .attr('ry', height / 2)
     }
-    else if (this._node.shape_type === 'arrow') {
-      drawingElements.d3_selection_g_shape?.append('path')
-        .classed('node', true)
-        .classed('node_shape', true)
-        .attr('d', this.getArrowPath())
-    }
 
     // Apply common properties
-    drawingElements.d3_selection_g_shape?.selectAll('.node_shape')
+    this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
-      .attr('fill-opacity', this._node.shape_visible ? this._node.shape_opacity : '0')
+      .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
       .attr('fill', color)
-      .attr('stroke', 'black')
-      .attr('stroke-width', this._node.is_selected ? default_selected_stroke_width : 0)
-      .attr('stroke-opacity', this._node.is_selected ? 1 : 0)
+      .attr('stroke', this._node.shape_border_color)
+      .attr('stroke-width', this._node.shape_border_thickness)
+      .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
+      .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
   }
 
   /**
    * Update stroke width for selected state
    */
-  public updateSelectedStroke(isSelected: boolean) {
-    const drawingElements = this._node.internalDrawingElements
-    drawingElements.d3_selection_g_shape?.selectAll('.node_shape')
-      .attr('stroke-width', isSelected ? default_selected_stroke_width : 0)
-      .attr('stroke-opacity', isSelected ? 1 : 0)
-  }
+  // public updateSelectedStroke(isSelected: boolean) {
+  //   const drawingElements = this._node.internalDrawingElements
+  //   drawingElements.d3_selection_g_shape?.selectAll('.node_shape')
+  //     .attr('stroke-width', isSelected ? default_selected_stroke_width : this._node.shape_border_thickness)
+  //     .attr('stroke-opacity', this._node.shape_border_visible || isSelected ? 1 : 0)
+  // }
 
-  /**
-   * Select the right color to use for this node (attribute / style / tags / ...)
-   */
-  public getShapeColorToUse() {
-    // Default color
-    let shape_color = default_element_color
-    if (
-      (this._node.shape_color_sustainable)
-    ) {
-      return this._node.shape_color
-    }
-    if (!this._node.sankey.node_taggs_list.some(tagg=>tagg.use_colors)) {
-      return this._node.shape_color
-    }
-    // Is the color defined by tags
-    const taggs_activated = this._node.taggs_list
-      .filter(tagg => tagg.use_colors)
-    if (
-      (taggs_activated.length > 0)
-    ) {
-      const tagg_for_colormap = taggs_activated[0]
-      const tags_for_colormap = this._node.tags_list
-        .filter(tag => (tag.group === tagg_for_colormap))
-      const selected_tags_for_colormap = tags_for_colormap
-        .filter(tag => tag.is_selected)
-
-      if (selected_tags_for_colormap.length > 0) {
-        shape_color = selected_tags_for_colormap[0].color
-      }
-    }
-
-    return shape_color
-  }
-
-  /**
-   * Generate arrow path for arrow-shaped nodes
-   */
-  private getArrowPath() {
-    // Compute height & width
-    const width = this._node.getShapeWidthToUse()
-    const height = this._node.getShapeHeightToUse()
-    // Svg path to construct
-    let path = ''
-
-    // Arrow toward the right side
-    if (this._node.shape_arrow_angle_direction === 'right') {
-      const opp = Math.tan(this._node.shape_arrow_angle_factor * Math.PI / 180) * (height / 2)
-      const p0: string = '0,0'
-      const p1: string = (width - opp) + ',0'
-      const p2: string = width + ',' + (height / 2)
-      const p3: string = (width - opp) + ',' + height
-      const p4: string = '0,' + height
-      const p5: string = opp + ',' + (height / 2)
-      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
-    }
-    // Arrow toward the left side
-    else if (this._node.shape_arrow_angle_direction === 'left') {
-      const opp = Math.tan((this._node.shape_arrow_angle_factor * Math.PI / 180)) * (height / 2)
-      const p0: string = opp + ',0'
-      const p1: string = width + ',0'
-      const p2: string = width - opp + ',' + (height / 2)
-      const p3: string = width + ',' + height
-      const p4: string = opp + ',' + height
-      const p5: string = '0,' + (height / 2)
-      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
-    }
-    // Arrow toward the top
-    else if (this._node.shape_arrow_angle_direction === 'top') {
-      const opp = Math.tan((this._node.shape_arrow_angle_factor * Math.PI / 180)) * (width / 2)
-      const p0: string = '0,' + opp
-      const p1: string = width / 2 + ',0'
-      const p2: string = width + ',' + opp
-      const p3: string = width + ',' + height
-      const p4: string = width / 2 + ',' + (height - opp)
-      const p5: string = '0,' + height
-      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
-    }
-    // Arrow toward the bottom
-    else {
-      const opp = Math.tan((this._node.shape_arrow_angle_factor * Math.PI / 180)) * (width / 2)
-      const p0: string = '0,0'
-      const p1: string = (width / 2) + ',' + opp
-      const p2: string = width + ',0'
-      const p3: string = width + ',' + (height - opp)
-      const p4: string = (width / 2) + ',' + height
-      const p5: string = '0,' + (height - opp)
-      path = 'M' + p0 + 'L' + p1 + 'L' + p2 + 'L' + p3 + 'L' + p4 + 'L' + p5 + 'z'
-    }
-
-    return path
-  }
 }
 
 
@@ -245,8 +147,7 @@ export const draw_arrow_part: draw_arrow_partFType = (
   revert,
   arrow_length,
   node_arrow_shift,
-  node_arrow_shift2,
-  node_is_arrow
+  _node_arrow_shift2
 ) => {
   // Il est possible que arrowSizeAlreadyComputed,linkSize et arrowHalfHeight soit à 0 ce qui entraine => 0/0 qui retourne NaN et cause des problème àl'export png/pdf
   // Donc on assume que ca vaut 0
@@ -282,13 +183,7 @@ export const draw_arrow_part: draw_arrow_partFType = (
     x2 = x0 + l * (2 - ratio_cum - ratio_cur)
     x3 = start
   }
-  if (node_is_arrow) {
-    if (node_arrow_shift > arrow_length) {
-      x1 = x1 + l + node_arrow_shift2 * coeff
-      x2 = x2 + l + node_arrow_shift2 * coeff
-    }
-    x3 += node_arrow_shift * coeff
-  }
+
 
   const arrowHalfHeight_scaled_by_ratio_cumulative_value = arrowHalfHeight * ratio_cum
   const arrowHalfHeight_scaled_by_ratio_current_value = arrowHalfHeight * ratio_cur

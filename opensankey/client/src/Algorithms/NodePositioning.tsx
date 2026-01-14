@@ -32,7 +32,7 @@ import {
   Class_LinkElement
 } from '../Elements/Link'
 import { Class_Tag } from '../types/Tag'
-import { Class_DataTagGroup,Class_LevelTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
 
@@ -809,7 +809,7 @@ export class NodePositioning {
       })
 
 
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].position_dy!
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -1004,7 +1004,7 @@ export class NodePositioning {
       })
 
       // Get horizontal index that needs the most vertical space
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].position_dy!
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -1039,8 +1039,8 @@ export class NodePositioning {
     // Compute left horizontal margin
     if (h_index == 0) {
       const style_node = node.getStyleWithAttr('name_label_box_width')
-      const node_label_width = this.drawingArea.sankey.node_styles_dict[style_node.id].name_label_box_width!
-      const needed_margin = this.drawingArea.grid_size + node_label_width
+      const node_shape_min_width = this.drawingArea.sankey.styles_dict[style_node.id].name_label_box_width!
+      const needed_margin = this.drawingArea.grid_size + node_shape_min_width
       if (needed_margin > h_left_margin) {
         h_left_margin = needed_margin
       }
@@ -1049,8 +1049,8 @@ export class NodePositioning {
     // Compute right horizontal margin
     if (h_index == max_horizontal_index) {
       const style_node = node.getStyleWithAttr('name_label_box_width')
-      const node_label_width = this.drawingArea.sankey.node_styles_dict[style_node.id].name_label_box_width!
-      const needed_margin = this.drawingArea.grid_size + node_label_width
+      const node_shape_min_width = this.drawingArea.sankey.styles_dict[style_node.id].name_label_box_width!
+      const needed_margin = this.drawingArea.grid_size + node_shape_min_width
       if (needed_margin > h_right_margin) {
         h_right_margin = needed_margin
       }
@@ -1098,7 +1098,7 @@ export class NodePositioning {
     if (node_id_per_hxv_indexes.length === 0) {
       return
     }
-    const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+    const v_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
 
     let shift = 0
     const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
@@ -1299,7 +1299,7 @@ export class NodePositioning {
     }
 
     // Appliquer les ajustements pour chaque colonne
-    const v_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+    const v_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
     let total_adjustments = 0
 
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
@@ -1493,8 +1493,8 @@ export class NodePositioning {
     // first split the nodes
     trade_nodes.forEach(node => {
       if (node.style.length < 2) node.style = [
-        this.drawingArea.sankey.node_styles_dict['NodeSectorStyle'],
-        this.drawingArea.sankey.node_styles_dict['NodeImportExportCloseStyle']
+        this.drawingArea.sankey.styles_dict['NodeSectorStyle'],
+        this.drawingArea.sankey.styles_dict['NodeImportExportCloseStyle']
       ]
       if (node.output_links_list.length > 0) {
         (node as Class_NodeElement).SplitIOrE(true)
@@ -1590,11 +1590,11 @@ export class NodePositioning {
 
       nodes_to_process.forEach(node => {
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
-        node.display.position.u = node_index + 1
+        node.position_u = node_index + 1
       })
     } else {
       nodes_to_process.forEach(node => {
-        node.display.position.u = Math.round(node.display.position.x / this.drawingArea.sankey.node_styles_dict['default'].position.dx!)
+        node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].position_dx!)
       })
     }
 
@@ -1743,15 +1743,15 @@ export class NodePositioning {
     // if (!nodeDimParent) {
     //   return
     // }
-    node.dimensions_as_child_pure.forEach(nodeDimParent => {
-      if (nodeDimParent.parent.display.position.v != -1) {
+    node.dimensions_as_child.forEach(nodeDimParent => {
+      if (nodeDimParent.parent.position_v != -1) {
         // v is computed at the first path
         return
       }
-      nodeDimParent.parent.display.position.x = node.position_x
-      nodeDimParent.parent.display.position.y = node.position_y
-      nodeDimParent.parent.display.position.u = node.position_u
-      nodeDimParent.parent.display.position.v = node.position_v
+      nodeDimParent.parent.position_x = node.position_x
+      nodeDimParent.parent.position_y = node.position_y
+      nodeDimParent.parent.position_u = node.position_u
+      nodeDimParent.parent.position_v = node.position_v
       this.applyVAgregate(nodeDimParent.parent as Class_NodeElement)
     })
   }
@@ -1766,13 +1766,13 @@ export class NodePositioning {
     // if (node.master_node) {
     //   return current_v
     // }
-    if (node.display.position.v == -1) {
+    if (node.position_v == -1) {
       // v is computed at the first path
-      node.display.position.v = current_v
+      node.position_v = current_v
     }
     let new_current_v = current_v
     // let desagregated_nodes: Class_NodeElement[] = []
-    node.dimensions_as_parent_pure.forEach(d => {
+    node.dimensions_as_parent.forEach(d => {
       //const d = node.nodeDimensionAsParent(tagGroup)
       if (!d) return new_current_v + 1
       if (d.children.includes(node)) return new_current_v + 1
@@ -1785,10 +1785,10 @@ export class NodePositioning {
           if (nn.master_node) {
             return
           }
-          nn.display.position.v = -1
-          nn.display.position.x = node.position_x
-          nn.display.position.u = node.position_u
-          // nn.display.position.y = current_y
+          nn.position_v = -1
+          nn.position_x = node.position_x
+          nn.position_u = node.position_u
+          // nn.position_y = current_y
           // current_y += nn.getShapeHeightToUse() + nn.position_dy
           new_current_v = this.applyVDesagregate(nn, new_current_v)
         })
@@ -1807,15 +1807,15 @@ export class NodePositioning {
       () => {
         // If it's not launched_from_process then we assume it's user input so we save it undoing
         if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
           const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
           const inv_computeAutoSankey = () => {
             this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
             // Reposition node to old pos
             this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
+              n.position_x = node_pos[n.id].x
+              n.position_y = node_pos[n.id].y
               // Reset old node IO order
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
@@ -1860,7 +1860,7 @@ export class NodePositioning {
 
         // If it's not launched_from_process then we assume it's user input so we save it undoing
         if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y, links_order: n.links_order_visible.map(l => l.id) }]))
+          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
           const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
           const _computeAutoSankey = () => {
@@ -1868,8 +1868,8 @@ export class NodePositioning {
 
             // Reposition node to old pos
             this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-              n.display.position.x = node_pos[n.id].x
-              n.display.position.y = node_pos[n.id].y
+              n.position_x = node_pos[n.id].x
+              n.position_y = node_pos[n.id].y
               // Reset old node IO order
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
@@ -1934,7 +1934,7 @@ export class NodePositioning {
       })
 
       // 3. Ajouter une marge de sécurité
-      const safety_margin = this.drawingArea.sankey.node_styles_dict['default'].position.dy!
+      const safety_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
       //min_y_to_avoid += safety_margin
 
       // 4. Calculer shape_middle_recycling en fonction de l'orientation du lien
@@ -1989,7 +1989,7 @@ export class NodePositioning {
   public arrangeNodesToGrid = () => {
     const app_data = this.drawingArea.application_data
     const { sankey } = this.drawingArea
-    const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.display.position.x, y: n.display.position.y }]))
+    const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y }]))
 
     const _arrangeNodesToGrid = () => {
       this._arrangeNodesToGrid()

@@ -24,289 +24,67 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
 
 import {
-  getBooleanFromJSON,
-  Type_JSON,
   const_default_position_x,
   const_default_position_y,
-  getStringFromJSON,
-  getNumberFromJSON,
-  Type_Position,
-  getStringOrUndefinedFromJSON,
   randomId,
-  Type_ElementPosition
+  Type_BaseElementPosition,
+  default_style_id
 } from '../types/Utils'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { Class_Sankey } from '../types/Sankey'
+import {
+  AttributeConfig,
+  IconLabelAttributeTypes,
+  LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
+  NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
+  Type_Orientation, ValueLabelAttributeTypes,
+  ConfigType
+} from './ElementsAttributesConfig'
 
-
-// CLASS PROTO ELEMENT ******************************************************************
-
-/**
- * Class that define a meta element to display on drawing area
- *
- * @class ClassTemplate_ProtoElement
- */
-export abstract class ClassTemplate_ProtoElement {
-
-  // PUBLIC ATTRIBUTES ==================================================================
-
-  /**
-   * D3 selection that contains related svg element
-   * @type {(d3.Selection<SVGGElement, ClassTemplate_Element, SVGGElement, unknown> | null)}
-   * @memberof ClassTemplate_Element
-   */
+export abstract class Class_BaseElement {
   public d3_selection: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
-
-
   private _drawing_area: Class_DrawingArea
-  private _sankey: Class_Sankey
-  /**
-   * Parent svg group : where element belong
-   * @protected
-   * @type {string}
-   * @memberof ClassTemplate_Element
-   */
-  protected _svg_parent_group: string
-
-  /**
-   * Is element currently visually selected
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_Element
-   */
-  protected _is_selected: boolean = false
-
-  /**
-   * Is element currently drawn
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_Element
-   */
-  protected _is_visible: boolean = true
-
-  /**
-   * Allows to know if element visibility must be recomputed
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_ProtoElement
-   */
+  protected _is_visible: boolean = false
   protected _visibility_fingerprint: string
 
-  /**
-   * Is mouse cursor over element d3 selection (default=false)
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_Element
-   */
-  protected _is_mouse_over: boolean = false
-
-  /**
-   * Is this element grabbed by mouse (default=false)
-   * @protected
-   * @type {boolean}
-   * @memberof ClassTemplate_Element
-   */
-  protected _is_mouse_grabbed: boolean = false
-
-  // PRIVATE ATTRIBUTES =================================================================
-
-  /**
-   * Id of element
-   * @private
-   * @type {string}
-   * @memberof ClassTemplate_Element
-   */
-  private _id: string
-
-  /**
-   * True if element is currently on a deletion process
-   * Avoid cross calls of delete() method
-   * @private
-   * @memberof ClassTemplate_Element
-   */
   private _is_currently_deleted = false
 
-  // CONSTRUCTOR ========================================================================
+  protected _position: Type_BaseElementPosition
+  protected _is_selected: boolean = false
+  protected _svg_parent_group: string
+  protected _id: string
+  protected _is_mouse_over: boolean = false
+  protected _is_mouse_grabbed: boolean = false
 
-  /**
-   * Creates an instance of ClassTemplate_Element.
-   * @param {string} id
-   * @param {Class_DrawingArea} drawing_area
-   * @param {string} svg_parent_group
-   * @memberof ClassTemplate_Element
-   */
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    sankey: Class_Sankey,
+    is_visible: boolean,
     svg_parent_group: string,
   ) {
-    // Set values
     this._id = id
-    this._drawing_area = drawing_area
-    this._sankey = sankey
+    this._is_visible = is_visible
     this._svg_parent_group = svg_parent_group
 
-    // Init visibility id
+    this._drawing_area = drawing_area
+    this._position = {
+      x: const_default_position_x,
+      y: const_default_position_y
+    }
     this._visibility_fingerprint = randomId()
-    // Element created -> set save indicator
-    //this._menu_config.ref_to_save_in_cache_indicator.current(false)
   }
 
-  // DELETION METHODS ===================================================================
-
-  /**
-   * Define deletion behavior
-   * @memberof ClassTemplate_Element
-   */
-  public delete() {
-    if (this._is_currently_deleted === false) {
-      // Set deletion boolean to true
-      this._is_currently_deleted = true
-      // Remove from drawing area
-      this.unDraw()
-      // Abstract method for cleaning relations between elements
-      this.cleanForDeletion()
-    }
-  }
-
-  /**
-   * Methods that needs to be overrides to properly clean elements
-   * @protected
-   * @memberof ClassTemplate_ProtoElement
-   */
-  protected cleanForDeletion() {
-    // Does nothing here
-  }
-
-  // COPY METHODS =======================================================================
-
-  /**
-   * Copy only attributes that are not references
-   * /!\ Id is not copied
-   * @param {ClassTemplate_ProtoElement} element_to_copy
-   * @memberof ClassTemplate_ProtoElement
-   */
-  public copyFrom(element_to_copy: ClassTemplate_ProtoElement) {
-    // Remove from drawing area
-    this.unDraw()
-    // Copy intrasect values
-    this._copyFrom(element_to_copy)
-    // We will need to check all visibility tests after copy
-    this.updateVisibilityFingerprint()
-  }
-
-  /**
-   * Copy only intrasect attributes that are not references
-   * Function to override
-   * @param {ClassTemplate_ProtoElement} element_to_copy
-   * @memberof ClassTemplate_ProtoElement
-   */
-  protected _copyFrom(element_to_copy: ClassTemplate_ProtoElement) {
-    this._is_visible = element_to_copy._is_visible
-    this._is_selected = element_to_copy._is_selected
-    this._svg_parent_group = element_to_copy._svg_parent_group
-  }
-
-  // SAVING METHODS =====================================================================
-
-  /**
-   * Convert element to JSON
-   * @return {*}
-   * @memberof Class_NodeElement
-   */
-  public toJSON(
-    kwargs?: Type_JSON
+  protected _process_or_bypass(
+    process_func: () => void
   ) {
-    // Init output JSON
-    const json_object: Type_JSON = {}
-    // Fill data
-    this._toJSON(json_object, kwargs)
-    // Return
-    return json_object
+    if (this._drawing_area.bypass_redraws)
+      return
+    process_func()
   }
 
-  protected _toJSON(
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    json_object['id'] = this._id
-    if (!this._is_visible) json_object['is_visible'] = this._is_visible
-  }
-
-  /**
-   * Apply json to element
-   * @param {Type_JSON} json_object
-   * @memberof Class_NodeElement
-   */
-  public fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ) {
-    // Remove from drawing area
-    this.unDraw()
-    // Get infos
-    this._fromJSON(json_object, kwargs)
-    // We will need to check all visibility tests after loading
-    this.updateVisibilityFingerprint()
-  }
-
-  protected _fromJSON(
-    json_object: Type_JSON,
-    _kwargs?: Type_JSON
-  ) {
-    this._id = getStringFromJSON(json_object, 'id', this._id)
-    this._is_visible = getBooleanFromJSON(json_object, 'is_visible', this._is_visible)
-  }
-
-  // PUBLIC METHODS ====================================================================
-
-  /**
-   * Set up element on d3 svg area
-   * @memberof ClassTemplate_Element
-   */
-  public draw() {
-    this._process_or_bypass(() => {
-      this.unDraw()
-      if (this.is_visible && !this._is_currently_deleted)
-        this._draw()
-    })
-  }
-
-  /**
-   * Unset element from d3 svg area
-   * @memberof ClassTemplate_Element
-   */
-  public unDraw() {
-    if (this.d3_selection !== null) {
-      this.d3_selection.remove()
-      this.d3_selection = null
-    }
-  }
-
-  public isRelatedD3SelectionPresentAndSynced() {
-    const d3_drawing_area = this.drawing_area.d3_selection
-    if (d3_drawing_area !== null) {
-      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
-      if (d3_drawing_area_selection.nodes().length > 0) {
-        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this.svg_group)
-        if (d3_selection && d3_selection.nodes().length > 0)
-          return true
-      }
-    }
-    return false
-  }
-
-  /**
-   * Set up events related to element d3_element
-   * @protected
-   * @memberof ClassTemplate_Element
-   */
   public setEventsListeners() {
     this.d3_selection?.on(
       'contextmenu',
@@ -317,7 +95,7 @@ export abstract class ClassTemplate_ProtoElement {
       'click',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
         this.eventSimpleLMBCLick(event))
-    if (!this._drawing_area.static) {
+    if (!this.drawing_area.static) {
 
       this.d3_selection?.on(
         'dblclick',
@@ -369,35 +147,55 @@ export abstract class ClassTemplate_ProtoElement {
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
         this.eventMouseMove(event))
   }
-
-  // PROTECTED METHODS ==================================================================
-
-  /**
-   * Create a timed out process - Used to avoid multiple reloading of components
-   *
-   * The process_func is meant to be use by setTimeout(),
-   * and inside setTimeOut 'this' keyword has another meaning,
-   * so the current object must be passed directly as an argument.
-   * see : https://developer.mozilla.org/en-US/docs/Web/API/setTimeout#the_this_problem
-   *
-   * @protected
-   * @param {string} process_id
-   * @param {(_: ClassTemplate_ProtoElement) => void} process_func
-   * @memberof ClassTemplate_ProtoElement
-   */
-  protected _process_or_bypass(
-    process_func: () => void
-  ) {
-    if (this._drawing_area.bypass_redraws)
-      return
-    process_func()
+  public delete() {
+    if (this._is_currently_deleted === false) {
+      // Set deletion boolean to true
+      this._is_currently_deleted = true
+      // Remove from drawing area
+      this.unDraw()
+      // Abstract method for cleaning relations between elements
+      this.cleanForDeletion()
+      
+    }
+  }
+  protected cleanForDeletion() {
+    // Does nothing here
   }
 
+  public copyFrom(element_to_copy: Class_BaseElement) {
+    // Remove from drawing area
+    this.unDraw()
+    // Copy intrasect values
+    this._copyFrom(element_to_copy)
+    // We will need to check all visibility tests after copy
+    this.updateVisibilityFingerprint()
+  }
+
+  protected _copyFrom(element: Class_BaseElement) {
+    this._is_visible = element._is_visible
+    this._is_selected = element._is_selected
+    this._position.x = element.position_x
+    this._position.y = element.position_y
+    this._svg_parent_group = element._svg_parent_group
+  }
+
+  public draw() {
+    this._process_or_bypass(() => {
+      this.unDraw()
+      if (this.is_visible && !this._is_currently_deleted)
+        this._draw()
+    })
+  }
   protected _draw() {
-    // Set d3 selections
     this._initDraw()
-    // Add events listeners
     this.setEventsListeners()
+  }
+
+  public unDraw() {
+    if (this.d3_selection !== null) {
+      this.d3_selection.remove()
+      this.d3_selection = null
+    }
   }
 
   protected _initDraw() {
@@ -410,31 +208,42 @@ export abstract class ClassTemplate_ProtoElement {
       }
     }
   }
-
-  protected abstract drawAsSelected(): void
-
-  /**
-   * History saving
-   * @param f
-   */
-  protected saveUndo(f: (_: ClassTemplate_ProtoElement) => void) {
-    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
+  public setPosXY(x: number, y: number) {
+    this._position.x = x; this._position.y = y; this.applyPosition()
   }
-
-  /**
-  * History saving
-  * @param f
-  */
-  protected saveRedo(f: (_: ClassTemplate_ProtoElement) => void) {
-    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
+  protected applyPosition() {
+    this.d3_selection?.attr(
+      'transform',
+      'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
+  public get position_x() { return this._position.x }
+  public set position_x(_) { this._position.x = _ }
+  public get position_y() { return this._position.y }
+  public set position_y(_) { this._position.y = _ }
 
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
+  public get drawing_area() { return this._drawing_area }
+  public get is_visible() {
+    return (this.sankey.is_visible && this._is_visible)
+  }
+  public get visibility_fingerprint() { return this._visibility_fingerprint }
+  public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
+  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
+  public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
+
+  public setSelected() { this._is_selected = true; this.drawAsSelected() }
+  public setUnSelected() { this._is_selected = false; this.drawAsSelected() }
+  public get is_selected() { return this._is_selected }
+  protected drawAsSelected() { }
+
+  public get id() { return this._id }
+  public get sankey() { return this.drawing_area.sankey }
+  public get svg_parent_group() { return this._svg_parent_group }
+  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
+
+  public isMouseOver() { return this._is_mouse_over }
+  public setMouseOver() { this._is_mouse_over = true }
+  public unsetMouseOver() { this._is_mouse_over = false }
+
   protected eventSimpleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -443,24 +252,12 @@ export abstract class ClassTemplate_ProtoElement {
     // TODO do something
   }
 
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter déclemenchement editeur nom de noeud
   }
 
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventSimpleRMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -469,12 +266,6 @@ export abstract class ClassTemplate_ProtoElement {
     // TODO Ajouter ouverture menu contextuel (clic droit) sur noeud
   }
 
-  /**
-   * Define maintained left mouse button click for drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMaintainedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -482,12 +273,6 @@ export abstract class ClassTemplate_ProtoElement {
     this._is_mouse_grabbed = true
   }
 
-  /**
-   * Define released left mouse button click for drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventReleasedClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -495,12 +280,6 @@ export abstract class ClassTemplate_ProtoElement {
     this._is_mouse_grabbed = false
   }
 
-  /**
-   * Define event when mouse moves over drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseOver(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -510,12 +289,6 @@ export abstract class ClassTemplate_ProtoElement {
     this.setMouseOver()
   }
 
-  /**
-   * Define event when mouse moves out of drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseOut(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -523,267 +296,737 @@ export abstract class ClassTemplate_ProtoElement {
     this.unsetMouseOver()
   }
 
-  /**
-   * Define event when mouse moves in drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseMove(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     /* TODO définir  */
   }
 
-  /**
-   * Define event when mouse drag starts
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseDragStart(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
 
-  /**
-   * Define event when mouse drag element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseDrag(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
 
-  /**
-   * Define event when mouse drag ends
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   protected eventMouseDragEnd(
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     /* TODO définir  */
   }
-
-  // GETTERS / SETTERS ==================================================================
-
-  // DrawingArea
-  public get drawing_area() { return this._drawing_area }
-
-  // Svg Group
-  public get svg_parent_group() { return this._svg_parent_group }
-  public get svg_group() { return 'gg_' + this._id.replace(/[^a-zA-Z0-9]/g, '') }
-
-  // Selection
-  public setSelected() { this._is_selected = true; this.drawAsSelected() }
-  public setUnSelected() { this._is_selected = false; this.drawAsSelected() }
-  public get is_selected() { return this._is_selected }
-
-  // Visible
-  public setVisible() { this._is_visible = true; this.updateVisibilityFingerprint(); this.draw() }
-  public setInvisible() { this._is_visible = false; this.updateVisibilityFingerprint(); this.draw() }
-  public updateVisibilityFingerprint() { this._visibility_fingerprint = randomId() }
-  public get is_visible() {
-    return (this.sankey.is_visible && this._is_visible)
-  }
-  public get visibility_fingerprint() { return this._visibility_fingerprint }
-
-  // Mouse is over element
-  public isMouseOver() { return this._is_mouse_over }
-  public setMouseOver() { this._is_mouse_over = true }
-  public unsetMouseOver() { this._is_mouse_over = false }
-
-  // Unique id
-  public get id() { return this._id }
-
-  // Sankey
-  public get sankey() { return this._sankey }
-
-  // Get application config menu
-  //public get menu_config(): Class_MenuConfig { return this._menu_config }
 }
+export abstract class Class_ProtoElement extends Class_BaseElement {
 
-// CLASS ELEMENT ************************************************************************
+  protected _storage: StorageType<ConfigType> = {}
+  protected _config: ConfigType
 
-/**
- * Class that define a meta element to display on drawing area
- * Difference with ClassTemplate_ProtoElement, ClassTemplate_Element set its position
- *
- * @class ClassTemplate_Element
- */
-export class ClassTemplate_Element extends ClassTemplate_ProtoElement {
 
-  // PROTECTED ATTRIBUTES ===============================================================
+  protected _position: Type_BaseElementPosition
+  protected _style: Class_ElementStyle[]
 
-  /**
-   * Display attributes for element
-   * @protected
-   * @type {{
-   *     drawing_area: Class_DrawingArea,
-   *     position: Type_ElementPosition,
-   *   }}
-   * @memberof ClassTemplate_Element
-   */
-  protected _display: {
-    position: Type_ElementPosition,
-  }
-
-  // CONSTRUCTOR ========================================================================
-
-  /**
-   * Creates an instance of ClassTemplate_Element.
-   * @param {string} id
-   * @param {Class_DrawingArea} drawing_area
-   * @param {string} svg_parent_group
-   * @memberof ClassTemplate_Element
-   */
   constructor(
     id: string,
     drawing_area: Class_DrawingArea,
-    sankey: Class_Sankey,
     svg_parent_group: string,
+    style: Class_ElementStyle
   ) {
-    super(id, drawing_area, sankey, svg_parent_group)
-    this._display = {
-      position: {
-        type: 'absolute', // Default position type
-        x: const_default_position_x, // Default position x    
-        y: const_default_position_y, // Default position y
-        u: 0, // Default position u
-        v: 0, // Default position v
+    super(id, drawing_area, true, svg_parent_group)
+
+    this._position = {
+      x: const_default_position_x,
+      y: const_default_position_y
+    }
+    const default_style = drawing_area.sankey.default_style
+    if (style.id == default_style_id) {
+      this._style = [default_style]
+    } else {
+      this._style = [default_style, style]
+    }
+    this._config = ALL_ATTRIBUTES_CONFIG
+    this._style.forEach(s => s.addReference(this))
+    this.createDynamicProperties()
+  }
+
+  protected createDynamicProperties() {
+    (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: () => this.getElementProperty(key as keyof ConfigType),
+        set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
+          const attribute = this._config[key]
+
+          if (attribute.setter) {
+            const setter = this[attribute.setter as keyof this]
+            if (typeof setter === 'function') {
+              setter.call(this, value)
+            }
+          } else {
+            this._storage[key] = value
+          }
+
+          if (attribute.callback) {
+            const callback = this[attribute.callback as keyof this]
+            if (typeof callback === 'function') {
+              callback.call(this)
+            }
+          }
+          if (attribute.actions) {
+            attribute.actions.forEach(action => {
+              const actionMethod = this[action as keyof this]
+              if (typeof actionMethod === 'function') {
+                actionMethod.call(this)
+              }
+            })
+          }
+        },
+        enumerable: true,
+        configurable: true
+      })
+    })
+  }
+
+  public get attributes() {
+    return this._storage
+  }
+  public set attributes(_) {
+    this._storage = _
+  }
+  public getStyleWithAttr(k: keyof ConfigType) {
+    return this._style.slice().reverse().find(s => s[k as keyof Class_ElementStyle] !== undefined) ?? this._style[0]
+  }
+
+  public getStyleProperty(k: keyof ConfigType) {
+    const valueOfStyle = this.getStyleWithAttr(k)
+    if (valueOfStyle && valueOfStyle[k as keyof Class_ElementStyle] !== undefined) {
+      return valueOfStyle[k as keyof Class_ElementStyle]
+    }
+    return this._config[k].default
+  }
+  public getElementProperty(k: keyof ConfigType) {
+    if (this._storage[k] !== undefined) {
+      return this._storage[k]
+    }
+    return this.getStyleProperty(k)
+  }
+
+  public get style() {
+    return this._style
+  }
+
+  public set style(_: Class_ElementStyle[]) {
+    if (!_) return
+    this._style.forEach(style => style.removeReference(this))
+    this._style = _
+    _.forEach(style => style.addReference(this))
+
+    this.draw()
+  }
+
+  public resetAttributes() {
+    this._storage = {}
+    this.draw()
+  }
+
+  public shouldSaveAttribute(
+    key: keyof ConfigType,
+    value: string | number | boolean | undefined
+  ): boolean {
+    return value !== undefined && value !== '' && value !== this.getStyleProperty(key)
+    // else if (default_style) return value !== undefined && value !== default_style[key]
+    // else return value !== undefined && value !== this._config[key].default
+  }
+
+  public useDefaultStyle() {
+  }
+
+  public isAttributeOverloaded(attr: keyof ConfigType) {
+    if (this._storage[attr] === undefined) return false
+    if (this._storage[attr] === this.getStyleWithAttr(attr)[attr as keyof Class_ElementStyle]) return false
+    return true
+  }
+
+  public delete_attribute(k: keyof ConfigType) {
+    delete this._storage[k]
+  }
+
+  protected cleanForDeletion() {
+    this.style.forEach(s => s.removeReference(this))
+  }
+
+  public isEqual(_: this) {
+    return Object.keys(this._config).every(attr => this[attr as keyof Class_ProtoElement] === _[attr as keyof Class_ProtoElement])
+  }
+
+  public copyAttrFrom(element_to_copy: Class_ProtoElement) {
+    this._storage = {};
+    (Object.keys(element_to_copy._storage) as Array<keyof ConfigType>).forEach(key => {
+      if (element_to_copy._storage[key] !== this.getStyleProperty(key as keyof ConfigType)) {
+        this._storage[key] = element_to_copy._storage[key]
+      }
+    })
+  }
+  protected _copyFrom(element_to_copy: Class_ProtoElement) {
+    super._copyFrom(element_to_copy)
+    this.copyAttrFrom(element_to_copy)
+    this.updateVisibilityFingerprint()
+  }
+
+  public isRelatedD3SelectionPresentAndSynced() {
+    const d3_drawing_area = this.drawing_area.d3_selection
+    if (d3_drawing_area !== null) {
+      const d3_drawing_area_selection = d3_drawing_area.selectAll(' #' + this._svg_parent_group)
+      if (d3_drawing_area_selection.nodes().length > 0) {
+        const d3_selection = d3_drawing_area_selection.selectAll(' #' + this.svg_group)
+        if (d3_selection && d3_selection.nodes().length > 0)
+          return true
       }
     }
+    return false
   }
 
-  // COPY METHODS =======================================================================
+  protected _process_or_bypass(
+    process_func: () => void
+  ) {
+    if (this.drawing_area.bypass_redraws)
+      return
+    process_func()
+  }
 
-  /**
-   * Copy only intrasect attributes that are not references
-   * Function to override
-   * @param {ClassTemplate_ProtoElement} _
-   * @memberof ClassTemplate_ProtoElement
-   */
-  protected _copyFrom(_: ClassTemplate_Element): void {
-    super._copyFrom(_)
-    this._display.position.type = _._display.position.type
-    this._display.position.x = _._display.position.x
-    this._display.position.y = _._display.position.y
-    this._display.position.u = _._display.position.u
-    if (Number.isNaN(this._display.position.u)) {
-      console.log('tutu')
+  public saveUndo(f: (_: Class_ProtoElement) => void) {
+    this.drawing_area.application_data.history.saveUndo(() => { f(this) })
+  }
+
+  public saveRedo(f: (_: Class_ProtoElement) => void) {
+    this.drawing_area.application_data.history.saveRedo(() => { f(this) })
+  }
+
+}
+export abstract class Class_BaseShape extends Class_ProtoElement {
+  // =================== SHAPE ATTRIBUTES (shape_*) ===================
+  shape_visible!: ShapeAttributeTypes['visible']
+  shape_type!: ShapeAttributeTypes['type']
+  shape_min_width!: ShapeAttributeTypes['min_width'] //only nodes
+  shape_min_height!: ShapeAttributeTypes['min_height'] //only nodes
+  shape_color_visible!: ShapeAttributeTypes['color_visible']
+  shape_color!: ShapeAttributeTypes['color']
+  shape_opacity!: ShapeAttributeTypes['opacity']
+  shape_color_sustainable!: ShapeAttributeTypes['color_sustainable']
+
+  // =================== BORDER ATTRIBUTES (border_*) ===================
+  shape_border_visible!: ShapeAttributeTypes['border_visible']
+  shape_border_color!: ShapeAttributeTypes['border_color']
+  shape_border_thickness!: ShapeAttributeTypes['border_thickness']
+  shape_border_dashed!: ShapeAttributeTypes['border_dashed']
+  shape_border_radius!: ShapeAttributeTypes['border_radius']
+
+  // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
+  // Visibility & Font
+  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
+  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
+
+  name_label_is_visible!: NameLabelAttributeTypes['is_visible']
+  name_label_font_family!: NameLabelAttributeTypes['font_family']
+  name_label_font_size!: NameLabelAttributeTypes['font_size']
+  name_label_uppercase!: NameLabelAttributeTypes['uppercase']
+  name_label_bold!: NameLabelAttributeTypes['bold']
+  name_label_italic!: NameLabelAttributeTypes['italic']
+  name_label_color!: NameLabelAttributeTypes['color']
+  // Separator
+  name_label_separator!: NameLabelAttributeTypes['separator']
+  name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+
+  // Position
+  name_label_horiz!: NameLabelAttributeTypes['horiz']
+  name_label_vert!: NameLabelAttributeTypes['vert']
+  name_label_horiz_shift!: NameLabelAttributeTypes['horiz_shift']
+  name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
+  name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
+  name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_position_x!: NameLabelAttributeTypes['position_x']
+  name_label_position_y!: NameLabelAttributeTypes['position_y']
+  name_label_position_offset!: NameLabelAttributeTypes['position_offset']
+  name_label_text_align!: NameLabelAttributeTypes['text_align']
+  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
+  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
+  // Background
+  name_label_background_visible!: NameLabelAttributeTypes['background_visible']
+  name_label_background_color!: NameLabelAttributeTypes['background_color']
+  name_label_background_opacity!: NameLabelAttributeTypes['background_opacity']
+  name_label_background_type!: NameLabelAttributeTypes['background_type']
+  name_label_background_min_width!: NameLabelAttributeTypes['background_min_width']
+  name_label_background_min_height!: NameLabelAttributeTypes['background_min_height']
+  name_label_background_color_visible!: NameLabelAttributeTypes['background_color_visible']
+  name_label_background_color_sustainable!: NameLabelAttributeTypes['background_color_sustainable']
+  name_label_background_border_visible!: NameLabelAttributeTypes['background_border_visible']
+  name_label_background_border_color!: NameLabelAttributeTypes['background_border_color']
+  name_label_background_border_thickness!: NameLabelAttributeTypes['background_border_thickness']
+  name_label_background_border_dashed!: NameLabelAttributeTypes['background_border_dashed']
+  name_label_background_border_radius!: NameLabelAttributeTypes['background_border_radius']
+
+
+  // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
+  // Visibility & Font
+  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
+  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
+
+  value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
+  value_label_font_family!: ValueLabelAttributeTypes['font_family']
+  value_label_font_size!: ValueLabelAttributeTypes['font_size']
+  value_label_uppercase!: ValueLabelAttributeTypes['uppercase']
+  value_label_bold!: ValueLabelAttributeTypes['bold']
+  value_label_italic!: ValueLabelAttributeTypes['italic']
+  value_label_color!: ValueLabelAttributeTypes['color']
+
+  // Position
+  value_label_horiz!: ValueLabelAttributeTypes['horiz']
+  value_label_vert!: ValueLabelAttributeTypes['vert']
+  value_label_horiz_shift!: ValueLabelAttributeTypes['horiz_shift']
+  value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
+  value_label_box_width!: ValueLabelAttributeTypes['box_width']
+  value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_position_x!: ValueLabelAttributeTypes['position_x']
+  value_label_position_y!: ValueLabelAttributeTypes['position_y']
+  value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
+  value_label_text_align!: ValueLabelAttributeTypes['text_align']
+  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
+  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
+  // Background
+  value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
+  value_label_background_color!: ValueLabelAttributeTypes['background_color']
+  value_label_background_opacity!: ValueLabelAttributeTypes['background_opacity']
+  value_label_background_type!: ValueLabelAttributeTypes['background_type']
+  value_label_background_min_width!: ValueLabelAttributeTypes['background_min_width']
+  value_label_background_min_height!: ValueLabelAttributeTypes['background_min_height']
+  value_label_background_color_visible!: ValueLabelAttributeTypes['background_color_visible']
+  value_label_background_color_sustainable!: ValueLabelAttributeTypes['background_color_sustainable']
+  value_label_background_border_visible!: ValueLabelAttributeTypes['background_border_visible']
+  value_label_background_border_color!: ValueLabelAttributeTypes['background_border_color']
+  value_label_background_border_thickness!: ValueLabelAttributeTypes['background_border_thickness']
+  value_label_background_border_dashed!: ValueLabelAttributeTypes['background_border_dashed']
+  value_label_background_border_radius!: ValueLabelAttributeTypes['background_border_radius']
+
+  // Formatting
+  value_label_scientific_notation!: ValueLabelAttributeTypes['scientific_notation']
+  value_label_significant_digits!: ValueLabelAttributeTypes['significant_digits']
+  value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
+  value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
+  value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+
+  // Units
+  value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
+  value_label_unit_type!: ValueLabelAttributeTypes['unit_type']
+  value_label_unit!: ValueLabelAttributeTypes['unit']
+  value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
+
+  value_label_on_path!: LinkLabelSpecificValues['on_path']
+  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  name_label_on_path!: LinkLabelSpecificValues['on_path']
+  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  orphan_node_visible!: boolean
+  position_type!: NodeShapeSpecificAttributeTypes['position_type']
+  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
+  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
+  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
+  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
+  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+
+  // =================== ICON ATTRIBUTES (icon_*) ===================
+  icon_color!: IconLabelAttributeTypes['color']
+  icon_is_visible!: IconLabelAttributeTypes['is_visible']
+  icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_view_box!: IconLabelAttributeTypes['view_box']
+  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
+  icon_horiz!: IconLabelAttributeTypes['horiz']
+  icon_vert!: IconLabelAttributeTypes['vert']
+  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
+  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_inside_horiz!: IconLabelAttributeTypes['inside_horiz']
+  icon_inside_vert!: IconLabelAttributeTypes['inside_vert']
+  icon_is_image!: IconLabelAttributeTypes['is_image']
+  icon_image_src!: IconLabelAttributeTypes['image_src']
+
+  hyperlink!: string | undefined
+
+  shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
+  shape_is_curved!: LinkShapeSpecificValues['is_curved']
+  shape_curvature!: LinkShapeSpecificValues['curvature']
+  shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
+  shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_orientation!: LinkShapeSpecificValues['orientation']
+  shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
+  shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
+  shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
+  shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
+  shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
+  shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
+  shape_color_rule!: LinkShapeSpecificValues['color_rule']
+
+  public getShapeColorToUse() {
+    return this.shape_color
+  }
+}
+
+export abstract class Class_LinkAttribute extends Class_BaseShape {
+  constructor(
+    id: string,
+    drawing_area: Class_DrawingArea,
+    svg_parent_group: string,
+    default_style: Class_ElementStyle
+  ) {
+    super(
+      id, drawing_area, svg_parent_group,
+      default_style,
+    )
+  }
+
+  // Setters personnalisés pour la logique complexe
+  private customShapeOrientation(value: Type_Orientation) {
+    if ((!this.shape_is_recycling) && (
+      ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) &&
+      ((value === 'hh') || (value === 'vv'))
+    )) {
+      if (this.shape_starting_curve !== undefined) this.attributes.shape_starting_curve = this.shape_starting_curve / 2
+      if (this.shape_ending_curve !== undefined) this.attributes.shape_ending_curve = this.shape_ending_curve / 2
     }
-    this._display.position.v = _._display.position.v
-    this._display.position.dx = _._display.position.dx
-    this._display.position.dy = _._display.position.dy
+    this.attributes.shape_orientation = value
+    this.updateLinkAndSourceTarget()
   }
 
-  // SAVING METHODS =====================================================================
-
-  protected _toJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ): void {
-    super._toJSON(json_object, kwargs)
-    if (this._display.position.type) json_object['position'] = this._display.position.type
-    json_object['x'] = this._display.position.x
-    json_object['y'] = this._display.position.y
-    json_object['u'] = this._display.position.u
-    json_object['v'] = this._display.position.v
-    // We can not handle this field here for now. They are stored in local or in the style
-    // and we have not generalised this mechanism to other elements than nodes or links
-    // if (this._display.position.dx) json_object['dx'] = this._display.position.dx
-    // if (this._display.position.dy) json_object['dy'] = this._display.position.dy
-    // if (this._display.position.relative_dx) json_object['relative_dx'] = this._display.position.relative_dx
-    // if (this._display.position.relative_dy) json_object['relative_dy'] = this._display.position.relative_dy
+  private customStartingCurve(value: number) {
+    if (value !== undefined && value >= 0) {
+      if (!this.shape_is_recycling) {
+        if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
+          this.attributes.shape_starting_curve = value <= 1.0 ? value : 1.0
+        } else {
+          const endingCurve = this.shape_ending_curve ?? this._config.shape_ending_curve.default
+          this.attributes.shape_starting_curve = (value + endingCurve) <= 1.0 ? value : 1.0 - endingCurve
+        }
+      } else {
+        this.attributes.shape_starting_curve = value
+      }
+    } else {
+      this.attributes.shape_starting_curve = value
+    }
   }
 
-  protected _fromJSON(
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ): void {
-    super._fromJSON(json_object, kwargs)
-    this._display.position.type = getStringOrUndefinedFromJSON(json_object, 'position') as Type_Position
-    this._display.position.x = getNumberFromJSON(json_object, 'x', this._display.position.x)
-    this._display.position.y = getNumberFromJSON(json_object, 'y', this._display.position.y)
-    this._display.position.u = getNumberFromJSON(json_object, 'u', this._display.position.u)
-    this._display.position.v = getNumberFromJSON(json_object, 'v', this._display.position.v)
-    // We can not handle this field here for now. They are stored in local or in the style
-    // and we have not generalised this mechanism to other elements than nodes or links
-    // this._display.position.dx = getNumberOrUndefinedFromJSON(json_object, 'dx')
-    // this._display.position.relative_dx = getNumberOrUndefinedFromJSON(json_object, 'relative_dx')
-    // this._display.position.dy = getNumberOrUndefinedFromJSON(json_object, 'dy')
-    // this._display.position.relative_dy = getNumberOrUndefinedFromJSON(json_object, 'relative_dy')
+  private customEndingCurve(value: number) {
+    if (value !== undefined && value >= 0) {
+      if (!this.shape_is_recycling) {
+        if ((this.shape_orientation === 'vh') || (this.shape_orientation === 'hv')) {
+          this.attributes.shape_ending_curve = value <= 1.0 ? value : 1.0
+        } else {
+          const startingCurve = this.shape_starting_curve ?? this._config.shape_starting_curve.default
+          this.attributes.shape_ending_curve = (value + startingCurve) <= 1.0 ? value : 1.0 - startingCurve
+        }
+      } else {
+        this.attributes.shape_ending_curve = value
+      }
+    } else {
+      this.attributes.shape_ending_curve = value
+    }
   }
 
-  // PUBLIC METHODS =====================================================================
+  private customStartingTangeant(value: number) {
+    this.attributes['shape_starting_tangeant'] = (value !== undefined && value > 0) ? value : value
 
-  // Positioning
-  public setPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.applyPosition() }
-  public initPosXY(x: number, y: number) { this._display.position.x = x; this._display.position.y = y; this.draw() }
-  public initDefaultPosXY() { this.initPosXY(const_default_position_x, const_default_position_y) }
-
-  /**
-   * Apply node position to it shape in d3
-   * @protected
-   * @return {*}
-   * @memberof Class_Node
-   */
-  public applyPosition() {
-    this._process_or_bypass(() => this._applyPosition())
   }
 
-  // PROTECTED METHODS ==================================================================
+  private customEndingTangeant(value: number) {
+    this.attributes['shape_ending_tangeant'] = (value !== undefined && value > 0) ? value : value
 
-  /**
-   * Set up element on d3 svg area
-   * @protected
-   * @memberof ClassTemplate_Element
-   */
-  protected _draw() {
-    // Draw element on D3
-    super._draw()
-    // Add apply position
-    this._applyPosition()
   }
 
-  protected drawAsSelected() { }
-
-  /**
-   * Apply node position to it shape in d3
-   * @protected
-   * @return {*}
-   * @memberof Class_Node
-   */
-  protected _applyPosition() {
-    this.d3_selection?.attr(
-      'transform',
-      'translate(' + this.position_x + ', ' + this.position_y + ')')
+  private customShapeIsRecycling(value: boolean) {
+    // En mode recycling, pas de limite supérieure pour starting & ending
+    // En mode normal, on a des limites, donc on doit les appliquer
+    if (!value && this.attributes.shape_is_recycling) {
+      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
+      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
+    }
+    this.attributes.shape_is_recycling = value
   }
 
-  // GETTERS / SETTERS ==================================================================
 
-  // Position 
-  public get position_x() { return this._display.position.x }
-  public set position_x(_: number) { this._display.position.x = _ }
-  public get position_y() { return this._display.position.y }
-  public set position_y(_: number) { this._display.position.y = _ }
-  public get position_u() { return this._display.position.u }
-  public set position_u(_: number) { this._display.position.u = _ }
-  public get position_v() { return this._display.position.v }
-  public set position_v(_: number) { this._display.position.v = _ }
-  public get position_dx() { return this._display.position.dx }
-  public set position_dx(_) { this._display.position.dx = _ }
-  public get position_dy() { return this._display.position.dy }
-  public set position_dy(_) { this._display.position.dy = _ }
-  public get position_auto_x() { return this._display.position.auto_x }
-  public set position_auto_x(_) { this._display.position.auto_x = _ }
-  public get position_auto_y() { return this._display.position.auto_y }
-  public set position_auto_y(_) { this._display.position.auto_y = _ }
-  public get display() { return this._display }
+  // Méthodes abstraites
+  // protected update() { }
+  protected updateLinkAndSourceTarget() { }
+}
+
+// Type helper pour extraire le type de valeur d'un AttributeConfig
+export type ExtractAttributeValue<T> = T extends AttributeConfig<infer U> ? U : never
+
+// Type pour le storage basé sur CONFIG
+export type StorageType<CONFIG extends Record<string, AttributeConfig<unknown>>> = {
+  -readonly [K in keyof CONFIG]?: ExtractAttributeValue<CONFIG[K]>
+}
+export class Class_ElementStyle {
+  shape_visible!: ShapeAttributeTypes['visible']
+  shape_type!: ShapeAttributeTypes['type']
+  shape_min_width!: ShapeAttributeTypes['min_width'] //only nodes
+  shape_min_height!: ShapeAttributeTypes['min_height'] //only nodes
+  shape_color_visible!: ShapeAttributeTypes['color_visible']
+  shape_color!: ShapeAttributeTypes['color']
+  shape_opacity!: ShapeAttributeTypes['opacity']
+  shape_color_sustainable!: ShapeAttributeTypes['color_sustainable']
+
+  // =================== BORDER ATTRIBUTES (border_*) ===================
+  shape_border_visible!: ShapeAttributeTypes['border_visible']
+  shape_border_color!: ShapeAttributeTypes['border_color']
+  shape_border_thickness!: ShapeAttributeTypes['border_thickness']
+  shape_border_dashed!: ShapeAttributeTypes['border_dashed']
+  shape_border_radius!: ShapeAttributeTypes['border_radius']
+
+  // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
+  // Visibility & Font
+  name_label_has_fo!: NameLabelAttributeTypes['has_fo']
+  name_label_fo_content!: NameLabelAttributeTypes['fo_content']
+
+  name_label_is_visible!: NameLabelAttributeTypes['is_visible']
+  name_label_font_family!: NameLabelAttributeTypes['font_family']
+  name_label_font_size!: NameLabelAttributeTypes['font_size']
+  name_label_uppercase!: NameLabelAttributeTypes['uppercase']
+  name_label_bold!: NameLabelAttributeTypes['bold']
+  name_label_italic!: NameLabelAttributeTypes['italic']
+  name_label_color!: NameLabelAttributeTypes['color']
+  // Separator
+  name_label_separator!: NameLabelAttributeTypes['separator']
+  name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+
+  // Position
+  name_label_horiz!: NameLabelAttributeTypes['horiz']
+  name_label_vert!: NameLabelAttributeTypes['vert']
+  name_label_horiz_shift!: NameLabelAttributeTypes['horiz_shift']
+  name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
+  name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
+  name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_position_x!: NameLabelAttributeTypes['position_x']
+  name_label_position_y!: NameLabelAttributeTypes['position_y']
+  name_label_position_offset!: NameLabelAttributeTypes['position_offset']
+  name_label_position_absolute!: NameLabelAttributeTypes['position_absolute']
+  name_label_text_align!: NameLabelAttributeTypes['text_align']
+  name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
+  name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
+  // Background
+  name_label_background_visible!: NameLabelAttributeTypes['background_visible']
+  name_label_background_color!: NameLabelAttributeTypes['background_color']
+  name_label_background_opacity!: NameLabelAttributeTypes['background_opacity']
+  name_label_background_type!: NameLabelAttributeTypes['background_type']
+  name_label_background_min_width!: NameLabelAttributeTypes['background_min_width']
+  name_label_background_min_height!: NameLabelAttributeTypes['background_min_height']
+  name_label_background_color_visible!: NameLabelAttributeTypes['background_color_visible']
+  name_label_background_color_sustainable!: NameLabelAttributeTypes['background_color_sustainable']
+  name_label_background_border_visible!: NameLabelAttributeTypes['background_border_visible']
+  name_label_background_border_color!: NameLabelAttributeTypes['background_border_color']
+  name_label_background_border_thickness!: NameLabelAttributeTypes['background_border_thickness']
+  name_label_background_border_dashed!: NameLabelAttributeTypes['background_border_dashed']
+  name_label_background_border_radius!: NameLabelAttributeTypes['background_border_radius']
+
+
+  // =================== VALUE LABEL ATTRIBUTES (value_label_*) ===================
+  // Visibility & Font
+  value_label_has_fo!: ValueLabelAttributeTypes['has_fo']
+  value_label_fo_content!: ValueLabelAttributeTypes['fo_content']
+
+  value_label_is_visible!: ValueLabelAttributeTypes['is_visible']
+  value_label_font_family!: ValueLabelAttributeTypes['font_family']
+  value_label_font_size!: ValueLabelAttributeTypes['font_size']
+  value_label_uppercase!: ValueLabelAttributeTypes['uppercase']
+  value_label_bold!: ValueLabelAttributeTypes['bold']
+  value_label_italic!: ValueLabelAttributeTypes['italic']
+  value_label_color!: ValueLabelAttributeTypes['color']
+
+  // Position
+  value_label_horiz!: ValueLabelAttributeTypes['horiz']
+  value_label_vert!: ValueLabelAttributeTypes['vert']
+  value_label_horiz_shift!: ValueLabelAttributeTypes['horiz_shift']
+  value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
+  value_label_box_width!: ValueLabelAttributeTypes['box_width']
+  value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_position_x!: ValueLabelAttributeTypes['position_x']
+  value_label_position_y!: ValueLabelAttributeTypes['position_y']
+  value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
+  value_label_position_absolute!: ValueLabelAttributeTypes['position_absolute']
+  value_label_text_align!: ValueLabelAttributeTypes['text_align']
+  value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
+  value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
+  // Background
+  value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
+  value_label_background_color!: ValueLabelAttributeTypes['background_color']
+  value_label_background_opacity!: ValueLabelAttributeTypes['background_opacity']
+  value_label_background_type!: ValueLabelAttributeTypes['background_type']
+  value_label_background_min_width!: ValueLabelAttributeTypes['background_min_width']
+  value_label_background_min_height!: ValueLabelAttributeTypes['background_min_height']
+  value_label_background_color_visible!: ValueLabelAttributeTypes['background_color_visible']
+  value_label_background_color_sustainable!: ValueLabelAttributeTypes['background_color_sustainable']
+  value_label_background_border_visible!: ValueLabelAttributeTypes['background_border_visible']
+  value_label_background_border_color!: ValueLabelAttributeTypes['background_border_color']
+  value_label_background_border_thickness!: ValueLabelAttributeTypes['background_border_thickness']
+  value_label_background_border_dashed!: ValueLabelAttributeTypes['background_border_dashed']
+  value_label_background_border_radius!: ValueLabelAttributeTypes['background_border_radius']
+
+  // Formatting
+  value_label_scientific_notation!: ValueLabelAttributeTypes['scientific_notation']
+  value_label_significant_digits!: ValueLabelAttributeTypes['significant_digits']
+  value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
+  value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
+  value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+
+  // Units
+  value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
+  value_label_unit_type!: ValueLabelAttributeTypes['unit_type']
+  value_label_unit!: ValueLabelAttributeTypes['unit']
+  value_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
+
+  // =================== ICON ATTRIBUTES (icon_*) ===================
+  icon_color!: IconLabelAttributeTypes['color']
+  icon_is_visible!: IconLabelAttributeTypes['is_visible']
+  icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_view_box!: IconLabelAttributeTypes['view_box']
+  icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
+  icon_horiz!: IconLabelAttributeTypes['horiz']
+  icon_vert!: IconLabelAttributeTypes['vert']
+  icon_horiz_shift!: IconLabelAttributeTypes['horiz_shift']
+  icon_vert_shift!: IconLabelAttributeTypes['vert_shift']
+  icon_inside_horiz!: IconLabelAttributeTypes['inside_horiz']
+  icon_inside_vert!: IconLabelAttributeTypes['inside_vert']
+
+  icon_is_image!: IconLabelAttributeTypes['is_image']
+  icon_image_src!: IconLabelAttributeTypes['image_src']
+
+  // =================== HYPERLINK ATTRIBUTES ===================
+  hyperlink!: string | undefined
+
+  shape_local_link_scale!: LinkShapeSpecificValues['local_link_scale']
+  shape_is_curved!: LinkShapeSpecificValues['is_curved']
+  shape_curvature!: LinkShapeSpecificValues['curvature']
+  shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
+  shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_orientation!: LinkShapeSpecificValues['orientation']
+  shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
+  shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
+  shape_starting_tangeant!: LinkShapeSpecificValues['starting_tangeant']
+  shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
+  shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
+  shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
+  shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
+  shape_color_rule!: LinkShapeSpecificValues['color_rule']
+
+  value_label_on_path!: LinkLabelSpecificValues['on_path']
+  value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  name_label_on_path!: LinkLabelSpecificValues['on_path']
+  name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  orphan_node_visible!: boolean
+  position_type!: NodeShapeSpecificAttributeTypes['position_type']
+  position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
+  position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
+  margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
+  margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
+  margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+
+  private _storage: Record<string, unknown> = {}
+  private _config: Record<string, AttributeConfig<unknown>>
+  private _id: string
+  private _name: string
+  private _references: { [_: string]: Class_BaseElement } = {}
+
+  private _default_style: Class_ElementStyle
+  private _drawing_area: Class_DrawingArea
+
+  constructor(
+    config: Record<string, AttributeConfig<unknown>>,
+    id: string,
+    name: string,
+    is_deletable: boolean,
+    default_style: Class_ElementStyle,
+    drawing_area: Class_DrawingArea
+  ) {
+    this._config = config
+    this._id = id
+    this._name = name
+    this._default_style = default_style
+    this._drawing_area = drawing_area
+
+    if (!is_deletable) {
+      Object.entries(this._config).forEach(([key, config]) => {
+        this._storage[key] = config.default
+      })
+    }
+    this.createDynamicProperties()
+  }
+  public getElementProperty(k: keyof ConfigType) {
+    if (this._storage[k] !== undefined) {
+      return this._storage[k]
+    }
+    return undefined
+  }
+  protected createDynamicProperties() {
+    (Object.keys(this._config) as Array<keyof ConfigType>).forEach(key => {
+      Object.defineProperty(this, key, {
+        get: () => this.getElementProperty(key as keyof ConfigType),
+        set: (value: ExtractAttributeValue<ConfigType[typeof key]>) => {
+          this._storage[key] = value
+          Object.values(this._references).forEach(ref => ref.draw())
+        },
+        enumerable: true,
+        configurable: true
+      })
+    })
+  }
+
+  public deleteAttribute(key: string): void {
+    delete this._storage[key]
+  }
+
+  public copyFrom(element: Class_ElementStyle) {
+    Object.keys(element._storage).forEach(key => {
+      this._storage[key] = element._storage[key]
+    })
+  }
+
+  protected isAttributeOverloaded(
+    attr: keyof ConfigType
+  ) {
+    if (this._default_style) {
+      return this._storage[attr] !== undefined && this._storage[attr] !== this._default_style[attr as keyof Class_ElementStyle]
+    }
+    return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
+  }
+
+  public delete() {
+    // if (this._is_deletable) {
+    //   //Object.values(this._references).forEach(ref => ref.useDefaultStyle())
+    this._references = {}
+    // }
+  }
+
+  public addReference(ref: Class_BaseElement) {
+    if (!this._references[ref.id]) {
+      this._references[ref.id] = ref
+    }
+  }
+
+  public removeReference(ref: Class_BaseElement) {
+    if (this._references[ref.id] !== undefined) {
+      delete this._references[ref.id]
+    }
+  }
+
+  public get id() { return this._id }
+  public get name() { return this._name }
+  public set name(value: string) { this._name = value }
+
+  public get drawing_area() { return this._drawing_area }
 }

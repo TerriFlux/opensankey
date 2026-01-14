@@ -44,6 +44,15 @@ const COLORS = {
   openSankey: {
     50: '#C1E5DB', 100: '#66a59366', 200: '#66a593',
     300: '#25B48C', 400: '#78C2AD'
+  },
+  // Ajoute les couleurs orange pour l'état indéterminé
+  orange: {
+    50: '#FFF5E6',
+    100: '#FFE4CC',
+    200: '#FFCC99',
+    300: '#FFB366',
+    400: '#FF9933',
+    500: '#FF8000'
   }
 }
 
@@ -89,7 +98,7 @@ const BASE_STYLES = {
 // ===============================
 
 // Générateur de styles pour les boutons avec couleurs
-export const createButtonStyle = (colorScheme: ColorScheme, level: ColorLevel) : SystemStyleObject => defineStyle({
+export const createButtonStyle = (colorScheme: ColorScheme, level: ColorLevel): SystemStyleObject => defineStyle({
   ...BASE_STYLES.buttonBase,
   borderColor: `${colorScheme}.${level}`,
   bg: `${colorScheme}.${level}`,
@@ -112,7 +121,7 @@ export const createButtonStyle = (colorScheme: ColorScheme, level: ColorLevel) :
 })
 
 // Générateur de styles pour les tailles
-export const createSizeStyle = (width: string, height: string, padding = '0.2rem') : SystemStyleObject => defineStyle({
+export const createSizeStyle = (width: string, height: string, padding = '0.2rem'): SystemStyleObject => defineStyle({
   width,
   height,
   minW: 'unset',
@@ -514,6 +523,54 @@ export const buttonStyles = {
         borderColor: `primaire.${level}`,
       },
     })
+
+
+    return acc
+  }, {} as Record<string, SystemStyleObject>),
+
+  // Dans buttonStyles, ajoute ces variants après les boutons activés existants :
+
+  // Boutons indéterminés avec positions (left, center, right)
+  ...(['left', 'center', 'right'] as const).reduce((acc, position) => {
+    // Bouton indéterminé non positionné (pour référence)
+    if (position === 'left') {
+      acc['menuconfigpanel_option_button_indeterminate'] = defineStyle({
+        ...menuconfigBaseButton,
+        borderStyle: 'dashed',
+        borderWidth: '2px',
+        borderColor: 'orange.400',
+        opacity: 0.7,
+        bg: 'orange.50',
+        bgColor: 'orange.50',
+        color: 'tertiaire.3',
+        fill: 'tertiaire.3',
+        position: 'relative',
+        _hover: {
+          opacity: 0.85,
+          bg: 'orange.100',
+          bgColor: 'orange.100',
+        },
+      })
+    }
+
+    // Boutons indéterminés positionnés
+    acc[`menuconfigpanel_option_button_indeterminate_${position}`] = createPositionedButtonStyle({
+      ...menuconfigBaseButton,
+      borderStyle: 'dashed',
+      borderWidth: '2px',
+      borderColor: 'orange.400',
+      opacity: 0.7,
+      bg: 'orange.50',
+      bgColor: 'orange.50',
+      color: 'tertiaire.3',
+      fill: 'tertiaire.3',
+      position: 'relative',
+      _hover: {
+        opacity: 0.85,
+        bg: 'orange.100',
+        bgColor: 'orange.100',
+      },
+    }, position)
 
     return acc
   }, {} as Record<string, SystemStyleObject>),
@@ -2487,7 +2544,7 @@ const layerStyles = {
   },
 
   // Grid layouts avec factory
-  ...(['2cols', '3cols', '4cols'] as const).reduce((acc, type) => {
+  ...(['2cols', '3cols', '4cols', '5cols', '6cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
     acc[`options_${type}`] = {
       display: 'grid',
@@ -2535,7 +2592,7 @@ const layerStyles = {
   menuconfigpanel_row_droplist_simple: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    gridTemplateColumns: '8fr 1fr',
+    gridTemplateColumns: '2fr 4fr 1fr',
   },
 
   menuconfigpanel_zdt_row_droplist: {

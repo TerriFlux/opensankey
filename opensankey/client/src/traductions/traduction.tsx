@@ -8,13 +8,13 @@ import { resources_guided_tour } from './traduction_guided_tour'
 import { resources_loading_toasts } from './traduction_loading_toasts'
 import { resources_template } from './traduction_templates'
 import { resources_welcome } from './traduction_welcome'
-import { LINKS_ATTRIBUTES_CONFIG } from '../Elements/LinkAttributesConfig'
-import { NODES_ATTRIBUTES_CONFIG } from '../Elements/NodeAttributesConfig'
 import { ZDD_MENU_CONFIG } from '../components/dialogs/ContextZDDConfig'
 import { LINK_MENU_CONFIG } from '../components/dialogs/ContextLinkConfig'
 import { NODE_MENU_CONFIG } from '../components/dialogs/ContextNodeConfig'
 import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
+import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
+import { ELEMENTS_MENU_CONFIG } from '../components/configmenus/MenuElementsSelection'
 
 interface TranslationItem {
   en: string
@@ -66,8 +66,8 @@ export const resources_process_dialog = {
   }
 }
 interface TranslationSection {
-  tooltips?: Record<string, string>
-  [key: string]: string | TranslationSection | Record<string, string> | undefined
+  tooltips?: Record<string, string | Record<string, string>>  // ✅ Permet imbrication
+  [key: string]: string | TranslationSection | Record<string, string | Record<string, string>> | undefined
 }
 
 interface LanguageResource {
@@ -185,7 +185,7 @@ export const use_context_config = (
 }
 
 const use_link_config = (resources: I18nResources): void => {
-  const linksConfig = LINKS_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  const linksConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
   
   // Génération automatique des traductions pour chaque attribut
   Object.entries(linksConfig).forEach(([attributeKey, config]) => {
@@ -227,8 +227,86 @@ const use_link_config = (resources: I18nResources): void => {
   })
 }
 
+interface ElementSelectionConfig {
+  labels: Record<string, { en: string; fr: string }>
+  tooltips: Record<string, { en: string; fr: string }>
+}
+
+interface ElementsSelectionConfig {
+  node: ElementSelectionConfig
+  link: ElementSelectionConfig
+  container: ElementSelectionConfig
+  common: {
+    labels: Record<string, { en: string; fr: string }>
+  }
+}
+
+
+export const use_elements_selection_config = (
+  resources: I18nResources,
+  elements_config: ElementsSelectionConfig
+): void => {
+  // Traiter chaque type d'élément (node, link, container)
+  const typeMapping = {
+    node: 'Noeud',
+    link: 'Flux',
+    container: 'Container'
+  } as const
+
+  (['node', 'link', 'container'] as const).forEach(elementType => {
+    const config = elements_config[elementType]
+    const translationPath = typeMapping[elementType]
+    
+    // Initialiser les structures pour ce type d'élément
+    const elementEn = resources.en.translation[translationPath] as TranslationSection
+    const elementFr = resources.fr.translation[translationPath] as TranslationSection
+    
+    if (!elementEn) {
+      resources.en.translation[translationPath] = { tooltips: {} }
+    }
+    if (!elementFr) {
+      resources.fr.translation[translationPath] = { tooltips: {} }
+    }
+    
+    const targetEn = resources.en.translation[translationPath] as TranslationSection
+    const targetFr = resources.fr.translation[translationPath] as TranslationSection
+    
+    // S'assurer que tooltips existe
+    if (!targetEn.tooltips) {
+      targetEn.tooltips = {} as Record<string, string | Record<string, string>>
+    }
+    if (!targetFr.tooltips) {
+      targetFr.tooltips = {} as Record<string, string | Record<string, string>>
+    }
+    
+    const tooltipsEn = targetEn.tooltips as Record<string, string>
+    const tooltipsFr = targetFr.tooltips as Record<string, string>
+    
+    // Ajouter les labels au niveau racine (ex: Noeud.TS, Flux.NS)
+    Object.entries(config.labels).forEach(([key, value]) => {
+      targetEn[key] = value.en
+      targetFr[key] = value.fr
+    })
+    
+    // Ajouter les tooltips (ex: Noeud.tooltips.plus, Flux.tooltips.slct)
+    Object.entries(config.tooltips).forEach(([key, value]) => {
+      tooltipsEn[key] = value.en
+      tooltipsFr[key] = value.fr
+    })
+  })
+  
+  // Traiter les labels communs dans Menu
+  const menuEn = resources.en.translation['Menu'] as TranslationSection
+  const menuFr = resources.fr.translation['Menu'] as TranslationSection
+  
+  Object.entries(elements_config.common.labels).forEach(([key, value]) => {
+    menuEn[key] = value.en
+    menuFr[key] = value.fr
+  })
+}
+
 const use_node_config = (resources: I18nResources): void => {
-  const nodesConfig = NODES_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
+  const nodesConfig = ALL_ATTRIBUTES_CONFIG as Record<string, AttributeConfig>
   
   // Génération automatique des traductions pour chaque attribut
   Object.entries(nodesConfig).forEach(([attributeKey, config]) => {
@@ -296,6 +374,12 @@ export const deep_assign_resources = (
 // Application des configurations de traduction
 use_link_config(resources_flux as unknown as I18nResources)
 use_node_config(resources_nodes as unknown as I18nResources)
+
+use_elements_selection_config(
+  resources_app_elements as unknown as I18nResources,
+  ELEMENTS_MENU_CONFIG
+)
+
 // use_excel_config(resources_app_elements as unknown as I18nResources)
 use_context_config(
   resources_app_elements as unknown as I18nResources,

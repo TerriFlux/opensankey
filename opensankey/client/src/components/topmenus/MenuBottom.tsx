@@ -3,10 +3,9 @@ import {
   Box, Button, ButtonGroup, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -323,7 +322,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
   // Fucntion used when we click on a step to manually switch to clicked tag
   const switchCurrTag = (idx: number) => {
     DataGroup.selectTagsFromId(stepper_sequence[idx].id_tag)
-    new_data.drawing_area.checkAndUpdateAreaSize()
+    new_data.drawing_area.areaAutoFit()
     new_data.menu_configuration.updateAllComponentsRelatedToDataTags()
   }
 

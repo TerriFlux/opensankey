@@ -29,12 +29,12 @@ import { MenuList, MenuButton, MenuItem, Menu } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput } from '../configmenus/SankeyMenuConfiguration'
-import { updateElements, ValueElementsType, ValueKey } from '../configmenus/MenuCommon'
-import { LINKS_ATTRIBUTES_CONFIG } from '../../Elements/LinkAttributesConfig'
+import { ConfigMenuNumberInput} from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
+import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { Class_LinkElement } from '../../Elements/Link'
 
 /*************************************************************************************************/
 
@@ -50,15 +50,13 @@ export const checked = (b: boolean) => <span style={{ margin: 'auto 0 auto auto'
  */
 export const MenuContextLinksData = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
-  const { selected_links_list_sorted, visible_and_selected_links_list_sorted } = drawing_area
+  const { selected_links_list_sorted } = drawing_area
   const {
     ref_to_menu_contextual_config_links_data_updater,
     ref_to_save_in_cache_indicator
   } = menu_configuration
 
-  const selected_links = menu_configuration.is_selector_only_for_visible_links ?
-    visible_and_selected_links_list_sorted :
-    selected_links_list_sorted
+  const selected_links = selected_links_list_sorted
   const first_link = selected_links[0]
   const first_link_value = first_link?.value
   const value_option = first_link_value?.value_option ?? default_value_option
@@ -82,8 +80,8 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
   return <ConfigMenuNumberInput
     t={app_data.t}
     default_value={default_value}
-    function_on_blur={(_: number | null) => updateElements(
-      app_data, selected_links, 'valueCurrent' as ValueKey, _ as ValueElementsType, refreshThisAndUpdateRelatedComponents
+    function_on_blur={(_: number | null) => Class_LinkElement.updateLinks(
+      app_data, selected_links, 'valueCurrent' , _!, refreshThisAndUpdateRelatedComponents
     )}
     minimum_value={0}
     stepper={true}
@@ -91,7 +89,7 @@ export const MenuContextLinksData = ({ app_data }: { app_data: Class_Application
     unit_text={
       (
         selected_links[0]?.value_label_unit_visible &&
-        selected_links[0]?.value_label_unit !== LINKS_ATTRIBUTES_CONFIG.value_label_unit.default
+        selected_links[0]?.value_label_unit !== ALL_ATTRIBUTES_CONFIG.value_label_unit.default
       ) ?
         selected_links[0]?.value_label_unit :
         undefined
@@ -232,7 +230,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
   const { drawing_area } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_node = drawing_area.node_contextualised
-  const has_node_style = drawing_area.sankey.node_styles_list.length > 0
+  const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
     (contextualised_node !== undefined) &&
     (has_node_style)
@@ -249,7 +247,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
 
         <MenuList>
           {
-            drawing_area.sankey.node_styles_list
+            drawing_area.sankey.styles_list
               .map((_) => {
                 const has_style = contextualised_node.style.includes(_)
                 return <MenuItem
@@ -278,7 +276,7 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
   const { drawing_area } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_link = drawing_area.link_contextualised
-  const has_node_style = drawing_area.sankey.link_styles_list.length > 0
+  const has_node_style = drawing_area.sankey.styles_list.length > 0
   return (
     (contextualised_link !== undefined) &&
     (has_node_style)
@@ -295,7 +293,7 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
 
         <MenuList>
           {
-            drawing_area.sankey.link_styles_list
+            drawing_area.sankey.styles_list
               .map((_) => {
                 const has_style = contextualised_link.style.includes(_)
                 return <MenuItem

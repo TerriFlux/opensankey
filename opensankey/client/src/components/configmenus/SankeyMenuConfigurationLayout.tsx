@@ -24,24 +24,19 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { FC, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import {
   Box,
   Button,
   Checkbox,
   Select
 } from '@chakra-ui/react'
-import { ConfigMenuNumberInput } from './SankeyMenuConfiguration'
-import { WrapperBoxSubSectionMenu } from './MenuCommon'
-import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle } from 'react-beautiful-dnd'
-import { t } from 'i18next'
-import { Class_LinkElement } from '../../Elements/Link'
+
+import { ConfigMenuNumberInput, MenuColorPicker } from './MenuCommon'
+import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import {BaseApplicationDataType } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
-import { MenuColorPicker } from './MenuColorPicker'
-
 
 // Utils functions -------------------------------------------------------------------
 
@@ -49,225 +44,69 @@ const right_addon_pixel = (val: number) => {
   if (val === 1) {
     return 'pixel'
   }
-  return 'pixels'
+  return 'px'
 }
 
-// MENU COMPONENT ***********************************************************************
 
-export const OpenSankeyMenuConfigurationLayout = ({
-  new_data,
-  extra_background_element,
-}:{
-  new_data: Class_ApplicationData
-  contextual: boolean
-  extra_background_element: JSX.Element,
-}) => {
-
-  // Components updaters ---------------------------------------------------------------
-
-  return <Box>
-    <DrawingAreaStyle new_data={new_data} extra_background_element={extra_background_element} />
-    <LayoutConfigDAScaleAndLimit new_data={new_data} />
-    <LegendStyleConfig new_data={new_data} />
-    <LegendContextConfig new_data={new_data} />
-
-  </Box>
-}
-
-export const DrawingAreaStyle = ({ new_data, extra_background_element }:{
-  new_data: Class_ApplicationData
-  extra_background_element: JSX.Element,
-}) => {
-
-  // Data -------------------------------------------------------------------------------
-
-  const { t } = new_data
-
-  // Components updaters ---------------------------------------------------------------
-
+export const DrawingAreaConfig = ({app_data,}: {app_data: Class_ApplicationData}) => {
+  const { t } = app_data
   const [, setCount] = useState(0)
 
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    setCount(a => a + 1)
-    // And update this menu also
-    new_data.menu_configuration.updateComponentRelatedToLayoutApparence()
+  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  const [selectedTag, setSelectedTag] = useState(unit_taggs.length > 0 ? unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id : '')
+
+  // Refs for inputs
+  const ref_scale = useRef((_: string | null | undefined) => null)
+  const ref_minimum_flux = useRef((_: string | null | undefined) => null)
+  const ref_maximum_flux = useRef((_: string | null | undefined) => null)
+
+  // Update refs
+  if (unit_taggs.length > 0) {
+    ref_scale.current(String(unit_taggs[0].tags_dict[selectedTag].scale))
+  } else {
+    ref_scale.current(String(app_data.drawing_area.scale))
   }
+  ref_minimum_flux.current(String(app_data.drawing_area.minimum_flux ?? ''))
+  ref_maximum_flux.current(String(app_data.drawing_area.maximum_flux ?? ''))
 
-
-  // Event functions -------------------------------------------------------------------
-
-  // ===================================================================================
-  // Create functions that will be used when modifying a attribute of the DA or the Legend,
-  // these functions will save the last value of said attribute in data history so we can revert if we want it
-  // ===================================================================================
+  const refreshThisAndUpdateRelatedComponents = () => {
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setCount(a => a + 1)
+    app_data.menu_configuration.updateComponentRelatedToLayoutApparence()
+  }
 
   const eventBgColor = (evt: string) => {
     const f = (_: string) => {
-      new_data.drawing_area.color = _
+      app_data.drawing_area.color = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'color', evt, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'color', evt, f)
   }
 
   const eventGridVisible = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
-      new_data.drawing_area.grid_visible = _
+      app_data.drawing_area.grid_visible = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'grid_visible', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'grid_visible', evt.target.checked, f)
   }
 
   const eventGridSize = (evt: number | null | undefined) => {
     if (evt) {
       const f = (_: number) => {
-        new_data.drawing_area.grid_size = _
+        app_data.drawing_area.grid_size = _
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area, 'grid_size', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area, 'grid_size', evt, f)
     }
   }
 
   const eventMagneticNodes = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
-      new_data.drawing_area.magnetic_nodes = _
+      app_data.drawing_area.magnetic_nodes = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'magnetic_nodes', evt.target.checked, f)
-  }
-
-
-  return <WrapperBoxSubSectionMenu title={t('Menu.background')} new_data={new_data} >
-    <>
-      {/* Couleur du fond de la page */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.BgC')}
-        </Box>
-        <OSTooltip label={t('MEP.tooltips.BgC')}>
-          <Box>
-            <MenuColorPicker
-              initialColor={new_data.drawing_area.color}
-              onColorChange={eventBgColor}
-            />
-          </Box>
-        </OSTooltip>
-      </Box>
-
-      {extra_background_element}
-
-      {/* Quadrillage */}
-      {/* Afficher le quadrillage */}
-      <Box layerStyle='menuconfigpanel_row_2cols'>
-
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={new_data.drawing_area.grid_visible}
-          icon={<CustomFaEyeCheckIcon />}
-          onChange={eventGridVisible}
-        >
-          <OSTooltip label={t('MEP.tooltips.GV')}>
-            {t('MEP.TCG')}
-          </OSTooltip>
-        </Checkbox>
-        {/* Taille de la grille */}
-
-        <OSTooltip label={t('MEP.tooltips.TCG')}>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.grid_size}
-            function_on_blur={eventGridSize}
-            minimum_value={10}
-            stepper={true}
-            unit_text={right_addon_pixel(new_data.drawing_area.grid_size)}
-          />
-        </OSTooltip>
-      </Box>
-      {/* Nodes move by steps */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.drawing_area.magnetic_nodes}
-        icon={<CustomFaEyeCheckIcon />}
-        onChange={eventMagneticNodes}
-      >
-        <OSTooltip label={t('MEP.tooltips.MN')}>
-          {t('MEP.MN')}
-        </OSTooltip>
-      </Checkbox>
-    </>
-  </WrapperBoxSubSectionMenu>
-}
-
-/**
- * Component to config scale of DA and limit to flow thickness
- *
- * @param {*} { new_data }
- * @return {*} 
- */
-export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_data }) => {
-  const { t } = new_data
-  const [, setCount] = useState(0)
-  const unit_taggs = new_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-  const [selectedTag,setSelectedTag] = useState(unit_taggs.length > 0?unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0].id:'')
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // And update this menu also
-    setCount(a => a + 1)
-  }
-  const ref_scale = useRef((_: string | null | undefined) => null)
-  const ref_minimum_flux = useRef((_: string | null | undefined) => null)
-  const ref_maximum_flux = useRef((_: string | null | undefined) => null)
-
-  if (unit_taggs.length > 0) {
-    ref_scale.current(String(unit_taggs[0].tags_dict[selectedTag].scale))
-  } else {
-    ref_scale.current(String(new_data.drawing_area.scale))
-  }
-  ref_minimum_flux.current(String(new_data.drawing_area.minimum_flux ?? ''))
-  ref_maximum_flux.current(String(new_data.drawing_area.maximum_flux ?? ''))
-
-  const eventMinLinkThickness = (evt: number | null | undefined) => {
-    if (evt == null)
-      return
-    const f = (_: number | undefined) => {
-      if (_) {
-        new_data.drawing_area.minimum_flux = _
-        // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-      } else {
-        new_data.drawing_area.removeMinimumLinkThickness()
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-      }
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'minimum_flux', evt, f)
-  }
-  const eventMaxLinkThickness = (evt: number | null | undefined) => {
-    if (evt == null)
-      return
-    const f = (_: number | undefined) => {
-      if (_) {
-        new_data.drawing_area.maximum_flux = _
-        // Even we are changing a parameter for link we redraw all node so it also redraw link + arrow
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-      } else {
-        new_data.drawing_area.removeMaximumLinkThickness()
-        new_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
-      }
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area, 'maximum_flux', evt, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'magnetic_nodes', evt.target.checked, f)
   }
 
   const eventScale = (evt: number | null | undefined) => {
@@ -275,147 +114,220 @@ export const LayoutConfigDAScaleAndLimit: FC<BaseApplicationDataType> = ({ new_d
       const f = (_: number) => {
         if (unit_taggs.length > 0) {
           unit_taggs[0].tags_dict[selectedTag].scale = _
-          new_data.drawing_area.draw()
+          app_data.drawing_area.draw()
         } else {
-          new_data.drawing_area.scale = _
+          app_data.drawing_area.scale = _
         }
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area, 'scale', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area, 'scale', evt, f)
     }
   }
 
-  return <WrapperBoxSubSectionMenu new_data={new_data} title={t('MEP.links_size')}>
-    <>
-      {unit_taggs.length > 0 ?
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-          <Box
-            as='span'
-            layerStyle='menuconfigpanel_part_title_3'
-          >
-            {unit_taggs[0].name}
-          </Box>
-          <Select
-            name={unit_taggs[0].id}
-            variant='menuconfigpanel_option_select'
-            value={
-              selectedTag
-            }
-            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              setSelectedTag(evt.target.value)
-              // Update selected attributes for tags
-              // data_tagg.selectTagsFromId(evt.target.value)
-              // Update this menu
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {
-              unit_taggs[0].tags_list.map(tag => {
-                return <option key={tag.id} value={tag.id}>{tag.name}</option>
-              })
-            }
-          </Select>
-        </Box> : <></>
+  const eventMinLinkThickness = (evt: number | null | undefined) => {
+    if (evt == null) return
+    const f = (_: number | undefined) => {
+      if (_) {
+        app_data.drawing_area.minimum_flux = _
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      } else {
+        app_data.drawing_area.removeMinimumLinkThickness()
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
       }
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('MEP.Echelle')}
-        </Box>
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', evt, f)
+  }
+
+  const eventMaxLinkThickness = (evt: number | null | undefined) => {
+    if (evt == null) return
+    const f = (_: number | undefined) => {
+      if (_) {
+        app_data.drawing_area.maximum_flux = _
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      } else {
+        app_data.drawing_area.removeMaximumLinkThickness()
+        app_data.drawing_area.sankey.visible_nodes_list.forEach(node => node.draw())
+      }
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'maximum_flux', evt, f)
+  }
+
+  return <>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.BgC')}
+      </Box>
+      <OSTooltip label={t('MEP.tooltips.BgC')}>
         <Box>
-          <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={unit_taggs.length > 0 ?unit_taggs[0].tags_dict[selectedTag].scale:new_data.drawing_area.scale}
-            function_on_blur={eventScale}
-            minimum_value={1}
-            stepper={true}
-            unit_text={'unit. / 100 pixels'}
+          <MenuColorPicker
+            initialColor={app_data.drawing_area.color}
+            onColorChange={eventBgColor}
           />
         </Box>
-      </Box>
-      {/* Taille minimale du flux */}
-      <Box
-        layerStyle='menuconfigpanel_2row_3cols'
+      </OSTooltip>
+    </Box>
+    <Box layerStyle='menuconfigpanel_row_2cols'>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.grid_visible}
+        icon={<CustomFaEyeCheckIcon />}
+        onChange={eventGridVisible}
       >
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='1'
-          gridColumnEnd='2'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          {t('MEP.link_size_limit')}
+        <OSTooltip label={t('MEP.tooltips.GV')}>
+          {t('MEP.TCG')}
+        </OSTooltip>
+      </Checkbox>
+
+      <OSTooltip label={t('MEP.tooltips.TCG')}>
+        <ConfigMenuNumberInput
+          t={app_data.t}
+          default_value={app_data.drawing_area.grid_size}
+          function_on_blur={eventGridSize}
+          minimum_value={10}
+          stepper={true}
+          unit_text={right_addon_pixel(app_data.drawing_area.grid_size)}
+        />
+      </OSTooltip>
+    </Box>
+
+    {/* Nodes move by steps */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={app_data.drawing_area.magnetic_nodes}
+      icon={<CustomFaEyeCheckIcon />}
+      onChange={eventMagneticNodes}
+    >
+      <OSTooltip label={t('MEP.tooltips.MN')}>
+        {t('MEP.MN')}
+      </OSTooltip>
+    </Checkbox>
+
+    {unit_taggs.length > 0 && (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box as='span' layerStyle='menuconfigpanel_part_title_3'>
+          {unit_taggs[0].name}
         </Box>
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='2'
-          gridColumnEnd='3'
-          gridRowStart='1'
-          gridRowEnd='2'
-          alignItems='flex-end'
+        <Select
+          name={unit_taggs[0].id}
+          variant='menuconfigpanel_option_select'
+          value={selectedTag}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            setSelectedTag(evt.target.value)
+            refreshThisAndUpdateRelatedComponents()
+          }}
         >
-          {t('MEP.MinFlux')}
-        </Box>
-        <Box
-          layerStyle='menuconfigpanel_option_name'
-          gridColumnStart='3'
-          gridColumnEnd='4'
-          gridRowStart='1'
-          gridRowEnd='2'
-          alignItems='flex-end'
-        >
-          {t('MEP.MaxFlux')}
-        </Box>
-        <Box
-          gridColumnStart='2'
-          gridColumnEnd='3'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          <OSTooltip label={t('MEP.tooltips.MinFlux')}>
-            <ConfigMenuNumberInput
-              t={new_data.t}
-              default_value={new_data.drawing_area.minimum_flux}
-              function_on_blur={eventMinLinkThickness}
-              maximum_value={new_data.drawing_area.maximum_flux}
-              stepper={true}
-            />
-          </OSTooltip>
-        </Box>
-        <Box
-          gridColumnStart='3'
-          gridColumnEnd='4'
-          gridRowStart='2'
-          gridRowEnd='3'
-        >
-          <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
-            <ConfigMenuNumberInput
-              t={new_data.t}
-              default_value={new_data.drawing_area.maximum_flux}
-              function_on_blur={eventMaxLinkThickness}
-              minimum_value={new_data.drawing_area.minimum_flux}
-              stepper={true}
-              unit_text={right_addon_pixel(new_data.drawing_area.maximum_flux!)}
-            />
-          </OSTooltip>
-        </Box>
+          {unit_taggs[0].tags_list.map(tag => (
+            <option key={tag.id} value={tag.id}>{tag.name}</option>
+          ))}
+        </Select>
       </Box>
-    </>
-  </WrapperBoxSubSectionMenu>
+    )}
+
+    {/* Échelle */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.Echelle')}
+      </Box>
+      <Box>
+        <ConfigMenuNumberInput
+          t={app_data.t}
+          default_value={unit_taggs.length > 0 ? unit_taggs[0].tags_dict[selectedTag].scale : app_data.drawing_area.scale}
+          function_on_blur={eventScale}
+          minimum_value={1}
+          stepper={true}
+          unit_text={'unit. / 100 pixels'}
+        />
+      </Box>
+    </Box>
+
+    {/* Limites min/max */}
+    <Box layerStyle='menuconfigpanel_2row_3cols'>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='1'
+        gridColumnEnd='2'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        {t('MEP.link_size_limit')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MinFlux')}
+      </Box>
+      <Box
+        layerStyle='menuconfigpanel_option_name'
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='1'
+        gridRowEnd='2'
+        alignItems='flex-end'
+      >
+        {t('MEP.MaxFlux')}
+      </Box>
+      <Box
+        gridColumnStart='2'
+        gridColumnEnd='3'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MinFlux')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.minimum_flux}
+            function_on_blur={eventMinLinkThickness}
+            maximum_value={app_data.drawing_area.maximum_flux}
+            stepper={true}
+          />
+        </OSTooltip>
+      </Box>
+      <Box
+        gridColumnStart='3'
+        gridColumnEnd='4'
+        gridRowStart='2'
+        gridRowEnd='3'
+      >
+        <OSTooltip label={t('MEP.tooltips.MaxFlux')}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.maximum_flux}
+            function_on_blur={eventMaxLinkThickness}
+            minimum_value={app_data.drawing_area.minimum_flux}
+            stepper={true}
+            unit_text={right_addon_pixel(app_data.drawing_area.maximum_flux!)}
+          />
+        </OSTooltip>
+      </Box>
+
+    </Box>
+    <Button
+      variant={'menuconfigpanel_option_button'}
+      onClick={() => {
+        app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_element_ordoner.current(true)
+      }}
+    >
+      {t('Menu.ElOrder')}
+    </Button>
+  </>
 }
 
-
 /**
- *Component to configure legend attribute
+ * ✅ Composant unifié pour configurer la légende (style + contenu)
  *
- * @param {*} { new_data }
+ * @param {*} { app_data }
  * @return {*} 
  */
-export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData}) => {
+export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
 
-  const { t } = new_data
+  const { t } = app_data
   const [, setCount] = useState(0)
 
   /**
@@ -423,103 +335,136 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
    */
   const refreshThisAndUpdateRelatedComponents = () => {
     // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
     setCount(a => a + 1)
   }
 
   // Event functions -------------------------------------------------------------------
 
-  // ===================================================================================
-  // Create functions that will be used when modifying a attribute of the DA or the Legend,
-  // these functions will save the last value of said attribute in data history so we can revert if we want it
-  // ===================================================================================
-
+  // ✅ Visibilité principale
   const eventLegendMasked = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
-      new_data.drawing_area.legend.masked = _
+      app_data.drawing_area.legend.masked = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'masked', !evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'masked', !evt.target.checked, f)
   }
 
-  const eventLegendFontSize = (evt: number | null | undefined) => {
-    if (evt) {
-      const f = (_: number) => {
-        new_data.drawing_area.legend.legend_police = _
-        refreshThisAndUpdateRelatedComponents()
-      }
-      new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_police', evt, f)
-    }
-  }
-
-  const eventGLegendBgColor = (evt: string) => {
+  // ✅ Style
+  const eventLegendBgColor = (evt: string) => {
     const f = (_: string) => {
-      new_data.drawing_area.legend.legend_bg_color = _
+      app_data.drawing_area.legend.legend_bg_color = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_color', evt, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_bg_color', evt, f)
   }
 
   const eventLegendBgOpacity = (evt: number | null | undefined) => {
     if (evt) {
       const f = (_: number) => {
-        new_data.drawing_area.legend.legend_bg_opacity = _
+        app_data.drawing_area.legend.legend_bg_opacity = _
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_opacity', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_bg_opacity', evt, f)
     }
-  }
-  const eventLegendStickDrawing = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      const {drawing_area} = new_data
-      drawing_area.legend.stick_to_drawing = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)
   }
 
   const eventLegendBorder = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
-      new_data.drawing_area.legend.legend_bg_border = _
+      app_data.drawing_area.legend.legend_bg_border = _
       refreshThisAndUpdateRelatedComponents()
     }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_bg_border', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_bg_border', evt.target.checked, f)
+  }
+
+  const eventLegendFontSize = (evt: number | null | undefined) => {
+    if (evt) {
+      const f = (_: number) => {
+        app_data.drawing_area.legend.legend_police = _
+        refreshThisAndUpdateRelatedComponents()
+      }
+      app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_police', evt, f)
+    }
+  }
+
+  // ✅ Position
+  const eventLegendStickDrawing = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      const { drawing_area } = app_data
+      drawing_area.legend.stick_to_drawing = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)
   }
 
   const eventLegendPosX = (evt: number | undefined | null) => {
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
-        new_data.drawing_area.legend.position_x = _
-        new_data.drawing_area.legend.applyPosition()
+        app_data.drawing_area.legend.position_x = _
+        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'position_x', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_x', evt, f)
     }
   }
 
   const eventLegendPosY = (evt: number | undefined | null) => {
     if (evt !== undefined && evt !== null) {
       const f = (_: number) => {
-        new_data.drawing_area.legend.position_y = _
-        new_data.drawing_area.legend.applyPosition()
+        app_data.drawing_area.legend.position_y = _
+        app_data.drawing_area.legend.applyPosition()
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'position_y', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'position_y', evt, f)
     }
   }
 
   const eventLegendWidth = (evt: number | undefined | null) => {
     if (evt) {
       const f = (_: number) => {
-        new_data.drawing_area.legend.width = _
+        app_data.drawing_area.legend.width = _
         refreshThisAndUpdateRelatedComponents()
       }
-      new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'width', evt, f)
+      app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'width', evt, f)
     }
   }
 
+  // ✅ Contenu
+  const eventLegendScale = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.display_legend_scale = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'display_legend_scale', evt.target.checked, f)
+  }
+
+  const eventLegendDataTag = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.legend_show_dataTags = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
+  }
+
+  const eventLegendConstraints = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.legend_show_constraints = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_constraints', evt.target.checked, f)
+  }
+
+  const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.info_link_value_void = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'info_link_value_void', evt.target.checked, f)
+  }
+
   return <Box layerStyle='menu_sub_section'>
+    {/* ✅ TITRE AVEC CHECKBOX DE VISIBILITÉ */}
     <Box
       as='span'
       layerStyle='menu_sub_section_title'
@@ -527,62 +472,44 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
-        isChecked={!new_data.drawing_area.legend.masked}
+        isChecked={!app_data.drawing_area.legend.masked}
         onChange={eventLegendMasked}
       >
         {t('Menu.Leg')}
       </Checkbox>
     </Box>
-    {/* Solidaire du diagramme */}
-    <Box layerStyle='menuconfigpanel_grid'>
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={new_data.drawing_area.legend.stick_to_drawing}
-        onChange={eventLegendStickDrawing}
-      >
-        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
-          {t('Menu.LegStickDrawing')}
-        </OSTooltip>
-      </Checkbox>
-    </Box>
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (new_data.drawing_area.legend.masked ? 'none' : '') }}
+      style={{ display: (app_data.drawing_area.legend.masked ? 'none' : '') }}
     >
+      {/* ✅ SECTION STYLE */}
+      <Box as='span' textStyle='title_sub_section'>{t('Menu.style') || 'Style'}</Box>
 
-      {/* Couleur de fond de la légende */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_suboption_name'>
+      {/* Couleur de fond */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgColor')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgColor')}>
           <Box>
             <MenuColorPicker
-              initialColor={new_data.drawing_area.legend.legend_bg_color}
-              onColorChange={eventGLegendBgColor}
+              initialColor={app_data.drawing_area.legend.legend_bg_color}
+              onColorChange={eventLegendBgColor}
             />
           </Box>
         </OSTooltip>
       </Box>
 
-      {/* Opacité du fond de la légende */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_suboption_name'>
+      {/* Opacité du fond */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.LegBgOpacity')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
           <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.legend.legend_bg_opacity}
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.legend_bg_opacity}
             function_on_blur={eventLegendBgOpacity}
             minimum_value={0}
             maximum_value={100}
@@ -592,33 +519,26 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
         </OSTooltip>
       </Box>
 
-
-      {/* Affichage du bord de la légende */}
-      <Box layerStyle='menuconfigpanel_grid'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={new_data.drawing_area.legend.legend_bg_border}
-          onChange={eventLegendBorder}
-        >
-          <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
-            {t('Menu.LegBgBorder')}
-          </OSTooltip>
-        </Checkbox>
-      </Box>
-
-      {/* Font size de la legende*/}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
+      {/* Affichage du bord */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.legend_bg_border}
+        onChange={eventLegendBorder}
       >
-        <Box
-          layerStyle='menuconfigpanel_suboption_name'>
+        <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
+          {t('Menu.LegBgBorder')}
+        </OSTooltip>
+      </Checkbox>
+
+      {/* Taille de police */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_suboption_name'>
           {t('Menu.fontSize')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
           <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.legend.legend_police}
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.legend_police}
             function_on_blur={eventLegendFontSize}
             minimum_value={1}
             stepper={true}
@@ -626,267 +546,217 @@ export const LegendStyleConfig = ({ new_data }:{new_data:Class_ApplicationData})
         </OSTooltip>
       </Box>
 
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
+      {/* ✅ SECTION POSITION */}
+      <Box as='span' textStyle='title_sub_section'>{t('Menu.position') || 'Position'}</Box>
+
+      {/* Solidaire du diagramme */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.stick_to_drawing}
+        onChange={eventLegendStickDrawing}
       >
-        <Box
-          layerStyle='menuconfigpanel_option_name'>
+        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
+          {t('Menu.LegStickDrawing')}
+        </OSTooltip>
+      </Checkbox>
+
+      {/* Position X */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegX')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegX')}>
           <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.legend.position_x}
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.position_x}
             function_on_blur={eventLegendPosX}
             step={1}
             stepper={true}
-            unit_text={right_addon_pixel(Math.round(new_data.drawing_area.legend.position_x))}
+            unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_x))}
           />
         </OSTooltip>
       </Box>
 
-      {/* Position Y de la legende */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'>
+      {/* Position Y */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegY')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegY')}>
           <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.legend.position_y}
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.position_y}
             function_on_blur={eventLegendPosY}
             step={1}
             stepper={true}
-            unit_text={right_addon_pixel(Math.round(new_data.drawing_area.legend.position_y))}
+            unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_y))}
           />
         </OSTooltip>
       </Box>
 
-      {/* Largeur de la fenetre de legende */}
-      <Box
-        as='span'
-        layerStyle='menuconfigpanel_row_2cols'
-      >
-        <Box
-          layerStyle='menuconfigpanel_option_name'>
+      {/* Largeur */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
           {t('Menu.LegWidth')}
         </Box>
         <OSTooltip label={t('Menu.tooltips.LegWidth')}>
           <ConfigMenuNumberInput
-            t={new_data.t}
-            default_value={new_data.drawing_area.legend.width}
+            t={app_data.t}
+            default_value={app_data.drawing_area.legend.width}
             function_on_blur={eventLegendWidth}
             minimum_value={0}
             step={1}
             stepper={true}
-            unit_text={right_addon_pixel(new_data.drawing_area.legend.width)}
+            unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
           />
         </OSTooltip>
       </Box>
 
+      {/* ✅ SECTION CONTENU */}
+      <Box as='span' textStyle='title_sub_section'>{t('Menu.content') || 'Contenu'}</Box>
+
+      {/* Afficher l'échelle */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.display_legend_scale}
+        onChange={eventLegendScale}
+      >
+        {t('Menu.display_scale')}
+      </Checkbox>
+
+      {/* Afficher les dataTags */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.legend_show_dataTags}
+        onChange={eventLegendDataTag}
+      >
+        {t('MEP.leg_show_dataTags')}
+      </Checkbox>
+
+      {/* Afficher les contraintes */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.legend_show_constraints}
+        onChange={eventLegendConstraints}
+      >
+        {t('MEP.leg_show_constraints')}
+      </Checkbox>
+
+      {/* Afficher l'info flux null */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.info_link_value_void}
+        onChange={eventLegendLinkInfo}
+      >
+        {t('MEP.leg_show_info_link_void')}
+      </Checkbox>
+
     </Box>
   </Box>
 }
+export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { icon_move_element_down, icon_move_element_up } = app_data.icon_library
+  const [, forceUpdate] = useState(0)
 
+  const triggerUpdate = () => forceUpdate(prev => prev + 1)
 
-export const LegendContextConfig: FC<BaseApplicationDataType> = ({ new_data }) => {
-
-  const { t } = new_data
-  const [, setCount] = useState(0)
-
-  /**
-   * Function used to reset menu UI
-   */
-  const refreshThisAndUpdateRelatedComponents = () => {
-    // Whatever is done, set saving indicator
-    new_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-    // And update this menu also
-    setCount(a => a + 1)
-  }
-
-  // Event functions -------------------------------------------------------------------
-
-  // ===================================================================================
-  // Create functions that will be used when modifying a attribute of the DA or the Legend,
-  // these functions will save the last value of said attribute in data history so we can revert if we want it
-  // ===================================================================================
-
-
-  const eventLegendScale = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.display_legend_scale = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'display_legend_scale', evt.target.checked, f)
-  }
-
-  const eventLegendDataTag = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.legend_show_dataTags = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
-  }
-
-  const eventLegendConstraints = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.legend_show_constraints = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'legend_show_constraints', evt.target.checked, f)
-  }
-
-  const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.info_link_value_void = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'info_link_value_void', evt.target.checked, f)
-  }
-
-  const eventLegendMasked = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      new_data.drawing_area.legend.masked = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    new_data.setValueAndSaveHistory(new_data.drawing_area.legend, 'masked', !evt.target.checked, f)
-  }
-
-  return <>
-    <Box
-      as='span'
-      layerStyle='menu_sub_section_title'
-    >
-      <Checkbox
-        variant='menuconfigpanel_part_title_1_checkbox'
-        icon={<CustomFaEyeCheckIcon />}
-        isChecked={!new_data.drawing_area.legend.masked}
-        onChange={eventLegendMasked}
-      >
-        {t('Menu.Leg')}
-      </Checkbox>
-    </Box>
-
-    {/* Afficher l'échelle sur le graphe*/}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={new_data.drawing_area.legend.display_legend_scale}
-      checked={new_data.drawing_area.legend.display_legend_scale}
-      onChange={eventLegendScale}
-    >
-      {t('Menu.display_scale')}
-    </Checkbox>
-
-    {/* Afficher les dataTags dans la légende*/}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={new_data.drawing_area.legend.legend_show_dataTags}
-      checked={new_data.drawing_area.legend.legend_show_dataTags}
-      onChange={eventLegendDataTag}
-    >
-      {t('MEP.leg_show_dataTags')}
-    </Checkbox>
-    {/* Afficher les dataTags dans la légende*/}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={new_data.drawing_area.legend.legend_show_constraints}
-      checked={new_data.drawing_area.legend.legend_show_constraints}
-      onChange={eventLegendConstraints}
-    >
-      {t('MEP.leg_show_constraints')}
-    </Checkbox>
-
-    {/* Afficher l'info concernant les flux null*/}
-    <Checkbox
-      variant='menuconfigpanel_option_checkbox'
-      isChecked={new_data.drawing_area.legend.info_link_value_void}
-      checked={new_data.drawing_area.legend.info_link_value_void}
-      onChange={eventLegendLinkInfo}
-    >
-      {t('MEP.leg_show_info_link_void')}
-    </Checkbox>
-  </>
-}
-
-export const GraphElementsOrdoner: FC<{ new_data: Class_ApplicationData }> = ({ new_data }) => {
-  const { icon_move_element_down, icon_move_element_up } = new_data.icon_library
-  const [, setUpdate] = useState(0)
-
-  new_data.menu_configuration.ref_to_GraphElementsOrdoner_updater.current = () => setUpdate(a => a + 1)
-
-  // Function that return style of element draggable depending on it's state (isDragging)
   const style_TableLineDragging = (isDragging: boolean, draggableStyle: DraggingStyle | NotDraggingStyle | undefined, is_selected: boolean) => ({
-    // change background colour if dragging
-    // border:isDragging ? '1px solid #78A7C2' : 'unset',
     borderColor: is_selected ? 'red' : 'black',
-    // styles we need to apply on draggables
     ...draggableStyle
   })
-  return <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={new_data} is_open={false}>
-    <DragDropContext onDragEnd={(evt) => {
-      // Reorganise links order at drop event
-      if (evt.destination && evt.destination.index !== undefined) {
-        new_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
-      }
-    }}>
+
+  const handleDragEnd:OnDragEndResponder = (evt) => {
+    if (evt.destination && evt.destination.index !== undefined && evt.source.index !== evt.destination.index) {
+      app_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
+      triggerUpdate()
+    }
+  }
+
+  const handleMoveUp = (element_idx: number) => {
+    if (element_idx > 0) {
+      app_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
+      triggerUpdate()
+    }
+  }
+
+  const handleMoveDown = (element_idx: number, maxIdx: number) => {
+    if (element_idx < maxIdx - 1) {
+      app_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
+      triggerUpdate()
+    }
+  }
+
+  // Nettoyer la liste : enlever doublons, legend et ghost_link
+  const cleanedElements = [...new Set(
+    app_data.drawing_area.list_g_element.filter(id =>
+      id !== 'legend' &&
+      id !== 'ghost_link' &&
+      !id.includes('ghost')
+    )
+  )]
+
+  console.log('Cleaned elements:', cleanedElements)
+
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
       <Droppable droppableId="droppable">
-        {(provided,) => (
+        {(provided) => (
           <Box
             {...provided.droppableProps}
             ref={provided.innerRef}
-            style={{ display: 'grid', gridRowGap: '0.2rem' }}
+            style={{
+              display: 'grid',
+              gridRowGap: '0.2rem',
+              maxHeight: '400px',
+              overflowY: 'auto'
+            }}
           >
-            {
-              new_data.drawing_area.list_g_element
-                .map((id_element, element_idx) => {
-                  const element = new_data.drawing_area.elementFromId(id_element)
-                  if (!element.is_visible)
-                    return <></>
-                  return (
-                    <Draggable key={element.id} index={element_idx} draggableId={'line_drag_' + element.id}>
-                      {(provided, snapshot) => (
-                        <Box key={id_element} layerStyle='drag_line_element_order' ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+            {cleanedElements.map((id_element, element_idx) => {
+              const element = app_data.drawing_area.sankey.elementFromId(id_element)
+              if (!element?.is_visible) return null
+
+              return (
+                <Draggable
+                  key={id_element}
+                  index={element_idx}
+                  draggableId={id_element}
+                >
+                  {(provided, snapshot) => (
+                    <Box
+                      layerStyle='drag_line_element_order'
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      {...provided.dragHandleProps}
+                      style={style_TableLineDragging(snapshot.isDragging, provided.draggableProps.style, element.is_selected)}
+                    >
+                      <Box className='name_element'>{element.name}</Box>
+                      <Box layerStyle="options_2cols">
+                        <Button
+                          variant='menuconfigpanel_move_order_node_io'
+                          minWidth='0'
+                          disabled={element_idx === 0}
+                          onClick={() => handleMoveUp(element_idx)}
                         >
-                          <Box className='name_element'>{(element as Class_LinkElement).name}</Box>
-                          <Box layerStyle="options_2cols">
-                            <Button
-                              variant='menuconfigpanel_move_order_node_io'
-                              minWidth='0'
-                              onClick={() => {
-                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx - 1)
-                                setUpdate(a => a + 1)
-                              }}
-                            >
-                              {icon_move_element_up}
-                            </Button>
-                            <Button
-                              variant='menuconfigpanel_move_order_node_io'
-                              minWidth='0'
-                              onClick={() => {
-                                new_data.drawing_area.moveOrderElementInDA(element_idx, element_idx + 1)
-                                setUpdate(a => a + 1)
-                              }}
-                            >
-                              {icon_move_element_down}
-                            </Button>
-                          </Box>
-                        </Box>)}
-                    </Draggable>
-                  )
-                })
-            }
+                          {icon_move_element_up}
+                        </Button>
+                        <Button
+                          variant='menuconfigpanel_move_order_node_io'
+                          minWidth='0'
+                          disabled={element_idx === cleanedElements.length - 1}
+                          onClick={() => handleMoveDown(element_idx, cleanedElements.length)}
+                        >
+                          {icon_move_element_down}
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
+                </Draggable>
+              )
+            })}
             {provided.placeholder}
           </Box>
         )}
       </Droppable>
     </DragDropContext>
-  </WrapperBoxSubSectionMenu>
+  )
 }

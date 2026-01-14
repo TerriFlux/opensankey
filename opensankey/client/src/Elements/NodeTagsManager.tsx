@@ -140,9 +140,7 @@ export class NodeTagsManager {
   }
 
   public fromJSON(
-    json_node_object: Type_JSON,
-    matching_taggs_id: { [_: string]: string },
-    matching_tags_id: { [_: string]: { [_: string]: string } }
+    json_node_object: Type_JSON
   ) {
     // Node Tags
     //   In JSON here are how supposed tags var is :
@@ -153,14 +151,14 @@ export class NodeTagsManager {
     const taggs_dict = { ...this._node.sankey.node_taggs_dict, ...level_taggs_dict }
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
-        const tagg = taggs_dict[matching_taggs_id[tagg_id] ?? tagg_id]
+        const tagg = taggs_dict[tagg_id]
         if (tagg !== undefined) {
           (tag_ids as string[])
             .forEach(tag_id => {
               if (+tag_id == 0 && level_taggs_dict[tagg_id]) {
                 this._node._nodeTagsManager.addAsAntiTagged(tagg as Class_LevelTagGroup)
               }
-              const tag = tagg.tags_dict[matching_tags_id[tagg_id][tag_id] ?? tag_id]
+              const tag = tagg.tags_dict[tag_id]
               if (tag !== undefined)
                 this.addTag(tag as Class_Tag)
             })

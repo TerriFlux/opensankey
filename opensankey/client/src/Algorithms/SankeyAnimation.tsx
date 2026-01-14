@@ -108,7 +108,7 @@ export class SankeyAnimation {
   public getDescendantNodes(node: Class_NodeElement): Class_NodeElement[] {
     let nodeList: Class_NodeElement[] = []
 
-    const dimensionsAsParentPure = node.dimensions_as_parent_pure || []
+    const dimensionsAsParentPure = node.dimensions_as_parent || []
     dimensionsAsParentPure.forEach((dimension: Class_NodeDimension) => {
       // Récupère les enfants directs
       const children = (dimension.children || []) as Class_NodeElement[]
@@ -180,7 +180,7 @@ export class SankeyAnimation {
           if (targetNode) {
             const colorTarget = targetNode.shape_visible
               ? (targetNode.getShapeColorToUse?.() || '#999')
-              : (targetNode.icon_visible ? targetNode.icon_color : 'grey')
+              : (targetNode.icon_is_visible ? targetNode.icon_color : 'grey')
 
             const isGradient = animatedLink.shape_color_rule === 'gradient'
             const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')

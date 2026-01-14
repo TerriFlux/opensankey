@@ -33,9 +33,9 @@ import { TourProvider } from '@reactour/tour'
 
 import { SankeyMenu } from './components/topmenus/SankeyMenus'
 
-import { MenuConfigurationNodeStyle } from './components/configmenus/SankeyMenuConfigurationNodesShape'
+import { MenuConfigurationAppearance } from './components/configmenus/MenuElementsAppearance'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
-import { SankeyModalStyleLink, SankeyModalStyleNode } from './components/dialogs/SankeyStyle'
+import { GenericModalStyle } from './components/dialogs/SankeyStyle'
 
 import { checkForUrlToJSON, Type_JSON, WrapperInitializeAdditionalMenus } from './types/Utils'
 import { ModalDocumentation } from './components/welcome/SplashScreen'
@@ -121,10 +121,9 @@ export const OpenSankeyApp = ({
   }
 
   /*************************************************************************************************/
-  const menu_configuration_nodes_attributes = <MenuConfigurationNodeStyle
+  const menu_configuration_nodes_attributes = <MenuConfigurationAppearance
     app_data={app_data}
     menu_for_style={false}
-    additional_menus={app_data.menu_configuration.additionalMenus}
   />
 
   // Wait a delay before adding the event on sankeydrawzone for the element to be created, because otherwise the d3 selection return nothing
@@ -208,15 +207,8 @@ export const OpenSankeyApp = ({
         path='ContextMenuZDD'
       />
       <React.Fragment key={'modale_style_link'}>
-        <SankeyModalStyleLink
-          new_data={app_data}
-          additionalMenus={app_data.menu_configuration.additionalMenus}
-        />
-      </React.Fragment>
-      <React.Fragment key={'modale_style_node'}>
-        <SankeyModalStyleNode
-          new_data={app_data}
-          additionalMenus={app_data.menu_configuration.additionalMenus}
+        <GenericModalStyle
+          app_data={app_data}
         />
       </React.Fragment>
     </div>
