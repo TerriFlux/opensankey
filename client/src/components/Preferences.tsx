@@ -121,7 +121,7 @@ export const ModalPreference = ({new_data, additionalMenus}:{
         <TabsUserTags user_data={ghost_data.current} app_data={new_data} />
       </TabPanel>
       <TabPanel key={'pref_style'}>
-        <TabUserStyle user_data={ghost_data.current} app_data={new_data} additionalMenus={additionalMenus} />
+        <TabUserStyle user_data={ghost_data.current} app_data={new_data} />
       </TabPanel>
       <TabPanel key={'pref_icon'}>
         <TabUserIcon user_data={ghost_data.current} app_data={new_data} />
