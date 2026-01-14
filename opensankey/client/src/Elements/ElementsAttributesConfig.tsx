@@ -1087,8 +1087,8 @@ export const NAME_LABEL_CONFIG = {
   ...NAME_LABEL_BASE_CONFIG,
 
   separator: {
-    default: '',
-    type: (() => '') as (() => string),
+    default: ' - ',
+    type: (() => ' - ') as (() => string),
     category: 'name_label' as const,
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
@@ -2141,7 +2141,7 @@ export const getElementsValueLabelValues = (
 
 export const getElementsNameLabelValues = (
   elements: Class_NodeBase[] | Class_ElementStyle[],
-  prefix: 'name_label' | 'value_label',
+  prefix: 'name_label' | 'value_label'| 'icon',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, NAME_LABEL_CONFIG, prefix, refreshParentComponent)
 

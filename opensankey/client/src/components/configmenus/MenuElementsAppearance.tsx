@@ -27,7 +27,8 @@ import {
   LabelWithOverload,
   TooltipElementOverloaded,
   ConfigMenuNumberOrUndefinedInput,
-  OSMultiSelect
+  OSMultiSelect,
+  ElementAttrSetterTextInput2Cols
 } from './MenuCommon'
 
 // Imports des configs
@@ -57,10 +58,7 @@ import {
   isConfigValueIndeterminate,
   font_families,
   getShapeAttributeKey,
-  isShapeValueIndeterminate,
-  getLinkShapeAttributeKey,
-  getNodeShapeAttributeKey,
-  getLabelAttributeKey
+  isShapeValueIndeterminate
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 
@@ -119,6 +117,8 @@ const LabelContentComponent = ({
       -readonly [K in keyof typeof BASE_LABEL_CONFIG]:
       ReturnType<(typeof BASE_LABEL_CONFIG)[K]['type']>
     }
+  //@ts-expect-error xxx
+  const selection = analyzeSelection(elements)
 
   const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
     if (elements.length === 0) return 'simple_text'
@@ -145,10 +145,15 @@ const LabelContentComponent = ({
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const links_elements = elements as Class_LinkElement[] | Class_ElementStyle[]
+  const nodes_elements = elements as Class_NodeElement[] | Class_ElementStyle[]
 
   const linkLabelValues = elements.length > 0
     ? getLinksLabelValues(links_elements, prefix, refreshParentComponent)
     : Object.fromEntries(Object.entries(LINKS_LABEL_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default]))
+
+  const nodeLabelValues = elements.length > 0
+    ? getElementsNameLabelValues(nodes_elements, prefix, refreshParentComponent)
+    : Object.fromEntries(Object.entries(NAME_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
   const _load_image = useRef<HTMLInputElement>(null)
 
@@ -232,6 +237,36 @@ const LabelContentComponent = ({
           </LabelWithOverload>)}
       </Box>
       {displayMode === 'simple_text' && (<>
+        {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
+          <LabelWithOverload attributeKey="separator" elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+          <ElementAttrSetterTextInput2Cols
+            app_data={app_data}
+            elements={elements}
+            config={NAME_LABEL_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            attributeKey={'separator'}
+            refreshParentComponent={refreshParentComponent}
+          />
+          </LabelWithOverload>
+          <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
+            <Box layerStyle='options_2cols'>
+              <Button variant={nodeLabelValues.separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                onClick={() => {
+                  nodeLabelValues.separator_part = 'before'
+                }}
+              >
+                {app_data.t('Menu.before')}
+              </Button>
+              <Button variant={nodeLabelValues.separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                onClick={() => {
+                  nodeLabelValues.separator_part = 'before'
+                }}
+              >
+                {app_data.t('Menu.after')}
+              </Button>
+            </Box>
+          </OSTooltip></Box> : <></>}
         <Box as='span' layerStyle='options_2cols'>
           <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_3cols'>
@@ -613,7 +648,7 @@ export const MenuConfigurationAppearance = ({
     const selectedNodes = drawing_area.selected_nodes_list_sorted
     elements.push(...selectedNodes)
 
-    const selectedLinks =  drawing_area.selected_links_list_sorted
+    const selectedLinks = drawing_area.selected_links_list_sorted
     elements.push(...selectedLinks)
 
     const selectedContainers = drawing_area.selected_containers_list_sorted
@@ -915,15 +950,15 @@ export const MenuConfigurationAppearance = ({
                     </Checkbox>
                   </Box>
                   {selection.hasNodes ?
-                  <Button
-                    variant={'menuconfigpanel_option_button'}
-                    onClick={() => {
-                      app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
-                      app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
-                    }}
-                  >
-                    {t('Noeud.Reorg_title')}
-                  </Button>:<></>}
+                    <Button
+                      variant={'menuconfigpanel_option_button'}
+                      onClick={() => {
+                        app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
+                        app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
+                      }}
+                    >
+                      {t('Noeud.Reorg_title')}
+                    </Button> : <></>}
                 </Box>
               )}
 
@@ -1351,12 +1386,12 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Afficher le fond'}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Fond visible'}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'color_visible'}
-                config={config}
-                prefix={prefix} />
+            <TooltipElementOverloaded
+              elements={base_elements}
+              t={t}
+              attributeKey={'color_visible'}
+              config={config}
+              prefix={prefix} />
           </OSTooltip>
         </Checkbox>
         <Box layerStyle='option_with_activation'>
@@ -1379,12 +1414,12 @@ export const MenuShapeAttributes = ({
               }}
             >
               {shapeValues.color_sustainable ? icon_locked : icon_unlocked}
-                <TooltipElementOverloaded
-                  elements={base_elements}
-                  t={t}
-                  attributeKey={'color_sustainable'}
-                  config={config}
-                  prefix={prefix} />
+              <TooltipElementOverloaded
+                elements={base_elements}
+                t={t}
+                attributeKey={'color_sustainable'}
+                config={config}
+                prefix={prefix} />
             </Button>
           </OSTooltip>
         </Box>
@@ -1431,12 +1466,12 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Afficher la bordure'}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Bordure visible'}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'border_visible'}
-                config={config}
-                prefix={prefix} />
+            <TooltipElementOverloaded
+              elements={base_elements}
+              t={t}
+              attributeKey={'border_visible'}
+              config={config}
+              prefix={prefix} />
           </OSTooltip>
         </Checkbox>
 
@@ -1474,12 +1509,12 @@ export const MenuShapeAttributes = ({
         >
           <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}>
             {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'border_dashed'}
-                config={config}
-                prefix={prefix} />
+            <TooltipElementOverloaded
+              elements={base_elements}
+              t={t}
+              attributeKey={'border_dashed'}
+              config={config}
+              prefix={prefix} />
           </OSTooltip>
         </Checkbox>
         <Box />

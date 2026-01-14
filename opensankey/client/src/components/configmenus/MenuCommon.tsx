@@ -558,7 +558,7 @@ export const ElementAttrSetterTextInput2Cols = <
       <ConfigMenuTextInput
         default_value={attribute_values[attributeKey] as string}
         function_on_blur={(value) => {
-          attribute_values[attributeKey] = (value ?? attribute_values[attributeKey]) as ExtractConfigValue<CONFIG[K]>
+          attribute_values[attributeKey] = (value ?? '') as ExtractConfigValue<CONFIG[K]>
         }}
         menu_for_style={menu_for_style}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
