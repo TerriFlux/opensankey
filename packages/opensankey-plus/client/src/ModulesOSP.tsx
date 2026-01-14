@@ -24,17 +24,8 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-// External imports
 import React from 'react'
-
-// OpenSankey imports
-import {
-  MenuDraggable
-} from './deps/OpenSankey/components/topmenus/SankeyMenus'
-import { WrapperContentConfig,MenuConfigurationLinksTooltip,MenuConfigurationNodesTooltip } from './deps/OpenSankey/components/configmenus/MenuCommon'
-import {
-  IType_DictHookRefSetterShowDialogComponents
-} from './deps/OpenSankey/types/MenuConfig'
+import { WrapperContentConfig } from './deps/OpenSankey/components/configmenus/MenuCommon'
 import {
   FType_InitializeAdditionalMenus,
   FType_ModuleDialogs,
@@ -42,14 +33,7 @@ import {
   moduleDialogs
 } from './deps/OpenSankey/Modules'
 
-
-// import {
-//   MenuConfigurationContainersOSP,
-// } from './components/SankeyPlusMenuConfigurationLabels'
 import { ContextZDT } from './components/ContextZDTOSP'
-import {
-  NodeHyperLinkOSP
-} from './components/SankeyPlusNodes'
 
 import {
   ModalTransparentViewAttrOSP,
@@ -62,22 +46,12 @@ import {
 import {
   ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
-import {
-  SankeyMenuConfigurationNodesTags
-} from './components/SankeyPlusMenuConfigurationNodesTags'
-import {
-  MenuConfigurationLinksTags
-} from './components/SankeyPlusMenuConfigurationLinksTags'
-import {
-  SankeySettingsEditionElementTags
-} from './components/SankeyPlusMenuConfigurationTags'
-import {
-  ImportImageAsSvgBg,
-} from './components/UtilsOSP'
+import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
+import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
+import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
+import {ImportImageAsSvgBg} from './components/UtilsOSP'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
-import { UniversalFileConverter } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
-import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -254,12 +228,6 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
 
   // Cast type
   const new_data_plus = new_data as Class_ApplicationDataOSP
-  const { t } = new_data_plus
-  // Add new_menus
-  // const content_draggable_menu_zdt = <MenuConfigurationContainersOSP
-  //   app_data={new_data_plus}
-  //   menu_for_style={false}
-  // />
   const modules_dialogs_OSP = [
     <ContextZDT
       app_data={new_data_plus}

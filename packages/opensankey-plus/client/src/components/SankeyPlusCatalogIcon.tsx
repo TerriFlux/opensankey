@@ -266,7 +266,7 @@ export const ModalSelectionIcon = (
       </ModalBody>
     </ModalContent>
   </Modal>
-    {file_import}
+  {file_import}
   </>
 }
 

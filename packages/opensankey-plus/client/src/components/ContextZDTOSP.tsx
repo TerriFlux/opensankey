@@ -119,7 +119,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -137,7 +137,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-    variant='contextmenu_button'
+  variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 
@@ -165,11 +165,11 @@ export const ContextZDT = (
     <ButtonGroup orientation='vertical' isAttached>
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       <Divider/>
-        {btn_mask_border}
-        {btn_change_color}
-        {<Divider/>}
-          {btn_move_to_first_plan}
-          {btn_move_to_last_plan}
-          </ButtonGroup>
+      {btn_mask_border}
+      {btn_change_color}
+      {<Divider/>}
+      {btn_move_to_first_plan}
+      {btn_move_to_last_plan}
+    </ButtonGroup>
   </Box> : <></>
 }

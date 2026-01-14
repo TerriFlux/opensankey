@@ -10,7 +10,6 @@ import {
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
 import { SankeyLinkSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuElementsSelection'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_LinkElement } from '../deps/OpenSankey/Elements/Link'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
@@ -22,7 +21,7 @@ export const MenuConfigurationLinksTags = ({new_data}:{new_data: Class_Applicati
   const flux_tagg_entry = list_flux_taggs[flux_tagg_entry_index]
 
   const data_taggs = new_data.drawing_area.sankey.data_taggs_list
-  let selected_links = new_data.drawing_area.selected_links_list_sorted
+  const selected_links = new_data.drawing_area.selected_links_list_sorted
 
   const [, setCount] = useState(0)
   const updateThis = () => {

@@ -2,11 +2,9 @@
 import {
   default_main_sankey_id,
   getStringFromJSON,
-  getStringOrUndefinedFromJSON,
-  Type_JSON,
+  Type_JSON
 } from '../deps/OpenSankey/types/Utils'
 import { convert_data_plus_legacy, getArrayFromJSON } from '../components/UtilsOSP'
-import { Class_Sankey } from '../deps/OpenSankey/types/Sankey'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_ApplicationDataOSP } from './ApplicationDataOSP'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
@@ -84,7 +82,7 @@ export class DrawingAreaPersistenceOSP extends DrawingAreaPersistence {
   }
 
   public static fromJSON(drawing_area: Class_DrawingAreaOSP, json_object: Type_JSON, kwargs?: Type_JSON): void {
-    super.fromJSON(drawing_area, json_object, {})
+    super.fromJSON(drawing_area, json_object, kwargs)
 
     drawing_area['name'] = getStringFromJSON(json_object, 'name', drawing_area.name)
     drawing_area['_heredited_attr'] = getArrayFromJSON(json_object, 'heredited_attr', []) as string[]

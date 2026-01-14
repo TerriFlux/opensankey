@@ -4,7 +4,6 @@ import {Box,Checkbox,Select,} from '@chakra-ui/react'
 
 import type { Class_Tag } from '../deps/OpenSankey/types/Tag'
 import { WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { SankeyNodeSelectionSimple } from '../deps/OpenSankey/components/configmenus/MenuElementsSelection'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
@@ -33,7 +32,7 @@ export const SankeyMenuConfigurationNodesTags = ({app_data}:BaseComponentProps) 
   const [node_tagg_entry_index, setNodeTaggEntryIndex] = useState(0)
   const node_tagg_entry = list_node_taggs[node_tagg_entry_index]
 
-  let selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
+  const selected_nodes = app_data.drawing_area.selected_nodes_list_sorted
 
   const [, setCount] = useState(0)
   const updateThis = () => {
