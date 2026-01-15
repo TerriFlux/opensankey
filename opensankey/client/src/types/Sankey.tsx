@@ -85,7 +85,7 @@ export class Class_Sankey {
     this._icon_catalog = {}
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
-    base_styles.forEach(style_id => this.create_node_internal_style(style_id, elementStyleConfigs))
+    base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
   }
 
   public get dimensions_list() {
@@ -251,7 +251,7 @@ export class Class_Sankey {
       })
     })
   }
-  public create_node_internal_style(id: ElementStyleKey, configs: ElementStyleConfigsDict) {
+  public create_internal_style(id: ElementStyleKey, configs: ElementStyleConfigsDict) {
     if (this._styles[id]) {
       return
     }
