@@ -138,7 +138,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'name_label_is_visible': false
     }
   },
-  SankeyUnitaryElementStyle: {
+  SankeyUnitaryNodeStyle: {
     name: 'Unitaire',
     config: {
       name_label_horiz: 'middle',
@@ -179,7 +179,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     }
   } as const,
   LinkInUnitaryStyle: {
-    name: 'close import',
+    name: 'Unitaire flux entrée',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,
@@ -192,7 +192,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     }
   } as const,
   LinkOutUnitaryStyle: {
-    name: 'close import',
+    name: 'Unitaire flux sortie',
     config: {
       value_label_font_size: 40,
       value_label_bold: true,
@@ -257,8 +257,9 @@ export const node_exchanges_style: readonly ElementStyleKey[] = [
   'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
   'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
 ] as const
+
 export const node_unitary_styles: readonly ElementStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryElementStyle'] as const
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle'] as const
 
 export const link_exchanges_style: readonly ElementStyleKey[] = [
   'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',

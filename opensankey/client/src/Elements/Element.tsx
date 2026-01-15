@@ -996,7 +996,7 @@ export class Class_ElementStyle {
     })
   }
 
-  protected isAttributeOverloaded(
+  public isAttributeOverloaded(
     attr: keyof ConfigType
   ) {
     if (this._default_style) {
@@ -1023,7 +1023,7 @@ export class Class_ElementStyle {
       delete this._references[ref.id]
     }
   }
-
+  public get attributes() { return this._storage}
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }

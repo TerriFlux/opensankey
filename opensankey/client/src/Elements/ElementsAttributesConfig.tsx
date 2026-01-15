@@ -1638,8 +1638,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
   position_dy: {
-    default: 0,
-    type: (() => 0) as (() => number),
+    default: 20,
+    type: (() => 20) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 

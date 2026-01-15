@@ -891,13 +891,12 @@ export class StylePersistence {
 
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
-    // const jsonMapping = this._attributeMappings.getToJsonMapping()
-    // Object.entries(this).forEach(([key, value]) => {
-    //   if (this.shouldSaveAttribute(key, value, this._default_style)) {
-    //     const jsonKey = jsonMapping[key] || key
-    //     json_object[jsonKey] = value
-    //   }
-    // })
+    Object.entries(style.attributes).forEach(([key, value]) => {
+      if (style.isAttributeOverloaded(key)) {
+        //@ts-expect-error xxx
+        json_object[key]= value
+      }
+    })
     return json_object
   }
 
@@ -1247,9 +1246,9 @@ export class SankeyPersistence {
     // const matching_nodes_id: { [_: string]: string } = {}
     // const matching_links_id: { [_: string]: string } = {}
     // First read styles
-    if (json_object['style_element'] !== undefined) {
+    if (json_object['style'] !== undefined) {
       // Set node styles from json data
-      Object.entries(json_object['style_element'])
+      Object.entries(json_object['style'])
         .forEach(([style_id, style_json]) => {
           // Create a node style
           const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
@@ -1317,9 +1316,9 @@ export class SankeyPersistence {
         })
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
-        product_sector_styles.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
-        node_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
-        link_exchanges_style.forEach(style_id => sankey.create_node_internal_style(style_id, elementStyleConfigs))
+        product_sector_styles.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        link_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
       }
     }
     json_entry = 'fluxTags'
