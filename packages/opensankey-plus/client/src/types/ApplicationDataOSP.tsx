@@ -12,7 +12,7 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { elementStyleConfigs, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+import { elementStyleConfigs, link_unitary_styles, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
@@ -566,8 +566,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     DrawingAreaPersistence.fromJSON(new_drawing_area,copy)
     new_drawing_area.name = name
 
-    node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, elementStyleConfigs))
-    //link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_node_internal_style(style_id, linkStyleConfigs))
+    node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
+    link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
 
     new_drawing_area.removeMinimumLinkThickness()
     new_drawing_area.removeMaximumLinkThickness()
