@@ -584,10 +584,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         }
       })
 
-    let scale = 0
-    new_drawing_area.sankey.nodes_dict[node_ref.id].input_links_list.forEach(l => scale += l.valueCurrent!)
+    let scale = new_drawing_area.sankey.nodes_dict[node_ref.id].getShapeHeightToUse()
     // Set new scale for unitary sankey
-    new_drawing_area.scale = scale / 3
+    new_drawing_area.scale = scale*3
 
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
