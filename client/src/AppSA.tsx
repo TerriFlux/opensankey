@@ -204,7 +204,10 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
   // Minimal app ------------------------------------------------------------------------------------
   const sankeyApp =
     <OpenSankeyApp
-      initializeApplicationData={() => new_data_app}
+      initializeApplicationData={() => {
+        document.onkeydown = new_data_app.keyboardEventListener(new_data_app)
+        return new_data_app
+      }}
       initializeAdditionalMenus={(additionalMenus, new_data) => {
         initializeAdditionalMenusSA(
           additionalMenus,
