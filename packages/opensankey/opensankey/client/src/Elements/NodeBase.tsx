@@ -147,7 +147,6 @@ export class Class_NodeBase extends Class_BaseShape {
   protected drawElements() {
     this._nodeDrawShape.drawShape()
     this._nodeDrawNameLabel.drawGenericLabel()
-    this._nodeDrawNameLabel.drawGenericLabel()
     this._nodeDrawIcon.drawGenericLabel()
   }
   public drawIcon() {

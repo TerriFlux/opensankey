@@ -858,6 +858,7 @@ export class Class_ElementStyle {
   value_label_text_align!: ValueLabelAttributeTypes['text_align']
   value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
   value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
+
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']

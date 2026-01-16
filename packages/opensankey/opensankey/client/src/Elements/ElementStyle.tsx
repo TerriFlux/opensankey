@@ -30,14 +30,14 @@ export type ElementStyleConfigsDict = Record<string, ElementStyleConfigItem>
 export const elementStyleConfigs: ElementStyleConfigsDict = {
   NodeStyle: {
     name: 'Style de noeud par défaut',
-    config: { 
+    config: {
       'name_label_is_visible': true,
       //'value_label_is_visible': false 
     }
   },
   LinkStyle: {
     name: 'Style de flux par défaut',
-    config: { 
+    config: {
       //'name_label_is_visible': false,
       'name_label_background_visible': false,
       'name_label_vert': 'top',
@@ -49,19 +49,19 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
   },
   ContainerStyle: {
     name: 'Style de container par défaut',
-    config: { 
+    config: {
       'name_label_font_family': 'Arial,sans-serif',
       'name_label_is_visible': true,
       'name_label_inside_vert': true,
-      'name_label_vert': 'top',      
-      'shape_color':'white',
+      'name_label_vert': 'top',
+      'shape_color': 'white',
       'shape_border_visible': true,
-      'shape_border_radius': 5,      
+      'shape_border_radius': 5,
       'value_label_is_visible': false,
       'shape_min_height': 100,
-      'shape_min_width': 100     
+      'shape_min_width': 100
     }
-  },  
+  },
   NodeProductStyle: {
     name: 'Produit',
     config: { 'shape_type': 'ellipse' }
@@ -141,6 +141,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
   SankeyUnitaryNodeStyle: {
     name: 'Unitaire',
     config: {
+      name_label_text_align: 'middle',
       name_label_horiz: 'middle',
       name_label_vert: 'bottom',
       name_label_font_size: 40,
@@ -148,7 +149,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_type: 'rect',
       name_label_bold: true,
       name_label_uppercase: true,
-      name_label_box_width: 500,
+      name_label_box_width: 350,
+      name_label_background_visible: false,
       position_dx: 300
     }
   },
@@ -157,6 +159,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     config: {
       name_label_horiz: 'left',
       name_label_vert: 'middle',
+      name_label_text_align: 'right',
       name_label_font_size: 40,
       shape_min_width: 1,
       shape_min_height: 1,
@@ -186,11 +189,15 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       value_label_font_size: 40,
       value_label_bold: true,
       value_label_horiz: 'left',
-      value_label_pos_auto: true,
+      value_label_on_path: false,
+      value_label_pos_auto: false,
       value_label_unit_visible: true,
       value_label_unit_type: '%OD',
       value_label_significant_digits: true,
-      value_label_nb_significant_digits: 3
+      value_label_nb_significant_digits: 3,
+      value_label_background_visible: true,
+      value_label_background_color_visible: true,
+      value_label_background_color: 'white'
     }
   } as const,
   LinkOutUnitaryStyle: {
@@ -199,11 +206,16 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       value_label_font_size: 40,
       value_label_bold: true,
       value_label_horiz: 'right',
-      value_label_pos_auto: true,
+      value_label_vert: 'middle',
+      value_label_on_path: false,
+      value_label_pos_auto: false,
       value_label_unit_visible: true,
       value_label_unit_type: '%IS',
       value_label_significant_digits: true,
-      value_label_nb_significant_digits: 3
+      value_label_nb_significant_digits: 3,
+      value_label_background_visible: true,
+      value_label_background_color_visible: true,
+      value_label_background_color: 'white',
     }
   } as const,
   LinkImportExportCloseStyle: {
@@ -252,7 +264,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
 }
 
 export type ElementStyleKey = keyof typeof elementStyleConfigs
-export const base_styles : readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle', 'ContainerStyle'] as const
+export const base_styles: readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle', 'ContainerStyle'] as const
 
 export const product_sector_styles: readonly ElementStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
