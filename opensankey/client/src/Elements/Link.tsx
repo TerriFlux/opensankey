@@ -1366,30 +1366,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public formatValueWithOption(value: number | string, option: ValueOptionType) {
-    if (
-      this.style.includes(this.sankey.styles_dict['LinkInUnitaryStyle']) ||
-      this.style.includes(this.sankey.styles_dict['LinkOutUnitaryStyle'])
-    ) {
-      return value + '%'
-    }
-    if (option == '%IS' && value) {
-      return '→↕ ' + value + '%'
-    } else if (option == '%OS' && value) {
-      return '↕→ ' + value + '%'
-    } else if (option == '%ID' && value) {
-      return value + '% ↕→'
-    } else if (option == '%OD' && value) {
-      return value + '% →↕'
-    } else if (option == 'unit_ratio' && value) {
-      return value + ' ' + this.unit_name + '/' + 't'//this.value?.ratio_unit_tag!.name
-    } else if (option == '%PS' && value) {
-      return '↑→ ' + value + '%'
-    } else if (option == '%PD' && value) {
-      return value + '% ↑→'
-    }
-    return value as string
-  }
+
 
   public get unit_name() {
     if (this.value_label_unit_type == 'unit_name') return this.value_label_unit

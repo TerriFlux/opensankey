@@ -32,6 +32,8 @@ import { value_option_percent_constants, ValueOptionType } from '../Elements/Lin
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_DataTagGroup } from './TagGroup'
+import { Class_NodeElement } from '../Elements/Node'
+import { Class_BaseShape } from '../Elements/Element'
 
 declare const window: Window &
   typeof globalThis & {
@@ -339,12 +341,37 @@ export function checkForUrlToJSON() {
   return url_var
 
 }
-
+  export const formatValueWithOption = (element:Class_BaseShape,value: number | string, option: ValueOptionType) =>{
+    if (
+      element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) || 
+      element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']) ||
+      element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeInputStyle']) ||
+      element.style.includes(element.sankey.styles_dict['LinkOutUnitaryStyle'])
+    ) {
+      return value + '%'
+    }
+    if (option == '%IS' && value) {
+      return '→↕ ' + value + '%'
+    } else if (option == '%OS' && value) {
+      return '↕→ ' + value + '%'
+    } else if (option == '%ID' && value) {
+      return value + '% ↕→'
+    } else if (option == '%OD' && value) {
+      return value + '% →↕'
+    } else if (option == 'unit_ratio' && value) {
+      return value + ' ' + element.value_label_unit + '/' + 't'//this.value?.ratio_unit_tag!.name
+    } else if (option == '%PS' && value) {
+      return '↑→ ' + value + '%'
+    } else if (option == '%PD' && value) {
+      return value + '% ↑→'
+    }
+    return value as string
+  }
 
 export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement) => {
   if (type_data == 'data' || type_data == 'data_label') {
     if (!link.value?.valueData) return ''
-    return link.formatValueWithOption(format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
+    return formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name), link.value?.value_option)/*else if (link.value?.value_option == 'unit_ratio' ) {
         return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
       }*/
   }
@@ -371,30 +398,36 @@ export const format_value = (
   // First step. value transformation
   const unit_taggs = element.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
   const link = element as Class_LinkElement
+  const node = element as Class_NodeElement
   if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const tag = unit_taggs[0].tags_dict[element.value_label_unit]
     const new_value = link.valueForTag(tag)
-    data_value = new_value?.valueResult ?? new_value?.valueData
+    data_value = new_value?.valueResult ?? 
+    new_value?.valueData
   }
+
+  const is_node = element instanceof Class_NodeElement
+  const source = is_node ? node : link.source
+  const target = is_node ? node : link.target
 
   if (element.value_label_unit_type == '%IS') {
     let total_source = 0
     // if (unit_taggs.length > 0) {
     //   link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
     // }
-    link.source.input_links_list.filter(l => l.is_visible && l.value!.data_tag == link.value!.data_tag).forEach(l => total_source += l.valueCurrent ?? 0)
+    source.input_links_list.filter(l => l.is_visible /*&& l.value!.data_tag == link.value!.data_tag*/).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_source * 100 : null
   } else if (element.value_label_unit_type == '%OD') {
     let total_target = 0
-    link.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_target * 100 : null
   } else if (element.value_label_unit_type == '%OS') {
     let total_target = 0
-    link.source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_target * 100 : null
   } else if (element.value_label_unit_type == '%ID') {
     let total_source = 0
-    link.target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value ? data_value / total_source * 100 : null
   } else if (element.value_label_unit_type == 'normalized') {
     data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
@@ -449,8 +482,8 @@ export const format_value = (
   } else if (element.value_label_unit_type == 'other_unit_tag' && unit_taggs.length > 0) {
     const label_unit = unit_taggs[0].tags_dict[element.value_label_unit]!.name
     text_value = text_value + ' ' + label_unit
-  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0) {
-    text_value = link.formatValueWithOption(text_value, element.value_label_unit_type as ValueOptionType)
+  } else if (value_option_percent_constants.filter(s => element.value_label_unit_type == s).length > 0 && element.value_label_is_visible) {
+    text_value = formatValueWithOption(element,text_value, element.value_label_unit_type as ValueOptionType)
   } else if (element.value_label_unit_type == 'normalized') return text_value
 
   return text_value

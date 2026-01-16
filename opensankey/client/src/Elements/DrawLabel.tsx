@@ -246,7 +246,7 @@ export abstract class DrawLabelBase {
       return
     }
     d3_selection_g_FO.call(d3.drag<SVGForeignObjectElement, unknown>()
-      .filter(evt => (evt.which == 1 && evt.altKey ))
+      .filter(evt => (evt.which == 1 && evt.altKey))
       .on('start', ev => this.dragGenericStart(ev))
       .on('drag', ev => this.dragGenericMove(ev))
       .on('end', ev => this.dragGenericEnd(ev))
@@ -285,7 +285,7 @@ export abstract class DrawLabelBase {
       return
     }
     this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
-      .filter(evt => (evt.which == 1) && evt.altKey &&this._element.drawing_area?.isInSelectionMode())
+      .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area?.isInSelectionMode())
       .on('start', ev => this.dragGenericStart(ev))
       .on('drag', ev => this.dragGenericMove(ev))
       .on('end', ev => this.dragGenericEnd(ev))
@@ -330,7 +330,7 @@ export abstract class DrawLabelBase {
     d3_selection_icon_svg
       .append('g')
       .append('path')
-      .style('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse() )
+      .style('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
       .attr('d', this._element.sankey.getIconFromCatalog(this._label_values.icon_name))
 
     // ✅ Appliquer le drag générique unifié
@@ -783,13 +783,9 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     const shape_height = this.node.getShapeHeightToUse()
     const inside_vert = this._label_values.inside_vert
 
-    if (this.prefix === 'name_label') {
-      label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
-      label_baseline = 'text-before-edge'
-    } else {
-      label_pos_y = label_pos_dy + shape_height + this._label_values.font_size + this._label_values.vert_shift
-      label_baseline = 'text-before-edge'
-    }
+    label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
+    label_baseline = 'text-before-edge'
+
 
     if (this._label_values.position_absolute) {
       label_pos_y = this._label_values.position_y
@@ -811,11 +807,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
         }
       }
       else if (this._label_values.vert === 'middle') {
-        if (this.prefix === 'name_label') {
-          label_pos_y = shape_height / 2 + this._label_values.vert_shift
-        } else {
-          label_pos_y = (shape_height / 2) + (this._label_values.font_size / 2) + this._label_values.vert_shift
-        }
+        label_pos_y = shape_height / 2 + this._label_values.vert_shift
         label_baseline = 'middle'
       }
     }
@@ -1071,6 +1063,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
+    let label_pos_y_end = this.link.position_y_end
+    const going_up = label_pos_y_end - label_pos_y < 0
     let label_pos_x = this.link.position_x_start
     let label_anchor = 'start'
     let label_baseline = 'text-before-edge'
@@ -1097,18 +1091,31 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     } else {
       const inside_vert = this._label_values.inside_vert ?? false
 
-      if (this._label_values.vert === 'top' || (this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness)) {
+      // Déterminer la position verticale automatique ou manuelle
+      let shouldPlaceTop = this._label_values.vert === 'top'
+
+      if (this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness) {
+        // Logique pos_auto selon la position horizontale
+        const horiz = this._label_values.horiz || 'left'
+
+        if (horiz === 'left') {
+          // À gauche : dessous si going_up, dessus sinon
+          shouldPlaceTop = !going_up
+        } else if (horiz === 'middle' || horiz === 'right') {
+          // À droite ou middle : dessus si going_up
+          shouldPlaceTop = going_up
+        }
+      }
+
+      if (shouldPlaceTop) {
         if (inside_vert) {
           label_pos_y -= this.link.thickness / 2 - this.getFontSize() + this._label_values.vert_shift
           label_baseline = 'text-before-edge'
         } else {
-          label_pos_y -= this.link.thickness / 2 + this.getFontSize() / 2
+          label_pos_y -= this.link.thickness / 2
           label_baseline = 'text-after-edge'
         }
-      } else if (this._label_values.vert === 'middle') {
-        label_pos_y += this.getFontSize() / 3
-        label_baseline = 'middle'
-      } else if (this._label_values.vert === 'bottom') {
+      } else if (this._label_values.vert === 'bottom' || this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness) {
         if (inside_vert) {
           label_pos_y += this.link.thickness / 2
           label_baseline = 'text-after-edge'
@@ -1116,6 +1123,9 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
           label_pos_y += this.link.thickness / 2 + this.getFontSize()
           label_baseline = 'text-before-edge'
         }
+      } else if (this._label_values.vert === 'middle') {
+        label_pos_y += this.getFontSize() / 3
+        label_baseline = 'middle'
       }
     }
 
