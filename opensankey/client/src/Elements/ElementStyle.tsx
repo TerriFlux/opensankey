@@ -148,7 +148,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_type: 'rect',
       name_label_bold: true,
       name_label_uppercase: true,
-      name_label_box_width: 1000,
+      name_label_box_width: 500,
       position_dx: 300
     }
   },
@@ -161,8 +161,9 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_width: 1,
       shape_min_height: 1,
       shape_visible: false,
-      name_label_box_width: 1000,
-      position_dx: 300
+      name_label_box_width: 500,
+      position_dx: 300,
+      position_dy: 50
     }
   },
   SankeyUnitaryNodeOutputStyle: {
@@ -174,8 +175,9 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_width: 1,
       shape_min_height: 1,
       shape_visible: false,
-      name_label_box_width: 1000,
-      position_dx: 300
+      name_label_box_width: 500,
+      position_dx: 300,
+      position_dy: 50
     }
   } as const,
   LinkInUnitaryStyle: {
