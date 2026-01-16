@@ -318,7 +318,7 @@ interface TagFilterConfig {
   show_palette_switch: boolean
   show_type_selection_header: boolean
   update_method: string
-  ref_updater_key: string
+  ref_updater_key?: string
 }
 const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
   element: {
@@ -337,7 +337,6 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
     show_palette_switch: false,
     show_type_selection_header: false,
     update_method: 'updateAllComponentsRelatedToNodeTags',
-    ref_updater_key: 'ref_to_leveltag_filter_updater'
   },
   data: {
     mode: 'data',
@@ -720,9 +719,6 @@ export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_Applic
 )
 
 export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [, setCount] = useState(0)
-  app_data.menu_configuration.ref_to_leveltag_filter_updater.current = () => setCount(a => a + 1)
-
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
     return <></>

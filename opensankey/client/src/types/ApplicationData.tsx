@@ -304,8 +304,6 @@ export class Class_ApplicationData {
     if (this.options.no_key_event === true) {
       return
     }
-    // Link keyboard listener with app key down detection
-    document.onkeydown = this._keyboardEventListener(this)
   }
 
   // // CLEANING METHODS ===================================================================
@@ -837,7 +835,7 @@ export class Class_ApplicationData {
    * @return {*}
    * @memberof Class_ApplicationData
    */
-  protected _keyboardEventListener(
+  public keyboardEventListener(
     app_ref: Class_ApplicationData
   ) {
     return (evt: KeyboardEvent) => { this._keyboardEventProcessing(evt, app_ref) }

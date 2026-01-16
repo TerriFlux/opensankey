@@ -153,7 +153,10 @@ const App: FC = () => {
   // Rendre SankeyApp une fois que tout est chargé
   return   <ChakraProvider theme={opensankey_theme}>
     <OpenSankeyApp
-      initializeApplicationData={()=>dataApp} // Data, displayed data, default data
+      initializeApplicationData={()=>{
+        document.onkeydown = dataApp!.keyboardEventListener(dataApp!)
+        return dataApp
+      }} // Data, displayed data, default data
 
       // Ref to some key ui element in the application
       initializeAdditionalMenus={initializeAdditionalMenus}

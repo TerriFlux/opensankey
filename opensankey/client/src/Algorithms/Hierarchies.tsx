@@ -929,11 +929,13 @@ export const disaggregate = (
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
     })
-    const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag
-    parent_dim.children.forEach(child=>{
-      child.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag)).forEach(l=>l.source.dimensions_as_child[0].setForceToShowChildren())
-      child.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag)).forEach(l=>l.target.dimensions_as_child[0].setForceToShowChildren())
-    })
+    const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
+    if (echangeTag) {
+      parent_dim.children.forEach(child=>{
+        child.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag)).forEach(l=>l.source.dimensions_as_child[0].setForceToShowChildren())
+        child.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag)).forEach(l=>l.target.dimensions_as_child[0].setForceToShowChildren())
+      })
+    }
   }
 
   const undo = () => {
