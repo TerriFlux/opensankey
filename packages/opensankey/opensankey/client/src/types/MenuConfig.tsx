@@ -256,7 +256,7 @@ export class Class_MenuConfig {
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
-  private _ref_to_leveltag_filter_updater: MutableRefObject<() => void>
+
   private _ref_to_nodetag_filter_updater: MutableRefObject<() => void>
   private _ref_to_datatag_filter_updater: MutableRefObject<() => void>
 
@@ -347,7 +347,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_context_drawing_area_updater = useRef(() => null)
 
     // Init filtering components updater ------------------------------------------------
-    this._ref_to_leveltag_filter_updater = useRef(() => null)
+
     this._ref_to_nodetag_filter_updater = useRef(() => null)
     // this._ref_to_fluxtag_filter_updater = useRef(() => null)
     this._ref_to_datatag_filter_updater = useRef(() => null)
@@ -833,7 +833,6 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToLevelTags() {
-    this._ref_to_leveltag_filter_updater.current()
     this.updateComponentRelatedToNodesDimTags()
     this._ref_to_menu_config_tags_updater['level_taggs'].current()
     this._ref_to_toolbar_level_tag_filter_updater.current()
@@ -841,7 +840,6 @@ export class Class_MenuConfig {
 
   public updateAllComponentsRelatedToNodeTags() {
     this._ref_to_nodetag_filter_updater.current()
-    this._ref_to_leveltag_filter_updater.current()
     this._ref_to_toolbar_node_tag_updater.current()
     this._ref_to_toolbar_level_tag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
@@ -1187,13 +1185,6 @@ export class Class_MenuConfig {
 
   public get ref_to_toolbar_updater(): MutableRefObject<() => void> {
     return this._ref_to_toolbar_updater
-  }
-
-
-  // Filtering components ---------------------------------------------------------------
-
-  public get ref_to_leveltag_filter_updater(): MutableRefObject<() => void> {
-    return this._ref_to_leveltag_filter_updater
   }
 
   public get ref_to_nodetag_filter_updater(): MutableRefObject<() => void> {
