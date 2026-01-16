@@ -128,8 +128,11 @@ export const createNodeModifierPlus = (app_data: Class_ApplicationDataOSP) => {
   return {
     ...baseModifiers,
     createUnitarySankey: () => {
-      if (app_data.drawing_area.node_contextualised)
-        app_data.createUnitaryNewView(app_data.drawing_area.node_contextualised)
+      if (app_data.drawing_area.node_contextualised) {
+        const d = app_data.createUnitaryNewView(app_data.drawing_area.node_contextualised)
+        app_data.setCurrentView(d.id)
+        app_data.menu_configuration_osp.updateComponentRelatedToViews()
+      }
     }
   }
 }

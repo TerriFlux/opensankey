@@ -218,31 +218,28 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   additional_menus,
   menu_configuration_nodes_attributes 
 ) => {
-
-  // OpenSankey Menu
   const modules_dialogs = moduleDialogs(
     new_data,
     additional_menus,
     menu_configuration_nodes_attributes
   )
 
-  // Cast type
-  const new_data_plus = new_data as Class_ApplicationDataOSP
+  const app_data = new_data as Class_ApplicationDataOSP
   const modules_dialogs_OSP = [
     <ContextZDT
-      app_data={new_data_plus}
+      app_data={app_data}
     />,
     <ModalTransparentViewAttrOSP
-      new_data_plus={new_data_plus}
+      app_data={app_data}
     />,
     <ModalViewNotSavedOSP
-      new_data_plus={new_data_plus}
+      app_data={app_data}
     />,
     <ModalSelectionIcon
-      app_data={new_data_plus}
+      app_data={app_data}
     />,
     <ModalCreateUnitaryViewOSP
-      new_data_plus={new_data_plus}
+      app_data={app_data}
     />
   ]
 

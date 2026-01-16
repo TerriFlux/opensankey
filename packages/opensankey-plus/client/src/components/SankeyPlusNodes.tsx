@@ -1,6 +1,6 @@
 import React, { useState, FC } from 'react'
 
-import {Box,Button,Input,InputGroup,InputRightElement,MenuItem} from '@chakra-ui/react'
+import { Box, Button, Input, InputGroup, InputRightElement, MenuItem } from '@chakra-ui/react'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 
@@ -75,7 +75,7 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
             <InputRightElement >
               <Button
                 variant='menuconfigpanel_option_button'
-                isDisabled={hasHyperLink()===''}
+                isDisabled={hasHyperLink() === ''}
                 onClick={() => {
                   window.open(node_hyperlink)
                 }}
@@ -95,8 +95,8 @@ export const NodeHyperLinkOSP: FC<BaseComponentPropsPlus> = ({
 
 }
 
-export const ButtonNodeContextCreateUnitaryView = ({ app_data }:{app_data:Class_ApplicationDataOSP}) => {
-  const { t,drawing_area,menu_configuration_osp } = app_data
+export const ButtonNodeContextCreateUnitaryView = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
+  const { t, drawing_area, menu_configuration_osp } = app_data
 
   const closeContextMenu = () => {
     // Unset contextualized node
@@ -110,8 +110,12 @@ export const ButtonNodeContextCreateUnitaryView = ({ app_data }:{app_data:Class_
     onClick={() => {
       app_data.sendWaitingToast(
         () => {
-          if (drawing_area.node_contextualised)
-            app_data.createUnitaryNewView(drawing_area.node_contextualised)
+          if (drawing_area.node_contextualised) {
+            const d = app_data.createUnitaryNewView(drawing_area.node_contextualised)
+            app_data.setCurrentView(d.id)
+            app_data.menu_configuration_osp.updateComponentRelatedToViews()
+          }
+
           menu_configuration_osp.updateComponentRelatedToViews()
           menu_configuration_osp.ref_to_save_in_cache_indicator.current(true)
           closeContextMenu()

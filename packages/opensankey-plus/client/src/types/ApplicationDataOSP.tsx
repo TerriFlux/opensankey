@@ -170,31 +170,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
   }
 
-  /**
-   * Save to Excel format
-   * @protected
-   * @param {string} url_prefix
-   * @param {string} [file_name='sankey']
-   * @memberof Class_ApplicationData
-   */
-  // protected _saveToExcel(
-  //   url_prefix: string,
-  //   save_options: ExcelOptionType
-  // ) {
-  //   const cur_option = this.options_save_json.only_current_view
-  //   this.options_save_json.only_current_view = true
-  //   JSONtoExcel(
-  //     this._toJSON(),
-  //     url_prefix,
-  //     this._file_name,
-  //     save_options
-  //   )
-  //   this.options_save_json.only_current_view = cur_option
-  // }
-
   public createNewMenuConfiguration() {
     this._toast = useToast()
-    this._menu_configuration = new Class_MenuConfig()
+    this._menu_configuration = new Class_MenuConfigOSP()
     this._history = new Class_ApplicationHistory(this._menu_configuration)
 
     return this._menu_configuration
@@ -260,7 +238,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     //save current view
     if (!this.is_view_master) {
-      this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP,kwargs))
+      this._views[this._drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs))
       this.menu_configuration.ref_to_save_in_cache_indicator.current(true)
     }
 
@@ -273,7 +251,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return json_entry
     }
     // Herited toJSON to save master data
-    json_entry = DrawingAreaPersistence.toJSON(this._master_drawing_area!,kwargs)
+    json_entry = DrawingAreaPersistence.toJSON(this._master_drawing_area!, kwargs)
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
@@ -283,7 +261,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       (json_entry_views[id] as Type_JSON)['name'] = this._views[id].name
       if (kwargs && kwargs['save_only_visible_elements']) {
         this.extractViewFromJSON(this._views[id].json, id)
-        json_entry_views[id] = DrawingAreaPersistence.toJSON(this._drawing_area,kwargs)
+        json_entry_views[id] = DrawingAreaPersistence.toJSON(this._drawing_area, kwargs)
       }
     })
 
@@ -302,13 +280,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       }
     }
     //super._fromJSON(json_object, kwargs)
-    DrawingAreaPersistenceOSP.fromJSON(this._drawing_area as Class_DrawingAreaOSP,json_object, kwargs)
+    DrawingAreaPersistenceOSP.fromJSON(this._drawing_area as Class_DrawingAreaOSP, json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
     if (kwargs && kwargs['only_current_view']) {
       return
     }
+    this.viewsFromJSON(json_object)
 
+  }
+  public viewsFromJSON(json_object: Type_JSON) {
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       return
@@ -359,7 +340,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const drawing_area_view = this.createNewDrawingArea(view_id)
     drawing_area_view.bypass_redraws = true
     const decompressed_string = pako.inflate(new Uint8Array(json_object), { to: 'string' })
-    DrawingAreaPersistence.fromJSON(drawing_area_view,JSON.parse(decompressed_string))
+    DrawingAreaPersistence.fromJSON(drawing_area_view, JSON.parse(decompressed_string))
     //const visible_json = drawing_area_view.toJSON(false,true,false)
     //this._views[view_id].json = compressJSONToGzip(visible_json)
     //drawing_area_view.fromJSON(visible_json)
@@ -520,7 +501,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Create the new sankey
     const new_drawing_area = this.createNewDrawingArea(view_id/*makeId('view')*/)
     new_drawing_area.bypass_redraws = true
-    if (copy) DrawingAreaPersistence.fromJSON(new_drawing_area,DrawingAreaPersistence.toJSON(this.drawing_area)) // /!\ CopyFrom overwrites drawing area's name
+    if (copy) DrawingAreaPersistence.fromJSON(new_drawing_area, DrawingAreaPersistence.toJSON(this.drawing_area)) // /!\ CopyFrom overwrites drawing area's name
     new_drawing_area.name = 'Copie de ' + this.drawing_area.name
     new_drawing_area.sankey.id = view_id
     // Add new sankey to views
@@ -561,9 +542,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Copy current sankey
     const name = 'Unitary view of ' + node_ref.name
     const id = new_drawing_area.id
-    const copy = DrawingAreaPersistence.toJSON(base_drawing_area,{ keep_siblings: true })
+    const copy = DrawingAreaPersistence.toJSON(base_drawing_area, { keep_siblings: true })
     copy.id = id
-    DrawingAreaPersistence.fromJSON(new_drawing_area,copy)
+    DrawingAreaPersistence.fromJSON(new_drawing_area, copy)
     new_drawing_area.name = name
 
     node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
@@ -672,7 +653,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.position_x -= 100
       })
     new_drawing_area.legend.stick_to_drawing = false
-    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_','Sankey Unitaire')
+    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_', 'Sankey Unitaire')
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
@@ -688,8 +669,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       'json': compressJSONToGzip(DrawingAreaPersistence.toJSON(new_drawing_area))
     }
     this.pushViewIdInViewOrder(new_drawing_area.id)
-    this.setCurrentView(new_drawing_area.id)
-    this.menu_configuration_osp.updateComponentRelatedToViews()
+    return new_drawing_area
+
   }
 
   public setCurrentView(id: string) {
@@ -725,7 +706,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       if (id !== default_main_sankey_id) {
         // Update view with attr heredited from master
         this._drawing_area.bypass_redraws = true
-        updateFrom(this._drawing_area,this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+        updateFrom(this._drawing_area, this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
         // Create a clone of current view's DA
         if (!this.is_static) {
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))

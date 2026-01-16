@@ -34,11 +34,12 @@ import {
 // OpenSankey Libs
 import {
   default_main_sankey_id,
+  getJSONOrUndefinedFromJSON,
   makeId,
   Type_JSON,
 } from '../deps/OpenSankey/types/Utils'
 
-import {updateFrom} from '../deps/OpenSankey/Algorithms/UpdateFrom'
+import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
@@ -46,11 +47,11 @@ import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
-import { compressJSONToGzip, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
 
 interface BaseComponentPropsPlus {
-  new_data_plus: Class_ApplicationDataOSP
+  app_data: Class_ApplicationDataOSP
 }
 
 export const logo_view = <svg
@@ -80,7 +81,7 @@ export const logo_view = <svg
  * a button that appear if the view is a unitary view and the unitary node of the view has the tag 'secteur' from the nodeTag 'type de noeud'
  *
  * @param {*} {
- *   new_data_plus
+ *   app_data
  * }
  * @return {*}
  */
@@ -90,10 +91,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
   const { t, icon_library, menu_configuration_osp } = app_data
   const { icon_add_element, icon_remove_element, icon_welcome, icon_next, icon_previous, icon_attr_view, icon_unit_view, icon_copy, icon_locked, icon_collapse_down, icon_collapse_up } = icon_library
-  // Component updater ------------------------------------------------------------------
-
-  // Local updater ----------------------------------------------------------------------
-
   const [, setCount] = useState(0)
   const { isOpen, onToggle } = useDisclosure()
   const refreshThis = () => {
@@ -511,7 +508,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
       alignSelf='center'
       alignContent='center'
     >
-      <SelecteurView new_data_plus={app_data} />
+      <SelecteurView app_data={app_data} />
 
     </Box>
     {
@@ -567,21 +564,21 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 /**
  * View selector for navbar or menuconfig
  * @param {*} {
- *   new_data_plus
+ *   app_data
  * }
  * @return {*}
  */
 export const SelecteurView = (
-  { new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }
+  { app_data }: { app_data: Class_ApplicationDataOSP }
 ) => {
-  const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
+  const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
   const [s_select_or_edit, sSelectOrEdit] = useState<'edit' | 'select'>('select')
 
   const cur_view = drawing_area_plus
-  const has_sankey_plus = new_data_plus.has_sankey_plus
-  const has_views = new_data_plus.has_views
-  const is_view_master = new_data_plus.is_view_master
+  const has_sankey_plus = app_data.has_sankey_plus
+  const has_views = app_data.has_views
+  const is_view_master = app_data.is_view_master
 
   // JSX elements -----------------------------------------------------------------------
 
@@ -598,43 +595,43 @@ export const SelecteurView = (
     }}
     onChange={
       (evt: React.ChangeEvent<HTMLSelectElement>) => {
-        new_data_plus.setCurrentView(evt.target.value)
+        app_data.setCurrentView(evt.target.value)
         // Update views components (without updating save in cache button)
-        new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
+        app_data.menu_configuration_osp.updateComponentRelatedToViews()
       }
     }
     value={
-      Object.keys(new_data_plus.views_dict).includes(cur_view.id) && cur_view.id !== default_main_sankey_id
+      Object.keys(app_data.views_dict).includes(cur_view.id) && cur_view.id !== default_main_sankey_id
         ? cur_view.id
         : 'master'
     }
   >
     <option value="master" disabled hidden>Sankey Maître</option>
     {
-      new_data_plus.views_order
-        .map((view,i) => {
+      app_data.views_order
+        .map((view, i) => {
           return <option
             key={i}
             value={view}
           >
-            {new_data_plus.views_dict[view].name}
+            {app_data.views_dict[view].name}
           </option>
         })
     }
   </Select>
 
   const text_input = <ConfigMenuTextInput
-    default_value={new_data_plus.views_dict[cur_view.id]?.name}
+    default_value={app_data.views_dict[cur_view.id]?.name}
     function_on_blur={(_) => {
       // Update text for links
       if ((_ !== undefined) && (_ !== null)) {
-        new_data_plus.views_dict[cur_view.id].name = _
+        app_data.views_dict[cur_view.id].name = _
         //cur_view.name = _
       }
       // Update this menu
       sSelectOrEdit('select')
       // Update views components
-      new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
+      app_data.menu_configuration_osp.updateComponentRelatedToViews()
     }}
     disabled={!has_views}
   />
@@ -644,7 +641,7 @@ export const SelecteurView = (
 /**
  * Content for view config in menu configuration
  * @param {*} {
- *   new_data_plus,
+ *   app_data,
  * }
  * @return {*}
  */
@@ -682,7 +679,7 @@ export const ViewsConfig = (
         </Box>
         <InputGroup
           variant='menuconfigpanel_option_input'>
-          <SelecteurView new_data_plus={app_data} />
+          <SelecteurView app_data={app_data} />
         </InputGroup>
       </Box>
       <Table variant='table_view' size='sm'>
@@ -810,18 +807,18 @@ export const ViewsConfig = (
 // }
 
 // export const MenuPreferenceViewOSP: FC<BaseComponentPropsPlus> = (
-//   { new_data_plus }
+//   { app_data }
 // ) => {
 //   const [, setCount] = useState(0)
-//   new_data_plus.menu_configuration.ref_to_checkbox_pref_view_updater.current = () => setCount(a => a + 1)
-//   const { t } = new_data_plus
+//   app_data.menu_configuration.ref_to_checkbox_pref_view_updater.current = () => setCount(a => a + 1)
+//   const { t } = app_data
 //   return <Checkbox
 //     variant='menuconfigpanel_option_checkbox'
-//     isDisabled={!new_data_plus.has_sankey_plus}
-//     ref={new_data_plus.checkbox_refs['Vis']}
-//     isChecked={new_data_plus.menu_configuration.isGivenAccordionShowed('Vis')}
+//     isDisabled={!app_data.has_sankey_plus}
+//     ref={app_data.checkbox_refs['Vis']}
+//     isChecked={app_data.menu_configuration.isGivenAccordionShowed('Vis')}
 //     onChange={() => {
-//       new_data_plus.menu_configuration.toggleGivenAccordion('Vis')
+//       app_data.menu_configuration.toggleGivenAccordion('Vis')
 //       setCount(a => a + 1)
 //     }}>
 //     {t('view.storytelling')}
@@ -831,16 +828,16 @@ export const ViewsConfig = (
 /**
  * Modal to ask user if he want to save unsaved view change before switching view
  *
- * @param {*} {new_data_plus}
+ * @param {*} {app_data}
  * @return {*}
  */
 export const ModalViewNotSavedOSP: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+  { app_data }
 ) => {
 
-  const { t } = new_data_plus
+  const { t } = app_data
   const [show_modal, setShowModal] = useState(false)
-  new_data_plus.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current = setShowModal
+  app_data.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current = setShowModal
 
   return (
     <Modal
@@ -866,7 +863,7 @@ export const ModalViewNotSavedOSP: FC<BaseComponentPropsPlus> = (
             <Button
               variant='menuconfigpanel_del_button'
               onClick={() => {
-                new_data_plus.resetViewWithOriginal()
+                app_data.resetViewWithOriginal()
                 setShowModal(false)
               }}
             >
@@ -875,7 +872,7 @@ export const ModalViewNotSavedOSP: FC<BaseComponentPropsPlus> = (
             <Button
               variant='menuconfigpanel_add_button'
               onClick={() => {
-                new_data_plus.saveBeforeChangingView()
+                app_data.saveBeforeChangingView()
                 setShowModal(false)
               }}
             >
@@ -888,10 +885,10 @@ export const ModalViewNotSavedOSP: FC<BaseComponentPropsPlus> = (
 }
 
 export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+  { app_data }
 ): JSX.Element => {
 
-  const { t, icon_library } = new_data_plus
+  const { t, icon_library } = app_data
   const {
     icon_activated,
     icon_unactivated
@@ -904,17 +901,17 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   const switchThis = (_: boolean) => {
     setState(_)
   }
-  const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
-  new_data_plus.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = switchThis
+  const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
+  app_data.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = switchThis
 
   const updateComponent = () => {
-    new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setUpdater(a => a + 1)
   }
 
-  const has_sankey_plus = new_data_plus.has_sankey_plus
-  const has_master_sankey = new_data_plus.has_master_sankey
-  const is_view_master = new_data_plus.is_view_master
+  const has_sankey_plus = app_data.has_sankey_plus
+  const has_master_sankey = app_data.has_master_sankey
+  const is_view_master = app_data.is_view_master
 
   if (has_sankey_plus && has_master_sankey && !is_view_master) {
 
@@ -1178,10 +1175,10 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
         <ModalFooter>
           <Button
             onClick={() => {
-              const master_view = new_data_plus.master_view
+              const master_view = app_data.master_view
               if (master_view) {
-                updateFrom(drawing_area_plus,master_view, drawing_area_plus.heredited_attr)
-                new_data_plus.draw()
+                updateFrom(drawing_area_plus, master_view, drawing_area_plus.heredited_attr)
+                app_data.draw()
               }
             }}
           >
@@ -1197,14 +1194,14 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
 /**
  * Modal to generate unitary sankey either from local sankey or from excel file
  *
- * @param {*} { new_data_plus }
+ * @param {*} { app_data }
  * @return {*}  {JSX.Element}
  */
 export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
-  { new_data_plus }
+  { app_data }
 ): JSX.Element => {
 
-  const { t } = new_data_plus
+  const { t } = app_data
 
   const [state, setState] = useState(false)
   const [, setUpdater] = useState(0)
@@ -1213,14 +1210,14 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
     setState(_)
   }
 
-  new_data_plus.menu_configuration_osp.ref_show_modal_unitary_view.current = switchThis
+  app_data.menu_configuration_osp.ref_show_modal_unitary_view.current = switchThis
 
   const updateComponent = () => {
     setUpdater(a => a + 1)
   }
-  new_data_plus.menu_configuration_osp.ref_update_modal_unitary_view.current = updateComponent
+  app_data.menu_configuration_osp.ref_update_modal_unitary_view.current = updateComponent
 
-  const has_sankey_plus = new_data_plus.has_sankey_plus
+  const has_sankey_plus = app_data.has_sankey_plus
 
   if (has_sankey_plus) {
 
@@ -1243,8 +1240,8 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
               <Tab>{t('view.unit_tab_excel')}</Tab>
             </TabList>
             <TabPanels>
-              <TabPanel><TabLocalDataForUnitary new_data_plus={new_data_plus} /></TabPanel>
-              <TabPanel><TabImportExcelDataForUnitary new_data_plus={new_data_plus} /></TabPanel>
+              <TabPanel><TabLocalDataForUnitary app_data={app_data} /></TabPanel>
+              <TabPanel><TabImportExcelDataForUnitary app_data={app_data} /></TabPanel>
             </TabPanels>
           </Tabs>
         </ModalBody>
@@ -1257,12 +1254,12 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
 /**
  * Tab to create unitary sankey from local sankey
  *
- * @param {*} { new_data_plus }
+ * @param {*} { app_data }
  * @return {*} 
  */
-const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = ({ new_data_plus }) => {
-  const { t } = new_data_plus
-  const drawing_area_plus = new_data_plus.drawing_area as Class_DrawingAreaOSP
+const TabLocalDataForUnitary: FC<{ app_data: Class_ApplicationDataOSP }> = ({ app_data }) => {
+  const { t } = app_data
+  const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
 
   const list_selected_nodes_for_unitary = useRef<Class_NodeElement[]>([])
   const [, setUpdater] = useState(0)
@@ -1273,7 +1270,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
   }
 
   return <Box display={'grid'} gridRowGap='0.2rem'>
-    <FilterWrapperBox app_data={new_data_plus} title={t('view.title_rule_modal_unit')}>
+    <FilterWrapperBox app_data={app_data} title={t('view.title_rule_modal_unit')}>
       <ul style={{ display: 'grid', gridRowGap: '0.2rem' }}>
         <li>-{t('view.rule_modal_unit_1')}</li>
         <li>-{t('view.rule_modal_unit_2')}</li>
@@ -1282,7 +1279,7 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
     </FilterWrapperBox>
 
     {/* LevelTagFilter for current imported data */}
-    <LevelTagFilter app_data={new_data_plus} />
+    <LevelTagFilter app_data={app_data} />
 
     {/* List of visible node for current imported data 
       (visible as it would be visible if imported data were displayed, depend in majority to level tag)*/}
@@ -1312,13 +1309,13 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
         variant='btn_create_unitary_from_nodes'
         isDisabled={list_selected_nodes_for_unitary.current.length == 0}
         onClick={() => {
-          new_data_plus.sendWaitingToast(
+          app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
-                new_data_plus.createUnitaryNewView(element)
+                app_data.createUnitaryNewView(element)
               })
-              new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
-              new_data_plus.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+              app_data.menu_configuration_osp.updateComponentRelatedToViews()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
             },
             {
               success: {
@@ -1339,11 +1336,11 @@ const TabLocalDataForUnitary: FC<{ new_data_plus: Class_ApplicationDataOSP }> = 
 /**
  * Tab to create unitary sankey from sankey imported via excel file
  *
- * @param {*} { new_data_plus }
+ * @param {*} { app_data }
  * @return {*} 
  */
-const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_ApplicationDataOSP }) => {
-  const { t, url_prefix } = new_data_plus
+const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
+  const { t } = app_data
   //const [input_file_blob, set_input_file_blob] = useState<Blob | undefined>(undefined)
   const ref_input_file = useRef<HTMLInputElement>(null)
   const [checkStatus, setCheckStatus] = useState(false)
@@ -1358,41 +1355,37 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
 
   const list_node_selected_data = local_app_data.current.drawing_area.sankey.visible_nodes_list_sorted
 
-
+  local_app_data.current.createNewMenuConfiguration()
   // Failesafe if there is data but no selected data 
   if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {
     list_selected_nodes_for_unitary.current = []
     const new_sel_key = Object.keys(list_data.current)[0]
-    DrawingAreaPersistence.fromJSON(local_app_data.current.drawing_area,list_data.current[new_sel_key].data)
+    DrawingAreaPersistence.fromJSON(local_app_data.current.drawing_area, list_data.current[new_sel_key].data)
     set_selected_data_id(new_sel_key)
   }
 
 
   // Function to retrieve data from server & add it to data list 
-  const localRetriveResust = () => {
+  const localRetriveResust = async () => {
     const root = window.location.origin
-    const url = root + url_prefix + 'upload/retrieve_excel'
+    const url = root + '/opensankey/upload/retrieve_result'
 
     const form_data = new FormData()
     const fetchData = {
       method: 'POST',
       body: form_data
     }
-    fetch(url, fetchData).then(response => {
-      response.text()
-        .then(text => {
-          if (text === '{}')
-            return
-          // Extract JSON struct
-          const data_as_json = JSON.parse(text) as Type_JSON
-          data_as_json['version'] = local_app_data.current.version // Avoid converter process
-          // Extract sankey datas from JSON
-          list_data.current[makeId('data_src_')] = { name: file_name, data: data_as_json }
-          setLaunchRetriveResult(false)
-          set_file_name('')
-        })
-
-    })
+    const response = await fetch(url, fetchData)
+    if (response.ok) {
+      const arrayBuffer = await response.arrayBuffer()
+      //const uint8Array = new Uint8Array(arrayBuffer)
+      const decompressed = await decompressGzipDataFixed(arrayBuffer)
+      const jsonData = JSON.parse(decompressed)
+      jsonData['version'] = local_app_data.current.version // Avoid converter process
+      // Extract sankey datas from JSON
+      list_data.current[makeId('data_src_')] = { name: file_name, data: jsonData }
+      setLaunchRetriveResult(false)
+    }
   }
 
   // Function launched at the end of server process to get data from server
@@ -1406,12 +1399,13 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
    */
   const ProcessExcelFile = () => {
     const root = window.location.origin
-    const url = root + url_prefix + 'excel/upload/launch'
+    const url = root + '/opensankey/convert/launch'
     const form_data = new FormData()
     const file = ref_input_file.current?.files?.[0]
     form_data.append(
       'file', file as Blob
     )
+    form_data.append('output_format', 'json')
     const fetchData = {
       method: 'POST',
       body: form_data
@@ -1447,7 +1441,7 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
     {(checkStatus || launchRetriveResult) ? <Spinner /> : <></>}
 
     {/* Regulary check server process to know if the function is processing /success/failed */}
-    {checkStatus ? <CheckLoad new_data_plus={new_data_plus} setCheckStatus={setCheckStatus} setLaunchRetriveResult={setLaunchRetriveResult} /> : <></>}
+    {checkStatus ? <CheckLoad app_data={app_data} setCheckStatus={setCheckStatus} setLaunchRetriveResult={setLaunchRetriveResult} /> : <></>}
 
     {/* List of data imported from excel */}
     {Object.keys(list_data.current).length > 0 ? <>
@@ -1495,15 +1489,14 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
         variant='btn_create_unitary_from_nodes'
         isDisabled={list_selected_nodes_for_unitary.current.length == 0}
         onClick={() => {
-          new_data_plus.sendWaitingToast(
+          app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
                 local_app_data.current.createUnitaryNewView(element)
               })
-              //const obj_view: Type_JSON = {}
-              //Object.values(local_app_data.current.views_dict).forEach(v => obj_view[v.id] = v.toJSON(false, false, true))
-              //new_data_plus.extractViewsFromJSON({ views: obj_view })
-              new_data_plus.menu_configuration_osp.updateComponentRelatedToViews()
+              const app_data_json = local_app_data.current.toJSON()
+              app_data.viewsFromJSON(app_data_json)
+              app_data.menu_configuration_osp.updateComponentRelatedToViews()
             },
             {
               success: {
@@ -1525,15 +1518,15 @@ const TabImportExcelDataForUnitary = ({ new_data_plus }: { new_data_plus: Class_
 /**
  * Ghost component that check the loading process of the excel file in the server & set signal when it finish or fail
  *
- * @param {*} { new_data_plus, setCheckStatus, setLaunchRetriveResult }
+ * @param {*} { app_data, setCheckStatus, setLaunchRetriveResult }
  * @return {*} 
  */
 const CheckLoad: FC<{
-  new_data_plus: Class_ApplicationDataOSP
+  app_data: Class_ApplicationDataOSP
   setCheckStatus: (b: boolean) => void,
   setLaunchRetriveResult: (b: boolean) => void
-}> = ({ new_data_plus, setCheckStatus, setLaunchRetriveResult }) => {
-  const { url_prefix } = new_data_plus
+}> = ({ app_data, setCheckStatus, setLaunchRetriveResult }) => {
+  const { url_prefix } = app_data
   useEffect(() => {
     const interval = setInterval(() => {
       const root = window.location.origin
@@ -1547,7 +1540,7 @@ const CheckLoad: FC<{
           if (response.ok) {
             response.json().then(
               function (data) {
-                if (data.output.includes('FINISHED')) {
+                if (data.output.includes('FINISHED') || data.output.includes('COMPLETED') || data.output.includes('CONVERSION TERMINÉE')) {
                   setCheckStatus(false)
                   setLaunchRetriveResult(true)
                 } else if (data.output.includes('FAILED')) {
@@ -1565,20 +1558,20 @@ const CheckLoad: FC<{
 }
 
 // export const MenuEnregistrerViewOSP: FC<BaseComponentPropsPlus> = ({
-//   new_data_plus
+//   app_data
 // }) => {
 //   const [, setCount] = useState(0)
-//   const { t } = new_data_plus
-//   new_data_plus.menu_configuration_osp.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
+//   const { t } = app_data
+//   app_data.menu_configuration_osp.ref_to_save_diagram_only_view_updater.current = () => setCount(a => a + 1)
 
-//   return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
+//   return (app_data.has_views && !app_data.is_view_master) ? <Checkbox
 //     variant='menuconfigpanel_option_checkbox'
 //     isChecked={
-//       new_data_plus.options_save_json.only_current_view
+//       app_data.options_save_json.only_current_view
 //     }
 //     onChange={(evt) => {
-//       new_data_plus.options_save_json.only_current_view = evt.target.checked
-//       new_data_plus.menu_configuration.updateComponentSaveDiagramJSON()
+//       app_data.options_save_json.only_current_view = evt.target.checked
+//       app_data.menu_configuration.updateComponentSaveDiagramJSON()
 //     }}>
 //     <OSTooltip label={t('view.tooltips.buttonExportView')}>
 //       {t('view.export')}
@@ -1587,20 +1580,20 @@ const CheckLoad: FC<{
 // }
 
 // export const MenuLoadViewOSP: FC<BaseComponentPropsPlus> = ({
-//   new_data_plus
+//   app_data
 // }) => {
 //   const [, setCount] = useState(0)
-//   const { t } = new_data_plus
-//   new_data_plus.menu_configuration_osp.ref_to_load_diagram_only_view_updater.current = () => setCount(a => a + 1)
+//   const { t } = app_data
+//   app_data.menu_configuration_osp.ref_to_load_diagram_only_view_updater.current = () => setCount(a => a + 1)
 
-//   return (new_data_plus.has_views && !new_data_plus.is_view_master) ? <Checkbox
+//   return (app_data.has_views && !app_data.is_view_master) ? <Checkbox
 //     variant='menuconfigpanel_option_checkbox'
 //     isChecked={
-//       new_data_plus.options_open_json.only_current_view
+//       app_data.options_open_json.only_current_view
 //     }
 //     onChange={(evt) => {
-//       new_data_plus.options_open_json.only_current_view = evt.target.checked
-//       new_data_plus.menu_configuration.updateComponentLoadDiagramJSON()
+//       app_data.options_open_json.only_current_view = evt.target.checked
+//       app_data.menu_configuration.updateComponentLoadDiagramJSON()
 //     }}>
 //     <OSTooltip label={t('view.tooltips.buttonImportViewOnly')}>
 //       {t('view.view_import')}
