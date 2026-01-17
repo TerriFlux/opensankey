@@ -573,9 +573,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style = [new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle']]
+            link.style.push(new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle'])
           } else {
-            link.style = [new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle']]
+             link.style.push(new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle'])
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -598,9 +598,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           return
         }
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.style.push(new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle'])
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.style.push(new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle'])
         }
         node.resetAttributes()
         //node.resetPositionAttributes()
@@ -608,10 +608,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
     new_drawing_area.sankey.default_style.shape_position_type = 'parametric'
-    new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
-      new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
-      tagg.use_colors = false
-    })
+    // new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
+    //   new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
+    //   tagg.use_colors = false
+    // })
     new_drawing_area.nodePositioning.computeAutoSankey(false, false)
     new_drawing_area.sankey.nodes_list
       .forEach(node => { node.position_v = -1 })
@@ -639,6 +639,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         // Affect style depending on IO
         if (node.input_links_list.length == 0) {
           node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
+
         } else if (node.output_links_list.length == 0) {
           node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
         }
@@ -650,15 +651,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const tagg = new_drawing_area.sankey.node_taggs_dict['type de noeud']
     const product_tag = tagg?.tags_dict['produit']
     let title = 'Process de transformation : '
-    //const sector_tag = tagg.tags_dict['secteur']
+    const sector_tag = tagg.tags_dict['secteur']
     //const echange_tag = tagg.tags_dict['echange']
-    if (tagg && node_ref.hasGivenTag(product_tag)) {
+    if (tagg && node_ref.hasGivenTag(sector_tag)) {
       new_drawing_area.sankey.icon_catalog['waste_industry'] = ListIcons.waste.industry
       new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_industry'
     } else {
       new_drawing_area.sankey.icon_catalog['waste_atom'] = ListIcons.waste.atom
       new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_atom'
-            title = 'Process de marché : '
+      title = 'Process de marché : '
     }
 
     new_drawing_area.sankey.nodes_dict[node_ref.id].icon_color = 'black'
@@ -673,13 +674,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
         node.reorganizeIOLinks()
-        node.position_y += 50
-        node.position_x -= 100
+        node.position_y += 100
+        // node.position_x -= 100
       })
-    new_drawing_area.legend.stick_to_drawing = false
+    new_drawing_area.legend.stick_to_drawing = true
+    new_drawing_area.legend.position_x = 50
+    new_drawing_area.legend.position_y = 0
     const cont = new_drawing_area.sankey.addNewContainer('unitary_container_', 'Processus de Transformation: ' + node_ref.name)
     cont.name_label_has_fo = true
-    cont.name_label_fo_content = '<p class="ql-align-center" style="font-size: 40px;">'+title+'<strong>'+ node_ref.name + '</strong></p>'
+    cont.name_label_fo_content = '<p class="ql-align-center" style="font-size: 40px;">' + title + '<strong>' + node_ref.name + '</strong></p>'
     cont.name_label_font_size = 40
     cont.name_label_bold = true
     cont.name_label_box_width = 3000
@@ -688,7 +691,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
-
+    new_drawing_area.sankey.links_list.forEach(link => link.value_label_custom_digit = true)
     new_drawing_area.sankey.nodes_list.forEach(node => {
       node.getListDescendantOfNode().forEach(n => {
         cont.attachNodeToCont(n)
