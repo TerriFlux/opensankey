@@ -575,7 +575,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           if (link.source.id == node_ref.id) {
             link.style.push(new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle'])
           } else {
-             link.style.push(new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle'])
+            link.style.push(new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle'])
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -686,6 +686,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     cont.name_label_font_size = 40
     cont.name_label_bold = true
     cont.name_label_box_width = 3000
+    cont.shape_border_visible = false
     cont.shape_border_thickness = 3
     cont.shape_margin_top = 100
 
