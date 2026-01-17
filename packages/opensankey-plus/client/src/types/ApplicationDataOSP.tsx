@@ -13,7 +13,7 @@ import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, 
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
 import { elementStyleConfigs, link_unitary_styles, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
-
+import ListIcons from '../icons/lib_of_icons.json'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
@@ -586,7 +586,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     let scale = new_drawing_area.sankey.nodes_dict[node_ref.id].getShapeHeightToUse()
     // Set new scale for unitary sankey
-    new_drawing_area.scale = scale*3
+    new_drawing_area.scale = scale * 3
+
+
 
     new_drawing_area.sankey.nodes_list
       .forEach(node => {
@@ -603,6 +605,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.resetAttributes()
         //node.resetPositionAttributes()
       })
+
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
     new_drawing_area.sankey.default_style.position_type = 'parametric'
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
@@ -643,6 +646,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
 
       })
+      
+    new_drawing_area.sankey.icon_catalog['waste_industry'] = ListIcons.waste.industry
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_industry'
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_color = 'black'
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_color_sustainable = true
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_is_visible = true
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_inside_horiz = true
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_inside_vert = true
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_horiz = 'middle'
+    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_vert = 'middle'
     //new_drawing_area.sankey.default_node_style.position.auto_x = true
 
     new_drawing_area.sankey.nodes_list
