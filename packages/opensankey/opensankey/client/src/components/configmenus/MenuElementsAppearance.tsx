@@ -719,41 +719,6 @@ export const MenuConfigurationAppearance = ({
     : Object.fromEntries(Object.entries(ICON_LABEL_BASE_CONFIG).map(([key, value]) => [key, value.default]))
 
   const showContent = allElements.length > 0 || menu_for_style
-  const updateLabelTiedToNodesAtExtremity = (value: boolean) => {
-    if (menu_for_style) return
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.at_extremity_of_attached_nodes]))
-
-    const _update = () => {
-      containerElements.forEach(d => d.at_extremity_of_attached_nodes = value)
-      refreshAll()
-    }
-    const inv_update = () => {
-      containerElements.forEach(d => d.at_extremity_of_attached_nodes = dict_old_val[d.id])
-      refreshAll()
-    }
-    app_data.history.saveUndo(inv_update)
-    app_data.history.saveRedo(_update)
-    _update()
-  }
-
-  const updateLabelExtremityPos = (value: 'top' | 'bottom' | 'left' | 'right') => {
-    if (menu_for_style) return
-    const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-    const dict_old_val = Object.fromEntries(containerElements.map(d => [d.id, d.extremity_position]))
-
-    const _update = () => {
-      containerElements.forEach(d => d.extremity_position = value)
-      refreshAll()
-    }
-    const inv_update = () => {
-      containerElements.forEach(d => d.extremity_position = dict_old_val[d.id])
-      refreshAll()
-    }
-    app_data.history.saveUndo(inv_update)
-    app_data.history.saveRedo(_update)
-    _update()
-  }
   const container_element = elements[0] as Class_ContainerElement
   const options_selector_node_tied = !menu_for_style
     ? app_data.drawing_area.sankey.nodes_list_sorted.map((node) => ({
@@ -1180,7 +1145,7 @@ export const MenuConfigurationAppearance = ({
                               stepper={true} />
                           </Box>
                           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Top'}</Box>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginRight') || 'Top'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
                               default_value={nodeShapeValues.margin_right}
@@ -1191,7 +1156,7 @@ export const MenuConfigurationAppearance = ({
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Right'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
                               default_value={nodeShapeValues.margin_top}
@@ -1200,7 +1165,7 @@ export const MenuConfigurationAppearance = ({
                               stepper={true} />
                           </Box>
                           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginBottom') || 'Bottom'}</Box>
                             <ConfigMenuNumberInput
                               t={app_data.t}
                               default_value={nodeShapeValues.margin_bottom}
@@ -1210,32 +1175,6 @@ export const MenuConfigurationAppearance = ({
                           </Box>
                         </Box>
                       </OSTooltip>
-
-                      <Checkbox
-                        variant='menuconfigpanel_option_checkbox'
-                        iconColor={'white'}
-                        isChecked={elements.length > 0 ? container_element.at_extremity_of_attached_nodes : false}
-                        onChange={(evt) => updateLabelTiedToNodesAtExtremity(evt.target.checked)}>
-                        <OSTooltip label={t('LL.tooltips.tiedToNodesExtremity')} placement='left'>{t('LL.tiedToNodesExtremity')}</OSTooltip>
-                      </Checkbox>
-
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box layerStyle='menuconfigpanel_option_name'>{t('LL.extremityPos')}</Box>
-                        <ButtonGroup isAttached>
-                          <Button
-                            variant={elements.length > 0 && container_element.extremity_position === 'top' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                            onClick={() => { updateLabelExtremityPos('top') }}>{icon_text_vert_pos_top}</Button>
-                          <Button
-                            variant={elements.length > 0 && container_element.extremity_position === 'bottom' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                            onClick={() => { updateLabelExtremityPos('bottom') }}>{icon_text_vert_pos_bottom}</Button>
-                          <Button
-                            variant={elements.length > 0 && container_element.extremity_position === 'left' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                            onClick={() => { updateLabelExtremityPos('left') }}>{icon_to_the_left}</Button>
-                          <Button
-                            variant={elements.length > 0 && container_element.extremity_position === 'right' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                            onClick={() => { updateLabelExtremityPos('right') }}>{icon_to_the_right}</Button>
-                        </ButtonGroup>
-                      </Box>
                     </Box> : <></>}
                   </Box></>
               )}

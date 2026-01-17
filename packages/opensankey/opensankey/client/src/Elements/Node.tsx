@@ -615,30 +615,30 @@ export class Class_NodeElement extends Class_NodeBase {
       // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
       if (
         (
-          (this.position_type === 'relative') ||
-          (this.position_type === 'parametric')
+          (this.shape_position_type === 'relative') ||
+          (this.shape_position_type === 'parametric')
         ) &&
         (!this._drag) && (!this.sankey.drawing_area.ghost_link)
       ) {
         // Apply relative position
-        if (this.position_type === 'relative') {
+        if (this.shape_position_type === 'relative') {
           if (this.hasInputLinks()) {
             // Node is export
             const input_link = this.getFirstInputLink()
             const source_node = input_link!.source
-            this._position.x = source_node.position_x + this.position_dx + source_node.getShapeWidthToUse()
-            this._position.y = source_node.position_y + this.position_dy + source_node.getShapeHeightToUse()
+            this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
+            this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
           }
           else if (this.hasOutputLinks()) {
             // Node is import
             const output_link = this.getFirstOutputLink()
             const target_node = output_link!.target
-            this._position.x = target_node.position_x + this.position_dx - this.getShapeWidthToUse()
-            this._position.y = target_node.position_y + this.position_dy
+            this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
+            this._position.y = target_node.position_y + this.shape_position_dy
           }
         }
         // Apply parametric position
-        else { // if (this.position_type === 'parametric')
+        else { // if (this.shape_position_type === 'parametric')
           const process_nodes = this.sankey.visible_nodes_list
           const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
           const same_u_import = process_nodes.filter(n => n.output_links_list.length > 0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
@@ -652,10 +652,10 @@ export class Class_NodeElement extends Class_NodeBase {
             if (nodeAbove) {
               this._position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
-                + this.position_dy
+                + this.shape_position_dy
             } else {
               // position of the first import node
-              this._position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.position_dy
+              this._position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.shape_position_dy
             }
             // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
             //   // The import nodes must be above the rest of the diagram. It is pushed downward.
@@ -670,7 +670,7 @@ export class Class_NodeElement extends Class_NodeBase {
             if (nodeAbove) {
               this._position.y = nodeAbove.position_y
                 + nodeAbove.getShapeHeightToUse()
-                + this.position_dy
+                + this.shape_position_dy
             } else {
               let max_vertical_offset = 0
               this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
@@ -688,7 +688,7 @@ export class Class_NodeElement extends Class_NodeBase {
               if (same_container) {
                 this._position.y = nodeAbove.position_y
                   + nodeAbove.getShapeHeightToUse()
-                  + this.position_dy
+                  + this.shape_position_dy
               }
             } else {
               // if (this.position_auto_y) {
@@ -696,14 +696,14 @@ export class Class_NodeElement extends Class_NodeBase {
               // }
             }
             // if (this.position_auto_x) {
-            //   this._position.x = this. position_u * this.position_dx
+            //   this._position.x = this. position_u * this.shape_position_dx
             // }
           }
         }
       }
 
-      this.input_links_list.filter(l => l.source.position_type == 'relative').forEach(l => l.source.applyPosition())
-      this.output_links_list.filter(l => l.target.position_type == 'relative').forEach(l => l.target.applyPosition())
+      this.input_links_list.filter(l => l.source.shape_position_type == 'relative').forEach(l => l.source.applyPosition())
+      this.output_links_list.filter(l => l.target.shape_position_type == 'relative').forEach(l => l.target.applyPosition())
 
       super.applyPosition()
     }
@@ -1218,7 +1218,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
-      if (this.orphan_node_visible) return true
+      if (this.shape_orphan_node_visible) return true
       else return false
     }
     return true
@@ -1280,12 +1280,12 @@ export class Class_NodeElement extends Class_NodeBase {
       })
 
       // Style handling
-      const node_importation_style = this.position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
-      const node_exportation_style = this.position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
-      const node_importexport_style = this.position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
-      const link_importation_style = this.position_type !== 'parametric' ? 'LinkImportCloseStyle' : 'LinkImportAboveStyle'
-      const link_exportation_style = this.position_type !== 'parametric' ? 'LinkExportCloseStyle' : 'LinkExportBelowStyle'
-      const link_importexport_style = this.position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
+      const node_importation_style = this.shape_position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
+      const node_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
+      const node_importexport_style = this.shape_position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
+      const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : 'LinkImportAboveStyle'
+      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'LinkExportCloseStyle' : 'LinkExportBelowStyle'
+      const link_importexport_style = this.shape_position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
         new_node.sankey.styles_dict['NodeSectorStyle'],

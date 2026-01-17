@@ -1060,12 +1060,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.source.draw()
     this.target.draw()
 
-    if (this.source.position_type == 'parametric') {
+    if (this.source.shape_position_type == 'parametric') {
       // if the positioning mode of source is parametric we need to reposition all nodes below
       const same_source_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.source.position_u && n.position_v > this.source.position_v)
       same_source_u.forEach(n => n.draw())
     }
-    if (this.target.position_type == 'parametric') {
+    if (this.target.shape_position_type == 'parametric') {
       // if the positioning mode of target is parametric we need to reposition all nodes below
       const same_target_u = this.sankey.visible_nodes_list.filter(n => n.position_u == this.target.position_u && n.position_v > this.target.position_v)
       same_target_u.forEach(n => n.draw())

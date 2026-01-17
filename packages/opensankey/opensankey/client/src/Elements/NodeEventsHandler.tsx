@@ -187,7 +187,7 @@ export class NodeEventsHandler {
     this._node.setDragState(false)
 
     // Move all elements so none of them are outside the DA
-    if (this._node.sankey.default_style.position_type == 'parametric') {
+    if (this._node.sankey.default_style.shape_position_type == 'parametric') {
       this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
       this._node.drawing_area.nodePositioning.computeParametricV()
     }
@@ -218,15 +218,15 @@ export class NodeEventsHandler {
       else {
         // Set position
         // Update node position
-        if (this._node.position_type !== 'relative')
+        if (this._node.shape_position_type !== 'relative')
           this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
-        if (this._node.position_type == 'relative') {
+        if (this._node.shape_position_type == 'relative') {
           if (this._node.hasInputLinks()) {
             const source_node = this._node.input_links_list[0].source
-            this._node.position_dx = this._node.position_x - source_node.position_x + source_node.getShapeWidthToUse()
+            this._node.shape_position_dx = this._node.position_x - source_node.position_x + source_node.getShapeWidthToUse()
           } else if (this._node.hasOutputLinks()) {
             const target_node = this._node.output_links_list[0].target
-            this._node.position_dx = this._node.position_x + event.dx - target_node.position_x + target_node.getShapeWidthToUse()
+            this._node.shape_position_dx = this._node.position_x + event.dx - target_node.position_x + target_node.getShapeWidthToUse()
           }
         }
       }

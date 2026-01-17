@@ -176,7 +176,7 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
     json_object['name'] = node_base.name
-    if (node_base.sankey.default_style.position_type == 'parametric') {
+    if (node_base.sankey.default_style.shape_position_type == 'parametric') {
       json_object['u'] = node_base.position_u
       json_object['v'] = node_base.position_v
     }
@@ -221,8 +221,6 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.toJSON(container, json_object, kwargs)
     json_object['tiedToNode'] = container.tied_to_nodes
     json_object['attachedNodes'] = container.attached_node.map(n => n.id)
-    json_object['attachedNodesExtremity'] = container.at_extremity_of_attached_nodes
-    json_object['extremityPos'] = container.extremity_position
 
     return json_object
   }
@@ -324,19 +322,6 @@ export class ContainerPersistence extends NodeBasePersistence {
         container.attachContToNode(node)
       }
     })
-
-    // Load extremity positioning
-    container['_at_extremity_of_attached_nodes'] = getBooleanFromJSON(
-      json_object,
-      'attachedNodesExtremity',
-      container.at_extremity_of_attached_nodes
-    )
-
-    container['_extremity_position'] = getStringFromJSON(
-      json_object,
-      'extremityPos',
-      container.extremity_position
-    ) as 'top' | 'bottom' | 'left' | 'right'
   }
 }
 
@@ -697,8 +682,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     ProtoElementPersistence.toJSON(legend, json_legend)
     //if (this.position_x != const_default_position_x || this.position_x != const_default_position_y) json_legend['legend_position'] = [String(this.position_x), String(this.position_y)]
     if (!legend.masked) json_legend['mask_legend'] = legend.masked
-    if (legend.position_dx) json_legend['legend_dx'] = legend.position_dx
-    if (legend.position_dy) json_legend['legend_dy'] = legend.position_dy
+    if (legend.shape_position_dx) json_legend['legend_dx'] = legend.shape_position_dx
+    if (legend.shape_position_dy) json_legend['legend_dy'] = legend.shape_position_dy
     if (legend.display_legend_scale) json_legend['legend_scale'] = legend.display_legend_scale
     if (legend.width != default_width) json_legend['legend_width'] = legend.width
     if (legend.display_legend_scale) json_legend['display_legend_scale'] = legend.display_legend_scale
@@ -754,8 +739,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     // this._position_x = +legend_position[0]
     // legend.position_y = +legend_position[1]
     legend['_masked'] = getBooleanFromJSON(json_legend, 'mask_legend', legend.masked)
-    legend['_dx'] = getNumberFromJSON(json_legend, 'legend_dx', legend.position_dx)
-    legend['_dy'] = getNumberFromJSON(json_legend, 'legend_dy', legend.position_dy)
+    legend['_dx'] = getNumberFromJSON(json_legend, 'legend_dx', legend.shape_position_dx)
+    legend['_dy'] = getNumberFromJSON(json_legend, 'legend_dy', legend.shape_position_dy)
     legend['_scale'] = getNumberFromJSON(json_legend, 'legend_scale', legend['_scale'])
     legend['_width'] = getNumberFromJSON(json_legend, 'legend_width', legend.width)
     legend['_display_legend_scale'] = getBooleanFromJSON(json_legend, 'display_legend_scale', legend.display_legend_scale)

@@ -805,11 +805,11 @@ export class NodePositioning {
           }
         }
         max_vertical_index += 1
-        height_cumul_for_index += node_height
+        height_cumul_for_index += node_height + node.shape_position_dy
       })
 
 
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].position_dy!
+      //height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -995,7 +995,7 @@ export class NodePositioning {
         height_cumul_for_index += node_height
 
         // Compute margins for label display
-        this.computeMargins(node, h_index, max_horizontal_index, node.position_dx, node.position_dx)
+        this.computeMargins(node, h_index, max_horizontal_index, node.shape_position_dx, node.shape_position_dx)
 
         // Set label positioning if launched from process
         if (launched_from_process) {
@@ -1004,7 +1004,7 @@ export class NodePositioning {
       })
 
       // Get horizontal index that needs the most vertical space
-      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].position_dy!
+      height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
       if (height_cumul_for_index > max_height_cumul) {
         max_height_cumul = height_cumul_for_index
       }
@@ -1098,10 +1098,10 @@ export class NodePositioning {
     if (node_id_per_hxv_indexes.length === 0) {
       return
     }
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
+    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
 
     let shift = 0
-    const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].position_dx
+    const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
     console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
 
@@ -1260,7 +1260,7 @@ export class NodePositioning {
 
     // Regrouper les nœuds par position X approximative
     nodes_to_process.forEach(node => {
-      const h_index = Math.round(node.position_x / node.position_dx)
+      const h_index = Math.round(node.position_x / node.shape_position_dx)
       horizontal_positions[node.id] = h_index
 
       if (!nodes_per_horizontal_indexes[h_index]) {
@@ -1299,7 +1299,7 @@ export class NodePositioning {
     }
 
     // Appliquer les ajustements pour chaque colonne
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
+    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
     let total_adjustments = 0
 
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
@@ -1549,7 +1549,7 @@ export class NodePositioning {
       node.position_u = target_node.position_u
       node.position_v = target_node.position_v
       if (compute_xy) {
-        const x = target_node.position_x + node.position_dx
+        const x = target_node.position_x + node.shape_position_dx
         node.position_x = x
         node.position_y = 50
       }
@@ -1564,7 +1564,7 @@ export class NodePositioning {
         node.position_x = source_node.position_x + 1
       }
       if (compute_xy) {
-        const x = source_node.position_x + node.position_dx
+        const x = source_node.position_x + node.shape_position_dx
         node.position_x = x
         node.position_y = max_vertical_offset
       }
@@ -1594,7 +1594,7 @@ export class NodePositioning {
       })
     } else {
       nodes_to_process.forEach(node => {
-        node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].position_dx!)
+        node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].shape_position_dx!)
       })
     }
 
@@ -1685,7 +1685,7 @@ export class NodePositioning {
         }
         const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
         if (dy !== 0) {
-          n.position_dy = dy
+          n.shape_position_dy = dy
         } else {
           //delete n.local!.dy
         }
@@ -1778,7 +1778,7 @@ export class NodePositioning {
       if (d.children.includes(node)) return new_current_v + 1
       const desagregated_nodes = d.children
 
-      //const shift_y = (desagregated_nodes.length - 1) / 2 * node.position_dy
+      //const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
       if (desagregated_nodes.length > 0) {
         //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
         desagregated_nodes.forEach(nn => {
@@ -1789,7 +1789,7 @@ export class NodePositioning {
           nn.position_x = node.position_x
           nn.position_u = node.position_u
           // nn.position_y = current_y
-          // current_y += nn.getShapeHeightToUse() + nn.position_dy
+          // current_y += nn.getShapeHeightToUse() + nn.shape_position_dy
           new_current_v = this.applyVDesagregate(nn, new_current_v)
         })
       }
@@ -1934,7 +1934,7 @@ export class NodePositioning {
       })
 
       // 3. Ajouter une marge de sécurité
-      const safety_margin = this.drawingArea.sankey.styles_dict['default'].position_dy!
+      const safety_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
       //min_y_to_avoid += safety_margin
 
       // 4. Calculer shape_middle_recycling en fonction de l'orientation du lien
