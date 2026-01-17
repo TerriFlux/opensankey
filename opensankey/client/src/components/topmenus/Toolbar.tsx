@@ -486,7 +486,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     // Actions spécifiques selon le mode
     switch (mode) {
       case 'level':
-        if (app_data.drawing_area.sankey.default_style.position_type == 'parametric') {
+        if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
           app_data.drawing_area.nodePositioning.computeParametricVForTagg()
         }
         app_data.drawing_area.sankey.showAccordingToLevelTags()

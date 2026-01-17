@@ -79,8 +79,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'name_label_box_width': 300,
       'name_label_separator': ' - ',
       'name_label_separator_part': 'before',
-      'position_type': 'relative',
-      'position_dy': 20,
+      'shape_position_type': 'relative',
+      'shape_position_dy': 20,
     }
   },
   NodeImportExportAboveBelowStyle: {
@@ -94,14 +94,14 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'value_label_vert': 'middle',
       'name_label_vert': 'middle',
       'name_label_separator': ' - ',
-      'position_type': 'parametric'
+      'shape_position_type': 'parametric'
     }
   },
   NodeImportCloseStyle: {
     name: 'Import collés',
     config: {
-      'position_dx': -100,
-      'position_dy': -50
+      'shape_position_dx': -100,
+      'shape_position_dy': -50
     }
   },
   NodeImportAboveStyle: {
@@ -110,16 +110,16 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'name_label_horiz': 'left',
       'value_label_horiz': 'left',
       'value_label_horiz_shift': 40,
-      'position_dx': -200,
-      'position_dy': 20
+      'shape_position_dx': -200,
+      'shape_position_dy': 20
     }
   },
   NodeExportCloseStyle: {
     name: 'Export collés',
     config: {
       'name_label_vert': 'bottom',
-      'position_dx': 100,
-      'position_dy': 50
+      'shape_position_dx': 100,
+      'shape_position_dy': 50
     }
   },
   NodeExportBelowStyle: {
@@ -128,8 +128,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'name_label_horiz': 'right',
       'value_label_horiz': 'right',
       'value_label_horiz_shift': -40,
-      'position_dx': 200,
-      'position_dy': 20
+      'shape_position_dx': 200,
+      'shape_position_dy': 20
     }
   },
   NodeUnitaryStyle: {
@@ -152,7 +152,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       name_label_uppercase: true,
       name_label_box_width: 350,
       name_label_background_visible: false,
-      position_dx: 300
+      shape_position_dx: 300
     }
   },
   SankeyUnitaryNodeInputStyle: {
@@ -166,8 +166,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_height: 1,
       shape_visible: false,
       name_label_box_width: 500,
-      position_dx: 300,
-      position_dy: 50
+      shape_position_dx: 300,
+      shape_position_dy: 50
     }
   },
   SankeyUnitaryNodeOutputStyle: {
@@ -180,8 +180,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_height: 1,
       shape_visible: false,
       name_label_box_width: 500,
-      position_dx: 300,
-      position_dy: 50
+      shape_position_dx: 300,
+      shape_position_dy: 50
     }
   } as const,
   LinkInUnitaryStyle: {

@@ -1961,7 +1961,7 @@ const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: st
 
 export const ALL_ATTRIBUTES_CONFIG = {
   ...createConfigWithPrefix(BASE_SHAPE_CONFIG, 'shape'),
-  ...NODE_SHAPE_SPECIFIC_CONFIG,
+  ...createConfigWithPrefix(NODE_SHAPE_SPECIFIC_CONFIG, 'shape'),
   ...createConfigWithPrefix(LINK_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
 
   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),

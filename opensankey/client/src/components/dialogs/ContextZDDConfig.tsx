@@ -18,7 +18,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
             }
           }]
         },
@@ -29,7 +29,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
             }
           }]
         },
@@ -38,7 +38,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].position_type === 'parametric'
+              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
             }
           }]
         },
@@ -418,8 +418,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     resetTradeNode: () => { sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!)).forEach(n => n.removeTag(echangeTag!)) },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
-    toggleParametricMode: () => getNodeStyle().position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
-    toggleParametricModeValue: () => getNodeStyle().position_type === 'parametric',
+    toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
+    toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',
     resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
     toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
     toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,

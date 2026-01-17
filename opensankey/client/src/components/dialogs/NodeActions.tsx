@@ -310,7 +310,7 @@ export class NodeActions {
 
     const doAlign = () => {
       const node_ref = this.selected_nodes
-        .filter(nf => nf.position_type != 'relative')
+        .filter(nf => nf.shape_position_type != 'relative')
         .sort((n1, n2) => {
           return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
         })[0]
@@ -329,7 +329,7 @@ export class NodeActions {
       }
 
       this.selected_nodes
-        .filter(n => n != node_ref && n.position_type != 'relative')
+        .filter(n => n != node_ref && n.shape_position_type != 'relative')
         .forEach(n => {
           const is_circle_to_shift = (n.shape_type === 'ellipse')
           let wORh_to_shift = is_circle_to_shift ? n.getShapeWidthToUse() / 2 : n.getShapeWidthToUse()

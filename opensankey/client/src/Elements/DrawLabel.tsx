@@ -1231,8 +1231,13 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     labelText: string
   ): boolean {
     if (!this.link.source || !this.link.target) return false
-
-    if (this._specific_label_values.on_path) {
+      const x0 = this.link.position_x_start
+      const y0 = this.link.position_y_start
+      const xf = this.link.position_x_end
+      const yf = this.link.position_y_end
+      const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
+      const show_as_path = Math.abs(yf - y0) < 50 || ((dist / this.link.thickness) > 1.1)
+    if (this._specific_label_values.on_path && show_as_path) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
@@ -1418,18 +1423,18 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (this._element.drawing_area.type_data === 'structure') return false
     if ((link_val ?? 0) < this._element.drawing_area.filter_label) return false
 
-    const x0 = this.link.position_x_start
-    const y0 = this.link.position_y_start
-    const xf = this.link.position_x_end
-    const yf = this.link.position_y_end
-    const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
+    // const x0 = this.link.position_x_start
+    // const y0 = this.link.position_y_start
+    // const xf = this.link.position_x_end
+    // const yf = this.link.position_y_end
+    // const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
 
-    if (this.link.shape_orientation !== 'vh' &&
-      this.link.shape_orientation !== 'hv' &&
-      Math.abs(yf - y0) > 50 &&
-      (dist / this.link.thickness) < 1.1) {
-      return false
-    }
+    // if (this.link.shape_orientation !== 'vh' &&
+    //   this.link.shape_orientation !== 'hv' /*&&
+    //   Math.abs(yf - y0) > 50 &&
+    //   (dist / this.link.thickness) < 1.1*/) {
+    //   return false
+    // }
 
     return true
   }
