@@ -147,6 +147,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       name_label_font_size: 40,
       shape_min_width: 200,
       shape_type: 'rect',
+      shape_color_visible: false,
       name_label_bold: true,
       name_label_uppercase: true,
       name_label_box_width: 350,
