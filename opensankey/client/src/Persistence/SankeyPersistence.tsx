@@ -155,7 +155,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' &&proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
@@ -322,6 +322,8 @@ export class ContainerPersistence extends NodeBasePersistence {
         container.attachContToNode(node)
       }
     })
+
+
   }
 }
 

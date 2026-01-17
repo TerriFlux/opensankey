@@ -399,6 +399,10 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     return this._style.slice().reverse().find(s => s[k as keyof Class_ElementStyle] !== undefined) ?? this._style[0]
   }
 
+  public getStylesWithAttr(k: keyof ConfigType) {
+    return this._style.filter(s => s[k as keyof Class_ElementStyle] !== undefined)
+  }
+
   public getStyleProperty(k: keyof ConfigType) {
     const valueOfStyle = this.getStyleWithAttr(k)
     if (valueOfStyle && valueOfStyle[k as keyof Class_ElementStyle] !== undefined) {
@@ -435,7 +439,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     key: keyof ConfigType,
     value: string | number | boolean | undefined
   ): boolean {
-    return value !== undefined && value !== '' && value !== this.getStyleProperty(key)
+    return this.getStylesWithAttr(key).length > 1 || value !== undefined && value !== '' && value !== this.getStyleProperty(key)
     // else if (default_style) return value !== undefined && value !== default_style[key]
     // else return value !== undefined && value !== this._config[key].default
   }
