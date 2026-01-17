@@ -152,7 +152,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       name_label_uppercase: true,
       name_label_box_width: 350,
       name_label_background_visible: false,
-      shape_position_dx: 300
+
+      shape_position_dx: 500
     }
   },
   SankeyUnitaryNodeInputStyle: {
@@ -166,7 +167,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_height: 1,
       shape_visible: false,
       name_label_box_width: 500,
-      shape_position_dx: 300,
+      shape_position_dx: 500,
       shape_position_dy: 50
     }
   },
@@ -180,7 +181,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       shape_min_height: 1,
       shape_visible: false,
       name_label_box_width: 500,
-      shape_position_dx: 300,
+      shape_position_dx: 500,
       shape_position_dy: 50
     }
   } as const,
@@ -198,7 +199,9 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       value_label_nb_significant_digits: 3,
       value_label_background_visible: true,
       value_label_background_color_visible: true,
-      value_label_background_color: 'white'
+      value_label_background_color: 'white',
+      value_label_custom_digit: true,
+      value_label_nb_digit: 0
     }
   } as const,
   LinkOutUnitaryStyle: {
@@ -217,6 +220,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       value_label_background_visible: true,
       value_label_background_color_visible: true,
       value_label_background_color: 'white',
+      value_label_custom_digit: true,
+      value_label_nb_digit: 0
     }
   } as const,
   LinkImportExportCloseStyle: {
