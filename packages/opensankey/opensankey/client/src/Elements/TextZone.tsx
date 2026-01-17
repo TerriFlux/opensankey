@@ -387,7 +387,13 @@ export class Class_ContainerElement extends Class_NodeBase {
         }
         n.applyPosition()
       })
-      this.drawing_area.areaAutoFit()
+      if (!drawing_area.bypass_autofit) {
+        this.sankey.drawing_area.bypass_autofit = true
+        setTimeout(() => {
+          this.drawing_area.areaAutoFit()
+          this.sankey.drawing_area.bypass_autofit = false
+        },2000)
+      }
     }
   }
 
@@ -401,7 +407,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     if (this.drawing_area.isInSelectionMode()) {
-      this.drawing_area.areaAutoFit()
+      //this.drawing_area.areaAutoFit()
 
       // Save redo label pos
       const drawing_area = this.drawing_area

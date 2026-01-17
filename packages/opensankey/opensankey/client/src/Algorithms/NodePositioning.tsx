@@ -1820,7 +1820,7 @@ export class NodePositioning {
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.drawingArea.areaAutoFit(true)
+            this.drawingArea.areaAutoFit()
           }
           this.drawingArea.saveUndo(inv_computeAutoSankey)
         }
@@ -1854,7 +1854,7 @@ export class NodePositioning {
 
         this.drawingArea.draw()
         // Update area
-        this.drawingArea.areaAutoFit(true)
+        this.drawingArea.areaAutoFit()
         // Toggle saving indicator
         this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -1874,7 +1874,7 @@ export class NodePositioning {
               n.reorganizeIOFromListIds(node_pos[n.id].links_order)
               n.draw()
             })
-            this.drawingArea.areaAutoFit(true)
+            this.drawingArea.areaAutoFit()
           }
           this.drawingArea.saveRedo(_computeAutoSankey)
         }
