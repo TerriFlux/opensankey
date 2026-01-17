@@ -397,7 +397,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
             }
           })
       })
-    this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
+    //this._ref_sankey.drawing_area.checkAndUpdateAreaSize()
   }
 
   // PROTECTED METHODS ==================================================================
