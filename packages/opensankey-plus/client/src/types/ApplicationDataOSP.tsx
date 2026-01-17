@@ -607,7 +607,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       })
 
     new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
-    new_drawing_area.sankey.default_style.position_type = 'parametric'
+    new_drawing_area.sankey.default_style.shape_position_type = 'parametric'
     new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
       new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
       tagg.use_colors = false
@@ -646,9 +646,21 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
 
       })
-      
-    new_drawing_area.sankey.icon_catalog['waste_industry'] = ListIcons.waste.industry
-    new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_industry'
+
+    const tagg = new_drawing_area.sankey.node_taggs_dict['type de noeud']
+    const product_tag = tagg?.tags_dict['produit']
+    let title = 'Process de transformation : '
+    //const sector_tag = tagg.tags_dict['secteur']
+    //const echange_tag = tagg.tags_dict['echange']
+    if (tagg && node_ref.hasGivenTag(product_tag)) {
+      new_drawing_area.sankey.icon_catalog['waste_industry'] = ListIcons.waste.industry
+      new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_industry'
+    } else {
+      new_drawing_area.sankey.icon_catalog['waste_atom'] = ListIcons.waste.atom
+      new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_atom'
+            title = 'Process de marché : '
+    }
+
     new_drawing_area.sankey.nodes_dict[node_ref.id].icon_color = 'black'
     new_drawing_area.sankey.nodes_dict[node_ref.id].icon_color_sustainable = true
     new_drawing_area.sankey.nodes_dict[node_ref.id].icon_is_visible = true
@@ -665,11 +677,22 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.position_x -= 100
       })
     new_drawing_area.legend.stick_to_drawing = false
-    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_', 'Sankey Unitaire')
+    const cont = new_drawing_area.sankey.addNewContainer('unitary_container_', 'Processus de Transformation: ' + node_ref.name)
+    cont.name_label_has_fo = true
+    cont.name_label_fo_content = '<p class="ql-align-center" style="font-size: 40px;">'+title+'<strong>'+ node_ref.name + '</strong></p>'
+    cont.name_label_font_size = 40
+    cont.name_label_bold = true
+    cont.name_label_box_width = 3000
+    cont.shape_border_thickness = 3
+    cont.shape_margin_top = 100
 
     cont.tied_to_nodes = true
     //cont.margin_from_attached_nodes = 100
+
     new_drawing_area.sankey.nodes_list.forEach(node => {
+      node.getListDescendantOfNode().forEach(n => {
+        cont.attachNodeToCont(n)
+      })
       cont.attachNodeToCont(node)
     })
 
