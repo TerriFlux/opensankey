@@ -265,14 +265,14 @@ const updateNodePositioning = (
     .forEach(n2 => {
       n2.position_u += expand_left ? -1 : 1
     })
-  const vertical_spacing = contextualised_node.position_dy!
+  const vertical_spacing = contextualised_node.shape_position_dy!
   // Calcul de la position Y
   const total_height = calculateTotalHeight(nodes, vertical_spacing)
   const shift_y = total_height / 2
 
   nodes.forEach((n, i) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
-    if (new_data.drawing_area.sankey.styles_dict[default_style_id].position_type === 'parametric' && i === 0) {
+    if (new_data.drawing_area.sankey.styles_dict[default_style_id].shape_position_type === 'parametric' && i === 0) {
       n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
     }
   })
@@ -293,14 +293,14 @@ const updateAggregationExpansionPositioning = (
     .forEach(n2 => n2.position_u += config.expand_left ? -1 : 1)
 
   aggregateNode.position_u = config.contextualised_node.position_u + (config.expand_left ? -1 : 1)
-  aggregateNode.position_x = aggregateNode.position_u * aggregateNode.position_dx
+  aggregateNode.position_x = aggregateNode.position_u * aggregateNode.shape_position_dx
 
-  const vertical_spacing = aggregateNode.position_dy!
+  const vertical_spacing = aggregateNode.shape_position_dy!
   // Calcul de la position Y
   const total_height = calculateTotalHeight(config.nodes_to_agregate as Class_NodeElement[], vertical_spacing)
   const center = total_height / 2
 
-  if (new_data.drawing_area.sankey.styles_dict[default_style_id].position_type === 'parametric') {
+  if (new_data.drawing_area.sankey.styles_dict[default_style_id].shape_position_type === 'parametric') {
     aggregateNode.position_y = config.contextualised_node.position_y + center - aggregateNode.getShapeHeightToUse() / 2
   }
 }
@@ -916,7 +916,7 @@ export const disaggregate = (
       new_data.drawing_area.sankey.sortNodes()
     })
 
-    const vertical_spacing = aggregateNode.position_dy!
+    const vertical_spacing = aggregateNode.shape_position_dy!
     const current_height = aggregateNode.getShapeHeightToUse()
     parent_dim.setForceToShowChildren()
     const new_nodes = parent_dim.children
@@ -925,7 +925,7 @@ export const disaggregate = (
 
     new_nodes.forEach((n, i) => {
       n.position_u = aggregateNode.position_u
-      if ((new_data.drawing_area.sankey.styles_dict[default_style_id] as Class_ElementStyle).position_type == 'parametric' && i == 0) {
+      if ((new_data.drawing_area.sankey.styles_dict[default_style_id] as Class_ElementStyle).shape_position_type == 'parametric' && i == 0) {
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
     })

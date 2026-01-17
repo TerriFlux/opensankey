@@ -7,8 +7,6 @@ export const default_container_content = 'Text Label ...'
 export class Class_ContainerElement extends Class_NodeBase {
   private _tied_to_nodes: boolean
   private _attached_node: Class_NodeElement[]
-  private _at_extremity_of_attached_nodes: boolean
-  private _extremity_position: 'top' | 'bottom' | 'left' | 'right'
 
   constructor(
     id: string,
@@ -16,12 +14,10 @@ export class Class_ContainerElement extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
   ) {
     //super(id, id, drawing_area, 'g_elements_sankey')
-    const container_style =  drawing_area.sankey.styles_dict['ContainerStyle']
+    const container_style = drawing_area.sankey.styles_dict['ContainerStyle']
     super(id, name, drawing_area, container_style) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
-    this._at_extremity_of_attached_nodes = false
-    this._extremity_position = 'top'
 
     drawing_area.list_g_element.push(this.id)
 
@@ -42,8 +38,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     super._copyFrom(container_to_copy)
     const cast_copy = container_to_copy as unknown as Class_ContainerElement
     this._tied_to_nodes = cast_copy._tied_to_nodes
-    this._at_extremity_of_attached_nodes = cast_copy._at_extremity_of_attached_nodes
-    this._extremity_position = cast_copy._extremity_position
 
     cast_copy._attached_node.forEach(n => {
       const node = this.drawing_area.sankey.nodes_dict[n.id]
@@ -127,37 +121,12 @@ export class Class_ContainerElement extends Class_NodeBase {
       }
     })
 
-    // Appliquer les marges selon la position
-    if (this.at_extremity_of_attached_nodes) {
-      switch (this.extremity_position) {
-      case 'top':
-        this.position_y = min_y - this.shape_min_height - this.margin_bottom
-        this.position_x = min_x - this.margin_left
-        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-        break
-      case 'bottom':
-        this.position_y = max_y + this.margin_top
-        this.position_x = min_x - this.margin_left
-        this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-        break
-      case 'left':
-        this.position_x = min_x - this.shape_min_width - this.margin_right
-        this.position_y = min_y - this.margin_top
-        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-        break
-      case 'right':
-        this.position_x = max_x + this.margin_left
-        this.position_y = min_y - this.margin_top
-        this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-        break
-      }
-    } else {
-      // Mode englobant : appliquer les marges sur tous les côtés
-      this.position_x = min_x - this.margin_left
-      this.position_y = min_y - this.margin_top
-      this.shape_min_width = max_x - min_x + this.margin_left + this.margin_right
-      this.shape_min_height = max_y - min_y + this.margin_top + this.margin_bottom
-    }
+    // Mode englobant : appliquer les marges sur tous les côtés
+    this.position_x = min_x - this.shape_margin_left
+    this.position_y = min_y - this.shape_margin_top
+    this.shape_min_width = max_x - min_x + this.shape_margin_left + this.shape_margin_right
+    this.shape_min_height = max_y - min_y + this.shape_margin_top + this.shape_margin_bottom
+
   }
 
   protected eventSimpleLMBCLick(
@@ -414,7 +383,7 @@ export class Class_ContainerElement extends Class_NodeBase {
         n.position_x = n.position_x + event.dx
         n.position_y = n.position_y + event.dy
         if (i == 0) {
-          n.position_dy = n.position_dy + event.dy
+          n.shape_position_dy = n.shape_position_dy + event.dy
         }
         n.applyPosition()
       })
@@ -462,13 +431,6 @@ export class Class_ContainerElement extends Class_NodeBase {
   }
 
   public get attached_node() { return this._attached_node }
-
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
   public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
-
-  public get at_extremity_of_attached_nodes(): boolean { return this._at_extremity_of_attached_nodes }
-  public set at_extremity_of_attached_nodes(value: boolean) { this._at_extremity_of_attached_nodes = value }
-
-  public get extremity_position(): 'top' | 'bottom' | 'left' | 'right' { return this._extremity_position }
-  public set extremity_position(value: 'top' | 'bottom' | 'left' | 'right') { this._extremity_position = value }
 }

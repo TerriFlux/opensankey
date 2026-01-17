@@ -1493,7 +1493,7 @@ export class Class_DrawingArea {
         this._ghost_link_target = null
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-        if (this.sankey.default_style.position_type == 'parametric') {
+        if (this.sankey.default_style.shape_position_type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
               this.nodePositioning.computeParametrization(false)
@@ -1959,20 +1959,20 @@ export class Class_DrawingArea {
 
   public setParametricMode() {
     const default_style = this.sankey.styles_dict['default']
-    default_style.position_type = 'parametric'
+    default_style.shape_position_type = 'parametric'
     this.sankey.nodes_list.forEach(n => n.position_v = -1)
-    if (default_style.position_type == 'parametric')
+    if (default_style.shape_position_type == 'parametric')
       this.nodePositioning.computeParametrization(false)
   }
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
-    default_style.position_type = 'absolute'
+    default_style.shape_position_type = 'absolute'
   }
 
   public resetAllVerticalIntervals() {
     Object.values(this.sankey.nodes_dict)
-      .filter(node => node.position_type !== 'relative')
+      .filter(node => node.shape_position_type !== 'relative')
       .forEach(node => {
         node.delete_attribute('position_dy')
         node.applyPosition()
