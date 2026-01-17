@@ -324,8 +324,17 @@ export abstract class DrawLabelBase {
       .attr('viewBox', this._label_values.view_box ? this._label_values.view_box : '0 0 1000 1000')
       .attr('x', icon_pos_x)
       .attr('y', icon_pos_y)
-      .attr('height', icon_height)
-      .attr('width', icon_width)
+    if (this._label_values.inside_vert && this._label_values.inside_horiz) {
+      d3_selection_icon_svg
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', (this._element as Class_NodeElement).getShapeWidthToUse())
+        .attr('height', (this._element as Class_NodeElement).getShapeHeightToUse())
+    } else {
+      d3_selection_icon_svg
+        .attr('height', icon_height)
+        .attr('width', icon_width)
+    }
 
     d3_selection_icon_svg
       .append('g')
