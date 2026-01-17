@@ -101,6 +101,11 @@ export class Class_DrawingArea {
 
   protected _height: number
   protected _width: number
+  protected _zoom_width: number
+  protected _zoom_height: number
+  protected _k_horiz : number
+  protected _k_vert : number
+
   protected _color: string = default_background_color
   protected _grid_color: string = default_grid_color
   protected _grid_visible: boolean = default_grid_visible
@@ -166,6 +171,7 @@ export class Class_DrawingArea {
   private _ghost_link_target: Class_NodeElement | null = null
 
 
+
   protected _selection: { [id: string]: Class_ProtoElement } = {}
 
   // Context menu
@@ -207,6 +213,10 @@ export class Class_DrawingArea {
     // Init attributes
     this._height = this.window_fitting_height
     this._width = this.window_fitting_width
+    this._k_horiz = this.window_fitting_width / this.width
+    this._k_vert = this.window_fitting_height / this.height
+    this._zoom_height = this.window_fitting_height
+    this._zoom_width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
     this._legend = new ClassTemplate_Legend(this, this._sankey)
     this._selection_zone = this.createNewSelectionZone()
@@ -305,7 +315,6 @@ export class Class_DrawingArea {
 
     // Draw Everything
     this.drawElements()
-
     // Fit area
     this.areaAutoFit()
     this._legend.draw()
@@ -376,20 +385,20 @@ export class Class_DrawingArea {
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && !this.static) {
       // Draw horizontal lines
-      const number_of_horizontal_lines = this.height / this.grid_size
+      const number_of_horizontal_lines = this._zoom_height / this.grid_size
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
           .attr('id', 'line_horiz_drawing_area_' + String(row))
           .attr('x1', '0')
-          .attr('x2', this.width)
+          .attr('x2', this._zoom_width)
           .attr('y1', row * this.grid_size)
           .attr('y2', row * this.grid_size)
           .style('stroke', this.grid_color)
           .style('stroke-dasharray', 4)
       }
       // Draw vertical lines
-      const number_of_vertical_lines = this.width / this.grid_size
+      const number_of_vertical_lines = this._zoom_width / this.grid_size
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')
@@ -397,12 +406,15 @@ export class Class_DrawingArea {
           .attr('x1', column * this.grid_size)
           .attr('x2', column * this.grid_size)
           .attr('y1', 0)
-          .attr('y2', this.height)
+          .attr('y2', this._zoom_height)
           .style('stroke-dasharray', 4)
           .style('stroke', this.grid_color)
       }
       this.d3_selection_grid?.raise()
     }
+    this.d3_selection_grid?.attr(
+      'transform',
+      'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
   }
 
   /**
@@ -676,11 +688,10 @@ export class Class_DrawingArea {
     }
   }
 
-  public checkAndUpdateAreaSize(recenter: boolean = false) {
-    // Get bounding box for all elements
+  public areaAutoFit(horiz?: boolean) {
+
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
-    // No bounding box -> return
     if (bbox == undefined)
       return
     if (this.legend.is_visible && this.legend.stick_to_drawing) {
@@ -712,96 +723,43 @@ export class Class_DrawingArea {
       return
     }
 
-    // Get fitting dimensions for drawing area - depends on screen size
-    const fitting_width = this.window_fitting_width // acces speeding computation
-    const fitting_height = this.window_fitting_height // acces speeding computation
+    const fitting_width = this.window_fitting_width
+    const fitting_height = this.window_fitting_height
 
-    // Get current drawing zone dimensions
-    // let width = this.width
-    // let height = this.height
-    // let lefter_x = this._background_d3_groups_shift_x
-    // let upper_y= this._background_d3_groups_shift_y
+    const new_lefter_x = Math.min(0, bbox.x - this._fit_margin / 2)
+    const new_righter_x = Math.max(fitting_width, bbox.x + bbox.width + this._fit_margin / 2)
+    this._width = new_righter_x - new_lefter_x
+    const new_upper_y = Math.min(0, bbox.y - this._fit_margin / 2)
+    const new_bottom_y = Math.max(fitting_height, bbox.y + bbox.height + this._fit_margin / 2)
+    this._height = new_bottom_y - new_upper_y
 
-    // Check horizontal fitting
-    const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
-    const new_righter_x = Math.max(fitting_width, bbox.x + bbox.width + default_DA_marging)
-    this.width = new_righter_x - new_lefter_x
-    //lefter_x = new_lefter_x
-    // if (!recenter) {
-    //   new_lefter_x = 0
-    //   this.width = fitting_width
-    // }
+    this._background_d3_groups_shift_x = new_lefter_x
+    this._background_d3_groups_shift_y = new_upper_y
+    const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
+    const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
 
-    // Check vertical fitting
-    const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
-    const new_bottom_y = Math.max(fitting_height, bbox.y + bbox.height + default_DA_marging)
-    this.height = new_bottom_y - new_upper_y
-    //upper_y = new_upper_y
-    // if (!recenter) {
-    //   new_upper_y = 0
-    //   this.height = fitting_height
-    // }
-
-    // Recenter elements
-    if (recenter && window.sankey?.recenter !== false) {
-      if (!this.bypass_autofit) {
-        this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
-        this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
-      }
-      this.d3_selection_elements_group?.attr(
-        'transform',
-        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-      this.d3_selection_legend?.attr(
-        'transform',
-        'translate(' + this._elements_d3_groups_shift_x + ', ' + this._elements_d3_groups_shift_y + ')')
-    }
-
-    if (!this.bypass_autofit) {
-      // Save new dimensions
-      // this._width = width
-      // this._height = height
-      this._background_d3_groups_shift_x = new_lefter_x
-      this._background_d3_groups_shift_y = new_upper_y
-      // And redraw
-      this.d3_selection_bg_group?.attr(
-        'transform',
-        'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
-    }
-    this.drawBackground()
-    this.drawGrid()
-  }
-
-  public areaFitHorizontally(recenter: boolean) {
-    this.checkAndUpdateAreaSize(recenter)
+    const is_horiz = horiz != undefined ? horiz : this.application_data.is_static ? false : ratio_h > ratio_v
 
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
-      const k = this.window_fitting_width / this.width
+      const new_k_horiz = this.window_fitting_width / this.width 
+      const new_k_height = this.window_fitting_height / this.height
+      if (this._k_horiz == new_k_horiz && this._k_vert == new_k_height) return
 
-      const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x
-      const y0 = Math.max(this._fit_margin / 2, (this.window_fitting_height - k * this.height) / 2) + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
-      //onst x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
-      //const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
+      // if (is_horiz) {
+        this._k_horiz = new_k_horiz
+      // } else {
+        this._k_vert = new_k_height
+      // }
+      const new_k = is_horiz ? new_k_horiz : new_k_height
+      this._zoom_height = is_horiz ? Math.max(this.height, this.height / this._k_horiz) : this.height
+      this._zoom_width = is_horiz ? this.width : Math.max(this.width, this.width / this._k_vert)
+      this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [x0, y0])
-    }
-  }
-
-  public areaFitVertically(recenter: boolean=false) {
-    this.checkAndUpdateAreaSize(recenter)
-    if (this.d3_selection_zoom_area) {
-      // window.innerHeight-50 correspond to minimal height of drawing_area (when there is no elements pushing it boundaries)
-      const k = this.window_fitting_height / this.height
-      const x0 = Math.max(this._fit_margin / 2, (this.window_fitting_width - k * this.width) / 2) - this._background_d3_groups_shift_x * k
-      const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
-      //const x0 = this._fit_margin / 2 - this._background_d3_groups_shift_x * k
-      //const y0 = this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * k
-      this.zoomListener.scaleTo(this.d3_selection_zoom_area, k)
-      this.zoomListener.translateTo(
-        this.d3_selection_zoom_area, 0, 0,
-        [x0, y0])
+        [this._fit_margin / 2 - this._background_d3_groups_shift_x* new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
+      this.drawBackground()
+      this.drawGrid()
     }
   }
 
@@ -961,19 +919,19 @@ export class Class_DrawingArea {
    *
    * @memberof Class_DrawingArea
    */
-  public areaAutoFit(recenter:boolean=false) {
-    if (this.application_data.is_static) this.areaFitVertically(recenter)
-    // Ratios
-    const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
-    const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
-    // Fit from ratio
-    if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-      this.areaFitHorizontally(recenter)
-    }
-    else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-      this.areaFitVertically(recenter)
-    }
-  }
+  // public areaAutoFit(recenter: boolean = false) {
+  //   if (this.application_data.is_static) this.areaFitVertically(recenter)
+  //   // Ratios
+  //   const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
+  //   const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
+  //   // Fit from ratio
+  //   if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
+  //     this.areaFitHorizontally(recenter)
+  //   }
+  //   else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
+  //     this.areaFitVertically(recenter)
+  //   }
+  // }
 
   /**
    * Swaps overlaps position of element on DA
@@ -983,21 +941,21 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public moveOrderElementInDA = (idx_src: number, idx_trgt: number) => {
-  // Nettoyer les doublons avant de commencer
+    // Nettoyer les doublons avant de commencer
     const uniqueList = [...new Set(this._list_g_element_id)]
-  
+
     // Validation
     if (idx_src < 0 || idx_src >= uniqueList.length) return
     if (idx_trgt < 0 || idx_trgt >= uniqueList.length) return
     if (idx_src === idx_trgt) return
-  
+
     const list_old_io = [...uniqueList]
-  
+
     const inv_moveElement = () => {
       this._list_g_element_id = [...list_old_io]
       this.orderElementOnDA()
     }
-  
+
     const _moveElement = () => {
       const newList = [...uniqueList]
       const [element] = newList.splice(idx_src, 1)
@@ -1005,7 +963,7 @@ export class Class_DrawingArea {
       this._list_g_element_id = newList
       this.orderElementOnDA()
     }
-  
+
     this.application_data.history.saveUndo(inv_moveElement)
     this.application_data.history.saveRedo(_moveElement)
     _moveElement()
@@ -1083,8 +1041,11 @@ export class Class_DrawingArea {
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
       .attr('fill', this.color)
-      .attr('width', this.width)
-      .attr('height', height)
+      .attr('width', this._zoom_width)
+      .attr('height', this._zoom_height)
+      .attr(
+        'transform',
+        'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
     if (!this.static) {
       this.d3_selection_bg?.select('rect').style('stroke-width', 5)
       this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
@@ -1572,7 +1533,7 @@ export class Class_DrawingArea {
           mouse_position[0] - (target.getShapeWidthToUse() / 2),
           mouse_position[1] - (target.getShapeHeightToUse() / 2))
 
-        this.checkAndUpdateAreaSize()
+        //this.checkAndUpdateAreaSize()
       }
     } else if (this.isInSelectionMode()) {
       if (this._selection_zone.is_visible) {
