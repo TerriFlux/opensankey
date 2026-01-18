@@ -306,7 +306,7 @@ export const retrieveJSONResults = (
         app_data.updateFromJSON(current_json)
       } else if (JSON_data['layout']) {
         app_data.drawing_area.nodePositioning.computeScale()
-        app_data.updateFromJSON(JSON_data as Type_JSON)
+        app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
       } else {
         app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
       }
@@ -383,7 +383,8 @@ export const UniversalFileConverter = ({
     set_input_format(input_format)
     set_output_format(getInitialFormat(config.output.format, 'json'))
     setAutoLoad(!config.output.required)
-    setAutoSave(!config.input.required && input_format != 'example_json')
+    setAutoSave(!config.input.required && input_format != 'example_json' && input_format != 'blob')
+    setAutoLayout(input_format == 'blob')
     setConfig(config)
 
     setLaunchAtOpening(launch_at_opening)
