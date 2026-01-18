@@ -14,7 +14,7 @@ import { Class_Handler } from './Handler'
 import {
   Type_PathLabelHPosition
 } from './ElementsAttributesConfig'
-import { Class_NodeBase, label_margin, default_selected_stroke_width } from './NodeBase'
+import { Class_NodeBase, default_selected_stroke_width } from './NodeBase'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -757,6 +757,16 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     let label_pos_y: number
     let label_baseline: string
 
+    let label_margin_left = this._element.shape_margin_left
+    let label_margin_right = this._element.shape_margin_right
+    let label_margin_top = this._element.shape_margin_top
+    let label_margin_bottom = this._element.shape_margin_bottom
+
+    if (this.node.shape_type === 'capsule') {
+      label_margin_bottom = this.node.getShapeWidthToUse()/2
+      label_margin_top = this.node.getShapeWidthToUse()/2
+    }
+
     if (this._label_values.position_absolute) {
       label_pos_x = this._label_values.position_x
       label_anchor = 'middle'
@@ -768,17 +778,17 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       if (this._label_values.horiz === 'right') {
         if (inside_horiz) {
           label_anchor = 'end'
-          label_pos_x = shape_width - label_margin + this._label_values.horiz_shift
+          label_pos_x = shape_width + this._label_values.horiz_shift
         } else {
           label_anchor = 'start'
-          label_pos_x = shape_width + label_pos_dx + label_margin + this._label_values.horiz_shift
+          label_pos_x = shape_width + label_pos_dx + label_margin_right + this._label_values.horiz_shift
         }
       } else if (this._label_values.horiz === 'left') {
         if (inside_horiz) {
           label_anchor = 'start'
-          label_pos_x = label_margin + this._label_values.horiz_shift
+          label_pos_x = this._label_values.horiz_shift
         } else {
-          label_pos_x = 0 - label_margin + this._label_values.horiz_shift
+          label_pos_x = 0 - label_margin_left + this._label_values.horiz_shift
           label_anchor = 'end'
         }
       }
@@ -795,6 +805,14 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
     label_baseline = 'text-before-edge'
 
+    let margin_top = this.node.shape_margin_top
+    if (this.node.shape_type === 'capsule') {
+      margin_top = this.node.getShapeWidthToUse()/2
+    }
+    let margin_bottom = this.node.shape_margin_top
+    if (this.node.shape_type === 'capsule') {
+      margin_bottom = this.node.getShapeWidthToUse()/2
+    }
 
     if (this._label_values.position_absolute) {
       label_pos_y = this._label_values.position_y
@@ -802,17 +820,19 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     } else {
       if (this._label_values.vert === 'top') {
         if (inside_vert) {
-          label_pos_y = label_margin + this._label_values.vert_shift
+          label_pos_y = this._label_values.vert_shift
           label_baseline = 'text-before-edge'
         } else {
-          label_pos_y = -label_pos_dy + this._label_values.vert_shift
+          label_pos_y = -label_margin_top+-label_pos_dy + this._label_values.vert_shift
           label_baseline = 'text-after-edge'
         }
       }
       else if (this._label_values.vert === 'bottom') {
         if (inside_vert) {
-          label_pos_y = shape_height - label_margin + this._label_values.vert_shift
+          label_pos_y = shape_height + this._label_values.vert_shift
           label_baseline = 'text-after-edge'
+        } else {
+          label_pos_y = label_pos_y + label_margin_bottom
         }
       }
       else if (this._label_values.vert === 'middle') {
