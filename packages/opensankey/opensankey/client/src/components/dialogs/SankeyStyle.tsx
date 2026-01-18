@@ -107,6 +107,8 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
   // const config = elementType === 'nodes' ? {
   //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
+    //app_data.menu_configuration.ref_to_menu_config_styles_editor_updater.current
+
     app_data.menu_configuration.updateAllComponentsRelatedToNodes()
     app_data.menu_configuration.updateComponentRelatedToStyles()
     app_data.menu_configuration.updateAllComponentsRelatedToContainers()

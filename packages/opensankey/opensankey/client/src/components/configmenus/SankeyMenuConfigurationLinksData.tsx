@@ -386,7 +386,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         />
       </RowSetter2Cols>
       <Box layerStyle='options_2cols'>
-        <Button
+        {/* <Button
           variant={'menuconfigpanel_option_button'}
           onClick={() => {
             app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(true)
@@ -397,7 +397,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           }}
         >
         Format
-        </Button>
+        </Button> */}
         <Button
           variant={'menuconfigpanel_option_button'}
           onClick={() => {

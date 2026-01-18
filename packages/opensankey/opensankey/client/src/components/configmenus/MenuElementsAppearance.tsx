@@ -61,6 +61,7 @@ import {
   isShapeValueIndeterminate
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
+import { MenuUnit } from './MenuElementsLabelValue'
 
 // ✅ Analyse de la sélection
 interface SelectionAnalysis {
@@ -422,8 +423,18 @@ const LabelContentComponent = ({
           </Box>
         </>
       )}
-
+      <Divider />
       {/* Section IMAGE */}
+      {prefix === 'value_label' && (
+        <React.Fragment key={`menu-unit-${elements.map(e => e.id).join('-')}`} >
+          <MenuUnit
+            app_data={app_data}
+            attributePath={attributePath}
+            elements={elements}
+          />
+        </React.Fragment>
+      )}
+      <Divider />
       {displayMode === 'image' && (
         <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
@@ -478,7 +489,6 @@ const LabelContentComponent = ({
           </Box>
         </>
       )}
-
       <Divider />
       <Box as='span' textStyle='title_sub_section'>Position, taille et décalages</Box>
 
@@ -833,7 +843,7 @@ export const MenuConfigurationAppearance = ({
                           </Button>
                           <Button
                             variant={getButtonVariant('right', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'capsule')}
-                            onClick={() => { 
+                            onClick={() => {
                               commonShapeValues.type = 'capsule'
                             }}
                           >
