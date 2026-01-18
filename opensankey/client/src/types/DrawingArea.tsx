@@ -423,6 +423,7 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     // Draw grid
+    this.drawBackground()
     this.drawGrid()
     // for parametric mode nodes need to be draw in a certain order
     // so that the nodes at the top of the columns are drawn first
