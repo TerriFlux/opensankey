@@ -294,6 +294,18 @@ export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
     ...BASE_OUTPUT_CONFIG,
   },
   excel: {
+    mode_write: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Add results sheets',
+        fr: 'Réécriture des feuilles'
+      },
+      tooltips: {
+        en: 'Add results sheets',
+        fr: 'Ajout onglets résultats'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
     with_sheet_formating: {
       default: true,
       type: (() => true) as (() => boolean),
