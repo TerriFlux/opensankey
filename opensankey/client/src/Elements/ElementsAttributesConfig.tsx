@@ -34,7 +34,7 @@ import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
-export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path'
+export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' | 'capsule'
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
@@ -1545,8 +1545,8 @@ export type HyperLinkConfigReturn = typeof HYPER_LINK_CONFIG
 export const NODE_SHAPE_SPECIFIC_CONFIG = {
   // =================== MARGINS ===================
   margin_left: {
-    default: 50,
-    type: (() => 50) as (() => number),
+    default: 0,
+    type: (() => 0) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 
@@ -1561,8 +1561,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   margin_right: {
-    default: 50,
-    type: (() => 50) as (() => number),
+    default: 0,
+    type: (() => 0) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 
@@ -1577,8 +1577,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   margin_top: {
-    default: 50,
-    type: (() => 50) as (() => number),
+    default: 0,
+    type: (() => 0) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 
@@ -1593,8 +1593,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   margin_bottom: {
-    default: 50,
-    type: (() => 50) as (() => number),
+    default: 0,
+    type: (() => 0) as (() => number),
     category: 'margins' as const,
     actions: ['drawShape'] as BaseActionType[],
 

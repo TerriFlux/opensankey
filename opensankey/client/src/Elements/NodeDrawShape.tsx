@@ -48,6 +48,24 @@ export class NodeDrawShape {
     this._node = node
   }
 
+  private getCapsulePath(): string {
+    const width = this._node.getShapeWidthToUse()
+    const radius = width / 2
+    const height = this._node.getShapeHeightToUse() + 2*radius
+    // Hauteur de la partie droite (sans les demi-cercles)
+    const straightHeight = Math.max(0, height - 2 * radius)
+
+    // Construction du path pour une capsule verticale
+    return `
+    M 0,${radius}
+    v ${straightHeight}
+    a ${radius},${radius} 0 0,0 ${width},0
+    v ${-straightHeight}
+    a ${radius},${radius} 0 0,0 ${-width},0
+    Z
+  `
+  }
+
   /**
    * Draw node shape on d3 svg
    */
@@ -63,8 +81,8 @@ export class NodeDrawShape {
 
     // Do the rest only if shape is visible
     // Compute shape attributes
-    const width = this._node.getShapeWidthToUse()
-    const height = this._node.getShapeHeightToUse()
+    const width = this._node.getShapeWidthToUse()+this._node.shape_margin_left+this._node.shape_margin_right
+    const height = this._node.getShapeHeightToUse()+this._node.shape_margin_top+this._node.shape_margin_bottom 
     const color = this._node.getShapeColorToUse()
 
     // Apply shape value
@@ -84,7 +102,18 @@ export class NodeDrawShape {
         .attr('cy', height / 2)
         .attr('rx', width / 2)
         .attr('ry', height / 2)
+    } else if (this._node.shape_type === 'capsule') {
+      this._node.d3_selection_g_shape?.append('path')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('d', this.getCapsulePath())
     }
+    let margin_top = this._node.shape_margin_top
+    if (this._node.shape_type === 'capsule') {
+      margin_top = this._node.getShapeWidthToUse()/2
+    }
+    this._node.d3_selection_g_shape?.selectAll('.node_shape')
+      .attr('transform', 'translate(' + 0 + ',' + -1*margin_top+ ')')
 
     // Apply common properties
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
