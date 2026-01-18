@@ -654,8 +654,8 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _updateFromJSON(json_object: Type_JSON, _?: Type_JSON) {
-    if (json_object['layout'] !== undefined) {
-      const json_layout = json_object['layout'] as Type_JSON
+    //if (json_object['layout'] !== undefined) {
+      const json_layout = json_object as Type_JSON
       const drawing_area_from_layout = this.createNewDrawingArea()
       drawing_area_from_layout.bypass_redraws = true
       DrawingAreaPersistence.fromJSON(drawing_area_from_layout,json_layout)
@@ -666,7 +666,7 @@ export class Class_ApplicationData {
         drawing_area_from_layout,
         ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
       )
-    }
+    //}
   }
 
   // PUBLIC METHODS =====================================================================
