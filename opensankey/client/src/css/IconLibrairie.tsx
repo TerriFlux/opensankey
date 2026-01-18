@@ -383,6 +383,24 @@ const RectShapeIcon: React.FC<ShapeIconProps> = ({
   </svg>
 )
 
+const CapsuleShapeIcon: React.FC<ShapeIconProps> = ({
+  fill = '#78C2AD',
+  stroke = 'currentColor',
+  width = '1rem',
+  height = '1rem'
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill={fill}
+    stroke={stroke}
+    viewBox='0 0 17 17'
+    width={width}
+    height={height}
+  >
+    <path d="M 4.5,5.5 v 6 a 4,4 0 0,0 8,0 v -6 a 4,4 0 0,0 -8,0 Z" />
+  </svg>
+)
+
 // Dans la section "Hand made icon" (après les autres logos)
 
 // Label à l'intérieur horizontal (inside_horiz)
@@ -1186,7 +1204,7 @@ export class Class_IconLibrary {
   // Define icon ===================================
   protected _icon_rect_shape = <RectShapeIcon/>
   protected _icon_ellipse_shape = <EllipseShapeIcon/>
-
+  protected _icon_capsule_shape = <CapsuleShapeIcon/>
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
@@ -1353,6 +1371,7 @@ export class Class_IconLibrary {
   // Getters ===================================
   public get icon_rect_shape() { return this._icon_rect_shape }
   public get icon_ellipse_shape() { return this._icon_ellipse_shape }
+  public get icon_capsule_shape() { return this._icon_capsule_shape }
 
   public get icon_new_da() { return this._icon_new_da }
   public get icon_open_sankey() { return this._icon_open_sankey }

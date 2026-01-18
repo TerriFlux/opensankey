@@ -35,7 +35,7 @@ import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
 
 export const default_selected_stroke_width = 3
-export const label_margin = 0
+//export const label_margin = 0
 
 export function sortNodesElements(
   a: Class_NodeBase | Class_ElementStyle,

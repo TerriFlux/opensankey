@@ -783,11 +783,11 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET FOND ========== */}
           {activeTab === 'background' && (
-          // <WrapperBoxSubSectionMenu
-          //   new_data={app_data}
-          //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
-          //   is_open={true}
-          // >
+            // <WrapperBoxSubSectionMenu
+            //   new_data={app_data}
+            //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
+            //   is_open={true}
+            // >
 
             <Box layerStyle='menu_sub_section'>
               <MenuShapeAttributes
@@ -805,11 +805,11 @@ export const MenuConfigurationAppearance = ({
           {activeTab === 'shape' && (
             <>
               {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
-              // <WrapperBoxSubSectionMenu
-              //   new_data={app_data}
-              //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
-              //   is_open={!menu_for_style && selection.hasNodes}
-              // >
+                // <WrapperBoxSubSectionMenu
+                //   new_data={app_data}
+                //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
+                //   is_open={!menu_for_style && selection.hasNodes}
+                // >
 
                 <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
@@ -818,7 +818,7 @@ export const MenuConfigurationAppearance = ({
                     >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
                     <OSTooltip label={t('Noeud.apparence.tooltips.shape_type')}>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box layerStyle='options_2cols'>
+                        <Box layerStyle='options_3cols'>
                           <Button
                             variant={getButtonVariant('left', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'ellipse')}
                             onClick={() => { commonShapeValues.type = 'ellipse' }}
@@ -826,10 +826,18 @@ export const MenuConfigurationAppearance = ({
                             {icon_library.icon_ellipse_shape}
                           </Button>
                           <Button
-                            variant={getButtonVariant('right', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'rect')}
+                            variant={getButtonVariant('center', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'rect')}
                             onClick={() => { commonShapeValues.type = 'rect' }}
                           >
                             {icon_library.icon_rect_shape}
+                          </Button>
+                          <Button
+                            variant={getButtonVariant('right', isShapeValueIndeterminate(elements, 'shape', 'type'), commonShapeValues.type === 'capsule')}
+                            onClick={() => { 
+                              commonShapeValues.type = 'capsule'
+                            }}
+                          >
+                            {icon_library.icon_capsule_shape}
                           </Button>
                         </Box>
                         <TooltipElementOverloaded
@@ -866,6 +874,49 @@ export const MenuConfigurationAppearance = ({
                       unit_text='px'
                       stepper={true}
                     />
+                    <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
+                    <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                          <ConfigMenuNumberInput
+                            t={app_data.t}
+                            default_value={nodeShapeValues.margin_left}
+                            function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
+                            minimum_value={0}
+                            stepper={true} />
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginRight') || 'Top'}</Box>
+                          <ConfigMenuNumberInput
+                            t={app_data.t}
+                            default_value={nodeShapeValues.margin_right}
+                            function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
+                            minimum_value={0}
+                            stepper={true} />
+                        </Box>
+                      </Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Right'}</Box>
+                          <ConfigMenuNumberInput
+                            t={app_data.t}
+                            default_value={nodeShapeValues.margin_top}
+                            function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
+                            minimum_value={0}
+                            stepper={true} />
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginBottom') || 'Bottom'}</Box>
+                          <ConfigMenuNumberInput
+                            t={app_data.t}
+                            default_value={nodeShapeValues.margin_bottom}
+                            function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
+                            minimum_value={0}
+                            stepper={true} />
+                        </Box>
+                      </Box>
+                    </OSTooltip>
                     <Divider />
                     <Box as='span' textStyle='title_sub_section'>Options</Box>
                     <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
@@ -928,11 +979,11 @@ export const MenuConfigurationAppearance = ({
               )}
 
               {(menu_for_style || selection.hasLinks) && (
-              // <WrapperBoxSubSectionMenu
-              //   new_data={app_data}
-              //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
-              //   is_open={!menu_for_style && selection.hasLinks}
-              // >
+                // <WrapperBoxSubSectionMenu
+                //   new_data={app_data}
+                //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
+                //   is_open={!menu_for_style && selection.hasLinks}
+                // >
 
                 <Box layerStyle='menu_sub_section'>
                   <Box layerStyle='menuconfigpanel_grid'>
@@ -1132,49 +1183,7 @@ export const MenuConfigurationAppearance = ({
                           refreshAll()
                         }}
                       />
-                      <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
-                      <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
-                            <ConfigMenuNumberInput
-                              t={app_data.t}
-                              default_value={nodeShapeValues.margin_left}
-                              function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
-                              minimum_value={0}
-                              stepper={true} />
-                          </Box>
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginRight') || 'Top'}</Box>
-                            <ConfigMenuNumberInput
-                              t={app_data.t}
-                              default_value={nodeShapeValues.margin_right}
-                              function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
-                              minimum_value={0}
-                              stepper={true} />
-                          </Box>
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Right'}</Box>
-                            <ConfigMenuNumberInput
-                              t={app_data.t}
-                              default_value={nodeShapeValues.margin_top}
-                              function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
-                              minimum_value={0}
-                              stepper={true} />
-                          </Box>
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginBottom') || 'Bottom'}</Box>
-                            <ConfigMenuNumberInput
-                              t={app_data.t}
-                              default_value={nodeShapeValues.margin_bottom}
-                              function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
-                              minimum_value={0}
-                              stepper={true} />
-                          </Box>
-                        </Box>
-                      </OSTooltip>
+
                     </Box> : <></>}
                   </Box></>
               )}
