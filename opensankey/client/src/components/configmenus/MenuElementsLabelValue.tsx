@@ -47,8 +47,8 @@ import { isValueLabelIndeterminate, VALUE_LABEL_CONFIG } from '../../Elements/El
 
 export const MenuUnit = ({
   app_data,
-  attributePath: initialAttributePath,
-  elements: initialElements
+  attributePath,
+  elements
 }: {
   app_data: Class_ApplicationData,
   attributePath?: string
@@ -58,21 +58,9 @@ export const MenuUnit = ({
   const { sankey } = drawing_area
   const [_, setCount] = useState(0)
   const refreshUI = () => setCount(a => a + 1)
-  const [state, setState] = useState({
-    elements: initialElements,
-    attributePath: initialAttributePath
-  })
-  if (!initialElements) {
-    app_data.menu_configuration.r_value_formatting_set_elements.current = (
-      _elements: Class_NodeBase[] | Class_LinkElement[] | Class_ElementStyle[],
-      _attributePath: string) => {
-      setState({
-        elements: _elements,
-        attributePath: _attributePath
-      })
-    }
-  }
-  const { elements, attributePath } = state
+  //const [state, setState] = useState({
+
+  //const { elements, attributePath } = state
   if (!elements || !attributePath) return <></>
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
   const unit_tagg = sankey.data_taggs_list.find(tagg => tagg.is_unit)
@@ -85,7 +73,7 @@ export const MenuUnit = ({
 
   return <Box
     layerStyle='menuconfigpanel_grid'
-  >
+  >      <Box layerStyle='options_2cols'>
     <Checkbox
       variant='menuconfigpanel_option_checkbox'
       iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
@@ -106,8 +94,7 @@ export const MenuUnit = ({
         />
       </OSTooltip>
     </Checkbox>
-    {/* Select pour unit type (seulement pour les liens) */}
-    {
+
       <ElementAttrSetterSelect2Cols
         app_data={app_data}
         attributePath={attributePath}
@@ -121,8 +108,8 @@ export const MenuUnit = ({
           label: t('Flux.labels.' + el)
         }))}
         refreshParentComponent={refreshUI}
-      />
-    }
+      /></Box>
+
     {/* Select pour unit tag (quand type = other_unit_tag) */}
     {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
       <ElementAttrSetterSelect2Cols
@@ -140,9 +127,10 @@ export const MenuUnit = ({
         refreshParentComponent={refreshUI}
       />
     )}
+    
     {/* Text input et number input pour unit_name */}
     {labelValues.unit_type == 'unit_name' && (
-      <>
+       <Box layerStyle='options_2cols'>
         <ElementAttrSetterTextInput2Cols
           app_data={app_data}
           elements={elements}
@@ -162,9 +150,10 @@ export const MenuUnit = ({
           refreshParentComponent={refreshUI}
           stepper={false}
         />
-      </>
+      </Box>
     )}
     <Box layerStyle='menuconfigpanel_grid'>
+      <Box layerStyle='options_2cols'>
       {/* Checkbox pour nombre de chiffres personnalisé avec input conditionnel */}
       <ConditionalCheckboxWithInput
         app_data={app_data}
@@ -177,7 +166,15 @@ export const MenuUnit = ({
         minimum_value={0}
         stepper={true}
       />
-
+      {/* Checkbox simple pour notation scientifique */}
+      <SimpleElementCheckbox
+        elements={elements}
+        attributeKey={'scientific_notation'}
+        config={VALUE_LABEL_CONFIG}
+        prefix='value_label'
+        refreshParentComponent={refreshUI}
+      />
+</Box>
       {/* Checkbox pour chiffres significatifs avec input conditionnel */}
       <ConditionalCheckboxWithInput
         app_data={app_data}
@@ -189,15 +186,6 @@ export const MenuUnit = ({
         refreshParentComponent={refreshUI}
         minimum_value={0}
         stepper={true}
-      />
-
-      {/* Checkbox simple pour notation scientifique */}
-      <SimpleElementCheckbox
-        elements={elements}
-        attributeKey={'scientific_notation'}
-        config={VALUE_LABEL_CONFIG}
-        prefix='value_label'
-        refreshParentComponent={refreshUI}
       />
     </Box>
   </Box>

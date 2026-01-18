@@ -58,7 +58,7 @@ import { OSTooltip } from '../configmenus/MenuCommon'
 import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
-import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
+//import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export declare const window: Window &
@@ -313,14 +313,14 @@ export const SankeyMenu = (
         minW={'25vw'}
         maxW={'25vw'}
       /> */}
-      <MenuDraggable
+      {/* <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
         dialog_name={'ref_setter_show_value_formatting_editor'}
         content={<MenuUnit app_data={app_data} />}
         title={'Formattage des valeurs'}
         minW={'25vw'}
         maxW={'25vw'}
-      />
+      /> */}
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
         dialog_name={'ref_setter_show_value_type_editor'}

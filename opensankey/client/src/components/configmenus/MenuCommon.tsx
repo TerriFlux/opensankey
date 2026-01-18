@@ -752,8 +752,9 @@ export const ConditionalCheckboxWithInput = <
 }) => {
   const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
+  //const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
+  const fullKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const layoutStyle = 'menuconfigpanel_row_2cols'
 
   return (
@@ -765,11 +766,11 @@ export const ConditionalCheckboxWithInput = <
           attribute_values[checkboxAttributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
         }}
       >
-        <OSTooltip label={t(`Flux.labels.tooltips.${fullcheckboxAttributeKey}`)}>
-          {t(`Flux.labels.${fullcheckboxAttributeKey}`) + ' '}
+        <OSTooltip label={t(`Flux.labels.tooltips.${fullKey}`)}>
+          {t(`Flux.labels.${fullKey}`) + ' '}
         </OSTooltip>
         <TooltipElementOverloaded
-          attributeKey={fullcheckboxAttributeKey}
+          attributeKey={checkboxAttributeKey}
           config={config}
           prefix={prefix}
           elements={elements as Class_LinkElement[] | Class_NodeBase[]}

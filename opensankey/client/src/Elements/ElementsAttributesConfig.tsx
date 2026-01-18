@@ -1175,8 +1175,8 @@ export const VALUE_LABEL_CONFIG = {
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
-      en: 'Custom digits',
-      fr: 'Décimales personnalisées'
+      en: 'Nb digits',
+      fr: 'Décimales'
     },
     tooltips: {
       en: 'Use custom number of decimals',
