@@ -1256,7 +1256,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       const xf = this.link.position_x_end
       const yf = this.link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 1.5)
+      const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
     if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline') {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
