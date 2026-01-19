@@ -1853,6 +1853,7 @@ export class NodePositioning {
         }
 
         this.drawingArea.draw()
+        this.drawingArea.recenter()
         // Update area
         this.drawingArea.areaAutoFit()
         // Toggle saving indicator

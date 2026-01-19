@@ -1410,6 +1410,9 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
   protected getLabelText() {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
+    if (this._label_values.is_value) {
+      return this.link.data_label(this.prefix as 'name_label')
+    }
     return this.link.text_value
   }
 
@@ -1434,7 +1437,7 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
   protected getLabelText() {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
-    return this.link.data_label
+    return this.link.data_label(this.prefix as 'value_label')
   }
 
   protected shouldDrawLabel(): boolean {
