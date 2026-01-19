@@ -561,13 +561,34 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
-      const wrapper = textwrap()
-        .bounds({ height: 100, width: this._label_values.box_width })
-        .method('tspans')
+      const hasSpaces = labelText.includes(' ')
 
-      textElement
-        .text(labelText)
-        .call(wrapper)
+      if (hasSpaces) {
+        const wrapper = textwrap()
+          .bounds({ height: 100, width: this._label_values.box_width })
+          .method('tspans')
+
+        textElement
+          .text(labelText)
+          .call(wrapper)
+
+        // ✅ Nettoyer les tspans vides
+        textElement.selectAll('tspan')
+          .filter(function () {
+            const text = d3.select(this).text()
+            return !text || text.trim() === ''
+          })
+          .remove()
+
+        // ✅ Réinitialiser le dy du premier tspan restant
+        const firstTspan = textElement.select('tspan')
+        if (!firstTspan.empty()) {
+          firstTspan.attr('dy', 0)
+        }
+      } else {
+        // Mot unique : pas de wrapping nécessaire
+        textElement.text(labelText)
+      }
 
       const tspans = textElement.selectAll('tspan').nodes() as SVGTSpanElement[]
       tspans.forEach(tspan => {
@@ -763,8 +784,8 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     let label_margin_bottom = this._element.shape_margin_bottom
 
     if (this.node.shape_type === 'capsule') {
-      label_margin_bottom = this.node.getShapeWidthToUse()/2
-      label_margin_top = this.node.getShapeWidthToUse()/2
+      label_margin_bottom = this.node.getShapeWidthToUse() / 2
+      label_margin_top = this.node.getShapeWidthToUse() / 2
     }
 
     if (this._label_values.position_absolute) {
@@ -807,11 +828,11 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
 
     let margin_top = this.node.shape_margin_top
     if (this.node.shape_type === 'capsule') {
-      margin_top = this.node.getShapeWidthToUse()/2
+      margin_top = this.node.getShapeWidthToUse() / 2
     }
     let margin_bottom = this.node.shape_margin_top
     if (this.node.shape_type === 'capsule') {
-      margin_bottom = this.node.getShapeWidthToUse()/2
+      margin_bottom = this.node.getShapeWidthToUse() / 2
     }
 
     if (this._label_values.position_absolute) {
@@ -823,7 +844,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
           label_pos_y = this._label_values.vert_shift
           label_baseline = 'text-before-edge'
         } else {
-          label_pos_y = -label_margin_top+-label_pos_dy + this._label_values.vert_shift
+          label_pos_y = -label_margin_top + -label_pos_dy + this._label_values.vert_shift
           label_baseline = 'text-after-edge'
         }
       }
@@ -1251,12 +1272,12 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     labelText: string
   ): boolean {
     if (!this.link.source || !this.link.target) return false
-      const x0 = this.link.position_x_start
-      const y0 = this.link.position_y_start
-      const xf = this.link.position_x_end
-      const yf = this.link.position_y_end
-      const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
+    const x0 = this.link.position_x_start
+    const y0 = this.link.position_y_start
+    const xf = this.link.position_x_end
+    const yf = this.link.position_y_end
+    const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
+    const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
     if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline') {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)

@@ -114,14 +114,14 @@ export class ProtoElementPersistence extends BaseElementPersistence {
   }
 
   public static fromJSON_pre_0_9(
-    _base_element: ProtoElementPersistence,
+    _base_element: Class_ProtoElement,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
   }
 
   public static fromJSON_0_9(
-    _base_element: ProtoElementPersistence,
+    _base_element: Class_ProtoElement,
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
@@ -131,10 +131,20 @@ export class ProtoElementPersistence extends BaseElementPersistence {
   }
 
   public static fromJSON_0_91(
-    _base_element: ProtoElementPersistence,
-    _json_object: Type_JSON,
+    proto_element: Class_ProtoElement,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    if (!Array.isArray(json_object.style)) {
+      const style_id = getStringFromJSON(json_object, 'style', default_style_id)
+      if (style_id != 'default' && proto_element.sankey.styles_dict[style_id]) {
+        proto_element['_style'].push(proto_element.sankey.styles_dict[style_id])
+      }
+    } else {
+      const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
+      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' &&proto_element.sankey.styles_dict[s_id])
+        .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
+    }
   }
 
   public static fromJSON(
@@ -150,7 +160,11 @@ export class ProtoElementPersistence extends BaseElementPersistence {
 
     if (!Array.isArray(json_object.style)) {
       const style_id = getStringFromJSON(json_object, 'style', default_style_id)
-      if (style_id != 'default' && proto_element.sankey.styles_dict[style_id]) {
+      if (
+        style_id != 'default'
+        && proto_element.sankey.styles_dict[style_id] 
+        && !proto_element['_style'].includes(proto_element.sankey.styles_dict[style_id])
+      ) {
         proto_element['_style'].push(proto_element.sankey.styles_dict[style_id])
       }
     } else {
@@ -558,26 +572,28 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
   }
   public static fromJSON_pre_0_9(
-    _node: Class_NodeElement,
-    _json_object: Type_JSON,
-    _$kwargs?: Type_JSON
+    node: Class_NodeElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
   ) {
+    super.fromJSON_pre_0_9(node,json_object,kwargs)
   }
 
   public static fromJSON_0_9(
-    _node: Class_NodeElement,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
+    node: Class_NodeElement,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
   ) {
-
+    super.fromJSON_0_9(node,json_object,kwargs)
   }
 
 
   public static fromJSON_0_91(
     node: Class_NodeElement,
     json_object: Type_JSON,
-    _kwargs?: Type_JSON
+    kwargs?: Type_JSON
   ) {
+    super.fromJSON_0_91(node,json_object,kwargs)
     const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       // Name label legacy
       'label_visible': 'name_label_is_visible',
