@@ -103,8 +103,8 @@ export class Class_DrawingArea {
   protected _width: number
   protected _zoom_width: number
   protected _zoom_height: number
-  protected _k_horiz : number
-  protected _k_vert : number
+  protected _k_horiz: number
+  protected _k_vert: number
 
   protected _color: string = default_background_color
   protected _grid_color: string = default_grid_color
@@ -743,14 +743,14 @@ export class Class_DrawingArea {
 
     if (this.d3_selection_zoom_area) {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
-      const new_k_horiz = this.window_fitting_width / this.width 
+      const new_k_horiz = this.window_fitting_width / this.width
       const new_k_height = this.window_fitting_height / this.height
       if (this._k_horiz == new_k_horiz && this._k_vert == new_k_height) return
 
       // if (is_horiz) {
-        this._k_horiz = new_k_horiz
+      this._k_horiz = new_k_horiz
       // } else {
-        this._k_vert = new_k_height
+      this._k_vert = new_k_height
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
       this._zoom_height = is_horiz ? Math.max(this.height, this.height / this._k_horiz) : this.height
@@ -758,7 +758,7 @@ export class Class_DrawingArea {
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [this._fit_margin / 2 - this._background_d3_groups_shift_x* new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
+        [this._fit_margin / 2 - this._background_d3_groups_shift_x * new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
       this.drawBackground()
       this.drawGrid()
     }
@@ -872,6 +872,7 @@ export class Class_DrawingArea {
     optimise_crossings: boolean
   ) {
     this.nodePositioning.computeAutoSankeyWithToast(launched_from_process, optimise_crossings)
+
   }
 
   /**
@@ -1028,6 +1029,32 @@ export class Class_DrawingArea {
     }
   }
 
+  public recenter() {
+    let bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    if (!bbox) return
+    if ((bbox.width == 0) && (bbox.height == 0)) {
+      return
+    }
+
+    const new_lefter_x = Math.min(0, bbox.x - default_DA_marging)
+    const new_righter_x = Math.max(this.window_fitting_width, bbox.x + bbox.width + default_DA_marging)
+    this.width = new_righter_x - new_lefter_x
+
+    const new_upper_y = Math.min(0, bbox.y - default_DA_marging)
+    const new_bottom_y = Math.max(this.window_fitting_height, bbox.y + bbox.height + default_DA_marging)
+    this.height = new_bottom_y - new_upper_y
+
+
+    this._elements_d3_groups_shift_x = (new_lefter_x - bbox.x) + (this.width - bbox.width) / 2
+    this._elements_d3_groups_shift_y = (new_upper_y - bbox.y) + (this.height - bbox.height) / 2
+    this.sankey.nodes_list.forEach(n => {
+      n.position_x += this._elements_d3_groups_shift_x
+      n.position_y += this._elements_d3_groups_shift_y
+    })
+    this.sankey.nodes_list.forEach(n => {
+      n.draw()
+    })
+  }
   /**
    * Draw background for drawing area
    *
@@ -1716,34 +1743,7 @@ export class Class_DrawingArea {
     return this.selected_containers_list
       .sort((a, b) => sortNodesElements(a, b))
   }
-  // selected visible
-  // public get visible_and_selected_nodes_list(): Class_NodeElement[] {
-  //   return this.selected_nodes_list
-  //     .filter(node => node.is_visible)
-  // }
-  // public get visible_and_selected_links_list(): Class_LinkElement[] {
-  //   return this.selected_links_list
-  //     .filter(link => link.is_visible)
-  // }
-  // public get visible_and_selected_containers_list(): Class_ContainerElement[] {
-  //   return this.selected_containers_list
-  //     .filter(c => c.is_visible)
-  // }
-  // // selected visible sorted
-  // public get visible_and_selected_nodes_list_sorted(): Class_NodeElement[] {
-  //   return this.visible_and_selected_nodes_list
-  //     .sort((a, b) => sortNodesElements(a, b))
-  // }
-  // public get visible_and_selected_links_list_sorted(): Class_LinkElement[] {
-  //   return this.visible_and_selected_links_list
-  //     .sort((a, b) => sortLinksElementsByIds(a, b))
-  // }
-  // public get visible_and_selected_containers_list_sorted(): Class_ContainerElement[] {
-  //   return this.visible_and_selected_containers_list
-  //     .sort((a, b) => sortNodesElements(a, b))
-  // }
 
-  // Size
   public get width() { return this._width }
   public set width(_: number) { this._width = _; this.drawBackground(); this.drawGrid() }
   public get height() { return this._height }

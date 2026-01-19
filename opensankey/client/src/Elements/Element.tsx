@@ -556,6 +556,19 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_text_align!: NameLabelAttributeTypes['text_align']
   name_label_inside_horiz!: NameLabelAttributeTypes['inside_horiz']
   name_label_inside_vert!: NameLabelAttributeTypes['inside_vert']
+
+  name_label_scientific_notation!: ValueLabelAttributeTypes['scientific_notation']
+  name_label_significant_digits!: ValueLabelAttributeTypes['significant_digits']
+  name_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
+  name_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
+  name_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+
+  // Units
+  name_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
+  name_label_unit_type!: ValueLabelAttributeTypes['unit_type']
+  name_label_unit!: ValueLabelAttributeTypes['unit']
+  name_label_unit_factor!: ValueLabelAttributeTypes['unit_factor']
+
   // Background
   name_label_background_visible!: NameLabelAttributeTypes['background_visible']
   name_label_background_color!: NameLabelAttributeTypes['background_color']

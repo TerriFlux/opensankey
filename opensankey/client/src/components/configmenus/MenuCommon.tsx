@@ -1597,7 +1597,7 @@ export const getCheckboxProps = (
 export const LabelWithOverload = ({
   attributeKey, elements, config, prefix, children, t
 }: React.PropsWithChildren<{
-  attributeKey: string
+  attributeKey: keyof typeof config
   elements: ElementsType
   config: typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG
   prefix: string
@@ -1608,8 +1608,7 @@ export const LabelWithOverload = ({
     <Box display="flex" alignItems="center" gap={1}>
       {children}
       <TooltipElementOverloaded
-      //@ts-expect-error xxx
-        attributeKey={`${prefix}_${attributeKey}`}
+        attributeKey={attributeKey}
         elements={elements}
         config={config}
         prefix={prefix}

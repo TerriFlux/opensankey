@@ -383,7 +383,7 @@ export const UniversalFileConverter = ({
     set_input_format(input_format)
     set_output_format(getInitialFormat(config.output.format, 'json'))
     setAutoLoad(!config.output.required)
-    setAutoSave(!config.input.required && input_format != 'example_json' && input_format != 'blob')
+    setAutoSave(!config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob')
     setAutoLayout(input_format == 'blob')
     setConfig(config)
 

@@ -1368,18 +1368,27 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
 
 
-  public get unit_name() {
-    if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
-    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-    if (unit_taggs.length > 0) {
-      if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
-      else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
+  public unit_name(prefix:'name_label'|'value_label') {
+    if (prefix == 'value_label') {
+      if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
+      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (unit_taggs.length > 0) {
+        if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
+        else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
+      }
+      return ''
     }
-    return ''
+      if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
+      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+      if (unit_taggs.length > 0) {
+        if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
+        else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
+      }
+      return ''
   }
 
-  public get data_label() {
-    return link_data_label(this.sankey.drawing_area.type_data, this)
+  public data_label(prefix:'name_label'|'value_label') {
+    return link_data_label(this.sankey.drawing_area.type_data, this,prefix)
   }
 
   /**

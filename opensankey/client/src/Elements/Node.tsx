@@ -1479,7 +1479,8 @@ export class Class_NodeElement extends Class_NodeBase {
       this.sankey.drawing_area.type_data,
       Math.max(input_val / pow_in, output_val / pow_out),
       this,
-      this.value_label_unit
+      this.value_label_unit,
+      'value_label'
     )
   }
 }

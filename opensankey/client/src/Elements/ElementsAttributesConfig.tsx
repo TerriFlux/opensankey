@@ -224,10 +224,10 @@ export const isLinkShapeSpecificValueIndeterminate = (
   configKey: keyof typeof LINK_SHAPE_SPECIFIC_CONFIG
 ) => isConfigValueIndeterminate(elements, LINK_SHAPE_SPECIFIC_CONFIG, configKey, 'shape')
 
-export const isNameLabelValueIndeterminate = (
-  elements: ElementsType,
-  configKey: keyof typeof NAME_LABEL_CONFIG
-) => isConfigValueIndeterminate(elements, NAME_LABEL_CONFIG, configKey, 'name_label')
+// export const isNameLabelValueIndeterminate = (
+//   elements: ElementsType,
+//   configKey: keyof typeof NAME_LABEL_CONFIG
+// ) => isConfigValueIndeterminate(elements, NAME_LABEL_CONFIG, configKey, 'name_label')
 
 export const isValueLabelIndeterminate = (
   elements: ElementsType,
@@ -984,7 +984,20 @@ export const BASE_LABEL_CONFIG = {
       fr: 'Afficher comme image'
     }
   } satisfies AttributeConfig<boolean>,
-
+  is_value: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'image' as const,
+    actions: ['drawImage'] as BaseActionType[],
+    labels: {
+      en: 'Is Value',
+      fr: 'Est une Valeur'
+    },
+    tooltips: {
+      en: 'Display as value',
+      fr: 'Afficher comme Valeur'
+    }
+  } satisfies AttributeConfig<boolean>,
   image_src: {
     default: undefined as string | undefined,
     type: (() => undefined) as (() => string | undefined),
@@ -998,131 +1011,7 @@ export const BASE_LABEL_CONFIG = {
       en: 'URL or path to image',
       fr: 'URL ou chemin vers l\'image'
     }
-  } satisfies AttributeConfig<string | undefined>
-} as const
-
-function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
-  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Icône'
-  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Icon'
-
-
-  return {
-    // ✅ Réutilisation de BASE_LABEL_CONFIG avec overrides
-    ...createConfigWithPrefixAndOverrides(
-      BASE_LABEL_CONFIG,
-      '', // Pas de prefix ici car NAME_LABEL_CONFIG/VALUE_LABEL_CONFIG ajouteront leur prefix après
-      category,
-      [drawAction],
-      {
-        // ✅ Surcharges spécifiques au prefix
-        is_visible: {
-          default: prefix === 'name_label' ? true : false,
-          labels: {
-            en: visibility_string_en,
-            fr: visibility_string_fr
-          }
-        },
-        horiz: {
-          setter: prefix === 'name_label' ? 'customNameLabelHoriz' : 'customValueLabelHoriz',
-        },
-        vert: {
-          default: (prefix === 'name_label' ? 'bottom' : 'top') as Type_TextVPos,
-          setter: prefix === 'name_label' ? 'customNameLabelVert' : 'customValueLabelVert',
-        }
-      }
-    ),
-
-    // ✅ Réutilisation de BASE_SHAPE_CONFIG avec préfixe "background" et overrides
-    ...createConfigWithPrefixAndOverrides(
-      BASE_SHAPE_CONFIG,
-      'background' as const,
-      category,
-      [drawAction],
-      {
-        visible: {
-          labels: {
-            en: 'Background visible',
-            fr: 'Fond visible'
-          },
-          tooltips: {
-            en: 'Show background for better visibility',
-            fr: 'Afficher le fond pour une meilleure visibilité'
-          }
-        },
-        color_visible: {
-          default: prefix === 'name_label' ? true : false,
-          labels: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
-          },
-          tooltips: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
-          }
-        },
-        color: {
-          default: '#ffffff',
-          labels: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
-          },
-          tooltips: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
-          }
-        },
-        opacity: {
-          default: 0.55,
-        },
-        border_radius: {
-          default: 4
-        }
-      }
-    ),
-  } as const
-}
-const NAME_LABEL_BASE_CONFIG = createLabelConfig('name_label', 'name_label', 'drawNameLabel')
-
-export const NAME_LABEL_CONFIG = {
-  ...NAME_LABEL_BASE_CONFIG,
-
-  separator: {
-    default: ' - ',
-    type: (() => ' - ') as (() => string),
-    category: 'name_label' as const,
-    actions: ['drawNameLabel'] as BaseActionType[],
-    labels: {
-      en: 'Separator',
-      fr: 'Séparateur'
-    },
-    tooltips: {
-      en: 'Separator character',
-      fr: 'Caractère séparateur'
-    }
-  } satisfies AttributeConfig<string>,
-
-  separator_part: {
-    default: 'after' as 'before' | 'after',
-    type: (() => 'after') as (() => 'before' | 'after'),
-    category: 'name_label' as const,
-    actions: ['drawNameLabel'] as BaseActionType[],
-    labels: {
-      en: 'Separator position',
-      fr: 'Position du séparateur'
-    },
-    tooltips: {
-      en: 'Position of the separator',
-      fr: 'Position du séparateur'
-    }
-  } satisfies AttributeConfig<'before' | 'after'>,
-} as const
-
-const VALUE_LABEL_BASE_CONFIG = createLabelConfig('value_label', 'value_label', 'drawValueLabel')
-export const ICON_LABEL_BASE_CONFIG = createLabelConfig('icon', 'icon', 'drawIcon')
-
-export const VALUE_LABEL_CONFIG = {
-  ...VALUE_LABEL_BASE_CONFIG,
-
+  } satisfies AttributeConfig<string | undefined>,
   // Formatting
   scientific_notation: {
     default: false as boolean,
@@ -1258,7 +1147,130 @@ export const VALUE_LABEL_CONFIG = {
       en: 'Conversion factor for the unit',
       fr: 'Facteur de conversion pour l\'unité'
     }
-  } satisfies AttributeConfig<number>,
+  } satisfies AttributeConfig<number>
+} as const
+
+function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
+  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Icône'
+  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Icon'
+
+
+  return {
+    // ✅ Réutilisation de BASE_LABEL_CONFIG avec overrides
+    ...createConfigWithPrefixAndOverrides(
+      BASE_LABEL_CONFIG,
+      '', // Pas de prefix ici car NAME_LABEL_CONFIG/VALUE_LABEL_CONFIG ajouteront leur prefix après
+      category,
+      [drawAction],
+      {
+        // ✅ Surcharges spécifiques au prefix
+        is_visible: {
+          default: prefix === 'name_label' ? true : false,
+          labels: {
+            en: visibility_string_en,
+            fr: visibility_string_fr
+          }
+        },
+        horiz: {
+          setter: prefix === 'name_label' ? 'customNameLabelHoriz' : 'customValueLabelHoriz',
+        },
+        vert: {
+          default: (prefix === 'name_label' ? 'bottom' : 'top') as Type_TextVPos,
+          setter: prefix === 'name_label' ? 'customNameLabelVert' : 'customValueLabelVert',
+        }
+      }
+    ),
+
+    // ✅ Réutilisation de BASE_SHAPE_CONFIG avec préfixe "background" et overrides
+    ...createConfigWithPrefixAndOverrides(
+      BASE_SHAPE_CONFIG,
+      'background' as const,
+      category,
+      [drawAction],
+      {
+        visible: {
+          labels: {
+            en: 'Background visible',
+            fr: 'Fond visible'
+          },
+          tooltips: {
+            en: 'Show background for better visibility',
+            fr: 'Afficher le fond pour une meilleure visibilité'
+          }
+        },
+        color_visible: {
+          default: prefix === 'name_label' ? true : false,
+          labels: {
+            en: 'Background color',
+            fr: 'Couleur de fond'
+          },
+          tooltips: {
+            en: 'Background color',
+            fr: 'Couleur de fond'
+          }
+        },
+        color: {
+          default: '#ffffff',
+          labels: {
+            en: 'Background color',
+            fr: 'Couleur de fond'
+          },
+          tooltips: {
+            en: 'Background color',
+            fr: 'Couleur de fond'
+          }
+        },
+        opacity: {
+          default: 0.55,
+        },
+        border_radius: {
+          default: 4
+        }
+      }
+    ),
+  } as const
+}
+const NAME_LABEL_BASE_CONFIG = createLabelConfig('name_label', 'name_label', 'drawNameLabel')
+
+export const NAME_LABEL_CONFIG = {
+  ...NAME_LABEL_BASE_CONFIG,
+
+  separator: {
+    default: ' - ',
+    type: (() => ' - ') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Separator',
+      fr: 'Séparateur'
+    },
+    tooltips: {
+      en: 'Separator character',
+      fr: 'Caractère séparateur'
+    }
+  } satisfies AttributeConfig<string>,
+
+  separator_part: {
+    default: 'after' as 'before' | 'after',
+    type: (() => 'after') as (() => 'before' | 'after'),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Separator position',
+      fr: 'Position du séparateur'
+    },
+    tooltips: {
+      en: 'Position of the separator',
+      fr: 'Position du séparateur'
+    }
+  } satisfies AttributeConfig<'before' | 'after'>,
+} as const
+
+const VALUE_LABEL_BASE_CONFIG = createLabelConfig('value_label', 'value_label', 'drawValueLabel')
+export const ICON_LABEL_BASE_CONFIG = createLabelConfig('icon', 'icon', 'drawIcon')
+
+export const VALUE_LABEL_CONFIG = {
+  ...VALUE_LABEL_BASE_CONFIG,
 } as const
 
 export const HYPER_LINK_CONFIG = {

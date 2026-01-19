@@ -157,7 +157,7 @@ export class NodeTooltip {
       row += `<td>${nodeName}</td>`
       const data_label_visible = link.value_label_is_visible
       link.value_label_is_visible = true
-      row += `<td class="value">${link.data_label}</td>`
+      row += `<td class="value">${link.data_label('value_label')}</td>`
       link.value_label_is_visible = data_label_visible
       row += `<td class="ratio">${ratio}</td>`
       row += '</tr>'

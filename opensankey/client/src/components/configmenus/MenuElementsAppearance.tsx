@@ -28,7 +28,10 @@ import {
   TooltipElementOverloaded,
   ConfigMenuNumberOrUndefinedInput,
   OSMultiSelect,
-  ElementAttrSetterTextInput2Cols
+  ElementAttrSetterTextInput2Cols,
+  ElementAttrSetterSelect2Cols,
+  ConditionalCheckboxWithInput,
+  SimpleElementCheckbox
 } from './MenuCommon'
 
 // Imports des configs
@@ -58,10 +61,12 @@ import {
   isConfigValueIndeterminate,
   font_families,
   getShapeAttributeKey,
-  isShapeValueIndeterminate
+  isShapeValueIndeterminate,
+  isValueLabelIndeterminate
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
-import { MenuUnit } from './MenuElementsLabelValue'
+// import { MenuUnit } from './MenuElementsLabelValue'
+import { unit_constants } from '../../Elements/LinkValues'
 
 // ✅ Analyse de la sélection
 interface SelectionAnalysis {
@@ -110,7 +115,7 @@ const LabelContentComponent = ({
   prefix: 'name_label' | 'value_label' | 'icon'
   refreshParentComponent: () => void
 }) => {
-  type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image'
+  type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
 
   const labelValues = elements.length > 0
     ? getElementsLabelValues(elements, prefix, refreshParentComponent)
@@ -120,12 +125,14 @@ const LabelContentComponent = ({
     }
   //@ts-expect-error xxx
   const selection = analyzeSelection(elements)
+  const unit_tagg = app_data.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
 
   const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
     if (elements.length === 0) return 'simple_text'
     if (labelValues.has_fo) return 'rich_text'
     if (labelValues.is_image) return 'image'
     if (labelValues.is_icon) return 'icon'
+    if (labelValues.is_value) return 'value'
     return 'simple_text'
   })
 
@@ -141,6 +148,13 @@ const LabelContentComponent = ({
     labelValues.has_fo = true
     labelValues.icon_name = ''
     setDisplayMode('rich_text')
+  }
+
+  const setModeValue = () => {
+    labelValues.has_fo = false
+    labelValues.icon_name = ''
+    labelValues.is_value = true
+    setDisplayMode('value')
   }
 
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
@@ -183,6 +197,12 @@ const LabelContentComponent = ({
                   onClick={setModeRichText}
                 >
                   Rich
+                </Button>
+                <Button
+                  variant={displayMode === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                  onClick={setModeValue}
+                >
+                  Valeur
                 </Button></>)}
             {prefix === 'icon' && (
               <>
@@ -223,7 +243,7 @@ const LabelContentComponent = ({
             ))}
           </Select>
         </LabelWithOverload>
-        {displayMode === 'simple_text' && (
+        {(displayMode === 'simple_text'||displayMode === 'value')  && (
           <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ConfigMenuNumberInput
               t={app_data.t}
@@ -237,9 +257,9 @@ const LabelContentComponent = ({
             />
           </LabelWithOverload>)}
       </Box>
-      {displayMode === 'simple_text' && (<>
+      {(displayMode === 'simple_text'||displayMode === 'value') && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
-          <LabelWithOverload attributeKey="separator" elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+          <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ElementAttrSetterTextInput2Cols
               app_data={app_data}
               elements={elements}
@@ -425,14 +445,125 @@ const LabelContentComponent = ({
       )}
       <Divider />
       {/* Section IMAGE */}
-      {prefix === 'value_label' && (
-        <React.Fragment key={`menu-unit-${elements.map(e => e.id).join('-')}`} >
-          <MenuUnit
-            app_data={app_data}
-            attributePath={attributePath}
-            elements={elements}
-          />
-        </React.Fragment>
+      {(prefix === 'value_label' || displayMode == 'value') && (
+        <Box
+            layerStyle='menuconfigpanel_grid'
+          >      <Box layerStyle='options_2cols'>
+            <Checkbox
+              variant='menuconfigpanel_option_checkbox'
+              iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
+              isIndeterminate={isValueLabelIndeterminate(elements, 'unit_visible')}
+              isChecked={labelValues.unit_visible}
+              onChange={(evt) => {
+                labelValues.unit_visible = evt.target.checked
+              }}
+            >
+              <OSTooltip label={app_data.t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || 'Afficher le fond'}>
+                {app_data.t(`${attributePath}.${'value_label_unit_visible'}`) || 'Fond visible'}
+                <TooltipElementOverloaded
+                  elements={base_elements}
+                  t={app_data.t}
+                  attributeKey={'unit_visible'}
+                  config={VALUE_LABEL_CONFIG}
+                  prefix={prefix}
+                />
+              </OSTooltip>
+            </Checkbox>
+        
+              <ElementAttrSetterSelect2Cols
+                app_data={app_data}
+                attributePath={attributePath}
+                attributeKey={'unit_type'}
+                elements={elements}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                options={unit_constants.map(el => ({
+                  key: 'value_' + el,
+                  value: el,
+                  label: app_data.t('Flux.labels.' + el)
+                }))}
+                refreshParentComponent={refreshParentComponent}
+              /></Box>
+        
+            {/* Select pour unit tag (quand type = other_unit_tag) */}
+            {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
+              <ElementAttrSetterSelect2Cols
+                app_data={app_data}
+                elements={elements}
+                attributePath={attributePath}
+                attributeKey={'unit'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                options={unit_tagg.tags_list.map(el => ({
+                  key: 'value_' + el.id,
+                  value: el.id,
+                  label: el.name
+                }))}
+                refreshParentComponent={refreshParentComponent}
+              />
+            )}
+            
+            {/* Text input et number input pour unit_name */}
+            {labelValues.unit_type == 'unit_name' && (
+               <Box layerStyle='options_2cols'>
+                <ElementAttrSetterTextInput2Cols
+                  app_data={app_data}
+                  elements={elements}
+                  attributePath={attributePath}
+                  attributeKey={'unit'}
+                  config={VALUE_LABEL_CONFIG}
+                  prefix={prefix}
+                  refreshParentComponent={refreshParentComponent}
+                />
+                <ElementAttrSetterNumberInput2Cols
+                  app_data={app_data}
+                  elements={elements}
+                  attributePath={attributePath}
+                  attributeKey={'unit_factor'}
+                  config={VALUE_LABEL_CONFIG}
+                  prefix={prefix}
+                  refreshParentComponent={refreshParentComponent}
+                  stepper={false}
+                />
+              </Box>
+            )}
+            <Box layerStyle='menuconfigpanel_grid'>
+              <Box layerStyle='options_2cols'>
+              {/* Checkbox pour nombre de chiffres personnalisé avec input conditionnel */}
+              <ConditionalCheckboxWithInput
+                app_data={app_data}
+                elements={elements}
+                checkboxAttributeKey={'custom_digit'}
+                inputAttributeKey={'nb_digit'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                refreshParentComponent={refreshParentComponent}
+                minimum_value={0}
+                stepper={true}
+              />
+              {/* Checkbox simple pour notation scientifique */}
+              <SimpleElementCheckbox
+                elements={elements}
+                attributeKey={'scientific_notation'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                refreshParentComponent={refreshParentComponent}
+              />
+        </Box>
+              {/* Checkbox pour chiffres significatifs avec input conditionnel */}
+              <ConditionalCheckboxWithInput
+                app_data={app_data}
+                elements={elements}
+                checkboxAttributeKey={'significant_digits'}
+                inputAttributeKey={'nb_significant_digits'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                refreshParentComponent={refreshParentComponent}
+                minimum_value={0}
+                stepper={true}
+              />
+            </Box>
+          </Box>
       )}
       <Divider />
       {displayMode === 'image' && (
