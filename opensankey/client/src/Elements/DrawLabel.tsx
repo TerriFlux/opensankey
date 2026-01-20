@@ -178,7 +178,7 @@ export abstract class DrawLabelBase {
 
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
-      .attr('width', 'max-content')
+      .style('width', 'max-content')
       .style('max-width', '1000px')
       .html(fo_content)
 
@@ -234,7 +234,7 @@ export abstract class DrawLabelBase {
         .attr('y', 0)
       d3_div_selection.attr('width', this._element.shape_min_width)
     } else {
-      measureAndResize()
+      requestAnimationFrame(measureAndResize)
     }
 
     if (this._element.name_label_has_fo && this._element.name_label_inside_horiz && this._element.name_label_inside_vert) {
@@ -457,8 +457,33 @@ export abstract class DrawLabelBase {
     // Pour FO
     const fo = this.d3_selection.select('.element_fo')
     if (!fo.empty()) {
-      const [new_x, new_y] = this.getIconPos()
-      fo.attr('x', new_x).attr('y', new_y)
+      const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+
+      // Récupérer les dimensions actuelles du FO
+      const foWidth = parseFloat(fo.attr('width')) || 0
+      const foHeight = parseFloat(fo.attr('height')) || 0
+
+      // Appliquer les mêmes ajustements que dans measureAndResize
+      let adjusted_x = label_pos_x
+      if (label_anchor === 'middle') {
+        adjusted_x = label_pos_x - foWidth / 2
+      } else if (label_anchor === 'end') {
+        adjusted_x = label_pos_x - foWidth
+      }
+
+      let adjusted_y = label_pos_y
+      if (label_baseline === 'text-after-edge') {
+        adjusted_y = label_pos_y - foHeight
+      } else if (label_baseline === 'middle') {
+        adjusted_y = label_pos_y - foHeight / 2
+      }
+
+      // Mettre à jour le background aussi
+      const foBg = this.d3_selection.select('.element_fo_background')
+      if (!foBg.empty()) {
+        foBg.attr('x', adjusted_x - 5).attr('y', adjusted_y - 5)
+      }
+
       return
     }
 
@@ -868,7 +893,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return [label_pos_x, label_pos_y, label_anchor, label_baseline]
   }
 
-protected updateLabelPos(): void {
+  protected updateLabelPos(): void {
     const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
     this.d3_selection?.selectAll(this.getTextSelector())
       .attr('x', label_pos_x)
