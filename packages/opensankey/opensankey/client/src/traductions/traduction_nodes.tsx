@@ -47,8 +47,8 @@ export const resources_nodes = {
         text_desagreg: 'Will disagregate in : ',
         desaggreg: 'Disagregation',
         aggreg: 'Agregation',
-        firstPlan: 'Move elements in the foreground',
-        lastPlan: 'Move elements in the last plane',
+        firstPlan: 'Move in the bakground',
+        lastPlan: 'Move at the foreground',
         changePlan: 'Change plan of nodes',
         mask_attr: 'Elements display',
         tooltips: {
@@ -239,8 +239,8 @@ export const resources_nodes = {
         text_desagreg: 'Sera désaggrégé en : ',
         desaggreg: 'Désagrégation',
         aggreg: 'Agrégation',
-        firstPlan: 'Mettre les éléments au premier plan',
-        lastPlan: 'Mettre les éléments au dernier plan',
+        firstPlan: 'Mettre au dernier plan',
+        lastPlan: 'Mettre au premier plan',
         changePlan: 'Modifier le plan des noeud',
         mask_attr: 'Affichage des éléments',
         tooltips: {
