@@ -677,7 +677,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
 
     if (json_local.value_label_vert == 'middle') {
-      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size / 2
+      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size*0.35
     }
   }
 
