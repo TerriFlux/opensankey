@@ -1054,6 +1054,13 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       n.draw()
     })
+    this.sankey.containers_list.forEach(n => {
+      n.position_x += this._elements_d3_groups_shift_x
+      n.position_y += this._elements_d3_groups_shift_y
+    })
+    this.sankey.containers_list.forEach(n => {
+      n.draw()
+    })
   }
   /**
    * Draw background for drawing area

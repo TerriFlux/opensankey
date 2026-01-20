@@ -1442,6 +1442,41 @@ export class Class_NodeElement extends Class_NodeBase {
   public get tooltip_text() { return this._tooltip_text }
   public set tooltip_text(_: string) { this._tooltip_text = _ }
 
+  public get data_value() {
+    let input_val = 0
+    let output_val = 0
+
+    // Éviter les problèmes de float
+    let max_digit_in = 0
+    const link_in = this.input_links_list
+      .filter(link => link.is_visible)
+      .map(link => {
+        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        if (decimal_digit !== undefined) {
+          max_digit_in = Math.max(max_digit_in, decimal_digit.length)
+        }
+        return link
+      })
+
+    const pow_in = Math.pow(10, max_digit_in)
+    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
+
+    let max_digit_out = 0
+    const link_out = this.output_links_list
+      .filter(link => link.is_visible)
+      .map(link => {
+        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        if (decimal_digit !== undefined) {
+          max_digit_out = Math.max(max_digit_out, decimal_digit.length)
+        }
+        return link
+      })
+
+    const pow_out = Math.pow(10, max_digit_out)
+    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
+    return Math.max(input_val / pow_in, output_val / pow_out)
+  }
+  
   public get data_label(): string {
     let input_val = 0
     let output_val = 0
