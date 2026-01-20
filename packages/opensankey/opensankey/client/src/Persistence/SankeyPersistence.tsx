@@ -286,6 +286,7 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.attributes['shape_border_radius'] = 5
     } else {
       // Text mode: configure as text container
+      container.attributes['name_label_font_family'] = ''
       container.attributes['name_label_has_fo'] = true
       container.attributes['shape_color_visible'] = json_object['color_visible']
       container.attributes['name_label_horiz'] = 'middle'
