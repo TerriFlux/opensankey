@@ -32,7 +32,7 @@ import {
   sortLinksElementsByRelativeNodesPositions
 } from './Link'
 import { Class_Handler } from './Handler'
-import { format_value,Type_JSON } from '../types/Utils'
+import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
 import { draw_arrow_part } from './NodeDrawShape'
@@ -85,7 +85,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
     const default_node_style = drawing_area.sankey.styles_dict['NodeStyle']
-    super(id, name, drawing_area,default_node_style)
+    super(id, name, drawing_area, default_node_style)
     this._nodeTooltip = new NodeTooltip(this)
     this._nodeEventsHandler = new NodeEventsHandler(this)
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
@@ -1283,8 +1283,8 @@ export class Class_NodeElement extends Class_NodeBase {
       const node_importation_style = this.shape_position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
       const node_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
       const node_importexport_style = this.shape_position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
-      const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : 'LinkImportAboveStyle'
-      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'LinkExportCloseStyle' : 'LinkExportBelowStyle'
+      const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : ''
+      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : ''
       const link_importexport_style = this.shape_position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
@@ -1296,11 +1296,15 @@ export class Class_NodeElement extends Class_NodeBase {
       ]
 
       input_or_output_link.style = [
-        new_node.sankey.styles_dict[link_importexport_style],
-        importation ?
-          new_node.sankey.styles_dict[link_importation_style] :
-          new_node.sankey.styles_dict[link_exportation_style]
+        new_node.sankey.styles_dict[link_importexport_style]
       ]
+      if (this.shape_position_type == 'parametric') {
+        input_or_output_link.style.push(
+          importation ?
+            new_node.sankey.styles_dict[link_importation_style] :
+            new_node.sankey.styles_dict[link_exportation_style]
+        )
+      }
 
       input_or_output_link.shape_is_recycling = false
 
@@ -1476,7 +1480,7 @@ export class Class_NodeElement extends Class_NodeBase {
     link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
     return Math.max(input_val / pow_in, output_val / pow_out)
   }
-  
+
   public get data_label(): string {
     let input_val = 0
     let output_val = 0
