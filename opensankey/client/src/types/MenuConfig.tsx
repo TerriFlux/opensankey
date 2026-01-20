@@ -132,7 +132,7 @@ export class Class_MenuConfig {
       // 'welcome',
       'tour',
       'tutoriel',
-      'documentation',
+      // 'documentation',
     ],
     [
       'contact',
