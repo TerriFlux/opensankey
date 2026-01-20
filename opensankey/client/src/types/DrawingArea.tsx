@@ -93,6 +93,7 @@ export class Class_DrawingArea {
 
 
   public static: boolean = !!window.sankey?.publish
+  public to_recenter = false
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -1030,6 +1031,7 @@ export class Class_DrawingArea {
   }
 
   public recenter() {
+    if (!this.to_recenter) return 
     let bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
