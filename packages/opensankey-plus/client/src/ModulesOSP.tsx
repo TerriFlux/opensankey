@@ -201,7 +201,7 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
   //   </WrapperContentConfig>
   // }
   if (new_data_plus.has_sankey_dev) {
-    additionalMenus.current.additional_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
+    additionalMenus.current.additional_new_menu_config_content['presentation']['level_tag'] = <WrapperContentConfig title={t('Menu.Hierarchy')} >
       <><SankeySettingsEditionElementTags
         new_data={new_data_plus}
         elementTagNameProp='level_taggs'
