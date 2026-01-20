@@ -19,7 +19,6 @@ export class Class_DrawingAreaOSP extends Class_DrawingArea {
   ) {
     super(application_data, id)
     this.application_data = application_data as Class_ApplicationDataOSP
-    this._group_to_select += ',.gg_labels'
   }
 
   public delete() {
