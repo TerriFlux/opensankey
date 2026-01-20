@@ -162,6 +162,7 @@ export class Class_NodeBase extends Class_BaseShape {
   }
 
   public drawNameLabel() {
+    if (this.drawing_area.bypass_redraws) return 
     this._nodeDrawNameLabel.drawGenericLabel()
     this._orderD3Elements()
   }
