@@ -12,12 +12,11 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { elementStyleConfigs, link_unitary_styles, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+import { elementStyleConfigs, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
 import ListIcons from '../icons/lib_of_icons.json'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
-import { Class_MenuConfig } from '../deps/OpenSankey/types/MenuConfig'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
@@ -548,7 +547,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     new_drawing_area.name = name
 
     node_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
-    link_unitary_styles.forEach(style_id => new_drawing_area.sankey.create_internal_style(style_id, elementStyleConfigs))
 
     new_drawing_area.removeMinimumLinkThickness()
     new_drawing_area.removeMaximumLinkThickness()
