@@ -45,11 +45,11 @@ export type Type_AdditionalMenus = {
   // Config menu
   additional_menu_type: { [x: string]: string }
   additional_menu_button_element_configurable: typeButtonElementConfigurable
-  additional_menu_config_content: {
-    data: { [x: string]: JSX.Element },
-    style: { [x: string]: JSX.Element },
-    presentation: { [x: string]: JSX.Element }
-  }
+  // additional_menu_config_content: {
+  //   data: { [x: string]: JSX.Element },
+  //   style: { [x: string]: JSX.Element },
+  //   presentation: { [x: string]: JSX.Element }
+  // }
   additional_new_menu_config_content: { [x: string]: { [x: string]: JSX.Element } }
 
   extra_background_element: JSX.Element
@@ -278,7 +278,7 @@ export class Class_MenuConfig {
     // Menu config
     additional_menu_type: {},
     additional_menu_button_element_configurable: {},
-    additional_menu_config_content: { data: {}, style:{}, presentation:{} },
+    // additional_menu_config_content: { data: {}, style:{}, presentation:{} },
     additional_new_menu_config_content: {},
     extra_background_element: <></>,
 
