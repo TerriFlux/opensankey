@@ -745,7 +745,7 @@ export class Class_DrawingArea {
       // window_fitting_width correspond to minimal width of drawing_area (when there is no elements pushing it boundaries)
       const new_k_horiz = this.window_fitting_width / this.width
       const new_k_height = this.window_fitting_height / this.height
-      if (this._k_horiz == new_k_horiz && this._k_vert == new_k_height) return
+      //if (this._k_horiz == new_k_horiz && this._k_vert == new_k_height) return
 
       // if (is_horiz) {
       this._k_horiz = new_k_horiz
@@ -754,7 +754,7 @@ export class Class_DrawingArea {
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
       this._zoom_height = is_horiz ? Math.max(this.height, this.height / this._k_horiz) : this.height
-      this._zoom_width = is_horiz ? this.width : Math.max(this.width, this.width / this._k_vert)
+      this._zoom_width = is_horiz ? Math.max(this.width, this.width / this._k_vert) : this.width
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
