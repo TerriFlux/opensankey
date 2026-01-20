@@ -209,7 +209,7 @@ export abstract class DrawLabelBase {
             .attr('height', height)
             .attr('x', adjusted_x)
             .attr('y', adjusted_y)
-
+          d3_div_selection.style('width', width + 'px')
           this.drawGenericBackground(
             this.d3_selection!,
             adjusted_x,
