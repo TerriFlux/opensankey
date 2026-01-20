@@ -176,9 +176,10 @@ export abstract class DrawLabelBase {
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
 
+    const width_attr = this._label_values.horiz == 'middle' && this._label_values.vert == 'middle' ? '100%' : 'max-content'
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
-      .style('width', '100%')
+      .style('width', width_attr)
       .style('max-width', '1000px')
       .html(fo_content)
 
@@ -209,7 +210,7 @@ export abstract class DrawLabelBase {
             .attr('height', height)
             .attr('x', adjusted_x)
             .attr('y', adjusted_y)
-          d3_div_selection.style('width', width + 'px')
+
           this.drawGenericBackground(
             this.d3_selection!,
             adjusted_x,

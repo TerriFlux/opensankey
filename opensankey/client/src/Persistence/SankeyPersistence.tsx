@@ -319,8 +319,25 @@ export class ContainerPersistence extends NodeBasePersistence {
           container.attributes[key] = jsonValue as ExtractAttributeValue<ConfigType[typeof key]>
         }
       }
-    })
-
+    });
+container.attributes['name_label_fo_content']  = (container.attributes['name_label_fo_content'] as string)
+// Alignements
+    .replace(/class="ql-align-center"/g, 'style="text-align: center"')
+    .replace(/class="ql-align-right"/g, 'style="text-align: right"')
+    .replace(/class="ql-align-left"/g, 'style="text-align: left"')
+    .replace(/class="ql-align-justify"/g, 'style="text-align: justify"')
+    
+    // Tailles standard Quill
+    .replace(/class="ql-size-small"/g, 'style="font-size: 0.75em"')
+    .replace(/class="ql-size-large"/g, 'style="font-size: 1.5em"')
+    .replace(/class="ql-size-huge"/g, 'style="font-size: 2.5em"')
+    
+    // Tailles custom (9px à 120px) - si tu as des ql-size-25px par exemple
+    .replace(/class="ql-size-(\d+)px"/g, 'style="font-size: $1px"')
+    
+    // Fonts
+    .replace(/class="ql-font-serif"/g, 'style="font-family: serif"')
+    .replace(/class="ql-font-monospace"/g, 'style="font-family: monospace"')
     // Load tied_to_nodes flag
     container['_tied_to_nodes'] = getBooleanFromJSON(
       json_object,

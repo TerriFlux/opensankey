@@ -18,9 +18,32 @@ import { BASE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
  * @param {number} stop
  * @param {number} step
  */
-const arrayRangePx = (start: number, stop: number, step: number) => Array.from({ length: (stop - start) / step + 1 }, (value, index) => (start + index * step) + 'px')
+/**
+ * Create an array with logarithmic scale for font sizes
+ */
+const arrayRangeLogarithmic = () => [
+  // Petites tailles (pas de 1)
+  8, 9, 10, 11, 12,
+  // Tailles moyennes (pas de 2)
+  14, 16, 18, 20, 22,
+  // Tailles grandes (pas de 4)
+  24, 28, 32, 36,
+  // Très grandes tailles (pas de 8)
+  40, 48, 56, 64, 72,
+  // Énormes tailles (pas de 12-24)
+  80, 96, 120
+].map(n => n + 'px')
+
 // Exported variable for Quill editor
-export const listOptionSizeQuill = arrayRangePx(9, 120, 1)
+export const listOptionSizeQuill = [
+  // Les 3 tailles standard en premier
+  '0.75em',  // small
+  '1.5em',   // large
+  '2.5em',   // huge
+  
+  // Puis échelle logarithmique en pixels
+  ...arrayRangeLogarithmic()
+]
 
 // Configuration Quill
 const QUILL_MODULES = {
@@ -44,6 +67,8 @@ const QUILL_FORMATS = [
 const Size = ReactQuill.Quill.import('attributors/style/size')
 Size.whitelist = listOptionSizeQuill
 ReactQuill.Quill.register(Size, true)
+const Align = ReactQuill.Quill.import('attributors/style/align')
+ReactQuill.Quill.register(Align, true)
 
 // Interface pour les méthodes exposées via ref
 export interface ForeignObjectEditorHandle {
@@ -209,12 +234,14 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
               isRawMode={is_raw}
               value={labelValues.fo_content ?? ''}
               onChange={(newContent) => {
+                labelValues.fo_content = newContent
                 s_tmp_editor_content_fo_node = newContent
                 if (!s_tmp_editor_content_changed) {
                   sEditorContentFoNode(newContent)
                 }
               }}
               onBlur={(currentContent) => {
+                labelValues.fo_content = currentContent
                 sEditorContentFoNode(currentContent)
               }}
               isActivated={is_activated}
@@ -225,7 +252,7 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
           <></>
         )}
 
-        <Box as='span' layerStyle='options_2cols'>
+        {/* <Box as='span' layerStyle='options_2cols'>
           <Button
             variant='menuconfigpanel_option_button_left'
             isDisabled={!is_activated || !s_tmp_editor_content_changed}
@@ -248,7 +275,7 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
           >
             {t('Noeud.FO.submit')}
           </Button>
-        </Box>
+        </Box> */}
       </>
     </Box>
   )
