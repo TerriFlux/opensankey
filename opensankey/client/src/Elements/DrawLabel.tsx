@@ -180,7 +180,7 @@ export abstract class DrawLabelBase {
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
       .style('width', width_attr)
-      .style('max-width', '1000px')
+      .style('max-width', '2000px')
       .html(fo_content)
 
     const measureAndResize = () => {
