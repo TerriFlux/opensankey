@@ -76,11 +76,12 @@ export class Class_NodeBase extends Class_BaseShape {
     id: string,
     name: string,
     drawing_area: Class_DrawingArea,
-    default_style: Class_ElementStyle
+    default_style: Class_ElementStyle,
+    parent_svg = 'g_elements_sankey'
   ) {
     // Init parent class attributes
     super(
-      id, drawing_area, 'g_elements_sankey',
+      id, drawing_area, parent_svg,
       default_style
     )
 
