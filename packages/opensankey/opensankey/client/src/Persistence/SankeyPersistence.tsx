@@ -675,6 +675,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     node.name_label_text_align = 'middle'
     if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
     if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
+
+    if (json_local.value_label_vert == 'middle') {
+      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size / 2
+    }
   }
 
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
