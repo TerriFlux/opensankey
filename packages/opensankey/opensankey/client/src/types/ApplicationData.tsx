@@ -545,6 +545,7 @@ export class Class_ApplicationData {
         if (draw) {
           this._drawing_area.sankey.sortNodes()
           this._drawing_area.draw()
+          this._drawing_area.recenter()
         }
       })
   }
