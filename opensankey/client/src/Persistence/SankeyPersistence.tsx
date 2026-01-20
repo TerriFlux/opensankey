@@ -1481,6 +1481,7 @@ export class DrawingAreaPersistence {
       (Number(version) < 0.92)
     ) {
       this.fromJSON_0_91(drawing_area, json_object, kwargs)
+      drawing_area.to_recenter = true
     }
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
