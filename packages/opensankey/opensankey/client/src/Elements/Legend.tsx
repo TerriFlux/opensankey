@@ -28,10 +28,10 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import { MouseEvent } from 'react'
 
-import { 
-  default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border, 
-  default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_legend_show_constraints, 
-  default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width 
+import {
+  default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border,
+  default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_legend_show_constraints,
+  default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width
 } from './ElementsAttributesConfig'
 
 import { Class_DataTag, Class_Tag } from '../types/Tag'
@@ -64,7 +64,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     drawing_area: Class_DrawingArea,
     sankey: Class_Sankey
   ) {
-    super('legend', '', drawing_area, sankey.default_style)
+    super('legend', '', drawing_area, sankey.default_style, 'grp_legend')
   }
 
   public copyFrom(_: Class_NodeBase): void {
@@ -189,7 +189,9 @@ export class ClassTemplate_Legend extends Class_NodeBase {
         this.drawInfoConstraintLink()
       }
       // IMPORTANT: Créer la zone de drag APRÈS avoir dessiné tout le contenu
-      this.updateDragZone()
+      requestAnimationFrame(() => {
+        this.updateDragZone()
+      })
     })
   }
 
@@ -667,7 +669,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
     dragZone.append('rect')
       .attr('class', 'zone_for_dragging')
-      .attr('width', this.width) // Petit padding
+      .attr('width', contentBbox.width + 10) // Petit padding
       .attr('height', contentBbox.height + 10)
       .attr('x', contentBbox.x - 5)
       .attr('y', contentBbox.y - 5)
