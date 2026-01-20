@@ -63,15 +63,15 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
     }
   },
   NodeProductStyle: {
-    name: 'Produit',
+    name: 'Noeud produit',
     config: { 'shape_type': 'ellipse' }
   },
   NodeSectorStyle: {
-    name: 'Secteur',
+    name: 'Noeud secteur',
     config: { 'shape_type': 'rect' }
   },
   NodeImportExportCloseStyle: {
-    name: 'Import export collés',
+    name: 'Noeud import export collé',
     config: {
       'name_label_is_visible': false,
       'shape_visible': false,
@@ -83,8 +83,26 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'shape_position_dy': 20,
     }
   },
+  NodeImportCloseStyle: {
+    name: 'Noeud import collés',
+    config: {
+      'shape_position_dx': -100,
+      'shape_position_dy': -50
+    }
+  },
+  NodeExportCloseStyle: {
+    name: 'Noeud export collé',
+    config: {
+      'name_label_vert': 'bottom',
+      'shape_position_dx': 100,
+      'shape_position_dy': 50,
+        'shape_orientation': 'hv',
+      'shape_starting_tangeant': 0.25,
+      'shape_ending_tangeant': 1
+    }
+  },
   NodeImportExportAboveBelowStyle: {
-    name: 'Import export dessus dessous',
+    name: 'Noeud import export dessus dessous',
     config: {
       'shape_min_width': 40,
       'name_label_is_visible': true,
@@ -97,39 +115,45 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'shape_position_type': 'parametric'
     }
   },
-  NodeImportCloseStyle: {
-    name: 'Import collés',
-    config: {
-      'shape_position_dx': -100,
-      'shape_position_dy': -50
-    }
-  },
   NodeImportAboveStyle: {
-    name: 'Import au dessus',
+    name: 'Noeud import au dessus',
     config: {
       'name_label_horiz': 'left',
       'value_label_horiz': 'left',
       'value_label_horiz_shift': 40,
       'shape_position_dx': -200,
-      'shape_position_dy': 20
-    }
-  },
-  NodeExportCloseStyle: {
-    name: 'Export collés',
-    config: {
-      'name_label_vert': 'bottom',
-      'shape_position_dx': 100,
-      'shape_position_dy': 50
+      'shape_position_dy': 20,
+      'shape_orientation': 'vh',
+      'shape_starting_tangeant': 1,
+      'shape_ending_tangeant': 0.25
     }
   },
   NodeExportBelowStyle: {
-    name: 'Export au dessous',
+    name: 'Noeud export au dessous',
     config: {
       'name_label_horiz': 'right',
       'value_label_horiz': 'right',
       'value_label_horiz_shift': -40,
       'shape_position_dx': 200,
       'shape_position_dy': 20
+    }
+  },
+  LinkImportExportCloseStyle: {
+    name: 'Flux import export collé',
+    config: {
+      'value_label_is_visible': true,
+      'value_label_on_path': true,
+    }
+  },
+  LinkImportExportAboveBelowStyle: {
+    name: 'Flux export haut bas',
+    config: {
+      'shape_starting_curve': 0.25,
+      'shape_starting_tangeant': 0.50,
+      'shape_ending_tangeant': 0.50,
+      'shape_ending_curve': 0.25,
+      'value_label_is_visible': false,
+      'value_label_on_path': true
     }
   },
   NodeUnitaryStyle: {
@@ -224,48 +248,8 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       value_label_nb_digit: 0
     }
   } as const,
-  LinkImportExportCloseStyle: {
-    name: 'close import export',
-    config: {
-      'value_label_is_visible': true,
-      'value_label_on_path': true,
-    }
-  },
-  LinkImportCloseStyle: {
-    name: 'close import',
-    config: {
-      'shape_orientation': 'vh',
-      'shape_starting_tangeant': 1,
-      'shape_ending_tangeant': 0.25
-    }
-  },
-  LinkExportCloseStyle: {
-    name: 'close import',
-    config: {
-      'shape_orientation': 'hv',
-      'shape_starting_tangeant': 0.25,
-      'shape_ending_tangeant': 1
-    }
-  },
-  LinkImportExportAboveBelowStyle: {
-    name: 'close import',
-    config: {
-      'shape_starting_curve': 0.25,
-      'shape_starting_tangeant': 0.50,
-      'shape_ending_tangeant': 0.50,
-      'shape_ending_curve': 0.25,
-      'value_label_is_visible': false,
-      'value_label_on_path': true
-    }
-  },
-  LinkImportAboveStyle: {
-    name: 'close import',
-    config: {}
-  },
-  LinkExportBelowStyle: {
-    name: 'close import',
-    config: {}
-  },
+
+
 
 }
 
@@ -275,16 +259,8 @@ export const base_styles: readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle'
 export const product_sector_styles: readonly ElementStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
   'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle'
+  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle','LinkImportExportAboveBelowStyle','LinkImportExportCloseStyle'
 ] as const
 
 export const node_unitary_styles: readonly ElementStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle'] as const
-
-export const link_exchanges_style: readonly ElementStyleKey[] = [
-  'LinkImportExportAboveBelowStyle', 'LinkExportCloseStyle', 'LinkImportCloseStyle', 'LinkImportExportCloseStyle',
-  'LinkImportAboveStyle', 'LinkExportBelowStyle'
-] as const
-export const link_unitary_styles: readonly ElementStyleKey[] = [
-  'LinkInUnitaryStyle', 'LinkOutUnitaryStyle'
-] as const
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle','LinkInUnitaryStyle', 'LinkOutUnitaryStyle'] as const

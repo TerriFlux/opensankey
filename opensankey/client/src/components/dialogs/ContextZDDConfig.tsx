@@ -70,14 +70,14 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'arrangeNodesToGrid' }
       ]
     },
-    {
-      type: 'submenu',
-      titleKey: 'ZoneDessin',
-      children: [
-        { type: 'button', actionName: 'bgGrid' },
-        { type: 'button', actionName: 'maskLegend' }
-      ]
-    },
+    // {
+    //   type: 'submenu',
+    //   titleKey: 'ZoneDessin',
+    //   children: [
+    //     { type: 'button', actionName: 'bgGrid' },
+    //     { type: 'button', actionName: 'maskLegend' }
+    //   ]
+    // },
     {
       type: 'submenu',
       titleKey: 'GestionCouleurs',
@@ -92,10 +92,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'button',
       actionName: 'openStyleModal'
     },
-    {
-      type: 'button',
-      actionName: 'openGraphOrder'
-    },
+    // {
+    //   type: 'button',
+    //   actionName: 'openGraphOrder'
+    // },
     {
       type: 'button',
       actionName: 'toggleZDTActivated',
@@ -364,26 +364,26 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des nœuds'
       }
     },
-    openGraphOrder: {
-      type: 'action',
-      labels: {
-        en: 'Shape draw order',
-        fr: 'Ordre d\'affichage des formes'
-      },
-      tooltips: {
-        en: 'Shape draw order',
-        fr: 'Ordre d\'affichage des formes'
-      }
-    }
+    // openGraphOrder: {
+    //   type: 'action',
+    //   labels: {
+    //     en: 'Shape draw order',
+    //     fr: 'Ordre d\'affichage des formes'
+    //   },
+    //   tooltips: {
+    //     en: 'Shape draw order',
+    //     fr: 'Ordre d\'affichage des formes'
+    //   }
+    // }
 
     
   },
 
   sectionTitles: {
-    ZoneDessin: {
-      en: 'Drawing zone',
-      fr: 'Zone de dessin'
-    },
+    // ZoneDessin: {
+    //   en: 'Drawing zone',
+    //   fr: 'Zone de dessin'
+    // },
     Positionnement: {
       en: 'Automatic Positioning',
       fr: 'Positionnement Automatique'
@@ -410,10 +410,10 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   return {
     fromNew: () => app_data.reinitialization(),
-    bgGrid: () => drawing_area.bgGrid(),
-    bgGridValue: () => drawing_area.grid_visible,
-    maskLegend: () => drawing_area.maskLegend(),
-    maskLegendValue: () => drawing_area.legend.masked,
+    // bgGrid: () => drawing_area.bgGrid(),
+    // bgGridValue: () => drawing_area.grid_visible,
+    // maskLegend: () => drawing_area.maskLegend(),
+    // maskLegendValue: () => drawing_area.legend.masked,
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     resetTradeNode: () => { sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!)).forEach(n => n.removeTag(echangeTag!)) },
@@ -432,7 +432,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
-    openGraphOrder: () => ref_setter_show_element_ordoner.current(true),
+    // openGraphOrder: () => ref_setter_show_element_ordoner.current(true),
     
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated

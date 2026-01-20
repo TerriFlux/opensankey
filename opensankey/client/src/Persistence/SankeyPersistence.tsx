@@ -42,7 +42,7 @@ import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { link_exchanges_style, node_exchanges_style, elementStyleConfigs, product_sector_styles } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
@@ -1271,19 +1271,45 @@ export class SankeyPersistence {
     // const matching_nodes_id: { [_: string]: string } = {}
     // const matching_links_id: { [_: string]: string } = {}
     // First read styles
-    if (json_object['style'] !== undefined) {
-      // Set node styles from json data
-      Object.entries(json_object['style'])
-        .forEach(([style_id, style_json]) => {
-          // Create a node style
-          const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
-          // Set node style value to node from JSON
-          StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
-          new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
-          // Add node style to sankey
-          sankey._styles[style_id] = new_style
-        })
+if (json_object['style'] !== undefined) {
+  // Set node styles from json data
+  const skip = [
+    'LinkExportCloseStyle', 'LinkImportCloseStyle',
+    'LinkImportAboveStyle', 'LinkExportBelowStyle'
+  ]
+  
+  // D'abord traiter les styles dans l'ordre défini dans elementStyleConfigs
+  const orderedStyleKeys = Object.keys(elementStyleConfigs) as ElementStyleKey[]
+  
+  orderedStyleKeys.forEach((style_id) => {
+    if ((json_object['style']as Type_JSON)[style_id] !== undefined && !skip.includes(style_id)) {
+      const style_json = (json_object['style']as Type_JSON)[style_id]
+      // Create a node style
+      const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+      // Set node style value to node from JSON
+      StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
+      new_style.name = elementStyleConfigs[style_id].name
+      // Add node style to sankey
+      sankey._styles[style_id] = new_style
     }
+  })
+  
+  // Ensuite traiter les styles personnalisés qui ne sont pas dans elementStyleConfigs
+  Object.entries(json_object['style'])
+    .filter(([style_id, style_json]) => 
+      !skip.includes(style_id) && 
+      !Object.keys(elementStyleConfigs).includes(style_id)
+    )
+    .forEach(([style_id, style_json]) => {
+      // Create a node style
+      const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+      // Set node style value to node from JSON
+      StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
+      new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+      // Add node style to sankey
+      sankey._styles[style_id] = new_style
+    })
+}
 
     SankeyPersistence.load_tags(json_object, sankey)
     SankeyPersistence.load_links(
@@ -1343,7 +1369,6 @@ export class SankeyPersistence {
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
         product_sector_styles.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
         node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
-        link_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
       }
     }
     json_entry = 'fluxTags'
