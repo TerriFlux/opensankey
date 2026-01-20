@@ -88,30 +88,30 @@ export const ContextZDT = (
   }
 
   // Check if every transparent_border of selected zdt are the same as the first selected, if it true value is not indeterminate
-  const valAllLabelBorderTransparent = selected_zdt[0]?.shape_border_visible ?? true
+  // const valAllLabelBorderTransparent = selected_zdt[0]?.shape_border_visible ?? true
 
-  const btn_mask_border = <Button onClick={() => {
-    selected_zdt.forEach(zdt => zdt.shape_border_visible = !valAllLabelBorderTransparent)
-    redrawAndRefresh()
-  }} variant='contextmenu_button'>{valAllLabelBorderTransparent ? t('LL.display_border') : t('LL.hide_border')}</Button>
+  // const btn_mask_border = <Button onClick={() => {
+  //   selected_zdt.forEach(zdt => zdt.shape_border_visible = !valAllLabelBorderTransparent)
+  //   redrawAndRefresh()
+  // }} variant='contextmenu_button'>{valAllLabelBorderTransparent ? t('LL.display_border') : t('LL.hide_border')}</Button>
 
 
-  const btn_change_color = <>
-    <Button variant='contextmenu_button'>
-      <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
-        <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
-        <MenuColorPicker
-          initialColor={(selected_zdt.length === 1) ? selected_zdt[0].shape_color : '#ffffff'}
-          onColorChange={(new_color) => {
-            selected_zdt.map(d => d.shape_color = new_color)
-            redrawAndRefresh()
-          }} />
-      </Box>
-    </Button>
-  </>
+  // const btn_change_color = <>
+  //   <Button variant='contextmenu_button'>
+  //     <Box style={{ display: 'grid', gridTemplateColumns: '1fr 3fr' }}>
+  //       <label style={{ margin: 0 }}>{t('LL.cfl')}</label>
+  //       <MenuColorPicker
+  //         initialColor={(selected_zdt.length === 1) ? selected_zdt[0].shape_color : '#ffffff'}
+  //         onColorChange={(new_color) => {
+  //           selected_zdt.map(d => d.shape_color = new_color)
+  //           redrawAndRefresh()
+  //         }} />
+  //     </Box>
+  //   </Button>
+  // </>
 
   const button_detach_all_tied_nodes = <Button onClick={() => {
-    // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array 
+    // Loop throught attached nodes in reverse index order to avoid problem when deleting element from array
     for (let i = zdt_to_contextualise.attached_node.length - 1; i >= 0; i--) {
       zdt_to_contextualise.dettachNodeFromCont(zdt_to_contextualise.attached_node[i])
     }
@@ -164,10 +164,6 @@ export const ContextZDT = (
     }}>
     <ButtonGroup orientation='vertical' isAttached>
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
-      <Divider/>
-      {btn_mask_border}
-      {btn_change_color}
-      {<Divider/>}
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}
     </ButtonGroup>
