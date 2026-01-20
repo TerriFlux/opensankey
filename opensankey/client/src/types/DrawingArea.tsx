@@ -163,7 +163,7 @@ export class Class_DrawingArea {
 
   private _list_g_element_id: string[] = []
 
-  protected _group_to_select: string = '.gg_nodes,.gg_links'
+  protected _group_to_select: string = '.gg_nodes,.gg_links,.gg_labels'
 
   private _mode: 'edition' | 'selection' = 'edition'
 
@@ -222,7 +222,6 @@ export class Class_DrawingArea {
     this._legend = new ClassTemplate_Legend(this, this._sankey)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
-    this._group_to_select += ',.gg_labels'
 
   }
 
