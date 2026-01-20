@@ -760,6 +760,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Draw new-sankey
       this._drawing_area.sankey.sortNodes()
       this._drawing_area.draw()
+      this._drawing_area.recenter()
       //this._drawing_area.draw()
 
       this._drawing_area.orderElementOnDA()
