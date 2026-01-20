@@ -72,6 +72,7 @@ export class Class_NodeBase extends Class_BaseShape {
 
   protected _attached_container: Class_ContainerElement[] = []
 
+  protected class_name = 'gg_nodes'
   constructor(
     id: string,
     name: string,
@@ -194,7 +195,7 @@ export class Class_NodeBase extends Class_BaseShape {
 
   protected _initDraw() {
     super._initDraw()
-    this.d3_selection?.attr('class', 'gg_nodes').datum(this)
+    this.d3_selection?.attr('class', this.class_name).datum(this)
     this.d3_selection?.style('display', 'inline')
     this.d3_selection?.attr('font-family', this.name_label_font_family)
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null

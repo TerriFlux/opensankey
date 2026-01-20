@@ -142,7 +142,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' &&proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
   }
@@ -162,14 +162,14 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       const style_id = getStringFromJSON(json_object, 'style', default_style_id)
       if (
         style_id != 'default'
-        && proto_element.sankey.styles_dict[style_id] 
+        && proto_element.sankey.styles_dict[style_id]
         && !proto_element['_style'].includes(proto_element.sankey.styles_dict[style_id])
       ) {
         proto_element['_style'].push(proto_element.sankey.styles_dict[style_id])
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'],...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' &&proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
@@ -577,7 +577,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super.fromJSON_pre_0_9(node,json_object,kwargs)
+    super.fromJSON_pre_0_9(node, json_object, kwargs)
   }
 
   public static fromJSON_0_9(
@@ -585,7 +585,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super.fromJSON_0_9(node,json_object,kwargs)
+    super.fromJSON_0_9(node, json_object, kwargs)
   }
 
 
@@ -594,7 +594,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
     json_object: Type_JSON,
     kwargs?: Type_JSON
   ) {
-    super.fromJSON_0_91(node,json_object,kwargs)
+    super.fromJSON_0_91(node, json_object, kwargs)
     const fromJsonMapping_0_91_to_0_92Local: { [key: string]: keyof typeof ALL_ATTRIBUTES_CONFIG } = {
       // Name label legacy
       'label_visible': 'name_label_is_visible',
@@ -672,13 +672,13 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.icon_is_visible) {
       node.icon_vert = 'middle'
       node.icon_horiz = 'middle'
-    }    
+    }
     node.name_label_text_align = 'middle'
     if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
     if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
 
     if (json_local.value_label_vert == 'middle') {
-      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size*0.35
+      json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size * 0.35
     }
   }
 
@@ -743,8 +743,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     _kwargs?: Type_JSON
   ) {
     const json_legend = json_object['legend'] as Type_JSON
-    json_legend['x'] =  +(json_legend['legend_position'] as Type_JSON)[0]
-    json_legend['y'] =  +(json_legend['legend_position'] as Type_JSON)[1]
+    json_legend['x'] = +(json_legend['legend_position'] as Type_JSON)[0]
+    json_legend['y'] = +(json_legend['legend_position'] as Type_JSON)[1]
   }
 
   public static fromJSON(
@@ -902,7 +902,7 @@ export class StylePersistence {
     Object.entries(style.attributes).forEach(([key, value]) => {
       if (style.isAttributeOverloaded(key)) {
         //@ts-expect-error xxx
-        json_object[key]= value
+        json_object[key] = value
       }
     })
     return json_object
@@ -1506,7 +1506,17 @@ export class DrawingAreaPersistence {
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
 
-    drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
+    //drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)
+    const order_from_json = getStringListFromJSON(json_object, 'order_g_elements', [])
+
+    // Récupérer l'ordre actuel
+    const current_order = drawing_area.list_g_element
+
+    // Trouver les éléments actuels qui ne sont pas dans le JSON (éléments ajoutés depuis)
+    const missing_in_json = current_order.filter(id => !order_from_json.includes(id))
+
+    // Fusionner : ordre du JSON + éléments manquants à la fin
+    drawing_area['_list_g_element_id'] = [...order_from_json, ...missing_in_json]
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)

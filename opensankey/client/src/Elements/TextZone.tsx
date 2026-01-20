@@ -18,7 +18,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     super(id, name, drawing_area, container_style) //'g_elements_sankey')
     this._tied_to_nodes = false
     this._attached_node = []
-
+    this.class_name = 'gg_labels'
     drawing_area.list_g_element.push(this.id)
 
     // Launch timer to reorder element on DA
@@ -392,7 +392,7 @@ export class Class_ContainerElement extends Class_NodeBase {
         setTimeout(() => {
           this.drawing_area.areaAutoFit()
           this.sankey.drawing_area.bypass_autofit = false
-        },2000)
+        }, 2000)
       }
     }
   }
