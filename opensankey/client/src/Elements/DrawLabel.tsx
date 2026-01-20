@@ -394,6 +394,7 @@ export abstract class DrawLabelBase {
   }
 
   protected dragGenericMove(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    this._element.drawing_area.bypass_redraws = true
     if (this._label_values.position_absolute) {
       // MODE ABSOLU : éditer position_x/position_y
       this._label_values.position_x = (this._label_values.position_x ?? 0) + event.dx
@@ -403,7 +404,7 @@ export abstract class DrawLabelBase {
       this._label_values.horiz_shift = (this._label_values.horiz_shift ?? 0) + event.dx
       this._label_values.vert_shift = (this._label_values.vert_shift ?? 0) + event.dy
     }
-
+    this._element.drawing_area.bypass_redraws = false
     // Mettre à jour la position visuelle
     this.updateGenericPosition()
   }
@@ -447,36 +448,38 @@ export abstract class DrawLabelBase {
   /**
    * ✅ Mise à jour visuelle pendant le drag
    */
+  /**
+   * ✅ Mise à jour visuelle pendant le drag
+   */
   protected updateGenericPosition() {
-    // Calculer la nouvelle position
-    const [new_x, new_y] = this.getIconPos()
+    if (!this.d3_selection) return
 
-    // Appliquer selon le type d'élément
-    if (this.d3_selection) {
-      // Pour FO
-      const fo = this.d3_selection.select('.element_fo')
-      if (!fo.empty()) {
-        fo.attr('x', new_x).attr('y', new_y)
-        return
-      }
-
-      // Pour Image
-      const img = this.d3_selection.select('image')
-      if (!img.empty()) {
-        img.attr('x', new_x).attr('y', new_y)
-        return
-      }
-
-      // Pour Icon (SVG)
-      const iconSvg = this.d3_selection.select('.illustration_svg')
-      if (!iconSvg.empty()) {
-        iconSvg.attr('x', new_x).attr('y', new_y)
-        return
-      }
-
-      // Pour Text, utiliser updateLabelPos()
-      this.updateLabelPos()
+    // Pour FO
+    const fo = this.d3_selection.select('.element_fo')
+    if (!fo.empty()) {
+      const [new_x, new_y] = this.getIconPos()
+      fo.attr('x', new_x).attr('y', new_y)
+      return
     }
+
+    // Pour Image
+    const img = this.d3_selection.select('image')
+    if (!img.empty()) {
+      const [new_x, new_y] = this.getIconPos()
+      img.attr('x', new_x).attr('y', new_y)
+      return
+    }
+
+    // Pour Icon (SVG)
+    const iconSvg = this.d3_selection.select('.illustration_svg')
+    if (!iconSvg.empty()) {
+      const [new_x, new_y] = this.getIconPos()
+      iconSvg.attr('x', new_x).attr('y', new_y)
+      return
+    }
+
+    // ✅ Pour Text, utiliser updateLabelPos() directement
+    this.updateLabelPos()
   }
 
   /**
@@ -865,7 +868,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return [label_pos_x, label_pos_y, label_anchor, label_baseline]
   }
 
-  protected updateLabelPos(): void {
+protected updateLabelPos(): void {
     const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
     this.d3_selection?.selectAll(this.getTextSelector())
       .attr('x', label_pos_x)
@@ -873,7 +876,9 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
 
+    // ✅ AJOUTER : Mettre à jour aussi les x des tspans
     this.d3_selection?.select(this.getTextSelector()).selectAll('tspan')
+      .attr('x', label_pos_x)  // LIGNE AJOUTÉE
       .attr('dominant-baseline', label_baseline)
       .attr('text-anchor', label_anchor)
   }
@@ -1125,41 +1130,37 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       if (this._label_values.horiz === 'middle') {
         label_anchor = 'middle'
         label_pos_x = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_x +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2 + this._label_values.horiz_shift
+          this._link_control_points_internal.controlPoints.ending_bezier_point.position_x) / 2
         label_pos_y = (this._link_control_points_internal.controlPoints.starting_bezier_point.position_y +
-          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2 + this._label_values.vert_shift
+          this._link_control_points_internal.controlPoints.ending_bezier_point.position_y) / 2
       } else if (this._label_values.horiz === 'right') {
         label_anchor = 'end'
-        label_pos_x = this.link.position_x_end + this._label_values.horiz_shift
-        label_pos_y = this.link.position_y_end + this._label_values.vert_shift
+        label_pos_x = this.link.position_x_end
+        label_pos_y = this.link.position_y_end
       }
+      // ✅ TOUJOURS appliquer horiz_shift
+      label_pos_x += this._label_values.horiz_shift
     }
 
-    if (this._label_values.position_y !== 0) {
+    if (this._label_values.position_absolute) {
       label_pos_y = this._label_values.position_y
       label_baseline = 'middle'
     } else {
       const inside_vert = this._label_values.inside_vert ?? false
-
-      // Déterminer la position verticale automatique ou manuelle
       let shouldPlaceTop = this._label_values.vert === 'top'
 
       if (this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness) {
-        // Logique pos_auto selon la position horizontale
         const horiz = this._label_values.horiz || 'left'
-
         if (horiz === 'left') {
-          // À gauche : dessous si going_up, dessus sinon
           shouldPlaceTop = !going_up
         } else if (horiz === 'middle' || horiz === 'right') {
-          // À droite ou middle : dessus si going_up
           shouldPlaceTop = going_up
         }
       }
 
       if (shouldPlaceTop) {
         if (inside_vert) {
-          label_pos_y -= this.link.thickness / 2 - this.getFontSize() + this._label_values.vert_shift
+          label_pos_y -= this.link.thickness / 2 - this.getFontSize()
           label_baseline = 'text-before-edge'
         } else {
           label_pos_y -= this.link.thickness / 2
@@ -1177,6 +1178,9 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
         label_pos_y += this.getFontSize() / 3
         label_baseline = 'middle'
       }
+
+      // ✅ TOUJOURS appliquer vert_shift
+      label_pos_y += this._label_values.vert_shift
     }
 
     return [label_pos_x, label_pos_y, label_anchor, label_baseline]
@@ -1185,7 +1189,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   protected updateLabelPos() {
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
     const textSelector = this.getTextSelector()
-    this._element.d3_selection?.selectAll(textSelector)
+    this.d3_selection?.selectAll(textSelector)
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
       .attr('text-anchor', label_anchor)

@@ -34,7 +34,7 @@ import type {
 } from '../types/Tag'
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
-import {Type_BaseElementPosition,link_data_label} from '../types/Utils'
+import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
 import { Class_LinkValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
@@ -245,15 +245,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement,
     drawing_area: Class_DrawingArea
   ) {
-    const link_style =  drawing_area.sankey.styles_dict['LinkStyle']
+    const link_style = drawing_area.sankey.styles_dict['LinkStyle']
     super(id, drawing_area, 'g_elements_sankey', link_style)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
     //this._link_control_points_internal = this._link_control_points.createInternalAccess()
     this._link_shape = new LinkDrawShape(this, this._link_control_points)
-    this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points,'name_label')
+    this._link_draw_label = new LinkDrawNameLabel(this, this._link_control_points, 'name_label')
     this._link_draw_value = new LinkDrawValueLabel(this, this._link_control_points)
-    this._link_draw_icon = new LinkDrawNameLabel(this, this._link_control_points,'icon')
+    this._link_draw_icon = new LinkDrawNameLabel(this, this._link_control_points, 'icon')
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
@@ -271,7 +271,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       drawing_area.list_g_element.push(this.id)
     }
 
-    this._position_ending = {x: 0,y: 0}
+    this._position_ending = { x: 0, y: 0 }
 
     this.source.addOutputLink(this)
     this.target.addInputLink(this)
@@ -409,11 +409,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawValueLabel() {
+    if (this.drawing_area.bypass_redraws) return
     this._link_draw_value.drawGenericLabel()
     this._orderD3Elements()
   }
 
   public drawNameLabel() {
+    if (this.drawing_area.bypass_redraws) return
     this._link_draw_label.drawGenericLabel()
     this._orderD3Elements()
   }
@@ -1368,7 +1370,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
 
 
-  public unit_name(prefix:'name_label'|'value_label') {
+  public unit_name(prefix: 'name_label' | 'value_label') {
     if (prefix == 'value_label') {
       if (this.value_label_unit_type == 'unit_name') return this.value_label_unit
       const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
@@ -1378,17 +1380,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
       return ''
     }
-      if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
-      const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-      if (unit_taggs.length > 0) {
-        if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
-        else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
-      }
-      return ''
+    if (this.name_label_unit_type == 'unit_name') return this.name_label_unit
+    const unit_taggs = this.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length > 0) {
+      if (!this.selected_data_tags_list) return unit_taggs[0].selected_tags_list[0].name
+      else return this.selected_data_tags_list.filter(tag => tag.group.is_unit)[0].name
+    }
+    return ''
   }
 
-  public data_label(prefix:'name_label'|'value_label') {
-    return link_data_label(this.sankey.drawing_area.type_data, this,prefix)
+  public data_label(prefix: 'name_label' | 'value_label') {
+    return link_data_label(this.sankey.drawing_area.type_data, this, prefix)
   }
 
   /**
@@ -1667,7 +1669,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'text_value'> (
+  public static updateLinks = <K extends 'valueCurrent' | 'text_value'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
@@ -1678,15 +1680,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     elements.forEach(element => {
       dict_old_val[element.id] = element[key]
     })
-  
+
     // Original function
     const _updateElements = () => {
       elements.forEach(element => {
-        Reflect.set(element, key,value)
+        Reflect.set(element, key, value)
       })
       refreshParentComponent()
     }
-  
+
     // Undo function
     const inv_updateElements = () => {
       elements.forEach(element =>
@@ -1694,7 +1696,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       )
       refreshParentComponent()
     }
-  
+
     data.history.saveUndo(inv_updateElements)
     data.history.saveRedo(_updateElements)
     _updateElements()

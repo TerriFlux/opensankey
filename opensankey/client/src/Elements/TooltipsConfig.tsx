@@ -303,7 +303,7 @@ export function implementTooltipForLink(LinkClass: typeof Class_LinkElement) {
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     const show_tooltip = this.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
-    if (show_tooltip) {
+    if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan' && (event.target as HTMLElement).tagName !== 'text') {
       const tooltipManager = TooltipEventManager.getInstance()
 
       // ✅ CHANGEMENT : Passer la position de la souris au LinkTooltip
