@@ -1559,7 +1559,7 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   margin_left: {
     default: 0,
     type: (() => 0) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
@@ -1575,7 +1575,7 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   margin_right: {
     default: 0,
     type: (() => 0) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
@@ -1591,7 +1591,7 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   margin_top: {
     default: 0,
     type: (() => 0) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
@@ -1607,7 +1607,7 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   margin_bottom: {
     default: 0,
     type: (() => 0) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
