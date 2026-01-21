@@ -39,7 +39,6 @@ import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
-import { NodeEventsHandler } from './NodeEventsHandler'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
@@ -57,7 +56,6 @@ import { Type_Side } from './ElementsAttributesConfig'
  */
 export class Class_NodeElement extends Class_NodeBase {
   public _nodeTooltip: NodeTooltip
-  public _nodeEventsHandler: NodeEventsHandler
   public _nodeDimensionsManager: NodeDimensionsManager
   protected _dimensions_as_parent: { [id: string]: Class_NodeDimension } = {}
   protected _dimensions_as_child: { [id: string]: Class_NodeDimension } = {}
@@ -87,7 +85,7 @@ export class Class_NodeElement extends Class_NodeBase {
     const default_node_style = drawing_area.sankey.styles_dict['NodeStyle']
     super(id, name, drawing_area, default_node_style)
     this._nodeTooltip = new NodeTooltip(this)
-    this._nodeEventsHandler = new NodeEventsHandler(this)
+
     this._nodeDimensionsManager = new NodeDimensionsManager(this)
     this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
     this._nodeTagsManager = new NodeTagsManager(this)
@@ -1041,8 +1039,8 @@ export class Class_NodeElement extends Class_NodeBase {
     link_to_redraw
       .forEach(link => {
         link.draw()
-        if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
-        if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
+        //if (link.source === this && this._output_links_handle[link.id]) this._output_links_handle[link.id].draw()
+        //if (link.target === this && this._input_links_handle[link.id]) this._input_links_handle[link.id].draw()
       })
   }
 
@@ -1335,76 +1333,15 @@ export class Class_NodeElement extends Class_NodeBase {
       window.open(this.hyperlink)
     }
   }
-
-  public drawTooltip() {
-    this._nodeTooltip.drawTooltip()
-  }
-
-  protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDragStart(event)
-    this._nodeEventsHandler.handleMouseDragStart(event)
-  }
-
-  /**
-   * Function used to move selected containers from another element drag event,
-   * we created this function and moveSelectedNodesFromDragEvent to avoid recursive call of eventMouseDrag
-   *
-   * @param {d3.D3DragEvent<SVGGElement, unknown, unknown>} event
-   * @memberof Class_DrawingAreaOSP
-   */
-  public moveSelectedContainerFromDragEvent(
-    event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    this.sankey.drawing_area.selected_containers_list
-      .forEach(n => {
-        if (!n.tied_to_nodes) {
-          n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-          n.drawDragHandlers()
-        }
-      })
-  }
-
-  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDrag(event)
-    if (this.drawing_area.isInSelectionMode()) {
-      this.moveSelectedContainerFromDragEvent(event)
-    }
-    this._nodeEventsHandler.handleMouseDrag(event)
-  }
-
-  public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDragEnd(event)
-    if (this.drawing_area.isInSelectionMode()) {
-      this._attached_container.forEach(cont => cont.draw())
-      this.drawing_area.orderElementOnDA()
-    }
-    this._nodeEventsHandler.handleMouseDragEnd(event)
-  }
-
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMaintainedClick(event)
     this._nodeEventsHandler.handleMaintainedClick(event)
   }
 
-  protected eventSimpleRMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleRMBCLick(event)
-    this._nodeEventsHandler.handleSimpleRMBClick(event)
+  public drawTooltip() {
+    this._nodeTooltip.drawTooltip()
   }
 
-  public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseOver(event)
-    this._nodeEventsHandler.handleMouseOver(event)
-  }
-
-  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseMove(event)
-    this._nodeEventsHandler.handleMouseMove()
-  }
-
-  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventMouseOut(event)
-    this._nodeEventsHandler.handleMouseOut()
-  }
   public get is_child() { return this._nodeDimensionsManager.is_child }
   public get is_parent() { return this._nodeDimensionsManager.is_parent }
   public get is_multi_parent() { return this._nodeDimensionsManager.is_multi_parent }
@@ -1521,5 +1458,11 @@ export class Class_NodeElement extends Class_NodeBase {
       this.value_label_unit,
       'value_label'
     )
+  }
+  public get selected_elements_list() {
+    return this.sankey.drawing_area.selected_nodes_list
+  }
+  public set_contextualized_element(element: Class_NodeBase) {
+    this.drawing_area.node_contextualised = element as Class_NodeElement
   }
 }
