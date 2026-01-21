@@ -26,16 +26,17 @@
 
 import * as d3 from 'd3'
 
-import { Class_NodeElement } from './Node'
+import { Class_NodeBase } from './NodeBase'
 import { TooltipEventManager } from './TooltipsConfig'
 import { Class_LinkElement } from './Link'
 import { Class_ProtoElement } from './Element'
+import { Class_NodeElement } from './Node'
 
 export class NodeEventsHandler {
 
-  private _node: Class_NodeElement
+  private _node: Class_NodeBase
 
-  constructor(node: Class_NodeElement) {
+  constructor(node: Class_NodeBase) {
     this._node = node
   }
 
@@ -60,7 +61,7 @@ export class NodeEventsHandler {
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
       if (event.shiftKey) {
-        if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
+        if (!this._node.selected_elements_list.includes(this._node)) {
           // add node to selection
           this._node.drawing_area.addElementToSelection(this._node)
         }
@@ -94,10 +95,7 @@ export class NodeEventsHandler {
       return
     }
 
-    // Memorize position of all node that will be dragged
-    // Get related drawing area
-    const drawing_area = this._node.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list
+    const nodes_selected = this._node.selected_elements_list
     const dict_old_pos: { [x: string]: [number, number] } = {}
 
     if (nodes_selected.includes(this._node)) {
@@ -121,7 +119,7 @@ export class NodeEventsHandler {
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list as Class_NodeElement[]
+    const nodes_selected = this._node.selected_elements_list
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -175,7 +173,10 @@ export class NodeEventsHandler {
     if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
       function undo(_: Class_ProtoElement) {
         Object.keys(dict_old_pos).forEach(k => {
-          const n = _.drawing_area.sankey.nodes_dict[k]
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) {
+            n = _.drawing_area.sankey.containers_dict[k]
+          }
           n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
         })
       }
@@ -193,7 +194,7 @@ export class NodeEventsHandler {
     }
 
     const drawing_area = this._node.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list
+    const nodes_selected = this._node.selected_elements_list
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -221,11 +222,12 @@ export class NodeEventsHandler {
         if (this._node.shape_position_type !== 'relative')
           this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
         if (this._node.shape_position_type == 'relative') {
-          if (this._node.hasInputLinks()) {
-            const source_node = this._node.input_links_list[0].source
+          const node_element = this._node  as Class_NodeElement
+          if (node_element.hasInputLinks()) {
+            const source_node = node_element.input_links_list[0].source
             this._node.shape_position_dx = this._node.position_x - source_node.position_x + source_node.getShapeWidthToUse()
-          } else if (this._node.hasOutputLinks()) {
-            const target_node = this._node.output_links_list[0].target
+          } else if (node_element.hasOutputLinks()) {
+            const target_node = node_element.output_links_list[0].target
             this._node.shape_position_dx = this._node.position_x + event.dx - target_node.position_x + target_node.getShapeWidthToUse()
           }
         }
@@ -247,7 +249,7 @@ export class NodeEventsHandler {
       // Create default source node
       // Position center of source node to pointer pos
       // Create default target node
-      const target = this._node.sankey.addNewDefaultNode() as Class_NodeElement
+      const target = this._node.sankey.addNewDefaultNode()
       target.setPosXY(this._node.position_x, this._node.position_y)
       // Make target a 'ghost' node
       target.setInvisible()
@@ -257,7 +259,7 @@ export class NodeEventsHandler {
       // Ref newly created link this var to be used in other mouse event
       this._node.drawing_area.ghost_link = new Class_LinkElement(
         'ghost_link',
-        this._node,
+        this._node as Class_NodeElement,
         target,
         this._node.drawing_area,
       )
@@ -270,11 +272,11 @@ export class NodeEventsHandler {
   public handleSimpleRMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     event.preventDefault()
     this._node.drawing_area.pointer_pos = [event.pageX, event.pageY]
-    if (!this._node.drawing_area.selected_nodes_list.includes(this._node)) {
+    if (!this._node.selected_elements_list.includes(this._node)) {
       this._node.drawing_area.addElementToSelection(this._node)
     }
     this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-    this._node.drawing_area.node_contextualised = this._node
+    this._node.set_contextualized_element(this._node)
     this._node.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
     this._node.drawing_area.setToModeEdition(false)
   }
@@ -301,6 +303,7 @@ export class NodeEventsHandler {
 
         // Utiliser le système intégré
         const tooltipManager = TooltipEventManager.getInstance()
+        //@ts-expect-error xxx
         tooltipManager.showTooltip(this._node, event.pageX, event.pageY)
       }
     }
@@ -324,7 +327,7 @@ export class NodeEventsHandler {
    * Add or remove node from selection
    */
   private addOrRemoveNodeFromSelection() {
-    if (this._node.drawing_area.selected_nodes_list.includes(this._node)) {
+    if (this._node.selected_elements_list.includes(this._node)) {
       // Remove node from selection
       this._node.drawing_area.removeElementFromSelection(this._node)
     } else {
@@ -338,7 +341,7 @@ export class NodeEventsHandler {
    */
   private moveMagneticNode(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
-    node_to_move: Class_NodeElement[]
+    node_to_move: Class_NodeBase[]
   ) {
     const drawing_area = this._node.drawing_area
     const limit_magnetic_node = drawing_area.grid_size / 4
@@ -379,7 +382,7 @@ export class NodeEventsHandler {
   private saveRedoAtEventMouseDragEnd() {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-    const nodes_selected = drawing_area.selected_nodes_list
+    const nodes_selected = this._node.selected_elements_list
 
     if (nodes_selected.includes(this._node)) {
       const dict_old_pos: { [x: string]: [number, number] } = {}
