@@ -62,7 +62,8 @@ import {
   font_families,
   getShapeAttributeKey,
   isShapeValueIndeterminate,
-  isValueLabelIndeterminate
+  isValueLabelIndeterminate,
+  getNodeShapeAttributeKey
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 // import { MenuUnit } from './MenuElementsLabelValue'
@@ -108,11 +109,13 @@ const LabelContentComponent = ({
   app_data,
   elements,
   prefix,
+  menu_style,
   refreshParentComponent
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   prefix: 'name_label' | 'value_label' | 'icon'
+  menu_style: boolean
   refreshParentComponent: () => void
 }) => {
   type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
@@ -181,7 +184,7 @@ const LabelContentComponent = ({
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {/* Sélecteur de mode */}
-      {prefix !== 'value_label' && (
+      {prefix !== 'value_label' && !menu_style && (
         <Box layerStyle='menuconfigpanel_row_2cols'>
           <Box layerStyle='options_4cols'>
             {prefix === 'name_label' && (
@@ -204,7 +207,7 @@ const LabelContentComponent = ({
                 >
                   Valeur
                 </Button></>)}
-            {prefix === 'icon' && (
+            {prefix === 'icon' && !menu_style && (
               <>
                 <Button
                   variant={displayMode === 'icon' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
@@ -243,7 +246,7 @@ const LabelContentComponent = ({
             ))}
           </Select>
         </LabelWithOverload>
-        {(displayMode === 'simple_text'||displayMode === 'value')  && (
+        {(displayMode === 'simple_text' || displayMode === 'value') && (
           <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ConfigMenuNumberInput
               t={app_data.t}
@@ -257,7 +260,7 @@ const LabelContentComponent = ({
             />
           </LabelWithOverload>)}
       </Box>
-      {(displayMode === 'simple_text'||displayMode === 'value') && (<>
+      {(displayMode === 'simple_text' || displayMode === 'value') && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
           <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ElementAttrSetterTextInput2Cols
@@ -443,12 +446,13 @@ const LabelContentComponent = ({
           </Box>
         </>
       )}
-      <Divider />
+
       {/* Section IMAGE */}
-      {(prefix === 'value_label' || displayMode == 'value') && (
+      {(prefix === 'value_label' || displayMode == 'value') && (<>
+        <Divider />
         <Box
-            layerStyle='menuconfigpanel_grid'
-          >      <Box layerStyle='options_2cols'>
+          layerStyle='menuconfigpanel_grid'
+        >      <Box layerStyle='options_2cols'>
             <Checkbox
               variant='menuconfigpanel_option_checkbox'
               iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
@@ -469,66 +473,66 @@ const LabelContentComponent = ({
                 />
               </OSTooltip>
             </Checkbox>
-        
-              <ElementAttrSetterSelect2Cols
-                app_data={app_data}
-                attributePath={attributePath}
-                attributeKey={'unit_type'}
-                elements={elements}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                options={unit_constants.map(el => ({
-                  key: 'value_' + el,
-                  value: el,
-                  label: app_data.t('Flux.labels.' + el)
-                }))}
-                refreshParentComponent={refreshParentComponent}
-              /></Box>
-        
-            {/* Select pour unit tag (quand type = other_unit_tag) */}
-            {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
-              <ElementAttrSetterSelect2Cols
+
+            <ElementAttrSetterSelect2Cols
+              app_data={app_data}
+              attributePath={attributePath}
+              attributeKey={'unit_type'}
+              elements={elements}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix}
+              options={unit_constants.map(el => ({
+                key: 'value_' + el,
+                value: el,
+                label: app_data.t('Flux.labels.' + el)
+              }))}
+              refreshParentComponent={refreshParentComponent}
+            /></Box>
+
+          {/* Select pour unit tag (quand type = other_unit_tag) */}
+          {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
+            <ElementAttrSetterSelect2Cols
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              attributeKey={'unit'}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix}
+              options={unit_tagg.tags_list.map(el => ({
+                key: 'value_' + el.id,
+                value: el.id,
+                label: el.name
+              }))}
+              refreshParentComponent={refreshParentComponent}
+            />
+          )}
+
+          {/* Text input et number input pour unit_name */}
+          {labelValues.unit_type == 'unit_name' && (
+            <Box layerStyle='options_2cols'>
+              <ElementAttrSetterTextInput2Cols
                 app_data={app_data}
                 elements={elements}
                 attributePath={attributePath}
                 attributeKey={'unit'}
                 config={VALUE_LABEL_CONFIG}
                 prefix={prefix}
-                options={unit_tagg.tags_list.map(el => ({
-                  key: 'value_' + el.id,
-                  value: el.id,
-                  label: el.name
-                }))}
                 refreshParentComponent={refreshParentComponent}
               />
-            )}
-            
-            {/* Text input et number input pour unit_name */}
-            {labelValues.unit_type == 'unit_name' && (
-               <Box layerStyle='options_2cols'>
-                <ElementAttrSetterTextInput2Cols
-                  app_data={app_data}
-                  elements={elements}
-                  attributePath={attributePath}
-                  attributeKey={'unit'}
-                  config={VALUE_LABEL_CONFIG}
-                  prefix={prefix}
-                  refreshParentComponent={refreshParentComponent}
-                />
-                <ElementAttrSetterNumberInput2Cols
-                  app_data={app_data}
-                  elements={elements}
-                  attributePath={attributePath}
-                  attributeKey={'unit_factor'}
-                  config={VALUE_LABEL_CONFIG}
-                  prefix={prefix}
-                  refreshParentComponent={refreshParentComponent}
-                  stepper={false}
-                />
-              </Box>
-            )}
-            <Box layerStyle='menuconfigpanel_grid'>
-              <Box layerStyle='options_2cols'>
+              <ElementAttrSetterNumberInput2Cols
+                app_data={app_data}
+                elements={elements}
+                attributePath={attributePath}
+                attributeKey={'unit_factor'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                refreshParentComponent={refreshParentComponent}
+                stepper={false}
+              />
+            </Box>
+          )}
+          <Box layerStyle='menuconfigpanel_grid'>
+            <Box layerStyle='options_2cols'>
               {/* Checkbox pour nombre de chiffres personnalisé avec input conditionnel */}
               <ConditionalCheckboxWithInput
                 app_data={app_data}
@@ -549,25 +553,26 @@ const LabelContentComponent = ({
                 prefix={prefix}
                 refreshParentComponent={refreshParentComponent}
               />
-        </Box>
-              {/* Checkbox pour chiffres significatifs avec input conditionnel */}
-              <ConditionalCheckboxWithInput
-                app_data={app_data}
-                elements={elements}
-                checkboxAttributeKey={'significant_digits'}
-                inputAttributeKey={'nb_significant_digits'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshParentComponent}
-                minimum_value={0}
-                stepper={true}
-              />
             </Box>
+            {/* Checkbox pour chiffres significatifs avec input conditionnel */}
+            <ConditionalCheckboxWithInput
+              app_data={app_data}
+              elements={elements}
+              checkboxAttributeKey={'significant_digits'}
+              inputAttributeKey={'nb_significant_digits'}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix}
+              refreshParentComponent={refreshParentComponent}
+              minimum_value={0}
+              stepper={true}
+            />
           </Box>
+        </Box></>
       )}
-      <Divider />
+
       {displayMode === 'image' && (
         <>
+          <Divider />
           <Box layerStyle='menuconfigpanel_row_2cols'>
             <Box as='span' layerStyle='menuconfigpanel_option_name'>Source image</Box>
             <Box as='span' layerStyle='options_2cols'>
@@ -1016,10 +1021,10 @@ export const MenuConfigurationAppearance = ({
                       stepper={true}
                     />
                     <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
-                    <OSTooltip label={t('LL.tooltips.margin')} placement='left'>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                    <OSTooltip label={app_data.t('Noeud.apparence.tooltips.shape_margin_left')} placement='left'>
+                      <Box as='span' layerStyle='options_2cols'>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginLeft') || 'Left'}</Box>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.shape_margin_left')}</Box>
                           <ConfigMenuNumberInput
                             t={app_data.t}
                             default_value={nodeShapeValues.margin_left}
@@ -1028,7 +1033,7 @@ export const MenuConfigurationAppearance = ({
                             stepper={true} />
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginRight') || 'Top'}</Box>
+                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_right')}</Box>
                           <ConfigMenuNumberInput
                             t={app_data.t}
                             default_value={nodeShapeValues.margin_right}
@@ -1037,9 +1042,9 @@ export const MenuConfigurationAppearance = ({
                             stepper={true} />
                         </Box>
                       </Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                      <Box as='span' layerStyle='options_2cols'>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginTop') || 'Right'}</Box>
+                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_top')}</Box>
                           <ConfigMenuNumberInput
                             t={app_data.t}
                             default_value={nodeShapeValues.margin_top}
@@ -1048,7 +1053,7 @@ export const MenuConfigurationAppearance = ({
                             stepper={true} />
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('LL.marginBottom') || 'Bottom'}</Box>
+                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_bottom')}</Box>
                           <ConfigMenuNumberInput
                             t={app_data.t}
                             default_value={nodeShapeValues.margin_bottom}
@@ -1094,8 +1099,8 @@ export const MenuConfigurationAppearance = ({
                       isChecked={nodeShapeValues.orphan_node_visible}
                       onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
                     >
-                      <OSTooltip label={t('Noeud.apparence.tooltips.orphan_node_visible')}>
-                        {t('Noeud.apparence.orphan_node_visible')}
+                      <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
+                        {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
                         <TooltipElementOverloaded
                           elements={nodes_elements}
                           t={t}
@@ -1346,6 +1351,7 @@ export const MenuConfigurationAppearance = ({
                   app_data={app_data}
                   elements={elements}
                   prefix={'name_label'}
+                  menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
                 />
               )}
@@ -1366,6 +1372,7 @@ export const MenuConfigurationAppearance = ({
                   app_data={app_data}
                   elements={elements}
                   prefix={'value_label'}
+                  menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
                 />
               )}
@@ -1386,6 +1393,7 @@ export const MenuConfigurationAppearance = ({
                   app_data={app_data}
                   elements={elements}
                   prefix={'icon'}
+                  menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
                 />
               )}
@@ -1435,176 +1443,181 @@ export const MenuShapeAttributes = ({
 
   return (
     <>
-      {/* Fond visible + Couleur */}
-      {/* Choix de la source de la couleur */}
-      {/* <Box layerStyle='menuconfigpanel_grid'> */}
-      <Box as='span' layerStyle='menu_sub_section_title'
-        textStyle='title_sub_section'
-      >{`${'Fond Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {app_data.t('Flux.apparence.shape_color_rule')}
-          <TooltipElementOverloaded
-            prefix={prefix} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
-          />
-        </Box>
-        <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
-          <Select
-            value={linkShapeValues.color_rule}
+      <Box layerStyle='menuconfigpanel_grid'>
+        <Box as='span' layerStyle='options_2cols'>
+          <Checkbox
+            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
+            isChecked={shapeValues.color_visible}
             onChange={(evt) => {
-              linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
+              shapeValues.color_visible = evt.target.checked
             }}
           >
-            {app_data.menu_configuration.flow_color_origin_type.map(el => {
-              return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-            })}
-          </Select>
-        </OSTooltip>
-      </Box>
-      <Divider />
-      <Box as='span' layerStyle='options_2cols'>
-        <Checkbox
-          {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
-          isChecked={shapeValues.color_visible}
-          onChange={(evt) => {
-            shapeValues.color_visible = evt.target.checked
-          }}
-        >
-          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Afficher le fond'}>
-            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Fond visible'}
-            <TooltipElementOverloaded
-              elements={base_elements}
-              t={t}
-              attributeKey={'color_visible'}
-              config={config}
-              prefix={prefix} />
-          </OSTooltip>
-        </Checkbox>
-        <Box layerStyle='option_with_activation'>
-          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color')}`)}>
-            <Box>
-              <MenuColorPicker
-                initialColor={shapeValues.color}
-                onColorChange={(new_color) => {
-                  shapeValues.color = new_color
-                }} />
-            </Box>
-          </OSTooltip>
-          <OSTooltip label={t(`${attributePath}.tooltips.color_sustainable`)}>
-            <Button
-              variant={shapeValues.color_sustainable ?
-                'menuconfigpanel_option_button_activated' :
-                'menuconfigpanel_option_button'}
-              onClick={() => {
-                shapeValues.color_sustainable = !shapeValues.color_sustainable
-              }}
-            >
-              {shapeValues.color_sustainable ? icon_locked : icon_unlocked}
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Afficher le fond'}>
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Fond visible'}
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
-                attributeKey={'color_sustainable'}
+                attributeKey={'color_visible'}
                 config={config}
                 prefix={prefix} />
-            </Button>
+            </OSTooltip>
+          </Checkbox>
+          <Box layerStyle='option_with_activation'>
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color')}`)}>
+              <Box>
+                <MenuColorPicker
+                  initialColor={shapeValues.color}
+                  onColorChange={(new_color) => {
+                    shapeValues.color = new_color
+                  }} />
+              </Box>
+            </OSTooltip>
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_sustainable')}`)}>
+              <Button
+                variant={shapeValues.color_sustainable ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+                onClick={() => {
+                  shapeValues.color_sustainable = !shapeValues.color_sustainable
+                }}
+              >
+                {shapeValues.color_sustainable ? icon_locked : icon_unlocked}
+                <TooltipElementOverloaded
+                  elements={base_elements}
+                  t={t}
+                  attributeKey={'color_sustainable'}
+                  config={config}
+                  prefix={prefix} />
+              </Button>
+            </OSTooltip>
+          </Box>
+        </Box>
+
+        <Box as='span' layerStyle='options_2cols'>
+          {/* Shape Opacity */}
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'opacity'}
+            prefix={prefix}
+            config={BASE_SHAPE_CONFIG}
+            refreshParentComponent={refreshUI}
+            unit_text=''
+            minimum_value={0}
+            maximum_value={1}
+            step={0.1}
+            stepper={true} />
+          {/* Radius */}
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'border_radius'}
+            prefix={prefix}
+            config={BASE_SHAPE_CONFIG}
+            refreshParentComponent={refreshUI}
+            unit_text='px'
+            minimum_value={0}
+            maximum_value={20}
+            stepper={true} />
+        </Box>
+
+        {/* Bordure visible + Couleur */}
+        <Box as='span' layerStyle='options_2cols'>
+          <Checkbox
+            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_visible'))}
+            isChecked={shapeValues.border_visible}
+            onChange={(evt) => {
+              shapeValues.border_visible = evt.target.checked
+            }}
+          >
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Afficher la bordure'}>
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Bordure visible'}
+              <TooltipElementOverloaded
+                elements={base_elements}
+                t={t}
+                attributeKey={'border_visible'}
+                config={config}
+                prefix={prefix} />
+            </OSTooltip>
+          </Checkbox>
+
+          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
+            <MenuColorPicker
+              initialColor={shapeValues.border_color}
+              onColorChange={(new_color) => {
+                shapeValues.border_color = new_color
+              }} />
           </OSTooltip>
         </Box>
-      </Box>
 
-      <Box as='span' layerStyle='options_2cols'>
-        {/* Shape Opacity */}
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          attributeKey={'opacity'}
-          prefix={prefix}
-          config={BASE_SHAPE_CONFIG}
-          refreshParentComponent={refreshUI}
-          unit_text=''
-          minimum_value={0}
-          maximum_value={1}
-          step={0.1}
-          stepper={true} />
-        {/* Radius */}
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          attributeKey={'border_radius'}
-          prefix={prefix}
-          config={BASE_SHAPE_CONFIG}
-          refreshParentComponent={refreshUI}
-          unit_text='px'
-          minimum_value={0}
-          maximum_value={20}
-          stepper={true} />
-      </Box>
+        <Box as='span' layerStyle='options_2cols'>
+          {/* Épaisseur */}
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'border_thickness'}
+            config={BASE_SHAPE_CONFIG}
+            prefix={prefix}
+            refreshParentComponent={refreshUI}
+            unit_text='px'
+            minimum_value={0}
+            maximum_value={20}
+            stepper={true} />
 
-      {/* Bordure visible + Couleur */}
-      <Box as='span' layerStyle='options_2cols'>
-        <Checkbox
-          {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_visible'))}
-          isChecked={shapeValues.border_visible}
-          onChange={(evt) => {
-            shapeValues.border_visible = evt.target.checked
-          }}
-        >
-          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Afficher la bordure'}>
-            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Bordure visible'}
-            <TooltipElementOverloaded
-              elements={base_elements}
-              t={t}
-              attributeKey={'border_visible'}
-              config={config}
-              prefix={prefix} />
-          </OSTooltip>
-        </Checkbox>
+          {/* Pointillés */}
+          <Checkbox
+            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_dashed'))}
+            isChecked={shapeValues.border_dashed}
+            onChange={(evt) => {
+              shapeValues.border_dashed = evt.target.checked
+            }}
+          >
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}>
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              <TooltipElementOverloaded
+                elements={base_elements}
+                t={t}
+                attributeKey={'border_dashed'}
+                config={config}
+                prefix={prefix} />
+            </OSTooltip>
+          </Checkbox>
+          <Box />
+        </Box>
 
-        <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
-          <MenuColorPicker
-            initialColor={shapeValues.border_color}
-            onColorChange={(new_color) => {
-              shapeValues.border_color = new_color
-            }} />
-        </OSTooltip>
-      </Box>
-
-      <Box as='span' layerStyle='options_2cols'>
-        {/* Épaisseur */}
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          attributeKey={'border_thickness'}
-          config={BASE_SHAPE_CONFIG}
-          prefix={prefix}
-          refreshParentComponent={refreshUI}
-          unit_text='px'
-          minimum_value={0}
-          maximum_value={20}
-          stepper={true} />
-
-        {/* Pointillés */}
-        <Checkbox
-          {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_dashed'))}
-          isChecked={shapeValues.border_dashed}
-          onChange={(evt) => {
-            shapeValues.border_dashed = evt.target.checked
-          }}
-        >
-          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}>
-            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-            <TooltipElementOverloaded
-              elements={base_elements}
-              t={t}
-              attributeKey={'border_dashed'}
-              config={config}
-              prefix={prefix} />
-          </OSTooltip>
-        </Checkbox>
-        <Box />
-      </Box>
+        {/* Fond visible + Couleur */}
+        {/* Choix de la source de la couleur */}
+        {/* <Box layerStyle='menuconfigpanel_grid'> */}
+        {selection.hasLinks || menu_for_style ?
+          <>
+            <Divider />
+            <Box as='span' layerStyle='menu_sub_section_title'
+              textStyle='title_sub_section'
+            >{`${'Fond Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
+            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {app_data.t('Flux.apparence.shape_color_rule')}
+                <TooltipElementOverloaded
+                  prefix={prefix} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
+                />
+              </Box>
+              <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+                <Select
+                  value={linkShapeValues.color_rule}
+                  onChange={(evt) => {
+                    linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
+                  }}
+                >
+                  {app_data.menu_configuration.flow_color_origin_type.map(el => {
+                    return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+                  })}
+                </Select>
+              </OSTooltip>
+            </Box>
+          </> : <></>}</Box>
     </>
   )
 }
