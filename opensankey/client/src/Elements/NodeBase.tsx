@@ -33,6 +33,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
 import { Class_BaseShape } from './Element'
+import { NodeEventsHandler } from './NodeEventsHandler'
 
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
@@ -46,14 +47,14 @@ export function sortNodesElements(
   else return 0
 }
 
-export class Class_NodeBase extends Class_BaseShape {
+export abstract class Class_NodeBase extends Class_BaseShape {
   private _drag_handler: {
     top: Class_Handler,
     bottom: Class_Handler,
     left: Class_Handler,
     right: Class_Handler,
   }
-
+  public _nodeEventsHandler: NodeEventsHandler
   public d3_selection_g_shape: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
 
   private _position_u: number
@@ -90,6 +91,7 @@ export class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawShape = new NodeDrawShape(this)
     this._nodeDrawNameLabel = new NodeDrawNameLabel(this, 'name_label')
     this._nodeDrawIcon = new NodeDrawNameLabel(this, 'icon')
+    this._nodeEventsHandler = new NodeEventsHandler(this)
 
     this._position_u = 0
     this._position_v = 0
@@ -148,6 +150,9 @@ export class Class_NodeBase extends Class_BaseShape {
 
   protected drawElements() {
     this._nodeDrawShape.drawShape()
+    if (this._is_selected) {
+      this.drawDragHandlers()
+    }
     this._nodeDrawNameLabel.drawGenericLabel()
     this._nodeDrawIcon.drawGenericLabel()
   }
@@ -178,6 +183,7 @@ export class Class_NodeBase extends Class_BaseShape {
 
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOver(event)
+        this._nodeEventsHandler.handleMouseOver(event)
   }
 
   //public getShapeColorToUse() { return this.shape_color }
@@ -211,6 +217,57 @@ export class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon.d3_selection?.raise()
   }
 
+  // public moveSelectedContainerFromDragEvent(
+  //   event: d3.D3DragEvent<SVGGElement, unknown, unknown>
+  // ) {
+  //   this.sankey.drawing_area.selected_containers_list
+  //     .forEach(n => {
+  //       if (!n.tied_to_nodes) {
+  //         n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+  //         n.drawDragHandlers()
+  //       }
+  //     })
+  // }
+
+  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDrag(event)
+    // if (this.drawing_area.isInSelectionMode()) {
+    //   this.moveSelectedContainerFromDragEvent(event)
+    // }
+    this._nodeEventsHandler.handleMouseDrag(event)
+  }
+  protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDragStart(event)
+    this._nodeEventsHandler.handleMouseDragStart(event)
+  }
+  public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDragEnd(event)
+    if (this.drawing_area.isInSelectionMode()) {
+      this._attached_container.forEach(cont => cont.draw())
+      this.drawing_area.orderElementOnDA()
+    }
+    this._nodeEventsHandler.handleMouseDragEnd(event)
+  }
+
+  protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMaintainedClick(event)
+    // this._nodeEventsHandler.handleMaintainedClick(event)
+  }
+
+  protected eventSimpleRMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventSimpleRMBCLick(event)
+    this._nodeEventsHandler.handleSimpleRMBClick(event)
+  }
+
+  public eventMouseMove(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseMove(event)
+    this._nodeEventsHandler.handleMouseMove()
+  }
+
+  public eventMouseOut(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventMouseOut(event)
+    this._nodeEventsHandler.handleMouseOut()
+  }
   public eventDoubleLMBCLick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -437,4 +494,11 @@ export class Class_NodeBase extends Class_BaseShape {
   public set position_u(_: number) { this._position_u = _ }
   public get position_v() { return this._position_v }
   public set position_v(_: number) { this._position_v = _ }
+
+  public get selected_elements_list(): Class_NodeBase[] {
+    return []
+  }
+  public set_contextualized_element(element:Class_NodeBase) {
+
+  }
 }

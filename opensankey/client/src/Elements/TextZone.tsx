@@ -218,167 +218,13 @@ export class Class_ContainerElement extends Class_NodeBase {
     }
   }
 
-  /**
-   * Define maintained left mouse button click for free labels
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMaintainedClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventMaintainedClick(_event)
-  }
-
-  /**
-   * Define released left mouse button click for drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventReleasedClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventMaintainedClick(_event)
-  }
-
-  /**
-   * Define event when mouse moves over drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  public eventMouseOver(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventMouseOver(_event)
-  }
-
-  /**
-   * Define event when mouse moves out of drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMouseOut(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventMouseOut(_event)
-  }
-
-  /**
-   * Define event when mouse moves in drawing area
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMouseMove(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventMouseMove(_event)
-  }
-
-  /**
-   *Function that save in history the undo of dragging free label
-   *
-   * @memberof Class_DrawingAreaOSP
-   */
-  public saveUndoLabelSelectedPos() {
-    const containers_selected = this.sankey.drawing_area.selected_containers_list.filter(cont => !cont.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.sankey.drawing_area.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for undo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
-    })
-    // undo function
-    const undo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.sankey.drawing_area.areaAutoFit()
-    }
-    this.sankey.drawing_area.application_data.history.saveUndo(undo)
-  }
-
-  /**
-   *Function that save in history the redo of dragging free label
-   *
-   * @memberof Class_DrawingAreaOSP
-   */
-  public saveRedoLabelSelectedPos() {
-    const containers_selected = this.sankey.drawing_area.selected_containers_list.filter(zdt => !zdt.tied_to_nodes) // desn't keep track of tied to nodes containers
-    const nodes_selected = this.sankey.drawing_area.selected_nodes_list
-    const dict_old_pos_label: { [x: string]: [number, number] } = {}
-    const dict_old_pos_node: { [x: string]: [number, number] } = {}
-    // Memorize for redo
-    containers_selected.forEach(n => {
-      dict_old_pos_label[n.id] = [n.position_x, n.position_y]
-    })
-    nodes_selected.forEach(n => {
-      dict_old_pos_node[n.id] = [n.position_x, n.position_y]
-    })
-    // redo function
-    const redo = () => {
-      containers_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_label[n.id][0], dict_old_pos_label[n.id][1])
-      })
-      nodes_selected.forEach(n => {
-        n.setPosXY(dict_old_pos_node[n.id][0], dict_old_pos_node[n.id][1])
-      })
-      this.sankey.drawing_area.areaAutoFit()
-    }
-    this.sankey.drawing_area.application_data.history.saveRedo(redo)
-  }
-  /**
-   * Define event when mouse drag starts
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMouseDragStart(
-    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    super.eventMouseDragStart(_event)
-
-    const drawing_area = this.drawing_area
-    const containers_selected = drawing_area.selected_containers_list
-    if (containers_selected.includes(this)) {
-      this.saveUndoLabelSelectedPos()
-      drawing_area.areaAutoFit()
-    } else {
-      // Memorize for undo
-      const old_x = this.position_x
-      const old_y = this.position_y
-      // Undo function
-      const undo = () => {
-        this.setPosXY(old_x, old_y)
-        drawing_area.areaAutoFit()
-      }
-      this.drawing_area.application_data.history.saveUndo(undo)
-    }
-  }
-
-  /**
-   * Define event when mouse drag element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMouseDrag(
+  public eventMouseDrag(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>
   ) {
     super.eventMouseDrag(event)
-    const drawing_area = this.drawing_area
-    if (drawing_area.isInSelectionMode()) {
-      this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
+    //const drawing_area = this.drawing_area
+    if (this.drawing_area.isInSelectionMode()) {
+      //this.setPosXY(this.position_x + event.dx, this.position_y + event.dy)
       this._attached_node.filter(n => n.is_visible).sort((n1, n2) => n1.position_y - n2.position_y).forEach((n, i) => {
         n.position_x = n.position_x + event.dx
         n.position_y = n.position_y + event.dy
@@ -387,44 +233,13 @@ export class Class_ContainerElement extends Class_NodeBase {
         }
         n.applyPosition()
       })
-      if (!drawing_area.bypass_autofit) {
-        this.sankey.drawing_area.bypass_autofit = true
-        setTimeout(() => {
-          this.drawing_area.areaAutoFit()
-          this.sankey.drawing_area.bypass_autofit = false
-        }, 2000)
-      }
-    }
-  }
-
-  /**
-   * Define event when mouse drag ends
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  protected eventMouseDragEnd(
-    _event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  ) {
-    if (this.drawing_area.isInSelectionMode()) {
-      //this.drawing_area.areaAutoFit()
-
-      // Save redo label pos
-      const drawing_area = this.drawing_area
-      const containers_selected = drawing_area.selected_containers_list
-      if (containers_selected.includes(this)) {
-        this.saveRedoLabelSelectedPos()
-      } else {
-        // Memorize for redo
-        const old_x = this.position_x
-        const old_y = this.position_y
-        // redo function
-        const redo = () => {
-          this.setPosXY(old_x, old_y)
-        }
-        this.drawing_area.application_data.history.saveRedo(redo)
-        this.drawing_area.orderElementOnDA()
-      }
+      // if (!drawing_area.bypass_autofit) {
+      //   this.sankey.drawing_area.bypass_autofit = true
+      //   setTimeout(() => {
+      //     this.drawing_area.areaAutoFit()
+      //     this.sankey.drawing_area.bypass_autofit = false
+      //   }, 2000)
+      // }
     }
   }
 
@@ -435,8 +250,19 @@ export class Class_ContainerElement extends Class_NodeBase {
       this.applyPosition()
     }
   }
+  public applyPosition() {
+    super.applyPosition()
+    this.drawElements()
+  }
 
   public get attached_node() { return this._attached_node }
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
   public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
+
+  public get selected_elements_list() {
+    return this.sankey.drawing_area.selected_containers_list
+  }
+    public set_contextualized_element(element: Class_NodeBase) {
+    this.drawing_area.contextualised_container = element as Class_ContainerElement
+  }
 }
