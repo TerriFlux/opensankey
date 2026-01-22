@@ -954,7 +954,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
         // CTRL
         if (event.ctrlKey) {
           this.addOrRemoveLinkFromSelection()
-          // Update components related to link edition
+          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
+          this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
+          this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
           this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
         }
         // OTHERS
