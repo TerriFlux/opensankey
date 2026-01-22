@@ -927,8 +927,8 @@ export const BASE_LABEL_CONFIG = {
   } satisfies AttributeConfig<string | undefined>,
 
   color_sustainable: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
+    default: true as boolean,
+    type: (() => true) as (() => boolean),
     category: 'icon' as const,
     actions: ['drawIcon'] as BaseActionType[],
     labels: {
