@@ -762,15 +762,16 @@ const LabelContentComponent = ({
             <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
           </Box>
         </Box></> : <></>}
-      <Divider />
-      <Box as='span' textStyle='title_sub_section'>Fond</Box>
-      <MenuShapeAttributes
-        app_data={app_data}
-        elements={elements}
-        attributePath={attributePath}
-        prefix={prefix + '_background' as ShapePrefix}
-        refreshUI={refreshParentComponent}
-      />
+      {(selection.hasNodes || selection.hasLinks || menu_style) && (<>
+        <Divider />
+        <Box as='span' textStyle='title_sub_section'>Fond</Box>
+        <MenuShapeAttributes
+          app_data={app_data}
+          elements={elements}
+          attributePath={attributePath}
+          prefix={prefix + '_background' as ShapePrefix}
+          refreshUI={refreshParentComponent}
+        /></>)}
     </Box>
   )
 }

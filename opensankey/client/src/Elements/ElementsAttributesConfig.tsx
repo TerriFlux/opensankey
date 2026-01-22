@@ -1982,50 +1982,18 @@ export const ALL_ATTRIBUTES_CONFIG = {
   ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
   ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
 
-  ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
+  ...createConfigWithPrefixAndOverrides(ICON_LABEL_BASE_CONFIG, 'icon',
+      'icon',
+      ['drawIcon'],
+      {
+        // ✅ Surcharges spécifiques au prefix
+        box_width: {
+          default: 50,
+        }
+}),
   ...HYPER_LINK_CONFIG,
 } as const
 
-// export const LINKS_ATTRIBUTES_CONFIG = {
-//   ...createConfigWithPrefixAndOverrides(
-//     BASE_SHAPE_CONFIG,
-//     'shape' as const,
-//     'shape',
-//     ['drawElements'] as BaseActionType[],
-//     {
-//       // Overrides pour les liens
-//       type: {
-//         default: 'bezier_path',
-//         labels: {
-//           en: 'Type',
-//           fr: 'Type'
-//         },
-//         tooltips: {
-//           en: 'Choose the shape type for the link',
-//           fr: 'Choisir le type de forme pour le flux'
-//         }
-//       }
-//     }
-//   ),
-//   ...createConfigWithPrefix(LINK_SHAPE_SPECIFIC_CONFIG, 'shape' as const),
-//   ...createConfigWithPrefix(NAME_LABEL_CONFIG, 'name_label'),
-//   ...createLinkLabelSpecificConfig('name_label' as const, 'name_label', 'drawNameLabel'),
-//   ...createConfigWithPrefixAndOverrides(
-//     VALUE_LABEL_CONFIG,
-//     'value_label' as const,
-//     'value_label',
-//     ['drawValueLabel'] as BaseActionType[],
-//     {
-//       is_visible: { default: true },
-//       font_size: { default: 20 },
-//       vert: { default: 'middle' }
-//     }
-//   ),
-//   ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
-//   ...createConfigWithPrefix(ICON_LABEL_BASE_CONFIG, 'icon'),
-//   ...HYPER_LINK_CONFIG,
-// } as const
-// ✅ Union de tous vos éléments
 export type ElementsType = Class_LinkElement[] | Class_NodeBase[] | Class_ElementStyle[]
 // Hook pour extraire la logique commune des composants ElementAttr*
 

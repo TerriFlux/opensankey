@@ -297,7 +297,7 @@ export abstract class DrawLabelBase {
    * ✅ Dessine une icône
    */
   public drawIcon() {
-    if (!this._element.d3_selection || !this._label_values.icon_name || !this._label_values.color) return
+    if (!this._element.d3_selection || !this._label_values.is_visible || !this._label_values.icon_name || !this._label_values.color) return
 
     const [icon_pos_x, icon_pos_y] = this.getIconPos()
     const [icon_width, icon_height] = this.getIconSize()
@@ -763,7 +763,8 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
   }
 
   protected getIconSize() {
-    return [24, 24] as [number, number]
+    return [this._element.icon_box_width, this._element.icon_box_width] as [number, number]
+    //return [24, 24] as [number, number]
   }
 
   protected getIconPos(): [number, number] {
@@ -1277,7 +1278,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
     let ortho_position = label_ortho_position
     let ratio = 1
-    const bezier_outline = this.link.shape_type == 'bezier_outline' || (this.link.shape_border_visible /*&& !this.link.shape_color_visible*/)
+    const bezier_outline = this.link.shape_type == 'bezier_outline' || (this.link.shape_border_visible && !this.link.linkIsStructure())
     if (bezier_outline) {
       ratio = 3
       ortho_position = this.link.thickness / 2
@@ -1424,7 +1425,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   protected getIconSize(): [number, number] {
-    return [24, 24]
+    return [this._element.icon_box_width, this._element.icon_box_width] as [number, number]
   }
 
   protected getIconPos(): [number, number] {
