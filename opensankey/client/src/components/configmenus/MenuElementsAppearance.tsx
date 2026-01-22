@@ -805,9 +805,10 @@ export const MenuConfigurationAppearance = ({
   const [editMarginsUnified, setEditMarginsUnified] = useState(true)
 
   // ✅ State pour l'onglet actif : 5 onglets
-  type ActiveTab = 'background' | 'shape' | 'name' | 'value' | 'icon'
+  type ActiveTab = 'background' | 'shape' | 'name_label' | 'value_label' | 'icon'
   const [activeTab, setActiveTab] = useState<ActiveTab>('background')
-
+  if (activeTab !== app_data.menu_configuration.tab_selected)
+    setActiveTab(app_data.menu_configuration.tab_selected)
   // ✅ Récupération éléments
   const getAllSelectedElements = (): (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] => {
     const elements: (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[] = []
@@ -917,31 +918,46 @@ export const MenuConfigurationAppearance = ({
           <Box layerStyle='options_5cols'>
             <Button
               variant={activeTab === 'background' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => setActiveTab('background')}
+              onClick={() => {
+                app_data.menu_configuration.tab_selected = 'background'
+                setActiveTab('background')
+              }}
             >
               {t('Menu.background') || 'Fond'}
             </Button>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => setActiveTab('shape')}
+              onClick={() => {
+                app_data.menu_configuration.tab_selected = 'shape'
+                setActiveTab('shape')
+              }}
             >
               {'Forme'}
             </Button>
             <Button
-              variant={activeTab === 'name' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => setActiveTab('name')}
+              variant={activeTab === 'name_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                app_data.menu_configuration.tab_selected = 'name_label'
+                setActiveTab('name_label')
+              }}
             >
               {t('Noeud.labels.name_label_is_visible') || 'Nom'}
             </Button>
             <Button
-              variant={activeTab === 'value' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => setActiveTab('value')}
+              variant={activeTab === 'value_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              onClick={() => {
+                app_data.menu_configuration.tab_selected = 'value_label'
+                setActiveTab('value_label')
+              }}
             >
               {t('Noeud.labels.value_label_is_visible') || 'Valeur'}
             </Button>
             <Button
               variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => setActiveTab('icon')}
+              onClick={() => {
+                app_data.menu_configuration.tab_selected = 'icon'
+                setActiveTab('icon')
+              }}
             >
               {t('Noeud.labels.icon_is_visible') || 'Icône'}
             </Button>
@@ -1310,7 +1326,7 @@ export const MenuConfigurationAppearance = ({
           )}
 
           {/* ========== ONGLETS LABELS ========== */}
-          {activeTab === 'name' && (
+          {activeTab === 'name_label' && (
             <MenuSectionCheckbox
               elements={elements}
               attributePath='Noeud.labels'
@@ -1331,7 +1347,7 @@ export const MenuConfigurationAppearance = ({
             </MenuSectionCheckbox>
           )}
 
-          {activeTab === 'value' && (
+          {activeTab === 'value_label' && (
             <MenuSectionCheckbox
               elements={elements}
               attributePath='Noeud.labels'
