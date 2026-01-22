@@ -605,6 +605,7 @@ export const resources_app_elements = {
         },
       },
       LL: {
+        'linked': 'Marges',
         'hl': 'Hauteur',
         'll': 'Largeur',
         'ft': 'Opacité',
