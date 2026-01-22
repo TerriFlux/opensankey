@@ -98,7 +98,6 @@ export class Class_DrawingArea {
   public drawing_link = false
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
-  // private _bypass_autofit: boolean = false
 
   protected _height: number
   protected _width: number
@@ -1959,13 +1958,4 @@ export class Class_DrawingArea {
 
   public get background_image(): string { return this._background_image }
   public set background_image(value: string) { this._background_image = value }
-
-  // public get bypass_autofit() {
-  //   if (window.sankey?.publish && this._bypass_autofit) {
-  //     return true
-  //   }
-  //   return false
-  // }
-
-  // public set bypass_autofit(value) { this._bypass_autofit = value }
 }

@@ -113,7 +113,7 @@ export class NodeDrawShape {
       margin_top = this._node.getShapeWidthToUse()/2
     }
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
-      .attr('transform', 'translate(' + 0 + ',' + -1*margin_top+ ')')
+      .attr('transform', 'translate(' + -1* this._node.shape_margin_left + ',' + -1*margin_top+ ')')
 
     // Apply common properties
     this._node.d3_selection_g_shape?.selectAll('.node_shape')

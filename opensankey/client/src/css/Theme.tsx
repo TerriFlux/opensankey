@@ -2592,7 +2592,7 @@ const layerStyles = {
   menuconfigpanel_row_droplist_simple: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    gridTemplateColumns: '2fr 4fr 1fr',
+    gridTemplateColumns: '2fr 6fr 1fr',
   },
 
   menuconfigpanel_zdt_row_droplist: {
