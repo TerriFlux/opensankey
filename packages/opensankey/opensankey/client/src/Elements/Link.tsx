@@ -519,9 +519,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public getPathColorToUse(): string {
+  public getShapeColorToUse(): string {
     if (this.sibling) {
-      return this.sibling.getPathColorToUse()
+      return this.sibling.getShapeColorToUse()
     }
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
@@ -731,7 +731,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           return is_revert ? target_color : source_color
       }
     }
-    return this.getPathColorToUse()
+    return this.getShapeColorToUse()
   }
 
   /**
