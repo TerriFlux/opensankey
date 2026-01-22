@@ -63,7 +63,8 @@ import {
   getShapeAttributeKey,
   isShapeValueIndeterminate,
   isValueLabelIndeterminate,
-  getNodeShapeAttributeKey
+  getNodeShapeAttributeKey,
+  getLabelAttributeKey
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 // import { MenuUnit } from './MenuElementsLabelValue'
@@ -119,7 +120,7 @@ const LabelContentComponent = ({
   refreshParentComponent: () => void
 }) => {
   type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
-
+  const { icon_locked, icon_unlocked } = app_data.icon_library
   const labelValues = elements.length > 0
     ? getElementsLabelValues(elements, prefix, refreshParentComponent)
     : Object.fromEntries(Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])) as {
@@ -231,21 +232,21 @@ const LabelContentComponent = ({
       )}
 
       {/* Section TEXT */}
-        {(displayMode === 'simple_text' || displayMode === 'value') && (
-      <Box layerStyle='options_2cols'>
-        <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-          <Select
-            variant='menuconfigpanel_option_select'
-            value={labelValues.font_family}
-            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              labelValues.font_family = evt.target.value
-            }}
-          >
-            {font_families.map((d: string) => (
-              <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
-            ))}
-          </Select>
-        </LabelWithOverload>
+      {(displayMode === 'simple_text' || displayMode === 'value') && (
+        <Box layerStyle='options_2cols'>
+          <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+            <Select
+              variant='menuconfigpanel_option_select'
+              value={labelValues.font_family}
+              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+                labelValues.font_family = evt.target.value
+              }}
+            >
+              {font_families.map((d: string) => (
+                <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
+              ))}
+            </Select>
+          </LabelWithOverload>
           <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ConfigMenuNumberInput
               t={app_data.t}
@@ -258,7 +259,7 @@ const LabelContentComponent = ({
               multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
             />
           </LabelWithOverload>
-      </Box>)}
+        </Box>)}
       {(displayMode === 'simple_text' || displayMode === 'value') && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
           <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
@@ -321,13 +322,32 @@ const LabelContentComponent = ({
               <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
             </Box>
           </Box>
-
-          <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-            <MenuColorPicker
-              initialColor={labelValues.color}
-              onColorChange={(new_color) => { labelValues.color = new_color }}
-            />
-          </LabelWithOverload>
+          <Box layerStyle='option_with_activation'>
+            <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+              <MenuColorPicker
+                initialColor={labelValues.color}
+                onColorChange={(new_color) => { labelValues.color = new_color }}
+              />
+            </LabelWithOverload>
+            <OSTooltip label={app_data.t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'color_sustainable')}`)}>
+              <Button
+                variant={labelValues.color_sustainable ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+                onClick={() => {
+                  labelValues.color_sustainable = !labelValues.color_sustainable
+                }}
+              >
+                {labelValues.color_sustainable ? icon_locked : icon_unlocked}
+                <TooltipElementOverloaded
+                  elements={base_elements}
+                  t={app_data.t}
+                  attributeKey={'color_sustainable'}
+                  config={BASE_LABEL_CONFIG}
+                  prefix={prefix} />
+              </Button>
+            </OSTooltip>
+          </Box>
         </Box>
 
         <Box layerStyle='options_2cols'>
@@ -761,16 +781,15 @@ const LabelContentComponent = ({
             <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
           </Box>
         </Box></> : <></>}
-      {(selection.hasNodes || selection.hasLinks || menu_style) && (<>
-        <Divider />
-        <Box as='span' textStyle='title_sub_section'>Fond</Box>
-        <MenuShapeAttributes
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          prefix={prefix + '_background' as ShapePrefix}
-          refreshUI={refreshParentComponent}
-        /></>)}
+      <Divider />
+      <Box as='span' textStyle='title_sub_section'>Fond</Box>
+      <MenuShapeAttributes
+        app_data={app_data}
+        elements={elements}
+        attributePath={attributePath}
+        prefix={prefix + '_background' as ShapePrefix}
+        refreshUI={refreshParentComponent}
+      />
     </Box>
   )
 }
@@ -1615,14 +1634,33 @@ export const MenuShapeAttributes = ({
                 prefix={prefix} />
             </OSTooltip>
           </Checkbox>
-
-          <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
-            <MenuColorPicker
-              initialColor={shapeValues.border_color}
-              onColorChange={(new_color) => {
-                shapeValues.border_color = new_color
-              }} />
-          </OSTooltip>
+          <Box as='span' layerStyle='option_with_activation'>
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
+              <MenuColorPicker
+                initialColor={shapeValues.border_color}
+                onColorChange={(new_color) => {
+                  shapeValues.border_color = new_color
+                }} />
+            </OSTooltip>
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color_sustainable')}`)}>
+              <Button
+                variant={shapeValues.color_sustainable ?
+                  'menuconfigpanel_option_button_activated' :
+                  'menuconfigpanel_option_button'}
+                onClick={() => {
+                  shapeValues.border_color_sustainable = !shapeValues.border_color_sustainable
+                }}
+              >
+                {shapeValues.border_color_sustainable ? icon_locked : icon_unlocked}
+                <TooltipElementOverloaded
+                  elements={base_elements}
+                  t={t}
+                  attributeKey={'border_color_sustainable'}
+                  config={config}
+                  prefix={prefix} />
+              </Button>
+            </OSTooltip>
+          </Box>
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>

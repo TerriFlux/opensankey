@@ -525,6 +525,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   // =================== BORDER ATTRIBUTES (border_*) ===================
   shape_border_visible!: ShapeAttributeTypes['border_visible']
   shape_border_color!: ShapeAttributeTypes['border_color']
+  shape_border_color_sustainable!: ShapeAttributeTypes['border_color_sustainable']
   shape_border_thickness!: ShapeAttributeTypes['border_thickness']
   shape_border_dashed!: ShapeAttributeTypes['border_dashed']
   shape_border_radius!: ShapeAttributeTypes['border_radius']
@@ -582,6 +583,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_background_color_sustainable!: NameLabelAttributeTypes['background_color_sustainable']
   name_label_background_border_visible!: NameLabelAttributeTypes['background_border_visible']
   name_label_background_border_color!: NameLabelAttributeTypes['background_border_color']
+  name_label_background_border_color_sustainable!: NameLabelAttributeTypes['background_border_color_sustainable']
   name_label_background_border_thickness!: NameLabelAttributeTypes['background_border_thickness']
   name_label_background_border_dashed!: NameLabelAttributeTypes['background_border_dashed']
   name_label_background_border_radius!: NameLabelAttributeTypes['background_border_radius']
