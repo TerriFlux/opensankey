@@ -108,7 +108,7 @@ export class LinkDrawShape {
           .attr('stroke-width', '0')
       }
       else {
-        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible /*&& !this._link.shape_color_visible*/)
+        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.linkIsStructure())
         let path = ''
         if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
         else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
@@ -116,7 +116,7 @@ export class LinkDrawShape {
 
         const da = this._link.sankey.drawing_area
 
-        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible /*&& !this._link.shape_color_visible*/))
+        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.linkIsStructure()))
 
         // =================== BORDURE (si visible) ===================
         // ✅ Ajout de la condition pour bezier_outline

@@ -658,6 +658,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   icon_color!: IconLabelAttributeTypes['color']
   icon_is_visible!: IconLabelAttributeTypes['is_visible']
   icon_icon_name!: IconLabelAttributeTypes['icon_name']
+  icon_box_width!: IconLabelAttributeTypes['box_width']
   icon_view_box!: IconLabelAttributeTypes['view_box']
   icon_color_sustainable!: IconLabelAttributeTypes['color_sustainable']
   icon_horiz!: IconLabelAttributeTypes['horiz']
