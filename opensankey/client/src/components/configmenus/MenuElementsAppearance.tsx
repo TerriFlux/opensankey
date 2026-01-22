@@ -231,7 +231,7 @@ const LabelContentComponent = ({
       )}
 
       {/* Section TEXT */}
-
+        {(displayMode === 'simple_text' || displayMode === 'value') && (
       <Box layerStyle='options_2cols'>
         <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
           <Select
@@ -246,7 +246,6 @@ const LabelContentComponent = ({
             ))}
           </Select>
         </LabelWithOverload>
-        {(displayMode === 'simple_text' || displayMode === 'value') && (
           <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <ConfigMenuNumberInput
               t={app_data.t}
@@ -258,8 +257,8 @@ const LabelContentComponent = ({
               function_on_blur={(value) => { labelValues.font_size = value ?? labelValues.font_size }}
               multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
             />
-          </LabelWithOverload>)}
-      </Box>
+          </LabelWithOverload>
+      </Box>)}
       {(displayMode === 'simple_text' || displayMode === 'value') && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
           <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
