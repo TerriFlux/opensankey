@@ -841,6 +841,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (!this.d3_selection)
       return
     const da = this.sankey.drawing_area
+    const border_visible = this.shape_border_visible
+    const border_color = this.shape_border_color
+    const border_dashed = this.shape_border_dashed
+    const border_thickness = this.shape_border_thickness
     // Clean previous shape
     this.d3_selection?.selectAll('.link_arrow').remove()
     // draw arrow if needed
@@ -853,11 +857,17 @@ export class Class_LinkElement extends Class_LinkAttribute {
         this.d3_selection?.append('path')
           .attr('class', 'link_arrow')
           .attr('d', this._arrow_shape)
-          .attr('fill', arrow_color)
+          .attr('fill', this.shape_color_visible ? arrow_color : 'none')
           .attr('fill-opacity', da.type_data == 'data_label' && !this.has_data ? 0.2 : this.shape_opacity)
-          .attr('stroke', arrow_color)
-          .attr('stroke-width', 0.1)
+          // .attr('stroke', arrow_color)
+          // .attr('stroke-width', 0.1)
+          .attr('stroke', border_visible ? border_color : 'none')
+          .attr('stroke-width', border_visible ? border_thickness : 0)
+          .attr('stroke-opacity', border_visible ? 1 : 0)
+          .attr('stroke-dasharray', border_dashed ? '10,2' : '')
       }
+
+
     }
   }
 

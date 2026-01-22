@@ -359,10 +359,8 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 DRAW LINKS ARROW - RÉINTÉGRÉ DIRECTEMENT
   public drawLinksArrow() {
-    this._process_or_bypass(() => {
-      this._drawLinksArrow()
-      this._orderD3Elements()
-    })
+    this._drawLinksArrow()
+    this._orderD3Elements()
   }
 
   /**
