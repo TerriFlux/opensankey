@@ -829,7 +829,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
 
   public drawIcon() {
-    this._link_draw_icon.drawIcon()
+    this._link_draw_icon.drawGenericLabel()
   }
   /**
    * Draw arrow shape on d3
