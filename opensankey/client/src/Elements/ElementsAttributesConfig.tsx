@@ -1477,11 +1477,11 @@ export function getNameLabelValues(
  * Inclut margin_left, margin_right, margin_top, margin_bottom, position_type, position_dx, position_dy
  */
 export function getNodeShapeSpecificValues(
-  element: Class_NodeBase | Class_ElementStyle,
+  element: Class_NodeBase | Class_ElementStyle, prefix: ShapePrefix
 ) {
   const result = {} as NodeShapeSpecificValues
   const config = NODE_SHAPE_SPECIFIC_CONFIG
-  const prefix = 'shape'
+  //const prefix = 'shape'
 
   // Créer des getters/setters pour chaque propriété
   for (const key in config) {

@@ -294,17 +294,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       },
       getToggleValue: 'toggleTradeValue'
     },
-    resetTradeNode: {
-      type: 'action',
-      labels: {
-        en: 'Transform trade nodes in sectors',
-        fr: 'Transforme les noeuds d\'échanges en secteurs'
-      },
-      tooltips: {
-        en: 'Transform trade nodes in sectors',
-        fr: 'Transforme les noeuds d\'échanges en secteurs'
-      }
-    },
     applyRandomNodeColors: {
       type: 'action',
       labels: {
@@ -410,13 +399,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   return {
     fromNew: () => app_data.reinitialization(),
-    // bgGrid: () => drawing_area.bgGrid(),
-    // bgGridValue: () => drawing_area.grid_visible,
-    // maskLegend: () => drawing_area.maskLegend(),
-    // maskLegendValue: () => drawing_area.legend.masked,
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
-    resetTradeNode: () => { sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!)).forEach(n => n.removeTag(echangeTag!)) },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',

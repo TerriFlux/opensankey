@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import {
   BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,
-  getNameLabelValues, getShapeValue,
+  getNameLabelValues, getNodeShapeSpecificValues, getShapeValue,
   getValueLabelValues, LinkLabelSpecificValues,
   NameLabelAttributeTypes,
   ShapePrefix,
@@ -77,13 +77,11 @@ export abstract class DrawLabelBase {
     height: number,
     options?: {
       bgPrefix?: ShapePrefix
-      padding?: number
       className?: string
     }
   ) {
 
     const bgPrefix = options?.bgPrefix ?? `${this.prefix}_background` as ShapePrefix
-    const padding = options?.padding ?? 0
     const className = options?.className ?? `${this.prefix}_background`
 
     parent.select(`.${className}`).remove()
@@ -94,9 +92,11 @@ export abstract class DrawLabelBase {
       BASE_SHAPE_CONFIG
     )
 
-    if (!bgValues.visible) return null
+  const shapeValues = getNodeShapeSpecificValues(this._element as unknown as Class_NodeBase, `${this.prefix}_background` as ShapePrefix)
 
-    const bgElement = parent.append(bgValues.type === 'ellipse' ? 'ellipse' : 'rect')
+    if (!bgValues.visible) return null
+    const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
+    const bgElement = parent.append(type_to_use)
       .classed(`${this.prefix}_bg`, true)
       .classed(this.prefix, true)
       .classed(className, true)
@@ -111,17 +111,16 @@ export abstract class DrawLabelBase {
       bgElement
         .attr('cx', x + width / 2)
         .attr('cy', y + height / 2)
-        .attr('rx', width / 2 + padding)
-        .attr('ry', height / 2 + padding)
-    } else {
+        .attr('rx', width / 2 + shapeValues.margin_left + shapeValues.margin_right  )
+        .attr('ry', height / 2 + shapeValues.margin_top + shapeValues.margin_bottom )
+    } else if (bgValues.type === 'rect') {
       bgElement
-        .attr('x', x - padding)
-        .attr('y', y - padding)
-        .attr('width', width + padding * 2)
-        .attr('height', height + padding * 2)
+        .attr('x', x - shapeValues.margin_left )
+        .attr('y', y - shapeValues.margin_top)
+        .attr('width', width + shapeValues.margin_left + shapeValues.margin_right)
+        .attr('height', height + shapeValues.margin_top + shapeValues.margin_bottom)
         .attr('rx', bgValues.border_radius)
-    }
-
+    } 
     bgElement.lower()
     return bgElement
   }
@@ -218,8 +217,7 @@ export abstract class DrawLabelBase {
             width,
             height,
             {
-              className: 'element_fo_background',
-              padding: 5
+              className: 'element_fo_background'
             }
           )
         } else {
@@ -1249,6 +1247,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     let label_dominant_baseline = 'text-after-edge'
 
     const thickness = this._element.sankey.drawing_area.type_data !== 'structure' ? this.link.thickness : 2
+    const inside_vert = this._label_values.inside_vert ?? false  // ✅ AJOUTÉ
 
     if (this._label_values.position_offset !== 0) {
       label_position = this._label_values.position_offset
@@ -1262,14 +1261,30 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       }
     }
 
+    // ✅ CORRIGÉ : Inversion des baselines pour top
     if (this._label_values.vert === 'top' || (this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness)) {
-      label_ortho_position = -thickness / 2
+      if (inside_vert) {
+        // À l'intérieur, en haut : le texte descend depuis le bord supérieur
+        label_ortho_position = -thickness / 2
+        label_dominant_baseline = 'text-before-edge'  // ✅ Le haut du texte touche le bord
+      } else {
+        // À l'extérieur, en haut : le texte est au-dessus du flux
+        label_ortho_position = -thickness / 2
+        label_dominant_baseline = 'text-after-edge'  // ✅ Le bas du texte touche le bord
+      }
     } else if (this._label_values.vert === 'middle') {
       label_ortho_position = 0
       label_dominant_baseline = 'middle'
     } else if (this._label_values.vert === 'bottom') {
-      label_ortho_position = this.link.thickness / 2 + this.getFontSize()
-      label_dominant_baseline = 'text-top'
+      if (inside_vert) {
+        // À l'intérieur, en bas : le texte monte depuis le bord inférieur
+        label_ortho_position = thickness / 2
+        label_dominant_baseline = 'text-after-edge'  // ✅ Le bas du texte touche le bord
+      } else {
+        // À l'extérieur, en bas : le texte est en dessous du flux
+        label_ortho_position = thickness / 2
+        label_dominant_baseline = 'text-before-edge'  // ✅ Le haut du texte touche le bord
+      }
     }
 
     return [label_position, label_anchor, label_ortho_position, label_dominant_baseline]
