@@ -475,7 +475,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Gestion des actions spécifiques selon le mode
   const handleTagSelection = (tagg: Class_TagGroup, values: string[]) => {
     //app_data.drawing_area.bypass_redraws = true
-    app_data.drawing_area.bypass_autofit = true
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
@@ -505,7 +504,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         app_data.drawing_area.orderElementOnDA()
         break
     }
-    app_data.drawing_area.bypass_autofit = false
     updateComponents()
   }
 
@@ -616,7 +614,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             // level_tagg.siblings.forEach(sibling => {
             //   app_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !level_tagg.activated
             // })
-            app_data.drawing_area.bypass_autofit = true
             app_data.drawing_area.bypass_redraws = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg()
@@ -627,7 +624,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
               () => {
                 app_data.drawing_area.draw()
                 app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-                app_data.drawing_area.bypass_autofit = false
                 updateComponents()
               })
           }

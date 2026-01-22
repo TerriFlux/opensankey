@@ -233,13 +233,6 @@ export class Class_ContainerElement extends Class_NodeBase {
         }
         n.applyPosition()
       })
-      // if (!drawing_area.bypass_autofit) {
-      //   this.sankey.drawing_area.bypass_autofit = true
-      //   setTimeout(() => {
-      //     this.drawing_area.areaAutoFit()
-      //     this.sankey.drawing_area.bypass_autofit = false
-      //   }, 2000)
-      // }
     }
   }
 
