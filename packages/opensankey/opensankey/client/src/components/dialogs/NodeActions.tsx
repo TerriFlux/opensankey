@@ -96,9 +96,7 @@ export class NodeActions {
 
     if (child_dims.length > 0) {
       aggregate(this.app_data, this.contextualised_node, parent)
-      this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
-      this.app_data.drawing_area.bypass_autofit = false
       this.drawing_area.purgeSelection()
       this.drawing_area.node_contextualised = undefined
       //this.drawing_area.areaAutoFit(false)
@@ -142,9 +140,7 @@ export class NodeActions {
     if (childDims.length > 0) {
       const child = childDims.filter(dim=>dim.children.filter(c=>c.id==dim_name).length>0)[0].children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
-      this.app_data.drawing_area.bypass_autofit = true
       this.drawing_area.draw()
-      this.app_data.drawing_area.bypass_autofit = false
       // this.drawing_area.purgeSelection()
       //this.drawing_area.areaAutoFit(false)
       this.refreshAndSave()
