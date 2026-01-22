@@ -101,9 +101,9 @@ export abstract class DrawLabelBase {
       .classed(this.prefix, true)
       .classed(className, true)
       .attr('id', `${className}_${this.getElementId()}`)
-      .attr('fill', bgValues.color_visible ? bgValues.color : 'none')
+      .attr('fill', bgValues.color_visible ? (bgValues.color_sustainable ? bgValues.color : this._element.getShapeColorToUse()) : 'none')
       .attr('fill-opacity', bgValues.opacity)
-      .attr('stroke', bgValues.border_visible ? bgValues.border_color : 'none')
+      .attr('stroke', bgValues.border_visible ? (bgValues.border_color_sustainable ? bgValues.border_color : this._element.getShapeColorToUse()) : 'none')
       .attr('stroke-width', bgValues.border_thickness)
       .attr('stroke-dasharray', bgValues.border_dashed ? '5,3' : '')
 
@@ -918,7 +918,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
     selection
-      ?.attr('fill', this._label_values.color)
+      ?.attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
       .attr('font-size', String(this._label_values.font_size) + 'px')
