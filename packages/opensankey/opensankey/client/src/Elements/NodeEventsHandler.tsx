@@ -162,7 +162,7 @@ export class NodeEventsHandler {
       return
     }
 
-    const nodes_selected = this._node.selected_elements_list
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
 
     if (nodes_selected.includes(this._node)) {
@@ -186,7 +186,7 @@ export class NodeEventsHandler {
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-    const nodes_selected = this._node.selected_elements_list
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -261,7 +261,7 @@ export class NodeEventsHandler {
     }
 
     const drawing_area = this._node.drawing_area
-    const nodes_selected = this._node.selected_elements_list
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
