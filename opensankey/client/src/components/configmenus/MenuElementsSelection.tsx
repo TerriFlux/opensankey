@@ -510,8 +510,6 @@ const handleNameUpdate = (newName: string | null | undefined) => {
   // ==================================================================================
 
   const renderDropdown = () => {
-    const width = dropdownWidth || (mode === 'simple' ? '8vw' : '11vw')
-
     const labelKey = isMultiType
       ? 'Menu.selection'
       : singleConfig?.translationKeys.labelSelect
@@ -545,7 +543,7 @@ const handleNameUpdate = (newName: string | null | undefined) => {
       clearSearch: 'Effacer',
     }
     return (
-      <Box layerStyle='submenuconfig_droplist' width={width}>
+      <Box layerStyle='submenuconfig_droplist'>
         <MultiSelect
           options={options}
           value={selectedOptions}

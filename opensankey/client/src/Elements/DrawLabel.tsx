@@ -666,12 +666,15 @@ export abstract class DrawLabelBase {
     const vert = this._label_values.vert
     const lineCount = Math.max(0, tspanWidths.length - 1)
     const font_size = this._label_values.font_size
+    const inside_vert = this._label_values.inside_vert  // ✅ AJOUTÉ
 
-    if (vert === 'top' && lineCount > 0) {
+    // ✅ MODIFIÉ : Ne pas décaler vers le haut si inside_vert et vert === 'top'
+    if (vert === 'top' && lineCount > 0 && !inside_vert) {  // ✅ Ajout de !inside_vert
       textElement.attr('y', label_pos_y - lineCount * font_size)
     } else if (vert === 'middle' && lineCount > 0) {
       textElement.attr('y', label_pos_y - (lineCount * font_size / 2))
     }
+    // ✅ Si inside_vert et vert === 'top', on garde label_pos_y tel quel (pas de décalage)
 
     const tspans = textElement.selectAll('tspan').nodes() as SVGTSpanElement[]
     tspans.forEach((node, i) => {

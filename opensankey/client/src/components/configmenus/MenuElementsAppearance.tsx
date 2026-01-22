@@ -333,7 +333,7 @@ const LabelContentComponent = ({
 
         <Box layerStyle='options_2cols'>
           <Box display="flex" alignItems="center" gap={1}>
-            <Box layerStyle='options_3cols'>
+            <Box layerStyle='options_4cols'>
               <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.left_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
@@ -361,12 +361,6 @@ const LabelContentComponent = ({
                   <FaAlignRight />
                 </Button>
               </OSTooltip>
-            </Box>
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-          </Box>
-
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box layerStyle='options_3cols'>
               <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || 'Vertical'}>
                 <Button
                   variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
@@ -376,27 +370,11 @@ const LabelContentComponent = ({
                   {labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}
                 </Button>
               </OSTooltip>
-              <Button
-                variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
-              >
-                {app_data.icon_library.icon_label_on_path}
-              </Button>
-              <Button
-                variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
-              >
-                {app_data.icon_library.icon_label_auto_position}
-              </Button>
             </Box>
-            <Box display="flex" gap={0}>
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'on_path'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-            </Box>
+            <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+            <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
           </Box>
+
         </Box></>)
       }
 
@@ -757,6 +735,33 @@ const LabelContentComponent = ({
         <></>
       </Box>
 
+      {selection.hasLinks ? <>
+        <Divider />
+        <Box as='span' textStyle='title_sub_section'>Position Label Flux</Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box layerStyle='options_3cols'>
+
+            <Button
+              variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
+              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+              onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+            >
+              {app_data.icon_library.icon_label_on_path}
+            </Button>
+            <Button
+              variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
+              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+              onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+            >
+              {app_data.icon_library.icon_label_auto_position}
+            </Button>
+          </Box>
+          <Box display="flex" gap={0}>
+
+            <TooltipElementOverloaded prefix={prefix} attributeKey={'on_path'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
+            <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
+          </Box>
+        </Box></> : <></>}
       <Divider />
       <Box as='span' textStyle='title_sub_section'>Fond</Box>
       <MenuShapeAttributes
@@ -783,6 +788,7 @@ export const MenuConfigurationAppearance = ({
   const { sankey } = drawing_area
   const [, setCount] = useState(0)
   const { ref_selected_style } = menu_configuration
+  const [editMarginsUnified, setEditMarginsUnified] = useState(true)
 
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'background' | 'shape' | 'name' | 'value' | 'icon'
@@ -1019,128 +1025,175 @@ export const MenuConfigurationAppearance = ({
                       unit_text='px'
                       stepper={true}
                     />
-                    <Box as='span' textStyle='title_sub_section'>{t('LL.margin')}</Box>
-                    <OSTooltip label={app_data.t('Noeud.apparence.tooltips.shape_margin_left')} placement='left'>
-                      <Box as='span' layerStyle='options_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.shape_margin_left')}</Box>
+                    <Box as='span' textStyle='title_sub_section'>
+                      <Box display="flex" alignItems="center" gap={2}>
+                        {t('LL.margin')}
+
+                      </Box>
+                    </Box>
+                    <Box as='span' layerStyle='options_2cols'>
+
+                      <Checkbox
+                        size="sm"
+                        isChecked={editMarginsUnified}
+                        onChange={(evt) => setEditMarginsUnified(evt.target.checked)}
+                      >
+                        <OSTooltip label="Éditer toutes les marges en même temps">
+                          <Box>Liées</Box>
+                        </OSTooltip>
+                      </Checkbox>
+                      {editMarginsUnified ? (
+                        <OSTooltip label={app_data.t('Noeud.apparence.tooltips.shape_margin')} placement='left'>
                           <ConfigMenuNumberInput
                             t={app_data.t}
                             default_value={nodeShapeValues.margin_left}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
+                            function_on_blur={(value: number | null) => {
+                              if (value !== null) {
+                                nodeShapeValues.margin_left = value
+                                nodeShapeValues.margin_right = value
+                                nodeShapeValues.margin_top = value
+                                nodeShapeValues.margin_bottom = value
+                              }
+                            }}
                             minimum_value={0}
-                            stepper={true} />
+                            stepper={true}
+                          />
+                        </OSTooltip>
+                      ) : <></>}
+                    </Box>
+                    {!editMarginsUnified && (
+                      // Mode individuel : quatre inputs séparés
+                      <>
+                        <OSTooltip label={app_data.t('Noeud.apparence.tooltips.shape_margin_left')} placement='left'>
+                          <Box as='span' layerStyle='options_2cols'>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.shape_margin_left')}</Box>
+                              <ConfigMenuNumberInput
+                                t={app_data.t}
+                                default_value={nodeShapeValues.margin_left}
+                                function_on_blur={(value: number | null) => nodeShapeValues.margin_left = value!}
+                                minimum_value={0}
+                                stepper={true}
+                              />
+                            </Box>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_right')}</Box>
+                              <ConfigMenuNumberInput
+                                t={app_data.t}
+                                default_value={nodeShapeValues.margin_right}
+                                function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
+                                minimum_value={0}
+                                stepper={true}
+                              />
+                            </Box>
+                          </Box>
+                        </OSTooltip>
+                        <Box as='span' layerStyle='options_2cols'>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_top')}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              default_value={nodeShapeValues.margin_top}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
+                              minimum_value={0}
+                              stepper={true}
+                            />
+                          </Box>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_bottom')}</Box>
+                            <ConfigMenuNumberInput
+                              t={app_data.t}
+                              default_value={nodeShapeValues.margin_bottom}
+                              function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
+                              minimum_value={0}
+                              stepper={true}
+                            />
+                          </Box>
                         </Box>
+                      </>
+                    )}
+                    {selection.hasNodes ? <>
+                      <Divider />
+                      <Box as='span' textStyle='title_sub_section'>Options Noeuds</Box>
+                      <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_right')}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            default_value={nodeShapeValues.margin_right}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_right = value!}
-                            minimum_value={0}
-                            stepper={true} />
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
+                          <Box layerStyle='options_3cols'>
+                            {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
+                              <Button
+                                key={type}
+                                variant={getButtonVariant(
+                                  idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
+                                  isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
+                                  nodeShapeValues.position_type === type
+                                )}
+                                onClick={() => {
+                                  nodeShapeValues.position_type = type
+                                }}
+                              >
+                                {t(`Noeud.apparence.geometry_${type}`)}
+                              </Button>
+                            ))}
+                          </Box>
+                          <TooltipElementOverloaded
+                            elements={nodes_elements}
+                            t={t}
+                            attributeKey={'position_type'}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                          />
                         </Box>
-                      </Box>
-                      <Box as='span' layerStyle='options_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_top')}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            default_value={nodeShapeValues.margin_top}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_top = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{app_data.t('Noeud.apparence.shape_margin_bottom')}</Box>
-                          <ConfigMenuNumberInput
-                            t={app_data.t}
-                            default_value={nodeShapeValues.margin_bottom}
-                            function_on_blur={(value: number | null) => nodeShapeValues.margin_bottom = value!}
-                            minimum_value={0}
-                            stepper={true} />
-                        </Box>
-                      </Box>
-                    </OSTooltip>
-                    <Divider />
-                    <Box as='span' textStyle='title_sub_section'>Options</Box>
-                    <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
-                        <Box layerStyle='options_3cols'>
-                          {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
-                            <Button
-                              key={type}
-                              variant={getButtonVariant(
-                                idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
-                                isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
-                                nodeShapeValues.position_type === type
-                              )}
-                              onClick={() => {
-                                nodeShapeValues.position_type = type
-                              }}
-                            >
-                              {t(`Noeud.apparence.geometry_${type}`)}
-                            </Button>
-                          ))}
-                        </Box>
-                        <TooltipElementOverloaded
-                          elements={nodes_elements}
-                          t={t}
-                          attributeKey={'position_type'}
-                          config={NODE_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
-                      </Box>
-                    </OSTooltip>
-                    {nodeShapeValues.position_type == 'parametric' ? <>
-                      <ElementAttrSetterNumberInput2Cols
-                        app_data={app_data}
-                        config={NODE_SHAPE_SPECIFIC_CONFIG}
-                        elements={elements}
-                        attributePath='Noeud.apparence'
-                        attributeKey={'position_dx'}
-                        prefix={'shape'}
-                        refreshParentComponent={refreshAll}
-                        unit_text='pixels'
-                        stepper={true} />
-                      <ElementAttrSetterNumberInput2Cols
-                        app_data={app_data}
-                        config={NODE_SHAPE_SPECIFIC_CONFIG}
-                        elements={elements}
-                        attributePath='Noeud.apparence'
-                        attributeKey={'position_dy'}
-                        prefix={'shape'}
-                        refreshParentComponent={refreshAll}
-                        unit_text='pixels'
-                        stepper={true} /></> : <></>}
-                    <Checkbox
-                      {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
-                      isChecked={nodeShapeValues.orphan_node_visible}
-                      onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
-                    >
-                      <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
-                        {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
-                        <TooltipElementOverloaded
-                          elements={nodes_elements}
-                          t={t}
-                          attributeKey={'orphan_node_visible'}
-                          config={NODE_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
                       </OSTooltip>
-                    </Checkbox>
+                      {nodeShapeValues.position_type == 'parametric' ? <>
+                        <ElementAttrSetterNumberInput2Cols
+                          app_data={app_data}
+                          config={NODE_SHAPE_SPECIFIC_CONFIG}
+                          elements={elements}
+                          attributePath='Noeud.apparence'
+                          attributeKey={'position_dx'}
+                          prefix={'shape'}
+                          refreshParentComponent={refreshAll}
+                          unit_text='pixels'
+                          stepper={true} />
+                        <ElementAttrSetterNumberInput2Cols
+                          app_data={app_data}
+                          config={NODE_SHAPE_SPECIFIC_CONFIG}
+                          elements={elements}
+                          attributePath='Noeud.apparence'
+                          attributeKey={'position_dy'}
+                          prefix={'shape'}
+                          refreshParentComponent={refreshAll}
+                          unit_text='pixels'
+                          stepper={true} /></> : <></>}
+                      <Checkbox
+                        {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
+                        isChecked={nodeShapeValues.orphan_node_visible}
+                        onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
+                      >
+                        <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
+                          {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                          <TooltipElementOverloaded
+                            elements={nodes_elements}
+                            t={t}
+                            attributeKey={'orphan_node_visible'}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                          />
+                        </OSTooltip>
+                      </Checkbox>
+                    </> : <></>
+                    }
+                    {selection.hasNodes ?
+                      <Button
+                        variant={'menuconfigpanel_option_button'}
+                        onClick={() => {
+                          app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
+                          app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
+                        }}
+                      >
+                        {t('Noeud.Reorg_title')}
+                      </Button> : <></>}
                   </Box>
-                  {selection.hasNodes ?
-                    <Button
-                      variant={'menuconfigpanel_option_button'}
-                      onClick={() => {
-                        app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
-                        app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
-                      }}
-                    >
-                      {t('Noeud.Reorg_title')}
-                    </Button> : <></>}
                 </Box>
               )}
 
