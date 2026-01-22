@@ -165,6 +165,7 @@ export class Class_MenuConfig {
     'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag','flow_tag', 'data_tag','view'] }
   }
 
+  protected _tab_selected: 'background' | 'shape' | 'name_label' | 'value_label' | 'icon' = 'background'
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
     'data': [],
     'style': [],
@@ -172,8 +173,8 @@ export class Class_MenuConfig {
   }
 
   public get elements_configurable_selected() { return this._elements_configurable_selected }
-
-
+  public get tab_selected() { return this._tab_selected }
+  public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
   /* ========================================
     Timeout dict
   =========================================== */

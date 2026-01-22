@@ -416,8 +416,8 @@ export const BASE_SHAPE_CONFIG = {
       fr: 'Type de forme'
     },
     tooltips: {
-      en: 'Choose a shape (rectangle, ellipse, arrow)',
-      fr: 'Choisir une forme (rectangle, ellipse, flèche)'
+      en: 'Choose a shape (rectangle, ellipse, capsule)',
+      fr: 'Choisir une forme (rectangle, ellipse, capsule)'
     }
   } satisfies AttributeConfig<Type_Shape>,
 

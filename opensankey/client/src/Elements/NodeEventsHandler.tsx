@@ -65,6 +65,51 @@ export class NodeEventsHandler {
       }
     }
   }
+
+  /**
+   * ✅ Détermine quel type d'élément a été cliqué
+   */
+  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+    // Remonter dans le DOM pour trouver les classes pertinentes
+    let current: Element | null = element
+
+    while (current) {
+      const classList = current.classList
+
+      // Vérifier les labels de texte
+      if (classList.contains('value_label_text') ||
+        classList.contains('value_label') ||
+        current.id.includes('value_label')) {
+        return 'value_label'
+      }
+
+      if (classList.contains('name_label_text') ||
+        classList.contains('name_label') ||
+        current.id.includes('name_label')) {
+        return 'name_label'
+      }
+
+      // Vérifier les icônes
+      if (classList.contains('illustration_icon') ||
+        classList.contains('illustration') ||
+        current.id.includes('icon')) {
+        return 'icon'
+      }
+
+      // Vérifier la shape
+      if (classList.contains('node_shape') ||
+        current.id.includes('node_shape')) {
+        return 'shape'
+      }
+
+      // Remonter au parent
+      current = current.parentElement
+    }
+
+    // Par défaut, considérer que c'est la shape
+    return 'shape'
+  }
+
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
    */
@@ -84,12 +129,17 @@ export class NodeEventsHandler {
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
+      const clickedElement = event.target as Element
+      const labelType = this.getClickedLabelType(clickedElement)
       // CTRL
       if (event.ctrlKey) {
-        this.addOrRemoveNodeFromSelection()
+
+        this.addOrRemoveNodeFromSelection(labelType!)
+
         drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
         drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['node']
         drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
+        drawing_area.application_data.menu_configuration.tab_selected = labelType!
         drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
         this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
@@ -343,10 +393,11 @@ export class NodeEventsHandler {
   /**
    * Add or remove node from selection
    */
-  private addOrRemoveNodeFromSelection() {
+  private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_label' | 'icon') {
     if (this._node.selected_elements_list.includes(this._node)) {
       // Remove node from selection
-      this._node.drawing_area.removeElementFromSelection(this._node)
+      if (labelType == this._node.drawing_area.application_data.menu_configuration.tab_selected)
+        this._node.drawing_area.removeElementFromSelection(this._node)
     } else {
       // Add node to selection
       this._node.drawing_area.addElementToSelection(this._node)
