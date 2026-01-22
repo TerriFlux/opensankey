@@ -66,7 +66,7 @@ export class TooltipEventManager {
       if (this.activeTooltip.element) {
         const isOverElement = this.isMouseOverElement(event)
         const isOverTooltip = this.isMouseOverTooltip(event)
-        
+
         if (!isOverElement && !isOverTooltip) {
           // La souris n'est ni sur l'élément ni sur le tooltip
           this.startAutoCloseTimer()
@@ -82,10 +82,10 @@ export class TooltipEventManager {
     if (!this.activeTooltip.element || !this.activeTooltip.element.d3_selection) {
       return false
     }
-    
+
     const elementNode = this.activeTooltip.element.d3_selection.node()
     if (!elementNode) return false
-    
+
     // Vérifier si l'événement vient de l'élément ou de ses enfants
     return elementNode.contains(event.target as Node)
   }
@@ -302,7 +302,7 @@ export function implementTooltipForLink(LinkClass: typeof Class_LinkElement) {
     this: Class_LinkElement,
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    const show_tooltip = this.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
+    const show_tooltip = event.shiftKey
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan' && (event.target as HTMLElement).tagName !== 'text') {
       const tooltipManager = TooltipEventManager.getInstance()
 

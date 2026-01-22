@@ -168,7 +168,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   public drawNameLabel() {
-    if (this.drawing_area.bypass_redraws) return 
+    if (this.drawing_area.bypass_redraws) return
     this._nodeDrawNameLabel.drawGenericLabel()
     this._orderD3Elements()
   }
@@ -183,7 +183,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMouseOver(event)
-        this._nodeEventsHandler.handleMouseOver(event)
+    this._nodeEventsHandler.handleMouseOver(event)
   }
 
   //public getShapeColorToUse() { return this.shape_color }
@@ -269,8 +269,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeEventsHandler.handleMouseOut()
   }
   public eventDoubleLMBClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    super.eventDoubleLMBClick(event)
+    //this._nodeEventsHandler.handleDoubleLMBClick(event)
     if (this.hyperlink) {
       window.open(this.hyperlink, '_blank', 'noopener,noreferrer')
     }
@@ -498,7 +500,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public get selected_elements_list(): Class_NodeBase[] {
     return []
   }
-  public set_contextualized_element(element:Class_NodeBase) {
+  public set_contextualized_element(element: Class_NodeBase) {
 
   }
 }

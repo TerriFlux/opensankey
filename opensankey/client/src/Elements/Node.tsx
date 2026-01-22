@@ -1323,13 +1323,31 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public setTradeDimensions(importation: boolean) { this._nodeDimensionsManager.setTradeDimensions(importation) }
 
+  public eventDoubleLMBClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+
+    super.eventDoubleLMBClick(event)
+    this._nodeEventsHandler.handleDoubleLMBClick(event)
+
+  }
+
   public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleLMBClick(event)
-    this._nodeEventsHandler.handleSimpleLMBClick(event)
-    // OSP Extension - Ajouter cette section
-    if (this.hyperlink) {
-      window.open(this.hyperlink)
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+      return // C'était en fait un double-clic, on ignore
     }
+    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
+    this._clickTimer = setTimeout(() => {
+      this._clickTimer = null
+      super.eventSimpleLMBClick(event)
+      this._nodeEventsHandler.handleSimpleLMBClick(event)
+      // OSP Extension - Ajouter cette section
+      if (this.hyperlink) {
+        window.open(this.hyperlink)
+      }
+    }, this._clickDelay) // Délai pour détecter un double-clic (250 ms)
   }
   protected eventMaintainedClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     super.eventMaintainedClick(event)

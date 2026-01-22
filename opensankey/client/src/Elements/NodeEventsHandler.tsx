@@ -39,7 +39,32 @@ export class NodeEventsHandler {
   constructor(node: Class_NodeBase) {
     this._node = node
   }
-
+  public handleDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    const drawing_area = this._node.drawing_area
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return
+    }
+    if (drawing_area.isInEditionMode()) {
+      // Purge selection list
+      drawing_area.purgeSelection()
+      // Close all menus
+      drawing_area.closeAllMenus()
+    }
+    if (drawing_area.isInSelectionMode() && event.button === 0) {
+      // SHIFT
+      if (event.ctrlKey) {
+        if (!this._node.selected_elements_list.includes(this._node)) {
+          // add node to selection
+          this._node.drawing_area.addElementToSelection(this._node)
+        }
+        // Open related menu
+        this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
+        // Update components related to node edition
+        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      }
+    }
+  }
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
    */
@@ -48,7 +73,7 @@ export class NodeEventsHandler {
     const drawing_area = this._node.drawing_area
     if (drawing_area.application_data.is_static) {
       drawing_area.purgeSelection()
-      return      
+      return
     }
     // EDITION MODE ===========================================================
     if (drawing_area.isInEditionMode()) {
@@ -59,17 +84,6 @@ export class NodeEventsHandler {
     }
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
-      // SHIFT
-      // if (event.shiftKey) {
-      //   if (!this._node.selected_elements_list.includes(this._node)) {
-      //     // add node to selection
-      //     this._node.drawing_area.addElementToSelection(this._node)
-      //   }
-      //   // Open related menu
-      //   this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
-      //   // Update components related to node edition
-      //   this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      // }
       // CTRL
       if (event.ctrlKey) {
         this.addOrRemoveNodeFromSelection()
@@ -222,7 +236,7 @@ export class NodeEventsHandler {
         if (this._node.shape_position_type !== 'relative')
           this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
         if (this._node.shape_position_type == 'relative') {
-          const node_element = this._node  as Class_NodeElement
+          const node_element = this._node as Class_NodeElement
           if (node_element.hasInputLinks()) {
             const source_node = node_element.input_links_list[0].source
             this._node.shape_position_dx = this._node.position_x - source_node.position_x + source_node.getShapeWidthToUse()

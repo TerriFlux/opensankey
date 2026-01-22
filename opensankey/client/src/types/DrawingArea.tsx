@@ -1029,7 +1029,7 @@ export class Class_DrawingArea {
   }
 
   public recenter() {
-    if (!this.to_recenter) return 
+    if (!this.to_recenter) return
     let bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
@@ -1205,8 +1205,9 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventDoubleLMBClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    if (event.ctrlKey) return
     this.closeAllMenus()
     this._selection_zone.reset()
   }
@@ -1407,7 +1408,7 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this._ghost_link.target as Class_NodeElement
           )
-          ghost_link_json = {id:l.id}
+          ghost_link_json = { id: l.id }
           LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
           this._ghost_link_target = l.target //For undo/redo
 
@@ -1422,7 +1423,7 @@ export class Class_DrawingArea {
           // For undo : Set wasGhostSrc to true to delete created the node source when we created a link with the mouse on the DA
           wasGhostSrc = true
           // For redo : save ghost source in json to recreate it correctly at redo
-          ghost_src_json = {id:this._ghost_link_source.id}
+          ghost_src_json = { id: this._ghost_link_source.id }
           NodeElementPersistence.toJSON(this._ghost_link_source, ghost_src_json)
         }
 
@@ -1430,7 +1431,7 @@ export class Class_DrawingArea {
           // For undo : Set wasGhostTrgt to true to delete created the node target when we created a link with the mouse on the DA
           wasGhostTrgt = true
           // For redo : save ghost target in json to recreate it correctly at redo
-          ghost_trgt_json = {id:this._ghost_link_target.id}
+          ghost_trgt_json = { id: this._ghost_link_target.id }
           NodeElementPersistence.toJSON(this._ghost_link_target, ghost_trgt_json)
 
         }

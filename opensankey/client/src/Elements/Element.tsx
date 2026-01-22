@@ -322,6 +322,8 @@ export abstract class Class_BaseElement {
 }
 export abstract class Class_ProtoElement extends Class_BaseElement {
 
+  protected _clickTimer: NodeJS.Timeout | null = null
+  protected _clickDelay: number = 250 // ms - délai pour distinguer simple/double clic
   protected _storage: StorageType<ConfigType> = {}
   protected _config: ConfigType
 

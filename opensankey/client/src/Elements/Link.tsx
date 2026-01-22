@@ -164,24 +164,7 @@ export function sortLinksElementsByRelativeNodesPositions(
  * @class Class_LinkElement
  */
 export class Class_LinkElement extends Class_LinkAttribute {
-
-
   private _position_ending: Type_BaseElementPosition
-
-  //style: Class_ElementStyle[],
-  //attributes: Class_LinkAttribute
-
-  // optional var used when value label is dragged (if label doesn't follow link path)
-  // private _position_x_value?: number
-  // private _position_y_value?: number
-  // private _position_offset_value?: number
-
-  // private _position_x_name?: number
-  // private _position_y_name?: number
-  // private _position_offset_name?: number
-  // private _position_x_label?: number
-  // private _position_y_label?: number
-  // private _position_offset_label?: number
 
   private _tooltip_text: string = ''
 
@@ -294,6 +277,10 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   protected cleanForDeletion() {
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+    }
     if (this._source !== this._target) {
       // Unref self from source node
       this._source.deleteOutputLink(this)
@@ -904,7 +891,29 @@ export class Class_LinkElement extends Class_LinkAttribute {
     //this._link_draw_image.d3_selection?.raise()
     this._link_draw_icon.d3_selection?.raise()
   }
-
+  protected eventDoubleLMBClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+    // Apply parent behavior first
+    super.eventDoubleLMBClick(event)
+    const drawing_area = this.drawing_area
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return
+    }
+    if (drawing_area.isInSelectionMode()) {
+      if (event.ctrlKey) {
+        if (!this.drawing_area.selected_links_list.includes(this)) {
+          // add link to selection
+          this.drawing_area.addElementToSelection(this)
+        }
+        // Open related menu
+        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
+        // Update components related to link edition
+        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      }
+    }
+  }
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
    * @private
@@ -914,49 +923,50 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected eventSimpleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    // Apply parent behavior first
-    super.eventSimpleLMBClick(event)
-    // Get related drawing area
-    const drawing_area = this.drawing_area
-    if (drawing_area.application_data.is_static) {
-      drawing_area.purgeSelection()
-      return
+    // ✅ Annuler le timer précédent s'il existe
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+      return // C'était en fait un double-clic, on ignore
     }
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      // Purge selection list
-      drawing_area.purgeSelection()
-      // Close all menus
-      drawing_area.closeAllMenus()
-    }
-    // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode()) {
-      // SHIFT
-      // if (event.shiftKey) {
-      //   if (!this.drawing_area.selected_links_list.includes(this)) {
-      //     // add link to selection
-      //     this.drawing_area.addElementToSelection(this)
-      //   }
-      //   // Open related menu
-      //   this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
-      //   // Update components related to link edition
-      //   this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      // }
-      // CTRL
-      if (event.ctrlKey) {
-        this.addOrRemoveLinkFromSelection()
-        // Update components related to link edition
-        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
+    this._clickTimer = setTimeout(() => {
+      this._clickTimer = null
+      // Apply parent behavior first
+      super.eventSimpleLMBClick(event)
+      // Get related drawing area
+      const drawing_area = this.drawing_area
+      if (drawing_area.application_data.is_static) {
+        drawing_area.purgeSelection()
+        return
       }
-      // OTHERS
-      else {
-        // If we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+      // EDITION MODE ===========================================================
+      if (drawing_area.isInEditionMode()) {
         // Purge selection list
         drawing_area.purgeSelection()
-        // Add link to selection
-        drawing_area.addElementToSelection(this)
+        // Close all menus
+        drawing_area.closeAllMenus()
       }
-    }
+      // SELECTION MODE =========================================================
+      else if (drawing_area.isInSelectionMode()) {
+        // SHIFT
+
+        // CTRL
+        if (event.ctrlKey) {
+          this.addOrRemoveLinkFromSelection()
+          // Update components related to link edition
+          this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+        }
+        // OTHERS
+        else {
+          // If we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
+          // Purge selection list
+          drawing_area.purgeSelection()
+          // Add link to selection
+          drawing_area.addElementToSelection(this)
+        }
+      }
+    }, this._clickDelay)
   }
 
   protected eventSimpleRMBClick(
