@@ -997,7 +997,6 @@ export const MenuConfigurationAppearance = ({
                     </OSTooltip>
 
                     <Divider />
-                    <Box as='span' textStyle='title_sub_section'>Géométrie</Box>
                     <ElementAttrSetterNumberInput2Cols
                       app_data={app_data}
                       elements={elements}
@@ -1020,7 +1019,7 @@ export const MenuConfigurationAppearance = ({
                       unit_text='px'
                       stepper={true}
                     />
-                    <Box layerStyle='menuconfigpanel_option_name'>{t('LL.margin')}</Box>
+                    <Box as='span' textStyle='title_sub_section'>{t('LL.margin')}</Box>
                     <OSTooltip label={app_data.t('Noeud.apparence.tooltips.shape_margin_left')} placement='left'>
                       <Box as='span' layerStyle='options_2cols'>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
@@ -1094,6 +1093,27 @@ export const MenuConfigurationAppearance = ({
                         />
                       </Box>
                     </OSTooltip>
+                    {nodeShapeValues.position_type == 'parametric' ? <>
+                      <ElementAttrSetterNumberInput2Cols
+                        app_data={app_data}
+                        config={NODE_SHAPE_SPECIFIC_CONFIG}
+                        elements={elements}
+                        attributePath='Noeud.apparence'
+                        attributeKey={'position_dx'}
+                        prefix={'shape'}
+                        refreshParentComponent={refreshAll}
+                        unit_text='pixels'
+                        stepper={true} />
+                      <ElementAttrSetterNumberInput2Cols
+                        app_data={app_data}
+                        config={NODE_SHAPE_SPECIFIC_CONFIG}
+                        elements={elements}
+                        attributePath='Noeud.apparence'
+                        attributeKey={'position_dy'}
+                        prefix={'shape'}
+                        refreshParentComponent={refreshAll}
+                        unit_text='pixels'
+                        stepper={true} /></> : <></>}
                     <Checkbox
                       {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
                       isChecked={nodeShapeValues.orphan_node_visible}

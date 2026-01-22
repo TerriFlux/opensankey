@@ -559,7 +559,7 @@ export const ElementAttrSetterNumberInput2Cols = <
   K extends keyof CONFIG
 >({
     app_data, elements, attributePath, attributeKey, config,
-    prefix = '', refreshParentComponent = () => null,
+    prefix, refreshParentComponent = () => null,
     minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
   }: {
   app_data: Class_ApplicationData
@@ -567,7 +567,7 @@ export const ElementAttrSetterNumberInput2Cols = <
   attributePath: string,
   attributeKey: K,
   config: CONFIG,
-  prefix?: string,
+  prefix: string,
   refreshParentComponent?: () => void
   minimum_value?: number
   maximum_value?: number

@@ -372,7 +372,7 @@ export class NodePositioning {
       .filter(link =>
       // Computes only for link to visible nodes
       // and not for nodes related to recycling flux
-        (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
+      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
         !recycling_links_ids.includes(link.id)))
       .forEach(link => {
         // Next node to recurse on
@@ -1675,23 +1675,6 @@ export class NodePositioning {
         columns[n.position_u].push(n)
       }
     })
-
-    // Calcul des positions dy
-    Object.values(columns).forEach(column => {
-      column.sort((n1, n2) => n1.position_y - n2.position_y)
-      column.forEach((n, i) => {
-        if (i == 0) {
-          return
-        }
-        const dy = n.position_y - column[i - 1].position_y - column[i - 1].getShapeHeightToUse()
-        if (dy !== 0) {
-          n.shape_position_dy = dy
-        } else {
-          //delete n.local!.dy
-        }
-      })
-    })
-
     return columns
   }
 
@@ -1853,7 +1836,9 @@ export class NodePositioning {
         }
 
         this.drawingArea.draw()
+        this.drawingArea.to_recenter = true
         this.drawingArea.recenter()
+        this.drawingArea.to_recenter = false
         // Update area
         this.drawingArea.areaAutoFit()
         // Toggle saving indicator

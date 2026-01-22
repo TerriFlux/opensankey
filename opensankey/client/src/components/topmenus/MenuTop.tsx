@@ -743,7 +743,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
 
   const edit_button = <OSTooltip
     placement='bottom'
-    label={new_data.t('Menu.tooltips.tuto')}
+    label={'Editer le diagramme dans OpenSankey'}
   >
     <Button
       variant='menutop_button'

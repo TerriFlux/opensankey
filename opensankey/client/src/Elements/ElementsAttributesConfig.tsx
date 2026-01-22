@@ -1563,12 +1563,12 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'Left margin',
-      fr: 'Marge gauche'
+      en: 'Left',
+      fr: 'Gauche'
     },
     tooltips: {
-      en: 'Left margin from attached nodes',
-      fr: 'Marge gauche depuis les nœuds attachés'
+      en: 'Left margin',
+      fr: 'Marge gauche '
     }
   } satisfies AttributeConfig<number>,
 
@@ -1579,12 +1579,12 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'Right margin',
-      fr: 'Marge droite'
+      en: 'Right',
+      fr: 'Droite'
     },
     tooltips: {
-      en: 'Right margin from attached nodes',
-      fr: 'Marge droite depuis les nœuds attachés'
+      en: 'Right margin',
+      fr: 'Marge droite'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1595,12 +1595,12 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'Top margin',
-      fr: 'Marge haute'
+      en: 'Top',
+      fr: 'Haute'
     },
     tooltips: {
-      en: 'Top margin from attached nodes',
-      fr: 'Marge haute depuis les nœuds attachés'
+      en: 'Top margin',
+      fr: 'Marge haute'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1611,18 +1611,18 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'Bottom margin',
-      fr: 'Marge basse'
+      en: 'Bottom',
+      fr: 'Basse'
     },
     tooltips: {
-      en: 'Bottom margin from attached nodes',
-      fr: 'Marge basse depuis les nœuds attachés'
+      en: 'Bottom margin',
+      fr: 'Marge basse'
     }
   } satisfies AttributeConfig<number>,
   position_type: {
     default: default_position_type,
     type: (() => default_position_type) as (() => Type_Position),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
@@ -1637,12 +1637,12 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   position_dx: {
     default: 200,
     type: (() => 200) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'x',
-      fr: 'x'
+      en: 'Horizontal',
+      fr: 'Horizontal'
     },
     tooltips: {
       en: 'x',
@@ -1652,12 +1652,12 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
   position_dy: {
     default: 20,
     type: (() => 20) as (() => number),
-    category: 'margins' as const,
+    category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
     labels: {
-      en: 'x',
-      fr: 'x'
+      en: 'Vertical',
+      fr: 'Vertical'
     },
     tooltips: {
       en: 'x',
