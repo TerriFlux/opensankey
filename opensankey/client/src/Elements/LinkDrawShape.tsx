@@ -78,7 +78,7 @@ export class LinkDrawShape {
 
       // Avoid recomputations
       const thickness = !this._link.linkIsStructure() ? this._link.thickness : 2
-      const shape_color = this._link.getPathColorToUse()
+      const shape_color = this._link.getShapeColorToUse()
       const shape_opacity = this._link.sankey.drawing_area.type_data == 'data_label' && !this._link.has_data ? 0.2 : (this._link.shape_color_visible ? this._link.shape_opacity : 0)
 
       // Check to choose how to draw

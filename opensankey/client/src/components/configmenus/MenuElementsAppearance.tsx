@@ -783,14 +783,22 @@ const LabelContentComponent = ({
           </Box>
         </Box></> : <></>}
       <Divider />
-      <Box as='span' textStyle='title_sub_section'>Fond</Box>
-      <MenuShapeAttributes
-        app_data={app_data}
+      <MenuSectionCheckbox
         elements={elements}
         attributePath={attributePath}
-        prefix={prefix + '_background' as ShapePrefix}
-        refreshUI={refreshParentComponent}
-      />
+        attributeKey={'visible'}
+        config={BASE_SHAPE_CONFIG}
+        prefix={`${prefix}_background` as ShapePrefix}
+        refreshParentComponent={refreshParentComponent}
+      >
+        {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (
+        <MenuShapeAttributes
+          app_data={app_data}
+          elements={elements}
+          attributePath={attributePath}
+          prefix={`${prefix}_background` as ShapePrefix}
+          refreshUI={refreshParentComponent}
+        />)}</MenuSectionCheckbox>
     </Box>
   )
 }

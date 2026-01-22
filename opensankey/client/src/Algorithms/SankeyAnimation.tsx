@@ -149,7 +149,7 @@ export class SankeyAnimation {
       d3.select(element)
         .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
         .attr('stroke-dashoffset', totalLength)
-        .style('stroke', linkClass?.getPathColorToUse?.() || '#999')
+        .style('stroke', linkClass?.getShapeColorToUse?.() || '#999')
     })
       .transition()
       .duration(2000)
@@ -183,7 +183,7 @@ export class SankeyAnimation {
               : (targetNode.icon_is_visible ? targetNode.icon_color : 'grey')
 
             const isGradient = animatedLink.shape_color_rule === 'gradient'
-            const color = isGradient ? colorTarget : (animatedLink.getPathColorToUse?.() || '#999')
+            const color = isGradient ? colorTarget : (animatedLink.getShapeColorToUse?.() || '#999')
 
             if (color) {
               arrow.attr('fill', color)

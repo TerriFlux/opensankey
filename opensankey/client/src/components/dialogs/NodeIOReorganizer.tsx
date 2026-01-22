@@ -284,7 +284,7 @@ export const NodeIOReorganizer = ({
                   if (!link.is_visible) return <React.Fragment key={link.id} />
 
                   idx_link_io_visible += 1
-                  const color = link.getPathColorToUse()
+                  const color = link.getShapeColorToUse()
                   const bc = { backgroundColor: (color && tab_colored) ? color : 'inherit' }
                   const first_link = idx_link_io_visible === 0
                   const last_link = idx_link_io_visible === filtered_links_to_reorganize_length - 1
