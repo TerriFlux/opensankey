@@ -87,7 +87,10 @@ export class NodeEventsHandler {
       // CTRL
       if (event.ctrlKey) {
         this.addOrRemoveNodeFromSelection()
-        // Update components related to node edition
+        drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
+        drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['node']
+        drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
+        drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
         this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
       }
       // OTHERS

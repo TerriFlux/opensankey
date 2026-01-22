@@ -31,7 +31,8 @@ import {
   ElementAttrSetterTextInput2Cols,
   ElementAttrSetterSelect2Cols,
   ConditionalCheckboxWithInput,
-  SimpleElementCheckbox
+  SimpleElementCheckbox,
+  ColorPickerWithSustainable
 } from './MenuCommon'
 
 // Imports des configs
@@ -323,32 +324,17 @@ const LabelContentComponent = ({
               <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
             </Box>
           </Box>
-          <Box layerStyle='option_with_activation'>
-            <LabelWithOverload attributeKey="color" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-              <MenuColorPicker
-                initialColor={labelValues.color}
-                onColorChange={(new_color) => { labelValues.color = new_color }}
-              />
-            </LabelWithOverload>
-            <OSTooltip label={app_data.t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'color_sustainable')}`)}>
-              <Button
-                variant={labelValues.color_sustainable ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-                onClick={() => {
-                  labelValues.color_sustainable = !labelValues.color_sustainable
-                }}
-              >
-                {labelValues.color_sustainable ? icon_locked : icon_unlocked}
-                <TooltipElementOverloaded
-                  elements={base_elements}
-                  t={app_data.t}
-                  attributeKey={'color_sustainable'}
-                  config={BASE_LABEL_CONFIG}
-                  prefix={prefix} />
-              </Button>
-            </OSTooltip>
-          </Box>
+          <ColorPickerWithSustainable
+            app_data={app_data}
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            colorAttributeKey="color"
+            sustainableAttributeKey="color_sustainable"
+            refreshParentComponent={refreshParentComponent}
+          />
+
         </Box>
 
         <Box layerStyle='options_2cols'>
@@ -792,13 +778,13 @@ const LabelContentComponent = ({
         refreshParentComponent={refreshParentComponent}
       >
         {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (
-        <MenuShapeAttributes
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          prefix={`${prefix}_background` as ShapePrefix}
-          refreshUI={refreshParentComponent}
-        />)}</MenuSectionCheckbox>
+          <MenuShapeAttributes
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            prefix={`${prefix}_background` as ShapePrefix}
+            refreshUI={refreshParentComponent}
+          />)}</MenuSectionCheckbox>
     </Box>
   )
 }
@@ -1456,35 +1442,17 @@ export const MenuShapeAttributes = ({
                 prefix={prefix} />
             </OSTooltip>
           </Checkbox>
-          <Box layerStyle='option_with_activation'>
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color')}`)}>
-              <Box>
-                <MenuColorPicker
-                  initialColor={shapeValues.color}
-                  onColorChange={(new_color) => {
-                    shapeValues.color = new_color
-                  }} />
-              </Box>
-            </OSTooltip>
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_sustainable')}`)}>
-              <Button
-                variant={shapeValues.color_sustainable ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-                onClick={() => {
-                  shapeValues.color_sustainable = !shapeValues.color_sustainable
-                }}
-              >
-                {shapeValues.color_sustainable ? icon_locked : icon_unlocked}
-                <TooltipElementOverloaded
-                  elements={base_elements}
-                  t={t}
-                  attributeKey={'color_sustainable'}
-                  config={config}
-                  prefix={prefix} />
-              </Button>
-            </OSTooltip>
-          </Box>
+          <ColorPickerWithSustainable
+            app_data={app_data}
+            elements={elements}
+            config={BASE_SHAPE_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            colorAttributeKey="color"
+            sustainableAttributeKey="color_sustainable"
+            refreshParentComponent={refreshUI}
+          />
+
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>
@@ -1536,33 +1504,17 @@ export const MenuShapeAttributes = ({
                 prefix={prefix} />
             </OSTooltip>
           </Checkbox>
-          <Box as='span' layerStyle='option_with_activation'>
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color')}`) || 'Couleur de la bordure'}>
-              <MenuColorPicker
-                initialColor={shapeValues.border_color}
-                onColorChange={(new_color) => {
-                  shapeValues.border_color = new_color
-                }} />
-            </OSTooltip>
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_color_sustainable')}`)}>
-              <Button
-                variant={shapeValues.color_sustainable ?
-                  'menuconfigpanel_option_button_activated' :
-                  'menuconfigpanel_option_button'}
-                onClick={() => {
-                  shapeValues.border_color_sustainable = !shapeValues.border_color_sustainable
-                }}
-              >
-                {shapeValues.border_color_sustainable ? icon_locked : icon_unlocked}
-                <TooltipElementOverloaded
-                  elements={base_elements}
-                  t={t}
-                  attributeKey={'border_color_sustainable'}
-                  config={config}
-                  prefix={prefix} />
-              </Button>
-            </OSTooltip>
-          </Box>
+          <ColorPickerWithSustainable
+            app_data={app_data}
+            elements={elements}
+            config={BASE_SHAPE_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            colorAttributeKey="border_color"
+            sustainableAttributeKey="border_color_sustainable"
+            refreshParentComponent={refreshUI}
+          />
+
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>
