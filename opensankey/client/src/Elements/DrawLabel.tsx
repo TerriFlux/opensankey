@@ -478,6 +478,7 @@ export abstract class DrawLabelBase {
       } else if (label_baseline === 'middle') {
         adjusted_y = label_pos_y - foHeight / 2
       }
+      fo.attr('x', adjusted_x).attr('y', adjusted_y)
 
       // Mettre à jour le background aussi
       const foBg = this.d3_selection.select('.element_fo_background')
