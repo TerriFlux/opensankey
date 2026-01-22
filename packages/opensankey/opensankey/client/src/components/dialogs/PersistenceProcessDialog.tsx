@@ -269,7 +269,6 @@ export const retrieveJSONResults = (
   const current_json = app_data.toJSON()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
-
   app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/, false)
   app_data.sendWaitingToast(
     () => {
