@@ -1293,18 +1293,12 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   protected updateTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
     let ortho_position = label_ortho_position
-    let ratio = 1
-    const bezier_outline = this.link.shape_type == 'bezier_outline' || (this.link.shape_border_visible && !this.link.linkIsStructure())
-    if (bezier_outline) {
-      ratio = 3
-      ortho_position = this.link.thickness / 2
-    }
 
     const textPathSelector = this.getTextPathSelector()
     const textSelector = this.getTextSelector()
 
     this._element.d3_selection?.select(textPathSelector).attr('text-anchor', label_anchor)
-    this._element.d3_selection?.select(textPathSelector).attr('startOffset', label_position / ratio + '%')
+    this._element.d3_selection?.select(textPathSelector).attr('startOffset', label_position + '%')
     this._element.d3_selection?.select(textSelector).attr('dy', ortho_position)
     this._element.d3_selection?.select(textPathSelector).attr('dominant-baseline', label_dominant_baseline)
   }
@@ -1321,6 +1315,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
     labelText: string
   ): boolean {
+    if (this.link.shape_border_visible) return false
     if (!this.link.source || !this.link.target) return false
     const x0 = this.link.position_x_start
     const y0 = this.link.position_y_start

@@ -69,7 +69,7 @@ import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG, getShapeAttributeKey, ShapePrefix, getLabelAttributeKey, BASE_SHAPE_CONFIG } from '../../Elements/ElementsAttributesConfig'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -141,16 +141,16 @@ export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, chi
     </Checkbox>
 
   </Box>
-  <Collapse in={isOpen} animateOpacity>
-    <Box
-      layerStyle='menuconfigpanel_grid'
-      marginLeft='1rem'
-      borderLeft='lightgray 1px solid'
-      paddingLeft='0.2rem'
-    >
-      {children}
-    </Box>
-  </Collapse>
+    <Collapse in={isOpen} animateOpacity>
+      <Box
+        layerStyle='menuconfigpanel_grid'
+        marginLeft='1rem'
+        borderLeft='lightgray 1px solid'
+        paddingLeft='0.2rem'
+      >
+        {children}
+      </Box>
+    </Collapse>
   </>
 }
 // Version refactorisée de MenuSectionCheckbox
@@ -158,9 +158,9 @@ export const MenuSectionCheckbox = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    elements, attributePath, attributeKey, config,
-    prefix = '', refreshParentComponent, children
-  }: React.PropsWithChildren<{
+  elements, attributePath, attributeKey, config,
+  prefix = '', refreshParentComponent, children
+}: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
   attributeKey: K
@@ -404,9 +404,9 @@ export const ElementAttrSetter2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    elements, attributePath, attributeKey, config,
-    prefix = '', t, showTooltipOverload = true, children
-  }: React.PropsWithChildren<{
+  elements, attributePath, attributeKey, config,
+  prefix = '', t, showTooltipOverload = true, children
+}: React.PropsWithChildren<{
   elements: (Class_LinkElement | Class_NodeBase | Class_ElementStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: K
@@ -449,15 +449,15 @@ export const ElementAttrSetterSelect2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    app_data,
-    elements,
-    attributePath,
-    attributeKey,
-    config,
-    prefix = '',
-    refreshParentComponent,
-    options
-  }: {
+  app_data,
+  elements,
+  attributePath,
+  attributeKey,
+  config,
+  prefix = '',
+  refreshParentComponent,
+  options
+}: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -516,9 +516,9 @@ export const ElementAttrSetterTextInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    app_data, elements, attributePath, attributeKey, config,
-    prefix = '', refreshParentComponent
-  }: {
+  app_data, elements, attributePath, attributeKey, config,
+  prefix = '', refreshParentComponent
+}: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -558,10 +558,10 @@ export const ElementAttrSetterNumberInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    app_data, elements, attributePath, attributeKey, config,
-    prefix, refreshParentComponent = () => null,
-    minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
-  }: {
+  app_data, elements, attributePath, attributeKey, config,
+  prefix, refreshParentComponent = () => null,
+  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
+}: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string,
@@ -692,10 +692,10 @@ export const isElementAttributeOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-    elements: ElementsType,
-    attr: K,
-    _config: CONFIG
-  ) => {
+  elements: ElementsType,
+  attr: K,
+  _config: CONFIG
+) => {
   return elements.some(element => {
     //if (element instanceof Class_LinkElement) {
     //@ts-expect-error xxx
@@ -713,8 +713,8 @@ export const TooltipElementOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    attributeKey, config, prefix, elements, t
-  }: {
+  attributeKey, config, prefix, elements, t
+}: {
   attributeKey: K,
   config: CONFIG,
   prefix: string,
@@ -736,9 +736,9 @@ export const ConditionalCheckboxWithInput = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
-    minimum_value = 0, stepper = true, children
-  }: {
+  app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
+  minimum_value = 0, stepper = true, children
+}: {
   app_data: Class_ApplicationData,
   elements: ElementsType,
   checkboxAttributeKey: K,
@@ -803,8 +803,8 @@ export const CheckboxWithColorPicker = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    elements, attributePath, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent, children
-  }: {
+  elements, attributePath, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent, children
+}: {
   elements: ElementsType,
   attributePath: string,
   checkboxAttributeKey: K,
@@ -858,8 +858,8 @@ export const SimpleElementCheckbox = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-    elements, attributeKey, config, prefix, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
-  }: {
+  elements, attributeKey, config, prefix, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
+}: {
   elements: ElementsType
   attributeKey: K
   config: CONFIG
@@ -1074,7 +1074,7 @@ export const MenuConfigurationNodesTooltip = ({ new_data }: { new_data: Class_Ap
 
 export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const selected_links = app_data.drawing_area.selected_links_list_sorted
-  
+
   return (
     <>
       <SankeyLinkSelectionSimple app_data={app_data} />
@@ -1362,7 +1362,7 @@ export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
       }}
     />
   </InputGroup>
-  <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
+    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
   </FormControl>
 }
 
@@ -1542,6 +1542,88 @@ export const MenuColorPicker = ({
         </Text>
       )} */}
     </Box >
+  )
+}
+
+// À ajouter dans MenuCommon.tsx
+
+interface ColorPickerWithSustainableProps<T extends Record<string, any>> {
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  config: T
+  prefix: ShapePrefix | 'value_label' | 'name_label' | 'icon'
+  attributePath: string
+  colorAttributeKey: keyof T
+  sustainableAttributeKey: keyof T
+  refreshParentComponent: () => void
+}
+
+export const ColorPickerWithSustainable = <T extends Record<string, any>>({
+  app_data,
+  elements,
+  config,
+  prefix,
+  attributePath,
+  colorAttributeKey,
+  sustainableAttributeKey,
+  refreshParentComponent
+}: ColorPickerWithSustainableProps<T>) => {
+  const { t, icon_library } = app_data
+  const { icon_locked, icon_unlocked } = icon_library
+
+  // Récupération des valeurs via le système de config
+  const values = elements.length > 0
+    ? getConfigValues(elements, config, prefix, refreshParentComponent)
+    : Object.fromEntries(
+      Object.entries(config).map(([key, value]) => [key, value.default])
+    )
+
+  const colorValue = values[colorAttributeKey as string] as string
+  const sustainableValue = values[sustainableAttributeKey as string] as boolean
+
+  type label_type = keyof typeof BASE_LABEL_CONFIG
+  type shape_type = keyof typeof BASE_SHAPE_CONFIG
+  const is_label = prefix == 'name_label' || prefix == 'value_label' || prefix == 'icon'
+  const tooltip_color_key = is_label
+    ? getLabelAttributeKey(prefix, colorAttributeKey as label_type)
+    : getShapeAttributeKey(prefix, colorAttributeKey as shape_type)
+  return (
+    <Box layerStyle='option_with_activation'>
+      <Box display="flex" alignItems="center" gap={1}>
+        <MenuColorPicker
+          initialColor={colorValue}
+          onColorChange={(new_color) => {
+            // Utilise le setter du système de config
+            values[colorAttributeKey as string] = new_color
+          }}
+        />
+        <TooltipElementOverloaded
+          attributeKey={colorAttributeKey}
+          elements={elements}
+          config={config}
+          prefix={prefix}
+          t={t} />
+      </Box>
+
+
+      <OSTooltip label={t(`${attributePath}.tooltips.${tooltip_color_key}`)}>
+        <Button
+          variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => {
+            values[sustainableAttributeKey as string] = !sustainableValue
+          }}
+        >
+          {sustainableValue ? icon_locked : icon_unlocked}
+          <TooltipElementOverloaded
+            elements={elements}
+            t={t}
+            attributeKey={sustainableAttributeKey as string}
+            config={config}
+            prefix={prefix}
+          />
+        </Button>
+      </OSTooltip>
+    </Box>
   )
 }
 /**

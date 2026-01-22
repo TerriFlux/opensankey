@@ -73,8 +73,8 @@ export type Type_JSON = { [_: string]: boolean | number | string | string[] | Ty
 
 export const default_main_sankey_id = 'sankey_maitre'
 
-export const const_default_position_x = 50
-export const const_default_position_y = 50
+export const const_default_position_x = 200
+export const const_default_position_y = 200
 // export const default_element_position: Type_ElementPosition = {
 //   x: const_default_position_x,
 //   y: const_default_position_y,
