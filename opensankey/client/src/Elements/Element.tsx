@@ -89,18 +89,18 @@ export abstract class Class_BaseElement {
     this.d3_selection?.on(
       'contextmenu',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventSimpleRMBCLick(event))
+        this.eventSimpleRMBClick(event))
     // Right mouse button clicks
     this.d3_selection?.on(
       'click',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventSimpleLMBCLick(event))
+        this.eventSimpleLMBClick(event))
     if (!this.drawing_area.static) {
 
       this.d3_selection?.on(
         'dblclick',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
+          this.eventDoubleLMBClick(event))
       // Left mouse button click
 
       // Changed call of drag, we have to use only on time call because otherwise each .call erase the previous .call event
@@ -244,7 +244,7 @@ export abstract class Class_BaseElement {
   public setMouseOver() { this._is_mouse_over = true }
   public unsetMouseOver() { this._is_mouse_over = false }
 
-  protected eventSimpleLMBCLick(
+  protected eventSimpleLMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Clear tooltips presents
@@ -252,13 +252,13 @@ export abstract class Class_BaseElement {
     // TODO do something
   }
 
-  protected eventDoubleLMBCLick(
+  protected eventDoubleLMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // TODO Ajouter déclemenchement editeur nom de noeud
   }
 
-  protected eventSimpleRMBCLick(
+  protected eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Clear tooltips presents

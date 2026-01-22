@@ -1323,8 +1323,8 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public setTradeDimensions(importation: boolean) { this._nodeDimensionsManager.setTradeDimensions(importation) }
 
-  public eventSimpleLMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleLMBCLick(event)
+  public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventSimpleLMBClick(event)
     this._nodeEventsHandler.handleSimpleLMBClick(event)
     // OSP Extension - Ajouter cette section
     if (this.hyperlink) {

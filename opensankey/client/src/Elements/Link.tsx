@@ -911,11 +911,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_Link
    */
-  protected eventSimpleLMBCLick(
+  protected eventSimpleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     // Apply parent behavior first
-    super.eventSimpleLMBCLick(event)
+    super.eventSimpleLMBClick(event)
     // Get related drawing area
     const drawing_area = this.drawing_area
     if (drawing_area.application_data.is_static) {
@@ -932,18 +932,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode()) {
       // SHIFT
-      if (event.shiftKey) {
-        if (!this.drawing_area.selected_links_list.includes(this)) {
-          // add link to selection
-          this.drawing_area.addElementToSelection(this)
-        }
-        // Open related menu
-        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
-        // Update components related to link edition
-        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
+      // if (event.shiftKey) {
+      //   if (!this.drawing_area.selected_links_list.includes(this)) {
+      //     // add link to selection
+      //     this.drawing_area.addElementToSelection(this)
+      //   }
+      //   // Open related menu
+      //   this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
+      //   // Update components related to link edition
+      //   this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      // }
       // CTRL
-      else if (event.ctrlKey) {
+      if (event.ctrlKey) {
         this.addOrRemoveLinkFromSelection()
         // Update components related to link edition
         this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
@@ -959,14 +959,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  protected eventSimpleRMBCLick(
+  protected eventSimpleRMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     if (this.drawing_area.application_data.is_static) {
       return
     }
     // Apply parent behavior first
-    super.eventSimpleRMBCLick(event)
+    super.eventSimpleRMBClick(event)
     // SELECTION MODE =========================================================
 
     event.preventDefault()

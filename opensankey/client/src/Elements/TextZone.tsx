@@ -129,10 +129,10 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   }
 
-  protected eventSimpleLMBCLick(
+  protected eventSimpleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    super.eventSimpleLMBCLick(event)
+    super.eventSimpleLMBClick(event)
 
 
     // Get related drawing area
@@ -190,10 +190,10 @@ export class Class_ContainerElement extends Class_NodeBase {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  public eventDoubleLMBCLick(
+  public eventDoubleLMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    super.eventDoubleLMBCLick(_event)
+    super.eventDoubleLMBClick(_event)
   }
 
   /**
@@ -202,10 +202,10 @@ export class Class_ContainerElement extends Class_NodeBase {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof ClassTemplate_Element
    */
-  public eventSimpleRMBCLick(
+  public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    super.eventSimpleRMBCLick(_event)
+    super.eventSimpleRMBClick(_event)
     if (this.drawing_area.isInSelectionMode()) {
       _event.preventDefault()
       this.drawing_area.pointer_pos = [_event.pageX, _event.pageY]
