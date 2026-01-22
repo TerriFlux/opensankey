@@ -497,8 +497,8 @@ export const BASE_SHAPE_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   color_sustainable: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
+    default: true as boolean,
+    type: (() => true) as (() => boolean),
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
@@ -540,6 +540,20 @@ export const BASE_SHAPE_CONFIG = {
       fr: 'Couleur de la bordure'
     }
   } satisfies AttributeConfig<string>,
+  border_color_sustainable: {
+    default: true as boolean,
+    type: (() => true) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Static color',
+      fr: 'Couleur fixe'
+    },
+    tooltips: {
+      en: 'Keep the color fixed regardless of filters',
+      fr: 'Garder la couleur fixe indépendamment des filtres'
+    }
+  } satisfies AttributeConfig<boolean>,
 
   border_thickness: {
     default: 1,

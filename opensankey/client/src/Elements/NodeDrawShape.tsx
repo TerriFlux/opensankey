@@ -120,7 +120,7 @@ export class NodeDrawShape {
       .attr('id', this._node.id)
       .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
       .attr('fill', color)
-      .attr('stroke', this._node.shape_border_color)
+      .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
       .attr('stroke-width', this._node.shape_border_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
