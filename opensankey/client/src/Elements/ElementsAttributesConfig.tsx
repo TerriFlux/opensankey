@@ -1204,8 +1204,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
       {
         visible: {
           labels: {
-            en: 'Background visible',
-            fr: 'Fond visible'
+            en: 'Background',
+            fr: 'Fond'
           },
           tooltips: {
             en: 'Show background for better visibility',

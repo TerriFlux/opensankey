@@ -1230,7 +1230,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     selection
       ?.style('font-size', String(this.getFontSize()) + 'px')
       .style('font-family', this._label_values.font_family)
-      .attr('fill', this._label_values.color)
+      .attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
