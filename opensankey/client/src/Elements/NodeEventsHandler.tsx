@@ -60,18 +60,18 @@ export class NodeEventsHandler {
     // SELECTION MODE =========================================================
     else if (drawing_area.isInSelectionMode() && event.button === 0) {
       // SHIFT
-      if (event.shiftKey) {
-        if (!this._node.selected_elements_list.includes(this._node)) {
-          // add node to selection
-          this._node.drawing_area.addElementToSelection(this._node)
-        }
-        // Open related menu
-        this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
-        // Update components related to node edition
-        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      }
+      // if (event.shiftKey) {
+      //   if (!this._node.selected_elements_list.includes(this._node)) {
+      //     // add node to selection
+      //     this._node.drawing_area.addElementToSelection(this._node)
+      //   }
+      //   // Open related menu
+      //   this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
+      //   // Update components related to node edition
+      //   this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      // }
       // CTRL
-      else if (event.ctrlKey) {
+      if (event.ctrlKey) {
         this.addOrRemoveNodeFromSelection()
         // Update components related to node edition
         this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
@@ -292,7 +292,7 @@ export class NodeEventsHandler {
    * Define event when mouse moves over element
    */
   public handleMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    const show_tooltip = this._node.sankey.drawing_area.application_data.is_static && event.shiftKey || event.altKey
+    const show_tooltip = event.shiftKey
     // ALT + pas de tooltip déjà ouvert pour ce noeud
     if (show_tooltip && (event.target as HTMLElement).tagName !== 'tspan') {
       const existingTooltip = document.querySelector('.sankey-tooltip')

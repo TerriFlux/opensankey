@@ -1131,7 +1131,7 @@ export class Class_DrawingArea {
       this.d3_selection?.on(
         'click',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleLMBCLick(event))
+          this.eventSimpleLMBClick(event))
     }
     if (
       !this.static &&
@@ -1141,7 +1141,7 @@ export class Class_DrawingArea {
       this.d3_selection?.on(
         'dblclick',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventDoubleLMBCLick(event))
+          this.eventDoubleLMBClick(event))
       // Right mouse button maintained
       this.d3_selection?.on(
         'mousedown',
@@ -1169,7 +1169,7 @@ export class Class_DrawingArea {
       this.d3_selection?.on(
         'contextmenu',
         (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-          this.eventSimpleRMBCLick(event))
+          this.eventSimpleRMBClick(event))
     }
     // Zoom behavior(but can also drag drawing area in scroll zone)
     this.d3_selection_zoom_area?.call(
@@ -1187,7 +1187,7 @@ export class Class_DrawingArea {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_DrawingArea
    */
-  private eventSimpleLMBCLick(
+  private eventSimpleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()
@@ -1204,7 +1204,7 @@ export class Class_DrawingArea {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_DrawingArea
    */
-  private eventDoubleLMBCLick(
+  private eventDoubleLMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     this.closeAllMenus()
@@ -1217,7 +1217,7 @@ export class Class_DrawingArea {
    * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
    * @memberof Class_DrawingArea
    */
-  private eventSimpleRMBCLick(
+  private eventSimpleRMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     event.preventDefault()

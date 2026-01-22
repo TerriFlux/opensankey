@@ -106,7 +106,7 @@ export const setDiagram = (
       window.sankey.data_type = data_type_value
     }
   }
-  loadUniversalJSON(diagrams[diagram_url] + '.json.gz').then(data => {
+  loadUniversalJSON(diagrams[diagram_url] + '.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
     app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
   }).catch(e => console.log(e))
@@ -755,7 +755,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         const currentPath = window.location.pathname // "/portfolios/SOCLE/Cereales/diagrams.html"
         const basePath = currentPath.substring(0, currentPath.lastIndexOf('/')) // "/portfolios/SOCLE/Cereales"
         const fileUrl = window.location.origin + basePath + '/' + new_data.file_name
-        const url = 'https://open-sankey.fr/?url=' + fileUrl
+        const url = 'https://test.open-sankey.fr/?url=' + fileUrl
 
         window.open(url, '_blank')
       }}
