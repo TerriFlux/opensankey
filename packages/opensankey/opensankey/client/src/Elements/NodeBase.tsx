@@ -254,8 +254,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // this._nodeEventsHandler.handleMaintainedClick(event)
   }
 
-  protected eventSimpleRMBCLick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    super.eventSimpleRMBCLick(event)
+  protected eventSimpleRMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    super.eventSimpleRMBClick(event)
     this._nodeEventsHandler.handleSimpleRMBClick(event)
   }
 
@@ -268,7 +268,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     super.eventMouseOut(event)
     this._nodeEventsHandler.handleMouseOut()
   }
-  public eventDoubleLMBCLick(
+  public eventDoubleLMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     if (this.hyperlink) {
