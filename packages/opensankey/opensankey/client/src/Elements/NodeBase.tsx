@@ -217,26 +217,6 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon.d3_selection?.raise()
   }
 
-  // public moveSelectedContainerFromDragEvent(
-  //   event: d3.D3DragEvent<SVGGElement, unknown, unknown>
-  // ) {
-  //   this.sankey.drawing_area.selected_containers_list
-  //     .forEach(n => {
-  //       if (!n.tied_to_nodes) {
-  //         n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
-  //         n.drawDragHandlers()
-  //       }
-  //     })
-  // }
-  public eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-
-    super.eventDoubleLMBClick(event)
-    this._nodeEventsHandler.handleDoubleLMBClick(event)
-
-  }
-
   public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     if (this._clickTimer) {
       clearTimeout(this._clickTimer)
