@@ -2000,7 +2000,9 @@ export const ALL_ATTRIBUTES_CONFIG = {
       'icon',
       ['drawIcon'],
       {
-        // ✅ Surcharges spécifiques au prefix
+        is_icon: {
+          default: true,
+        },
         box_width: {
           default: 50,
         }

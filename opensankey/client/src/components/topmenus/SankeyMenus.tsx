@@ -491,35 +491,8 @@ const ConfigContent = ({ app_data, additional_menus }:
       element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
         <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
       </WrapperContentConfig>,
-      // flow: <WrapperContentConfig title={t('Menu.Config.title_flow')}>
-      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-      // </WrapperContentConfig>,
-
-      // node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-      // </WrapperContentConfig>,
-      // object: <WrapperContentConfig title={t('Menu.Config.title_object')}>
-      //   <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-      // </WrapperContentConfig>,
     },
-    // Menus related to context config
-    // context: {
-    //   flow: <WrapperContentConfig title={t('Menu.Config.title_flow')} >
-    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-    //   </WrapperContentConfig>,
 
-    //   node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
-    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-    //   </WrapperContentConfig>,
-
-    //   object: <WrapperContentConfig title={t('Menu.Config.element_object')}>
-    //     <MenuConfigurationAppearance app_data={app_data} menu_for_style={false} />
-    //   </WrapperContentConfig>,
-
-
-    //   ...additional_menus.current.additional_menu_config_content.context
-
-    // },
     presentation: {
       ...additional_menus.current.additional_new_menu_config_content.presentation
     }

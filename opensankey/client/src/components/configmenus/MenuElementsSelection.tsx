@@ -120,7 +120,7 @@ const NODE_CONFIG: ElementConfig<Class_NodeElement> = {
   updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToNodesConfig(),
 
   translationKeys: {
-    labelSelect: 'Noeud.TS',              // ✅ Chemin direct
+    labelSelect: 'Noeud.TS',
     labelNoSelection: 'Noeud.NS',
     tooltipAdd: 'Noeud.tooltips.plus',
     tooltipSelect: 'Noeud.tooltips.slct',
@@ -202,7 +202,7 @@ export const ALL_CONFIGS = {
 interface UnifiedSelectionProps {
   app_data: Class_ApplicationData
   // Configuration
-  config?: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement>  // Pour single-type
+  config?: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement>  // Pour single-type
   enabledTypes?: ElementType[]  // Pour multi-type
   // Mode
   mode?: 'full' | 'simple'
@@ -218,7 +218,7 @@ export const UnifiedElementSelection = ({
   dropdownWidth
 }: UnifiedSelectionProps) => {
   const { t, icon_library, menu_configuration, history } = app_data
-  const [ only_visible, setOnlyVisible] = useState(true)
+  const [only_visible, setOnlyVisible] = useState(true)
   const {
     icon_add_element,
     icon_remove_element,
@@ -256,7 +256,7 @@ export const UnifiedElementSelection = ({
   const getAllFilteredElements = () => {
     if (!isMultiType) return []
 
-    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement> }[] = []
+    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -277,7 +277,7 @@ export const UnifiedElementSelection = ({
   const getAllSelectedElements = () => {
     if (!isMultiType) return []
 
-    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement|Class_NodeElement|Class_LinkElement> }[] = []
+    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -374,11 +374,27 @@ export const UnifiedElementSelection = ({
   const toggleFilter = (type: ElementType) => {
     setActiveFilters(prev => {
       const newFilters = new Set(prev)
-      if (newFilters.has(type)) {
+      const wasActive = newFilters.has(type)
+
+      if (wasActive) {
+        // ✅ Si on désactive le filtre, désélectionner tous les éléments de ce type
         newFilters.delete(type)
+
+        const cfg = ALL_CONFIGS[type]
+        const elementsToDeselect = cfg.getSelectedElements(app_data)
+
+        elementsToDeselect.forEach(element => {
+          app_data.drawing_area.removeElementFromSelection(element)
+        })
+
+        // Rafraîchir les composants liés
+        cfg.updateRelatedComponents(app_data)
+        refreshAndToggleSaving()
       } else {
+        // Si on active le filtre, juste l'ajouter
         newFilters.add(type)
       }
+
       return newFilters
     })
   }
@@ -386,14 +402,14 @@ export const UnifiedElementSelection = ({
   const toggleVisibility = () => {
     setOnlyVisible(!only_visible)
   }
-type DropdownOption = SingleTypeOption | MultiTypeOption
-// ==================================================================================
-// HANDLERS
-// ==================================================================================
-const handleDropdownChange = (selected: DropdownOption[]) => {
-  const newSelection = selected.map(d => d.value)
+  type DropdownOption = SingleTypeOption | MultiTypeOption
+  // ==================================================================================
+  // HANDLERS
+  // ==================================================================================
+  const handleDropdownChange = (selected: DropdownOption[]) => {
+    const newSelection = selected.map(d => d.value)
 
-  if (isMultiType) {
+    if (isMultiType) {
       // Multi-type : traiter chaque type
       enabledTypes!.forEach(type => {
         if (!activeFilters.has(type)) return
@@ -412,80 +428,80 @@ const handleDropdownChange = (selected: DropdownOption[]) => {
           }
         })
       })
-  } else {
-    // Single-type
-    singleTypeElements.forEach(element => {
-      if (newSelection.includes(element.id)) {
-        app_data.drawing_area.addElementToSelection(element)
-      } else {
-        app_data.drawing_area.removeElementFromSelection(element)
+    } else {
+      // Single-type
+      singleTypeElements.forEach(element => {
+        if (newSelection.includes(element.id)) {
+          app_data.drawing_area.addElementToSelection(element)
+        } else {
+          app_data.drawing_area.removeElementFromSelection(element)
+        }
+      })
+    }
+
+    refreshAndUpdateRelated()
+  }
+
+  const handleCreate = () => {
+    if (!singleConfig?.createNewElement) return
+
+    let newElement: Class_NodeElement | Class_LinkElement | Class_ContainerElement
+
+    const execute = () => {
+      newElement = singleConfig.createNewElement!(app_data)
+      app_data.drawing_area.purgeSelectionOfElement()
+      app_data.drawing_area.addElementToSelection(newElement)
+      refreshAndUpdateRelated()
+    }
+
+    const undo = () => {
+      if ('deleteNode' in app_data.drawing_area && newElement instanceof Class_NodeElement) {
+        app_data.drawing_area.deleteNode(newElement)
+      } else if ('deleteLink' in app_data.drawing_area && newElement instanceof Class_LinkElement) {
+        app_data.drawing_area.deleteLink(newElement)
+      } else if ('deleteContainer' in app_data.drawing_area && newElement instanceof Class_ContainerElement) {
+        app_data.drawing_area.deleteContainer(newElement)
       }
-    })
+      refreshAndUpdateRelated()
+    }
+
+    history.saveUndo(undo)
+    history.saveRedo(execute)
+    execute()
   }
 
-  refreshAndUpdateRelated()
-}
-
-const handleCreate = () => {
-  if (!singleConfig?.createNewElement) return
-
-  let newElement: Class_NodeElement | Class_LinkElement | Class_ContainerElement
-
-  const execute = () => {
-    newElement = singleConfig.createNewElement!(app_data)
-    app_data.drawing_area.purgeSelectionOfElement()
-    app_data.drawing_area.addElementToSelection(newElement)
+  const handleDelete = () => {
+    app_data.drawing_area.deleteSelectedElements()
     refreshAndUpdateRelated()
   }
 
-  const undo = () => {
-    if ('deleteNode' in app_data.drawing_area && newElement instanceof Class_NodeElement) {
-      app_data.drawing_area.deleteNode(newElement)
-    } else if ('deleteLink' in app_data.drawing_area && newElement instanceof Class_LinkElement) {
-      app_data.drawing_area.deleteLink(newElement)
-    } else if ('deleteContainer' in app_data.drawing_area && newElement instanceof Class_ContainerElement) {
-      app_data.drawing_area.deleteContainer(newElement)
+  const handleNameUpdate = (newName: string | null | undefined) => {
+    if (!singleConfig?.hasNameInput || !newName || singleTypeSelectedElements.length !== 1) return
+
+    const oldName = singleTypeSelectedElements[0].name
+
+    const execute = () => {
+      if (singleTypeSelectedElements.length === 1) {
+        (singleTypeSelectedElements[0] as Class_NodeBase).name = newName
+        refreshAndToggleSaving()
+      }
     }
-    refreshAndUpdateRelated()
+
+    const undo = () => {
+      if (singleTypeSelectedElements.length === 1) {
+        (singleTypeSelectedElements[0] as Class_NodeBase).name = oldName
+        refreshAndToggleSaving()
+      }
+    }
+
+    history.saveUndo(undo)
+    history.saveRedo(execute)
+    execute()
   }
 
-  history.saveUndo(undo)
-  history.saveRedo(execute)
-  execute()
-}
-
-const handleDelete = () => {
-  app_data.drawing_area.deleteSelectedElements()
-  refreshAndUpdateRelated()
-}
-
-const handleNameUpdate = (newName: string | null | undefined) => {
-  if (!singleConfig?.hasNameInput || !newName || singleTypeSelectedElements.length !== 1) return
-
-  const oldName = singleTypeSelectedElements[0].name
-
-  const execute = () => {
-    if (singleTypeSelectedElements.length === 1) {
-      (singleTypeSelectedElements[0] as Class_NodeBase).name = newName
-      refreshAndToggleSaving()
-    }
-  }
-
-  const undo = () => {
-    if (singleTypeSelectedElements.length === 1) {
-      (singleTypeSelectedElements[0] as Class_NodeBase).name = oldName
-      refreshAndToggleSaving()
-    }
-  }
-
-  history.saveUndo(undo)
-  history.saveRedo(execute)
-  execute()
-}
-
-// ==================================================================================
-// TYPES POUR LES OPTIONS DU DROPDOWN
-// ==================================================================================
+  // ==================================================================================
+  // TYPES POUR LES OPTIONS DU DROPDOWN
+  // ==================================================================================
 
   interface SingleTypeOption {
     label: string

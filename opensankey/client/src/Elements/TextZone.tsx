@@ -13,18 +13,12 @@ export class Class_ContainerElement extends Class_NodeBase {
     name: string,
     drawing_area: Class_DrawingArea,
   ) {
-    //super(id, id, drawing_area, 'g_elements_sankey')
     const container_style = drawing_area.sankey.styles_dict['ContainerStyle']
-    super(id, name, drawing_area, container_style) //'g_elements_sankey')
+    super(id, name, drawing_area, container_style)
     this._tied_to_nodes = false
     this._attached_node = []
     this.class_name = 'gg_labels'
     drawing_area.list_g_element.push(this.id)
-
-    // Launch timer to reorder element on DA
-    this.drawing_area.application_data._add_waiting_process('order_elements_on_da', () => {
-      this.drawing_area.orderElementOnDA()
-    })
   }
 
   public updateSizeAndPosition() {
@@ -45,14 +39,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     })
   }
 
-
-  /**
-   * Add node ref to container attribute attached_node
-   *
-   * @param {Class_NodeElement} node
-   * @param {Type_GenericContainerElement} cont
-   * @memberof Class_Sankey
-   */
   public attachNodeToCont(node: Class_NodeElement) {
     if (!this.attached_node.includes(node)) {
       this.attached_node.push(node)
@@ -60,13 +46,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     }
   }
 
-  /**
-   * Add container ref to node attribute attached_container
-   *
-   * @param {Type_GenericContainerElement} cont
-   * @param {Class_NodeElement} node
-   * @memberof Class_Sankey
-   */
   public attachContToNode(node: Class_NodeElement): void {
     if (!node.attached_container.includes(this)) {
       node.attached_container.push(this)
@@ -74,13 +53,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     }
   }
 
-  /**
-   * Remove ref of container in node attached_node attribute
-   *
-   * @param {Class_NodeElement} node
-   * @param {Type_GenericContainerElement} cont
-   * @memberof Class_SankeyOSP
-   */
   public dettachNodeFromCont(node: Class_NodeElement) {
     if (this.attached_node.includes(node)) {
       const idx = this.attached_node.indexOf(node)
@@ -129,79 +101,6 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   }
 
-  protected eventSimpleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventSimpleLMBClick(event)
-
-
-    // Get related drawing area
-    const drawing_area = this.drawing_area
-    if (drawing_area.application_data.is_static) {
-      drawing_area.purgeSelection()
-      return
-    }
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      // Purge selection list
-      drawing_area.purgeSelection()
-      // Close all menus
-      drawing_area.closeAllMenus()
-    }
-    // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode() && event.button === 0) {
-      // Close context menu of node & flow
-      this.drawing_area.node_contextualised = undefined
-      this.drawing_area.link_contextualised = undefined
-      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_links_updater.current()
-      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
-      this.drawing_area.contextualised_container = undefined
-      this.drawing_area.application_data.menu_configuration.ref_to_menu_context_container_updater.current()
-      // SHIFT
-      if (event.shiftKey) {
-        // Add free label to selection
-        drawing_area.addElementToSelection(this)
-        // Open related menu
-        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsContainers()
-      }
-      // CTRL
-      else if (event.ctrlKey) {
-        // Add free label to selection
-        drawing_area.addElementToSelection(this)
-      }
-      // OTHERS
-      else {
-        // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Add free label to selection
-        drawing_area.addElementToSelection(this)
-      }
-      // Update components related to free label edition
-      this.drawing_area.application_data.menu_configuration.updateComponentRelatedToContainers()
-
-      this.drawing_area.orderElementOnDA()
-    }
-  }
-
-  /**
-   * Deal with double left Mouse Button (LMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
-  public eventDoubleLMBClick(
-    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventDoubleLMBClick(_event)
-  }
-
-  /**
-   * Deal with simple right Mouse Button (RMB) click on given element
-   * @protected
-   * @param {React.MouseEvent<HTMLButtonElement, React.MouseEvent>} event
-   * @memberof ClassTemplate_Element
-   */
   public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
@@ -255,7 +154,7 @@ export class Class_ContainerElement extends Class_NodeBase {
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_containers_list
   }
-    public set_contextualized_element(element: Class_NodeBase) {
+  public set_contextualized_element(element: Class_NodeBase) {
     this.drawing_area.contextualised_container = element as Class_ContainerElement
   }
 }

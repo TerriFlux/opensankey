@@ -228,6 +228,32 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   //       }
   //     })
   // }
+  public eventDoubleLMBClick(
+    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+  ) {
+
+    super.eventDoubleLMBClick(event)
+    this._nodeEventsHandler.handleDoubleLMBClick(event)
+
+  }
+
+  public eventSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    if (this._clickTimer) {
+      clearTimeout(this._clickTimer)
+      this._clickTimer = null
+      return // C'était en fait un double-clic, on ignore
+    }
+    // ✅ Démarrer un timer pour voir si un deuxième clic arrive
+    this._clickTimer = setTimeout(() => {
+      this._clickTimer = null
+      super.eventSimpleLMBClick(event)
+      this._nodeEventsHandler.handleSimpleLMBClick(event)
+      // OSP Extension - Ajouter cette section
+      if (this.hyperlink) {
+        window.open(this.hyperlink)
+      }
+    }, this._clickDelay) // Délai pour détecter un double-clic (250 ms)
+  }
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
@@ -268,19 +294,6 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     super.eventMouseOut(event)
     this._nodeEventsHandler.handleMouseOut()
   }
-  public eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
-  ) {
-    super.eventDoubleLMBClick(event)
-    //this._nodeEventsHandler.handleDoubleLMBClick(event)
-    if (this.hyperlink) {
-      window.open(this.hyperlink, '_blank', 'noopener,noreferrer')
-    }
-  }
-
-  // public getStyleWithPositionAttr(k: keyof Type_ElementPositionOptionnal) {
-  //   return this.style.slice().reverse().find(s => s.position[k as keyof Type_ElementPositionOptionnal] !== undefined) ?? this.sankey.default_node_style as Class_ElementStyle
-  // }
 
   public get name() { return this._name }
   public set name(_: string) { this._name = _; this.drawNameLabel() }
