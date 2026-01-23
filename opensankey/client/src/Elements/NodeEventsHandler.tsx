@@ -131,37 +131,6 @@ private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label
 }
 
 /**
- * ✅ Double-clic : ouvre le menu de configuration + sélectionne l'onglet approprié
- */
-public handleDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-  const drawing_area = this._node.drawing_area
-  
-  if (drawing_area.application_data.is_static) {
-    drawing_area.purgeSelection()
-    return
-  }
-
-  if (drawing_area.isInEditionMode()) {
-    drawing_area.purgeSelection()
-    drawing_area.closeAllMenus()
-    return
-  }
-
-  if (drawing_area.isInSelectionMode() && event.button === 0) {
-    const clickedElement = event.target as Element
-    const labelType = this.getClickedLabelType(clickedElement)
-
-    if (!labelType) return
-
-    // ✅ Sélectionner l'élément et ouvrir l'onglet
-    this.selectElementAndOpenTab(labelType, event.ctrlKey)
-
-    // ✅ SPÉCIFIQUE AU DOUBLE-CLIC : Ouvrir le menu de configuration
-    drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
-  }
-}
-
-/**
  * ✅ Simple clic : sélectionne l'élément + ouvre l'onglet approprié
  */
 public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {

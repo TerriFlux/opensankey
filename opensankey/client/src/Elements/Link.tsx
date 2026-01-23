@@ -896,23 +896,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Apply parent behavior first
     super.eventDoubleLMBClick(event)
-    const drawing_area = this.drawing_area
-    if (drawing_area.application_data.is_static) {
-      drawing_area.purgeSelection()
-      return
-    }
-    if (drawing_area.isInSelectionMode()) {
-      if (event.ctrlKey) {
-        if (!this.drawing_area.selected_links_list.includes(this)) {
-          // add link to selection
-          this.drawing_area.addElementToSelection(this)
-        }
-        // Open related menu
-        this.drawing_area.application_data.menu_configuration.openConfigMenuElementsLinks()
-        // Update components related to link edition
-        this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
-      }
-    }
   }
   /**
    * Deal with simple left Mouse Button (LMB) click on given element

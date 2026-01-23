@@ -1760,7 +1760,7 @@ export const missing_menu_translations = {
         // Onglets principaux
         tabs: {
           shape: 'Shape',
-          name: 'Name',
+          name: 'Label',
           value: 'Value',
           icon: 'Icon'
         },
@@ -1811,7 +1811,7 @@ export const missing_menu_translations = {
         // Onglets principaux
         tabs: {
           shape: 'Forme',
-          name: 'Nom',
+          name: 'Libellé',
           value: 'Valeur',
           icon: 'Icône'
         },
