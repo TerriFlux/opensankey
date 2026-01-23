@@ -599,12 +599,6 @@ const LabelContentComponent = ({
                   const resultat = (e.target as FileReader).result
                   const res = resultat?.toString().replaceAll('=', '')
                   labelValues.image_src = res
-                  // base_elements.forEach(el => {
-                  //   //if ('image_src' in el) {
-                  //     el.image_src = res as string
-                  //     el.draw()
-                  //   //}
-                  //})
                 }
                 reader.readAsDataURL(files[0])
               }}
@@ -801,15 +795,13 @@ export const MenuConfigurationAppearance = ({
   menu_for_style: boolean
 }) => {
   const { t, drawing_area, menu_configuration, icon_library } = app_data
-  const { icon_to_the_left, icon_to_the_right, icon_text_vert_pos_top, icon_text_vert_pos_bottom } = icon_library
   const { sankey } = drawing_area
   const [, setCount] = useState(0)
   const { ref_selected_style } = menu_configuration
-  const [editMarginsUnified, setEditMarginsUnified] = useState(true)
 
   // ✅ State pour l'onglet actif : 5 onglets
-  type ActiveTab = 'background' | 'shape' | 'name_label' | 'value_label' | 'icon'
-  const [activeTab, setActiveTab] = useState<ActiveTab>('background')
+  type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon'
+  const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
   if (activeTab !== app_data.menu_configuration.tab_selected)
     setActiveTab(app_data.menu_configuration.tab_selected)
   // ✅ Récupération éléments
@@ -911,23 +903,14 @@ export const MenuConfigurationAppearance = ({
           app_data={app_data}
           selected_elements={base_elements}
           config={ALL_ATTRIBUTES_CONFIG}
-          categories={activeTab === 'background' || activeTab === 'shape' ? ['shape'] : ['value_label', 'name_label']}
+          categories={activeTab === 'shape' ? ['shape'] : ['value_label', 'name_label']}
         />
       )}
 
       {/* ✅ 5 ONGLETS */}
       {showContent && (
         <>
-          <Box layerStyle='options_5cols'>
-            <Button
-              variant={activeTab === 'background' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                app_data.menu_configuration.tab_selected = 'background'
-                setActiveTab('background')
-              }}
-            >
-              {t('Menu.background') || 'Fond'}
-            </Button>
+          <Box layerStyle='options_4cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
@@ -967,7 +950,7 @@ export const MenuConfigurationAppearance = ({
           </Box>
 
           {/* ========== ONGLET FOND ========== */}
-          {activeTab === 'background' && (
+          {activeTab === 'shape' && (
             // <WrapperBoxSubSectionMenu
             //   new_data={app_data}
             //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
@@ -982,342 +965,358 @@ export const MenuConfigurationAppearance = ({
                 prefix='shape'
                 refreshUI={refreshAll}
               />
-            </Box>
-            //</WrapperBoxSubSectionMenu>
-          )}
+              <>
+                {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
+                  // <WrapperBoxSubSectionMenu
+                  //   new_data={app_data}
+                  //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
+                  //   is_open={!menu_for_style && selection.hasNodes}
+                  // >
 
-          {/* ========== ONGLET FORME ========== */}
-          {activeTab === 'shape' && (
-            <>
-              {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
-                // <WrapperBoxSubSectionMenu
-                //   new_data={app_data}
-                //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
-                //   is_open={!menu_for_style && selection.hasNodes}
-                // >
-
-                <Box layerStyle='menu_sub_section'>
-                  <Box layerStyle='menuconfigpanel_grid'>
-                    <Box as='span' layerStyle='menu_sub_section_title'
-                      textStyle='title_sub_section'
-                    >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
-                    <ElementAttrSetterNumberInput2Cols
-                      app_data={app_data}
-                      elements={elements}
-                      attributePath='Noeud.apparence'
-                      attributeKey='min_width'
-                      prefix='shape'
-                      config={BASE_SHAPE_CONFIG}
-                      refreshParentComponent={refreshAll}
-                      unit_text='px'
-                      stepper={true}
-                    />
-                    <ElementAttrSetterNumberInput2Cols
-                      app_data={app_data}
-                      elements={elements}
-                      attributePath='Noeud.apparence'
-                      attributeKey='min_height'
-                      prefix='shape'
-                      config={BASE_SHAPE_CONFIG}
-                      refreshParentComponent={refreshAll}
-                      unit_text='px'
-                      stepper={true}
-                    />
-                    {selection.hasNodes ? <>
-                      <Divider />
-                      <Box as='span' textStyle='title_sub_section'>Options Noeuds</Box>
-                      <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
-                          <Box layerStyle='options_3cols'>
-                            {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
-                              <Button
-                                key={type}
-                                variant={getButtonVariant(
-                                  idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
-                                  isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
-                                  nodeShapeValues.position_type === type
-                                )}
-                                onClick={() => {
-                                  nodeShapeValues.position_type = type
-                                }}
-                              >
-                                {t(`Noeud.apparence.geometry_${type}`)}
-                              </Button>
-                            ))}
-                          </Box>
-                          <TooltipElementOverloaded
-                            elements={nodes_elements}
-                            t={t}
-                            attributeKey={'position_type'}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                          />
-                        </Box>
-                      </OSTooltip>
-                      {nodeShapeValues.position_type == 'parametric' ? <>
-                        <ElementAttrSetterNumberInput2Cols
-                          app_data={app_data}
-                          config={NODE_SHAPE_SPECIFIC_CONFIG}
-                          elements={elements}
-                          attributePath='Noeud.apparence'
-                          attributeKey={'position_dx'}
-                          prefix={'shape'}
-                          refreshParentComponent={refreshAll}
-                          unit_text='pixels'
-                          stepper={true} />
-                        <ElementAttrSetterNumberInput2Cols
-                          app_data={app_data}
-                          config={NODE_SHAPE_SPECIFIC_CONFIG}
-                          elements={elements}
-                          attributePath='Noeud.apparence'
-                          attributeKey={'position_dy'}
-                          prefix={'shape'}
-                          refreshParentComponent={refreshAll}
-                          unit_text='pixels'
-                          stepper={true} /></> : <></>}
-                      <Checkbox
-                        {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
-                        isChecked={nodeShapeValues.orphan_node_visible}
-                        onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
-                      >
-                        <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
-                          {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
-                          <TooltipElementOverloaded
-                            elements={nodes_elements}
-                            t={t}
-                            attributeKey={'orphan_node_visible'}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                          />
-                        </OSTooltip>
-                      </Checkbox>
-                    </> : <></>
-                    }
-                    {selection.hasNodes ?
-                      <Button
-                        variant={'menuconfigpanel_option_button'}
-                        onClick={() => {
-                          app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
-                          app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
-                        }}
-                      >
-                        {t('Noeud.Reorg_title')}
-                      </Button> : <></>}
-                  </Box>
-                </Box>
-              )}
-
-              {(menu_for_style || selection.hasLinks) && (
-                // <WrapperBoxSubSectionMenu
-                //   new_data={app_data}
-                //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
-                //   is_open={!menu_for_style && selection.hasLinks}
-                // >
-
-                <Box layerStyle='menu_sub_section'>
-                  <Box layerStyle='menuconfigpanel_grid'>
-                    <Box as='span' layerStyle='menu_sub_section_title'
-                      textStyle='title_sub_section'
-                    >{`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
-
-                    <Divider />
-                    <Box as='span' textStyle='title_sub_section'>Orientation</Box>
-                    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                      <Box layerStyle='options_4cols'>
-                        <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling')}>
-                          <Button
-                            variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
-                            onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
-                          >
-                            {icon_library.icon_orientation_recycle}
-                          </Button>
-                        </OSTooltip>
-                        <TooltipElementOverloaded
-                          elements={links_elements}
-                          t={t}
-                          attributeKey={'is_recycling'}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
-                        <></>
-                        <></>
-                        <></>
-                      </Box>
-                      <Box layerStyle='options_4cols'>
-                        {['hh', 'vv', 'vh', 'hv'].map((orientation, idx) => (
-                          <OSTooltip key={orientation} label={t(`Flux.apparence.tooltips.of_${orientation}`)}>
-                            <Button
-                              variant={getButtonVariant(
-                                idx === 0 ? 'left' : idx === 3 ? 'right' : 'center',
-                                isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation'),
-                                linkShapeValues.orientation === orientation
-                              )}
-                              onClick={() => { linkShapeValues.orientation = orientation as Type_Orientation }}
-                            >
-                              {icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]}
-                            </Button>
-                          </OSTooltip>
-                        ))}
-                      </Box>
-                      <TooltipElementOverloaded
-                        elements={links_elements}
-                        t={t}
-                        attributeKey={'orientation'}
-                        config={LINK_SHAPE_SPECIFIC_CONFIG}
-                        prefix={'shape'}
+                  <Box layerStyle='menu_sub_section'>
+                    <Box layerStyle='menuconfigpanel_grid'>
+                      <Box as='span' layerStyle='menu_sub_section_title'
+                        textStyle='title_sub_section'
+                      >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
+                      <ElementAttrSetterNumberInput2Cols
+                        app_data={app_data}
+                        elements={elements}
+                        attributePath='Noeud.apparence'
+                        attributeKey='min_width'
+                        prefix='shape'
+                        config={BASE_SHAPE_CONFIG}
+                        refreshParentComponent={refreshAll}
+                        unit_text='px'
+                        stepper={true}
                       />
-                    </Box>
-
-                    <Divider />
-                    <Box as='span' textStyle='title_sub_section'>Forme</Box>
-                    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                      <Checkbox
-                        {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'))}
-                        isChecked={linkShapeValues.is_curved}
-                        onChange={(evt) => { linkShapeValues.is_curved = evt.target.checked }}
-                      >
-                        <OSTooltip label={t('Flux.apparence.tooltips.shape_is_curved')}>
-                          {t('Flux.apparence.shape_is_curved')}
-                          <TooltipElementOverloaded
-                            elements={links_elements}
-                            t={t}
-                            attributeKey={'is_curved'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                          />
-                        </OSTooltip>
-                      </Checkbox>
-                      {linkShapeValues.is_curved && (
-                        <Select
-                          value={commonShapeValues.type}
-                          onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
-                        >
-                          {menu_configuration.shape_type.map(el => (
-                            <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-                          ))}
-                        </Select>
-                      )}
-                    </Box>
-
-                    <Box layerStyle='menuconfigpanel_row_2cols'>
-                      <Checkbox
-                        {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'))}
-                        isChecked={linkShapeValues.is_arrow}
-                        onChange={(evt) => { linkShapeValues.is_arrow = evt.target.checked }}
-                      >
-                        <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
-                          {t('Flux.apparence.shape_is_arrow')}
-                          <TooltipElementOverloaded
-                            elements={links_elements}
-                            t={t}
-                            attributeKey={'is_arrow'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                          />
-                        </OSTooltip>
-                      </Checkbox>
-                      {linkShapeValues.is_arrow && (
-                        <InputGroup variant='menuconfigpanel_option_input'>
-                          <ConfigMenuNumberInput
-                            t={t}
-                            default_value={linkShapeValues.arrow_size}
-                            menu_for_style={menu_for_style}
-                            minimum_value={1}
-                            unit_text='px'
-                            stepper={true}
-                            function_on_blur={(value) => { linkShapeValues.arrow_size = value ?? linkShapeValues.arrow_size }}
-                            multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
-                          />
-                        </InputGroup>
-                      )}
-                    </Box>
-                    <Divider />
-                    <Box as='span' textStyle='title_sub_section'>Options</Box>
-                    <Checkbox
-                      {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'))}
-                      isChecked={linkShapeValues.is_structure}
-                      onChange={(evt) => {
-                        linkShapeValues.is_structure = evt.target.checked
-                      }}>
-                      <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
-                        {t('Flux.apparence.shape_is_structure')}
-                        <TooltipElementOverloaded
-                          elements={links_elements}
-                          t={t}
-                          attributeKey={'is_structure'}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
-                      </OSTooltip>
-                    </Checkbox>
-
-                    {/* Value of link local scale to override scale from DA, can be undefined */}
-                    <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                      <>
-                        <Box as='span' layerStyle='options_2cols' >
-                          <Box layerStyle='menuconfigpanel_option_name' >
-                            {t('Flux.apparence.shape_local_link_scale')}
+                      <ElementAttrSetterNumberInput2Cols
+                        app_data={app_data}
+                        elements={elements}
+                        attributePath='Noeud.apparence'
+                        attributeKey='min_height'
+                        prefix='shape'
+                        config={BASE_SHAPE_CONFIG}
+                        refreshParentComponent={refreshAll}
+                        unit_text='px'
+                        stepper={true}
+                      />
+                      {selection.hasNodes ? <>
+                        <Divider />
+                        <Box as='span' textStyle='title_sub_section'>Options Noeuds</Box>
+                        <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                            <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
+                            <Box layerStyle='options_3cols'>
+                              {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
+                                <Button
+                                  key={type}
+                                  variant={getButtonVariant(
+                                    idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
+                                    isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
+                                    nodeShapeValues.position_type === type
+                                  )}
+                                  onClick={() => {
+                                    nodeShapeValues.position_type = type
+                                  }}
+                                >
+                                  {t(`Noeud.apparence.geometry_${type}`)}
+                                </Button>
+                              ))}
+                            </Box>
                             <TooltipElementOverloaded
-                              elements={links_elements}
+                              elements={nodes_elements}
                               t={t}
-                              attributeKey={'local_link_scale'}
-                              config={LINK_SHAPE_SPECIFIC_CONFIG}
+                              attributeKey={'position_type'}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
                               prefix={'shape'}
                             />
                           </Box>
-                          <ConfigMenuNumberOrUndefinedInput
-                            default_value={linkShapeValues.local_link_scale}
-                            function_on_blur={(_) => {
-                              linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                            }}
-                            minimum_value={0}
-                            stepper={true}
-                            step={1}
-                          />
-                        </Box>
-                      </>
-                    </OSTooltip>
+                        </OSTooltip>
+                        {nodeShapeValues.position_type == 'parametric' ? <>
+                          <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            elements={elements}
+                            attributePath='Noeud.apparence'
+                            attributeKey={'position_dx'}
+                            prefix={'shape'}
+                            refreshParentComponent={refreshAll}
+                            unit_text='pixels'
+                            stepper={true} />
+                          <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            elements={elements}
+                            attributePath='Noeud.apparence'
+                            attributeKey={'position_dy'}
+                            prefix={'shape'}
+                            refreshParentComponent={refreshAll}
+                            unit_text='pixels'
+                            stepper={true} /></> : <></>}
+                        <Checkbox
+                          {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
+                          isChecked={nodeShapeValues.orphan_node_visible}
+                          onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
+                        >
+                          <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
+                            {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                            <TooltipElementOverloaded
+                              elements={nodes_elements}
+                              t={t}
+                              attributeKey={'orphan_node_visible'}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                            />
+                          </OSTooltip>
+                        </Checkbox>
+                      </> : <></>
+                      }
+                      {selection.hasNodes ?
+                        <Button
+                          variant={'menuconfigpanel_option_button'}
+                          onClick={() => {
+                            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
+                            app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
+                          }}
+                        >
+                          {t('Noeud.Reorg_title')}
+                        </Button> : <></>}
+                    </Box>
                   </Box>
-                </Box>
-              )}
-              {(selection.hasContainers) && (
-                <>
+                )}
+
+                {(menu_for_style || selection.hasLinks) && (
+                  // <WrapperBoxSubSectionMenu
+                  //   new_data={app_data}
+                  //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
+                  //   is_open={!menu_for_style && selection.hasLinks}
+                  // >
+
                   <Box layerStyle='menu_sub_section'>
-                    <Checkbox
-                      variant='menuconfigpanel_option_checkbox'
-                      iconColor={'white'}
-                      isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
-                      onChange={(evt) => {
-                        container_element.tied_to_nodes = evt.target.checked
-                        refreshAll()
-                      }}>
-                      <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
-                    </Checkbox>
+                    <Box layerStyle='menuconfigpanel_grid'>
+                      <Box as='span' layerStyle='menu_sub_section_title'
+                        textStyle='title_sub_section'
+                      >{`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
 
-                    {elements.length > 0 && container_element.tied_to_nodes ? <Box>
-                      <OSMultiSelect
-                        t={app_data.t}
-                        elements={options_selector_node_tied}
-                        onClick={(entries) => {
-                          const entries_values = entries.map(d => d.value)
-                          const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
+                      {/* <Box layerStyle='menuconfigpanel_grid'> */}
+                      {selection.hasLinks || menu_for_style ?
+                        <>
+                          <Divider />
+                          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                            <Box layerStyle='menuconfigpanel_option_name'>
+                              {app_data.t('Flux.apparence.shape_color_rule')}
+                              <TooltipElementOverloaded
+                                prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
+                              />
+                            </Box>
+                            <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+                              <Select
+                                value={linkShapeValues.color_rule}
+                                onChange={(evt) => {
+                                  linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
+                                }}
+                              >
+                                {app_data.menu_configuration.flow_color_origin_type.map(el => {
+                                  return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+                                })}
+                              </Select>
+                            </OSTooltip>
+                          </Box>
+                        </> : <></>}
+                      
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <Box as='span' layerStyle='menuconfigpanel_option_name'>Orientation</Box>
+                        <Box layerStyle='options_5cols'>
+                          <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling')}>
+                            <Button
+                              variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
+                              onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
+                            >
+                              {icon_library.icon_orientation_recycle}
+                            </Button>
+                          </OSTooltip>
+                          {['hh', 'vv', 'vh', 'hv'].map((orientation, idx) => (
+                            <OSTooltip key={orientation} label={t(`Flux.apparence.tooltips.of_${orientation}`)}>
+                              <Button
+                                variant={getButtonVariant(
+                                  idx === 0 ? 'left' : idx === 3 ? 'right' : 'center',
+                                  isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation'),
+                                  linkShapeValues.orientation === orientation
+                                )}
+                                onClick={() => { linkShapeValues.orientation = orientation as Type_Orientation }}
+                              >
+                                {icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]}
+                              </Button>
+                            </OSTooltip>
+                          ))}
+                        </Box>
+                          <TooltipElementOverloaded
+                            elements={links_elements}
+                            t={t}
+                            attributeKey={'is_recycling'}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                          />
+                        <TooltipElementOverloaded
+                          elements={links_elements}
+                          t={t}
+                          attributeKey={'orientation'}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          prefix={'shape'}
+                        />
+                      </Box>
 
-                          app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                            if (entries_values.includes(node.id)) {
-                              containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
-                            } else {
-                              containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
-                            }
-                          })
+                      <Divider />
+                      <Box as='span' textStyle='title_sub_section'>Forme</Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <Checkbox
+                          {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'))}
+                          isChecked={linkShapeValues.is_curved}
+                          onChange={(evt) => { linkShapeValues.is_curved = evt.target.checked }}
+                        >
+                          <OSTooltip label={t('Flux.apparence.tooltips.shape_is_curved')}>
+                            {t('Flux.apparence.shape_is_curved')}
+                            <TooltipElementOverloaded
+                              elements={links_elements}
+                              t={t}
+                              attributeKey={'is_curved'}
+                              config={LINK_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                            />
+                          </OSTooltip>
+                        </Checkbox>
+                        {linkShapeValues.is_curved && (
+                          <Select
+                            value={commonShapeValues.type}
+                            onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
+                          >
+                            {menu_configuration.shape_type.map(el => (
+                              <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+                            ))}
+                          </Select>
+                        )}
+                      </Box>
+
+                      <Box layerStyle='menuconfigpanel_row_2cols'>
+                        <Checkbox
+                          {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'))}
+                          isChecked={linkShapeValues.is_arrow}
+                          onChange={(evt) => { linkShapeValues.is_arrow = evt.target.checked }}
+                        >
+                          <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
+                            {t('Flux.apparence.shape_is_arrow')}
+                            <TooltipElementOverloaded
+                              elements={links_elements}
+                              t={t}
+                              attributeKey={'is_arrow'}
+                              config={LINK_SHAPE_SPECIFIC_CONFIG}
+                              prefix={'shape'}
+                            />
+                          </OSTooltip>
+                        </Checkbox>
+                        {linkShapeValues.is_arrow && (
+                          <InputGroup variant='menuconfigpanel_option_input'>
+                            <ConfigMenuNumberInput
+                              t={t}
+                              default_value={linkShapeValues.arrow_size}
+                              menu_for_style={menu_for_style}
+                              minimum_value={1}
+                              unit_text='px'
+                              stepper={true}
+                              function_on_blur={(value) => { linkShapeValues.arrow_size = value ?? linkShapeValues.arrow_size }}
+                              multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
+                            />
+                          </InputGroup>
+                        )}
+                      </Box>
+                      <Divider />
+                      <Box as='span' textStyle='title_sub_section'>Options</Box>
+                      <Checkbox
+                        {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'))}
+                        isChecked={linkShapeValues.is_structure}
+                        onChange={(evt) => {
+                          linkShapeValues.is_structure = evt.target.checked
+                        }}>
+                        <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
+                          {t('Flux.apparence.shape_is_structure')}
+                          <TooltipElementOverloaded
+                            elements={links_elements}
+                            t={t}
+                            attributeKey={'is_structure'}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                          />
+                        </OSTooltip>
+                      </Checkbox>
+
+                      {/* Value of link local scale to override scale from DA, can be undefined */}
+                      <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                        <>
+                          <Box as='span' layerStyle='options_2cols' >
+                            <Box layerStyle='menuconfigpanel_option_name' >
+                              {t('Flux.apparence.shape_local_link_scale')}
+                              <TooltipElementOverloaded
+                                elements={links_elements}
+                                t={t}
+                                attributeKey={'local_link_scale'}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                              />
+                            </Box>
+                            <ConfigMenuNumberOrUndefinedInput
+                              default_value={linkShapeValues.local_link_scale}
+                              function_on_blur={(_) => {
+                                linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                              }}
+                              minimum_value={0}
+                              stepper={true}
+                              step={1}
+                            />
+                          </Box>
+                        </>
+                      </OSTooltip>
+                    </Box>
+                  </Box>
+                )}
+                {(selection.hasContainers) && (
+                  <>
+                    <Box layerStyle='menu_sub_section'>
+                      <Checkbox
+                        variant='menuconfigpanel_option_checkbox'
+                        iconColor={'white'}
+                        isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
+                        onChange={(evt) => {
+                          container_element.tied_to_nodes = evt.target.checked
                           refreshAll()
-                        }}
-                      />
+                        }}>
+                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
+                      </Checkbox>
 
-                    </Box> : <></>}
-                  </Box></>
-              )}
-            </>
+                      {elements.length > 0 && container_element.tied_to_nodes ? <Box>
+                        <OSMultiSelect
+                          t={app_data.t}
+                          elements={options_selector_node_tied}
+                          onClick={(entries) => {
+                            const entries_values = entries.map(d => d.value)
+                            const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
+
+                            app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                              if (entries_values.includes(node.id)) {
+                                containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
+                              } else {
+                                containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
+                              }
+                            })
+                            refreshAll()
+                          }}
+                        />
+
+                      </Box> : <></>}
+                    </Box></>
+                )}
+              </>
+            </Box>
+            //</WrapperBoxSubSectionMenu>
           )}
 
           {/* ========== ONGLETS LABELS ========== */}
@@ -1566,34 +1565,7 @@ export const MenuShapeAttributes = ({
 
         {/* Fond visible + Couleur */}
         {/* Choix de la source de la couleur */}
-        {/* <Box layerStyle='menuconfigpanel_grid'> */}
-        {selection.hasLinks || menu_for_style ?
-          <>
-            <Divider />
-            <Box as='span' layerStyle='menu_sub_section_title'
-              textStyle='title_sub_section'
-            >{`${'Fond Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {app_data.t('Flux.apparence.shape_color_rule')}
-                <TooltipElementOverloaded
-                  prefix={prefix} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
-                />
-              </Box>
-              <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
-                <Select
-                  value={linkShapeValues.color_rule}
-                  onChange={(evt) => {
-                    linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
-                  }}
-                >
-                  {app_data.menu_configuration.flow_color_origin_type.map(el => {
-                    return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-                  })}
-                </Select>
-              </OSTooltip>
-            </Box>
-          </> : <></>}</Box>
+      </Box>
     </>
   )
 }
