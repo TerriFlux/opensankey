@@ -189,61 +189,63 @@ const LabelContentComponent = ({
     <Box layerStyle='menuconfigpanel_grid'>
       {/* Sélecteur de mode */}
       {prefix !== 'value_label' && !menu_style && (
-        <Box layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='options_4cols'>
-            {prefix === 'name_label' && (
-              <>
-                <Button
-                  variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-                  onClick={setModeSimpleText}
-                >
-                  {t('Menu.display_mode.text')}
-                </Button>
-                <Button
-                  variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-                  onClick={setModeRichText}
-                >
-                  {t('Menu.display_mode.rich')}
-                </Button>
-                <Button
-                  variant={displayMode === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                  onClick={setModeValue}
-                >
-                  {t('Menu.display_mode.value')}
-                </Button></>)}
-            {prefix === 'icon' && !menu_style && (
-              <>
-                <Button
-                  variant={displayMode === 'icon' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-                  onClick={() => {
-                    labelValues.has_fo = false
-                    labelValues.is_icon = true
-                    labelValues.is_image = false
-                    setDisplayMode('icon')
-                  }}
-                >
-                  {t('Menu.display_mode.icon')}
-                </Button>
-                <Button
-                  variant={displayMode === 'image' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                  onClick={() => {
-                    labelValues.has_fo = false
-                    labelValues.is_icon = false
-                    labelValues.is_image = true
-                    setDisplayMode('image')
-                  }}
-                >
-                  {t('Menu.display_mode.image')}
-                </Button>
-              </>
-            )}
+        <Box as='span' layerStyle='options_4cols'>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Box layerStyle='options_4cols'>
+              {prefix === 'name_label' && (
+                <>
+                  <Button
+                    variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                    onClick={setModeSimpleText}
+                  >
+                    {app_data.icon_library.icon_text_mode_simple}
+                  </Button>
+                  <Button
+                    variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                    onClick={setModeRichText}
+                  >
+                    {app_data.icon_library.icon_text_mode_rich}
+                  </Button>
+                  <Button
+                    variant={displayMode === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                    onClick={setModeValue}
+                  >
+                    {app_data.icon_library.icon_text_mode_value}
+                  </Button></>)}
+              {prefix === 'icon' && !menu_style && (
+                <>
+                  <Button
+                    variant={displayMode === 'icon' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+                    onClick={() => {
+                      labelValues.has_fo = false
+                      labelValues.is_icon = true
+                      labelValues.is_image = false
+                      setDisplayMode('icon')
+                    }}
+                  >
+                    {t('Menu.display_mode.icon')}
+                  </Button>
+                  <Button
+                    variant={displayMode === 'image' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+                    onClick={() => {
+                      labelValues.has_fo = false
+                      labelValues.is_icon = false
+                      labelValues.is_image = true
+                      setDisplayMode('image')
+                    }}
+                  >
+                    {t('Menu.display_mode.image')}
+                  </Button>
+                </>
+              )}
+            </Box>
           </Box>
-        </Box>
-      )}
-
       {/* Section TEXT */}
-      {(displayMode === 'simple_text' || displayMode === 'value') && (
-        <Box layerStyle='options_2cols'>
+      {(displayMode === 'simple_text' || displayMode === 'value') && (<>
+
           <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
             <Select
               variant='menuconfigpanel_option_select'
@@ -269,7 +271,42 @@ const LabelContentComponent = ({
               multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
             />
           </LabelWithOverload>
-        </Box>)}
+
+        <Box display="flex" alignItems="center" gap={1}>
+            <Box layerStyle='options_3cols'>
+              <Button
+                variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                onClick={() => { labelValues.bold = !labelValues.bold }}
+              >
+                {app_data.icon_library.icon_text_bold}
+              </Button>
+              <Button
+                variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
+              >
+                {svg_label_upper}
+              </Button>
+              <Button
+                variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
+                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+                onClick={() => { labelValues.italic = !labelValues.italic }}
+              >
+                {app_data.icon_library.icon_text_italic}
+              </Button>
+            </Box>
+            <Box display="flex" gap={0}>
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'bold'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'uppercase'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+              <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+            </Box>
+        </Box>
+        </>)}
+        </Box>
+      )}
+
+
       {(displayMode === 'simple_text' || displayMode === 'value') && (<>
         {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
           <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
@@ -301,50 +338,6 @@ const LabelContentComponent = ({
               </Button>
             </Box>
           </OSTooltip></Box> : <></>}
-        <Box as='span' layerStyle='options_2cols'>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box layerStyle='options_3cols'>
-              <Button
-                variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                onClick={() => { labelValues.bold = !labelValues.bold }}
-              >
-                {app_data.icon_library.icon_text_bold}
-              </Button>
-              <Button
-                variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
-              >
-                {svg_label_upper}
-              </Button>
-              <Button
-                variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                onClick={() => { labelValues.italic = !labelValues.italic }}
-              >
-                {app_data.icon_library.icon_text_italic}
-              </Button>
-            </Box>
-            <Box display="flex" gap={0}>
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'bold'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'uppercase'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            </Box>
-          </Box>
-          <ColorPickerWithSustainable
-            app_data={app_data}
-            elements={elements}
-            config={BASE_LABEL_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            colorAttributeKey="color"
-            sustainableAttributeKey="color_sustainable"
-            refreshParentComponent={refreshParentComponent}
-          />
-
-        </Box>
-
         <Box layerStyle='options_2cols'>
           <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_4cols'>
@@ -388,7 +381,16 @@ const LabelContentComponent = ({
             <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
             <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
           </Box>
-
+          <ColorPickerWithSustainable
+            app_data={app_data}
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            colorAttributeKey="color"
+            sustainableAttributeKey="color_sustainable"
+            refreshParentComponent={refreshParentComponent}
+          />
         </Box></>)
       }
 
