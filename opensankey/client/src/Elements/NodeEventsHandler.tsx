@@ -35,6 +35,7 @@ import { Class_NodeElement } from './Node'
 export class NodeEventsHandler {
 
   private _node: Class_NodeBase
+  private bbox: DOMRect | undefined = undefined
 
   constructor(node: Class_NodeBase) {
     this._node = node
@@ -215,6 +216,28 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // ✅ Utiliser les nouvelles méthodes d'accès
     this._node.setDragStartPositions(dict_old_pos)
     this._node.setDragState(true)
+    this.bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+
+    if (this.bbox == undefined)
+      return
+    if (this._node.drawing_area.legend.is_visible && this._node.drawing_area.legend.stick_to_drawing) {
+      const legendBbox = this._node.drawing_area.d3_selection_legend?.node()?.getBBox()
+      if (legendBbox) {
+        // Calculer la bounding box englobante
+        const minX = Math.min(this.bbox.x, legendBbox.x)
+        const minY = Math.min(this.bbox.y, legendBbox.y)
+        const maxX = Math.max(this.bbox.x + this.bbox.width, legendBbox.x + legendBbox.width)
+        const maxY = Math.max(this.bbox.y + this.bbox.height, legendBbox.y + legendBbox.height)
+
+        // Créer une nouvelle bbox combinée
+        this.bbox = {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY
+        } as DOMRect
+      } 
+    }
   }
 
   /**
@@ -299,7 +322,10 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
 
     const drawing_area = this._node.drawing_area
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
-
+    let max_x = 0
+    let max_y = 0
+    let min_x = 10000
+    let min_y = 10000
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
       if (drawing_area.isInEditionMode()) {
@@ -311,6 +337,10 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
         // Update node position
         nodes_selected
           .forEach(n => {
+            if (n.position_x > max_x) max_x = n.position_x
+            if (n.position_y > max_y) max_y = n.position_y
+            if (n.position_x < min_x) min_x = n.position_x
+            if (n.position_y < min_y) min_y = n.position_y
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
           })
       }
@@ -338,7 +368,36 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
       }
     }
 
-    this._node.drawing_area.areaAutoFit()
+    let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+
+    if (new_bbox == undefined)
+      return
+    if (this._node.drawing_area.legend.is_visible && this._node.drawing_area.legend.stick_to_drawing) {
+      const legendBbox = this._node.drawing_area.d3_selection_legend?.node()?.getBBox()
+      if (legendBbox) {
+        // Calculer la bounding box englobante
+        const minX = Math.min(new_bbox.x, legendBbox.x)
+        const minY = Math.min(new_bbox.y, legendBbox.y)
+        const maxX = Math.max(new_bbox.x + new_bbox.width, legendBbox.x + legendBbox.width)
+        const maxY = Math.max(new_bbox.y + new_bbox.height, legendBbox.y + legendBbox.height)
+
+        // Créer une nouvelle bbox combinée
+        new_bbox = {
+          x: minX,
+          y: minY,
+          width: maxX - minX,
+          height: maxY - minY
+        } as DOMRect
+      } 
+    }
+
+
+    if (this.bbox && (
+      new_bbox.x < this.bbox.x || new_bbox.y < this.bbox.y || 
+      new_bbox.x + new_bbox.width > (this.bbox.x + this.bbox.width) || new_bbox.y + new_bbox.height > (this.bbox.y + this.bbox.height)
+    )) {
+      this._node.drawing_area.areaAutoFit()
+    }
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
