@@ -165,7 +165,7 @@ export class Class_MenuConfig {
     'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag','flow_tag', 'data_tag','view'] }
   }
 
-  protected _tab_selected: 'background' | 'shape' | 'name_label' | 'value_label' | 'icon' = 'background'
+  protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' = 'shape'
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
     'data': [],
     'style': [],
