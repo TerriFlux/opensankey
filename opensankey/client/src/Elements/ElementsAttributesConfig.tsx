@@ -497,8 +497,8 @@ export const BASE_SHAPE_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   color_sustainable: {
-    default: true as boolean,
-    type: (() => true) as (() => boolean),
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
