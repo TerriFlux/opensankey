@@ -775,14 +775,21 @@ const LabelContentComponent = ({
         prefix={`${prefix}_background` as ShapePrefix}
         refreshParentComponent={refreshParentComponent}
       >
-        {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (
+        {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (<>
+          <ShapeTypeSelector app_data={app_data} elements={elements} prefix={`${prefix}_background` as ShapePrefix} attributePath={attributePath} refreshUI={refreshParentComponent} />
+          <MarginEditor
+            app_data={app_data}
+            elements={elements}
+            prefix={`${prefix}_background` as ShapePrefix}
+            refreshUI={refreshParentComponent}
+          />
           <MenuShapeAttributes
             app_data={app_data}
             elements={elements}
             attributePath={attributePath}
             prefix={`${prefix}_background` as ShapePrefix}
             refreshUI={refreshParentComponent}
-          />)}</MenuSectionCheckbox>
+          /></>)}</MenuSectionCheckbox>
     </Box>
   )
 }
@@ -953,6 +960,7 @@ export const MenuConfigurationAppearance = ({
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
             <Box layerStyle='menu_sub_section'>
+              <ShapeTypeSelector app_data={app_data} elements={elements} prefix={'shape'} attributePath={'Noeud.apparence'} refreshUI={refreshAll} />
               <MenuShapeAttributes
                 app_data={app_data}
                 elements={elements}
@@ -1414,8 +1422,6 @@ export const MenuShapeAttributes = ({
   return (
     <>
       <Box layerStyle='menuconfigpanel_grid'>
-        <ShapeTypeSelector app_data={app_data} elements={elements} prefix={prefix} attributePath={attributePath} refreshUI={refreshUI} />
-
         <Box as='span' layerStyle='options_2cols'>
           <Checkbox
             {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
@@ -1775,9 +1781,9 @@ export const missing_menu_translations = {
           image_source: 'Image source',
           position_size_offsets: 'Position, size and offsets',
           link_label_position: 'Link label position',
-          node_geometry: 'Node shape & geometry',
+          node_geometry: 'Node shape',
           node_options: 'Node options',
-          link_geometry: 'Link shape & geometry',
+          link_geometry: 'Link shape',
           orientation: 'Orientation',
           shape: 'Shape',
           options: 'Options',
@@ -1826,9 +1832,9 @@ export const missing_menu_translations = {
           image_source: 'Source image',
           position_size_offsets: 'Position, taille et décalages',
           link_label_position: 'Position Label Flux',
-          node_geometry: 'Forme et géométrie Nœuds et Formes',
+          node_geometry: 'Forme Nœuds et Formes',
           node_options: 'Options Noeuds',
-          link_geometry: 'Forme et géométrie Flux',
+          link_geometry: 'Forme Flux',
           orientation: 'Orientation',
           shape: 'Forme',
           options: 'Options',
