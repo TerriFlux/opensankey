@@ -39,120 +39,188 @@ export class NodeEventsHandler {
   constructor(node: Class_NodeBase) {
     this._node = node
   }
-  public handleDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    const drawing_area = this._node.drawing_area
-    if (drawing_area.application_data.is_static) {
-      drawing_area.purgeSelection()
-      return
+/**
+ * ✅ Détermine quel type d'élément a été cliqué
+ */
+private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+  let current: Element | null = element
+
+  while (current) {
+    const id = current.id
+    const classList = current.classList
+
+    // Check par ID (plus fiable car unique)
+    if (id.startsWith('value_label_text_') || id.startsWith('g_value_label')) {
+      return 'value_label'
     }
-    if (drawing_area.isInEditionMode()) {
-      // Purge selection list
-      drawing_area.purgeSelection()
-      // Close all menus
-      drawing_area.closeAllMenus()
+    if (id.startsWith('name_label_text_') || id.startsWith('g_name_label')) {
+      return 'name_label'
     }
-    if (drawing_area.isInSelectionMode() && event.button === 0) {
-      // SHIFT
-      if (event.ctrlKey) {
-        if (!this._node.selected_elements_list.includes(this._node)) {
-          // add node to selection
-          this._node.drawing_area.addElementToSelection(this._node)
-        }
-        // Open related menu
-        this._node.drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
-        // Update components related to node edition
-        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      }
+    if (id.startsWith('g_icon_') || id.startsWith('icon_svg_')) {
+      return 'icon'
     }
-  }
+    if (id.startsWith('node_shape_')) {
+      return 'shape'
+    }
 
-  /**
-   * ✅ Détermine quel type d'élément a été cliqué
-   */
-  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
-    // Remonter dans le DOM pour trouver les classes pertinentes
-    let current: Element | null = element
+    // Fallback sur les classes
+    if (classList.contains('value_label_text') || classList.contains('value_label')) {
+      return 'value_label'
+    }
+    if (classList.contains('name_label_text') || classList.contains('name_label')) {
+      return 'name_label'
+    }
+    if (classList.contains('illustration_icon') || classList.contains('illustration')) {
+      return 'icon'
+    }
+    if (classList.contains('node_shape')) {
+      return 'shape'
+    }
 
-    while (current) {
-      const classList = current.classList
-
-      // Vérifier les labels de texte
-      if (classList.contains('value_label_text') ||
-        classList.contains('value_label') ||
-        current.id.includes('value_label')) {
-        return 'value_label'
-      }
-
-      if (classList.contains('name_label_text') ||
-        classList.contains('name_label') ||
-        current.id.includes('name_label')) {
-        return 'name_label'
-      }
-
-      // Vérifier les icônes
-      if (classList.contains('illustration_icon') ||
-        classList.contains('illustration') ||
-        current.id.includes('icon')) {
-        return 'icon'
-      }
-
-      // Vérifier la shape
-      if (classList.contains('node_shape') ||
-        current.id.includes('node_shape')) {
-        return 'shape'
-      }
-
-      // Remonter au parent
+    // Remonter au parent (sécurité pour éviter boucle infinie)
+    if (current.parentElement && current !== current.parentElement) {
       current = current.parentElement
-    }
-
-    // Par défaut, considérer que c'est la shape
-    return 'shape'
-  }
-
-  /**
-   * Deal with simple left Mouse Button (LMB) click on given element
-   */
-  public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-    // Get related drawing area
-    const drawing_area = this._node.drawing_area
-    if (drawing_area.application_data.is_static) {
-      drawing_area.purgeSelection()
-      return
-    }
-    // EDITION MODE ===========================================================
-    if (drawing_area.isInEditionMode()) {
-      // Purge selection list
-      drawing_area.purgeSelection()
-      // Close all menus
-      drawing_area.closeAllMenus()
-    }
-    // SELECTION MODE =========================================================
-    else if (drawing_area.isInSelectionMode() && event.button === 0) {
-      const clickedElement = event.target as Element
-      const labelType = this.getClickedLabelType(clickedElement)
-      // CTRL
-      if (event.ctrlKey) {
-
-        this.addOrRemoveNodeFromSelection(labelType!)
-
-        drawing_area.application_data.menu_configuration.type_menu_configuration_selected = 'style'
-        drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['node']
-        drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
-        drawing_area.application_data.menu_configuration.tab_selected = labelType!
-        drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
-        this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
-      }
-      // OTHERS
-      else {
-        // if we're here then it's a simple click (no ctrl,alt or shift key pressed) - purge
-        // Purge selection list
-        drawing_area.purgeSelection()
-        // Add node to selection
-        drawing_area.addElementToSelection(this._node)
-      }
+    } else {
+      break
     }
   }
+
+  return 'shape' // Default
+}
+
+/**
+ * ✅ Logique commune pour sélectionner l'élément et ouvrir le bon onglet
+ */
+private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label' | 'icon', ctrlKey: boolean) {
+  const drawing_area = this._node.drawing_area
+  const menu_config = drawing_area.application_data.menu_configuration
+  const elements_configurable_selected = menu_config.elements_configurable_selected
+
+  // ✅ Ajouter/Retirer de la sélection
+  if (ctrlKey) {
+    this.addOrRemoveNodeFromSelection(labelType)
+  } else {
+    drawing_area.purgeSelection()
+    drawing_area.addElementToSelection(this._node)
+  }
+
+  // ✅ Mettre à jour elements_configurable_selected.data
+  if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
+    elements_configurable_selected.data.push('node')
+  }
+  if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
+    elements_configurable_selected.data.push('object')
+  }
+
+  // ✅ Configurer le style et l'onglet
+  elements_configurable_selected.style = ['element']
+  
+  // // ✅ Mapper le type de label vers l'onglet correspondant
+  // const tabMap: Record<string, 'background' | 'shape' | 'name' | 'value' | 'icon'> = {
+  //   'shape': 'shape',
+  //   'name_label': 'name',
+  //   'value_label': 'value',
+  //   'icon': 'icon'
+  // }
+  
+  menu_config.tab_selected = labelType
+
+  // ✅ Mettre à jour les composants
+  menu_config.ref_to_menu_config_updater.current()
+  menu_config.updateAllComponentsRelatedToNodes()
+}
+
+/**
+ * ✅ Double-clic : ouvre le menu de configuration + sélectionne l'onglet approprié
+ */
+public handleDoubleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  const drawing_area = this._node.drawing_area
+  
+  if (drawing_area.application_data.is_static) {
+    drawing_area.purgeSelection()
+    return
+  }
+
+  if (drawing_area.isInEditionMode()) {
+    drawing_area.purgeSelection()
+    drawing_area.closeAllMenus()
+    return
+  }
+
+  if (drawing_area.isInSelectionMode() && event.button === 0) {
+    const clickedElement = event.target as Element
+    const labelType = this.getClickedLabelType(clickedElement)
+
+    if (!labelType) return
+
+    // ✅ Sélectionner l'élément et ouvrir l'onglet
+    this.selectElementAndOpenTab(labelType, event.ctrlKey)
+
+    // ✅ SPÉCIFIQUE AU DOUBLE-CLIC : Ouvrir le menu de configuration
+    drawing_area.application_data.menu_configuration.openConfigMenuElementsNodes()
+  }
+}
+
+/**
+ * ✅ Simple clic : sélectionne l'élément + ouvre l'onglet approprié
+ */
+public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+  const drawing_area = this._node.drawing_area
+  
+  if (drawing_area.application_data.is_static) {
+    drawing_area.purgeSelection()
+    return
+  }
+
+  // EDITION MODE ===========================================================
+  if (drawing_area.isInEditionMode()) {
+    drawing_area.purgeSelection()
+    drawing_area.closeAllMenus()
+    return
+  }
+
+  // SELECTION MODE =========================================================
+  if (drawing_area.isInSelectionMode() && event.button === 0) {
+    const clickedElement = event.target as Element
+    const labelType = this.getClickedLabelType(clickedElement)
+
+    if (!labelType) return
+
+    // ✅ Sélectionner l'élément et ouvrir l'onglet
+    this.selectElementAndOpenTab(labelType, event.ctrlKey)
+  }
+}
+
+/**
+ * ✅ Add or remove node from selection (version améliorée)
+ */
+private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_label' | 'icon') {
+  const drawing_area = this._node.drawing_area
+  const menu_config = drawing_area.application_data.menu_configuration
+  const currentTab = menu_config.tab_selected
+
+  // ✅ Mapper vers le format attendu
+  const tabMap: Record<string, string> = {
+    'shape': 'shape',
+    'name_label': 'name',
+    'value_label': 'value',
+    'icon': 'icon',
+    'background': 'shape' // Fallback
+  }
+
+  const clickedTab = tabMap[labelType] || 'shape'
+
+  if (this._node.selected_elements_list.includes(this._node)) {
+    // ✅ Retirer seulement si on clique sur le même onglet déjà ouvert
+    if (clickedTab === currentTab) {
+      drawing_area.removeElementFromSelection(this._node)
+    }
+    // Sinon, on garde la sélection et on change juste l'onglet
+  } else {
+    // Ajouter à la sélection
+    drawing_area.addElementToSelection(this._node)
+  }
+}
 
   /**
    * Define event when mouse drag element starts
@@ -162,7 +230,7 @@ export class NodeEventsHandler {
       return
     }
 
-    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
 
     if (nodes_selected.includes(this._node)) {
@@ -186,7 +254,7 @@ export class NodeEventsHandler {
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     // Get related drawing area
     const drawing_area = this._node.drawing_area
-    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -261,7 +329,7 @@ export class NodeEventsHandler {
     }
 
     const drawing_area = this._node.drawing_area
-    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list,...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
+    const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
 
     if (nodes_selected.includes(this._node)) { // Only trigger the drag if we drag a selected node
       // EDITION MODE ===========================================================
@@ -376,37 +444,9 @@ export class NodeEventsHandler {
     }
   }
 
-  /**
-   * Define event when mouse moves in the element
-   */
-  public handleMouseMove() {
-    return
-  }
+  public handleMouseMove() {return}
+  public handleMouseOut() {return}
 
-  /**
-   * Define event when mouse leaves element
-   */
-  public handleMouseOut() {
-    return
-  }
-
-  /**
-   * Add or remove node from selection
-   */
-  private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_label' | 'icon') {
-    if (this._node.selected_elements_list.includes(this._node)) {
-      // Remove node from selection
-      if (labelType == this._node.drawing_area.application_data.menu_configuration.tab_selected)
-        this._node.drawing_area.removeElementFromSelection(this._node)
-    } else {
-      // Add node to selection
-      this._node.drawing_area.addElementToSelection(this._node)
-    }
-  }
-
-  /**
-   * Move dragged nodes following steps method (nodes move from a step only when mouse shift exceed a threshold from last step)
-   */
   private moveMagneticNode(
     event: d3.D3DragEvent<SVGGElement, unknown, unknown>,
     node_to_move: Class_NodeBase[]
