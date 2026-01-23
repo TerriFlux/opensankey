@@ -92,7 +92,7 @@ export abstract class DrawLabelBase {
       BASE_SHAPE_CONFIG
     )
 
-  const shapeValues = getNodeShapeSpecificValues(this._element as unknown as Class_NodeBase, `${this.prefix}_background` as ShapePrefix)
+    const shapeValues = getNodeShapeSpecificValues(this._element as unknown as Class_NodeBase, `${this.prefix}_background` as ShapePrefix)
 
     if (!bgValues.visible) return null
     const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
@@ -111,16 +111,16 @@ export abstract class DrawLabelBase {
       bgElement
         .attr('cx', x + width / 2)
         .attr('cy', y + height / 2)
-        .attr('rx', width / 2 + shapeValues.margin_left + shapeValues.margin_right  )
-        .attr('ry', height / 2 + shapeValues.margin_top + shapeValues.margin_bottom )
+        .attr('rx', width / 2 + shapeValues.margin_left + shapeValues.margin_right)
+        .attr('ry', height / 2 + shapeValues.margin_top + shapeValues.margin_bottom)
     } else if (bgValues.type === 'rect') {
       bgElement
-        .attr('x', x - shapeValues.margin_left )
+        .attr('x', x - shapeValues.margin_left)
         .attr('y', y - shapeValues.margin_top)
         .attr('width', width + shapeValues.margin_left + shapeValues.margin_right)
         .attr('height', height + shapeValues.margin_top + shapeValues.margin_bottom)
         .attr('rx', bgValues.border_radius)
-    } 
+    }
     bgElement.lower()
     return bgElement
   }
@@ -255,26 +255,63 @@ export abstract class DrawLabelBase {
 
   protected abstract getIconPos(): [number, number]
 
-  /**
-   * ✅ Dessine une image
-   */
   public drawImage() {
     if (!this._element.d3_selection || !this._label_values.image_src) return
 
     const [icon_pos_x, icon_pos_y] = this.getIconPos()
+    const [icon_width, icon_height] = this.getIconSize()
 
-    this.d3_selection = this._element.d3_selection?.append('image')
+    // Créer le groupe
+    this.d3_selection = this._element.d3_selection.append('g')
+      .attr('id', `g_image_${this.prefix}_${this.getElementId()}`)
+      .classed('illustration', true)
+      .classed(`illustration_${this.prefix}`, true)
+
+    // Dessiner le background
+    this.drawGenericBackground(
+      this.d3_selection,
+      icon_pos_x,
+      icon_pos_y,
+      icon_width,
+      icon_height,
+      {
+        bgPrefix: `${this.prefix}_background` as ShapePrefix,
+        className: `${this.prefix}_image_background`
+      }
+    )
+
+    // ✅ Appeler une méthode protégée pour obtenir les dimensions finales
+    const [final_x, final_y, final_width, final_height] = this.getImageDimensions(icon_pos_x, icon_pos_y, icon_width, icon_height)
+
+    // Dessiner l'image
+    const imageElement = this.d3_selection.append('image')
       .attr('id', `image_${this.prefix}_${this.getElementId()}`)
       .attr('class', 'illustration image')
       .attr('xlink:href', this._label_values.image_src)
-      .attr('x', icon_pos_x)
-      .attr('y', icon_pos_y) as unknown as d3_selection_type
+      .attr('x', final_x)
+      .attr('y', final_y)
+      .attr('width', final_width)
+      .attr('height', final_height)
 
-    if (this._label_values.inside_vert && this._label_values.inside_horiz)
-      this.d3_selection
-        .attr('x', 0)
-        .attr('y', 0)
+    // Setup drag
+    this.setupImageDrag()
+  }
 
+  // ✅ Méthode protégée à override dans les sous-classes
+  protected getImageDimensions(
+    icon_pos_x: number,
+    icon_pos_y: number,
+    icon_width: number,
+    icon_height: number
+  ): [number, number, number, number] {
+    // Implémentation par défaut
+    if (this._label_values.inside_vert && this._label_values.inside_horiz) {
+      return [0, 0, this._element.shape_min_width, this._element.shape_min_height]
+    }
+    return [icon_pos_x, icon_pos_y, icon_width, icon_height]
+  }
+
+  protected setupImageDrag(): void {
     if (this._element.icon_is_image && this._element.icon_inside_horiz && this._element.icon_inside_vert) {
       return
     }
@@ -283,6 +320,7 @@ export abstract class DrawLabelBase {
     if (isStatic) {
       return
     }
+
     this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
       .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area?.isInSelectionMode())
       .on('start', ev => this.dragGenericStart(ev))
@@ -290,7 +328,6 @@ export abstract class DrawLabelBase {
       .on('end', ev => this.dragGenericEnd(ev))
     )
   }
-
   /**
    * ✅ Dessine une icône
    */
@@ -305,6 +342,7 @@ export abstract class DrawLabelBase {
       .classed('illustration', true)
       .classed(`illustration_${this.prefix}`, true)
 
+    // ✅ CORRECTION : Dessiner le background AVANT le SVG de l'icône
     this.drawGenericBackground(
       this.d3_selection,
       icon_pos_x,
@@ -323,6 +361,7 @@ export abstract class DrawLabelBase {
       .attr('viewBox', this._label_values.view_box ? this._label_values.view_box : '0 0 1000 1000')
       .attr('x', icon_pos_x)
       .attr('y', icon_pos_y)
+
     if (this._label_values.inside_vert && this._label_values.inside_horiz) {
       d3_selection_icon_svg
         .attr('x', 0)
@@ -559,7 +598,7 @@ export abstract class DrawLabelBase {
     if (this._label_values.has_fo) {
       return this.drawFO()
     }
-    if (this._label_values.icon_name != '') {
+    if (this._label_values.is_icon && this._label_values.is_visible) {
       return this.drawIcon()
     }
     if (this._label_values.is_visible && this._label_values.is_image) {
@@ -787,14 +826,20 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return [icon_pos_x, icon_pos_y]
   }
 
-  public override drawImage() {
-    if (!this._element.d3_selection || !this._label_values.image_src) return
-    super.drawImage()
+  // public override drawImage() {
+  //   if (!this._element.d3_selection || !this._label_values.image_src) return
 
-    this.d3_selection
-      ?.attr('height', this.node.getShapeHeightToUse() + 'px')
-      .attr('width', this.node.getShapeWidthToUse() + 'px')
-  }
+  //   // ✅ Appeler la méthode parent qui gère maintenant le background
+  //   super.drawImage()
+
+  //   // ✅ Ajustement spécifique pour les nodes
+  //   const imageElement = this.d3_selection?.select('image')
+  //   if (imageElement && !imageElement.empty()) {
+  //     imageElement
+  //       .attr('height', this.node.getShapeHeightToUse() + 'px')
+  //       .attr('width', this.node.getShapeWidthToUse() + 'px')
+  //   }
+  // }
 
   protected getD3Selection() {
     return this._element.d3_selection
@@ -923,6 +968,17 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       .attr('font-family', this._label_values.font_family)
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
+  }
+  protected override getImageDimensions(
+    icon_pos_x: number,
+    icon_pos_y: number,
+    icon_width: number,
+    icon_height: number
+  ): [number, number, number, number] {
+    if (this._label_values.inside_vert && this._label_values.inside_horiz) {
+      return [0, 0, this.node.getShapeWidthToUse(), this.node.getShapeHeightToUse()]
+    }
+    return [icon_pos_x, icon_pos_y, icon_width, icon_height]
   }
 
   protected getTextClasses(): string[] {
@@ -1456,15 +1512,13 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   public override drawImage() {
-    if (!this._element.d3_selection || !this._label_values.image_src) return
+    if (!this.d3_selection || !this._label_values.image_src) return
     super.drawImage()
 
     const link = this._element as Class_LinkElement
     const iconSize = link.thickness * 2
 
-    this.d3_selection
-      ?.attr('height', iconSize + 'px')
-      .attr('width', iconSize + 'px')
+    this.d3_selection.attr('width', iconSize + 'px')
   }
 }
 

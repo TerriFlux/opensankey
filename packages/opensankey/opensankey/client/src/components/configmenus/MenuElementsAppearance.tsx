@@ -139,7 +139,7 @@ const LabelContentComponent = ({
     if (labelValues.is_image) return 'image'
     if (labelValues.is_icon) return 'icon'
     if (labelValues.is_value) return 'value'
-    return 'simple_text'
+    return prefix == 'icon' ? 'icon' : 'simple_text'
   })
 
   const setModeSimpleText = () => {
@@ -216,6 +216,8 @@ const LabelContentComponent = ({
                   variant={displayMode === 'icon' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
                   onClick={() => {
                     labelValues.has_fo = false
+                    labelValues.is_icon = true
+                    labelValues.is_image = false
                     setDisplayMode('icon')
                   }}
                 >
@@ -223,7 +225,12 @@ const LabelContentComponent = ({
                 </Button>
                 <Button
                   variant={displayMode === 'image' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                  onClick={() => setDisplayMode('image')}
+                  onClick={() => {
+                    labelValues.has_fo = false
+                    labelValues.is_icon = false
+                    labelValues.is_image = true
+                    setDisplayMode('image')
+                  }}
                 >
                   Image
                 </Button>
@@ -574,12 +581,7 @@ const LabelContentComponent = ({
               <Button
                 variant='menuconfigpanel_option_button_right'
                 onClick={() => {
-                  base_elements.forEach(el => {
-                    if ('image_src' in el) {
-                      el.image_src = ''
-                      el.draw()
-                    }
-                  })
+                  labelValues.image_src = ''
                 }}
               >
                 {app_data.icon_library.icon_delete}
@@ -596,12 +598,13 @@ const LabelContentComponent = ({
                 reader.onload = (e: ProgressEvent<FileReader>) => {
                   const resultat = (e.target as FileReader).result
                   const res = resultat?.toString().replaceAll('=', '')
-                  base_elements.forEach(el => {
-                    if ('image_src' in el) {
-                      el.image_src = res as string
-                      el.draw()
-                    }
-                  })
+                  labelValues.image_src = res
+                  // base_elements.forEach(el => {
+                  //   //if ('image_src' in el) {
+                  //     el.image_src = res as string
+                  //     el.draw()
+                  //   //}
+                  //})
                 }
                 reader.readAsDataURL(files[0])
               }}
@@ -998,8 +1001,6 @@ export const MenuConfigurationAppearance = ({
                     <Box as='span' layerStyle='menu_sub_section_title'
                       textStyle='title_sub_section'
                     >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
-                    <ShapeTypeSelector app_data={app_data} elements={elements} prefix={'shape'} attributePath='Noeud.apparence' refreshUI={refreshAll} />
-                    <Divider />
                     <ElementAttrSetterNumberInput2Cols
                       app_data={app_data}
                       elements={elements}
@@ -1021,12 +1022,6 @@ export const MenuConfigurationAppearance = ({
                       refreshParentComponent={refreshAll}
                       unit_text='px'
                       stepper={true}
-                    />
-                    <MarginEditor
-                      app_data={app_data}
-                      elements={elements}
-                      prefix={'shape'}
-                      refreshUI={refreshAll}
                     />
                     {selection.hasNodes ? <>
                       <Divider />
