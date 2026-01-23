@@ -26,18 +26,18 @@
 import React from 'react'
 import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
-import { 
-  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand, 
-  faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat, 
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark,faBox,faFileExcel,faFileCode,faArrowRightArrowLeft
+import {
+  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
+  faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
+  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { 
-  FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp, 
-  FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold, 
-  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaFilter, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus 
+import {
+  FaAngleDoubleDown, FaAngleDoubleLeft, FaAngleDoubleRight, FaAngleDoubleUp, FaAngleDown, FaAngleUp,
+  FaArrowAltCircleDown, FaArrowAltCircleUp, FaArrowDown, FaArrowLeft, FaArrowRight, FaArrowUp, FaBold,
+  FaCaretDown, FaCaretUp, FaCheck, FaChevronDown, FaEye, FaEyeSlash, FaFilter, FaItalic, FaLock, FaLockOpen, FaMinus, FaPlus
 } from 'react-icons/fa'
-import { FaPause, FaPlay} from 'react-icons/fa'
+import { FaPause, FaPlay } from 'react-icons/fa'
 
 // Hand made icon ===========================================================================
 // Logo for sub-nav 'aide'
@@ -242,6 +242,65 @@ const logo_graph = <svg
       </g>
     </g>
   </g>
+</svg>
+// Dans la section "Hand made icon" du fichier IconLibrairie.tsx
+
+// Mode texte simple (simple_text)
+const logo_text_simple = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* Lignes de texte simple */}
+  <line x1="4" y1="8" x2="20" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  <line x1="4" y1="16" x2="14" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+</svg>
+
+// Mode texte riche (rich_text)
+const logo_text_rich = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* Cadre représentant un éditeur */}
+  <rect
+    x="3"
+    y="3"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    rx="2"
+  />
+  {/* Barre d'outils en haut */}
+  <line x1="3" y1="8" x2="21" y2="8" stroke="currentColor" strokeWidth="1.5" />
+  {/* Lignes de texte formaté */}
+  <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  <line x1="6" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  {/* Icône "B" pour Bold */}
+  <text x="7" y="7" fontSize="4" fill="currentColor" fontWeight="bold">B</text>
+</svg>
+
+// Mode valeur (value)
+const logo_text_value = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* Symbole # pour indiquer les valeurs numériques */}
+  <path
+    d="M 8,6 L 8,18 M 16,6 L 16,18 M 4,10 L 20,10 M 4,14 L 20,14"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  />
+  {/* Ou alternative avec chiffres */}
+  {/* <text x="12" y="16" fontSize="12" fill="currentColor" textAnchor="middle" fontWeight="bold">123</text> */}
 </svg>
 
 const logo_node = <svg
@@ -523,8 +582,8 @@ const logo_label_auto_position = (
     <text x="12" y="17.5" fontSize="7" fill="currentColor" textAnchor="middle" opacity="0.4">
       ABC
     </text>
-    <line x1="5" y1="16.5" x2="19" y2="16.5" stroke="currentColor" strokeWidth="1" opacity="0.4"/>
-    
+    <line x1="5" y1="16.5" x2="19" y2="16.5" stroke="currentColor" strokeWidth="1" opacity="0.4" />
+
     {/* Flèche vers le haut */}
     <path
       d="M 12,11 L 10,13 M 12,11 L 14,13"
@@ -1202,9 +1261,9 @@ export const logo_level_tag = <svg
 export class Class_IconLibrary {
 
   // Define icon ===================================
-  protected _icon_rect_shape = <RectShapeIcon/>
-  protected _icon_ellipse_shape = <EllipseShapeIcon/>
-  protected _icon_capsule_shape = <CapsuleShapeIcon/>
+  protected _icon_rect_shape = <RectShapeIcon />
+  protected _icon_ellipse_shape = <EllipseShapeIcon />
+  protected _icon_capsule_shape = <CapsuleShapeIcon />
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
@@ -1313,8 +1372,8 @@ export class Class_IconLibrary {
   protected _icon_node = logo_node
   protected _icon_tableau = logo_tableau
 
-  protected _icon_to_the_left=logo_to_the_left
-  protected _icon_to_the_right=logo_to_the_right
+  protected _icon_to_the_left = logo_to_the_left
+  protected _icon_to_the_right = logo_to_the_right
   protected _icon_repeat_sequence = <FontAwesomeIcon icon={faRepeat} />
   protected _icon_play = <FaPlay />
   protected _icon_pause = <FaPause />
@@ -1364,6 +1423,15 @@ export class Class_IconLibrary {
   protected _icon_filter_level = <FontAwesomeIcon icon={faFolderTree} />
 
   protected _icon_unit_view = <FontAwesomeIcon icon={faObjectUngroup} />
+  // Dans la section "Define icon"
+  protected _icon_text_mode_simple = logo_text_simple
+  protected _icon_text_mode_rich = logo_text_rich
+  protected _icon_text_mode_value = logo_text_value
+
+  // Dans la section "Getters"
+  public get icon_text_mode_simple() { return this._icon_text_mode_simple }
+  public get icon_text_mode_rich() { return this._icon_text_mode_rich }
+  public get icon_text_mode_value() { return this._icon_text_mode_value }
   // Constructor ===================================
   constructor() {
   }
