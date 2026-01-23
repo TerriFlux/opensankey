@@ -1234,6 +1234,9 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
             fr: 'Couleur de fond'
           }
         },
+        color_sustainable: {
+          default: true,
+        },
         opacity: {
           default: 0.55,
         },
