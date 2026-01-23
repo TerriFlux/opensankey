@@ -123,6 +123,7 @@ const LabelContentComponent = ({
 }) => {
   type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
   const { icon_locked, icon_unlocked } = app_data.icon_library
+  const { t } = app_data
   const labelValues = elements.length > 0
     ? getElementsLabelValues(elements, prefix, refreshParentComponent)
     : Object.fromEntries(Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])) as {
@@ -196,19 +197,19 @@ const LabelContentComponent = ({
                   variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
                   onClick={setModeSimpleText}
                 >
-                  Text
+                  {t('Menu.display_mode.text')}
                 </Button>
                 <Button
                   variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
                   onClick={setModeRichText}
                 >
-                  Rich
+                  {t('Menu.display_mode.rich')}
                 </Button>
                 <Button
                   variant={displayMode === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
                   onClick={setModeValue}
                 >
-                  Valeur
+                  {t('Menu.display_mode.value')}
                 </Button></>)}
             {prefix === 'icon' && !menu_style && (
               <>
@@ -221,7 +222,7 @@ const LabelContentComponent = ({
                     setDisplayMode('icon')
                   }}
                 >
-                  Icon
+                  {t('Menu.display_mode.icon')}
                 </Button>
                 <Button
                   variant={displayMode === 'image' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
@@ -232,7 +233,7 @@ const LabelContentComponent = ({
                     setDisplayMode('image')
                   }}
                 >
-                  Image
+                  {t('Menu.display_mode.image')}
                 </Button>
               </>
             )}
@@ -347,7 +348,7 @@ const LabelContentComponent = ({
         <Box layerStyle='options_2cols'>
           <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_4cols'>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.left_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.left_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
@@ -356,7 +357,7 @@ const LabelContentComponent = ({
                   <FaAlignLeft />
                 </Button>
               </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.center_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.center_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
@@ -365,7 +366,7 @@ const LabelContentComponent = ({
                   <FaAlignCenter />
                 </Button>
               </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.right_align')}>
+              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.right_align')}>
                 <Button
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                   variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
@@ -374,7 +375,7 @@ const LabelContentComponent = ({
                   <FaAlignRight />
                 </Button>
               </OSTooltip>
-              <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || 'Vertical'}>
+              <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || t('Menu.common.vertical')}>
                 <Button
                   variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
                   sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
@@ -395,7 +396,7 @@ const LabelContentComponent = ({
       {displayMode === 'icon' && (
         <>
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>Catalogue d'icônes</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_catalog')}</Box>
             <Button
               variant='menuconfigpanel_option_button'
               onClick={() => {
@@ -408,7 +409,7 @@ const LabelContentComponent = ({
           </Box>
 
           <Box layerStyle='menuconfigpanel_row_3cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>Couleur icône</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.icon_color')}</Box>
             <MenuColorPicker
               initialColor={iconColor}
               onColorChange={(new_color) => {
@@ -453,8 +454,8 @@ const LabelContentComponent = ({
                 labelValues.unit_visible = evt.target.checked
               }}
             >
-              <OSTooltip label={app_data.t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || 'Afficher le fond'}>
-                {app_data.t(`${attributePath}.${'value_label_unit_visible'}`) || 'Fond visible'}
+              <OSTooltip label={app_data.t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || t('Menu.common.show_background')}>
+                {app_data.t(`${attributePath}.${'value_label_unit_visible'}`) || t('Menu.common.background_visible')}
                 <TooltipElementOverloaded
                   elements={base_elements}
                   t={app_data.t}
@@ -565,7 +566,7 @@ const LabelContentComponent = ({
         <>
           <Divider />
           <Box layerStyle='menuconfigpanel_row_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_option_name'>Source image</Box>
+            <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.image_source')}</Box>
             <Box as='span' layerStyle='options_2cols'>
               <Button
                 variant='menuconfigpanel_option_button_left'
@@ -607,12 +608,12 @@ const LabelContentComponent = ({
         </>
       )}
       <Divider />
-      <Box as='span' textStyle='title_sub_section'>Position, taille et décalages</Box>
+      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.position_size_offsets')}</Box>
 
       <Box layerStyle='options_2cols'>
         <Box display="flex" alignItems="center" gap={1}>
           <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.deb')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.deb')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'left')}
@@ -621,7 +622,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_left}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.milieu_h')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.milieu_h')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'middle')}
@@ -630,7 +631,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_center}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.fin')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.fin')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'right')}
@@ -639,7 +640,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_align_right}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? 'Valeurs multiples' : (labelValues.inside_horiz ? 'Extérieur' : 'Intérieur')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? t('Menu.common.multiple_values') : (labelValues.inside_horiz ? t('Menu.common.exterior') : t('Menu.common.interior'))}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
@@ -657,7 +658,7 @@ const LabelContentComponent = ({
 
         <Box display="flex" alignItems="center" gap={1}>
           <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.dessous')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.dessous')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'bottom')}
@@ -666,7 +667,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_bottom}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.milieu_v')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.milieu_v')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'middle')}
@@ -675,7 +676,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_center}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? 'Valeurs multiples' : app_data.t(attributePath + '.tooltips.dessus')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.dessus')}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'top')}
@@ -684,7 +685,7 @@ const LabelContentComponent = ({
                 {app_data.icon_library.icon_text_vert_pos_top}
               </Button>
             </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? 'Valeurs multiples' : (labelValues.inside_vert ? 'Extérieur' : 'Intérieur')}>
+            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? t('Menu.common.multiple_values') : (labelValues.inside_vert ? t('Menu.common.exterior') : t('Menu.common.interior'))}>
               <Button
                 sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
@@ -740,7 +741,7 @@ const LabelContentComponent = ({
 
       {selection.hasLinks ? <>
         <Divider />
-        <Box as='span' textStyle='title_sub_section'>Position Label Flux</Box>
+        <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.link_label_position')}</Box>
         <Box display="flex" alignItems="center" gap={1}>
           <Box layerStyle='options_3cols'>
 
@@ -907,7 +908,7 @@ export const MenuConfigurationAppearance = ({
         />
       )}
 
-      {/* ✅ 5 ONGLETS */}
+      {/* ✅ 4 ONGLETS */}
       {showContent && (
         <>
           <Box layerStyle='options_4cols'>
@@ -918,7 +919,7 @@ export const MenuConfigurationAppearance = ({
                 setActiveTab('shape')
               }}
             >
-              {'Forme'}
+              {t('Menu.tabs.shape')}
             </Button>
             <Button
               variant={activeTab === 'name_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -927,7 +928,7 @@ export const MenuConfigurationAppearance = ({
                 setActiveTab('name_label')
               }}
             >
-              {t('Noeud.labels.name_label_is_visible') || 'Nom'}
+              {t('Menu.tabs.name')}
             </Button>
             <Button
               variant={activeTab === 'value_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -936,7 +937,7 @@ export const MenuConfigurationAppearance = ({
                 setActiveTab('value_label')
               }}
             >
-              {t('Noeud.labels.value_label_is_visible') || 'Valeur'}
+              {t('Menu.tabs.value')}
             </Button>
             <Button
               variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -945,18 +946,12 @@ export const MenuConfigurationAppearance = ({
                 setActiveTab('icon')
               }}
             >
-              {t('Noeud.labels.icon_is_visible') || 'Icône'}
+              {t('Menu.tabs.icon')}
             </Button>
           </Box>
 
-          {/* ========== ONGLET FOND ========== */}
+          {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
-            // <WrapperBoxSubSectionMenu
-            //   new_data={app_data}
-            //   title={t('Noeud.apparence.shape_visible') || 'Propriétés communes'}
-            //   is_open={true}
-            // >
-
             <Box layerStyle='menu_sub_section'>
               <MenuShapeAttributes
                 app_data={app_data}
@@ -967,17 +962,11 @@ export const MenuConfigurationAppearance = ({
               />
               <>
                 {(menu_for_style || selection.hasNodes || selection.hasContainers) && (
-                  // <WrapperBoxSubSectionMenu
-                  //   new_data={app_data}
-                  //   title={`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}
-                  //   is_open={!menu_for_style && selection.hasNodes}
-                  // >
-
                   <Box layerStyle='menu_sub_section'>
                     <Box layerStyle='menuconfigpanel_grid'>
                       <Box as='span' layerStyle='menu_sub_section_title'
                         textStyle='title_sub_section'
-                      >{`${'Forme et géométrie Nœud'} ${!menu_for_style && selection.hasNodes ? `(${selection.nodes.length})` : ''}`}</Box>
+                      >{!menu_for_style && selection.hasNodes ? `${t('Menu.sections.node_geometry')} (${selection.nodes.length})` : t('Menu.sections.node_geometry')}</Box>
                       <ElementAttrSetterNumberInput2Cols
                         app_data={app_data}
                         elements={elements}
@@ -1000,9 +989,15 @@ export const MenuConfigurationAppearance = ({
                         unit_text='px'
                         stepper={true}
                       />
+                      <MarginEditor
+                        app_data={app_data}
+                        elements={elements}
+                        prefix={'shape'}
+                        refreshUI={refreshAll}
+                      />
                       {selection.hasNodes ? <>
                         <Divider />
-                        <Box as='span' textStyle='title_sub_section'>Options Noeuds</Box>
+                        <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.node_options')}</Box>
                         <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
                           <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                             <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
@@ -1086,19 +1081,12 @@ export const MenuConfigurationAppearance = ({
                 )}
 
                 {(menu_for_style || selection.hasLinks) && (
-                  // <WrapperBoxSubSectionMenu
-                  //   new_data={app_data}
-                  //   title={`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}
-                  //   is_open={!menu_for_style && selection.hasLinks}
-                  // >
-
                   <Box layerStyle='menu_sub_section'>
                     <Box layerStyle='menuconfigpanel_grid'>
                       <Box as='span' layerStyle='menu_sub_section_title'
                         textStyle='title_sub_section'
-                      >{`${'Forme et géométrie Flux'} ${!menu_for_style && selection.hasLinks ? `(${selection.links.length})` : ''}`}</Box>
+                      >{!menu_for_style && selection.hasLinks ? `${t('Menu.sections.link_geometry')} (${selection.links.length})` : t('Menu.sections.link_geometry')}</Box>
 
-                      {/* <Box layerStyle='menuconfigpanel_grid'> */}
                       {selection.hasLinks || menu_for_style ?
                         <>
                           <Divider />
@@ -1123,9 +1111,9 @@ export const MenuConfigurationAppearance = ({
                             </OSTooltip>
                           </Box>
                         </> : <></>}
-                      
+
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_option_name'>Orientation</Box>
+                        <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.orientation')}</Box>
                         <Box layerStyle='options_5cols'>
                           <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling')}>
                             <Button
@@ -1150,13 +1138,13 @@ export const MenuConfigurationAppearance = ({
                             </OSTooltip>
                           ))}
                         </Box>
-                          <TooltipElementOverloaded
-                            elements={links_elements}
-                            t={t}
-                            attributeKey={'is_recycling'}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                          />
+                        <TooltipElementOverloaded
+                          elements={links_elements}
+                          t={t}
+                          attributeKey={'is_recycling'}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          prefix={'shape'}
+                        />
                         <TooltipElementOverloaded
                           elements={links_elements}
                           t={t}
@@ -1167,7 +1155,7 @@ export const MenuConfigurationAppearance = ({
                       </Box>
 
                       <Divider />
-                      <Box as='span' textStyle='title_sub_section'>Forme</Box>
+                      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.shape')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         <Checkbox
                           {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'))}
@@ -1230,7 +1218,7 @@ export const MenuConfigurationAppearance = ({
                         )}
                       </Box>
                       <Divider />
-                      <Box as='span' textStyle='title_sub_section'>Options</Box>
+                      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.options')}</Box>
                       <Checkbox
                         {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'))}
                         isChecked={linkShapeValues.is_structure}
@@ -1316,7 +1304,6 @@ export const MenuConfigurationAppearance = ({
                 )}
               </>
             </Box>
-            //</WrapperBoxSubSectionMenu>
           )}
 
           {/* ========== ONGLETS LABELS ========== */}
@@ -1428,12 +1415,7 @@ export const MenuShapeAttributes = ({
     <>
       <Box layerStyle='menuconfigpanel_grid'>
         <ShapeTypeSelector app_data={app_data} elements={elements} prefix={prefix} attributePath={attributePath} refreshUI={refreshUI} />
-        <MarginEditor
-          app_data={app_data}
-          elements={elements}
-          prefix={prefix}
-          refreshUI={refreshUI}
-        />
+
         <Box as='span' layerStyle='options_2cols'>
           <Checkbox
             {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
@@ -1442,8 +1424,8 @@ export const MenuShapeAttributes = ({
               shapeValues.color_visible = evt.target.checked
             }}
           >
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Afficher le fond'}>
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || 'Fond visible'}
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || t('Menu.common.show_background')}>
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || t('Menu.common.background_visible')}
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
@@ -1504,8 +1486,8 @@ export const MenuShapeAttributes = ({
               shapeValues.border_visible = evt.target.checked
             }}
           >
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Afficher la bordure'}>
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || 'Bordure visible'}
+            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || t('Menu.common.show_border')}>
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || t('Menu.common.border_visible')}
               <TooltipElementOverloaded
                 elements={base_elements}
                 t={t}
@@ -1562,9 +1544,6 @@ export const MenuShapeAttributes = ({
           </Checkbox>
           <Box />
         </Box>
-
-        {/* Fond visible + Couleur */}
-        {/* Choix de la source de la couleur */}
       </Box>
     </>
   )
@@ -1656,11 +1635,11 @@ export const MarginEditor = ({
       <Box as='span' layerStyle='options_2cols'>
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
-          isChecked={editMarginsUnified}
-          onChange={(evt) => setEditMarginsUnified(evt.target.checked)}
+          isChecked={!editMarginsUnified}
+          onChange={(evt) => setEditMarginsUnified(!evt.target.checked)}
         >
-          <OSTooltip label={t('Noeud.apparence.tooltips.margins_linked')}>
-            <Box>{t('LL.linked') || 'Liées'}</Box>
+          <OSTooltip label={t('Noeud.apparence.tooltips.shape_margin')}>
+            <Box>{t('Noeud.apparence.shape_margin')}</Box>
           </OSTooltip>
         </Checkbox>
 
@@ -1753,4 +1732,267 @@ export const MarginEditor = ({
       )}
     </>
   )
+}
+
+// ==================================================================================================
+// TRADUCTIONS MANQUANTES - À INTÉGRER DANS LE SYSTÈME i18n
+// ==================================================================================================
+
+/**
+ * Ce fichier contient toutes les traductions manquantes identifiées
+ * Elles sont organisées par ressource cible pour faciliter l'intégration
+ */
+
+// ==================================================================================================
+// 1. TRADUCTIONS POUR resources_app_elements (Menu général)
+// ==================================================================================================
+
+export const missing_menu_translations = {
+  en: {
+    translation: {
+      Menu: {
+        // Onglets principaux
+        tabs: {
+          shape: 'Shape',
+          name: 'Name',
+          value: 'Value',
+          icon: 'Icon'
+        },
+
+        // Modes d'affichage
+        display_mode: {
+          text: 'Text',
+          rich: 'Rich text',
+          value: 'Value',
+          icon: 'Icon',
+          image: 'Image'
+        },
+
+        // Sections communes
+        sections: {
+          icon_catalog: 'Icon catalog',
+          icon_color: 'Icon color',
+          image_source: 'Image source',
+          position_size_offsets: 'Position, size and offsets',
+          link_label_position: 'Link label position',
+          node_geometry: 'Node shape & geometry',
+          node_options: 'Node options',
+          link_geometry: 'Link shape & geometry',
+          orientation: 'Orientation',
+          shape: 'Shape',
+          options: 'Options',
+          link_background: 'Link background'
+        },
+
+        // Messages communs
+        common: {
+          show_background: 'Show background',
+          background_visible: 'Background visible',
+          show_border: 'Show border',
+          border_visible: 'Border visible',
+          multiple_values: 'Multiple values',
+          vertical: 'Vertical',
+          interior: 'Interior',
+          exterior: 'Exterior'
+        }
+      }
+    }
+  },
+
+  fr: {
+    translation: {
+      Menu: {
+        // Onglets principaux
+        tabs: {
+          shape: 'Forme',
+          name: 'Nom',
+          value: 'Valeur',
+          icon: 'Icône'
+        },
+
+        // Modes d'affichage
+        display_mode: {
+          text: 'Texte',
+          rich: 'Texte riche',
+          value: 'Valeur',
+          icon: 'Icône',
+          image: 'Image'
+        },
+
+        // Sections communes
+        sections: {
+          icon_catalog: 'Catalogue d\'icônes',
+          icon_color: 'Couleur icône',
+          image_source: 'Source image',
+          position_size_offsets: 'Position, taille et décalages',
+          link_label_position: 'Position Label Flux',
+          node_geometry: 'Forme et géométrie Nœuds et Formes',
+          node_options: 'Options Noeuds',
+          link_geometry: 'Forme et géométrie Flux',
+          orientation: 'Orientation',
+          shape: 'Forme',
+          options: 'Options',
+          link_background: 'Fond Flux'
+        },
+
+        // Messages communs
+        common: {
+          show_background: 'Afficher le fond',
+          background_visible: 'Fond visible',
+          show_border: 'Afficher la bordure',
+          border_visible: 'Bordure visible',
+          multiple_values: 'Valeurs multiples',
+          vertical: 'Vertical',
+          interior: 'Intérieur',
+          exterior: 'Extérieur'
+        }
+      }
+    }
+  }
+}
+
+// ==================================================================================================
+// 2. TRADUCTIONS POUR resources_nodes (Labels des nœuds)
+// ==================================================================================================
+
+export const missing_node_labels_translations = {
+  en: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: 'Value label',
+          icon_is_visible: 'Icon',
+          value_label_unit_visible: 'Show unit',
+
+          tooltips: {
+            left_align: 'Align left',
+            center_align: 'Center',
+            right_align: 'Align right',
+            deb: 'Start',
+            milieu_h: 'Horizontal middle',
+            fin: 'End',
+            dessous: 'Below',
+            milieu_v: 'Vertical middle',
+            dessus: 'Above'
+          }
+        }
+      }
+    }
+  },
+
+  fr: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: 'Label valeur',
+          icon_is_visible: 'Icône',
+          value_label_unit_visible: 'Afficher l\'unité',
+
+          tooltips: {
+            left_align: 'Aligner à gauche',
+            center_align: 'Centrer',
+            right_align: 'Aligner à droite',
+            deb: 'Début',
+            milieu_h: 'Milieu horizontal',
+            fin: 'Fin',
+            dessous: 'Dessous',
+            milieu_v: 'Milieu vertical',
+            dessus: 'Dessus'
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================================================================================================
+// 3. TRADUCTIONS POUR resources_nodes (Apparence des nœuds)
+// ==================================================================================================
+
+export const missing_node_apparence_translations = {
+  en: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: 'Shape',
+          shape_min_width: 'Minimum width',
+          shape_min_height: 'Minimum height',
+          shape_margin: 'Separate Margins,',
+          shape_margin_left: 'Left',
+          shape_margin_right: 'Right',
+          shape_margin_top: 'Top',
+          shape_margin_bottom: 'Bottom',
+
+          tooltips: {
+            margins_linked: 'Link margins',
+            shape_margin: 'Margin',
+            shape_margin_left: 'Left margin',
+            shape_type: 'Node shape type'
+          }
+        }
+      }
+    }
+  },
+
+  fr: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: 'Forme',
+          shape_min_width: 'Largeur minimale',
+          shape_min_height: 'Hauteur minimale',
+          shape_margin: 'Marges séparées',
+          shape_margin_left: 'Gauche',
+          shape_margin_right: 'Droite',
+          shape_margin_top: 'Haute',
+          shape_margin_bottom: 'Basse',
+
+          tooltips: {
+            margins_linked: 'Lier les marges',
+            shape_margin: 'Marge',
+            shape_margin_left: 'Marge gauche',
+            shape_type: 'Type de forme du nœud'
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================================================================================================
+// 4. TRADUCTIONS POUR resources_flux (Apparence des flux)
+// ==================================================================================================
+
+export const missing_flux_apparence_translations = {
+  en: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: 'Horizontal to horizontal',
+            of_vv: 'Vertical to vertical',
+            of_vh: 'Vertical to horizontal',
+            of_hv: 'Horizontal to vertical',
+            shape_is_recycling: 'Recycling flow'
+          }
+        }
+      }
+    }
+  },
+
+  fr: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: 'Horizontal vers horizontal',
+            of_vv: 'Vertical vers vertical',
+            of_vh: 'Vertical vers horizontal',
+            of_hv: 'Horizontal vers vertical',
+            shape_is_recycling: 'Flux de recyclage'
+          }
+        }
+      }
+    }
+  }
 }

@@ -5,7 +5,7 @@ export const resources_nodes = {
         // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG)
         // ❌ SUPPRIMÉ : TS (maintenant dans ELEMENTS_SELECTION_CONFIG)
         // ❌ SUPPRIMÉ : NS (maintenant dans ELEMENTS_SELECTION_CONFIG)
-        
+
         Style: 'Stylesheet',
         OrderStyle: 'Order of styles associated',
         multi_style: 'Selected nodes have different style',
@@ -90,8 +90,8 @@ export const resources_nodes = {
           shape_min_height: 'Minimum height',
           geometry: 'Mode',
           geometry_absolute: 'Position',
-          geometry_relative: 'Décalage',
-          geometry_parametric: 'Ecartement',
+          geometry_parametric: 'Spacing',
+          geometry_relative: 'Offset',
           position_u: 'Colonne',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
@@ -197,7 +197,7 @@ export const resources_nodes = {
         // ❌ SUPPRIMÉ : Nom (maintenant dans ELEMENTS_SELECTION_CONFIG)
         // ❌ SUPPRIMÉ : TS (maintenant dans ELEMENTS_SELECTION_CONFIG)
         // ❌ SUPPRIMÉ : NS (maintenant dans ELEMENTS_SELECTION_CONFIG)
-        
+
         Style: 'Feuille de style',
         OrderStyle: 'Ordre des styles associés',
         editStyle: 'Assigner un style',

@@ -746,7 +746,7 @@ export const BASE_LABEL_CONFIG = {
     category: '',
     actions: [] as BaseActionType[],
     labels: {
-      en: 'Horizontal shift',
+      en: 'Horizontal',
       fr: 'Horizontal'
     },
     tooltips: {
@@ -761,7 +761,7 @@ export const BASE_LABEL_CONFIG = {
     category: '',
     actions: [] as BaseActionType[],
     labels: {
-      en: 'Vertical shift',
+      en: 'Vertical',
       fr: 'Vertical'
     },
     tooltips: {

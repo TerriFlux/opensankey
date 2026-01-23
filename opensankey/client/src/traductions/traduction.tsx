@@ -15,6 +15,56 @@ import { rcc_shortcuts } from './traduction_rcc_shortcuts'
 import { translations } from '../components/dialogs/PersistenceProcessDialogConfigs'
 import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 import { ELEMENTS_MENU_CONFIG } from '../components/configmenus/MenuElementsSelection'
+import { missing_flux_apparence_translations, missing_menu_translations, missing_node_apparence_translations, missing_node_labels_translations } from '../components/configmenus/MenuElementsAppearance'
+
+
+// ==================================================================================================
+// 5. FONCTION D'INTÉGRATION DANS LE SYSTÈME i18n
+// ==================================================================================================
+
+/**
+ * Fonction utilitaire pour merger profondément les traductions
+ * @param source - Objet source à fusionner
+ * @param target - Objet cible qui recevra les nouvelles traductions
+ */
+export const deep_merge_translations = (source: any, target: any): void => {
+  Object.entries(source).forEach(([key, value]) => {
+    if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      if (!target[key]) {
+        target[key] = {}
+      }
+      deep_merge_translations(value, target[key])
+    } else {
+      target[key] = value
+    }
+  })
+}
+
+/**
+ * Fonction pour intégrer toutes les traductions manquantes
+ * À appeler dans ton fichier i18n principal
+ */
+export const integrate_missing_translations = (
+  resources_app_elements: any,
+  resources_nodes: any,
+  resources_flux: any
+): void => {
+  // Intégrer les traductions du menu général
+  deep_merge_translations(missing_menu_translations.en.translation, resources_app_elements.en.translation)
+  deep_merge_translations(missing_menu_translations.fr.translation, resources_app_elements.fr.translation)
+
+  // Intégrer les traductions des labels de nœuds
+  deep_merge_translations(missing_node_labels_translations.en.translation, resources_nodes.en.translation)
+  deep_merge_translations(missing_node_labels_translations.fr.translation, resources_nodes.fr.translation)
+
+  // Intégrer les traductions de l'apparence des nœuds
+  deep_merge_translations(missing_node_apparence_translations.en.translation, resources_nodes.en.translation)
+  deep_merge_translations(missing_node_apparence_translations.fr.translation, resources_nodes.fr.translation)
+
+  // Intégrer les traductions de l'apparence des flux
+  deep_merge_translations(missing_flux_apparence_translations.en.translation, resources_flux.en.translation)
+  deep_merge_translations(missing_flux_apparence_translations.fr.translation, resources_flux.fr.translation)
+}
 
 interface TranslationItem {
   en: string
@@ -395,6 +445,13 @@ use_context_config(
   resources_app_elements as unknown as  I18nResources,
   NODE_MENU_CONFIG as unknown as MenuConfig,
   'ContextMenuNodes'
+)
+
+// ✅ INTÉGRATION DES TRADUCTIONS MANQUANTES
+integrate_missing_translations(
+  resources_app_elements as unknown as I18nResources,
+  resources_nodes as unknown as I18nResources,
+  resources_flux as unknown as I18nResources
 )
 
 // Concat traductions resources
