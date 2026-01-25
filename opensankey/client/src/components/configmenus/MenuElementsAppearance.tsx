@@ -69,11 +69,9 @@ import {
   getNodeShapeAttributeKey,
   getLabelAttributeKey,
   getConfigValues,
-  getLinkShapeAttributeKey,
-  getLinkLabelAttributeKey
+  getLinkShapeAttributeKey
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
-// import { MenuUnit } from './MenuElementsLabelValue'
 import { unit_constants } from '../../Elements/LinkValues'
 
 // ✅ Analyse de la sélection

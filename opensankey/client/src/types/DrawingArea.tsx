@@ -1061,6 +1061,8 @@ export class Class_DrawingArea {
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
+    this.areaAutoFit()
+    this.orderElementOnDA()
   }
   /**
    * Draw background for drawing area
