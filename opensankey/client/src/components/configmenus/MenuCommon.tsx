@@ -1664,48 +1664,46 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
   const tooltip_color_key = is_label
     ? getLabelAttributeKey(prefix, colorAttributeKey as label_type)
     : getShapeAttributeKey(prefix, colorAttributeKey as shape_type)
+
+  // Calcul des overloads
+  const fullColorAttributeKey = `${prefix}_${String(colorAttributeKey)}` as keyof typeof config
+  const fullSustainableAttributeKey = `${prefix}_${String(sustainableAttributeKey)}` as keyof typeof config
+  const isColorOverloaded = isElementAttributeOverloaded(elements, fullColorAttributeKey, config)
+  const isSustainableOverloaded = isElementAttributeOverloaded(elements, fullSustainableAttributeKey, config)
+
   return (
     <Box layerStyle='option_with_activation'>
-      <Box display="flex" alignItems="center" gap={1}>
+      <OverloadIndicatorWrapper
+        isOverloaded={isColorOverloaded}
+      >
         <MenuColorPicker
           initialColor={colorValue}
           onColorChange={(new_color) => {
-            // Utilise le setter du système de config
             values[colorAttributeKey as string] = new_color
           }}
         />
-        <TooltipElementOverloaded
-          attributeKey={colorAttributeKey}
-          elements={elements}
-          config={config}
-          prefix={prefix}
-          t={t} />
-      </Box>
-
+      </OverloadIndicatorWrapper>
 
       <OSTooltip label={t(`${attributePath}.tooltips.${tooltip_color_key}`)}>
-        <Box display="flex" alignItems="center" gap={1}>
+        <OverloadIndicatorWrapper
+          isOverloaded={isSustainableOverloaded}
+        >
           <Button
             variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
               values[sustainableAttributeKey as string] = !sustainableValue
             }}
             sx={{
-              padding: '0px', width: '20px', height: '20px',
+              padding: '0px',
+              width: '20px',
+              height: '20px',
               display: 'flex',
               alignItems: 'center'
             }}
           >
             {sustainableValue ? icon_locked : icon_unlocked}
-            <TooltipElementOverloaded
-              elements={elements}
-              t={t}
-              attributeKey={sustainableAttributeKey as string}
-              config={config}
-              prefix={prefix}
-            />
           </Button>
-        </Box>
+        </OverloadIndicatorWrapper>
       </OSTooltip>
     </Box>
   )
