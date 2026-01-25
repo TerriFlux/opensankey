@@ -518,7 +518,7 @@ export const ElementAttrSetterTextInput2Cols = <
   K extends keyof CONFIG
 >({
   app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent,isOverloaded
+  prefix = '', refreshParentComponent, isOverloaded
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -745,30 +745,29 @@ export const TooltipElementOverloaded = <
 interface OverloadedButtonProps {
   elements: ElementsType
   config: any
+  attributePath: string,
   prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
   attributeKey: string
   variant: string
   onClick: () => void
-  tooltipLabel: string
   children: React.ReactNode
 }
 
 export const OverloadedButton = ({
   elements,
   config,
+  attributePath,
   prefix,
   attributeKey,
   variant,
   onClick,
-  tooltipLabel,
   children
 }: React.PropsWithChildren<OverloadedButtonProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
-
+  const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
-      tooltipLabel={tooltipLabel}
     >
       <OSTooltip label={tooltipLabel}>
         <Button
@@ -795,6 +794,7 @@ interface ButtonGroupItem<T = string> {
 interface OverloadedButtonGroupProps<T = string> {
   elements: ElementsType
   config: any
+  attributePath: string,
   prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
   attributeKey: string
   currentValue: T
@@ -807,6 +807,7 @@ interface OverloadedButtonGroupProps<T = string> {
 export const OverloadedButtonGroup = <T extends string>({
   elements,
   config,
+  attributePath,
   prefix,
   attributeKey,
   currentValue,
@@ -817,45 +818,46 @@ export const OverloadedButtonGroup = <T extends string>({
 }: OverloadedButtonGroupProps<T>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
-
+  const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isOverloaded}
-      tooltipLabel={t('Menu.common.attribute_overloaded')}
     >
-      <Box layerStyle={`options_${items.length}cols`}>
-        {items.map((item, idx) => {
-          const position =
-            items.length === 2 ? (idx === 0 ? 'left' : 'right') :
-              items.length === 3 ? (idx === 0 ? 'left' : idx === 2 ? 'right' : 'center') :
-                items.length === 4 ? (idx === 0 ? 'left' : idx === 3 ? 'right' : 'center') :
-                  items.length === 5 ? (idx === 0 ? 'left' : idx === 4 ? 'right' : 'center') :
-                    ''
+      <OSTooltip label={tooltipLabel}>
+        <Box layerStyle={`options_${items.length}cols`}>
+          {items.map((item, idx) => {
+            const position =
+              items.length === 2 ? (idx === 0 ? 'left' : 'right') :
+                items.length === 3 ? (idx === 0 ? 'left' : idx === 2 ? 'right' : 'center') :
+                  items.length === 4 ? (idx === 0 ? 'left' : idx === 3 ? 'right' : 'center') :
+                    items.length === 5 ? (idx === 0 ? 'left' : idx === 4 ? 'right' : 'center') :
+                      ''
 
-          // Déterminer le contenu du bouton : icône ou label
-          const buttonContent = item.icon || item.label || String(item.value)
+            // Déterminer le contenu du bouton : icône ou label
+            const buttonContent = item.icon || item.label || String(item.value)
 
-          return (
-            <Button
-              key={String(item.value)}
-              variant={getButtonVariant(
-                position as any,
-                getIsIndeterminate(),
-                currentValue === item.value
-              )}
-              onClick={() => onChange(item.value)}
-              sx={{
-                padding: '4px',
-                minWidth: 'auto',
-                height: 'auto',
-                ...(item.icon ? { '& svg': { width: '16px', height: '16px' } } : {})
-              }}
-            >
-              {buttonContent}
-            </Button>
-          )
-        })}
-      </Box>
+            return (
+              <Button
+                key={String(item.value)}
+                variant={getButtonVariant(
+                  position as any,
+                  getIsIndeterminate(),
+                  currentValue === item.value
+                )}
+                onClick={() => onChange(item.value)}
+                sx={{
+                  padding: '4px',
+                  minWidth: 'auto',
+                  height: 'auto',
+                  ...(item.icon ? { '& svg': { width: '16px', height: '16px' } } : {})
+                }}
+              >
+                {buttonContent}
+              </Button>
+            )
+          })}
+        </Box>
+      </OSTooltip>
     </OverloadIndicatorWrapper>
   )
 }
@@ -897,7 +899,6 @@ export const OverloadedCheckbox = ({
   return (
     <OverloadIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
-      tooltipLabel={t('Menu.common.attribute_overloaded')}
     >
       <Button
         variant={isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -920,37 +921,33 @@ export const OverloadedCheckbox = ({
  */
 export const OverloadIndicatorWrapper = ({
   isOverloaded,
-  children,
-  tooltipLabel
+  children
 }: React.PropsWithChildren<{
   isOverloaded: boolean
   children: React.ReactNode
-  tooltipLabel?: string
 }>) => {
   if (!isOverloaded) {
     return <>{children}</>
   }
 
   return (
-    <OSTooltip label={tooltipLabel!} placement='top'>
-      <Box
-        position='relative'
-        display='inline-flex'
-        sx={{
-          '& > *': {
-            boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
-            borderRadius: '6px',
-            transition: 'box-shadow 0.2s'
-          },
-          '&:hover > *': {
-            boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
-          },
-          cursor: 'help'
-        }}
-      >
-        {children}
-      </Box>
-    </OSTooltip>
+    <Box
+      position='relative'
+      display='inline-flex'
+      sx={{
+        '& > *': {
+          boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
+          borderRadius: '6px',
+          transition: 'box-shadow 0.2s'
+        },
+        '&:hover > *': {
+          boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
+        },
+        cursor: 'help'
+      }}
+    >
+      {children}
+    </Box>
   )
 }
 
@@ -1233,37 +1230,30 @@ export const InputIndicatorWrapper = ({
   const hasIndicator = isMultiValue || isOverloaded
   const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(66, 153, 225, 0.5)' // orange ou bleu
   const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(66, 153, 225, 0.8)'
-  const tooltipLabel = isMultiValue
-    ? t('Menu.common.multiple_values')
-    : isOverloaded
-      ? t('Menu.common.attribute_overloaded')
-      : undefined
 
   if (!hasIndicator) {
     return <>{children}</>
   }
 
   return (
-    <OSTooltip label={tooltipLabel!} placement='top'>
-      <Box
-        position='relative'
-        display='inline-flex'
-        width='100%'
-        sx={{
-          '& > *': {
-            boxShadow: `0 0 0 1.5px ${color}`,
-            borderRadius: '6px',
-            transition: 'box-shadow 0.2s'
-          },
-          '&:hover > *': {
-            boxShadow: `0 0 0 2px ${colorHover}`,
-          },
-          cursor: 'help'
-        }}
-      >
-        {children}
-      </Box>
-    </OSTooltip>
+    <Box
+      position='relative'
+      display='inline-flex'
+      width='100%'
+      sx={{
+        '& > *': {
+          boxShadow: `0 0 0 1.5px ${color}`,
+          borderRadius: '6px',
+          transition: 'box-shadow 0.2s'
+        },
+        '&:hover > *': {
+          boxShadow: `0 0 0 2px ${colorHover}`,
+        },
+        cursor: 'help'
+      }}
+    >
+      {children}
+    </Box>
   )
 }
 

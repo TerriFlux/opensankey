@@ -66,10 +66,11 @@ import {
   font_families,
   getShapeAttributeKey,
   isShapeValueIndeterminate,
-  isValueLabelIndeterminate,
   getNodeShapeAttributeKey,
   getLabelAttributeKey,
-  getConfigValues
+  getConfigValues,
+  getLinkShapeAttributeKey,
+  getLinkLabelAttributeKey
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 // import { MenuUnit } from './MenuElementsLabelValue'
@@ -359,89 +360,87 @@ const LabelContentComponent = ({
             )}
           </> : <></>}
         </Box>
-        <Box layerStyle='options_3cols'>
-          <Box layerStyle='options_1_2_1cols'>
-            {/* Checkbox 1 : Décimales personnalisées */}
-            <OverloadedCheckbox
-              elements={elements}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix as any}
-              attributeKey={'custom_digit'}
-              isChecked={labelValues.custom_digit}
-              onChange={(checked) => { labelValues.custom_digit = checked }}
-              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'custom_digit', prefix)}
-              tooltipLabel={t('Flux.labels.tooltips.value_label_custom_digit')}
+        <Box layerStyle='options_5cols'>
+          {/* Checkbox 1 : Décimales personnalisées */}
+          <OverloadedCheckbox
+            elements={elements}
+            config={VALUE_LABEL_CONFIG}
+            prefix={prefix as any}
+            attributeKey={'custom_digit'}
+            isChecked={labelValues.custom_digit}
+            onChange={(checked) => { labelValues.custom_digit = checked }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'custom_digit', prefix)}
+            tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'custom_digit')}`)}
+            t={t}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              .##
+            </Box>
+          </OverloadedCheckbox>
+
+          {/* Input 1 : Nombre de décimales */}
+          {labelValues.custom_digit ? (
+            <ConfigMenuNumberInput
               t={t}
-            >
-              <Box display="flex" alignItems="center" gap={1}>
-                {app_data.icon_library.icon_decimals}
-              </Box>
-            </OverloadedCheckbox>
+              default_value={labelValues.nb_digit}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              stepper={true}
+              function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
+              multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_digit', prefix)}
+              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
+            />
+          ) : <Box />}
 
-            {/* Input 1 : Nombre de décimales */}
-            {labelValues.custom_digit ? (
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={labelValues.nb_digit}
-                menu_for_style={menu_for_style}
-                minimum_value={0}
-                stepper={true}
-                function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
-                multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_digit', prefix)}
-                isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
-              />
-            ) : <Box />}
+          {/* Checkbox 2 : Notation scientifique */}
+          <OverloadedCheckbox
+            elements={elements}
+            config={VALUE_LABEL_CONFIG}
+            prefix={prefix as any}
+            attributeKey={'scientific_notation'}
+            isChecked={labelValues.scientific_notation}
+            onChange={(checked) => { labelValues.scientific_notation = checked }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'scientific_notation', prefix)}
+            tooltipLabel={t('Flux.labels.tooltips.value_label_scientific_notation')}
+            t={t}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              #e^#
+            </Box>
+          </OverloadedCheckbox>
+          {/* Checkbox 3 : Chiffres significatifs */}
+          <OverloadedCheckbox
+            elements={elements}
+            config={VALUE_LABEL_CONFIG}
+            prefix={prefix as any}
+            attributeKey={'significant_digits'}
+            isChecked={labelValues.significant_digits}
+            onChange={(checked) => { labelValues.significant_digits = checked }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'significant_digits', prefix)}
+            tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'significant_digits')}`)}
+            t={t}
+          >
+            <Box display="flex" alignItems="center" gap={1}>
+              #.##
+            </Box>
+          </OverloadedCheckbox>
 
-            {/* Checkbox 2 : Notation scientifique */}
-            <OverloadedCheckbox
-              elements={elements}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix as any}
-              attributeKey={'scientific_notation'}
-              isChecked={labelValues.scientific_notation}
-              onChange={(checked) => { labelValues.scientific_notation = checked }}
-              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'scientific_notation', prefix)}
-              tooltipLabel={t('Flux.labels.tooltips.value_label_scientific_notation')}
+          {/* Input 2 : Nombre de chiffres significatifs */}
+          {labelValues.significant_digits ? (
+            <ConfigMenuNumberInput
               t={t}
-            >
-              <Box display="flex" alignItems="center" gap={1}>
-                {app_data.icon_library.icon_scientific_notation}
-              </Box>
-            </OverloadedCheckbox>
-          </Box>
-          <Box layerStyle='options_1_2_1cols'>
-            {/* Checkbox 3 : Chiffres significatifs */}
-            <OverloadedCheckbox
-              elements={elements}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix as any}
-              attributeKey={'significant_digits'}
-              isChecked={labelValues.significant_digits}
-              onChange={(checked) => { labelValues.significant_digits = checked }}
-              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'significant_digits', prefix)}
-              tooltipLabel={t('Flux.labels.tooltips.value_label_significant_digits')}
-              t={t}
-            >
-              <Box display="flex" alignItems="center" gap={1}>
-                {app_data.icon_library.icon_significant_digits}
-              </Box>
-            </OverloadedCheckbox>
+              default_value={labelValues.nb_significant_digits}
+              menu_for_style={menu_for_style}
+              minimum_value={0}
+              stepper={true}
+              function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
+              multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_significant_digits', prefix)}
+              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
+            />
 
-            {/* Input 2 : Nombre de chiffres significatifs */}
-            {labelValues.significant_digits ? (
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={labelValues.nb_significant_digits}
-                menu_for_style={menu_for_style}
-                minimum_value={0}
-                stepper={true}
-                function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
-                multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_significant_digits', prefix)}
-                isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
-              />
-
-            ) : <Box />}
-          </Box>
+          ) : <Box />}
+        </Box>
+        <Box layerStyle='options_2cols'>
           <ElementAttrSetterNumberInput2Cols
             app_data={app_data}
             elements={elements}
@@ -453,8 +452,9 @@ const LabelContentComponent = ({
             stepper={false}
             isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('unit_factor') as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
           />
-          {/* </Box> */}
-        </Box></>
+        </Box>
+        {/* </Box> */}
+      </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
         {/* Section TEXT */}
@@ -465,7 +465,6 @@ const LabelContentComponent = ({
               `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
               BASE_LABEL_CONFIG
             )}
-            tooltipLabel={app_data.t('Menu.common.attribute_overloaded')}
           >
             <Select
               variant='menuconfigpanel_option_select'
@@ -498,11 +497,11 @@ const LabelContentComponent = ({
               <OverloadedButton
                 elements={elements}
                 config={BASE_LABEL_CONFIG}
+                attributePath={attributePath}
                 prefix={prefix}
                 attributeKey="bold"
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
                 onClick={() => { labelValues.bold = !labelValues.bold }}
-                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_text_bold}
               </OverloadedButton>
@@ -510,11 +509,11 @@ const LabelContentComponent = ({
               <OverloadedButton
                 elements={elements}
                 config={BASE_LABEL_CONFIG}
+                attributePath={attributePath}
                 prefix={prefix}
                 attributeKey="uppercase"
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
                 onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
-                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {svg_label_upper}
               </OverloadedButton>
@@ -522,11 +521,11 @@ const LabelContentComponent = ({
               <OverloadedButton
                 elements={elements}
                 config={BASE_LABEL_CONFIG}
+                attributePath={attributePath}
                 prefix={prefix}
                 attributeKey="italic"
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
                 onClick={() => { labelValues.italic = !labelValues.italic }}
-                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_text_italic}
               </OverloadedButton>
@@ -541,6 +540,7 @@ const LabelContentComponent = ({
             <OverloadedButtonGroup
               elements={elements}
               config={BASE_LABEL_CONFIG}
+              attributePath={attributePath}
               prefix={prefix}
               attributeKey="text_align"
               currentValue={labelValues.text_align}
@@ -557,11 +557,11 @@ const LabelContentComponent = ({
             <OverloadedButton
               elements={elements}
               config={BASE_LABEL_CONFIG}
+              attributePath={attributePath}
               prefix={prefix}
               attributeKey="vertical_text"
               variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
               onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
-              tooltipLabel={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || t('Menu.common.vertical')}
             >
               {<span style={{
                 display: 'inline-flex',
@@ -570,7 +570,7 @@ const LabelContentComponent = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0
-              }}>{labelValues.vertical_text ?   <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
+              }}>{labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
             </OverloadedButton>
           </Box>
           <ColorPickerWithSustainable
@@ -686,6 +686,7 @@ const LabelContentComponent = ({
           <OverloadedButtonGroup
             elements={elements}
             config={BASE_LABEL_CONFIG}
+            attributePath={attributePath}
             prefix={prefix}
             attributeKey="horiz"
             currentValue={labelValues.horiz}
@@ -703,10 +704,10 @@ const LabelContentComponent = ({
             elements={elements}
             config={BASE_LABEL_CONFIG}
             prefix={prefix}
+            attributePath={attributePath}
             attributeKey="inside_horiz"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
             onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
-            tooltipLabel={labelValues.inside_horiz ? t('Menu.common.exterior') : t('Menu.common.interior')}
           >
             {app_data.icon_library.icon_label_inside_horiz}
           </OverloadedButton>
@@ -716,6 +717,7 @@ const LabelContentComponent = ({
           <OverloadedButtonGroup
             elements={elements}
             config={BASE_LABEL_CONFIG}
+            attributePath={attributePath}
             prefix={prefix}
             attributeKey="vert"
             currentValue={labelValues.vert}
@@ -735,11 +737,11 @@ const LabelContentComponent = ({
           <OverloadedButton
             elements={elements}
             config={BASE_LABEL_CONFIG}
+            attributePath={attributePath}
             prefix={prefix}
             attributeKey="inside_vert"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
             onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
-            tooltipLabel={labelValues.inside_vert ? t('Menu.common.exterior') : t('Menu.common.interior')}
           >
             {app_data.icon_library.icon_label_inside_vert}
           </OverloadedButton>
@@ -758,10 +760,10 @@ const LabelContentComponent = ({
                 elements={links_elements}
                 config={LINKS_LABEL_SPECIFIC_CONFIG}
                 prefix={prefix}
+                attributePath={'Flux.labels'}
                 attributeKey="on_path"
                 variant={getButtonVariant('left', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
                 onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
-                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_label_on_path}
               </OverloadedButton>
@@ -769,11 +771,11 @@ const LabelContentComponent = ({
               <OverloadedButton
                 elements={links_elements}
                 config={LINKS_LABEL_SPECIFIC_CONFIG}
+                attributePath={'Flux.labels'}
                 prefix={prefix}
                 attributeKey="pos_auto"
                 variant={getButtonVariant('right', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
                 onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
-                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_label_auto_position}
               </OverloadedButton>
@@ -823,16 +825,16 @@ const LabelContentComponent = ({
         <></>
       </Box>
       {(displayMode === 'simple_text' && selection.hasNodes && prefix !== 'value_label' || menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
-          <ElementAttrSetterTextInput2Cols
-            app_data={app_data}
-            elements={elements}
-            config={NAME_LABEL_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            attributeKey={'separator'}
-            refreshParentComponent={refreshParentComponent}
-            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('separator') as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG)}
-          />
+        <ElementAttrSetterTextInput2Cols
+          app_data={app_data}
+          elements={elements}
+          config={NAME_LABEL_CONFIG}
+          prefix={prefix}
+          attributePath={attributePath}
+          attributeKey={'separator'}
+          refreshParentComponent={refreshParentComponent}
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('separator') as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG)}
+        />
 
         <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
           <Box layerStyle='options_2cols'>
@@ -1055,14 +1057,15 @@ export const MenuConfigurationAppearance = ({
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
             <Box layerStyle='menu_sub_section'>
-              <Box as='span' layerStyle='options_2cols'>
+              {(menu_for_style || selection.hasNodes || selection.hasContainers) && (<Box as='span' layerStyle='options_2cols'>
+
                 <ShapeTypeSelector
                   app_data={app_data}
                   elements={elements}
                   prefix={'shape'}
                   attributePath={'Noeud.apparence'}
                   refreshUI={refreshAll} />
-              </Box>
+              </Box>)}
               <MenuShapeAttributes
                 app_data={app_data}
                 elements={elements}
@@ -1115,6 +1118,7 @@ export const MenuConfigurationAppearance = ({
                           <OverloadedButtonGroup
                             elements={nodes_elements}
                             config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            attributePath={'Noeud.apparence'}
                             prefix={'shape'}
                             attributeKey="position_type"
                             currentValue={nodeShapeValues.position_type}
@@ -1222,7 +1226,7 @@ export const MenuConfigurationAppearance = ({
                                 isChecked={linkShapeValues.is_arrow}
                                 onChange={(checked) => { linkShapeValues.is_arrow = checked }}
                                 getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow')}
-                                tooltipLabel={t('Flux.apparence.tooltips.fleche')}
+                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow')}`)}
                                 t={t}
                               >
                                 {t('Flux.apparence.shape_is_arrow')}
@@ -1249,11 +1253,11 @@ export const MenuConfigurationAppearance = ({
                           <OverloadedButton
                             elements={links_elements}
                             config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
                             prefix={'shape'}
                             attributeKey="is_recycling"
                             variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
                             onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
-                            tooltipLabel={t('Flux.apparence.tooltips.shape_is_recycling')}
                           >
                             {icon_library.icon_orientation_recycle}
                           </OverloadedButton>
@@ -1262,6 +1266,7 @@ export const MenuConfigurationAppearance = ({
                             elements={links_elements}
                             config={LINK_SHAPE_SPECIFIC_CONFIG}
                             prefix={'shape'}
+                            attributePath='Noeud.apparence'
                             attributeKey="orientation"
                             currentValue={linkShapeValues.orientation}
                             items={['hh', 'vv', 'vh', 'hv'].map(orientation => ({
