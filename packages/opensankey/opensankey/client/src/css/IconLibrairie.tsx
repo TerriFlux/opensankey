@@ -131,151 +131,77 @@ const logo_vh = <svg xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>
 
-// Icône pour le nombre de décimales - DESSIN GÉOMÉTRIQUE
-// Icône pour le nombre de décimales - .XX avec accolade au-dessus
+// Dans la section "Hand made icon" du fichier IconLibrairie.tsx
+
+// Icône pour le nombre de décimales - Texte ".##"
 const logo_decimals = <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24"
   width="1em"
   height="1em"
 >
-  {/* Point décimal */}
-  <circle cx="4" cy="18" r="2.5" fill="currentColor" />
-  
-  {/* Premier X (décimale 1) */}
-  <path
-    d="M 9,10 L 14,18 M 9,18 L 14,10"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Deuxième X (décimale 2) */}
-  <path
-    d="M 16,10 L 21,18 M 16,18 L 21,10"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Accolade au-dessus des XX */}
-  <path
-    d="M 9,7 Q 9,4 11.5,4 Q 14,4 15,2 Q 16,4 18.5,4 Q 21,4 21,7"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-  />
+  <text 
+    x="12" 
+    y="16" 
+    fontSize="12" 
+    fill="currentColor" 
+    fontWeight="900" 
+    fontFamily="monospace"
+    textAnchor="middle"
+  >
+    .##
+  </text>
 </svg>
 
-// Icône pour la notation scientifique - .XX×10^AA
-// Icône pour la notation scientifique - x.y e^a
-// Icône pour la notation scientifique - x.y e^a (PLUS HAUT)
+// Icône pour la notation scientifique - Texte "10³"
 const logo_scientific_notation = <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24"
   width="1em"
   height="1em"
 >
-  {/* x (premier chiffre) - croix plus haute */}
-  <path
-    d="M 2,4 L 5,12 M 2,12 L 5,4"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Point décimal */}
-  <circle cx="7" cy="11" r="2" fill="currentColor" />
-  
-  {/* y (deuxième chiffre) - croix plus haute */}
-  <path
-    d="M 9,4 L 12,12 M 9,12 L 12,4"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* e (lettre e en minuscule dessinée) plus haute */}
-  <path
-    d="M 17,8 Q 14,8 14,11 Q 14,14 17,14 Q 19.5,14 19.5,11.5"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  <path
-    d="M 14.5,11 H 19"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Symbole ^ (chapeau pour l'exposant) */}
-  <path
-    d="M 18,5 L 20.5,1 L 23,5"
-    stroke="currentColor"
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    fill="none"
-  />
-  
-  {/* a (exposant) - petit a dessiné en haut */}
-  <circle cx="20.5" cy="18" r="2" fill="none" stroke="currentColor" strokeWidth="2" />
-  <path
-    d="M 22.5,18 V 20.5"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-  />
+  <text 
+    x="12" 
+    y="17" 
+    fontSize="11" 
+    fill="currentColor" 
+    fontWeight="900" 
+    fontFamily="monospace"
+    textAnchor="middle"
+  >
+    10
+  </text>
+  <text 
+    x="19" 
+    y="10" 
+    fontSize="8" 
+    fill="currentColor" 
+    fontWeight="900" 
+    fontFamily="monospace"
+    textAnchor="middle"
+  >
+    3
+  </text>
 </svg>
 
-// Icône pour les chiffres significatifs - XXX00 avec accolade au-dessus de XXX
+// Icône pour les chiffres significatifs - Texte "#.##"
 const logo_significant_digits = <svg
   xmlns="http://www.w3.org/2000/svg"
-  viewBox="0 0 28 24"
-  width="1.2em"
+  viewBox="0 0 24 24"
+  width="1em"
   height="1em"
 >
-  {/* Premier X (chiffre significatif) */}
-  <path
-    d="M 2,10 L 6,18 M 2,18 L 6,10"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Deuxième X (chiffre significatif) */}
-  <path
-    d="M 8,10 L 12,18 M 8,18 L 12,10"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Troisième X (chiffre significatif) */}
-  <path
-    d="M 14,10 L 18,18 M 14,18 L 18,10"
-    stroke="currentColor"
-    strokeWidth="2.5"
-    strokeLinecap="round"
-  />
-  
-  {/* Premier 0 (non significatif - gris) */}
-  <ellipse cx="21" cy="14" rx="2" ry="4" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-  
-  {/* Deuxième 0 (non significatif - gris) */}
-  <ellipse cx="25" cy="14" rx="2" ry="4" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
-  
-  {/* Accolade au-dessus des XXX */}
-  <path
-    d="M 2,7 Q 2,4 6,4 Q 10,4 10,2 Q 10,4 14,4 Q 18,4 18,7"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-  />
+  <text 
+    x="12" 
+    y="16" 
+    fontSize="11" 
+    fill="currentColor" 
+    fontWeight="900" 
+    fontFamily="monospace"
+    textAnchor="middle"
+  >
+    #.##
+  </text>
 </svg>
 
 // Dans la section "Hand made icon" du fichier IconLibrairie.tsx
