@@ -107,8 +107,8 @@ const svg_label_center_horizontal = <svg xmlns="http://www.w3.org/2000/svg" view
 </svg>
 
 const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
-  width="16"
-  height="16"
+  width="1em"
+  height="1em"
   viewBox="0 0 26 26"
 >
   <g>
@@ -119,8 +119,8 @@ const logo_hv = <svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 const logo_vh = <svg xmlns="http://www.w3.org/2000/svg"
-  width="16"
-  height="16"
+  width="1em"
+  height="1em"
   viewBox="0 0 26 26"
   style={{ transform: 'rotate(180deg)' }}
 >
@@ -131,9 +131,201 @@ const logo_vh = <svg xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>
 
+// Icône pour le nombre de décimales - DESSIN GÉOMÉTRIQUE
+// Icône pour le nombre de décimales - .XX avec accolade au-dessus
+const logo_decimals = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* Point décimal */}
+  <circle cx="4" cy="18" r="2.5" fill="currentColor" />
+  
+  {/* Premier X (décimale 1) */}
+  <path
+    d="M 9,10 L 14,18 M 9,18 L 14,10"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Deuxième X (décimale 2) */}
+  <path
+    d="M 16,10 L 21,18 M 16,18 L 21,10"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Accolade au-dessus des XX */}
+  <path
+    d="M 9,7 Q 9,4 11.5,4 Q 14,4 15,2 Q 16,4 18.5,4 Q 21,4 21,7"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  />
+</svg>
+
+// Icône pour la notation scientifique - .XX×10^AA
+// Icône pour la notation scientifique - x.y e^a
+// Icône pour la notation scientifique - x.y e^a (PLUS HAUT)
+const logo_scientific_notation = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* x (premier chiffre) - croix plus haute */}
+  <path
+    d="M 2,4 L 5,12 M 2,12 L 5,4"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Point décimal */}
+  <circle cx="7" cy="11" r="2" fill="currentColor" />
+  
+  {/* y (deuxième chiffre) - croix plus haute */}
+  <path
+    d="M 9,4 L 12,12 M 9,12 L 12,4"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* e (lettre e en minuscule dessinée) plus haute */}
+  <path
+    d="M 17,8 Q 14,8 14,11 Q 14,14 17,14 Q 19.5,14 19.5,11.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  <path
+    d="M 14.5,11 H 19"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Symbole ^ (chapeau pour l'exposant) */}
+  <path
+    d="M 18,5 L 20.5,1 L 23,5"
+    stroke="currentColor"
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    fill="none"
+  />
+  
+  {/* a (exposant) - petit a dessiné en haut */}
+  <circle cx="20.5" cy="18" r="2" fill="none" stroke="currentColor" strokeWidth="2" />
+  <path
+    d="M 22.5,18 V 20.5"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  />
+</svg>
+
+// Icône pour les chiffres significatifs - XXX00 avec accolade au-dessus de XXX
+const logo_significant_digits = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 28 24"
+  width="1.2em"
+  height="1em"
+>
+  {/* Premier X (chiffre significatif) */}
+  <path
+    d="M 2,10 L 6,18 M 2,18 L 6,10"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Deuxième X (chiffre significatif) */}
+  <path
+    d="M 8,10 L 12,18 M 8,18 L 12,10"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Troisième X (chiffre significatif) */}
+  <path
+    d="M 14,10 L 18,18 M 14,18 L 18,10"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+  
+  {/* Premier 0 (non significatif - gris) */}
+  <ellipse cx="21" cy="14" rx="2" ry="4" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+  
+  {/* Deuxième 0 (non significatif - gris) */}
+  <ellipse cx="25" cy="14" rx="2" ry="4" fill="none" stroke="currentColor" strokeWidth="2" opacity="0.3" />
+  
+  {/* Accolade au-dessus des XXX */}
+  <path
+    d="M 2,7 Q 2,4 6,4 Q 10,4 10,2 Q 10,4 14,4 Q 18,4 18,7"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+  />
+</svg>
+
+// Dans la section "Hand made icon" du fichier IconLibrairie.tsx
+
+// Icône pour l'unité - t, kg, %
+const logo_unit = <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 24 24"
+  width="1em"
+  height="1em"
+>
+  {/* Lettre "t" (tonne) */}
+  <path
+    d="M 2,4 H 8 M 5,4 V 14 Q 5,16 6.5,16"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    fill="none"
+  />
+  
+  {/* "kg" */}
+  <path
+    d="M 10,6 V 14 M 10,10 L 13,6 M 10,10 L 13,14"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  />
+  <path
+    d="M 15,6 Q 15,10 15,11 Q 15,14 17.5,14 Q 20,14 20,11 Q 20,10 20,11"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    fill="none"
+  />
+  
+  {/* Symbole % */}
+  <circle cx="20" cy="18" r="1.8" fill="currentColor" />
+  <circle cx="23" cy="22" r="1.8" fill="currentColor" />
+  <path
+    d="M 19,19 L 24,23"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+  />
+</svg>
+
 const logo_vv = <svg xmlns="http://www.w3.org/2000/svg"
-  width="16"
-  height="16"
+  width="1em"
+  height="1em"
   viewBox="0 0 27 70">
   <g>
     <path
@@ -143,8 +335,8 @@ const logo_vv = <svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 
 const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
-  width="16"
-  height="16"
+  width="1em"
+  height="1em"
   viewBox="0 0 70 27"
 >
   <g>
@@ -156,8 +348,8 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
 // Ajout après logo_hh dans la section "Hand made icon"
 
 const logo_recycle = <svg xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
+  width="1em"
+  height="1em"
   viewBox="0 0 52 26"
 >
   <g>
@@ -245,62 +437,65 @@ const logo_graph = <svg
 </svg>
 // Dans la section "Hand made icon" du fichier IconLibrairie.tsx
 
-// Mode texte simple (simple_text)
+// Dans la section "Hand made icon" du fichier IconLibrairie.tsx
+
+// Mode texte simple (simple_text) - DESSIN PLUS GROS
 const logo_text_simple = <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24"
   width="1em"
   height="1em"
 >
-  {/* Lignes de texte simple */}
-  <line x1="4" y1="8" x2="20" y2="8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-  <line x1="4" y1="16" x2="14" y2="16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+  {/* Lignes de texte simple - plus épaisses et plus grandes */}
+  <line x1="2" y1="6" x2="22" y2="6" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+  <line x1="2" y1="12" x2="22" y2="12" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+  <line x1="2" y1="18" x2="16" y2="18" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
 </svg>
 
-// Mode texte riche (rich_text)
+// Mode texte riche (rich_text) - DESSIN PLUS GROS
+// Mode texte riche (rich_text) - DESSIN BEAUCOUP PLUS GROS
 const logo_text_rich = <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24"
   width="1em"
   height="1em"
 >
-  {/* Cadre représentant un éditeur */}
+  {/* Cadre représentant un éditeur - très épais et élargi */}
   <rect
-    x="3"
-    y="3"
-    width="18"
-    height="18"
+    x="1"
+    y="1"
+    width="22"
+    height="22"
     fill="none"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="3"
     rx="2"
   />
-  {/* Barre d'outils en haut */}
-  <line x1="3" y1="8" x2="21" y2="8" stroke="currentColor" strokeWidth="1.5" />
-  {/* Lignes de texte formaté */}
-  <line x1="6" y1="12" x2="18" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  <line x1="6" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-  {/* Icône "B" pour Bold */}
-  <text x="7" y="7" fontSize="4" fill="currentColor" fontWeight="bold">B</text>
+  {/* Barre d'outils en haut - très épaisse */}
+  <line x1="1" y1="9" x2="23" y2="9" stroke="currentColor" strokeWidth="2.5" />
+  
+  {/* Lignes de texte formaté - très épaisses et longues */}
+  <line x1="4" y1="14" x2="20" y2="14" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+  <line x1="4" y1="18" x2="16" y2="18" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+  
+  {/* Icône "B" pour Bold - beaucoup plus grosse */}
+  <text x="5" y="7" fontSize="6.5" fill="currentColor" fontWeight="900">B</text>
 </svg>
 
-// Mode valeur (value)
+// Mode valeur (value) - DESSIN PLUS GROS
 const logo_text_value = <svg
   xmlns="http://www.w3.org/2000/svg"
   viewBox="0 0 24 24"
   width="1em"
   height="1em"
 >
-  {/* Symbole # pour indiquer les valeurs numériques */}
+  {/* Symbole # pour indiquer les valeurs numériques - plus épais */}
   <path
-    d="M 8,6 L 8,18 M 16,6 L 16,18 M 4,10 L 20,10 M 4,14 L 20,14"
+    d="M 6,4 L 6,20 M 18,4 L 18,20 M 2,9 L 22,9 M 2,15 L 22,15"
     stroke="currentColor"
-    strokeWidth="2"
+    strokeWidth="3"
     strokeLinecap="round"
   />
-  {/* Ou alternative avec chiffres */}
-  {/* <text x="12" y="16" fontSize="12" fill="currentColor" textAnchor="middle" fontWeight="bold">123</text> */}
 </svg>
 
 const logo_node = <svg
@@ -467,8 +662,8 @@ const logo_label_inside_horiz = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    width="20"
-    height="20"
+    width="1em"
+    height="1em"
   >
     {/* Rectangle de la forme */}
     <rect
@@ -501,8 +696,8 @@ const logo_label_inside_vert = (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
-    width="20"
-    height="20"
+    width="1em"
+    height="1em"
   >
     {/* Rectangle de la forme */}
     <rect
@@ -1427,19 +1622,29 @@ export class Class_IconLibrary {
   protected _icon_text_mode_simple = logo_text_simple
   protected _icon_text_mode_rich = logo_text_rich
   protected _icon_text_mode_value = logo_text_value
+// Dans la section "Define icon"
+protected _icon_decimals = logo_decimals
+protected _icon_scientific_notation = logo_scientific_notation
+protected _icon_significant_digits = logo_significant_digits
+protected _icon_unit = logo_unit
 
-  // Dans la section "Getters"
-  public get icon_text_mode_simple() { return this._icon_text_mode_simple }
-  public get icon_text_mode_rich() { return this._icon_text_mode_rich }
-  public get icon_text_mode_value() { return this._icon_text_mode_value }
+
   // Constructor ===================================
   constructor() {
   }
-
-  // Getters ===================================
-  public get icon_rect_shape() { return this._icon_rect_shape }
-  public get icon_ellipse_shape() { return this._icon_ellipse_shape }
-  public get icon_capsule_shape() { return this._icon_capsule_shape }
+  // Helper pour normaliser la taille des icônes
+private normalizeIcon = (svg: JSX.Element) => (
+  <span style={{ 
+    display: 'inline-flex', 
+    width: '1rem', 
+    height: '1rem', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    flexShrink: 0
+  }}>
+    {svg}
+  </span>
+)
 
   public get icon_new_da() { return this._icon_new_da }
   public get icon_open_sankey() { return this._icon_open_sankey }
@@ -1474,19 +1679,10 @@ export class Class_IconLibrary {
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
   public get icon_config_spreadsheet() { return this._icon_config_spreadsheet }
   public get icon_config_menu() { return this._icon_config_menu }
-  public get icon_text_align_left() { return this._icon_text_align_left }
-  public get icon_text_align_center() { return this._icon_text_align_center }
-  public get icon_text_align_right() { return this._icon_text_align_right }
-  public get icon_text_vert_pos_top() { return this._icon_text_vert_pos_top }
-  public get icon_text_vert_pos_center() { return this._icon_text_vert_pos_center }
-  public get icon_text_vert_pos_bottom() { return this._icon_text_vert_pos_bottom }
-  public get icon_text_bold() { return this._icon_text_bold }
-  public get icon_text_italic() { return this._icon_text_italic }
+
   public get icon_activated() { return this._icon_activated }
   public get icon_unactivated() { return this._icon_unactivated }
   public get icon_popup_menu() { return this._icon_popup_menu }
-  public get icon_locked() { return this._icon_locked }
-  public get icon_unlocked() { return this._icon_unlocked }
   public get icon_add_element() { return this._icon_add_element }
   public get icon_remove_element() { return this._icon_remove_element }
   public get icon_repeat() { return this._icon_repeat }
@@ -1499,11 +1695,7 @@ export class Class_IconLibrary {
   public get icon_direction_left() { return this._icon_direction_left }
   public get icon_direction_rift() { return this._icon_direction_rift }
   public get icon_open_selector() { return this._icon_open_selector }
-  public get icon_orientation_recycle() { return this._icon_orientation_recycle }
-  public get icon_orientation_hh() { return this._icon_orientation_hh }
-  public get icon_orientation_vv() { return this._icon_orientation_vv }
-  public get icon_orientation_hv() { return this._icon_orientation_hv }
-  public get icon_orientation_vh() { return this._icon_orientation_vh }
+
   public get icon_order_up() { return this._icon_order_up }
   public get icon_order_down() { return this._icon_order_down }
   public get icon_order_top() { return this._icon_order_top }
@@ -1534,20 +1726,13 @@ export class Class_IconLibrary {
   protected _icon_label_auto_position = logo_label_auto_position
 
   // Dans la section "Getters"
-  public get icon_label_on_path() { return this._icon_label_on_path }
-  public get icon_label_auto_position() { return this._icon_label_auto_position }
-  public get icon_label_inside_horiz() { return this._icon_label_inside_horiz }
-  public get icon_label_inside_vert() { return this._icon_label_inside_vert }
 
 
   // Getters ===================================
-  public get icon_open_modal_icon() { return this._icon_open_modal_icon }
-  public get icon_import_file_image() { return this._icon_import_file_image }
   public get icon_previous() { return this._icon_previous }
   public get icon_next() { return this._icon_next }
   public get icon_attr_view() { return this._icon_attr_view }
   public get icon_copy() { return this._icon_copy }
-  public get icon_delete() { return this._icon_delete }
 
   public get icon_palette_color() { return this._icon_palette_color }
   public get icon_random() { return this._icon_random }
@@ -1563,6 +1748,40 @@ export class Class_IconLibrary {
   public get icon_level_tag() { return this._icon_level_tag }
   public get icon_filter_level() { return this._icon_filter_level }
   public get icon_unit_view() { return this._icon_unit_view }
+
+// Getters normalisés UNIQUEMENT pour les icônes utilisées dans MenuConfigurationAppearance
+public get icon_text_mode_simple() { return this.normalizeIcon(this._icon_text_mode_simple) }
+public get icon_text_mode_rich() { return this.normalizeIcon(this._icon_text_mode_rich) }
+public get icon_text_mode_value() { return this.normalizeIcon(this._icon_text_mode_value) }
+public get icon_text_bold() { return this.normalizeIcon(this._icon_text_bold) }
+public get icon_text_italic() { return this.normalizeIcon(this._icon_text_italic) }
+public get icon_text_align_left() { return this.normalizeIcon(this._icon_text_align_left) }
+public get icon_text_align_center() { return this.normalizeIcon(this._icon_text_align_center) }
+public get icon_text_align_right() { return this.normalizeIcon(this._icon_text_align_right) }
+public get icon_text_vert_pos_top() { return this.normalizeIcon(this._icon_text_vert_pos_top) }
+public get icon_text_vert_pos_center() { return this.normalizeIcon(this._icon_text_vert_pos_center) }
+public get icon_text_vert_pos_bottom() { return this.normalizeIcon(this._icon_text_vert_pos_bottom) }
+public get icon_label_inside_horiz() { return this.normalizeIcon(this._icon_label_inside_horiz) }
+public get icon_label_inside_vert() { return this.normalizeIcon(this._icon_label_inside_vert) }
+public get icon_label_on_path() { return this.normalizeIcon(this._icon_label_on_path) }
+public get icon_label_auto_position() { return this.normalizeIcon(this._icon_label_auto_position) }
+public get icon_open_modal_icon() { return this.normalizeIcon(this._icon_open_modal_icon) }
+public get icon_import_file_image() { return this.normalizeIcon(this._icon_import_file_image) }
+public get icon_delete() { return this.normalizeIcon(this._icon_delete) }
+public get icon_locked() { return this._icon_locked }
+public get icon_unlocked() { return this._icon_unlocked }
+public get icon_orientation_hh() { return this.normalizeIcon(this._icon_orientation_hh) }
+public get icon_orientation_vv() { return this.normalizeIcon(this._icon_orientation_vv) }
+public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }
+public get icon_orientation_vh() { return this.normalizeIcon(this._icon_orientation_vh) }
+public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
+public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
+public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
+public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }
+public get icon_scientific_notation() { return this.normalizeIcon(this._icon_scientific_notation) }
+public get icon_significant_digits() { return this.normalizeIcon(this._icon_significant_digits) }
+public get icon_unit() { return this.normalizeIcon(this._icon_unit) }
 
 }
 

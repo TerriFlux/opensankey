@@ -598,7 +598,70 @@ export const BASE_SHAPE_CONFIG = {
       en: 'Border radius in pixels',
       fr: 'Rayon de bordure en pixels'
     }
-  } satisfies AttributeConfig<number>
+  } satisfies AttributeConfig<number>,
+  margin_left: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+
+    labels: {
+      en: 'Left',
+      fr: 'Gauche'
+    },
+    tooltips: {
+      en: 'Left margin',
+      fr: 'Marge gauche '
+    }
+  } satisfies AttributeConfig<number>,
+
+  margin_right: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+
+    labels: {
+      en: 'Right',
+      fr: 'Droite'
+    },
+    tooltips: {
+      en: 'Right margin',
+      fr: 'Marge droite'
+    }
+  } satisfies AttributeConfig<number>,
+
+  margin_top: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+
+    labels: {
+      en: 'Top',
+      fr: 'Haute'
+    },
+    tooltips: {
+      en: 'Top margin',
+      fr: 'Marge haute'
+    }
+  } satisfies AttributeConfig<number>,
+
+  margin_bottom: {
+    default: 0,
+    type: (() => 0) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+
+    labels: {
+      en: 'Bottom',
+      fr: 'Basse'
+    },
+    tooltips: {
+      en: 'Bottom margin',
+      fr: 'Marge basse'
+    }
+  } satisfies AttributeConfig<number>,
 } as const
 
 export const BASE_LABEL_CONFIG = {
@@ -1109,8 +1172,8 @@ export const BASE_LABEL_CONFIG = {
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
-      en: 'Unit visible',
-      fr: 'Unité visible'
+      en: 'Unit',
+      fr: 'Unité'
     },
     tooltips: {
       en: 'Display the unit',
@@ -1154,8 +1217,8 @@ export const BASE_LABEL_CONFIG = {
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
-      en: 'Unit factor',
-      fr: 'Facteur d\'unité'
+      en: 'Factor',
+      fr: 'Facteur'
     },
     tooltips: {
       en: 'Conversion factor for the unit',
@@ -1215,8 +1278,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
         color_visible: {
           default: prefix === 'name_label' ? true : false,
           labels: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
+            en: 'Background',
+            fr: 'Fond'
           },
           tooltips: {
             en: 'Background color',
@@ -1226,8 +1289,8 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
         color: {
           default: '#ffffff',
           labels: {
-            en: 'Background color',
-            fr: 'Couleur de fond'
+            en: 'Background',
+            fr: 'Fond'
           },
           tooltips: {
             en: 'Background color',
@@ -1241,8 +1304,11 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
           default: 0.55,
         },
         border_radius: {
-          default: 4
-        }
+          default: 4,
+        },
+        margin_left: {
+          category: category,
+        },
       }
     ),
   } as const
@@ -1573,69 +1639,7 @@ export type HyperLinkConfigReturn = typeof HYPER_LINK_CONFIG
 
 export const NODE_SHAPE_SPECIFIC_CONFIG = {
   // =================== MARGINS ===================
-  margin_left: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
 
-    labels: {
-      en: 'Left',
-      fr: 'Gauche'
-    },
-    tooltips: {
-      en: 'Left margin',
-      fr: 'Marge gauche '
-    }
-  } satisfies AttributeConfig<number>,
-
-  margin_right: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
-
-    labels: {
-      en: 'Right',
-      fr: 'Droite'
-    },
-    tooltips: {
-      en: 'Right margin',
-      fr: 'Marge droite'
-    }
-  } satisfies AttributeConfig<number>,
-
-  margin_top: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
-
-    labels: {
-      en: 'Top',
-      fr: 'Haute'
-    },
-    tooltips: {
-      en: 'Top margin',
-      fr: 'Marge haute'
-    }
-  } satisfies AttributeConfig<number>,
-
-  margin_bottom: {
-    default: 0,
-    type: (() => 0) as (() => number),
-    category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
-
-    labels: {
-      en: 'Bottom',
-      fr: 'Basse'
-    },
-    tooltips: {
-      en: 'Bottom margin',
-      fr: 'Marge basse'
-    }
-  } satisfies AttributeConfig<number>,
   position_type: {
     default: default_position_type,
     type: (() => default_position_type) as (() => Type_Position),
@@ -1688,8 +1692,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
-      en: 'Orphans visible',
-      fr: 'Orphelins visibles'
+      en: 'Orphans',
+      fr: 'Orphelins'
     },
     tooltips: {
       en: 'Visibility of orphan nodes',
@@ -1925,8 +1929,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
-      en: 'Color rule',
-      fr: 'Règle couleur'
+      en: 'Color',
+      fr: 'Couleur'
     },
     tooltips: {
       en: 'Choose what rule defines flow color',
