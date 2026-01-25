@@ -493,16 +493,16 @@ export const buttonStyles = {
       bgColor: 'none',
       borderColor: `tertiaire.${level}`,
       border: 'solid 2px',
-      _hover: {
-        bg: `secondaire.${level}`,
-        bgColor: `secondaire.${level}`,
-        borderColor: `secondaire.${level}`,
-      },
-      _active: {
-        bg: `primaire.${level}`,
-        bgColor: `primaire.${level}`,
-        borderColor: `primaire.${level}`,
-      },
+      // _hover: {
+      //   bg: `secondaire.${level}`,
+      //   bgColor: `secondaire.${level}`,
+      //   borderColor: `secondaire.${level}`,
+      // },
+      // _active: {
+      //   bg: `primaire.${level}`,
+      //   bgColor: `primaire.${level}`,
+      //   borderColor: `primaire.${level}`,
+      // },
     })
 
     acc[`menuconfigpanel_option_button_${type}_activated`] = defineStyle({
@@ -512,16 +512,16 @@ export const buttonStyles = {
       bgColor: `primaire.${level}`,
       borderColor: `tertiaire.${level}`,
       border: 'solid 2px',
-      _hover: {
-        bg: `secondaire.${level}`,
-        bgColor: `secondaire.${level}`,
-        borderColor: `secondaire.${level}`,
-      },
-      _active: {
-        bg: `primaire.${level}`,
-        bgColor: `primaire.${level}`,
-        borderColor: `primaire.${level}`,
-      },
+      // _hover: {
+      //   bg: `secondaire.${level}`,
+      //   bgColor: `secondaire.${level}`,
+      //   borderColor: `secondaire.${level}`,
+      // },
+      // _active: {
+      //   bg: `primaire.${level}`,
+      //   bgColor: `primaire.${level}`,
+      //   borderColor: `primaire.${level}`,
+      // },
     })
 
 
@@ -581,10 +581,11 @@ export const buttonStyles = {
 
     acc[`menuconfigpanel_option_button_activated_${position}`] = createPositionedButtonStyle({
       ...menuconfigBaseButton,
-      color: 'tertiaire.3',
-      fill: 'tertiaire.3',
-      borderColor: 'tertiaire.3',
-      border: 'solid 2px',
+      color: 'white',
+      fill: 'white',
+      //borderColor: 'tertiaire.3',
+      //border: 'solid 2px',
+      backgroundColor: 'tertiaire.3',
     }, position)
 
     return acc
@@ -595,10 +596,11 @@ export const buttonStyles = {
 
   menuconfigpanel_option_button_activated: defineStyle({
     ...menuconfigBaseButton,
-    color: 'tertiaire.3',
-    fill: 'tertiaire.3',
-    borderColor: 'tertiaire.3',
-    border: 'solid 2px',
+    color: 'white',
+    fill: 'white',
+    borderColor: 'white',
+    //border: 'solid 2px',
+    backgroundColor: 'tertiaire.3',
   }),
 
   // Boutons spécialisés
@@ -2543,6 +2545,21 @@ const layerStyles = {
     paddingLeft: '1.5rem'
   },
 
+  options_1_2_1cols: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 2fr 1fr',
+    gridColumnGap: '0.12rem',
+  },
+    options_1_2_2cols: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 3fr 2fr',
+    gridColumnGap: '0.12rem',
+  },
+    options_2_1_2cols: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr 2fr',
+    gridColumnGap: '0.12rem',
+  },
   // Grid layouts avec factory
   ...(['2cols', '3cols', '4cols', '5cols', '6cols'] as const).reduce((acc, type) => {
     const colCount = parseInt(type.charAt(0))
@@ -2830,7 +2847,7 @@ const layerStyles = {
 
   menu_sub_section: {
     display: 'grid',
-    border: '1px solid black',
+    border: '1px solid lightgrey',
     borderRadius: '4px',
     gridRowGap: '0.2rem',
     padding: '0.2rem'

@@ -710,6 +710,7 @@ export const UnifiedElementSelection = ({
           <Box>
             <OSTooltip label={t(singleConfig.translationKeys.tooltipName!)}>
               <ConfigMenuTextInput
+                t={t}
                 default_value={(singleTypeSelectedElements.length !== 1) ? '' : singleTypeSelectedElements[0].name}
                 function_on_blur={handleNameUpdate}
                 disabled={singleTypeSelectedElements.length !== 1}
