@@ -763,43 +763,7 @@ const LabelContentComponent = ({
             {app_data.icon_library.icon_label_inside_vert}
           </OverloadedButton>
         </Box>
-        {selection.hasLinks ? (
-          <>
-            {/* <Divider /> */}
-            {/* <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.link_label_position')}</Box> */}
-            {/* <Box display="flex" alignItems="center" gap={1}> */}
-            <Box layerStyle='options_3cols'>
-              <Box as='span'
-                layerStyle='menuconfigpanel_option_name'
-                display="flex"
-                alignItems="center">{t('Menu.sections.link_label_position')}</Box>
-              <OverloadedButton
-                elements={links_elements}
-                config={LINKS_LABEL_SPECIFIC_CONFIG}
-                prefix={prefix}
-                attributePath={'Flux.labels'}
-                attributeKey="on_path"
-                variant={getButtonVariant('left', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
-                onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
-              >
-                {app_data.icon_library.icon_label_on_path}
-              </OverloadedButton>
 
-              <OverloadedButton
-                elements={links_elements}
-                config={LINKS_LABEL_SPECIFIC_CONFIG}
-                attributePath={'Flux.labels'}
-                prefix={prefix}
-                attributeKey="pos_auto"
-                variant={getButtonVariant('right', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
-                onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
-              >
-                {app_data.icon_library.icon_label_auto_position}
-              </OverloadedButton>
-            </Box>
-            {/* </Box> */}
-          </>
-        ) : null}
       </Box>
 
       <Box layerStyle='options_2cols'>
@@ -871,7 +835,45 @@ const LabelContentComponent = ({
             </Button>
           </Box>
         </OSTooltip></Box> : <></>}
+      {selection.hasLinks ? (
+        <>
+          {/* <Divider /> */}
+          {/* <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.link_label_position')}</Box> */}
+          {/* <Box display="flex" alignItems="center" gap={1}> */}
+          <Box layerStyle='options_2cols'>
+            <Box layerStyle='options_3cols'>
+              <Box as='span'
+                layerStyle='menuconfigpanel_option_name'
+                display="flex"
+                alignItems="center">{t('Menu.sections.link_label_position')}</Box>
+              <OverloadedButton
+                elements={links_elements}
+                config={LINKS_LABEL_SPECIFIC_CONFIG}
+                prefix={prefix}
+                attributePath={'Flux.labels'}
+                attributeKey="on_path"
+                variant={getButtonVariant('left', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
+                onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+              >
+                {app_data.icon_library.icon_label_on_path}
+              </OverloadedButton>
 
+              <OverloadedButton
+                elements={links_elements}
+                config={LINKS_LABEL_SPECIFIC_CONFIG}
+                attributePath={'Flux.labels'}
+                prefix={prefix}
+                attributeKey="pos_auto"
+                variant={getButtonVariant('right', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
+                onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+              >
+                {app_data.icon_library.icon_label_auto_position}
+              </OverloadedButton>
+            </Box>
+          </Box>
+          {/* </Box> */}
+        </>
+      ) : null}
       <Divider />
       <MenuSectionCheckbox
         elements={elements}
