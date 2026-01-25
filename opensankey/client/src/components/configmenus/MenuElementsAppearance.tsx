@@ -3,10 +3,11 @@
 // Fusionne Shape + Labels avec 5 onglets : Fond | Forme | Nom | Valeur | Icône
 // ==================================================================================================
 
-import React, { useState, useRef, ChangeEvent } from 'react'
-import { Box, Button, Checkbox, InputGroup, Select, Divider, Input, ButtonGroup } from '@chakra-ui/react'
+import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
+import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
 import { FaAlignCenter, FaAlignLeft, FaAlignRight } from 'react-icons/fa'
 import { MdTextRotateVertical, MdTextRotationNone } from 'react-icons/md'
+import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -23,16 +24,18 @@ import {
   MenuSectionCheckbox,
   MenuColorPicker,
   getButtonVariant,
-  getCheckboxProps,
-  LabelWithOverload,
   TooltipElementOverloaded,
-  ConfigMenuNumberOrUndefinedInput,
   OSMultiSelect,
   ElementAttrSetterTextInput2Cols,
   ElementAttrSetterSelect2Cols,
-  ConditionalCheckboxWithInput,
-  SimpleElementCheckbox,
-  ColorPickerWithSustainable
+  ColorPickerWithSustainable,
+  OverloadedButton,
+  OverloadedButtonGroup,
+  OverloadedCheckbox,
+  isElementAttributeOverloaded,
+  InputIndicatorWrapper,
+  CustomFaEyeCheckIcon,
+  OverloadIndicatorWrapper
 } from './MenuCommon'
 
 // Imports des configs
@@ -107,22 +110,135 @@ const analyzeSelection = (
   }
 }
 
+/**
+ * Composant pour sélectionner le mode d'affichage d'un label
+ * Gère 3 modes pour les labels de texte : simple_text, rich_text, value
+ * Gère 2 modes pour les icônes : icon, image
+ */
+export const LabelDisplayModeSelector = ({
+  prefix,
+  labelValues,
+  app_data,
+  menu_style = false,
+  display_mode_name_label,
+  refreshAll,
+  t
+}: {
+  prefix: string
+  labelValues: any
+  app_data: Class_ApplicationData
+  menu_style?: boolean
+  display_mode_name_label: MutableRefObject<'simple_text' | 'rich_text' | 'value'>
+  refreshAll: () => void
+  t: TFunction
+}) => {
+  const setModeSimpleText = () => {
+    labelValues.has_fo = false
+    display_mode_name_label.current = 'simple_text'
+    refreshAll()
+  }
+
+  const setModeRichText = () => {
+    labelValues.has_fo = true
+    display_mode_name_label.current = 'rich_text'
+    refreshAll()
+  }
+
+  const setModeValue = () => {
+    labelValues.has_fo = false
+    display_mode_name_label.current = 'value'
+    refreshAll()
+  }
+
+  const setModeIcon = () => {
+    labelValues.has_fo = false
+    labelValues.is_icon = true
+    labelValues.is_image = false
+    refreshAll()
+  }
+
+  const setModeImage = () => {
+    labelValues.has_fo = false
+    labelValues.is_icon = false
+    labelValues.is_image = true
+    refreshAll()
+  }
+
+  if (prefix === 'name_label') {
+    return (
+      <Box layerStyle='options_3cols'>
+        <Button
+          variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          onClick={setModeSimpleText}
+        >
+          {app_data.icon_library.icon_text_mode_simple}
+        </Button>
+        <Button
+          variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          onClick={setModeRichText}
+        >
+          {app_data.icon_library.icon_text_mode_rich}
+        </Button>
+        <Button
+          variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          onClick={setModeValue}
+        >
+          {app_data.icon_library.icon_text_mode_value}
+        </Button>
+      </Box>
+    )
+  }
+
+  // Mode icône (icon label) - seulement si pas en mode style
+  if (prefix === 'icon' && !menu_style) {
+    return (
+      <Box layerStyle='options_2cols'>
+        <Button
+          variant={labelValues.is_icon ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          onClick={setModeIcon}
+        >
+          {t('Menu.display_mode.icon')}
+        </Button>
+        <Button
+          variant={labelValues.is_image ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          onClick={setModeImage}
+        >
+          {t('Menu.display_mode.image')}
+        </Button>
+      </Box>
+    )
+  }
+
+  // Pas de sélecteur pour les autres cas
+  return null
+}
+
+/**
+ * Section complète de formatage de texte (police, taille, gras, italique, majuscules)
+ * Affichée uniquement pour les modes simple_text et value
+ */
+
 // ✅ Sous-composant pour le contenu des labels
 const LabelContentComponent = ({
   app_data,
   elements,
   prefix,
+  displayMode,
   menu_style,
   refreshParentComponent
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   prefix: 'name_label' | 'value_label' | 'icon'
+  displayMode: 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
   menu_style: boolean
   refreshParentComponent: () => void
 }) => {
-  type DisplayMode = 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
-  const { icon_locked, icon_unlocked } = app_data.icon_library
   const { t } = app_data
   const labelValues = elements.length > 0
     ? getElementsLabelValues(elements, prefix, refreshParentComponent)
@@ -134,35 +250,7 @@ const LabelContentComponent = ({
   const selection = analyzeSelection(elements)
   const unit_tagg = app_data.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
 
-  const [displayMode, setDisplayMode] = useState<DisplayMode>(() => {
-    if (elements.length === 0) return 'simple_text'
-    if (labelValues.has_fo) return 'rich_text'
-    if (labelValues.is_image) return 'image'
-    if (labelValues.is_icon) return 'icon'
-    if (labelValues.is_value) return 'value'
-    return prefix == 'icon' ? 'icon' : 'simple_text'
-  })
 
-  const setModeSimpleText = () => {
-    labelValues.has_fo = false
-    labelValues.icon_name = ''
-    setDisplayMode('simple_text')
-  }
-
-  const setModeRichText = () => {
-    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
-    app_data.menu_configuration.r_editor_content_set_elements.current(base_elements, 'name_label')
-    labelValues.has_fo = true
-    labelValues.icon_name = ''
-    setDisplayMode('rich_text')
-  }
-
-  const setModeValue = () => {
-    labelValues.has_fo = false
-    labelValues.icon_name = ''
-    labelValues.is_value = true
-    setDisplayMode('value')
-  }
 
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
@@ -187,66 +275,198 @@ const LabelContentComponent = ({
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
-      {/* Sélecteur de mode */}
-      {prefix !== 'value_label' && !menu_style && (
-        <Box as='span' layerStyle='options_4cols'>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box layerStyle='options_4cols'>
-              {prefix === 'name_label' && (
-                <>
-                  <Button
-                    variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    onClick={setModeSimpleText}
-                  >
-                    {app_data.icon_library.icon_text_mode_simple}
-                  </Button>
-                  <Button
-                    variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    onClick={setModeRichText}
-                  >
-                    {app_data.icon_library.icon_text_mode_rich}
-                  </Button>
-                  <Button
-                    variant={displayMode === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                    sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                    onClick={setModeValue}
-                  >
-                    {app_data.icon_library.icon_text_mode_value}
-                  </Button></>)}
-              {prefix === 'icon' && !menu_style && (
-                <>
-                  <Button
-                    variant={displayMode === 'icon' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-                    onClick={() => {
-                      labelValues.has_fo = false
-                      labelValues.is_icon = true
-                      labelValues.is_image = false
-                      setDisplayMode('icon')
-                    }}
-                  >
-                    {t('Menu.display_mode.icon')}
-                  </Button>
-                  <Button
-                    variant={displayMode === 'image' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                    onClick={() => {
-                      labelValues.has_fo = false
-                      labelValues.is_icon = false
-                      labelValues.is_image = true
-                      setDisplayMode('image')
-                    }}
-                  >
-                    {t('Menu.display_mode.image')}
-                  </Button>
-                </>
+      {(prefix === 'value_label' || displayMode == 'value') && (<>
+        <Divider />
+        <Box layerStyle='options_1_2_2cols'>
+          <Checkbox
+            variant='menuconfigpanel_part_title_1_checkbox'
+            icon={<CustomFaEyeCheckIcon />}
+            isChecked={labelValues.unit_visible}
+            onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+              labelValues.unit_visible = evt.target.checked
+            }}
+          >
+            <OSTooltip label={t(`${String(attributePath)}.tooltips.value_label_unit_visible`)}>
+              {t(`${String(attributePath)}.value_label_unit_visible`)}
+            </OSTooltip>
+          </Checkbox>
+          {labelValues.unit_visible ? <>
+            <InputIndicatorWrapper
+              isOverloaded={isElementAttributeOverloaded(
+                elements,
+                `${prefix}_unit_type` as keyof typeof VALUE_LABEL_CONFIG,
+                VALUE_LABEL_CONFIG
               )}
-            </Box>
-          </Box>
-      {/* Section TEXT */}
-      {(displayMode === 'simple_text' || displayMode === 'value') && (<>
+              isMultiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'unit_type', prefix)}
+              t={app_data.t}
+            >
+              <Select
+                value={labelValues.unit_type}
+                onChange={(evt) => {
+                  labelValues.unit_type = evt.target.value
+                }}
+              >
+                {unit_constants.map(el => (
+                  <option key={'value_' + el} value={el}>
+                    {app_data.t('Flux.labels.' + el)}
+                  </option>
+                ))}
+              </Select>
+            </InputIndicatorWrapper>
 
-          <LabelWithOverload attributeKey="font_family" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
+            {/* Select pour unit tag (quand type = other_unit_tag) */}
+            {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
+              <ElementAttrSetterSelect2Cols
+                app_data={app_data}
+                elements={elements}
+                attributePath={attributePath}
+                attributeKey={'unit'}
+                config={VALUE_LABEL_CONFIG}
+                prefix={prefix}
+                options={unit_tagg.tags_list.map(el => ({
+                  key: 'value_' + el.id,
+                  value: el.id,
+                  label: el.name
+                }))}
+                refreshParentComponent={refreshParentComponent}
+              />
+            )}
+
+            {/* Text input et number input pour unit_name */}
+            {labelValues.unit_type == 'unit_name' && (<>
+              <InputIndicatorWrapper
+                isOverloaded={isElementAttributeOverloaded(
+                  elements,
+                  `${prefix}_unit` as keyof typeof VALUE_LABEL_CONFIG,
+                  VALUE_LABEL_CONFIG
+                )}
+                isMultiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'unit', prefix)}
+                t={app_data.t}
+              >
+                <Input
+                  variant='menuconfigpanel_option_input'
+                  value={labelValues.unit ?? ''}
+                  placeholder="nom de l'unité"
+                  onChange={(evt) => {
+                    labelValues.unit = evt.target.value
+                  }}
+                  onBlur={(evt) => {
+                    labelValues.unit = evt.target.value || ''
+                  }}
+                />
+              </InputIndicatorWrapper>
+            </>
+            )}
+          </> : <></>}
+        </Box>
+        <Box layerStyle='options_3cols'>
+          <Box layerStyle='options_1_2_1cols'>
+            {/* Checkbox 1 : Décimales personnalisées */}
+            <OverloadedCheckbox
+              elements={elements}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix as any}
+              attributeKey={'custom_digit'}
+              isChecked={labelValues.custom_digit}
+              onChange={(checked) => { labelValues.custom_digit = checked }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'custom_digit', prefix)}
+              tooltipLabel={t('Flux.labels.tooltips.value_label_custom_digit')}
+              t={t}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                {app_data.icon_library.icon_decimals}
+              </Box>
+            </OverloadedCheckbox>
+
+            {/* Input 1 : Nombre de décimales */}
+            {labelValues.custom_digit ? (
+              <ConfigMenuNumberInput
+                t={t}
+                default_value={labelValues.nb_digit}
+                menu_for_style={menu_for_style}
+                minimum_value={0}
+                stepper={true}
+                function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
+                multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_digit', prefix)}
+                isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
+              />
+            ) : <Box />}
+
+            {/* Checkbox 2 : Notation scientifique */}
+            <OverloadedCheckbox
+              elements={elements}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix as any}
+              attributeKey={'scientific_notation'}
+              isChecked={labelValues.scientific_notation}
+              onChange={(checked) => { labelValues.scientific_notation = checked }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'scientific_notation', prefix)}
+              tooltipLabel={t('Flux.labels.tooltips.value_label_scientific_notation')}
+              t={t}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                {app_data.icon_library.icon_scientific_notation}
+              </Box>
+            </OverloadedCheckbox>
+          </Box>
+          <Box layerStyle='options_1_2_1cols'>
+            {/* Checkbox 3 : Chiffres significatifs */}
+            <OverloadedCheckbox
+              elements={elements}
+              config={VALUE_LABEL_CONFIG}
+              prefix={prefix as any}
+              attributeKey={'significant_digits'}
+              isChecked={labelValues.significant_digits}
+              onChange={(checked) => { labelValues.significant_digits = checked }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'significant_digits', prefix)}
+              tooltipLabel={t('Flux.labels.tooltips.value_label_significant_digits')}
+              t={t}
+            >
+              <Box display="flex" alignItems="center" gap={1}>
+                {app_data.icon_library.icon_significant_digits}
+              </Box>
+            </OverloadedCheckbox>
+
+            {/* Input 2 : Nombre de chiffres significatifs */}
+            {labelValues.significant_digits ? (
+              <ConfigMenuNumberInput
+                t={t}
+                default_value={labelValues.nb_significant_digits}
+                menu_for_style={menu_for_style}
+                minimum_value={0}
+                stepper={true}
+                function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
+                multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_significant_digits', prefix)}
+                isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
+              />
+
+            ) : <Box />}
+          </Box>
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'unit_factor'}
+            config={VALUE_LABEL_CONFIG}
+            prefix={prefix}
+            refreshParentComponent={refreshParentComponent}
+            stepper={false}
+            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('unit_factor') as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
+          />
+          {/* </Box> */}
+        </Box></>
+      )}
+      <Box as='span' layerStyle='options_2_1_2cols'>
+        {/* Section TEXT */}
+        {(displayMode === 'simple_text' || displayMode === 'value') && (<>
+          <OverloadIndicatorWrapper
+            isOverloaded={isElementAttributeOverloaded(
+              elements,
+              `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
+              BASE_LABEL_CONFIG
+            )}
+            tooltipLabel={app_data.t('Menu.common.attribute_overloaded')}
+          >
             <Select
               variant='menuconfigpanel_option_select'
               value={labelValues.font_family}
@@ -258,128 +478,100 @@ const LabelContentComponent = ({
                 <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
               ))}
             </Select>
-          </LabelWithOverload>
-          <LabelWithOverload attributeKey="font_size" elements={elements} config={BASE_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-            <ConfigMenuNumberInput
-              t={app_data.t}
-              default_value={labelValues.font_size}
-              menu_for_style={menu_for_style}
-              minimum_value={11}
-              stepper={true}
-              unit_text='px'
-              function_on_blur={(value) => { labelValues.font_size = value ?? labelValues.font_size }}
-              multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
-            />
-          </LabelWithOverload>
+          </OverloadIndicatorWrapper>
 
-        <Box display="flex" alignItems="center" gap={1}>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={labelValues.font_size}
+            menu_for_style={menu_for_style}
+            minimum_value={11}
+            stepper={true}
+            unit_text='px'
+            function_on_blur={(value) => { labelValues.font_size = value ?? labelValues.font_size }}
+            multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'font_size', prefix)}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_font_size` as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
+          />
+
+
+          <Box display="flex" alignItems="center" gap={1}>
             <Box layerStyle='options_3cols'>
-              <Button
+              <OverloadedButton
+                elements={elements}
+                config={BASE_LABEL_CONFIG}
+                prefix={prefix}
+                attributeKey="bold"
                 variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'bold', prefix), labelValues.bold)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                 onClick={() => { labelValues.bold = !labelValues.bold }}
+                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_text_bold}
-              </Button>
-              <Button
+              </OverloadedButton>
+
+              <OverloadedButton
+                elements={elements}
+                config={BASE_LABEL_CONFIG}
+                prefix={prefix}
+                attributeKey="uppercase"
                 variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'uppercase', prefix), labelValues.uppercase)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                 onClick={() => { labelValues.uppercase = !labelValues.uppercase }}
+                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {svg_label_upper}
-              </Button>
-              <Button
+              </OverloadedButton>
+
+              <OverloadedButton
+                elements={elements}
+                config={BASE_LABEL_CONFIG}
+                prefix={prefix}
+                attributeKey="italic"
                 variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'italic', prefix), labelValues.italic)}
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
                 onClick={() => { labelValues.italic = !labelValues.italic }}
+                tooltipLabel={t('Menu.common.attribute_overloaded')}
               >
                 {app_data.icon_library.icon_text_italic}
-              </Button>
+              </OverloadedButton>
             </Box>
-            <Box display="flex" gap={0}>
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'bold'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'uppercase'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-              <TooltipElementOverloaded prefix={prefix} attributeKey={'italic'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            </Box>
-        </Box>
+          </Box>
         </>)}
-        </Box>
-      )}
-
-
+      </Box>
       {(displayMode === 'simple_text' || displayMode === 'value') && (<>
-        {((selection.hasNodes || menu_for_style) && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
-          <LabelWithOverload attributeKey={'separator' as keyof (typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG)} elements={elements} config={NAME_LABEL_CONFIG} prefix={prefix} t={app_data.t}>
-            <ElementAttrSetterTextInput2Cols
-              app_data={app_data}
+        <Box layerStyle='options_3cols'>
+          <Box layerStyle='options_4cols'>
+
+            <OverloadedButtonGroup
               elements={elements}
-              config={NAME_LABEL_CONFIG}
+              config={BASE_LABEL_CONFIG}
               prefix={prefix}
-              attributePath={attributePath}
-              attributeKey={'separator'}
-              refreshParentComponent={refreshParentComponent}
+              attributeKey="text_align"
+              currentValue={labelValues.text_align}
+              items={[
+                { value: 'left', icon: <FaAlignLeft /> },
+                { value: 'middle', icon: <FaAlignCenter /> },
+                { value: 'right', icon: <FaAlignRight /> }
+              ]}
+              onChange={(value) => { labelValues.text_align = value }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix)}
+              t={t}
             />
-          </LabelWithOverload>
-          <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
-            <Box layerStyle='options_2cols'>
-              <Button variant={nodeLabelValues.separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-                onClick={() => {
-                  nodeLabelValues.separator_part = 'before'
-                }}
-              >
-                {app_data.t('Menu.before')}
-              </Button>
-              <Button variant={nodeLabelValues.separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-                onClick={() => {
-                  nodeLabelValues.separator_part = 'before'
-                }}
-              >
-                {app_data.t('Menu.after')}
-              </Button>
-            </Box>
-          </OSTooltip></Box> : <></>}
-        <Box layerStyle='options_2cols'>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Box layerStyle='options_4cols'>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.left_align')}>
-                <Button
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                  variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'left')}
-                  onClick={() => { labelValues.text_align = 'left' }}
-                >
-                  <FaAlignLeft />
-                </Button>
-              </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.center_align')}>
-                <Button
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                  variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'middle')}
-                  onClick={() => { labelValues.text_align = 'middle' }}
-                >
-                  <FaAlignCenter />
-                </Button>
-              </OSTooltip>
-              <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.right_align')}>
-                <Button
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                  variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix), labelValues.text_align === 'right')}
-                  onClick={() => { labelValues.text_align = 'right' }}
-                >
-                  <FaAlignRight />
-                </Button>
-              </OSTooltip>
-              <OSTooltip label={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || t('Menu.common.vertical')}>
-                <Button
-                  variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
-                  sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-                  onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
-                >
-                  {labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}
-                </Button>
-              </OSTooltip>
-            </Box>
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'vertical_text'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'text_align'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
+
+            <OverloadedButton
+              elements={elements}
+              config={BASE_LABEL_CONFIG}
+              prefix={prefix}
+              attributeKey="vertical_text"
+              variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
+              onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
+              tooltipLabel={app_data.t('Noeud.labels.tooltips.name_label_vertical_text') || t('Menu.common.vertical')}
+            >
+              {<span style={{
+                display: 'inline-flex',
+                width: '1rem',
+                height: '1rem',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0
+              }}>{labelValues.vertical_text ?   <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
+            </OverloadedButton>
           </Box>
           <ColorPickerWithSustainable
             app_data={app_data}
@@ -441,128 +633,7 @@ const LabelContentComponent = ({
         </>
       )}
 
-      {/* Section IMAGE */}
-      {(prefix === 'value_label' || displayMode == 'value') && (<>
-        <Divider />
-        <Box
-          layerStyle='menuconfigpanel_grid'
-        >      <Box layerStyle='options_2cols'>
-            <Checkbox
-              variant='menuconfigpanel_option_checkbox'
-              iconColor={isValueLabelIndeterminate(elements, 'unit_visible') ? '#78C2AD' : 'white'}
-              isIndeterminate={isValueLabelIndeterminate(elements, 'unit_visible')}
-              isChecked={labelValues.unit_visible}
-              onChange={(evt) => {
-                labelValues.unit_visible = evt.target.checked
-              }}
-            >
-              <OSTooltip label={app_data.t(`${attributePath}.tooltips.${'value_label_unit_visible'}`) || t('Menu.common.show_background')}>
-                {app_data.t(`${attributePath}.${'value_label_unit_visible'}`) || t('Menu.common.background_visible')}
-                <TooltipElementOverloaded
-                  elements={base_elements}
-                  t={app_data.t}
-                  attributeKey={'unit_visible'}
-                  config={VALUE_LABEL_CONFIG}
-                  prefix={prefix}
-                />
-              </OSTooltip>
-            </Checkbox>
 
-            <ElementAttrSetterSelect2Cols
-              app_data={app_data}
-              attributePath={attributePath}
-              attributeKey={'unit_type'}
-              elements={elements}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix}
-              options={unit_constants.map(el => ({
-                key: 'value_' + el,
-                value: el,
-                label: app_data.t('Flux.labels.' + el)
-              }))}
-              refreshParentComponent={refreshParentComponent}
-            /></Box>
-
-          {/* Select pour unit tag (quand type = other_unit_tag) */}
-          {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
-            <ElementAttrSetterSelect2Cols
-              app_data={app_data}
-              elements={elements}
-              attributePath={attributePath}
-              attributeKey={'unit'}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix}
-              options={unit_tagg.tags_list.map(el => ({
-                key: 'value_' + el.id,
-                value: el.id,
-                label: el.name
-              }))}
-              refreshParentComponent={refreshParentComponent}
-            />
-          )}
-
-          {/* Text input et number input pour unit_name */}
-          {labelValues.unit_type == 'unit_name' && (
-            <Box layerStyle='options_2cols'>
-              <ElementAttrSetterTextInput2Cols
-                app_data={app_data}
-                elements={elements}
-                attributePath={attributePath}
-                attributeKey={'unit'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshParentComponent}
-              />
-              <ElementAttrSetterNumberInput2Cols
-                app_data={app_data}
-                elements={elements}
-                attributePath={attributePath}
-                attributeKey={'unit_factor'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshParentComponent}
-                stepper={false}
-              />
-            </Box>
-          )}
-          <Box layerStyle='menuconfigpanel_grid'>
-            <Box layerStyle='options_2cols'>
-              {/* Checkbox pour nombre de chiffres personnalisé avec input conditionnel */}
-              <ConditionalCheckboxWithInput
-                app_data={app_data}
-                elements={elements}
-                checkboxAttributeKey={'custom_digit'}
-                inputAttributeKey={'nb_digit'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshParentComponent}
-                minimum_value={0}
-                stepper={true}
-              />
-              {/* Checkbox simple pour notation scientifique */}
-              <SimpleElementCheckbox
-                elements={elements}
-                attributeKey={'scientific_notation'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshParentComponent}
-              />
-            </Box>
-            {/* Checkbox pour chiffres significatifs avec input conditionnel */}
-            <ConditionalCheckboxWithInput
-              app_data={app_data}
-              elements={elements}
-              checkboxAttributeKey={'significant_digits'}
-              inputAttributeKey={'nb_significant_digits'}
-              config={VALUE_LABEL_CONFIG}
-              prefix={prefix}
-              refreshParentComponent={refreshParentComponent}
-              minimum_value={0}
-              stepper={true}
-            />
-          </Box>
-        </Box></>
-      )}
 
       {displayMode === 'image' && (
         <>
@@ -609,99 +680,107 @@ const LabelContentComponent = ({
           </Box>
         </>
       )}
-      <Divider />
-      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.position_size_offsets')}</Box>
 
-      <Box layerStyle='options_2cols'>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.deb')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'left')}
-                onClick={() => { labelValues.horiz = 'left'; labelValues.horiz_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_align_left}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.milieu_h')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'middle')}
-                onClick={() => { labelValues.horiz = 'middle'; labelValues.horiz_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_align_center}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.fin')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix), labelValues.horiz === 'right')}
-                onClick={() => { labelValues.horiz = 'right'; labelValues.horiz_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_align_right}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix) ? t('Menu.common.multiple_values') : (labelValues.inside_horiz ? t('Menu.common.exterior') : t('Menu.common.interior'))}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
-                onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
-              >
-                {app_data.icon_library.icon_label_inside_horiz}
-              </Button>
-            </OSTooltip>
-          </Box>
-          <Box display="flex" gap={0}>
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'horiz'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'inside_horiz'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-          </Box>
+      <Box layerStyle='options_3cols'>
+        <Box layerStyle='options_4cols'>
+          <OverloadedButtonGroup
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributeKey="horiz"
+            currentValue={labelValues.horiz}
+            items={[
+              { value: 'left', icon: app_data.icon_library.icon_text_align_left },
+              { value: 'middle', icon: app_data.icon_library.icon_text_align_center },
+              { value: 'right', icon: app_data.icon_library.icon_text_align_right }
+            ]}
+            onChange={(value) => { labelValues.horiz = value; labelValues.horiz_shift = 0 }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'horiz', prefix)}
+            t={t}
+          />
+
+          <OverloadedButton
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributeKey="inside_horiz"
+            variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
+            onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
+            tooltipLabel={labelValues.inside_horiz ? t('Menu.common.exterior') : t('Menu.common.interior')}
+          >
+            {app_data.icon_library.icon_label_inside_horiz}
+          </OverloadedButton>
         </Box>
 
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box layerStyle='options_4cols'>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.dessous')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('left', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'bottom')}
-                onClick={() => { labelValues.vert = 'bottom'; labelValues.vert_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_vert_pos_bottom}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.milieu_v')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('center', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'middle')}
-                onClick={() => { labelValues.vert = 'middle'; labelValues.vert_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_vert_pos_center}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix) ? t('Menu.common.multiple_values') : app_data.t(attributePath + '.tooltips.dessus')}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('right', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix), labelValues.vert === 'top')}
-                onClick={() => { labelValues.vert = 'top'; labelValues.vert_shift = 0 }}
-              >
-                {app_data.icon_library.icon_text_vert_pos_top}
-              </Button>
-            </OSTooltip>
-            <OSTooltip label={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix) ? t('Menu.common.multiple_values') : (labelValues.inside_vert ? t('Menu.common.exterior') : t('Menu.common.interior'))}>
-              <Button
-                sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-                variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
-                onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
-              >
-                {app_data.icon_library.icon_label_inside_vert}
-              </Button>
-            </OSTooltip>
-          </Box>
-          <Box display="flex" gap={0}>
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'vert'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'inside_vert'} elements={elements} config={BASE_LABEL_CONFIG} t={app_data.t} />
-          </Box>
+        <Box layerStyle='options_4cols'>
+          <OverloadedButtonGroup
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributeKey="vert"
+            currentValue={labelValues.vert}
+            items={[
+              { value: 'bottom', icon: app_data.icon_library.icon_text_vert_pos_bottom },
+              { value: 'middle', icon: app_data.icon_library.icon_text_vert_pos_center },
+              { value: 'top', icon: app_data.icon_library.icon_text_vert_pos_top }
+            ]}
+            onChange={(value) => {
+              labelValues.vert = value
+              labelValues.vert_shift = 0
+            }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vert', prefix)}
+            t={t}
+          />
+
+          <OverloadedButton
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            prefix={prefix}
+            attributeKey="inside_vert"
+            variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
+            onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
+            tooltipLabel={labelValues.inside_vert ? t('Menu.common.exterior') : t('Menu.common.interior')}
+          >
+            {app_data.icon_library.icon_label_inside_vert}
+          </OverloadedButton>
         </Box>
+        {selection.hasLinks ? (
+          <>
+            {/* <Divider /> */}
+            {/* <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.link_label_position')}</Box> */}
+            {/* <Box display="flex" alignItems="center" gap={1}> */}
+            <Box layerStyle='options_3cols'>
+              <Box as='span'
+                layerStyle='menuconfigpanel_option_name'
+                display="flex"
+                alignItems="center">{t('Menu.sections.link_label_position')}</Box>
+              <OverloadedButton
+                elements={links_elements}
+                config={LINKS_LABEL_SPECIFIC_CONFIG}
+                prefix={prefix}
+                attributeKey="on_path"
+                variant={getButtonVariant('left', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
+                onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+                tooltipLabel={t('Menu.common.attribute_overloaded')}
+              >
+                {app_data.icon_library.icon_label_on_path}
+              </OverloadedButton>
+
+              <OverloadedButton
+                elements={links_elements}
+                config={LINKS_LABEL_SPECIFIC_CONFIG}
+                prefix={prefix}
+                attributeKey="pos_auto"
+                variant={getButtonVariant('right', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
+                onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+                tooltipLabel={t('Menu.common.attribute_overloaded')}
+              >
+                {app_data.icon_library.icon_label_auto_position}
+              </OverloadedButton>
+            </Box>
+            {/* </Box> */}
+          </>
+        ) : null}
       </Box>
 
       <Box layerStyle='options_2cols'>
@@ -714,6 +793,7 @@ const LabelContentComponent = ({
           prefix={prefix}
           refreshParentComponent={refreshParentComponent}
           unit_text='px'
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('horiz_shift') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
         <ElementAttrSetterNumberInput2Cols
           app_data={app_data}
@@ -724,6 +804,7 @@ const LabelContentComponent = ({
           prefix={prefix}
           refreshParentComponent={refreshParentComponent}
           unit_text='px'
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('vert_shift') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
       </Box>
 
@@ -737,37 +818,41 @@ const LabelContentComponent = ({
           prefix={prefix}
           refreshParentComponent={refreshParentComponent}
           unit_text='px'
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
         <></>
       </Box>
+      {(displayMode === 'simple_text' && selection.hasNodes && prefix !== 'value_label' || menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
+          <ElementAttrSetterTextInput2Cols
+            app_data={app_data}
+            elements={elements}
+            config={NAME_LABEL_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            attributeKey={'separator'}
+            refreshParentComponent={refreshParentComponent}
+            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('separator') as keyof typeof NAME_LABEL_CONFIG, NAME_LABEL_CONFIG)}
+          />
 
-      {selection.hasLinks ? <>
-        <Divider />
-        <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.link_label_position')}</Box>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box layerStyle='options_3cols'>
-
-            <Button
-              variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-              onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+        <OSTooltip label={app_data.t('Menu.tooltips.node_label_sep_pos')}>
+          <Box layerStyle='options_2cols'>
+            <Button variant={nodeLabelValues.separator_part == 'before' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+              onClick={() => {
+                nodeLabelValues.separator_part = 'before'
+              }}
             >
-              {app_data.icon_library.icon_label_on_path}
+              {app_data.t('Menu.before')}
             </Button>
-            <Button
-              variant={getButtonVariant('', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
-              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
-              onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+            <Button variant={nodeLabelValues.separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+              onClick={() => {
+                nodeLabelValues.separator_part = 'before'
+              }}
             >
-              {app_data.icon_library.icon_label_auto_position}
+              {app_data.t('Menu.after')}
             </Button>
           </Box>
-          <Box display="flex" gap={0}>
+        </OSTooltip></Box> : <></>}
 
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'on_path'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-            <TooltipElementOverloaded prefix={prefix} attributeKey={'pos_auto'} elements={links_elements} config={LINKS_LABEL_SPECIFIC_CONFIG} t={app_data.t} />
-          </Box>
-        </Box></> : <></>}
       <Divider />
       <MenuSectionCheckbox
         elements={elements}
@@ -776,9 +861,15 @@ const LabelContentComponent = ({
         config={BASE_SHAPE_CONFIG}
         prefix={`${prefix}_background` as ShapePrefix}
         refreshParentComponent={refreshParentComponent}
+        rightComponent={<ShapeTypeSelector
+          app_data={app_data}
+          elements={elements}
+          prefix={`${prefix}_background` as ShapePrefix}
+          attributePath={attributePath}
+          refreshUI={refreshParentComponent} />
+        }
       >
         {getShapeValues(elements, `${prefix}_background` as ShapePrefix, refreshParentComponent).visible && (<>
-          <ShapeTypeSelector app_data={app_data} elements={elements} prefix={`${prefix}_background` as ShapePrefix} attributePath={attributePath} refreshUI={refreshParentComponent} />
           <MarginEditor
             app_data={app_data}
             elements={elements}
@@ -791,7 +882,8 @@ const LabelContentComponent = ({
             attributePath={attributePath}
             prefix={`${prefix}_background` as ShapePrefix}
             refreshUI={refreshParentComponent}
-          /></>)}</MenuSectionCheckbox>
+          /></>)}
+      </MenuSectionCheckbox>
     </Box>
   )
 }
@@ -809,6 +901,7 @@ export const MenuConfigurationAppearance = ({
   const [, setCount] = useState(0)
   const { ref_selected_style } = menu_configuration
 
+  const display_mode_name_label = useRef<'simple_text' | 'rich_text' | 'value'>('simple_text')
   // ✅ State pour l'onglet actif : 5 onglets
   type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon'
   const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
@@ -962,7 +1055,14 @@ export const MenuConfigurationAppearance = ({
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
             <Box layerStyle='menu_sub_section'>
-              <ShapeTypeSelector app_data={app_data} elements={elements} prefix={'shape'} attributePath={'Noeud.apparence'} refreshUI={refreshAll} />
+              <Box as='span' layerStyle='options_2cols'>
+                <ShapeTypeSelector
+                  app_data={app_data}
+                  elements={elements}
+                  prefix={'shape'}
+                  attributePath={'Noeud.apparence'}
+                  refreshUI={refreshAll} />
+              </Box>
               <MenuShapeAttributes
                 app_data={app_data}
                 elements={elements}
@@ -977,28 +1077,32 @@ export const MenuConfigurationAppearance = ({
                       <Box as='span' layerStyle='menu_sub_section_title'
                         textStyle='title_sub_section'
                       >{!menu_for_style && selection.hasNodes ? `${t('Menu.sections.node_geometry')} (${selection.nodes.length})` : t('Menu.sections.node_geometry')}</Box>
-                      <ElementAttrSetterNumberInput2Cols
-                        app_data={app_data}
-                        elements={elements}
-                        attributePath='Noeud.apparence'
-                        attributeKey='min_width'
-                        prefix='shape'
-                        config={BASE_SHAPE_CONFIG}
-                        refreshParentComponent={refreshAll}
-                        unit_text='px'
-                        stepper={true}
-                      />
-                      <ElementAttrSetterNumberInput2Cols
-                        app_data={app_data}
-                        elements={elements}
-                        attributePath='Noeud.apparence'
-                        attributeKey='min_height'
-                        prefix='shape'
-                        config={BASE_SHAPE_CONFIG}
-                        refreshParentComponent={refreshAll}
-                        unit_text='px'
-                        stepper={true}
-                      />
+                      <Box as='span' layerStyle='options_2cols'>
+                        <ElementAttrSetterNumberInput2Cols
+                          app_data={app_data}
+                          elements={elements}
+                          attributePath='Noeud.apparence'
+                          attributeKey='min_width'
+                          prefix='shape'
+                          config={BASE_SHAPE_CONFIG}
+                          refreshParentComponent={refreshAll}
+                          unit_text='px'
+                          stepper={true}
+                          isOverloaded={isElementAttributeOverloaded(elements, 'shape_min_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                        />
+                        <ElementAttrSetterNumberInput2Cols
+                          app_data={app_data}
+                          elements={elements}
+                          attributePath='Noeud.apparence'
+                          attributeKey='min_height'
+                          prefix='shape'
+                          config={BASE_SHAPE_CONFIG}
+                          refreshParentComponent={refreshAll}
+                          unit_text='px'
+                          stepper={true}
+                          isOverloaded={isElementAttributeOverloaded(elements, 'shape_min_height' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                        />
+                      </Box>
                       <MarginEditor
                         app_data={app_data}
                         elements={elements}
@@ -1006,37 +1110,24 @@ export const MenuConfigurationAppearance = ({
                         refreshUI={refreshAll}
                       />
                       {selection.hasNodes ? <>
-                        <Divider />
-                        <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.node_options')}</Box>
-                        <OSTooltip label={t('Noeud.apparence.tooltips.geometry')}>
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                            <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
-                            <Box layerStyle='options_3cols'>
-                              {(['absolute', 'parametric', 'relative'] as Type_Position[]).map((type, idx) => (
-                                <Button
-                                  key={type}
-                                  variant={getButtonVariant(
-                                    idx === 0 ? 'left' : idx === 2 ? 'right' : 'center',
-                                    isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type'),
-                                    nodeShapeValues.position_type === type
-                                  )}
-                                  onClick={() => {
-                                    nodeShapeValues.position_type = type
-                                  }}
-                                >
-                                  {t(`Noeud.apparence.geometry_${type}`)}
-                                </Button>
-                              ))}
-                            </Box>
-                            <TooltipElementOverloaded
-                              elements={nodes_elements}
-                              t={t}
-                              attributeKey={'position_type'}
-                              config={NODE_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                            />
-                          </Box>
-                        </OSTooltip>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
+                          <OverloadedButtonGroup
+                            elements={nodes_elements}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            attributeKey="position_type"
+                            currentValue={nodeShapeValues.position_type}
+                            items={[
+                              { value: 'absolute' as Type_Position, label: t('Noeud.apparence.geometry_absolute'), icon: '' },
+                              { value: 'parametric' as Type_Position, label: t('Noeud.apparence.geometry_parametric'), icon: '' },
+                              { value: 'relative' as Type_Position, label: t('Noeud.apparence.geometry_relative'), icon: '' }
+                            ]}
+                            onChange={(value) => { nodeShapeValues.position_type = value }}
+                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
+                            t={t}
+                          />
+                        </Box>
                         {nodeShapeValues.position_type == 'parametric' ? <>
                           <ElementAttrSetterNumberInput2Cols
                             app_data={app_data}
@@ -1047,7 +1138,8 @@ export const MenuConfigurationAppearance = ({
                             prefix={'shape'}
                             refreshParentComponent={refreshAll}
                             unit_text='pixels'
-                            stepper={true} />
+                            stepper={true}
+                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dx' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} />
                           <ElementAttrSetterNumberInput2Cols
                             app_data={app_data}
                             config={NODE_SHAPE_SPECIFIC_CONFIG}
@@ -1057,23 +1149,23 @@ export const MenuConfigurationAppearance = ({
                             prefix={'shape'}
                             refreshParentComponent={refreshAll}
                             unit_text='pixels'
-                            stepper={true} /></> : <></>}
-                        <Checkbox
-                          {...getCheckboxProps(isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible'))}
-                          isChecked={nodeShapeValues.orphan_node_visible}
-                          onChange={(evt) => { nodeShapeValues.orphan_node_visible = evt.target.checked }}
-                        >
-                          <OSTooltip label={app_data.t(`${'Noeud.apparence'}.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}>
-                            {app_data.t(`${'Noeud.apparence'}.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
-                            <TooltipElementOverloaded
-                              elements={nodes_elements}
-                              t={t}
-                              attributeKey={'orphan_node_visible'}
-                              config={NODE_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                            />
-                          </OSTooltip>
-                        </Checkbox>
+                            stepper={true}
+                            isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
+                        <Box layerStyle='options_3cols'>
+                          <OverloadedCheckbox
+                            elements={nodes_elements}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            attributeKey="orphan_node_visible"
+                            isChecked={nodeShapeValues.orphan_node_visible}
+                            onChange={(checked) => { nodeShapeValues.orphan_node_visible = checked }}
+                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'orphan_node_visible')}
+                            tooltipLabel={t(`Noeud.apparence.tooltips.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                            t={t}
+                          >
+                            {t(`Noeud.apparence.${getNodeShapeAttributeKey('shape', 'orphan_node_visible')}`)}
+                          </OverloadedCheckbox>
+                        </Box>
                       </> : <></>
                       }
                       {selection.hasNodes ?
@@ -1100,179 +1192,154 @@ export const MenuConfigurationAppearance = ({
                       {selection.hasLinks || menu_for_style ?
                         <>
                           <Divider />
-                          <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                            <Box layerStyle='menuconfigpanel_option_name'>
-                              {app_data.t('Flux.apparence.shape_color_rule')}
-                              <TooltipElementOverloaded
-                                prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
-                              />
+                          <Box layerStyle='options_2cols'>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                              <Box layerStyle='menuconfigpanel_option_name'>
+                                {app_data.t('Flux.apparence.shape_color_rule')}
+                                <TooltipElementOverloaded
+                                  prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
+                                />
+                              </Box>
+                              <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+                                <Select
+                                  value={linkShapeValues.color_rule}
+                                  onChange={(evt) => {
+                                    linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
+                                  }}
+                                >
+                                  {app_data.menu_configuration.flow_color_origin_type.map(el => {
+                                    return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+                                  })}
+                                </Select>
+                              </OSTooltip>
                             </Box>
-                            <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
-                              <Select
-                                value={linkShapeValues.color_rule}
-                                onChange={(evt) => {
-                                  linkShapeValues.color_rule = evt.target.value as 'flow' | 'source' | 'target' | 'gradient' | 'auto'
-                                }}
+                            <Box layerStyle='menuconfigpanel_row_2cols'>
+                              <OverloadedCheckbox
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                attributeKey="is_arrow"
+                                isChecked={linkShapeValues.is_arrow}
+                                onChange={(checked) => { linkShapeValues.is_arrow = checked }}
+                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow')}
+                                tooltipLabel={t('Flux.apparence.tooltips.fleche')}
+                                t={t}
                               >
-                                {app_data.menu_configuration.flow_color_origin_type.map(el => {
-                                  return <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-                                })}
-                              </Select>
-                            </OSTooltip>
-                          </Box>
+                                {t('Flux.apparence.shape_is_arrow')}
+                              </OverloadedCheckbox>
+                              {linkShapeValues.is_arrow && (
+                                <InputGroup variant='menuconfigpanel_option_input'>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={linkShapeValues.arrow_size}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={1}
+                                    unit_text='px'
+                                    stepper={true}
+                                    function_on_blur={(value) => { linkShapeValues.arrow_size = value ?? linkShapeValues.arrow_size }}
+                                    multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
+                                  />
+                                </InputGroup>
+                              )}
+                            </Box></Box>
                         </> : <></>}
 
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box as='span' layerStyle='menuconfigpanel_option_name'>{t('Menu.sections.orientation')}</Box>
                         <Box layerStyle='options_5cols'>
-                          <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling')}>
-                            <Button
-                              variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
-                              onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
-                            >
-                              {icon_library.icon_orientation_recycle}
-                            </Button>
-                          </OSTooltip>
-                          {['hh', 'vv', 'vh', 'hv'].map((orientation, idx) => (
-                            <OSTooltip key={orientation} label={t(`Flux.apparence.tooltips.of_${orientation}`)}>
-                              <Button
-                                variant={getButtonVariant(
-                                  idx === 0 ? 'left' : idx === 3 ? 'right' : 'center',
-                                  isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation'),
-                                  linkShapeValues.orientation === orientation
-                                )}
-                                onClick={() => { linkShapeValues.orientation = orientation as Type_Orientation }}
-                              >
-                                {icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]}
-                              </Button>
-                            </OSTooltip>
-                          ))}
-                        </Box>
-                        <TooltipElementOverloaded
-                          elements={links_elements}
-                          t={t}
-                          attributeKey={'is_recycling'}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
-                        <TooltipElementOverloaded
-                          elements={links_elements}
-                          t={t}
-                          attributeKey={'orientation'}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                        />
-                      </Box>
-
-                      <Divider />
-                      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.shape')}</Box>
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Checkbox
-                          {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'))}
-                          isChecked={linkShapeValues.is_curved}
-                          onChange={(evt) => { linkShapeValues.is_curved = evt.target.checked }}
-                        >
-                          <OSTooltip label={t('Flux.apparence.tooltips.shape_is_curved')}>
-                            {t('Flux.apparence.shape_is_curved')}
-                            <TooltipElementOverloaded
-                              elements={links_elements}
-                              t={t}
-                              attributeKey={'is_curved'}
-                              config={LINK_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                            />
-                          </OSTooltip>
-                        </Checkbox>
-                        {linkShapeValues.is_curved && (
-                          <Select
-                            value={commonShapeValues.type}
-                            onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
-                          >
-                            {menu_configuration.shape_type.map(el => (
-                              <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
-                            ))}
-                          </Select>
-                        )}
-                      </Box>
-
-                      <Box layerStyle='menuconfigpanel_row_2cols'>
-                        <Checkbox
-                          {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'))}
-                          isChecked={linkShapeValues.is_arrow}
-                          onChange={(evt) => { linkShapeValues.is_arrow = evt.target.checked }}
-                        >
-                          <OSTooltip label={t('Flux.apparence.tooltips.fleche')}>
-                            {t('Flux.apparence.shape_is_arrow')}
-                            <TooltipElementOverloaded
-                              elements={links_elements}
-                              t={t}
-                              attributeKey={'is_arrow'}
-                              config={LINK_SHAPE_SPECIFIC_CONFIG}
-                              prefix={'shape'}
-                            />
-                          </OSTooltip>
-                        </Checkbox>
-                        {linkShapeValues.is_arrow && (
-                          <InputGroup variant='menuconfigpanel_option_input'>
-                            <ConfigMenuNumberInput
-                              t={t}
-                              default_value={linkShapeValues.arrow_size}
-                              menu_for_style={menu_for_style}
-                              minimum_value={1}
-                              unit_text='px'
-                              stepper={true}
-                              function_on_blur={(value) => { linkShapeValues.arrow_size = value ?? linkShapeValues.arrow_size }}
-                              multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
-                            />
-                          </InputGroup>
-                        )}
-                      </Box>
-                      <Divider />
-                      <Box as='span' textStyle='title_sub_section'>{t('Menu.sections.options')}</Box>
-                      <Checkbox
-                        {...getCheckboxProps(isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'))}
-                        isChecked={linkShapeValues.is_structure}
-                        onChange={(evt) => {
-                          linkShapeValues.is_structure = evt.target.checked
-                        }}>
-                        <OSTooltip label={t('Flux.apparence.tooltips.structure')}>
-                          {t('Flux.apparence.shape_is_structure')}
-                          <TooltipElementOverloaded
+                          <OverloadedButton
                             elements={links_elements}
-                            t={t}
-                            attributeKey={'is_structure'}
                             config={LINK_SHAPE_SPECIFIC_CONFIG}
                             prefix={'shape'}
-                          />
-                        </OSTooltip>
-                      </Checkbox>
+                            attributeKey="is_recycling"
+                            variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
+                            onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
+                            tooltipLabel={t('Flux.apparence.tooltips.shape_is_recycling')}
+                          >
+                            {icon_library.icon_orientation_recycle}
+                          </OverloadedButton>
 
-                      {/* Value of link local scale to override scale from DA, can be undefined */}
-                      <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                        <>
-                          <Box as='span' layerStyle='options_2cols' >
-                            <Box layerStyle='menuconfigpanel_option_name' >
-                              {t('Flux.apparence.shape_local_link_scale')}
-                              <TooltipElementOverloaded
-                                elements={links_elements}
+                          <OverloadedButtonGroup
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            attributeKey="orientation"
+                            currentValue={linkShapeValues.orientation}
+                            items={['hh', 'vv', 'vh', 'hv'].map(orientation => ({
+                              value: orientation as Type_Orientation,
+                              icon: icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]
+                            }))}
+                            onChange={(value) => { linkShapeValues.orientation = value }}
+                            getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation')}
+                            t={t}
+                          />
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+
+                          <OverloadedCheckbox
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            attributeKey="is_curved"
+                            isChecked={linkShapeValues.is_curved}
+                            onChange={(checked) => { linkShapeValues.is_curved = checked }}
+                            getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved')}
+                            tooltipLabel={t('Flux.apparence.tooltips.shape_is_curved')}
+                            t={t}
+                          >
+                            {t('Flux.apparence.shape_is_curved')}
+                          </OverloadedCheckbox>
+                          {linkShapeValues.is_curved && (
+                            <Select
+                              value={commonShapeValues.type}
+                              onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
+                            >
+                              {menu_configuration.shape_type.map(el => (
+                                <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
+                              ))}
+                            </Select>
+                          )}
+                        </Box>
+                      </Box>
+
+
+                      <Box as='span' layerStyle='options_2cols'>
+                        <OverloadedCheckbox
+                          elements={links_elements}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          prefix={'shape'}
+                          attributeKey="is_structure"
+                          isChecked={linkShapeValues.is_structure}
+                          onChange={(checked) => { linkShapeValues.is_structure = checked }}
+                          getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure')}
+                          tooltipLabel={t('Flux.apparence.tooltips.structure')}
+                          t={t}
+                        >
+                          {t('Flux.apparence.shape_is_structure')}
+                        </OverloadedCheckbox>
+
+                        {/* Value of link local scale to override scale from DA, can be undefined */}
+                        <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                          <>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                              <Box layerStyle='menuconfigpanel_option_name' >
+                                {t('Flux.apparence.shape_local_link_scale')}
+                              </Box>
+                              <ConfigMenuNumberInput
+                                default_value={linkShapeValues.local_link_scale}
+                                function_on_blur={(_) => {
+                                  linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                                }}
+                                minimum_value={0}
+                                stepper={true}
+                                step={1}
                                 t={t}
-                                attributeKey={'local_link_scale'}
-                                config={LINK_SHAPE_SPECIFIC_CONFIG}
-                                prefix={'shape'}
+                                isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
                               />
                             </Box>
-                            <ConfigMenuNumberOrUndefinedInput
-                              default_value={linkShapeValues.local_link_scale}
-                              function_on_blur={(_) => {
-                                linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                              }}
-                              minimum_value={0}
-                              stepper={true}
-                              step={1}
-                            />
-                          </Box>
-                        </>
-                      </OSTooltip>
+
+                          </>
+                        </OSTooltip>
+                      </Box>
                     </Box>
                   </Box>
                 )}
@@ -1325,12 +1392,22 @@ export const MenuConfigurationAppearance = ({
               config={NAME_LABEL_CONFIG}
               prefix={'name_label'}
               refreshParentComponent={refreshAll}
+              rightComponent={<LabelDisplayModeSelector
+                prefix='name_label'
+                app_data={app_data}
+                labelValues={nameLabelValues}
+                t={t}
+                display_mode_name_label={display_mode_name_label}
+                refreshAll={refreshAll}
+              />
+              }
             >
               {nameLabelValues.is_visible && (
                 <LabelContentComponent
                   app_data={app_data}
                   elements={elements}
                   prefix={'name_label'}
+                  displayMode={display_mode_name_label.current}
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
                 />
@@ -1352,6 +1429,7 @@ export const MenuConfigurationAppearance = ({
                   app_data={app_data}
                   elements={elements}
                   prefix={'value_label'}
+                  displayMode='value'
                   menu_style={menu_for_style}
                   refreshParentComponent={refreshAll}
                 />
@@ -1367,21 +1445,33 @@ export const MenuConfigurationAppearance = ({
               config={ICON_LABEL_BASE_CONFIG}
               prefix={'icon'}
               refreshParentComponent={refreshAll}
+              rightComponent={<LabelDisplayModeSelector
+                prefix='icon'
+                app_data={app_data}
+                labelValues={iconValues}
+                refreshAll={refreshAll}
+                display_mode_name_label={display_mode_name_label}
+                t={t}
+              />}
             >
-              {iconValues.is_visible && (
-                <LabelContentComponent
-                  app_data={app_data}
-                  elements={elements}
-                  prefix={'icon'}
-                  menu_style={menu_for_style}
-                  refreshParentComponent={refreshAll}
-                />
-              )}
+              {
+                iconValues.is_visible && (
+                  <LabelContentComponent
+                    app_data={app_data}
+                    elements={elements}
+                    prefix={'icon'}
+                    displayMode={iconValues.is_icon ? 'icon' : 'image'}
+                    menu_style={menu_for_style}
+                    refreshParentComponent={refreshAll}
+                  />
+                )
+              }
             </MenuSectionCheckbox>
           )}
         </>
-      )}
-    </Box>
+      )
+      }
+    </Box >
   )
 }
 
@@ -1396,14 +1486,11 @@ interface MenuShapeAttributesProps {
 export const MenuShapeAttributes = ({
   app_data, elements, attributePath, prefix, refreshUI
 }: MenuShapeAttributesProps) => {
-  const { t, icon_library } = app_data
-  const { icon_locked, icon_unlocked } = icon_library
+  const { t } = app_data
 
   if (!elements || !attributePath || !prefix || !refreshUI) return <></>
 
-  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const config = BASE_SHAPE_CONFIG
-  const base_elements = elements as Class_NodeElement[] | Class_LinkElement[] | Class_ContainerElement[]
 
   const shapeValues = elements.length > 0
     ? getShapeValues(elements, prefix, refreshUI)
@@ -1412,47 +1499,61 @@ export const MenuShapeAttributes = ({
     ) as {
       -readonly [K in keyof typeof config]: ReturnType<(typeof config)[K]['type']>
     }
-  const linkShapeValues = elements.length > 0
-    ? getLinkShapeValues(elements, refreshUI)
-    : Object.fromEntries(Object.entries(LINK_SHAPE_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])) as {
-      -readonly [K in keyof typeof LINK_SHAPE_SPECIFIC_CONFIG]:
-      ReturnType<(typeof LINK_SHAPE_SPECIFIC_CONFIG)[K]['type']>
-    }
-
-  const selection = analyzeSelection(base_elements)
 
   return (
     <>
       <Box layerStyle='menuconfigpanel_grid'>
         <Box as='span' layerStyle='options_2cols'>
-          <Checkbox
-            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
-            isChecked={shapeValues.color_visible}
-            onChange={(evt) => {
-              shapeValues.color_visible = evt.target.checked
-            }}
-          >
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`) || t('Menu.common.show_background')}>
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`) || t('Menu.common.background_visible')}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'color_visible'}
-                config={config}
-                prefix={prefix} />
-            </OSTooltip>
-          </Checkbox>
-          <ColorPickerWithSustainable
-            app_data={app_data}
-            elements={elements}
-            config={BASE_SHAPE_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            colorAttributeKey="color"
-            sustainableAttributeKey="color_sustainable"
-            refreshParentComponent={refreshUI}
-          />
-
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <OverloadedCheckbox
+              elements={elements}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              attributeKey="color_visible"
+              isChecked={shapeValues.color_visible}
+              onChange={(checked) => { shapeValues.color_visible = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'color_visible')}
+              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'color_visible')}`)}
+              t={t}
+            >
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'color_visible')}`)}
+            </OverloadedCheckbox>
+            <ColorPickerWithSustainable
+              app_data={app_data}
+              elements={elements}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              attributePath={attributePath}
+              colorAttributeKey="color"
+              sustainableAttributeKey="color_sustainable"
+              refreshParentComponent={refreshUI}
+            />
+          </Box>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <OverloadedCheckbox
+              elements={elements}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              attributeKey="border_visible"
+              isChecked={shapeValues.border_visible}
+              onChange={(checked) => { shapeValues.border_visible = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_visible')}
+              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`)}
+              t={t}
+            >
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`)}
+            </OverloadedCheckbox>
+            <ColorPickerWithSustainable
+              app_data={app_data}
+              elements={elements}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              attributePath={attributePath}
+              colorAttributeKey="border_color"
+              sustainableAttributeKey="border_color_sustainable"
+              refreshParentComponent={refreshUI}
+            />
+          </Box>
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>
@@ -1469,7 +1570,8 @@ export const MenuShapeAttributes = ({
             minimum_value={0}
             maximum_value={1}
             step={0.1}
-            stepper={true} />
+            stepper={true}
+            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('opacity') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
           {/* Radius */}
           <ElementAttrSetterNumberInput2Cols
             app_data={app_data}
@@ -1482,39 +1584,8 @@ export const MenuShapeAttributes = ({
             unit_text='px'
             minimum_value={0}
             maximum_value={20}
-            stepper={true} />
-        </Box>
-
-        {/* Bordure visible + Couleur */}
-        <Box as='span' layerStyle='options_2cols'>
-          <Checkbox
-            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_visible'))}
-            isChecked={shapeValues.border_visible}
-            onChange={(evt) => {
-              shapeValues.border_visible = evt.target.checked
-            }}
-          >
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_visible')}`) || t('Menu.common.show_border')}>
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_visible')}`) || t('Menu.common.border_visible')}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'border_visible'}
-                config={config}
-                prefix={prefix} />
-            </OSTooltip>
-          </Checkbox>
-          <ColorPickerWithSustainable
-            app_data={app_data}
-            elements={elements}
-            config={BASE_SHAPE_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            colorAttributeKey="border_color"
-            sustainableAttributeKey="border_color_sustainable"
-            refreshParentComponent={refreshUI}
-          />
-
+            stepper={true}
+            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_radius') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
         </Box>
 
         <Box as='span' layerStyle='options_2cols'>
@@ -1530,26 +1601,24 @@ export const MenuShapeAttributes = ({
             unit_text='px'
             minimum_value={0}
             maximum_value={20}
-            stepper={true} />
+            stepper={true}
+            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
 
-          {/* Pointillés */}
-          <Checkbox
-            {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'border_dashed'))}
-            isChecked={shapeValues.border_dashed}
-            onChange={(evt) => {
-              shapeValues.border_dashed = evt.target.checked
-            }}
-          >
-            <OSTooltip label={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}>
+          <Box as='span' layerStyle='options_2cols'>
+            <OverloadedCheckbox
+              elements={elements}
+              config={config}
+              prefix={prefix}
+              attributeKey="border_dashed"
+              isChecked={shapeValues.border_dashed}
+              onChange={(checked) => { shapeValues.border_dashed = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
+              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              t={t}
+            >
               {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-              <TooltipElementOverloaded
-                elements={base_elements}
-                t={t}
-                attributeKey={'border_dashed'}
-                config={config}
-                prefix={prefix} />
-            </OSTooltip>
-          </Checkbox>
+            </OverloadedCheckbox>
+          </Box>
           <Box />
         </Box>
       </Box>
@@ -1587,29 +1656,20 @@ export const ShapeTypeSelector = ({
 
   return (
     <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='options_3cols'>
-          {shapeTypes.map(({ value, position, icon }) => (
-            <Button
-              key={value}
-              variant={getButtonVariant(
-                position,
-                isShapeValueIndeterminate(elements, prefix, 'type'),
-                shapeValues.type === value
-              )}
-              onClick={() => { shapeValues.type = value }}
-            >
-              {icon}
-            </Button>
-          ))}
-        </Box>
-        <TooltipElementOverloaded
-          elements={elements}
-          t={t}
-          attributeKey={'type'}
-          config={BASE_SHAPE_CONFIG}
-          prefix={prefix}
-        />
+      <Box layerStyle='options_3cols'>
+        {shapeTypes.map(({ value, position, icon }) => (
+          <Button
+            key={value}
+            variant={getButtonVariant(
+              position,
+              isShapeValueIndeterminate(elements, prefix, 'type'),
+              shapeValues.type === value
+            )}
+            onClick={() => { shapeValues.type = value }}
+          >
+            {icon}
+          </Button>
+        ))}
       </Box>
     </OSTooltip>
   )
@@ -1629,28 +1689,38 @@ export const MarginEditor = ({
 }) => {
   const { t } = app_data
   const [editMarginsUnified, setEditMarginsUnified] = useState(true)
-  const config = NODE_SHAPE_SPECIFIC_CONFIG
+  const config = BASE_SHAPE_CONFIG
   const shapeValues = elements.length > 0
-    ? getConfigValues(elements, NODE_SHAPE_SPECIFIC_CONFIG, prefix, refreshUI)
+    ? getConfigValues(elements, BASE_SHAPE_CONFIG, prefix, refreshUI)
     : Object.fromEntries(
       Object.entries(config).map(([key, value]) => [key, value.default])
     ) as {
       -readonly [K in keyof typeof config]: ReturnType<(typeof config)[K]['type']>
     }
 
+  const attributePath = prefix.includes('_background') ? 'Noeud.labels' : 'Noeud.apparence'
+
   return (
     <>
-      <Box as='span' layerStyle='options_2cols'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
+      <Box as='span' layerStyle='options_3cols'>
+        <OverloadedCheckbox
+          elements={elements}
+          config={BASE_SHAPE_CONFIG}
+          prefix={prefix as any}
+          attributeKey="margin_left"  // On utilise margin_left comme représentant
           isChecked={!editMarginsUnified}
-          onChange={(evt) => setEditMarginsUnified(!evt.target.checked)}
+          onChange={(checked) => setEditMarginsUnified(!checked)}
+          getIsIndeterminate={() =>
+            isConfigValueIndeterminate(elements, BASE_SHAPE_CONFIG, 'margin_left', prefix) ||
+            isConfigValueIndeterminate(elements, BASE_SHAPE_CONFIG, 'margin_right', prefix) ||
+            isConfigValueIndeterminate(elements, BASE_SHAPE_CONFIG, 'margin_top', prefix) ||
+            isConfigValueIndeterminate(elements, BASE_SHAPE_CONFIG, 'margin_bottom', prefix)
+          }
+          tooltipLabel={t('Noeud.apparence.tooltips.shape_margin')}
+          t={t}
         >
-          <OSTooltip label={t('Noeud.apparence.tooltips.shape_margin')}>
-            <Box>{t('Noeud.apparence.shape_margin')}</Box>
-          </OSTooltip>
-        </Checkbox>
-
+          {t('Noeud.apparence.shape_margin')}
+        </OverloadedCheckbox>
         {editMarginsUnified && (
           <OSTooltip label={t('Noeud.apparence.tooltips.shape_margin')} placement='left'>
             <ConfigMenuNumberInput
@@ -1666,6 +1736,7 @@ export const MarginEditor = ({
               }}
               minimum_value={0}
               stepper={true}
+              unit_text='px'
             />
           </OSTooltip>
         )}
@@ -1673,68 +1744,78 @@ export const MarginEditor = ({
 
       {!editMarginsUnified && (
         <>
-          <OSTooltip label={t('Noeud.apparence.tooltips.shape_margin_left')} placement='left'>
-            <Box as='span' layerStyle='options_2cols'>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>
-                  {t('Noeud.apparence.shape_margin_left')}
-                </Box>
-                <ConfigMenuNumberInput
-                  t={t}
-                  default_value={shapeValues.margin_left}
-                  function_on_blur={(value: number | null) => {
-                    if (value !== null) shapeValues.margin_left = value
-                  }}
-                  minimum_value={0}
-                  stepper={true}
-                />
-              </Box>
-              <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                <Box layerStyle='menuconfigpanel_option_name'>
-                  {t('Noeud.apparence.shape_margin_right')}
-                </Box>
-                <ConfigMenuNumberInput
-                  t={t}
-                  default_value={shapeValues.margin_right}
-                  function_on_blur={(value: number | null) => {
-                    if (value !== null) shapeValues.margin_right = value
-                  }}
-                  minimum_value={0}
-                  stepper={true}
-                />
-              </Box>
-            </Box>
-          </OSTooltip>
+          <Box as='span' layerStyle='options_2cols'>
+            <ElementAttrSetterNumberInput2Cols
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              attributeKey={'margin_left'}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              refreshParentComponent={refreshUI}
+              unit_text='px'
+              minimum_value={0}
+              stepper={true}
+              isOverloaded={isElementAttributeOverloaded(
+                elements,
+                prefix + '_margin_left' as keyof typeof BASE_SHAPE_CONFIG,
+                BASE_SHAPE_CONFIG
+              )}
+            />
+            <ElementAttrSetterNumberInput2Cols
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              attributeKey={'margin_right'}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              refreshParentComponent={refreshUI}
+              unit_text='px'
+              minimum_value={0}
+              stepper={true}
+              isOverloaded={isElementAttributeOverloaded(
+                elements,
+                prefix + '_margin_right' as keyof typeof BASE_SHAPE_CONFIG,
+                BASE_SHAPE_CONFIG
+              )}
+            />
+          </Box>
 
           <Box as='span' layerStyle='options_2cols'>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Noeud.apparence.shape_margin_top')}
-              </Box>
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={shapeValues.margin_top}
-                function_on_blur={(value: number | null) => {
-                  if (value !== null) shapeValues.margin_top = value
-                }}
-                minimum_value={0}
-                stepper={true}
-              />
-            </Box>
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Noeud.apparence.shape_margin_bottom')}
-              </Box>
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={shapeValues.margin_bottom}
-                function_on_blur={(value: number | null) => {
-                  if (value !== null) shapeValues.margin_bottom = value
-                }}
-                minimum_value={0}
-                stepper={true}
-              />
-            </Box>
+            <ElementAttrSetterNumberInput2Cols
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              attributeKey={'margin_top'}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              refreshParentComponent={refreshUI}
+              unit_text='px'
+              minimum_value={0}
+              stepper={true}
+              isOverloaded={isElementAttributeOverloaded(
+                elements,
+                prefix + '_margin_top' as keyof typeof BASE_SHAPE_CONFIG,
+                BASE_SHAPE_CONFIG
+              )}
+            />
+            <ElementAttrSetterNumberInput2Cols
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              attributeKey={'margin_bottom'}
+              config={BASE_SHAPE_CONFIG}
+              prefix={prefix}
+              refreshParentComponent={refreshUI}
+              unit_text='px'
+              minimum_value={0}
+              stepper={true}
+              isOverloaded={isElementAttributeOverloaded(
+                elements,
+                prefix + '_margin_bottom' as keyof typeof BASE_SHAPE_CONFIG,
+                BASE_SHAPE_CONFIG
+              )}
+            />
           </Box>
         </>
       )}
@@ -1782,9 +1863,8 @@ export const missing_menu_translations = {
           icon_color: 'Icon color',
           image_source: 'Image source',
           position_size_offsets: 'Position, size and offsets',
-          link_label_position: 'Link label position',
+          link_label_position: 'Link',
           node_geometry: 'Node shape',
-          node_options: 'Node options',
           link_geometry: 'Link shape',
           orientation: 'Orientation',
           shape: 'Shape',
@@ -1833,10 +1913,9 @@ export const missing_menu_translations = {
           icon_color: 'Couleur icône',
           image_source: 'Source image',
           position_size_offsets: 'Position, taille et décalages',
-          link_label_position: 'Position Label Flux',
-          node_geometry: 'Forme Nœuds et Formes',
-          node_options: 'Options Noeuds',
-          link_geometry: 'Forme Flux',
+          link_label_position: 'Flux',
+          node_geometry: 'Nœuds',
+          link_geometry: 'Flux',
           orientation: 'Orientation',
           shape: 'Forme',
           options: 'Options',
@@ -1870,7 +1949,7 @@ export const missing_node_labels_translations = {
         labels: {
           value_label_is_visible: 'Value label',
           icon_is_visible: 'Icon',
-          value_label_unit_visible: 'Show unit',
+          value_label_unit_visible: 'Unit',
 
           tooltips: {
             left_align: 'Align left',
@@ -1892,9 +1971,9 @@ export const missing_node_labels_translations = {
     translation: {
       Noeud: {
         labels: {
-          value_label_is_visible: 'Label valeur',
+          value_label_is_visible: 'Valeur',
           icon_is_visible: 'Icône',
-          value_label_unit_visible: 'Afficher l\'unité',
+          value_label_unit_visible: 'Unité',
 
           tooltips: {
             left_align: 'Aligner à gauche',
@@ -1947,8 +2026,8 @@ export const missing_node_apparence_translations = {
       Noeud: {
         apparence: {
           shape_visible: 'Forme',
-          shape_min_width: 'Largeur minimale',
-          shape_min_height: 'Hauteur minimale',
+          shape_min_width: 'Largeur',
+          shape_min_height: 'Hauteur',
           shape_margin: 'Marges séparées',
           shape_margin_left: 'Gauche',
           shape_margin_right: 'Droite',

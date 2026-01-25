@@ -159,7 +159,7 @@ export const MenuSectionCheckbox = <
   K extends keyof CONFIG
 >({
   elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent, children
+  prefix = '', refreshParentComponent, children, rightComponent
 }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
@@ -168,36 +168,48 @@ export const MenuSectionCheckbox = <
   prefix?: string
   refreshParentComponent: () => void
   children: React.ReactNode
+  rightComponent?: React.ReactNode  // ✅ Nouveau paramètre optionnel
 }>) => {
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
   const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
+  const fullAttributeKey = `${prefix}_${String(attributeKey)}` as keyof typeof config
+
   return (
     <Box layerStyle='menu_sub_section'>
-      <Box layerStyle='menu_sub_section_head'>
-        <Checkbox
-          isIndeterminate={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
-          variant='menuconfigpanel_part_title_1_checkbox'
-          icon={<CustomFaEyeCheckIcon />}
-          isChecked={attribute_values[attributeKey] as boolean}
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-            attribute_values[attributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
-          }}
-        >
-          <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
-            {t(`${String(attributePath)}.${fullKey}`) + ' '}
-          </OSTooltip>
-          <TooltipElementOverloaded
-            attributeKey={attributeKey}
-            config={config}
-            prefix={prefix}
-            elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-            t={t}
-          />
-        </Checkbox>
-      </Box>
       <Box
-        layerStyle='menuconfigpanel_grid'
+        layerStyle='menu_sub_section_head'
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"  // ✅ Espace entre checkbox et rightComponent
+        gap={2}
       >
+        <InputIndicatorWrapper
+          isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
+          isMultiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
+          t={t}
+        >
+          <Checkbox
+            variant='menuconfigpanel_part_title_1_checkbox'
+            icon={<CustomFaEyeCheckIcon />}
+            isChecked={attribute_values[attributeKey] as boolean}
+            onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+              attribute_values[attributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
+            }}
+          >
+            <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullKey}`)}>
+              {t(`${String(attributePath)}.${fullKey}`)}
+            </OSTooltip>
+          </Checkbox>
+        </InputIndicatorWrapper>
+
+        {/* ✅ Composant optionnel à droite */}
+        {rightComponent && (
+          <Box flexShrink={0}>
+            {rightComponent}
+          </Box>
+        )}
+      </Box>
+      <Box layerStyle='menuconfigpanel_grid'>
         {children}
       </Box>
     </Box>
@@ -404,10 +416,9 @@ export const ElementAttrSetter2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  elements, attributePath, attributeKey, config,
-  prefix = '', t, showTooltipOverload = true, children
+  attributePath, attributeKey,
+  prefix = '', t, children
 }: React.PropsWithChildren<{
-  elements: (Class_LinkElement | Class_NodeBase | Class_ElementStyle)[]; // Éléments pour vérifier l'overload
   attributePath: string,
   attributeKey: K
   config: CONFIG
@@ -427,15 +438,6 @@ export const ElementAttrSetter2Cols = <
         <BOX2COLS>
           <Box layerStyle='menuconfigpanel_option_name'>
             {label}
-            {showTooltipOverload && (
-              <TooltipElementOverloaded
-                attributeKey={attributeKey}
-                elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-                t={t}
-                config={config}
-                prefix={prefix}
-              />
-            )}
           </Box>
           {children}
         </BOX2COLS>
@@ -480,8 +482,7 @@ export const ElementAttrSetterSelect2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
-      t={t}
-      elements={elements}>
+      t={t}>
       <Select
         value={attribute_values[attributeKey] as string}
         onChange={(evt) => {
@@ -517,7 +518,7 @@ export const ElementAttrSetterTextInput2Cols = <
   K extends keyof CONFIG
 >({
   app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent
+  prefix = '', refreshParentComponent,isOverloaded
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -526,6 +527,7 @@ export const ElementAttrSetterTextInput2Cols = <
   config: CONFIG,
   prefix?: string,
   refreshParentComponent: () => void
+  isOverloaded: boolean
 }) => {
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
@@ -535,15 +537,16 @@ export const ElementAttrSetterTextInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
-      t={t}
-      elements={elements}>
+      t={t}>
       <ConfigMenuTextInput
+        t={t}
         default_value={attribute_values[attributeKey] as string}
         function_on_blur={(value) => {
           attribute_values[attributeKey] = (value ?? '') as ExtractConfigValue<CONFIG[K]>
         }}
         menu_for_style={menu_for_style}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
+        isOverloaded={isOverloaded}
       />
     </ElementAttrSetter2Cols>
   )
@@ -560,7 +563,7 @@ export const ElementAttrSetterNumberInput2Cols = <
 >({
   app_data, elements, attributePath, attributeKey, config,
   prefix, refreshParentComponent = () => null,
-  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text
+  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text, isOverloaded
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
@@ -574,7 +577,8 @@ export const ElementAttrSetterNumberInput2Cols = <
   step?: number
   stepper?: boolean
   percent?: boolean,
-  unit_text?: string
+  unit_text?: string,
+  isOverloaded: boolean
 }) => {
 
   const { menu_for_style, t } = useElementAttributeConfig<CONFIG>(app_data, elements)
@@ -586,8 +590,7 @@ export const ElementAttrSetterNumberInput2Cols = <
       attributeKey={attributeKey}
       config={config}
       prefix={prefix}
-      t={t}
-      elements={elements}>
+      t={t}>
       <ConfigMenuNumberInput
         t={t}
         default_value={percent ? +attribute_values[attributeKey] * 100 : +attribute_values[attributeKey]}
@@ -601,6 +604,8 @@ export const ElementAttrSetterNumberInput2Cols = <
         step={step}
         stepper={stepper}
         multiValue={isConfigValueIndeterminate(elements, config, attributeKey, prefix)}
+        isOverloaded={isOverloaded}
+
       />
     </ElementAttrSetter2Cols>
   )
@@ -730,7 +735,224 @@ export const TooltipElementOverloaded = <
     <>{TooltipValueSurcharge('el_var_', t)}</>
   ) : <></>
 }
+// ==================================================================================================
+// COMPOSANTS RÉUTILISABLES POUR BOUTONS AVEC INDICATEUR D'OVERLOAD
+// ==================================================================================================
 
+/**
+ * Bouton unique avec indicateur d'overload intégré
+ */
+interface OverloadedButtonProps {
+  elements: ElementsType
+  config: any
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  attributeKey: string
+  variant: string
+  onClick: () => void
+  tooltipLabel: string
+  children: React.ReactNode
+}
+
+export const OverloadedButton = ({
+  elements,
+  config,
+  prefix,
+  attributeKey,
+  variant,
+  onClick,
+  tooltipLabel,
+  children
+}: React.PropsWithChildren<OverloadedButtonProps>) => {
+  const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
+
+  return (
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
+      tooltipLabel={tooltipLabel}
+    >
+      <OSTooltip label={tooltipLabel}>
+        <Button
+          variant={variant}
+          onClick={onClick}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+        >
+          {children}
+        </Button>
+      </OSTooltip>
+    </OverloadIndicatorWrapper>
+  )
+}
+
+/**
+ * Groupe de boutons générés en boucle avec indicateurs d'overload
+ */
+interface ButtonGroupItem<T = string> {
+  value: T
+  icon: React.ReactNode
+  label?: string
+}
+
+interface OverloadedButtonGroupProps<T = string> {
+  elements: ElementsType
+  config: any
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  attributeKey: string
+  currentValue: T
+  items: ButtonGroupItem<T>[]
+  onChange: (value: T) => void
+  getIsIndeterminate: () => boolean
+  t: (key: string) => string
+}
+
+export const OverloadedButtonGroup = <T extends string>({
+  elements,
+  config,
+  prefix,
+  attributeKey,
+  currentValue,
+  items,
+  onChange,
+  getIsIndeterminate,
+  t
+}: OverloadedButtonGroupProps<T>) => {
+  const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
+  const isOverloaded = isElementAttributeOverloaded(elements, fullAttributeKey, config)
+
+  return (
+    <OverloadIndicatorWrapper
+      isOverloaded={isOverloaded}
+      tooltipLabel={t('Menu.common.attribute_overloaded')}
+    >
+      <Box layerStyle={`options_${items.length}cols`}>
+        {items.map((item, idx) => {
+          const position =
+            items.length === 2 ? (idx === 0 ? 'left' : 'right') :
+              items.length === 3 ? (idx === 0 ? 'left' : idx === 2 ? 'right' : 'center') :
+                items.length === 4 ? (idx === 0 ? 'left' : idx === 3 ? 'right' : 'center') :
+                  items.length === 5 ? (idx === 0 ? 'left' : idx === 4 ? 'right' : 'center') :
+                    ''
+
+          // Déterminer le contenu du bouton : icône ou label
+          const buttonContent = item.icon || item.label || String(item.value)
+
+          return (
+            <Button
+              key={String(item.value)}
+              variant={getButtonVariant(
+                position as any,
+                getIsIndeterminate(),
+                currentValue === item.value
+              )}
+              onClick={() => onChange(item.value)}
+              sx={{
+                padding: '4px',
+                minWidth: 'auto',
+                height: 'auto',
+                ...(item.icon ? { '& svg': { width: '16px', height: '16px' } } : {})
+              }}
+            >
+              {buttonContent}
+            </Button>
+          )
+        })}
+      </Box>
+    </OverloadIndicatorWrapper>
+  )
+}
+
+/**
+ * Checkbox avec indicateur d'overload intégré
+ */
+/**
+ * Bouton stylisé comme une checkbox avec indicateur d'overload intégré
+ * Utilise les styles menuconfigpanel_option_button pour un look uniforme
+ */
+interface OverloadedCheckboxProps {
+  elements: ElementsType
+  config: any
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  attributeKey: string
+  isChecked: boolean
+  onChange: (checked: boolean) => void
+  getIsIndeterminate: () => boolean
+  tooltipLabel?: string
+  children: React.ReactNode
+  t: (key: string) => string
+}
+
+export const OverloadedCheckbox = ({
+  elements,
+  config,
+  prefix,
+  attributeKey,
+  isChecked,
+  onChange,
+  getIsIndeterminate,
+  tooltipLabel,
+  children,
+  t
+}: React.PropsWithChildren<OverloadedCheckboxProps>) => {
+  const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
+
+  return (
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
+      tooltipLabel={t('Menu.common.attribute_overloaded')}
+    >
+      <Button
+        variant={isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+        onClick={() => onChange(!isChecked)}
+        sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+      >
+        {tooltipLabel ? (
+          <OSTooltip label={tooltipLabel}>
+            {children}
+          </OSTooltip>
+        ) : children}
+      </Button>
+    </OverloadIndicatorWrapper>
+  )
+}
+
+/**
+ * Wrapper qui ajoute un indicateur visuel subtil quand un attribut est overloadé
+ * Peut wrapper n'importe quel élément (boutons, inputs, etc.)
+ */
+export const OverloadIndicatorWrapper = ({
+  isOverloaded,
+  children,
+  tooltipLabel
+}: React.PropsWithChildren<{
+  isOverloaded: boolean
+  children: React.ReactNode
+  tooltipLabel?: string
+}>) => {
+  if (!isOverloaded) {
+    return <>{children}</>
+  }
+
+  return (
+    <OSTooltip label={tooltipLabel!} placement='top'>
+      <Box
+        position='relative'
+        display='inline-flex'
+        sx={{
+          '& > *': {
+            boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
+            borderRadius: '6px',
+            transition: 'box-shadow 0.2s'
+          },
+          '&:hover > *': {
+            boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
+          },
+          cursor: 'help'
+        }}
+      >
+        {children}
+      </Box>
+    </OSTooltip>
+  )
+}
 
 export const ConditionalCheckboxWithInput = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
@@ -748,146 +970,50 @@ export const ConditionalCheckboxWithInput = <
   refreshParentComponent: () => void,
   minimum_value?: number,
   stepper?: boolean,
-  children?: React.ReactNode
+  children?: React.ReactNode  // ✅ Ajouter ce paramètre
 }) => {
   const { t, menu_for_style } = useElementAttributeConfig<CONFIG>(app_data, elements)
   const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  //const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
-  const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
-  const fullKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
+
+  const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey)) as keyof typeof config
+  const fullCheckboxKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
   const layoutStyle = 'menuconfigpanel_row_2cols'
 
   return (
     <Box as='span' layerStyle={layoutStyle}>
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
+      <OverloadedCheckbox
+        elements={elements}
+        config={config}
+        prefix={prefix as any}
+        attributeKey={String(checkboxAttributeKey)}
         isChecked={attribute_values[checkboxAttributeKey] as boolean}
-        onChange={(evt) => {
-          attribute_values[checkboxAttributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
+        onChange={(checked) => {
+          attribute_values[checkboxAttributeKey] = checked as ExtractConfigValue<CONFIG[K]>
         }}
+        getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, checkboxAttributeKey, prefix)}
+        tooltipLabel={t(`Flux.labels.tooltips.${fullCheckboxKey}`)}
+        t={t}
       >
-        <OSTooltip label={t(`Flux.labels.tooltips.${fullKey}`)}>
-          {t(`Flux.labels.${fullKey}`) + ' '}
-        </OSTooltip>
-        <TooltipElementOverloaded
-          attributeKey={checkboxAttributeKey}
-          config={config}
-          prefix={prefix}
-          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-          t={t}
-        />
-      </Checkbox>
+        <Box display="flex" alignItems="center" gap={1}>
+          {children ? children : t(`Flux.labels.${fullCheckboxKey}`)}
+        </Box>
+      </OverloadedCheckbox>
 
       {attribute_values[checkboxAttributeKey] && inputAttributeKey && (
-        <OSTooltip label={t(`Flux.labels.tooltips.${fullinputAttributeKey}`)}>
-          <ConfigMenuNumberInput
-            t={t}
-            default_value={attribute_values[inputAttributeKey] as number}
-            menu_for_style={menu_for_style}
-            minimum_value={minimum_value}
-            stepper={stepper}
-            function_on_blur={(value) => {
-              attribute_values[inputAttributeKey] = value as ExtractConfigValue<CONFIG[K]>
-            }}
-            multiValue={isConfigValueIndeterminate(elements, config, inputAttributeKey, prefix ?? '')}
-          />
-        </OSTooltip>
-      )}
-
-      {children}
-    </Box>
-  )
-}
-
-export const CheckboxWithColorPicker = <
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  K extends keyof CONFIG
->({
-  elements, attributePath, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent, children
-}: {
-  elements: ElementsType,
-  attributePath: string,
-  checkboxAttributeKey: K,
-  inputAttributeKey: K
-  config: CONFIG
-  prefix: string,
-  refreshParentComponent: () => void,
-  children?: React.ReactNode
-}) => {
-  const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullcheckboxAttributeKey = (prefix ? `${prefix}_${String(checkboxAttributeKey)}` : String(checkboxAttributeKey))
-  const fullinputAttributeKey = (prefix ? `${prefix}_${String(inputAttributeKey)}` : String(inputAttributeKey))
-  const layoutStyle = 'menuconfigpanel_row_2cols'
-
-  return (
-    <Box as='span' layerStyle={layoutStyle}>
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={attribute_values[checkboxAttributeKey] as boolean}
-        onChange={(evt) => {
-          attribute_values[checkboxAttributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
-        }}
-      >
-        <OSTooltip label={t(`${String(attributePath)}.tooltips.${fullcheckboxAttributeKey}`)}>
-          {t(`${String(attributePath)}.${fullcheckboxAttributeKey}`) + ' '}
-        </OSTooltip>
-        <TooltipElementOverloaded
-          attributeKey={fullcheckboxAttributeKey}
-          config={config}
-          prefix={prefix}
-          elements={elements as Class_LinkElement[] | Class_NodeBase[]}
+        <ConfigMenuNumberInput
           t={t}
+          default_value={attribute_values[inputAttributeKey] as number}
+          menu_for_style={menu_for_style}
+          minimum_value={minimum_value}
+          stepper={stepper}
+          function_on_blur={(value) => {
+            attribute_values[inputAttributeKey] = value as ExtractConfigValue<CONFIG[K]>
+          }}
+          multiValue={isConfigValueIndeterminate(elements, config, inputAttributeKey, prefix ?? '')}
+          isOverloaded={isElementAttributeOverloaded(elements, fullinputAttributeKey, config)}
         />
-      </Checkbox>
-
-      {attribute_values[checkboxAttributeKey] && (
-        <OSTooltip label={t(`${String(attributePath)}.tooltips.${String(fullinputAttributeKey)}`)}>
-          <MenuColorPicker
-            initialColor={attribute_values[inputAttributeKey] as string}
-            onColorChange={(new_color) => {
-              attribute_values[inputAttributeKey] = new_color as ExtractConfigValue<CONFIG[K]>
-            }} />
-        </OSTooltip>
       )}
-      {children}
     </Box>
-  )
-}
-
-export const SimpleElementCheckbox = <
-  CONFIG extends Record<string, AttributeConfig<unknown>>,
-  K extends keyof CONFIG
->({
-  elements, attributeKey, config, prefix, refreshParentComponent, variant = 'menuconfigpanel_option_checkbox'
-}: {
-  elements: ElementsType
-  attributeKey: K
-  config: CONFIG
-  prefix: string,
-  refreshParentComponent: () => void
-  variant?: string
-}) => {
-  const attribute_values = getConfigValues(elements, config, prefix, refreshParentComponent)
-  const fullKey = (prefix ? `${prefix}_${String(attributeKey)}` : String(attributeKey))
-  return (
-    <Checkbox
-      variant={variant}
-      isChecked={attribute_values[attributeKey] as boolean}
-      onChange={(evt) => {
-        attribute_values[attributeKey] = evt.target.checked as ExtractConfigValue<CONFIG[K]>
-      }}
-    >
-      <OSTooltip label={t(`Flux.labels.tooltips.${fullKey}`)}>
-        {t(`Flux.labels.${fullKey}`) + ' '}
-      </OSTooltip>
-      <TooltipElementOverloaded
-        attributeKey={attributeKey}
-        config={config}
-        prefix={prefix}
-        elements={elements as Class_LinkElement[] | Class_NodeBase[]}
-        t={t}
-      />
-    </Checkbox>
   )
 }
 
@@ -1087,6 +1213,59 @@ export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_Ap
   )
 }
 
+/**
+ * Wrapper universel qui gère à la fois :
+ * - L'encadrement bleu pour les attributs overloadés
+ * - L'encadrement orange pour les valeurs multiples (indéterminées)
+ */
+export const InputIndicatorWrapper = ({
+  isOverloaded = false,
+  isMultiValue = false,
+  children,
+  t
+}: React.PropsWithChildren<{
+  isOverloaded?: boolean
+  isMultiValue?: boolean
+  children: React.ReactNode
+  t: (key: string) => string
+}>) => {
+  // Priorité : multiValue > overloaded
+  const hasIndicator = isMultiValue || isOverloaded
+  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(66, 153, 225, 0.5)' // orange ou bleu
+  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(66, 153, 225, 0.8)'
+  const tooltipLabel = isMultiValue
+    ? t('Menu.common.multiple_values')
+    : isOverloaded
+      ? t('Menu.common.attribute_overloaded')
+      : undefined
+
+  if (!hasIndicator) {
+    return <>{children}</>
+  }
+
+  return (
+    <OSTooltip label={tooltipLabel!} placement='top'>
+      <Box
+        position='relative'
+        display='inline-flex'
+        width='100%'
+        sx={{
+          '& > *': {
+            boxShadow: `0 0 0 1.5px ${color}`,
+            borderRadius: '6px',
+            transition: 'box-shadow 0.2s'
+          },
+          '&:hover > *': {
+            boxShadow: `0 0 0 2px ${colorHover}`,
+          },
+          cursor: 'help'
+        }}
+      >
+        {children}
+      </Box>
+    </OSTooltip>
+  )
+}
 
 /**
  * Component developped for number input of the config menu
@@ -1102,7 +1281,7 @@ export const MenuConfigurationLinksTooltip = ({ app_data }: { app_data: Class_Ap
   * }
   * @return {*}
   */
-export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
+export const ConfigMenuNumberInput = ({
   t,
   default_value,
   function_on_blur,
@@ -1114,165 +1293,81 @@ export const ConfigMenuNumberInput: FC<FCType_ConfigMenuNumberInput> = ({
   unit_text = undefined,
   fixed_dec = 2,
   disabled = false,
-  multiValue = false
-
-}) => {
+  multiValue = false,
+  isOverloaded = false  // ✅ Nouveau paramètre
+}: FCType_ConfigMenuNumberInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
+
   const getFixedVal = (_: string | number | null | undefined) => {
     const number_val = Number(_)
-    // if val has decimal & we want a fixed number of decimal & the number is not an Integer then fix value decimal else return value(Integer or null)
     const new_fixed_value = (fixed_dec !== 0 && number_val !== null && number_val !== undefined && Math.trunc(number_val) != number_val) ? (number_val?.toFixed(fixed_dec)) : number_val
     return (String(new_fixed_value))
   }
+
   const fixed_value = getFixedVal(default_value)
   const [value, setValue] = useState<string | null | undefined>(default_value ? String(fixed_value) : '')
+
   useEffect(() => {
     setValue(default_value ? String(fixed_value) : '')
   }, [default_value])
 
-  // Add stepper addon if specified
   const stepperBtn = stepper ? <NumberInputStepper>
     <NumberIncrementStepper />
     <NumberDecrementStepper />
   </NumberInputStepper> : <></>
 
-  // Add unit addon if specified
   const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
 
-  return <FormControl isInvalid={multiValue} >
-    <InputGroup>
-      <NumberInput
-        allowMouseWheel
-        isDisabled={disabled}
-        variant={variant}
-        min={minimum_value ?? undefined}
-        max={maximum_value}
-        step={step}
-        value={value ?? ''}
-        onChange={(value_as_string) => {
-          // Launch/reset timeout before the input auto blur (and update the value in data)
-          if (!menu_for_style) {
-            // reset timeout if exist
-            if (is_modifying.current) {
-              clearTimeout(is_modifying.current)
-            }
-            // launch timeout that automatically blur the input
-            is_modifying.current = setTimeout(() => {
-              ref_input.current?.blur()
-            }, 3000)
-          }
-          // Update displayed value_as_number
-          setValue((value_as_string !== '') ? value_as_string : null)
-        }}
-        onKeyDown={e => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            ref_input.current?.blur()
-          }
-        }}
-      >
-        <NumberInputField
-          ref={ref_input}
-          onBlur={() => {
+  return (
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+      <InputGroup>
+        <NumberInput
+          allowMouseWheel
+          isDisabled={disabled}
+          variant={variant}
+          min={minimum_value ?? undefined}
+          max={maximum_value}
+          step={step}
+          value={value ?? ''}
+          onChange={(value_as_string) => {
             if (!menu_for_style) {
-              clearTimeout(is_modifying.current)
+              if (is_modifying.current) {
+                clearTimeout(is_modifying.current)
+              }
+              is_modifying.current = setTimeout(() => {
+                ref_input.current?.blur()
+              }, 3000)
             }
-            // Update selected elements value
-            // Use functionOnBlur with either value null or value casted as number
-            let new_value = value === null ? value : Number(value)
-            if (fixed_dec > 0 && new_value !== null) {
-              new_value = +new_value?.toFixed(2)
-            }
-            function_on_blur(new_value)
+            setValue((value_as_string !== '') ? value_as_string : null)
           }}
-        />
-        {stepperBtn}
-      </NumberInput>
-      {input_unit}
-    </InputGroup>
-    <FormErrorMessage marginTop={0} fontSize='0.5rem'>{t('Menu.multiValue')}</FormErrorMessage>
-  </FormControl>
-}
-
-export const ConfigMenuNumberOrUndefinedInput = ({
-  default_value,
-  function_on_blur,
-  menu_for_style = false,
-  minimum_value = Number.MIN_SAFE_INTEGER,
-  maximum_value = Number.MAX_SAFE_INTEGER,
-  disabled = false,
-  stepper = false,
-  step = 1,
-  unit_text = undefined,
-}: FCType_ConfigMenuNumberOrUndefinedInput) => {
-  const ref_input = useRef<HTMLInputElement>(null)
-  const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
-  const variant = unit_text ? 'menuconfigpanel_option_numberinput_with_right_addon' : 'menuconfigpanel_option_numberinput'
-  const getFixedVal = (_: string | number | null | undefined) => {
-    return _ ? (String(_)) : undefined
-  }
-
-  const [value, setValue] = useState<string | undefined | null>(getFixedVal(default_value))
-  useEffect(() => {
-    setValue(getFixedVal(default_value))
-  }, [default_value])
-
-  // Add stepper addon if specified
-  const stepperBtn = stepper ? <NumberInputStepper>
-    <NumberIncrementStepper />
-    <NumberDecrementStepper />
-  </NumberInputStepper> : <></>
-
-  // Add unit addon if specified
-  const input_unit = unit_text ? <InputRightAddon>{unit_text}</InputRightAddon> : <></>
-  return <InputGroup>
-    <NumberInput
-      isDisabled={disabled}
-      allowMouseWheel
-      variant={variant}
-      min={minimum_value}
-      max={maximum_value}
-      step={step}
-      value={value ?? ''}
-      onChange={(_, value_as_number) => {
-        // Launch/reset timeout before the input auto blur (and update the value in data)
-        if (!menu_for_style) {
-          // reset timeout if exist
-          if (is_modifying.current) {
-            clearTimeout(is_modifying.current)
-          }
-          // launch timeout that automatically blur the input
-          is_modifying.current = setTimeout(() => {
-            ref_input.current?.blur()
-          }, 3000)
-        }
-        // Update displayed value_as_number
-        setValue(isNaN(value_as_number) ? undefined : _)
-      }}
-      onKeyDown={e => {
-        if (e.key === 'Enter') {
-          ref_input.current?.blur()
-        }
-      }}
-    >
-      <NumberInputField
-        ref={ref_input}
-        onBlur={() => {
-          if (!menu_for_style) {
-            clearTimeout(is_modifying.current)
-          }
-          const new_value = value === undefined ? null : Number(value)
-          // Update selected elements value
-          function_on_blur(new_value)
-
-        }}
-      />
-      {stepperBtn}
-    </NumberInput>
-    {input_unit}
-  </InputGroup>
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              ref_input.current?.blur()
+            }
+          }}
+        >
+          <NumberInputField
+            ref={ref_input}
+            onBlur={() => {
+              if (!menu_for_style) {
+                clearTimeout(is_modifying.current)
+              }
+              let new_value = value === null ? value : Number(value)
+              if (fixed_dec > 0 && new_value !== null) {
+                new_value = +new_value?.toFixed(2)
+              }
+              function_on_blur(new_value)
+            }}
+          />
+          {stepperBtn}
+        </NumberInput>
+        {input_unit}
+      </InputGroup>
+    </InputIndicatorWrapper>
+  )
 }
 
 export type FCType_ConfigMenuNumberInput = {
@@ -1287,19 +1382,8 @@ export type FCType_ConfigMenuNumberInput = {
   unit_text?: string,
   fixed_dec?: number,
   disabled?: boolean,
-  multiValue?: boolean
-}
-
-export type FCType_ConfigMenuNumberOrUndefinedInput = {
-  default_value: number | undefined | null,
-  function_on_blur: (val: number | null) => void,
-  menu_for_style?: boolean,
-  minimum_value?: number,
-  maximum_value?: number,
-  disabled?: boolean,
-  stepper?: boolean,
-  step?: number,
-  unit_text?: string
+  multiValue?: boolean,
+  isOverloaded?: boolean,
 }
 
 /**
@@ -1313,65 +1397,68 @@ export type FCType_ConfigMenuNumberOrUndefinedInput = {
  * @return {*}
  */
 export const ConfigMenuTextInput: FC<FCType_ConfigMenuTextInput> = ({
+
   default_value,
   function_on_blur,
   menu_for_style = false,
   disabled = false,
-  multiValue: multiValue = false
+  multiValue = false,
+  isOverloaded = false,  // ✅ Nouveau paramètre
+  t
 }: FCType_ConfigMenuTextInput) => {
   const ref_input = useRef<HTMLInputElement>(null)
   const is_modifying: MutableRefObject<NodeJS.Timeout | undefined> = useRef<NodeJS.Timeout>()
   const [value, setValue] = useState<string | null | undefined>(default_value)
+
   useEffect(() => {
     setValue(default_value)
   }, [default_value])
 
-  return <FormControl isInvalid={multiValue} > <InputGroup>
-    <Input
-      isDisabled={disabled}
-      ref={ref_input}
-      variant='menuconfigpanel_option_input'
-      value={value ?? ''}
-      onChange={evt => {
-        const updated_value = evt.target.value
-        // Launch/reset timeout before the input auto blur (and update the updated_value in data)
-        if (!menu_for_style) {
-          // reset timeout if exist
-          if (is_modifying.current) {
-            clearTimeout(is_modifying.current)
-          }
-          // launch timeout that automatically blur the input
-          is_modifying.current = setTimeout(() => {
-            ref_input.current?.blur()
-          }, 2000)
-        }
-        // Update displayed updated_value
-        setValue((updated_value !== '') ? updated_value : null)
-      }}
-      onKeyDown={e => {
-        if (e.key === 'Enter') {
-          ref_input.current?.blur()
-        }
-      }}
-      onBlur={() => {
-        if (!menu_for_style) {
-          clearTimeout(is_modifying.current)
-        }
-        // Update selected elements value
-        function_on_blur(value ?? null)
-      }}
-    />
-  </InputGroup>
-    <FormErrorMessage marginTop={0} fontSize='0.5rem'>Multi value</FormErrorMessage>
-  </FormControl>
+  return (
+    <InputIndicatorWrapper isOverloaded={isOverloaded} isMultiValue={multiValue} t={t}>
+      <InputGroup>
+        <Input
+          isDisabled={disabled}
+          ref={ref_input}
+          variant='menuconfigpanel_option_input'
+          value={value ?? ''}
+          onChange={evt => {
+            const updated_value = evt.target.value
+            if (!menu_for_style) {
+              if (is_modifying.current) {
+                clearTimeout(is_modifying.current)
+              }
+              is_modifying.current = setTimeout(() => {
+                ref_input.current?.blur()
+              }, 2000)
+            }
+            setValue((updated_value !== '') ? updated_value : null)
+          }}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              ref_input.current?.blur()
+            }
+          }}
+          onBlur={() => {
+            if (!menu_for_style) {
+              clearTimeout(is_modifying.current)
+            }
+            function_on_blur(value ?? null)
+          }}
+        />
+      </InputGroup>
+    </InputIndicatorWrapper>
+  )
 }
 
 export type FCType_ConfigMenuTextInput = {
+  t: TFunction,
   default_value: string | null | undefined,
   function_on_blur: (_: string | null) => void,
   menu_for_style?: boolean,
   disabled?: boolean,
   multiValue?: boolean,
+  isOverloaded?: boolean
 }
 
 
@@ -1607,21 +1694,28 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
 
 
       <OSTooltip label={t(`${attributePath}.tooltips.${tooltip_color_key}`)}>
-        <Button
-          variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => {
-            values[sustainableAttributeKey as string] = !sustainableValue
-          }}
-        >
-          {sustainableValue ? icon_locked : icon_unlocked}
-          <TooltipElementOverloaded
-            elements={elements}
-            t={t}
-            attributeKey={sustainableAttributeKey as string}
-            config={config}
-            prefix={prefix}
-          />
-        </Button>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Button
+            variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => {
+              values[sustainableAttributeKey as string] = !sustainableValue
+            }}
+            sx={{
+              padding: '0px', width: '20px', height: '20px',
+              display: 'flex',
+              alignItems: 'center'
+            }}
+          >
+            {sustainableValue ? icon_locked : icon_unlocked}
+            <TooltipElementOverloaded
+              elements={elements}
+              t={t}
+              attributeKey={sustainableAttributeKey as string}
+              config={config}
+              prefix={prefix}
+            />
+          </Button>
+        </Box>
       </OSTooltip>
     </Box>
   )
@@ -1673,28 +1767,3 @@ export const getCheckboxProps = (
   isIndeterminate
 })
 
-/**
- * ✅ Wrapper qui combine un composant avec l'icône de surcharge
- */
-export const LabelWithOverload = ({
-  attributeKey, elements, config, prefix, children, t
-}: React.PropsWithChildren<{
-  attributeKey: keyof typeof config
-  elements: ElementsType
-  config: typeof BASE_LABEL_CONFIG | typeof VALUE_LABEL_CONFIG
-  prefix: string
-  children: React.ReactNode
-  t: TFunction
-}>) => {
-  return (
-    <Box display="flex" alignItems="center" gap={1}>
-      {children}
-      <TooltipElementOverloaded
-        attributeKey={attributeKey}
-        elements={elements}
-        config={config}
-        prefix={prefix}
-        t={t} />
-    </Box>
-  )
-}

@@ -653,10 +653,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
-  shape_margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
-  shape_margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
-  shape_margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
-  shape_margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+  shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
+  shape_margin_top!: ShapeAttributeTypes['margin_top']
+  shape_margin_left!: ShapeAttributeTypes['margin_left']
+  shape_margin_right!: ShapeAttributeTypes['margin_right']
 
   // =================== ICON ATTRIBUTES (icon_*) ===================
   icon_color!: IconLabelAttributeTypes['color']
@@ -954,10 +954,10 @@ export class Class_ElementStyle {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
-  shape_margin_bottom!: NodeShapeSpecificAttributeTypes['margin_bottom']
-  shape_margin_top!: NodeShapeSpecificAttributeTypes['margin_top']
-  shape_margin_left!: NodeShapeSpecificAttributeTypes['margin_left']
-  shape_margin_right!: NodeShapeSpecificAttributeTypes['margin_right']
+  shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
+  shape_margin_top!: ShapeAttributeTypes['margin_top']
+  shape_margin_left!: ShapeAttributeTypes['margin_left']
+  shape_margin_right!: ShapeAttributeTypes['margin_right']
 
   private _storage: Record<string, unknown> = {}
   private _config: Record<string, AttributeConfig<unknown>>

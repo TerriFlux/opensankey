@@ -421,6 +421,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         attributeKey={'affichage'}
       >
         <ConfigMenuTextInput
+          t={t}
           default_value={first_link_value?.text_value}
           function_on_blur={(_: string | null) =>
             Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)

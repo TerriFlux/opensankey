@@ -92,8 +92,6 @@ export abstract class DrawLabelBase {
       BASE_SHAPE_CONFIG
     )
 
-    const shapeValues = getNodeShapeSpecificValues(this._element as unknown as Class_NodeBase, `${this.prefix}_background` as ShapePrefix)
-
     if (!bgValues.visible) return null
     const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
     const bgElement = parent.append(type_to_use)
@@ -111,14 +109,14 @@ export abstract class DrawLabelBase {
       bgElement
         .attr('cx', x + width / 2)
         .attr('cy', y + height / 2)
-        .attr('rx', width / 2 + shapeValues.margin_left + shapeValues.margin_right)
-        .attr('ry', height / 2 + shapeValues.margin_top + shapeValues.margin_bottom)
+        .attr('rx', width / 2 + bgValues.margin_left + bgValues.margin_right)
+        .attr('ry', height / 2 + bgValues.margin_top + bgValues.margin_bottom)
     } else if (bgValues.type === 'rect') {
       bgElement
-        .attr('x', x - shapeValues.margin_left)
-        .attr('y', y - shapeValues.margin_top)
-        .attr('width', width + shapeValues.margin_left + shapeValues.margin_right)
-        .attr('height', height + shapeValues.margin_top + shapeValues.margin_bottom)
+        .attr('x', x - bgValues.margin_left)
+        .attr('y', y - bgValues.margin_top)
+        .attr('width', width + bgValues.margin_left + bgValues.margin_right)
+        .attr('height', height + bgValues.margin_top + bgValues.margin_bottom)
         .attr('rx', bgValues.border_radius)
     }
     bgElement.lower()
