@@ -203,7 +203,7 @@ export const MenuSectionCheckbox = <
         </InputIndicatorWrapper>
 
         {/* ✅ Composant optionnel à droite */}
-        {rightComponent && (
+        {rightComponent && attribute_values[attributeKey] && (
           <Box flexShrink={0}>
             {rightComponent}
           </Box>
@@ -1741,30 +1741,4 @@ export const getButtonVariant = (
 
   return `menuconfigpanel_option_button${suffix}`
 }
-
-/**
- * Helper pour les checkboxes - retourne les props communes
- * Similaire à getButtonVariant mais pour les Checkbox
- * 
- * @param isIndeterminate - Si la checkbox a des valeurs multiples
- * @param variant - Variant Chakra UI à utiliser (par défaut: 'menuconfigpanel_option_checkbox')
- * @returns Objet avec variant, iconColor et isIndeterminate
- * 
- * @example
- * <Checkbox
- *   {...getCheckboxProps(isShapeValueIndeterminate(elements, prefix, 'color_visible'))}
- *   isChecked={shapeValues.color_visible}
- *   onChange={(evt) => { shapeValues.color_visible = evt.target.checked }}
- * >
- *   Fond visible
- * </Checkbox>
- */
-export const getCheckboxProps = (
-  isIndeterminate: boolean,
-  variant: string = 'menuconfigpanel_option_checkbox'
-) => ({
-  variant,
-  iconColor: isIndeterminate ? '#78C2AD' : 'white',
-  isIndeterminate
-})
 
