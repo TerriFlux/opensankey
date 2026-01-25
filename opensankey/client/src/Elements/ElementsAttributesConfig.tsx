@@ -291,6 +291,17 @@ export function getLabelAttributeKey<
   return `${prefix}_${String(configKey)}` as `${P}_${string & K}`
 }
 
+export function getLinkLabelAttributeKey<
+  T extends typeof LINKS_LABEL_SPECIFIC_CONFIG,
+  P extends LabelPrefix,
+  K extends keyof T
+>(
+  prefix: P,
+  configKey: K
+): `${P}_${string & K}` {
+  return `${prefix}_${String(configKey)}` as `${P}_${string & K}`
+}
+
 // ==================================================================================================
 // HELPER POUR CRÉER DES CONFIGS AVEC PRÉFIXES
 // ==================================================================================================
