@@ -765,9 +765,12 @@ export const OverloadedButton = ({
 }: React.PropsWithChildren<OverloadedButtonProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
+
   return (
-    <OverloadIndicatorWrapper
+    <InputIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
+      isMultiValue={isConfigValueIndeterminate(elements, config, attributeKey as any, prefix)}
+      t={t}
     >
       <OSTooltip label={tooltipLabel}>
         <Button
@@ -778,7 +781,7 @@ export const OverloadedButton = ({
           {children}
         </Button>
       </OSTooltip>
-    </OverloadIndicatorWrapper>
+    </InputIndicatorWrapper>
   )
 }
 
@@ -895,10 +898,12 @@ export const OverloadedCheckbox = ({
   t
 }: React.PropsWithChildren<OverloadedCheckboxProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
-
+  
   return (
-    <OverloadIndicatorWrapper
+    <InputIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
+      isMultiValue={getIsIndeterminate()}
+      t={t}
     >
       <Button
         variant={isChecked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -911,7 +916,7 @@ export const OverloadedCheckbox = ({
           </OSTooltip>
         ) : children}
       </Button>
-    </OverloadIndicatorWrapper>
+    </InputIndicatorWrapper>
   )
 }
 
@@ -1671,10 +1676,16 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
   const isColorOverloaded = isElementAttributeOverloaded(elements, fullColorAttributeKey, config)
   const isSustainableOverloaded = isElementAttributeOverloaded(elements, fullSustainableAttributeKey, config)
 
+  // Calcul des multi-values
+  const isColorMultiValue = isConfigValueIndeterminate(elements, config, colorAttributeKey as any, prefix)
+  const isSustainableMultiValue = isConfigValueIndeterminate(elements, config, sustainableAttributeKey as any, prefix)
+
   return (
     <Box layerStyle='option_with_activation'>
-      <OverloadIndicatorWrapper
+      <InputIndicatorWrapper
         isOverloaded={isColorOverloaded}
+        isMultiValue={isColorMultiValue}
+        t={t}
       >
         <MenuColorPicker
           initialColor={colorValue}
@@ -1682,11 +1693,13 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
             values[colorAttributeKey as string] = new_color
           }}
         />
-      </OverloadIndicatorWrapper>
+      </InputIndicatorWrapper>
 
       <OSTooltip label={t(`${attributePath}.tooltips.${tooltip_color_key}`)}>
-        <OverloadIndicatorWrapper
+        <InputIndicatorWrapper
           isOverloaded={isSustainableOverloaded}
+          isMultiValue={isSustainableMultiValue}
+          t={t}
         >
           <Button
             variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -1703,7 +1716,7 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
           >
             {sustainableValue ? icon_locked : icon_unlocked}
           </Button>
-        </OverloadIndicatorWrapper>
+        </InputIndicatorWrapper>
       </OSTooltip>
     </Box>
   )

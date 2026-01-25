@@ -168,27 +168,33 @@ export const LabelDisplayModeSelector = ({
   if (prefix === 'name_label') {
     return (
       <Box layerStyle='options_3cols'>
-        <Button
-          variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-          onClick={setModeSimpleText}
-        >
-          {app_data.icon_library.icon_text_mode_simple}
-        </Button>
-        <Button
-          variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-          onClick={setModeRichText}
-        >
-          {app_data.icon_library.icon_text_mode_rich}
-        </Button>
-        <Button
-          variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-          onClick={setModeValue}
-        >
-          {app_data.icon_library.icon_text_mode_value}
-        </Button>
+        <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
+          <Button
+            variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeSimpleText}
+          >
+            {app_data.icon_library.icon_text_mode_simple}
+          </Button>
+        </OSTooltip>
+        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
+          <Button
+            variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeRichText}
+          >
+            {app_data.icon_library.icon_text_mode_rich}
+          </Button>
+        </OSTooltip>
+        <OSTooltip label={t('Menu.display_mode.tooltips.value')}>
+          <Button
+            variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeValue}
+          >
+            {app_data.icon_library.icon_text_mode_value}
+          </Button>
+        </OSTooltip>
       </Box>
     )
   }
@@ -197,20 +203,24 @@ export const LabelDisplayModeSelector = ({
   if (prefix === 'icon' && !menu_style) {
     return (
       <Box layerStyle='options_2cols'>
-        <Button
-          variant={labelValues.is_icon ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-          onClick={setModeIcon}
-        >
-          {t('Menu.display_mode.icon')}
-        </Button>
-        <Button
-          variant={labelValues.is_image ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-          onClick={setModeImage}
-        >
-          {t('Menu.display_mode.image')}
-        </Button>
+        <OSTooltip label={t('Menu.display_mode.tooltips.icon')}>
+          <Button
+            variant={labelValues.is_icon ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeIcon}
+          >
+            {t('Menu.display_mode.icon')}
+          </Button>
+        </OSTooltip>
+        <OSTooltip label={t('Menu.display_mode.tooltips.image')}>
+          <Button
+            variant={labelValues.is_image ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeImage}
+          >
+            {t('Menu.display_mode.image')}
+          </Button>
+        </OSTooltip>
       </Box>
     )
   }
@@ -459,12 +469,19 @@ const LabelContentComponent = ({
       <Box as='span' layerStyle='options_2_1_2cols'>
         {/* Section TEXT */}
         {(displayMode === 'simple_text' || displayMode === 'value') && (<>
-          <OverloadIndicatorWrapper
+          <InputIndicatorWrapper
             isOverloaded={isElementAttributeOverloaded(
               elements,
               `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
               BASE_LABEL_CONFIG
             )}
+            isMultiValue={isConfigValueIndeterminate(
+              elements,
+              BASE_LABEL_CONFIG,
+              'font_family',
+              prefix
+            )}
+            t={t}
           >
             <Select
               variant='menuconfigpanel_option_select'
@@ -477,7 +494,7 @@ const LabelContentComponent = ({
                 <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
               ))}
             </Select>
-          </OverloadIndicatorWrapper>
+          </InputIndicatorWrapper>
 
           <ConfigMenuNumberInput
             t={app_data.t}
@@ -1859,7 +1876,14 @@ export const missing_menu_translations = {
           rich: 'Rich text',
           value: 'Value',
           icon: 'Icon',
-          image: 'Image'
+          image: 'Image',
+          tooltips: {
+            simple_text: 'Simple text mode',
+            rich_text: 'Rich text mode with formatting',
+            value: 'Display numeric value',
+            icon: 'Display as icon',
+            image: 'Display as custom image'
+          }
         },
 
         // Sections communes
@@ -1903,13 +1927,19 @@ export const missing_menu_translations = {
           icon: 'Icône'
         },
 
-        // Modes d'affichage
         display_mode: {
-          text: 'Texte',
-          rich: 'Texte riche',
-          value: 'Valeur',
-          icon: 'Icône',
-          image: 'Image'
+          text: 'Text',
+          rich: 'Rich text',
+          value: 'Value',
+          icon: 'Icon',
+          image: 'Image',
+          tooltips: {
+            simple_text: 'Mode texte simple',
+            rich_text: 'Mode texte enrichi avec formatage',
+            value: 'Afficher la valeur numérique',
+            icon: 'Afficher sous forme d\'icône',
+            image: 'Afficher sous forme d\'image personnalisée'
+          }
         },
 
         // Sections communes
