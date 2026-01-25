@@ -621,6 +621,7 @@ export const SelecteurView = (
   </Select>
 
   const text_input = <ConfigMenuTextInput
+    t={app_data.t}
     default_value={app_data.views_dict[cur_view.id]?.name}
     function_on_blur={(_) => {
       // Update text for links
