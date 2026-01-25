@@ -34,6 +34,8 @@ import tempfile
 import os
 import json
 from time import perf_counter
+from .views_utils import cut_layout
+import openpyxl
 
 from .views_utils import clean_file, handle_json_or_compressed, parse_folder
 import requests
@@ -360,7 +362,8 @@ def retrieve_json():
                 'json',
                 {},
                 {},
-                logname
+                logname,
+                {}
             ),
         )
         thread.daemon = True
@@ -444,7 +447,7 @@ def launch_conversion():
             output_format=output_format,
             logname=log_filename
         )
-
+        sankey_as_data = None
         if (input_format == "blob"):
             data = request.form["data"]
             sankey_as_data = data
@@ -477,6 +480,7 @@ def launch_conversion():
                 input_options,
                 output_options,
                 log_filename,
+                sankey_as_data
             ),
         )
         thread.daemon = True
@@ -503,6 +507,7 @@ def conversion_thread(
     input_options,
     output_options,
     log_filename,
+    sankey_as_data
 ):
     """
     Thread de conversion universel.
@@ -573,6 +578,17 @@ def conversion_thread(
         trace.logger.info("📝 Écriture du fichier de sortie...")
         t_write_start = perf_counter()
         io_output.write_sankey(output_file_name, **output_options)
+        if "layout" in output_options and output_options["layout"]:
+            # Ajoute le fichier json dans un onglet layout
+            wb = openpyxl.load_workbook(output_file_name)
+            layout_sheet = wb.create_sheet()
+            layout_sheet.title = "layout"
+            splitted_layout = cut_layout(sankey_as_data)
+            cpt = 1
+            for i in splitted_layout:
+                layout_sheet["A" + str(cpt)].value = i
+                cpt = cpt + 1
+            wb.save(output_file_name)
         t_write = perf_counter() - t_write_start
 
         # Taille du fichier de sortie
