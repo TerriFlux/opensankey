@@ -32,7 +32,7 @@ import {
   Select
 } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput, MenuColorPicker } from './MenuCommon'
+import { ConfigMenuNumberInput, MenuColorPicker, WrapperBoxSubSectionMenu } from './MenuCommon'
 import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle, OnDragEndResponder } from 'react-beautiful-dnd'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -48,7 +48,7 @@ const right_addon_pixel = (val: number) => {
 }
 
 
-export const DrawingAreaConfig = ({app_data,}: {app_data: Class_ApplicationData}) => {
+export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationData }) => {
   const { t } = app_data
   const [, setCount] = useState(0)
 
@@ -308,14 +308,9 @@ export const DrawingAreaConfig = ({app_data,}: {app_data: Class_ApplicationData}
       </Box>
 
     </Box>
-    <Button
-      variant={'menuconfigpanel_option_button'}
-      onClick={() => {
-        app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_element_ordoner.current(true)
-      }}
-    >
-      {t('Menu.ElOrder')}
-    </Button>
+    <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data}>
+      <GraphElementsOrdoner app_data={app_data} />
+    </WrapperBoxSubSectionMenu>
   </>
 }
 
@@ -665,7 +660,7 @@ export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_Application
     ...draggableStyle
   })
 
-  const handleDragEnd:OnDragEndResponder = (evt) => {
+  const handleDragEnd: OnDragEndResponder = (evt) => {
     if (evt.destination && evt.destination.index !== undefined && evt.source.index !== evt.destination.index) {
       app_data.drawing_area.moveOrderElementInDA(evt.source.index, evt.destination.index)
       triggerUpdate()
