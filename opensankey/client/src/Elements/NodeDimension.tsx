@@ -293,12 +293,12 @@ export class Class_NodeDimension {
     }
     const last_tag = group.tags_list.at(-1)
     this.children.forEach(c => {
-      const dim_as_parent = c.dimensions_as_parent.filter(dim=>dim.id == this.id)[0]
+      const dim_as_parent = c.dimensions_as_parent.filter(dim => dim.id == this.id)[0]
       if (dim_as_parent) {
         dim_as_parent.normalize()
         return
       }
-      const last_child_tag = c.tags_list.filter(tag=>tag.group.id==this.id).at(-1)
+      const last_child_tag = c.tags_list.filter(tag => tag.group.id == this.id).at(-1)
       if (last_child_tag == last_tag) {
         return
       }
@@ -487,9 +487,11 @@ export class NodeDimensionsManager {
 
   public fromJSON(
     json_node_object: Type_JSON,
+    create_tag: boolean,
     matching_nodes_id: { [_: string]: string } = {},
     _matching_taggs_id: { [_: string]: string } = {},
     __matching_tags_id: { [_: string]: { [_: string]: string } } = {},
+
   ) {
     // Extract dimensions JSON struct from node JSON Struct
     const dimensions_as_JSON = getJSONOrUndefinedFromJSON(json_node_object, 'dimensions')
@@ -571,9 +573,11 @@ export class NodeDimensionsManager {
                     ancestor = ancestor.dimensions_as_child.filter(dim => dim.id == _)[0].parent
 
                   }
-                  this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_list[level] as unknown as Class_Tag)
-                  if (level == 1) {
-                    parent.addTag(this._node.sankey.level_taggs_dict[_].tags_list[0] as unknown as Class_Tag)
+                  if (create_tag) {
+                    this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_list[level] as unknown as Class_Tag)
+                    if (level == 1) {
+                      parent.addTag(this._node.sankey.level_taggs_dict[_].tags_list[0] as unknown as Class_Tag)
+                    }
                   }
                 }
               }

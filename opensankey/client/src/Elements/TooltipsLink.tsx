@@ -93,7 +93,7 @@ export class LinkTooltip {
     // if (has_results)
     // html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.result_value')}</th>`
     html += '<th>Valeur</th>'
-    html += `<td>${link_data_label('reconciled',this._link,'value_label')}</td>`
+    html += `<td>${link_data_label('free_value',this._link,'value_label')}</td>`
     html += '</tr>'
 
     if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {

@@ -1871,18 +1871,18 @@ const convert_nodes: convert_nodesFuncType = (
       })
 
     })
-    tmp.forEach(nt => {
-      const leveltagg_id = nt[0]
-      delete n.tags[leveltagg_id]
-    })
-    //remove tags which are not in data.NodeTags
-    const tags_to_remove: string[] = []
-    for (const tag in n.tags) {
-      if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
-        tags_to_remove.push(tag)
-      }
-    }
-    tags_to_remove.forEach(tag => { delete n.tags[tag] })
+    // tmp.forEach(nt => {
+    //   const leveltagg_id = nt[0]
+    //   delete n.tags[leveltagg_id]
+    // })
+    // //remove tags which are not in data.NodeTags
+    // const tags_to_remove: string[] = []
+    // for (const tag in n.tags) {
+    //   if (!(tag in data.nodeTags) && !(tag in data.levelTags)) {
+    //     tags_to_remove.push(tag)
+    //   }
+    // }
+    // tags_to_remove.forEach(tag => { delete n.tags[tag] })
 
     // Convert name of some local variables
     if (n.local) {

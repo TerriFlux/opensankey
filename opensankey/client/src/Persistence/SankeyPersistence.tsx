@@ -293,8 +293,11 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.attributes['name_label_vert'] = 'middle'
       container.attributes['name_label_inside_vert'] = true
       container.attributes['name_label_inside_horiz'] = true
-      container.attributes['shape_border_visible'] = true
-      container.attributes['shape_color'] = 'white'
+      container.attributes['shape_border_visible'] = !json_object['transparent_border']
+      container.attributes['shape_color'] = json_object['color']
+      if (json_object['opacity'] !== undefined)
+        container.attributes['shape_opacity'] = +json_object['opacity']/100
+      
       container.attributes['shape_border_radius'] = 5
     }
   }
@@ -691,10 +694,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
       node.icon_horiz = 'middle'
     }
     node.name_label_text_align = 'middle'
-    if (json_local.name_label_horiz == 'left') node.name_label_text_align = 'right'
-    if (json_local.name_label_horiz == 'right') node.name_label_text_align = 'left'
+    if (json_local?.name_label_horiz == 'left') node.name_label_text_align = 'right'
+    if (json_local?.name_label_horiz == 'right') node.name_label_text_align = 'left'
 
-    if (json_local.value_label_vert == 'middle') {
+    if (json_local?.value_label_vert == 'middle') {
       json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size * 0.35
     }
   }
@@ -1014,6 +1017,7 @@ export class SankeyPersistence {
         // Set dimensions
         node.dimensionsFromJSON(
           node_json as Type_JSON,
+          +json_object.version == 0.91 || +json_object.version == 0.90,
           {},
           {},
           {}
@@ -1235,12 +1239,12 @@ export class SankeyPersistence {
       LinkElementPersistence.fromJSON_0_91,
       kwargs
     )
-    SankeyPersistence.load_nodes(
-      sankey,
-      json_object,
-      NodeElementPersistence.fromJSON_0_91,
-      kwargs
-    )
+      SankeyPersistence.load_nodes(
+        sankey,
+        json_object,
+        NodeElementPersistence.fromJSON_0_91,
+        kwargs
+      )
     SankeyPersistence.load_containers(
       sankey,
       json_object,

@@ -716,6 +716,8 @@ export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_Applic
 )
 
 export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const [_,setCount] = useState(0)
+  app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater.current = () => setCount(a => a + 1)
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
     return <></>
