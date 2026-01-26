@@ -557,7 +557,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Rebuild links_order array safely
     const newLinksOrder = this._links_order
-      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l) && l.is_visible)
+      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
       .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
 
     this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
