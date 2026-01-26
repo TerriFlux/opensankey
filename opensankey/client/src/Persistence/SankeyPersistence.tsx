@@ -273,32 +273,32 @@ export class ContainerPersistence extends NodeBasePersistence {
       }
     })
     container.name = json_object['title'] as string
-    if (json_object['is_image']) {
-      // Image mode: configure as image container
-      container.attributes['name_label_is_visible'] = false
-      container.attributes['icon_is_visible'] = true
-      container.attributes['icon_is_image'] = true
-      container.attributes['icon_image_src'] = json_object['image_src']
-      container.attributes['icon_inside_vert'] = true
-      container.attributes['icon_inside_horiz'] = true
-      container.attributes['shape_border_visible'] = true
-      container.attributes['shape_color'] = 'white'
-      container.attributes['shape_border_radius'] = 5
-    } else {
-      // Text mode: configure as text container
-      container.attributes['name_label_font_family'] = ''
-      container.attributes['name_label_has_fo'] = true
       container.attributes['shape_color_visible'] = json_object['color_visible']
-      container.attributes['name_label_horiz'] = 'middle'
-      container.attributes['name_label_vert'] = 'middle'
-      container.attributes['name_label_inside_vert'] = true
-      container.attributes['name_label_inside_horiz'] = true
       container.attributes['shape_border_visible'] = !json_object['transparent_border']
       container.attributes['shape_color'] = json_object['color']
       if (json_object['opacity'] !== undefined)
         container.attributes['shape_opacity'] = +json_object['opacity']/100
       
       container.attributes['shape_border_radius'] = 5
+    if (json_object['is_image']) {
+      // Image mode: configure as image container
+      //container.attributes['name_label_is_visible'] = false
+      container.attributes['icon_is_visible'] = true
+      container.attributes['icon_is_icon'] = false
+      container.attributes['icon_is_image'] = true
+      container.attributes['icon_image_src'] = json_object['image_src']
+      container.attributes['icon_inside_vert'] = true
+      container.attributes['icon_inside_horiz'] = true
+    } else {
+      container.attributes['icon_is_icon'] = true
+      container.attributes['icon_is_image'] = false
+      container.attributes['name_label_font_family'] = ''
+      container.attributes['name_label_has_fo'] = true
+      container.attributes['name_label_horiz'] = 'middle'
+      container.attributes['name_label_vert'] = 'middle'
+      container.attributes['name_label_inside_vert'] = true
+      container.attributes['name_label_inside_horiz'] = true
+
     }
   }
 
