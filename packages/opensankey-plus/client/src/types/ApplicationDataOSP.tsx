@@ -650,9 +650,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const tagg = new_drawing_area.sankey.node_taggs_dict['type de noeud']
     const product_tag = tagg?.tags_dict['produit']
     let title = 'Process de transformation : '
-    const sector_tag = tagg.tags_dict['secteur']
+    const sector_tag = tagg?.tags_dict['secteur']
     //const echange_tag = tagg.tags_dict['echange']
-    if (tagg && node_ref.hasGivenTag(sector_tag)) {
+    if (!tagg || node_ref.hasGivenTag(sector_tag)) {
       new_drawing_area.sankey.icon_catalog['waste_industry'] = ListIcons.waste.industry
       new_drawing_area.sankey.nodes_dict[node_ref.id].icon_icon_name = 'waste_industry'
     } else {
