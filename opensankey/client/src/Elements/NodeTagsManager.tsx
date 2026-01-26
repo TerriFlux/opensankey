@@ -86,8 +86,12 @@ export class NodeTagsManager {
         const revert_matching_tags_id: { [id: string]: string } = {}
         Object.entries(matching_tags[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id] ?? []).forEach(([k, v]) => revert_matching_tags_id[v] = k)
 
-        const tagg = this._node.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        let tagg = this._node.sankey.node_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        if (tagg == undefined) {
+          tagg = this._node.sankey.level_taggs_dict[revert_matching_taggs_id[tag_to_copy.group.id] ?? tag_to_copy.group.id]
+        }
         if (tagg !== undefined) {
+
           const tag = tagg.tags_dict[revert_matching_tags_id[tag_to_copy.id] ?? tag_to_copy.id]
           if (tag !== undefined)
             this.addTag(tag as Class_Tag)

@@ -375,6 +375,7 @@ export const updateFrom = (
       to_update
         .forEach(id => {
           drawing_area.sankey.nodes_dict[id].copyTagsReferencingFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
+          drawing_area.sankey.nodes_dict[id].copyDimensionsFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id])
         })
 
 
@@ -383,6 +384,7 @@ export const updateFrom = (
         to_add
           .forEach(id => {
             drawing_area.sankey.nodes_dict[id].copyTagsReferencingFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
+            drawing_area.sankey.nodes_dict[id].copyDimensionsFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id])
           })
       }
 
@@ -609,7 +611,7 @@ export const updateFrom = (
     // Add new container present in new but not current
     list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
       .forEach(cont => {
-        drawing_area.sankey.addNewContainer(cont.id,cont.name)
+        drawing_area.sankey.addNewContainer(cont.id, cont.name)
         drawing_area.sankey.containers_dict[cont.id].copyFrom(cont)
       })
 

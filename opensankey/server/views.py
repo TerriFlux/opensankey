@@ -34,6 +34,8 @@ import tempfile
 import os
 import json
 from time import perf_counter
+
+import pandas as pd
 from .views_utils import cut_layout
 import openpyxl
 
@@ -532,7 +534,7 @@ def conversion_thread(
         Fichier de logs debug
     """
     trace.logger_init(log_filename, "a")
-    max_line_length = 50
+
 
     trace.logger.info("=" * 80)
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
@@ -557,6 +559,26 @@ def conversion_thread(
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
         ok, msg = io_input.load_sankey(input_file_name, **input_options)
+        max_line_length = 50
+        if input_format == 'excel':
+            try:
+                # Vérifier que la sheet layout existe
+                with pd.ExcelFile(input_file_name) as excel_file:
+                    if "layout" in excel_file.sheet_names:
+                        layout_table = pd.read_excel(input_file_name, "layout")
+                        trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
+                        layout_json_str = layout_table.columns[0] + "".join([layout_table.iloc[_][0] for _ in layout_table.index])
+                        layout_json = json.loads(layout_json_str)
+                        
+                        # Ajouter le layout aux options de sortie pour JSON
+                        if output_format == 'json':
+                            output_options['layout'] = layout_json
+                            trace.logger.info("✓ Layout extracted and will be included in JSON")
+                    else:
+                        trace.logger.debug("No layout sheet found in Excel file")
+            except Exception as e:
+                trace.logger.warning(f"Could not extract layout: {e}")
+            
         t_read = perf_counter() - t_read_start
 
         if not ok:
@@ -578,17 +600,18 @@ def conversion_thread(
         trace.logger.info("📝 Écriture du fichier de sortie...")
         t_write_start = perf_counter()
         io_output.write_sankey(output_file_name, **output_options)
-        if "layout" in output_options and output_options["layout"]:
-            # Ajoute le fichier json dans un onglet layout
-            wb = openpyxl.load_workbook(output_file_name)
-            layout_sheet = wb.create_sheet()
-            layout_sheet.title = "layout"
-            splitted_layout = cut_layout(sankey_as_data)
-            cpt = 1
-            for i in splitted_layout:
-                layout_sheet["A" + str(cpt)].value = i
-                cpt = cpt + 1
-            wb.save(output_file_name)
+        if input_format != 'excel':
+            if "layout" in output_options and output_options["layout"]:
+                # Ajoute le fichier json dans un onglet layout
+                wb = openpyxl.load_workbook(output_file_name)
+                layout_sheet = wb.create_sheet()
+                layout_sheet.title = "layout"
+                splitted_layout = cut_layout(sankey_as_data)
+                cpt = 1
+                for i in splitted_layout:
+                    layout_sheet["A" + str(cpt)].value = i
+                    cpt = cpt + 1
+                wb.save(output_file_name)
         t_write = perf_counter() - t_write_start
 
         # Taille du fichier de sortie
