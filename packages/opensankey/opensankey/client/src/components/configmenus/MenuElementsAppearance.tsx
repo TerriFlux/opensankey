@@ -118,6 +118,7 @@ export const LabelDisplayModeSelector = ({
   prefix,
   labelValues,
   app_data,
+  elements,
   menu_style = false,
   display_mode_name_label,
   refreshAll,
@@ -126,6 +127,7 @@ export const LabelDisplayModeSelector = ({
   prefix: string
   labelValues: any
   app_data: Class_ApplicationData
+  elements: ElementsType,
   menu_style?: boolean
   display_mode_name_label: MutableRefObject<'simple_text' | 'rich_text' | 'value'>
   refreshAll: () => void
@@ -139,6 +141,9 @@ export const LabelDisplayModeSelector = ({
 
   const setModeRichText = () => {
     labelValues.has_fo = true
+    app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
+    //@ts-expect-error xxx
+    app_data.menu_configuration.r_editor_content_set_elements.current(elements, 'name_label')
     display_mode_name_label.current = 'rich_text'
     refreshAll()
   }
@@ -1416,6 +1421,7 @@ export const MenuConfigurationAppearance = ({
               refreshParentComponent={refreshAll}
               rightComponent={<LabelDisplayModeSelector
                 prefix='name_label'
+                elements={elements}
                 app_data={app_data}
                 labelValues={nameLabelValues}
                 t={t}
@@ -1470,6 +1476,7 @@ export const MenuConfigurationAppearance = ({
               rightComponent={<LabelDisplayModeSelector
                 prefix='icon'
                 app_data={app_data}
+                elements={elements}
                 labelValues={iconValues}
                 refreshAll={refreshAll}
                 display_mode_name_label={display_mode_name_label}
