@@ -574,9 +574,9 @@ export class NodeDimensionsManager {
 
                   }
                   if (create_tag) {
-                    this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_list[level] as unknown as Class_Tag)
+                    this._node.addTag(this._node.sankey.level_taggs_dict[_].tags_list.filter(tag=>tag.name != '0')[level] as unknown as Class_Tag)
                     if (level == 1) {
-                      parent.addTag(this._node.sankey.level_taggs_dict[_].tags_list[0] as unknown as Class_Tag)
+                      parent.addTag(this._node.sankey.level_taggs_dict[_].tags_list.filter(tag=>tag.name != '0')[0] as unknown as Class_Tag)
                     }
                   }
                 }

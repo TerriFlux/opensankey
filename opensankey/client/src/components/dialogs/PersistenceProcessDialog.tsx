@@ -272,7 +272,7 @@ export const retrieveJSONResults = (
   app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/, false)
   app_data.sendWaitingToast(
     () => {
-
+      app_data.drawing_area.bypass_redraws = true
       app_data.drawing_area.sankey.nodes_list.forEach(n => {
         const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
         if (!tagg) {

@@ -315,7 +315,7 @@ export class Class_DrawingArea {
     // Draw Everything
     this.drawElements()
     // Fit area
-    this.areaAutoFit()
+    //this.areaAutoFit()
     this._legend.draw()
     // Added events listeners
     this.setEventsListeners()

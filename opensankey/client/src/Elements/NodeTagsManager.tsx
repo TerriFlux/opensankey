@@ -160,7 +160,9 @@ export class NodeTagsManager {
           (tag_ids as string[])
             .forEach(tag_id => {
               if (+tag_id == 0 && level_taggs_dict[tagg_id]) {
+              //if (+tag_id == 0) {
                 this._node._nodeTagsManager.addAsAntiTagged(tagg as Class_LevelTagGroup)
+                return
               }
               let tag = tagg.tags_dict[tag_id]
               if (tag == undefined) {
