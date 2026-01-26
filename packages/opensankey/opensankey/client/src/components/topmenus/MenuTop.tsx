@@ -56,7 +56,7 @@ import { useTour } from '@reactour/tour'
 
 import { Type_JSON } from '../../types/Utils'
 
-import { clickSavePDF } from './SankeyExports'
+import { clickSavePDF, clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalTuto } from './SankeyTutorials'
 import {
@@ -465,6 +465,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {new_data.icon_library.icon_export_sankey_pdf}
         PDF
+      </MenuItem>
+      <MenuItem
+        onClick={() => clickSaveSVG(new_data)}
+      >
+        SVG
       </MenuItem>
     </MenuList>
   </ChakraMenu>
