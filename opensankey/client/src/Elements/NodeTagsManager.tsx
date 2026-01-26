@@ -158,9 +158,11 @@ export class NodeTagsManager {
               if (+tag_id == 0 && level_taggs_dict[tagg_id]) {
                 this._node._nodeTagsManager.addAsAntiTagged(tagg as Class_LevelTagGroup)
               }
-              const tag = tagg.tags_dict[tag_id]
-              if (tag !== undefined)
-                this.addTag(tag as Class_Tag)
+              let tag = tagg.tags_dict[tag_id]
+              if (tag == undefined) {
+                tag = tagg.addTag(tag_id, tag_id) as Class_Tag
+              }
+              this.addTag(tag as Class_Tag)
             })
         }
       })
