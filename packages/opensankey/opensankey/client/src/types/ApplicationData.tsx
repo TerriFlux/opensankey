@@ -645,7 +645,6 @@ export class Class_ApplicationData {
    */
   public updateFromJSON(json_object: Type_JSON) {
     this._updateFromJSON(json_object)
-    this.drawing_area.draw()
     this._menu_configuration!.updateAllMenuComponents()
   }
 
@@ -665,7 +664,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
+      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', /*'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog'*/]
     )
     //}
   }
