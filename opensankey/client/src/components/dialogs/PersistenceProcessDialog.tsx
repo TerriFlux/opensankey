@@ -309,6 +309,7 @@ export const retrieveJSONResults = (
       } else {
         app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
       }
+      app_data.drawing_area.draw()
     })
 }
 
