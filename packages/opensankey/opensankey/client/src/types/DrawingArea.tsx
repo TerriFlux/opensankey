@@ -1930,6 +1930,7 @@ export class Class_DrawingArea {
   }
 
   public setParametricMode() {
+    this.bypass_redraws = true
     const default_style = this.sankey.styles_dict['default']
     default_style.shape_position_type = 'parametric'
     this.sankey.nodes_list.forEach(n => n.position_v = -1)
