@@ -72,9 +72,7 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  //ref_setter_show_value_formatting_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_element_ordoner: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_node_reorganizer_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -384,9 +382,7 @@ export class Class_MenuConfig {
       ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_rich_text_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      //ref_setter_show_value_formatting_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_element_ordoner: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_node_reorganizer_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -453,9 +449,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
-    //this._dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_element_ordoner.current(false)
     this._dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(false)
 
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
