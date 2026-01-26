@@ -1017,7 +1017,8 @@ export class SankeyPersistence {
         // Set dimensions
         node.dimensionsFromJSON(
           node_json as Type_JSON,
-          +json_object.version == 0.91 || +json_object.version == 0.90,
+          //+json_object.version == 0.91 || +json_object.version == 0.90,
+          json_object.version !== '0.8',
           {},
           {},
           {}
