@@ -752,8 +752,8 @@ export class Class_DrawingArea {
       this._k_vert = new_k_height
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
-      this._zoom_height = is_horiz ? Math.max(this.height, this.height / this._k_horiz) : this.height
-      this._zoom_width = is_horiz ? Math.max(this.width, this.width / this._k_vert) : this.width
+      this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height,this.window_fitting_height) / this._k_horiz) : this.height
+      this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width,this.window_fitting_width) / this._k_vert) : this.width
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1209,8 +1209,8 @@ export class Class_DrawingArea {
   private eventDoubleLMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (event.ctrlKey) return
-    this.closeAllMenus()
+    //if (event.ctrlKey) return
+    //this.closeAllMenus()
     this._selection_zone.reset()
   }
 

@@ -48,7 +48,7 @@ import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
-import { DrawingAreaConfig, GraphElementsOrdoner, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaConfig, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
@@ -326,14 +326,6 @@ export const SankeyMenu = (
         dialog_name={'ref_setter_show_value_type_editor'}
         content={<LinkValueTypeSelector app_data={app_data} t={t}/>}
         title={'Type de valeur'}
-        minW={'25vw'}
-        maxW={'25vw'}
-      />
-      <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_element_ordoner'}
-        content={<GraphElementsOrdoner app_data={app_data} />}
-        title={t('Menu.ElOrder')}
         minW={'25vw'}
         maxW={'25vw'}
       />
