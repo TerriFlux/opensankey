@@ -114,7 +114,7 @@ def _html_to_image(
                 "disable-smart-shrinking": "",  # Important pour préserver les styles
             })
             pdfkit.from_string(html_as_str, output_filename + ".pdf", css=css, options=options)
-            
+
             # Use subprocess instead of os.system for better error handling
             import subprocess
             import platform
@@ -122,20 +122,20 @@ def _html_to_image(
                 inkscape_cmd = r"C:\Program Files\Inkscape\bin\inkscape.exe"
             else:
                 inkscape_cmd = "inkscape"
-            
+
             result = subprocess.run(
-                [inkscape_cmd, 
-                output_filename + ".pdf",
-                "--export-type=svg",
-                "--export-filename=" + output_filename],
+                [inkscape_cmd,
+                 output_filename + ".pdf",
+                 "--export-type=svg",
+                 "--export-filename=" + output_filename],
                 capture_output=True,
                 text=True
             )
-            
+
             if result.returncode != 0:
                 current_app.logger.error(f"Inkscape conversion failed: {result.stderr}")
                 raise Exception(f"SVG conversion failed: {result.stderr}")
-            
+
             os.remove(output_filename + ".pdf")
 
 
