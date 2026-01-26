@@ -599,7 +599,7 @@ export abstract class DrawLabelBase {
     if (this._label_values.is_icon && this._label_values.is_visible) {
       return this.drawIcon()
     }
-    if (this._label_values.is_visible && this._label_values.is_image) {
+    if (this._label_values.is_image && this._label_values.is_visible) {
       return this.drawImage()
     }
 
