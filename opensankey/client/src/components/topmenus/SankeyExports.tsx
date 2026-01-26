@@ -46,7 +46,7 @@ import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 type FType_ModalResolutionPNG = (
-  new_data: Class_ApplicationData
+  app_data: Class_ApplicationData
 ) => JSX.Element
 
 // COMPONENTS ===========================================================================
@@ -55,18 +55,18 @@ export declare const window: Window & typeof globalThis
 
 /**
  * Create modal to update PNG resolution for export
- * @param {*} new_data
+ * @param {*} app_data
  * @return {*}
  */
 export const modalResolutionPNG: FType_ModalResolutionPNG = (
-  new_data
+  app_data
 ) => {
-  const { t } = new_data
+  const { t } = app_data
   const [h, set_h] = useState<number>()
   const [v, set_v] = useState<number>()
   const valid_input = (h === undefined && v === undefined) || (v !== undefined && h !== undefined && !isNaN(+v) && !isNaN(+h))
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
-  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
+  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
+  app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
   const content = <>
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
@@ -127,19 +127,19 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
     <Button
       disabled={!valid_input}
       onClick={() => {
-        new_data.sendWaitingToast(
+        app_data.sendWaitingToast(
           () => {
-            clickSavePNG(h, v, new_data)
+            clickSavePNG(h, v, app_data)
           },
           {
             success: {
-              title: new_data.t('toast.save_as_png.success.title')
+              title: app_data.t('toast.save_as_png.success.title')
             },
             loading: {
-              title: new_data.t('toast.save_as_png.loading.title')
+              title: app_data.t('toast.save_as_png.loading.title')
             },
             error: {
-              title: new_data.t('toast.save_as_png.error.title')
+              title: app_data.t('toast.save_as_png.error.title')
             }
           })
       }}
@@ -149,10 +149,22 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
   </>
 
   return <MenuDraggable
-    dict_hook_ref_setter_show_dialog_components={new_data.menu_configuration.dict_setter_show_dialog}
+    dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
     dialog_name={'ref_setter_show_modal_png_saver'}
     content={content}
     title={t('Menu.setResolutionPNG')} />
+}
+
+export const clickSaveSVG = (
+  app_data: Class_ApplicationData
+) => {
+  const svg = app_data.pre_process_export_svg()
+  const blob = new Blob([svg], { type: 'image/svg+xml' })
+
+  // Sauvegarder directement côté client
+  FileSaver.saveAs(blob, 'sankey_diagram.svg')
+
+  post_process_export_svg()
 }
 
 /**
@@ -160,19 +172,19 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
  *
  * @param {(number | undefined)} h
  * @param {(number | undefined)} v
- * @param {Class_ApplicationData} new_data
+ * @param {Class_ApplicationData} app_data
  */
 const clickSavePNG = (
   h: number | undefined,
   v: number | undefined,
-  new_data: Class_ApplicationData
+  app_data: Class_ApplicationData
 ) => {
-  const svg = new_data.pre_process_export_svg()
+  const svg = app_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
   let size_to_send = ''
-  const legend_w = !new_data.drawing_area.legend.masked ? new_data.drawing_area.legend.width : 0
+  const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
 
   if (h !== undefined && v !== undefined) {
     size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
@@ -191,7 +203,7 @@ const clickSavePNG = (
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, new_data.file_name+'.png')
+    FileSaver.saveAs(newBlob, app_data.file_name + '.png')
   }
 
   const cleanFile = () => {
@@ -211,15 +223,15 @@ const clickSavePNG = (
 /**
  * Save sankey as PDF
  *
- * @param {Class_ApplicationData} new_data
+ * @param {Class_ApplicationData} app_data
  */
-export const clickSavePDF = (new_data: Class_ApplicationData) => {
-  const svg = new_data.pre_process_export_svg()
+export const clickSavePDF = (app_data: Class_ApplicationData) => {
+  const svg = app_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
-  form_data.append('width', new_data.drawing_area.width.toString())
-  form_data.append('height', new_data.drawing_area.height.toString())
+  form_data.append('width', app_data.drawing_area.width.toString())
+  form_data.append('height', app_data.drawing_area.height.toString())
 
   post_process_export_svg()
 
@@ -232,7 +244,7 @@ export const clickSavePDF = (new_data: Class_ApplicationData) => {
 
   const showFile = (blob: BlobPart) => {
     const newBlob = new Blob([blob], { type: 'application/pdf' })
-    FileSaver.saveAs(newBlob, new_data.file_name+'.pdf')
+    FileSaver.saveAs(newBlob, app_data.file_name + '.pdf')
   }
 
   const cleanFile = () => {

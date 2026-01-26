@@ -101,9 +101,41 @@ def _html_to_image(
             options["page-width"] = output_width_px + "px"
         if output_format == "pdf":
             pdfkit.from_string(html_as_str, output_filename, css=css, options=options)
-        else:
+        else:  # svg case
+            pdf_options = options.copy()
+            pdf_options.update({
+                "margin-top": "0",
+                "margin-right": "0",
+                "margin-bottom": "0",
+                "margin-left": "0",
+                "print-media-type": "",
+                "no-pdf-compression": "",
+                "enable-local-file-access": "",
+                "disable-smart-shrinking": "",  # Important pour préserver les styles
+            })
             pdfkit.from_string(html_as_str, output_filename + ".pdf", css=css, options=options)
-            os.system("inkscape " + "--export-filename={0} {1}".format(output_filename, output_filename + ".pdf"))
+            
+            # Use subprocess instead of os.system for better error handling
+            import subprocess
+            import platform
+            if platform.system() == "Windows":
+                inkscape_cmd = r"C:\Program Files\Inkscape\bin\inkscape.exe"
+            else:
+                inkscape_cmd = "inkscape"
+            
+            result = subprocess.run(
+                [inkscape_cmd, 
+                output_filename + ".pdf",
+                "--export-type=svg",
+                "--export-filename=" + output_filename],
+                capture_output=True,
+                text=True
+            )
+            
+            if result.returncode != 0:
+                current_app.logger.error(f"Inkscape conversion failed: {result.stderr}")
+                raise Exception(f"SVG conversion failed: {result.stderr}")
+            
             os.remove(output_filename + ".pdf")
 
 
@@ -119,7 +151,13 @@ def save_svg():
     # Launch conversion
     filename = "tutu.svg"
     try:
-        _html_to_image(request.files["html"], filename, "svg")
+        _html_to_image(
+            request.files["html"],
+            filename,
+            "svg",
+            output_height_px=request.form.get("height"),
+            output_width_px=request.form.get("width"),
+        )
     except Exception as e:
         current_app.logger.error("SAVE_SVG | {0}".format(e))
         abort(500)

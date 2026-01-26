@@ -512,7 +512,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     return {
       ...json_object,
-      ...DrawingAreaPersistence.toJSON(this.drawing_area,kwargs)
+      ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
     }
   }
 
@@ -538,7 +538,7 @@ export class Class_ApplicationData {
         this.reset(kwargs)
         this._drawing_area.bypass_redraws = true
         // Read json file
-        this._fromJSON(json_object,kwargs)
+        this._fromJSON(json_object, kwargs)
         // Post processing & menu updating
         this._afterFromJSON()
         // Then draw if asked
@@ -561,7 +561,7 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON
   ) {
     // Update drawing area
-    DrawingAreaPersistence.fromJSON(this._drawing_area,json_object, kwargs)
+    DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
 
   }
@@ -656,17 +656,17 @@ export class Class_ApplicationData {
    */
   protected _updateFromJSON(json_object: Type_JSON, _?: Type_JSON) {
     //if (json_object['layout'] !== undefined) {
-      const json_layout = json_object as Type_JSON
-      const drawing_area_from_layout = this.createNewDrawingArea()
-      drawing_area_from_layout.bypass_redraws = true
-      DrawingAreaPersistence.fromJSON(drawing_area_from_layout,json_layout)
-      drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
-      this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
-      updateFrom(
-        this.drawing_area,
-        drawing_area_from_layout,
-        ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
-      )
+    const json_layout = json_object as Type_JSON
+    const drawing_area_from_layout = this.createNewDrawingArea()
+    drawing_area_from_layout.bypass_redraws = true
+    DrawingAreaPersistence.fromJSON(drawing_area_from_layout, json_layout)
+    drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
+    this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
+    updateFrom(
+      this.drawing_area,
+      drawing_area_from_layout,
+      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
+    )
     //}
   }
 
@@ -712,9 +712,59 @@ export class Class_ApplicationData {
 
   public pre_process_export_svg() {
     const d3_select = this._pre_process_export_svg()
+
+    if (d3_select) {
+      const foreignObjects = d3_select.selectAll('foreignObject')
+
+      foreignObjects.each(function () {
+        const fo = d3.select(this)
+        const foNode = fo.node() as SVGForeignObjectElement
+        if (!foNode) return
+
+        const x = parseFloat(fo.attr('x') || '0')
+        const y = parseFloat(fo.attr('y') || '0')
+
+        // Récupérer le div à l'intérieur
+        const divElement = fo.select('div').node() as HTMLElement
+        if (!divElement) return
+
+        const htmlContent = divElement.textContent || ''
+        const computedStyle = window.getComputedStyle(divElement)
+
+        // Vérifier si le texte contient du gras (dans le div ou dans des enfants)
+        const hasBold = divElement.querySelector('b, strong') !== null ||
+          computedStyle.fontWeight === 'bold' ||
+          computedStyle.fontWeight === '700' ||
+          parseInt(computedStyle.fontWeight) >= 700
+
+        // Créer l'élément text SVG
+        const textElement = document.createElementNS('http://www.w3.org/2000/svg', 'text')
+        textElement.setAttribute('x', x.toString())
+        textElement.setAttribute('y', (y + parseFloat(computedStyle.fontSize) * 0.8).toString())
+        textElement.setAttribute('font-family', computedStyle.fontFamily)
+        textElement.setAttribute('font-size', computedStyle.fontSize)
+        textElement.setAttribute('font-weight', hasBold ? 'bold' : 'normal')
+        textElement.setAttribute('fill', computedStyle.color || '#000')
+
+        if (computedStyle.textAnchor) {
+          textElement.setAttribute('text-anchor', computedStyle.textAnchor)
+        }
+
+        textElement.textContent = htmlContent
+
+        // Debug - à retirer après
+        console.log('Converting foreignObject:', {
+          text: htmlContent,
+          fontWeight: computedStyle.fontWeight,
+          hasBold: hasBold
+        })
+
+        foNode.parentNode?.replaceChild(textElement, foNode)
+      })
+    }
+
     const scale_da = this.drawing_area.getZoomScale()
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
-
     const svg_with_header = '<svg version="1.1" ' +
       ' height=\'' + (this.drawing_area.height * scale_da + 5).toString() + '\'' +
       ' width=\'' + ((this.drawing_area.width * scale_da) + legend_w + 5).toString() + '\'' +
@@ -1034,7 +1084,7 @@ export class Class_ApplicationData {
             this._toast_processes.splice(0, 1) // pop process from processes list
             resolve(200) // end
           },
-          500) // Leave 500ms of delay in order to give enough time to load spinner component
+            500) // Leave 500ms of delay in order to give enough time to load spinner component
         }),
         {
           success: {
