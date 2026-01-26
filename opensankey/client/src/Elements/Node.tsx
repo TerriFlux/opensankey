@@ -188,7 +188,7 @@ export class Class_NodeElement extends Class_NodeBase {
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
     const json_object = {}
     node_to_copy._nodeDimensionsManager.toJSON(json_object)
-    this._nodeDimensionsManager.fromJSON(json_object)
+    this._nodeDimensionsManager.fromJSON(json_object, false)
     //this.copyDimensionsFrom(node_to_copy)
     //this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
   }
@@ -215,11 +215,12 @@ export class Class_NodeElement extends Class_NodeBase {
   }
   public dimensionsFromJSON(
     json_node_object: Type_JSON,
+    create_tag: boolean,
     matching_nodes_id: { [_: string]: string } = {},
     matching_taggs_id: { [_: string]: string } = {},
     matching_tags_id: { [_: string]: { [_: string]: string } } = {},
   ) {
-    this._nodeDimensionsManager.fromJSON(json_node_object, matching_nodes_id, matching_taggs_id, matching_tags_id)
+    this._nodeDimensionsManager.fromJSON(json_node_object, create_tag, matching_nodes_id, matching_taggs_id, matching_tags_id)
   }
 
   public get master_node() { return this._master_node }
@@ -556,7 +557,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Rebuild links_order array safely
     const newLinksOrder = this._links_order
-      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l))
+      .filter(l => !import_links.includes(l) && !export_links.includes(l) && !recycling_links.includes(l) && l.is_visible)
       .sort((link_a, link_b) => sortLinksElementsByRelativeNodesPositions(link_a, link_b, this))
 
     this._links_order = [...import_links, ...newLinksOrder, ...recycling_links, ...export_links]
