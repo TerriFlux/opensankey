@@ -760,7 +760,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       this._drawing_area.sankey.sortNodes()
       this._drawing_area.draw()
       this._drawing_area.recenter()
-      //this._drawing_area.draw()
+      //this._drawing_area.areaAutoFit()
 
       this._drawing_area.orderElementOnDA()
       this._history = new Class_ApplicationHistory(this._menu_configuration!)
