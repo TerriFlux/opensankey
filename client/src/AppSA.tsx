@@ -35,7 +35,8 @@ import {
 import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/ModalWelcomeOSP'
 import {
   createZDDModifierPlus, createNodeModifierPlus,
-  createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus
+  createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus,
+  createStaticNodeMenuConfigPlus
 } from './deps/OpenSankey+/components/ContextMenuConfigs'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
@@ -221,7 +222,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
       ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
-      NODE_MENU_CONFIG={new_data_app.is_static ? STATIC_NODE_MENU_CONFIG : createNodeMenuConfigPlus()}
+      NODE_MENU_CONFIG={new_data_app.is_static ? createStaticNodeMenuConfigPlus() : createNodeMenuConfigPlus()}
       createNodeModifier={(app_data) => createNodeModifierPlus(app_data as Class_ApplicationDataSA)}
       input_config={OSP_INPUT_ATTRIBUTES_CONFIG}
       output_config={OSP_OUTPUT_ATTRIBUTES_CONFIG}
