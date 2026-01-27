@@ -7,6 +7,7 @@ import {
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
+import { Class_LevelTag } from '../../types/Tag'
 
 const width_fitler_drawer = 270
 
@@ -486,7 +487,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     switch (mode) {
       case 'level':
         if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
-          app_data.drawing_area.nodePositioning.computeParametricVForTagg()
+          app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
         }
         app_data.drawing_area.sankey.showAccordingToLevelTags()
         app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
@@ -616,16 +617,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             // })
             app_data.drawing_area.bypass_redraws = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
-            app_data.drawing_area.nodePositioning.computeParametricVForTagg()
+            app_data.drawing_area.nodePositioning.computeParametricVForTagg(
+              level_tagg.selected_tags_list[0] as Class_LevelTag
+            )
             app_data.drawing_area.resetAllVerticalIntervals()
             level_tagg.selectTagsFromId(selected_tag ?? '')
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            app_data.sendWaitingToast(
-              () => {
-                app_data.drawing_area.draw()
-                app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-                updateComponents()
-              })
+
+            app_data.drawing_area.draw()
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+            updateComponents()
           }
           } />
       ) : <></>

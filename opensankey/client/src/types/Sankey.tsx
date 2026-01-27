@@ -41,7 +41,7 @@ import {
   default_style_name,
 } from '../types/Utils'
 import { sortNodesElements } from '../Elements/NodeBase'
-import {ALL_ATTRIBUTES_CONFIG} from '../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
@@ -192,7 +192,7 @@ export class Class_Sankey {
       })
     Object.entries(sankey_to_copy._containers)
       .forEach(([idx, container_to_copy]) => {
-        this.addNewContainer(idx,container_to_copy.name)
+        this.addNewContainer(idx, container_to_copy.name)
           .copyFrom(container_to_copy)
       })
     // Copy icon catalog fom sankey
@@ -934,51 +934,67 @@ export class Class_Sankey {
     )
     if (close) {
       import_nodes.forEach((n, i) => {
-        if (i == 0) n.sibling!.style = [
-          node_styles_dict['NodeSectorStyle'],
-          node_styles_dict['NodeImportExportCloseStyle'],
-        ]
+        // if (i == 0) n.sibling!.style = [
+        //   node_styles_dict['NodeSectorStyle'],
+        //   node_styles_dict['NodeImportExportCloseStyle'],
+        // ]
         n.style = [
-          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['default'],
+          node_styles_dict['NodeStyle'],
           node_styles_dict['NodeImportExportCloseStyle'],
           node_styles_dict['NodeImportCloseStyle']
         ]
         n.getFirstOutputLink()!.style = [
+          node_styles_dict['default'],
+          node_styles_dict['LinkStyle'],
           link_styles_dict['LinkImportExportCloseStyle'],
+          link_styles_dict['LinkImportCloseStyle']
         ]
       })
       export_nodes.forEach(n => {
         n.style = [
-          node_styles_dict['NodeSectorStyle'],
+          node_styles_dict['default'],
+          node_styles_dict['NodeStyle'],
           node_styles_dict['NodeImportExportCloseStyle'],
           node_styles_dict['NodeExportCloseStyle']
         ]
         n.getFirstInputLink()!.style = [
+          node_styles_dict['default'],
+          node_styles_dict['LinkStyle'],
           link_styles_dict['LinkImportExportCloseStyle'],
+          link_styles_dict['LinkExportCloseStyle']
         ]
       })
     } else {
       import_nodes.forEach((n, i) => {
-        if (i == 0) n.sibling!.style = [
-          node_styles_dict['NodeSectorStyle'],
-          node_styles_dict['NodeImportExportAboveBelowStyle'],
-        ]
+        // if (i == 0) n.sibling!.style = [
+        //   node_styles_dict['NodeSectorStyle'],
+        //   node_styles_dict['NodeImportExportAboveBelowStyle'],
+        // ]
         n.style = [
+          node_styles_dict['default'],
+          node_styles_dict['NodeStyle'],
           node_styles_dict['NodeSectorStyle'],
           node_styles_dict['NodeImportExportAboveBelowStyle'],
           node_styles_dict['NodeImportAboveStyle']
         ]
         n.getFirstOutputLink()!.style = [
+          node_styles_dict['default'],
+          node_styles_dict['LinkStyle'],
           link_styles_dict['LinkImportExportAboveBelowStyle'],
         ]
       })
       export_nodes.forEach(n => {
         n.style = [
+          node_styles_dict['default'],
+          node_styles_dict['NodeStyle'],
           node_styles_dict['NodeSectorStyle'],
           node_styles_dict['NodeImportExportAboveBelowStyle'],
           node_styles_dict['NodeExportBelowStyle']
         ]
         n.getFirstInputLink()!.style = [
+          node_styles_dict['default'],
+          node_styles_dict['LinkStyle'],
           link_styles_dict['LinkImportExportAboveBelowStyle']
         ]
       })

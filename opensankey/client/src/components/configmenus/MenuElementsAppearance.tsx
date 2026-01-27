@@ -35,7 +35,8 @@ import {
   isElementAttributeOverloaded,
   InputIndicatorWrapper,
   CustomFaEyeCheckIcon,
-  OverloadIndicatorWrapper
+  OverloadIndicatorWrapper,
+  WrapperBoxSubSectionMenu
 } from './MenuCommon'
 
 // Imports des configs
@@ -73,6 +74,7 @@ import {
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
+import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 // ✅ Analyse de la sélection
 interface SelectionAnalysis {
@@ -1078,7 +1080,7 @@ export const MenuConfigurationAppearance = ({
 
           {/* ========== ONGLET FORME ========== */}
           {activeTab === 'shape' && (
-            <Box layerStyle='menu_sub_section'>
+            <>
               {(menu_for_style || selection.hasNodes || selection.hasContainers) && (<Box as='span' layerStyle='options_2cols'>
 
                 <ShapeTypeSelector
@@ -1134,7 +1136,7 @@ export const MenuConfigurationAppearance = ({
                         prefix={'shape'}
                         refreshUI={refreshAll}
                       />
-                      {selection.hasNodes ? <>
+                      {selection.hasNodes || menu_for_style ? <>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                           <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.geometry')}</Box>
                           <OverloadedButtonGroup
@@ -1194,16 +1196,10 @@ export const MenuConfigurationAppearance = ({
                         </Box>
                       </> : <></>
                       }
-                      {selection.hasNodes ?
-                        <Button
-                          variant={'menuconfigpanel_option_button'}
-                          onClick={() => {
-                            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(true)
-                            app_data.menu_configuration.set_node_io_reorganizer.current(nodes_elements[0] as Class_NodeElement)
-                          }}
-                        >
-                          {t('Noeud.Reorg_title')}
-                        </Button> : <></>}
+                      {selection.hasNodes  && !menu_for_style ?
+                      <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
+                        <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
+                        </WrapperBoxSubSectionMenu> : <></>}
                     </Box>
                   </Box>
                 )}
@@ -1407,7 +1403,7 @@ export const MenuConfigurationAppearance = ({
                     </Box></>
                 )}
               </>
-            </Box>
+            </>
           )}
 
           {/* ========== ONGLETS LABELS ========== */}

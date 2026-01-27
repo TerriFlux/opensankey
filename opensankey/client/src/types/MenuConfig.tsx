@@ -73,7 +73,6 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_show_modal_rich_text_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_shape_attribute_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_value_type_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_node_reorganizer_editor: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_png_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
@@ -383,7 +382,6 @@ export class Class_MenuConfig {
       ref_setter_show_modal_rich_text_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_shape_attribute_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_value_type_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_node_reorganizer_editor: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
@@ -415,7 +413,6 @@ export class Class_MenuConfig {
       elements: Class_NodeBase[] | Class_LinkElement[],
       prefix: 'name_label' | 'value_label' | 'icon'
     ) => void>(() => null)
-    this._set_node_io_reorganizer = useRef<(node:Class_NodeElement)=>void>(() => null)
     this._r_value_formatting_set_elements = useRef<(
       elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
       attributePath: string
@@ -438,28 +435,18 @@ export class Class_MenuConfig {
   // PUBLIC METHODS =====================================================================
 
   public closeAllMenus() {
-    // Close config menu
     this.closeConfigMenu()
-    // Close all modals
-    // -- Welcome
     this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_tuto.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
-
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_node_reorganizer_editor.current(false)
-
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
-    // -- Style & Layout
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
-
     this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
-
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
-    // -- Other modals
     this._dict_setter_show_dialog.ref_setter_show_modal_preference.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_templates_lib.current(false)
     this._dict_setter_show_dialog.ref_setter_show_spreadsheet.current(false)
@@ -1238,7 +1225,6 @@ export class Class_MenuConfig {
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   public get r_value_formatting_set_elements() { return this._r_value_formatting_set_elements }
-  public get set_node_io_reorganizer() { return this._set_node_io_reorganizer}
   
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
@@ -1296,10 +1282,7 @@ export class Class_MenuConfig {
     elements: Class_NodeBase[] | Class_ElementStyle[] | Class_LinkElement[],
     attributePath: string
   ) => void>
-  private _set_node_io_reorganizer: MutableRefObject<(
-    node: Class_NodeElement
-  ) => void>
-  
+
   private _r_value_type_set_elements: MutableRefObject<(
     _selected_links: Class_LinkElement[],
     _unit_data_tagg: Class_DataTagGroup,

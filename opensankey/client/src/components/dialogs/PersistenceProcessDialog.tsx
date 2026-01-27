@@ -282,9 +282,17 @@ export const retrieveJSONResults = (
         const sector_tag = tagg.tags_dict['secteur']
         //const echange_tag = tagg.tags_dict['echange']
         if (n.hasGivenTag(product_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.styles_dict['NodeProductStyle']]
+          n.style = [
+            app_data.drawing_area.sankey.styles_dict['default'],
+            app_data.drawing_area.sankey.styles_dict['NodeStyle'],
+            app_data.drawing_area.sankey.styles_dict['NodeProductStyle']
+          ]
         } else if (n.hasGivenTag(sector_tag) && n.style.some(s => s.id === 'default')) {
-          n.style = [app_data.drawing_area.sankey.styles_dict['NodeSectorStyle']]
+          n.style = [
+            app_data.drawing_area.sankey.styles_dict['default'],
+            app_data.drawing_area.sankey.styles_dict['NodeStyle'],
+            app_data.drawing_area.sankey.styles_dict['NodeSectorStyle']
+          ]
         }
       })
       app_data.drawing_area.legend.masked = false
@@ -308,6 +316,7 @@ export const retrieveJSONResults = (
         app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
       } else {
         app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+        app_data.drawing_area.sankey.setTrade(true)
       }
       app_data.drawing_area.draw()
     })
