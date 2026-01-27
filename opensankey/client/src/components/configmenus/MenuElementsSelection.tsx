@@ -547,9 +547,12 @@ export const UnifiedElementSelection = ({
         return parts.join(' + ')
       }
       : (selected: SingleTypeOption[]) => {
-        return selected.length
-          ? selected.map(opt => opt.label).join(', ')
-          : t(singleConfig!.translationKeys.labelNoSelection) || 'Aucune sélection'
+        // ✅ Afficher le nombre au lieu de la liste complète
+        return selected.length === 0
+          ? t(singleConfig!.translationKeys.labelNoSelection) || 'Aucune sélection'
+          : selected.length === 1
+            ? selected[0].label
+            : `${selected.length} éléments sélectionnés`  // ou `${selected.length} E`
       }
     const multiSelectStrings = {
       selectSomeItems: 'Sélectionner...',

@@ -1807,6 +1807,8 @@ export class NodePositioning {
       const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
       if (desagregated_nodes.length > 0) {
         let current_y = node.position_y /*+ node.getShapeHeightToUse() / 2*/ - shift_y /*- desagregated_nodes[0].getShapeHeightToUse()*/
+        //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+ 
         desagregated_nodes.forEach(nn => {
           if (nn.master_node) {
             return

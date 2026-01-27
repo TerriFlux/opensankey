@@ -609,6 +609,8 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public applyPosition() {
     if (this.d3_selection !== null) {
+        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
+      this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
       // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
       if (
         (
@@ -664,7 +666,7 @@ export class Class_NodeElement extends Class_NodeBase {
                 + nodeAbove.getShapeHeightToUse()
                 + this.shape_position_dy
             }
-          } else if (has_container) {
+          } else if (has_container && echangeTag && this.hasGivenTag(echangeTag)) {
              this.position_y = this._attached_container[0].position_y
           }
         }
