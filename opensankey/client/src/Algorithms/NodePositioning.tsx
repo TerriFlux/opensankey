@@ -1638,8 +1638,9 @@ export class NodePositioning {
     }
     const first_level_tagg = this.drawingArea.sankey.level_taggs_list.filter(
       tagg => tagg.activated
-    )[0].tags_list[0] as Class_LevelTag
-    this.computeParametricV(first_level_tagg)
+    )[0]?.tags_list[0] as Class_LevelTag
+    if (first_level_tagg)
+      this.computeParametricV(first_level_tagg)
     // // Sort input and output links for each node based on their connected nodes' position_v
     // this.drawingArea.sankey.nodes_list.forEach(node => {
     //   // Get current links order
