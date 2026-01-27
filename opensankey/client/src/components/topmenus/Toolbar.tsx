@@ -623,12 +623,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             app_data.drawing_area.resetAllVerticalIntervals()
             level_tagg.selectTagsFromId(selected_tag ?? '')
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-            app_data.sendWaitingToast(
-              () => {
-                app_data.drawing_area.draw()
-                app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
-                updateComponents()
-              })
+
+            app_data.drawing_area.draw()
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
+            updateComponents()
           }
           } />
       ) : <></>
