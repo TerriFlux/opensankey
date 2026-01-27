@@ -3,7 +3,7 @@
 // ==================================================================================================
 
 import { LINK_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextLinkConfig'
-import { NODE_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextNodeConfig'
+import { NODE_MENU_CONFIG, STATIC_NODE_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextNodeConfig'
 import { createZDDModifier, ZDD_MENU_CONFIG } from '../deps/OpenSankey/components/dialogs/ContextZDDConfig'
 import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeActions'
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
@@ -75,6 +75,12 @@ new_structure[5].children!.push({
   actionName: 'createUnitarySankey'
 })
 
+const new_static_structure = [...STATIC_NODE_MENU_CONFIG.structure]
+new_static_structure.push({
+  type: 'button',
+  actionName: 'createUnitarySankey'
+})
+
 export const createNodeMenuConfigPlus = (): MenuConfig => {
   return {
     ...NODE_MENU_CONFIG,
@@ -95,6 +101,30 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
     },
     sectionTitles: {
       ...NODE_MENU_CONFIG.sectionTitles,
+      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey' }
+    }
+  }
+}
+export const createStaticNodeMenuConfigPlus = (): MenuConfig => {
+  return {
+    ...STATIC_NODE_MENU_CONFIG,
+    structure: new_static_structure,
+    actions: {
+      ...STATIC_NODE_MENU_CONFIG.actions,
+      createUnitarySankey: {
+        type: 'action',
+        labels: {
+          en: 'Creates unitary sankey',
+          fr: 'Créer sankey unitaire'
+        },
+        tooltips: {
+          en: 'Creates unitary sankey',
+          fr: 'Créer sankey unitaire'
+        }
+      }
+    },
+    sectionTitles: {
+      ...STATIC_NODE_MENU_CONFIG.sectionTitles,
       createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey' }
     }
   }
