@@ -96,7 +96,7 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
       'name_label_vert': 'bottom',
       'shape_position_dx': 100,
       'shape_position_dy': 50,
-        'shape_orientation': 'hv',
+      'shape_orientation': 'hv',
       'shape_starting_tangeant': 0.25,
       'shape_ending_tangeant': 1
     }
@@ -141,8 +141,29 @@ export const elementStyleConfigs: ElementStyleConfigsDict = {
   LinkImportExportCloseStyle: {
     name: 'Flux import export collé',
     config: {
+      'shape_orientation': 'hv',
       'value_label_is_visible': true,
       'value_label_on_path': true,
+    }
+  },
+  LinkImportCloseStyle: {
+    name: 'Flux import collé',
+    config: {
+      'shape_orientation': 'vh',
+      'value_label_is_visible': true,
+      'value_label_on_path': true,
+      'value_label_horiz': 'right',
+      'value_label_vert': 'middle'
+    }
+  },
+  LinkExportCloseStyle: {
+    name: 'Flux export collé',
+    config: {
+      'shape_orientation': 'hv',
+      'value_label_is_visible': true,
+      'value_label_on_path': true,
+      'value_label_horiz': 'left',
+      'value_label_vert': 'middle'
     }
   },
   LinkImportExportAboveBelowStyle: {
@@ -259,8 +280,9 @@ export const base_styles: readonly ElementStyleKey[] = ['NodeStyle', 'LinkStyle'
 export const product_sector_styles: readonly ElementStyleKey[] = ['NodeProductStyle', 'NodeSectorStyle'] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
   'NodeExportBelowStyle', 'NodeExportCloseStyle', 'NodeImportAboveStyle', 'NodeImportCloseStyle',
-  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle','LinkImportExportAboveBelowStyle','LinkImportExportCloseStyle'
+  'NodeImportExportAboveBelowStyle', 'NodeImportExportCloseStyle', 'LinkImportExportAboveBelowStyle', 'LinkImportExportCloseStyle',
+  'LinkImportCloseStyle', 'LinkExportCloseStyle'
 ] as const
 
 export const node_unitary_styles: readonly ElementStyleKey[] = [
-  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle','LinkInUnitaryStyle', 'LinkOutUnitaryStyle'] as const
+  'SankeyUnitaryNodeOutputStyle', 'SankeyUnitaryNodeInputStyle', 'SankeyUnitaryNodeStyle', 'LinkInUnitaryStyle', 'LinkOutUnitaryStyle'] as const

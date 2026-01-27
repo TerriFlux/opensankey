@@ -635,79 +635,50 @@ export class Class_NodeElement extends Class_NodeBase {
           }
         }
         // Apply parametric position
-        else { // if (this.shape_position_type === 'parametric')
+        else {
           const process_nodes = this.sankey.visible_nodes_list
-          const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-          const same_u_import = process_nodes.filter(n => n.output_links_list.length > 0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
-          const same_u_export = process_nodes.filter(n => n.input_links_list.length > 0 && n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
-          const same_u_other = process_nodes.filter(n => !n.hasGivenTag(echangeTag!) && n.position_u === this.position_u)
-          if (echangeTag && this.hasGivenTag(echangeTag) && this.output_links_list.length > 0) {
-            // Importations
-            const firstNonEchangeNodeBelow = same_u_other.filter(n => !n.hasGivenTag(echangeTag)).sort((n1, n2) => n1.position_y - n2.position_y)[0]
-            //same_u = same_u.filter(n => n.hasGivenTag(echangeTag) && n.output_links_list.length > 0)
-            const nodeAbove = same_u_import[same_u_import.indexOf(this) - 1]
-            if (nodeAbove) {
-              this._position.y = nodeAbove.position_y
-                + nodeAbove.getShapeHeightToUse()
-                + this.shape_position_dy
-            } else {
-              // position of the first import node
-              this._position.y = firstNonEchangeNodeBelow.position_y - 100 - this.getShapeHeightToUse() - (same_u_import.length - 1) * this.shape_position_dy
-            }
-            // if (firstNonEchangeNodeBelow && firstNonEchangeNodeBelow.position_y < this.position_y + 200) {
-            //   // The import nodes must be above the rest of the diagram. It is pushed downward.
-            //   const shift = 200 + this.position_y - firstNonEchangeNodeBelow.position_y
-            //   this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.shiftVertically(shift))
-            //   this.sankey.nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => n.draw())
-            // }
-          }
-          else if (echangeTag && this.hasGivenTag(echangeTag) && this.input_links_list.length > 0) {
-            // Exportations
-            const nodeAbove = same_u_export[same_u_export.indexOf(this) - 1]
-            if (nodeAbove) {
-              this._position.y = nodeAbove.position_y
-                + nodeAbove.getShapeHeightToUse()
-                + this.shape_position_dy
-            } else {
-              let max_vertical_offset = 0
-              this.sankey.visible_nodes_list.filter(n => !n.hasGivenTag(echangeTag)).forEach(n => {
-                max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-              })
-              this._position.y = max_vertical_offset + 100
-            }
-          }
-          else {
-            const nodeAbove = same_u_other[same_u_other.indexOf(this) - 1]
-            if (nodeAbove) {
-              const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item =>
+          const same_u_other = process_nodes.filter(n => n.position_u === this.position_u)
+          const current_index = same_u_other.indexOf(this)
+
+          // Chercher le premier noeud au-dessus qui n'a pas de container ou qui partage un container
+          let nodeAbove: Class_NodeElement | undefined = undefined
+          const has_container = this._attached_container.length > 0
+          for (let i = current_index - 1; i >= 0; i--) {
+            const candidate = same_u_other[i]
+            const no_container = candidate._attached_container.length == 0
+            const same_container =
+              candidate._attached_container.some(item =>
                 this._attached_container.includes(item)
               )
-              if (same_container) {
-                this._position.y = nodeAbove.position_y
-                  + nodeAbove.getShapeHeightToUse()
-                  + this.shape_position_dy
-              }
-            } else {
-              // if (this.position_auto_y) {
-              //   this._position.y = 0
-              // }
+            if (same_container || (no_container && !has_container)) {
+              nodeAbove = candidate
+              break
             }
-            // if (this.position_auto_x) {
-            //   this._position.x = this. position_u * this.shape_position_dx
-            // }
+          }
+          if (nodeAbove) {
+            const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item =>
+              this._attached_container.includes(item)
+            )
+            if (same_container) {
+              this._position.y = nodeAbove.position_y
+                + nodeAbove.getShapeHeightToUse()
+                + this.shape_position_dy
+            }
+          } else if (has_container) {
+             this.position_y = this._attached_container[0].position_y
           }
         }
       }
-
       this.input_links_list.filter(l => l.source.shape_position_type == 'relative').forEach(l => l.source.applyPosition())
       this.output_links_list.filter(l => l.target.shape_position_type == 'relative').forEach(l => l.target.applyPosition())
 
       super.applyPosition()
+
+
     }
     // Redraw links
     this._drawLinks()
   }
-
   // 🔄 PRIVATE DRAWING METHODS - RÉINTÉGRÉS DIRECTEMENT ===========================
 
   /**
@@ -1281,7 +1252,7 @@ export class Class_NodeElement extends Class_NodeBase {
       const node_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
       const node_importexport_style = this.shape_position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
       const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : ''
-      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : ''
+      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'LinkExportCloseStyle' : ''
       const link_importexport_style = this.shape_position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
 
       new_node.style = [
