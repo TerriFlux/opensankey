@@ -352,7 +352,7 @@ export class Class_ApplicationData {
     // Reset Class_ApplicationData instance
     if (redraw) {
       this.reset({})
-      this.draw()
+      this.drawing_area.draw()
     }
 
     sessionStorage.setItem('dismiss_warning_sankey_plus', '0')
