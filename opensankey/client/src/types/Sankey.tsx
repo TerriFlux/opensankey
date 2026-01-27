@@ -945,7 +945,6 @@ export class Class_Sankey {
         ]
         n.getFirstOutputLink()!.style = [
           link_styles_dict['LinkImportExportCloseStyle'],
-          link_styles_dict['LinkImportCloseStyle']
         ]
       })
       export_nodes.forEach(n => {
@@ -956,7 +955,6 @@ export class Class_Sankey {
         ]
         n.getFirstInputLink()!.style = [
           link_styles_dict['LinkImportExportCloseStyle'],
-          link_styles_dict['LinkExportCloseStyle']
         ]
       })
     } else {
@@ -972,7 +970,6 @@ export class Class_Sankey {
         ]
         n.getFirstOutputLink()!.style = [
           link_styles_dict['LinkImportExportAboveBelowStyle'],
-          link_styles_dict['LinkImportAboveStyle']
         ]
       })
       export_nodes.forEach(n => {
@@ -982,8 +979,7 @@ export class Class_Sankey {
           node_styles_dict['NodeExportBelowStyle']
         ]
         n.getFirstInputLink()!.style = [
-          link_styles_dict['LinkImportExportAboveBelowStyle'],
-          link_styles_dict['LinkExportBelowStyle']
+          link_styles_dict['LinkImportExportAboveBelowStyle']
         ]
       })
     }
