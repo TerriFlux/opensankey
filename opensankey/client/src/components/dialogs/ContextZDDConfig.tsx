@@ -393,10 +393,9 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const { sankey } = drawing_area
   const { nodePositioning } = drawing_area
   const { dict_setter_show_dialog } = menu_configuration
-  const { ref_setter_show_modal_styles, ref_setter_show_element_ordoner } = dict_setter_show_dialog
+  const { ref_setter_show_modal_styles } = dict_setter_show_dialog
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.styles_dict['default']
-  const echangeTag = sankey.node_taggs_dict['type de noeud'] ? sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
   return {
     fromNew: () => app_data.reinitialization(),
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
@@ -416,7 +415,6 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
-    // openGraphOrder: () => ref_setter_show_element_ordoner.current(true),
     
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated
