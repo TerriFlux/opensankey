@@ -1682,8 +1682,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
   position_dy: {
-    default: 20,
-    type: (() => 20) as (() => number),
+    default: 50,
+    type: (() => 50) as (() => number),
     category: 'shape' as const,
     actions: ['drawShape'] as BaseActionType[],
 
