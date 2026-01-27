@@ -36,10 +36,12 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 
 interface NodeIOReorganizerProps {
   app_data: Class_ApplicationData,
+  node: Class_NodeElement
 }
 
 export const NodeIOReorganizer = ({
   app_data,
+  node,
 }: NodeIOReorganizerProps) => {
   // ✅ Constantes
   const { t, icon_library } = app_data
@@ -47,16 +49,9 @@ export const NodeIOReorganizer = ({
   
   // ✅ TOUS LES HOOKS D'ABORD (avant tout return)
   const [_, setCount] = useState(0)
-  const [node, setNode] = useState<Class_NodeElement | undefined>(undefined)
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
   const [tab_colored, setTabColored] = useState(false)
-
-  // Configuration du setter
-  app_data.menu_configuration.set_node_io_reorganizer.current = (
-    _node: Class_NodeElement | undefined) => {
-    setNode(_node)
-  }
 
 
   // ✅ TOUS LES useEffect AVANT le return
@@ -184,7 +179,7 @@ export const NodeIOReorganizer = ({
   let idx_link_io_visible = -1
 
   return (
-    <Box layerStyle='menu_sub_section'>
+    <>
       {/* Choisir un lien entrant / sortant */}
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <OSTooltip label={t('Noeud.PF.tooltips.io')}>
@@ -351,6 +346,6 @@ export const NodeIOReorganizer = ({
           </Droppable>
         </DragDropContext>
       </Table>
-    </Box>
+    </>
   )
 }

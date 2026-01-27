@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, {useState} from 'react'
+import React, { useState } from 'react'
 import { Select } from '@chakra-ui/react'
 import { TFunction } from 'i18next'
 import { ValueOptionType, value_option_percent_constants_source, value_option_percent_constants_target } from '../../Elements/LinkValues'
@@ -33,7 +33,8 @@ import { Box, Button } from '@chakra-ui/react'
 import {
   RowSetter2Cols, DataTagSelector, OSTooltip,
   BOX2COLSTITLEH4,
-  ConfigMenuNumberInput, ConfigMenuTextInput} from './MenuCommon'
+  ConfigMenuNumberInput, ConfigMenuTextInput
+} from './MenuCommon'
 import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { SankeyLinkSelection } from './MenuElementsSelection'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
@@ -46,20 +47,21 @@ interface LinkValueTypeSelectorProps {
 }
 
 export const LinkValueTypeSelector = ({
-  t,app_data
-}:LinkValueTypeSelectorProps) => {
+  t, app_data
+}: LinkValueTypeSelectorProps) => {
   const [state, setState] = useState<{
     selected_links: Class_LinkElement[],
     unit_data_tagg?: Class_DataTagGroup,
-    refreshThis: ()=>void}>({
-      selected_links:[],
-      refreshThis: ()=>null
-    })
+    refreshThis: () => void
+  }>({
+    selected_links: [],
+    refreshThis: () => null
+  })
 
   app_data.menu_configuration.r_value_type_set_elements.current = (
     _selected_links: Class_LinkElement[],
     _unit_data_tagg: Class_DataTagGroup,
-    _refreshThis: ()=>void
+    _refreshThis: () => void
   ) => {
     setState({
       selected_links: _selected_links,
@@ -74,8 +76,8 @@ export const LinkValueTypeSelector = ({
 
   // ✅ Fonction de calcul du value_option
   const compute_value_option = (
-    value_type: string, 
-    node_ref: string, 
+    value_type: string,
+    node_ref: string,
     dir: string
   ): string | undefined => {
     if (value_type === 'value') return 'value'
@@ -270,20 +272,20 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   // Function used to force this component to reload
   const [, setCount] = useState(0)
-  
+
   const refreshThis = () => {
     setCount(a => a + 1)
   }
-  
+
   // Link this menu's update function
   const refreshThisAndUpdateRelatedComponents = () => {
-    drawing_area.updateScaleAtLinkValueSetting()
+    //drawing_area.updateScaleAtLinkValueSetting()
     // Toogle saving indicator
     ref_to_save_in_cache_indicator.current(false)
     // And update this menu also
     menu_configuration.updateComponentRelatedToLinksData()
   }
-  
+
   ref_to_menu_config_links_data_updater.current = refreshThis
 
   // const shapeValues = selected_links.length > 0
@@ -349,7 +351,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   return <Box layerStyle='menu_sub_section'>
     <SankeyLinkSelection app_data={app_data} />
-    
+
     {/* Data tags selector */}
     {data_taggs_list.map(data_tagg => {
       return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
@@ -376,9 +378,12 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         <ConfigMenuNumberInput
           t={t}
           default_value={default_value}
-          function_on_blur={(_: number | null) => Class_LinkElement.updateLinks(
-            app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
-          )}
+          function_on_blur={(_: number | null) => {
+            Class_LinkElement.updateLinks(
+              app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
+            )
+            drawing_area.updateScaleAtLinkValueSetting()
+          }}
           minimum_value={0}
           stepper={true}
           step={1}
@@ -404,12 +409,12 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
             app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
             app_data.menu_configuration.r_value_type_set_elements.current(
               selected_links,
-            unit_data_tagg!,
-            refreshThisAndUpdateRelatedComponents
+              unit_data_tagg!,
+              refreshThisAndUpdateRelatedComponents
             )
           }}
         >
-        Type
+          Type
         </Button>
       </Box>
     </Box>

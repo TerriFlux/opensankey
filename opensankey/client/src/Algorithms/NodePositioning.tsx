@@ -31,7 +31,7 @@ import {
 import {
   Class_LinkElement
 } from '../Elements/Link'
-import { Class_Tag } from '../types/Tag'
+import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 
@@ -1537,11 +1537,14 @@ export class NodePositioning {
     )
     const other_nodes = process_nodes.filter(n => !n.hasGivenTag(echangeTag))
 
-    let max_vertical_offset = 0
-    other_nodes.forEach(n =>
-      max_vertical_offset = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_offset)
-    )
-    max_vertical_offset = max_vertical_offset + 200
+    let max_vertical_y = 0
+    let min_vertical_y = 5000
+    other_nodes.forEach(n => {
+      max_vertical_y = Math.max(n.position_y + n.getShapeHeightToUse(), max_vertical_y)
+      min_vertical_y = Math.min(n.position_y, min_vertical_y)
+    })
+    max_vertical_y = max_vertical_y + 200
+    min_vertical_y = min_vertical_y - 200
 
     import_nodes.forEach(node => {
       const output_link = node.output_links_list[0]
@@ -1551,9 +1554,27 @@ export class NodePositioning {
       if (compute_xy) {
         const x = target_node.position_x + node.shape_position_dx
         node.position_x = x
-        node.position_y = 50
+        //node.position_y = 50
       }
     })
+
+    if (import_nodes.length > 0 && import_nodes[0].style.find(style => style.id == 'NodeImportExportAboveBelowStyle')) {
+      let cont = this.drawingArea.sankey.containers_dict['import']
+      if (!cont) {
+        cont = this.drawingArea.sankey.addNewContainer('import', 'Importations')
+        cont.position_y = min_vertical_y
+        cont.tied_to_nodes = true
+      }
+
+      import_nodes.forEach(node => {
+        node.getListDescendantOfNode().forEach(n => {
+          cont.attachNodeToCont(n)
+        })
+        cont.attachNodeToCont(node)
+      })
+    } else {
+      delete this.drawingArea.sankey.containers_dict['import']
+    }
 
     export_nodes.forEach(node => {
       const input_link = node.input_links_list[0]
@@ -1566,9 +1587,27 @@ export class NodePositioning {
       if (compute_xy) {
         const x = source_node.position_x + node.shape_position_dx
         node.position_x = x
-        node.position_y = max_vertical_offset
+        //node.position_y = max_vertical_y
       }
     })
+
+    if (export_nodes.length > 0 && export_nodes[0].style.find(style => style.id == 'NodeImportExportAboveBelowStyle')) {
+      let cont = this.drawingArea.sankey.containers_dict['export']
+      if (!cont) {
+        cont = this.drawingArea.sankey.addNewContainer('export', 'Exportations')
+        cont.position_y = max_vertical_y
+        cont.tied_to_nodes = true
+      }
+
+      export_nodes.forEach(node => {
+        node.getListDescendantOfNode().forEach(n => {
+          cont.attachNodeToCont(n)
+        })
+        cont.attachNodeToCont(node)
+      })
+    } else {
+      delete this.drawingArea.sankey.containers_dict['export']
+    }
   }
 
   // PARAMETRIZATION METHODS ============================================================
@@ -1597,8 +1636,10 @@ export class NodePositioning {
         node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].shape_position_dx!)
       })
     }
-
-    this.computeParametricV()
+    const first_level_tagg = this.drawingArea.sankey.level_taggs_list.filter(
+      tagg => tagg.activated
+    )[0].tags_list[0] as Class_LevelTag
+    this.computeParametricV(first_level_tagg)
     // // Sort input and output links for each node based on their connected nodes' position_v
     // this.drawingArea.sankey.nodes_list.forEach(node => {
     //   // Get current links order
@@ -1679,13 +1720,13 @@ export class NodePositioning {
   }
 
   // Fonction qui applique le V pour un level tag donné
-  public applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }) {
+  public applyVForLevelTag(columns: { [_: number]: Class_NodeElement[] }, tag: Class_LevelTag) {
     Object.values(columns).forEach(column => {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
       column.forEach(n => {
         n.position_v = -1
-        current_v = this.applyVDesagregate(n, current_v)
+        current_v = this.applyVDesagregate(n, current_v, tag)
       })
     })
     Object.values(columns).forEach(column => {
@@ -1694,7 +1735,7 @@ export class NodePositioning {
   }
 
   // Fonction principale refactorisée
-  public computeParametricV() {
+  public computeParametricV(tag: Class_LevelTag) {
     const columns = this.computeColumns()
 
     if (this.drawingArea.sankey.level_taggs_list.length == 0) {
@@ -1706,16 +1747,16 @@ export class NodePositioning {
     }
 
     //this.drawingArea.sankey.level_taggs_list.forEach(tagGroup => {
-    this.applyVForLevelTag(columns)
+    this.applyVForLevelTag(columns, tag)
     //})
 
     this.drawingArea.sankey.sortNodes()
   }
 
   // Fonction qui compute le V paramétrique pour un tag spécifique
-  public computeParametricVForTagg() {
+  public computeParametricVForTagg(tag: Class_LevelTag) {
     const columns = this.computeColumns()
-    this.applyVForLevelTag(columns)
+    this.applyVForLevelTag(columns, tag)
     this.drawingArea.sankey.sortNodes()
   }
   /**
@@ -1745,6 +1786,7 @@ export class NodePositioning {
   public applyVDesagregate(
     node: Class_NodeElement,
     current_v: number,
+    tag: Class_LevelTag
   ) {
     // if (node.master_node) {
     //   return current_v
@@ -1754,16 +1796,17 @@ export class NodePositioning {
       node.position_v = current_v
     }
     let new_current_v = current_v
-    // let desagregated_nodes: Class_NodeElement[] = []
-    node.dimensions_as_parent.forEach(d => {
-      //const d = node.nodeDimensionAsParent(tagGroup)
-      if (!d) return new_current_v + 1
-      if (d.children.includes(node)) return new_current_v + 1
-      const desagregated_nodes = d.children
+    let desagregated_nodes = [...new Set(node.dimensions_as_parent.flatMap(d => d.children))] as Class_NodeElement[]
+    desagregated_nodes.filter(n=>n.hasGivenTag(tag))
+    desagregated_nodes.forEach(d => {
+      //const d = node.nodeDimensionAsParent(node)
+      //if (!d) return new_current_v + 1
+      //if (d.children.includes(node)) return new_current_v + 1
+      //const desagregated_nodes = d.children
 
-      //const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
+      const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
       if (desagregated_nodes.length > 0) {
-        //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
+        let current_y = node.position_y /*+ node.getShapeHeightToUse() / 2*/ - shift_y /*- desagregated_nodes[0].getShapeHeightToUse()*/
         desagregated_nodes.forEach(nn => {
           if (nn.master_node) {
             return
@@ -1771,9 +1814,10 @@ export class NodePositioning {
           nn.position_v = -1
           nn.position_x = node.position_x
           nn.position_u = node.position_u
-          // nn.position_y = current_y
-          // current_y += nn.getShapeHeightToUse() + nn.shape_position_dy
-          new_current_v = this.applyVDesagregate(nn, new_current_v)
+          nn.position_y = current_y
+          current_y += nn.getShapeHeightToUse() + nn.shape_position_dy
+          if(tag.group.tags_list[tag.group.tags_list.indexOf(tag)])
+            new_current_v = this.applyVDesagregate(nn, new_current_v, tag.group.tags_list[tag.group.tags_list.indexOf(tag)] as Class_LevelTag)
         })
       }
     })
@@ -1816,7 +1860,7 @@ export class NodePositioning {
           // Split trade nodes
           // this.splitTrade()
           // Computes u v,x and initial y for trade nodes
-          this.arrangeTrade(true)
+          //this.arrangeTrade(true)
         }
 
         // Default color + auto reorg of links
@@ -1840,7 +1884,7 @@ export class NodePositioning {
         this.drawingArea.recenter()
         this.drawingArea.to_recenter = false
         // Update area
-        this.drawingArea.areaAutoFit()
+        //this.drawingArea.areaAutoFit()
         // Toggle saving indicator
         this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
