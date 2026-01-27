@@ -305,35 +305,11 @@ export const SankeyMenu = (
       <LabelRichTextEditor
         app_data={app_data}
       />
-      {/* <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_shape_attribute_editor'}
-        content={<MenuShapeAttributes app_data={app_data} />}
-        title={'Fond de Label'}
-        minW={'25vw'}
-        maxW={'25vw'}
-      /> */}
-      {/* <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_value_formatting_editor'}
-        content={<MenuUnit app_data={app_data} />}
-        title={'Formattage des valeurs'}
-        minW={'25vw'}
-        maxW={'25vw'}
-      /> */}
       <MenuDraggable
         dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
         dialog_name={'ref_setter_show_value_type_editor'}
         content={<LinkValueTypeSelector app_data={app_data} t={t}/>}
         title={'Type de valeur'}
-        minW={'25vw'}
-        maxW={'25vw'}
-      />
-      <MenuDraggable
-        dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
-        dialog_name={'ref_setter_show_node_reorganizer_editor'}
-        content={<NodeIOReorganizer app_data={app_data} />}
-        title={t('Noeud.Reorg_title')}
         minW={'25vw'}
         maxW={'25vw'}
       />

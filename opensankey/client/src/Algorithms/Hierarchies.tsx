@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import { Class_NodeDimension } from '../Elements/NodeDimension'
-import { Class_Tag } from '../types/Tag'
+import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { default_style_id } from '../types/Utils'
 import { Class_ElementStyle } from '../Elements/Element'
 import { Class_NodeElement } from '../Elements/Node'
@@ -912,7 +912,8 @@ export const disaggregate = (
     let current_v = aggregateNode.position_v
     column.forEach(n => {
       n.position_v = -1
-      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v)
+      const levelTagg = new_data.drawing_area.sankey.level_taggs_dict[parent_dim.id]
+      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v,levelTagg.selected_tags_list[0] as Class_LevelTag)
       new_data.drawing_area.sankey.sortNodes()
     })
 
