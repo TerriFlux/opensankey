@@ -707,6 +707,10 @@ export abstract class DrawLabelBase {
     // ✅ MODIFIÉ : Ne pas décaler vers le haut si inside_vert et vert === 'top'
     if (vert === 'top' && lineCount > 0 && !inside_vert) {  // ✅ Ajout de !inside_vert
       textElement.attr('y', label_pos_y - lineCount * font_size)
+    }
+    // ✅ AJOUT : Pour bottom + inside_vert, remonter le texte
+    else if (vert === 'bottom' && lineCount > 0 && inside_vert) {
+      textElement.attr('y', label_pos_y - lineCount * font_size)
     } else if (vert === 'middle' && lineCount > 0) {
       textElement.attr('y', label_pos_y - (lineCount * font_size / 2))
     }
