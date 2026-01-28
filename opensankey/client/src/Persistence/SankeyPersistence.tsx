@@ -172,6 +172,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
+    proto_element['_style'].forEach(style=>style.addReference(proto_element))
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
@@ -473,12 +474,13 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'label_vert': 'name_label_vert'
 
     }
-    const was_gradient = getBooleanFromJSON(json_object, 'gradient', false) as boolean
-    if (was_gradient) {
-      link.attributes['shape_color_rule'] = 'gradient'
-    }
+
     const json_local = json_object.local as Type_JSON
     if (json_local) {
+      const was_gradient = getBooleanFromJSON(json_local, 'gradient', false) as boolean
+      if (was_gradient) {
+        link.attributes['shape_color_rule'] = 'gradient'
+      }
       Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
@@ -687,13 +689,15 @@ export class NodeElementPersistence extends NodeBasePersistence {
     })
 
     if (node.icon_is_image) {
-      node.icon_is_visible = true
-      node.icon_inside_horiz = true
-      node.icon_inside_vert = true
+      node.attributes['icon_is_icon'] = false
+      node.attributes['icon_is_image'] = true
+      node.attributes['icon_is_visible'] = true
+      node.attributes['icon_inside_horiz'] = true
+      node.attributes['icon_inside_vert'] = true
     }
     if (node.icon_is_visible) {
-      node.icon_vert = 'middle'
-      node.icon_horiz = 'middle'
+      node.attributes['icon_vert'] = 'middle'
+      node.attributes['icon_horiz'] = 'middle'
     }
     node.name_label_text_align = 'middle'
     if (json_local?.name_label_horiz == 'left') node.name_label_text_align = 'right'

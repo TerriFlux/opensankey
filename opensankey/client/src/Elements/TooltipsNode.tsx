@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 import { Class_NodeElement } from './Node'
 import { Class_LinkElement } from './Link'
-import { TOOLTIP_STYLES,TooltipBehaviorManager } from './TooltipsCSS'
+import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { TFunction } from 'i18next'
 
 
@@ -86,6 +86,7 @@ export class NodeTooltip {
   }
 
   private getTooltipHTML(): string {
+    this._node.sankey.drawing_area.bypass_redraws = true
     // Calculs des valeurs
     let input_val = 0
     let output_val = 0
@@ -140,6 +141,7 @@ export class NodeTooltip {
     }
 
     html += '</div>'
+    this._node.sankey.drawing_area.bypass_redraws = false
     return html
   }
 
@@ -157,7 +159,10 @@ export class NodeTooltip {
       row += `<td>${nodeName}</td>`
       const data_label_visible = link.value_label_is_visible
       link.value_label_is_visible = true
+      const tmp = link.value_label_unit_type
+      link.value_label_unit_type = 'unit_name'
       row += `<td class="value">${link.data_label('value_label')}</td>`
+      link.value_label_unit_type = tmp
       link.value_label_is_visible = data_label_visible
       row += `<td class="ratio">${ratio}</td>`
       row += '</tr>'
@@ -199,7 +204,7 @@ export class NodeTooltip {
   private getTagsTabHTML(hasInputs: boolean, hasOutputs: boolean, input_val: number, output_val: number, t: TFunction): string {
     let html = '<table class="tooltip-table"><thead><tr>'
     html += `<th>${t('Noeud.drawing_area_tooltip.prov')} / ${t('Noeud.drawing_area_tooltip.dest')}</th>`
-    
+
     this._node.sankey.flux_taggs_list.forEach(tagg => {
       html += `<th>${tagg.name}</th>`
     })
@@ -209,7 +214,7 @@ export class NodeTooltip {
       const nodeName = isInput ? link.source.name : link.target.name
       let row = '<tr>'
       row += `<td>${nodeName}</td>`
-      
+
       this._node.sankey.flux_taggs_list.forEach(tagg => {
         const names: string[] = []
         link.flux_tags_list.forEach(tag => {
