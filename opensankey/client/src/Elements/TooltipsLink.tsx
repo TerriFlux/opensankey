@@ -93,7 +93,10 @@ export class LinkTooltip {
     // if (has_results)
     // html += `<th>${this._link.drawing_area.application_data.t('Noeud.drawing_area_tooltip.result_value')}</th>`
     html += '<th>Valeur</th>'
+    const tmp = this._link.value_label_unit_type
+    this._link.value_label_unit_type = 'unit_name'
     html += `<td>${link_data_label('free_value',this._link,'value_label')}</td>`
+    this._link.value_label_unit_type = tmp
     html += '</tr>'
 
     if (this._link.value?.valueData !== null && this._link.value?.valueResult !== null) {

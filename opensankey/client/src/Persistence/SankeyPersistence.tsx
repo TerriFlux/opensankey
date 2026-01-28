@@ -172,6 +172,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
+    proto_element['_style'].forEach(style=>style.addReference(proto_element))
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
@@ -273,13 +274,13 @@ export class ContainerPersistence extends NodeBasePersistence {
       }
     })
     container.name = json_object['title'] as string
-      container.attributes['shape_color_visible'] = json_object['color_visible']
-      container.attributes['shape_border_visible'] = !json_object['transparent_border']
-      container.attributes['shape_color'] = json_object['color']
-      if (json_object['opacity'] !== undefined)
-        container.attributes['shape_opacity'] = +json_object['opacity']/100
-      
-      container.attributes['shape_border_radius'] = 5
+    container.attributes['shape_color_visible'] = json_object['color_visible']
+    container.attributes['shape_border_visible'] = !json_object['transparent_border']
+    container.attributes['shape_color'] = json_object['color']
+    if (json_object['opacity'] !== undefined)
+      container.attributes['shape_opacity'] = +json_object['opacity'] / 100
+
+    container.attributes['shape_border_radius'] = 5
     if (json_object['is_image']) {
       // Image mode: configure as image container
       //container.attributes['name_label_is_visible'] = false
@@ -322,25 +323,27 @@ export class ContainerPersistence extends NodeBasePersistence {
           container.attributes[key] = jsonValue as ExtractAttributeValue<ConfigType[typeof key]>
         }
       }
-    });
-container.attributes['name_label_fo_content']  = (container.attributes['name_label_fo_content'] as string)
-// Alignements
-    .replace(/class="ql-align-center"/g, 'style="text-align: center"')
-    .replace(/class="ql-align-right"/g, 'style="text-align: right"')
-    .replace(/class="ql-align-left"/g, 'style="text-align: left"')
-    .replace(/class="ql-align-justify"/g, 'style="text-align: justify"')
-    
-    // Tailles standard Quill
-    .replace(/class="ql-size-small"/g, 'style="font-size: 0.75em"')
-    .replace(/class="ql-size-large"/g, 'style="font-size: 1.5em"')
-    .replace(/class="ql-size-huge"/g, 'style="font-size: 2.5em"')
-    
-    // Tailles custom (9px à 120px) - si tu as des ql-size-25px par exemple
-    .replace(/class="ql-size-(\d+)px"/g, 'style="font-size: $1px"')
-    
-    // Fonts
-    .replace(/class="ql-font-serif"/g, 'style="font-family: serif"')
-    .replace(/class="ql-font-monospace"/g, 'style="font-family: monospace"')
+    })
+    if (container.attributes['name_label_fo_content']) {
+      container.attributes['name_label_fo_content'] = (container.attributes['name_label_fo_content'] as string)
+        // Alignements
+        .replace(/class="ql-align-center"/g, 'style="text-align: center"')
+        .replace(/class="ql-align-right"/g, 'style="text-align: right"')
+        .replace(/class="ql-align-left"/g, 'style="text-align: left"')
+        .replace(/class="ql-align-justify"/g, 'style="text-align: justify"')
+
+        // Tailles standard Quill
+        .replace(/class="ql-size-small"/g, 'style="font-size: 0.75em"')
+        .replace(/class="ql-size-large"/g, 'style="font-size: 1.5em"')
+        .replace(/class="ql-size-huge"/g, 'style="font-size: 2.5em"')
+
+        // Tailles custom (9px à 120px) - si tu as des ql-size-25px par exemple
+        .replace(/class="ql-size-(\d+)px"/g, 'style="font-size: $1px"')
+
+        // Fonts
+        .replace(/class="ql-font-serif"/g, 'style="font-family: serif"')
+        .replace(/class="ql-font-monospace"/g, 'style="font-family: monospace"')
+    }
     // Load tied_to_nodes flag
     container['_tied_to_nodes'] = getBooleanFromJSON(
       json_object,
@@ -471,12 +474,13 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'label_vert': 'name_label_vert'
 
     }
-    const was_gradient = getBooleanFromJSON(json_object, 'gradient', false) as boolean
-    if (was_gradient) {
-      link.attributes['shape_color_rule'] = 'gradient'
-    }
+
     const json_local = json_object.local as Type_JSON
     if (json_local) {
+      const was_gradient = getBooleanFromJSON(json_local, 'gradient', false) as boolean
+      if (was_gradient) {
+        link.attributes['shape_color_rule'] = 'gradient'
+      }
       Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
@@ -685,13 +689,15 @@ export class NodeElementPersistence extends NodeBasePersistence {
     })
 
     if (node.icon_is_image) {
-      node.icon_is_visible = true
-      node.icon_inside_horiz = true
-      node.icon_inside_vert = true
+      node.attributes['icon_is_icon'] = false
+      node.attributes['icon_is_image'] = true
+      node.attributes['icon_is_visible'] = true
+      node.attributes['icon_inside_horiz'] = true
+      node.attributes['icon_inside_vert'] = true
     }
     if (node.icon_is_visible) {
-      node.icon_vert = 'middle'
-      node.icon_horiz = 'middle'
+      node.attributes['icon_vert'] = 'middle'
+      node.attributes['icon_horiz'] = 'middle'
     }
     node.name_label_text_align = 'middle'
     if (json_local?.name_label_horiz == 'left') node.name_label_text_align = 'right'
@@ -1240,12 +1246,12 @@ export class SankeyPersistence {
       LinkElementPersistence.fromJSON_0_91,
       kwargs
     )
-      SankeyPersistence.load_nodes(
-        sankey,
-        json_object,
-        NodeElementPersistence.fromJSON_0_91,
-        kwargs
-      )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_0_91,
+      kwargs
+    )
     SankeyPersistence.load_containers(
       sankey,
       json_object,
@@ -1276,45 +1282,45 @@ export class SankeyPersistence {
     // const matching_nodes_id: { [_: string]: string } = {}
     // const matching_links_id: { [_: string]: string } = {}
     // First read styles
-if (json_object['style'] !== undefined) {
-  // Set node styles from json data
-  const skip = [
-    'LinkExportCloseStyle', 'LinkImportCloseStyle',
-    'LinkImportAboveStyle', 'LinkExportBelowStyle'
-  ]
-  
-  // D'abord traiter les styles dans l'ordre défini dans elementStyleConfigs
-  const orderedStyleKeys = Object.keys(elementStyleConfigs) as ElementStyleKey[]
-  
-  orderedStyleKeys.forEach((style_id) => {
-    if ((json_object['style']as Type_JSON)[style_id] !== undefined && !skip.includes(style_id)) {
-      const style_json = (json_object['style']as Type_JSON)[style_id]
-      // Create a node style
-      const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
-      // Set node style value to node from JSON
-      StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
-      new_style.name = elementStyleConfigs[style_id].name
-      // Add node style to sankey
-      sankey._styles[style_id] = new_style
+    if (json_object['style'] !== undefined) {
+      // Set node styles from json data
+      const skip = [
+        'LinkExportCloseStyle', 'LinkImportCloseStyle',
+        'LinkImportAboveStyle', 'LinkExportBelowStyle'
+      ]
+
+      // D'abord traiter les styles dans l'ordre défini dans elementStyleConfigs
+      const orderedStyleKeys = Object.keys(elementStyleConfigs) as ElementStyleKey[]
+
+      orderedStyleKeys.forEach((style_id) => {
+        if ((json_object['style'] as Type_JSON)[style_id] !== undefined && !skip.includes(style_id)) {
+          const style_json = (json_object['style'] as Type_JSON)[style_id]
+          // Create a node style
+          const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+          // Set node style value to node from JSON
+          StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
+          new_style.name = elementStyleConfigs[style_id].name
+          // Add node style to sankey
+          sankey._styles[style_id] = new_style
+        }
+      })
+
+      // Ensuite traiter les styles personnalisés qui ne sont pas dans elementStyleConfigs
+      Object.entries(json_object['style'])
+        .filter(([style_id, style_json]) =>
+          !skip.includes(style_id) &&
+          !Object.keys(elementStyleConfigs).includes(style_id)
+        )
+        .forEach(([style_id, style_json]) => {
+          // Create a node style
+          const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
+          // Set node style value to node from JSON
+          StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
+          new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
+          // Add node style to sankey
+          sankey._styles[style_id] = new_style
+        })
     }
-  })
-  
-  // Ensuite traiter les styles personnalisés qui ne sont pas dans elementStyleConfigs
-  Object.entries(json_object['style'])
-    .filter(([style_id, style_json]) => 
-      !skip.includes(style_id) && 
-      !Object.keys(elementStyleConfigs).includes(style_id)
-    )
-    .forEach(([style_id, style_json]) => {
-      // Create a node style
-      const new_style = sankey._styles[style_id] ?? sankey.createNewElementStyle(style_id, style_id, true)
-      // Set node style value to node from JSON
-      StylePersistence.fromJSON(version, new_style, style_json as Type_JSON)
-      new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
-      // Add node style to sankey
-      sankey._styles[style_id] = new_style
-    })
-}
 
     SankeyPersistence.load_tags(json_object, sankey)
     SankeyPersistence.load_links(
