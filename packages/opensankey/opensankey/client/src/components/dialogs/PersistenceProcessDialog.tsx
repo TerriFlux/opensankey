@@ -390,9 +390,13 @@ export const UniversalFileConverter = ({
   const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
     const input_format = getInitialFormat(config.input.format, 'excel')
     set_input_format(input_format)
+    const output_format = getInitialFormat(config.output.format, 'json')
     set_output_format(getInitialFormat(config.output.format, 'json'))
     setAutoLoad(!config.output.required)
-    setAutoSave(!config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob')
+    setAutoSave(
+      input_format == 'blob' && output_format == 'excel' || //save excel
+      !config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob'
+    )
     setAutoLayout(input_format == 'blob')
     setConfig(config)
 
