@@ -419,17 +419,107 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     return this.getStyleProperty(k)
   }
 
-  public get style() {
+  public get style(): readonly Class_ElementStyle[] {
     return this._style
   }
 
-  public set style(_: Class_ElementStyle[]) {
-    if (!_) return
-    this._style.forEach(style => style.removeReference(this))
-    this._style = _
-    _.forEach(style => style.addReference(this))
+  /**
+   * Ajoute un style à l'élément
+   * Le style est ajouté en fin de liste (donc prioritaire)
+   */
+  public addStyle(style: Class_ElementStyle): void {
+    if (!style) return
+
+    // Vérifier que le style n'est pas déjà présent
+    if (this._style.some(s => s.id === style.id)) {
+      console.warn(`Style ${style.id} is already applied to element ${this.id}`)
+      return
+    }
+
+    this._style.push(style)
+    style.addReference(this)
+    this.draw()
+  }
+
+  /**
+   * Retire un style de l'élément par son instance
+   */
+  public removeStyle(style: Class_ElementStyle): void {
+    if (!style) return
+    this.removeStyleById(style.id)
+  }
+
+  /**
+   * Retire un style de l'élément par son ID
+   */
+  public removeStyleById(styleId: string): void {
+    const index = this._style.findIndex(s => s.id === styleId)
+
+    if (index === -1) {
+      console.warn(`Style ${styleId} not found on element ${this.id}`)
+      return
+    }
+
+    // Ne pas permettre de retirer le style par défaut (premier dans la liste)
+    if (index === 0) {
+      console.warn(`Cannot remove default style from element ${this.id}`)
+      return
+    }
+
+    const [removedStyle] = this._style.splice(index, 1)
+    removedStyle.removeReference(this)
+    this.draw()
+  }
+
+  /**
+   * Retire tous les styles sauf le style par défaut
+   */
+  public removeAllStyles(): void {
+    // Conserver uniquement le premier style (style par défaut)
+    const stylesToRemove = this._style.slice(1)
+    this._style = [this._style[0]]
+
+    stylesToRemove.forEach(style => style.removeReference(this))
+    this.draw()
+  }
+
+  /**
+   * Remplace tous les styles (sauf le défaut) par de nouveaux styles
+   * Utile pour des opérations en batch
+   */
+  public replaceStyles(styles: Class_ElementStyle[]): void {
+    if (!styles || styles.length === 0) return
+
+    // Retirer tous les styles actuels sauf le défaut
+    const stylesToRemove = this._style.slice(1)
+    stylesToRemove.forEach(style => style.removeReference(this))
+
+    // Garder le style par défaut et ajouter les nouveaux
+    this._style = [this._style[0], ...styles]
+    styles.forEach(style => style.addReference(this))
 
     this.draw()
+  }
+
+  /**
+   * Vérifie si un style est appliqué à l'élément
+   */
+  public hasStyle(styleId: string): boolean {
+    return this._style.some(s => s.id === styleId)
+  }
+
+  /**
+   * Obtient un style par son ID
+   */
+  public getStyleById(styleId: string): Class_ElementStyle | undefined {
+    return this._style.find(s => s.id === styleId)
+  }
+
+  /**
+   * Obtient tous les styles sauf le style par défaut
+   */
+  public getCustomStyles(): Class_ElementStyle[] {
+    return this._style.slice(1)
   }
 
   public resetAttributes() {

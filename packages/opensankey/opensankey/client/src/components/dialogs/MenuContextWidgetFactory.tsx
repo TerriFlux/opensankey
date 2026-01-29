@@ -255,9 +255,9 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
                   closeOnSelect={false}
                   onClick={() => {
                     if (!has_style) {
-                      contextualised_node.style.push(_)
+                      contextualised_node.addStyle(_)
                     } else {
-                      contextualised_node.style = contextualised_node.style.filter(style => style !== _)
+                      contextualised_node.removeStyle(_)
                     }
                     setUpdate(a => a + 1)
                   }}
@@ -301,9 +301,9 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
                   closeOnSelect={false}
                   onClick={() => {
                     if (!has_style) {
-                      contextualised_link.style.push(_)
+                      contextualised_link.addStyle(_)
                     } else {
-                      contextualised_link.style = contextualised_link.style.filter(style => style !== _)
+                      contextualised_link.removeStyle(_)
                     }
                     setUpdate(a => a + 1)
                   }}

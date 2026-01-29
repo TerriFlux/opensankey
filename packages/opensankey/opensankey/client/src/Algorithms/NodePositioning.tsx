@@ -34,6 +34,7 @@ import {
 import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
 
 /**
@@ -1492,10 +1493,10 @@ export class NodePositioning {
 
     // first split the nodes
     trade_nodes.forEach(node => {
-      if (node.style.length < 2) node.style = [
-        this.drawingArea.sankey.styles_dict['NodeSectorStyle'],
-        this.drawingArea.sankey.styles_dict['NodeImportExportCloseStyle']
-      ]
+      if (node.style.length < 2) {
+        node.addStyle(this.drawingArea.sankey.styles_dict[NodeSectorStyle])
+        node.addStyle(this.drawingArea.sankey.styles_dict[NodeImportExportCloseStyle])
+        }
       if (node.output_links_list.length > 0) {
         (node as Class_NodeElement).SplitIOrE(true)
       }
@@ -1558,7 +1559,7 @@ export class NodePositioning {
       }
     })
 
-    if (import_nodes.length > 0 && import_nodes[0].style.find(style => style.id == 'NodeImportExportAboveBelowStyle')) {
+    if (import_nodes.length > 0 && import_nodes[0].style.find(style => style.id == NodeImportExportAboveBelowStyle)) {
       let cont = this.drawingArea.sankey.containers_dict['import']
       if (!cont) {
         cont = this.drawingArea.sankey.addNewContainer('import', 'Importations')
@@ -1591,7 +1592,7 @@ export class NodePositioning {
       }
     })
 
-    if (export_nodes.length > 0 && export_nodes[0].style.find(style => style.id == 'NodeImportExportAboveBelowStyle')) {
+    if (export_nodes.length > 0 && export_nodes[0].style.find(style => style.id == NodeImportExportAboveBelowStyle)) {
       let cont = this.drawingArea.sankey.containers_dict['export']
       if (!cont) {
         cont = this.drawingArea.sankey.addNewContainer('export', 'Exportations')

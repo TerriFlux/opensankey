@@ -42,7 +42,7 @@ import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
@@ -142,7 +142,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
   }
@@ -169,7 +169,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
     proto_element['_style'].forEach(style=>style.addReference(proto_element))
@@ -1218,9 +1218,9 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const old2new_name = {
-      'style_link': 'LinkStyle',
-      'style_node': 'NodeStyle',
-      'style_zdt': 'ContainerStyle'
+      'style_link': LinkStyle,
+      'style_node': NodeStyle,
+      'style_zdt': ContainerStyle
     };
     ['style_link', 'style_node', 'style_zdt'].forEach(style_type => {
       if (json_object[style_type] !== undefined) {
@@ -1285,7 +1285,7 @@ export class SankeyPersistence {
     if (json_object['style'] !== undefined) {
       // Set node styles from json data
       const skip = [
-        'LinkExportCloseStyle', 'LinkImportCloseStyle',
+        LinkExportCloseStyle, LinkImportCloseStyle,
         'LinkImportAboveStyle', 'LinkExportBelowStyle'
       ]
 
