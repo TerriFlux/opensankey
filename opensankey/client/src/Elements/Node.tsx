@@ -45,6 +45,7 @@ import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Type_Side } from './ElementsAttributesConfig'
+import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
@@ -82,7 +83,7 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    const default_node_style = drawing_area.sankey.styles_dict['NodeStyle']
+    const default_node_style = drawing_area.sankey.styles_dict[NodeStyle]
     super(id, name, drawing_area, default_node_style)
     this._nodeTooltip = new NodeTooltip(this)
 
@@ -285,6 +286,14 @@ export class Class_NodeElement extends Class_NodeBase {
         taggs[tag.group.id] = tag.group
     })
     return taggs
+  }
+  public get tags_dict() {
+    const tags: { [_: string]: Class_Tag } = {}
+    this.tags_list.forEach(tag => {
+      if (!tags[tag.group.id])
+        tags[tag.group.id] = tag
+    })
+    return tags
   }
   public get taggs_list() { return Object.values(this.taggs_dict) }
 
@@ -609,8 +618,8 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public applyPosition() {
     if (this.d3_selection !== null) {
-        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
-      this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
+        this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
       // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
       if (
         (
@@ -667,7 +676,7 @@ export class Class_NodeElement extends Class_NodeBase {
                 + this.shape_position_dy
             }
           } else if (has_container && echangeTag && this.hasGivenTag(echangeTag)) {
-             this.position_y = this._attached_container[0].position_y
+            this.position_y = this._attached_container[0].position_y
           }
         }
       }
@@ -1111,6 +1120,14 @@ export class Class_NodeElement extends Class_NodeBase {
         Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
+        const unitary_tagg = Object.keys(this.sankey.node_taggs_dict).filter(tagg_id => this.sankey.node_taggs_dict[tagg_id].banner == 'unitary')[0]
+        if (unitary_tagg) {
+          display = /*display &&*/
+            ((this._taggs_dict[unitary_tagg] && this._taggs_dict[unitary_tagg][0].is_selected)
+              || this.input_links_list.filter(l => l.source.grouped_taggs_dict[unitary_tagg] && l.source.grouped_taggs_dict[unitary_tagg][0].is_selected).length > 0
+              || this.output_links_list.filter(l => l.target.grouped_taggs_dict[unitary_tagg] && l.target.grouped_taggs_dict[unitary_tagg][0].is_selected).length > 0
+            )
+        }
         are_related_node_tags_selected = display
       } else {
         are_related_node_tags_selected = true
@@ -1249,31 +1266,37 @@ export class Class_NodeElement extends Class_NodeBase {
         new_node.addTag(tag)
       })
 
-      // Style handling
-      const node_importation_style = this.shape_position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
-      const node_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
-      const node_importexport_style = this.shape_position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
-      const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : ''
-      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'LinkExportCloseStyle' : ''
-      const link_importexport_style = this.shape_position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
+      // Déterminer les styles en fonction du type de position
+      const isParametric = this.shape_position_type === 'parametric'
 
-      new_node.style = [
-        new_node.sankey.styles_dict['NodeSectorStyle'],
-        new_node.sankey.styles_dict[node_importexport_style],
-        importation ?
-          new_node.sankey.styles_dict[node_importation_style] :
-          new_node.sankey.styles_dict[node_exportation_style]
-      ]
+      const node_importation_style = isParametric ? NodeImportAboveStyle : NodeImportCloseStyle
+      const node_exportation_style = isParametric ? NodeExportBelowStyle : NodeExportCloseStyle
+      const node_importexport_style = isParametric ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
 
-      input_or_output_link.style = [
-        new_node.sankey.styles_dict[link_importexport_style]
-      ]
-      if (this.shape_position_type == 'parametric') {
-        input_or_output_link.style.push(
-          importation ?
-            new_node.sankey.styles_dict[link_importation_style] :
-            new_node.sankey.styles_dict[link_exportation_style]
-        )
+      const link_importation_style = isParametric ? '' : LinkImportCloseStyle
+      const link_exportation_style = isParametric ? '' : LinkExportCloseStyle
+      const link_importexport_style = isParametric ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
+
+      // Appliquer les styles au nouveau noeud
+      const styles_dict = new_node.sankey.styles_dict
+      new_node.replaceStyles([
+        styles_dict[NodeSectorStyle],
+        styles_dict[node_importexport_style],
+        styles_dict[importation ? node_importation_style : node_exportation_style]
+      ])
+
+      // Appliquer les styles au lien
+      input_or_output_link.replaceStyles([
+        styles_dict[LinkStyle],
+        styles_dict[link_importexport_style]
+      ])
+
+      // Ajouter le style spécifique d'importation/exportation en mode parametric
+      if (isParametric) {
+        const specific_link_style = importation ? link_importation_style : link_exportation_style
+        if (specific_link_style) {
+          input_or_output_link.addStyle(styles_dict[specific_link_style])
+        }
       }
 
       input_or_output_link.shape_is_recycling = false

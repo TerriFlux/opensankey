@@ -94,6 +94,7 @@ export class Class_DrawingArea {
 
   public static: boolean = !!window.sankey?.publish
   public to_recenter = false
+  public is_unitary = false
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -980,46 +981,57 @@ export class Class_DrawingArea {
       .order()
   }
 
-  public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
-    // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
-    this.selected_elements_list.forEach(n => list_old_style[n.id] = n.style)
+public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
+  // Save old value that can be used in undo
+  const list_old_custom_styles: { [x: string]: Class_ElementStyle[] } = {}
+  this.selected_elements_list.forEach(n => list_old_custom_styles[n.id] = n.getCustomStyles())
 
-    // Function undo
-    const inv_changeStyleOrder = () => {
-      this.selected_nodes_list.forEach(n => {
-        n.style = list_old_style[n.id]
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateComponentRelatedToApparence()
-    }
-
-    // Function original
-    const _changeStyleOrder = () => {
-      this.selected_elements_list.forEach(n => {
-        const idx_src = n.style.indexOf(style_src)
-        const idx_trgt = n.style.indexOf(style_trgt)
-
-        // if node doesn't have both style, don't continue this iterations
-        if (idx_src == -1 || idx_trgt == -1)
-          return
-
-        // Remove element to move from the array of element order
-        const el_to_move = n.style.splice(idx_src, 1)
-        // Add the element  the element target in the order array
-        n.style.splice(idx_trgt, 0, el_to_move[0])
-
-        n.draw()
-      })
-      this.application_data.menu_configuration.updateComponentRelatedToApparence()
-    }
-    // Save undo/redo
-    this.application_data.history.saveUndo(inv_changeStyleOrder)
-    this.application_data.history.saveRedo(_changeStyleOrder)
-    // Execute original function
-    _changeStyleOrder()
+  // Function undo
+  const inv_changeStyleOrder = () => {
+    this.selected_elements_list.forEach(n => {
+      n.replaceStyles(list_old_custom_styles[n.id])
+      n.draw()
+    })
+    this.application_data.menu_configuration.updateComponentRelatedToApparence()
   }
 
+  // Function original
+  const _changeStyleOrder = () => {
+    this.selected_elements_list.forEach(n => {
+      // Obtenir tous les styles (y compris le défaut)
+      const all_styles = [...n.style]
+      
+      const idx_src = all_styles.findIndex(s => s.id === style_src.id)
+      const idx_trgt = all_styles.findIndex(s => s.id === style_trgt.id)
+
+      // Si le noeud n'a pas les deux styles, ou si l'un est le style par défaut (index 0), ne rien faire
+      if (idx_src === -1 || idx_trgt === -1 || idx_src === 0 || idx_trgt === 0)
+        return
+
+      // Créer une nouvelle liste de styles personnalisés
+      const custom_styles = all_styles.slice(1) // Exclure le style par défaut
+      
+      // Ajuster les indices pour les styles personnalisés (décaler de 1)
+      const custom_idx_src = idx_src - 1
+      const custom_idx_trgt = idx_trgt - 1
+      
+      // Réorganiser les styles personnalisés
+      const [el_to_move] = custom_styles.splice(custom_idx_src, 1)
+      custom_styles.splice(custom_idx_trgt, 0, el_to_move)
+
+      // Appliquer la nouvelle liste de styles
+      n.replaceStyles(custom_styles)
+      n.draw()
+    })
+    this.application_data.menu_configuration.updateComponentRelatedToApparence()
+  }
+  
+  // Save undo/redo
+  this.application_data.history.saveUndo(inv_changeStyleOrder)
+  this.application_data.history.saveRedo(_changeStyleOrder)
+  // Execute original function
+  _changeStyleOrder()
+}
 
   public unDraw() {
     if (this.d3_selection_zoom_area) {

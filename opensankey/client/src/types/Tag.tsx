@@ -41,7 +41,7 @@ import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup } from './TagGr
 
 // SPECIFIC TYPES ***********************************************************************
 
-export type tag_banner_type = 'none' | 'one' | 'multi' | 'sequence'
+export type tag_banner_type = 'none' | 'one' | 'multi' | 'sequence' | 'unitary'
 
 // CLASS PROTO TAG ***********************************************************************
 

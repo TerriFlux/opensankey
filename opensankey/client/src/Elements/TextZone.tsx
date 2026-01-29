@@ -2,6 +2,7 @@ import * as d3 from 'd3'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
 import { Class_NodeBase } from './NodeBase'
+import { ContainerStyle } from './ElementStyle'
 
 export const default_container_content = 'Text Label ...'
 export class Class_ContainerElement extends Class_NodeBase {
@@ -13,7 +14,7 @@ export class Class_ContainerElement extends Class_NodeBase {
     name: string,
     drawing_area: Class_DrawingArea,
   ) {
-    const container_style = drawing_area.sankey.styles_dict['ContainerStyle']
+    const container_style = drawing_area.sankey.styles_dict[ContainerStyle]
     super(id, name, drawing_area, container_style)
     this._tied_to_nodes = false
     this._attached_node = []

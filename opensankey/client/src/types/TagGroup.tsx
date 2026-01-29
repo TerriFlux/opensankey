@@ -450,7 +450,7 @@ export class Class_NodeTagGroup extends Class_TagGroup {
 
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_NodeTag; }
-
+  private _is_unitary = false
   // CONSTRUCTOR ========================================================================
   /**
    * Creates an instance of Class_TagGroup.
@@ -481,6 +481,8 @@ export class Class_NodeTagGroup extends Class_TagGroup {
     return tag
   }
 
+  public get is_unitary() { return this._is_unitary}
+  public set is_unitary(_) { this._is_unitary = _}  
 }
 // CLASS FLUXTAGGROUP *******************************************************************
 /**

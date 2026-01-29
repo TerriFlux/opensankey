@@ -178,7 +178,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   public useDefaultStyle() {
-    this.style = [this.sankey.default_style as Class_ElementStyle]
+    this.removeAllStyles()
   }
 
   public eventMouseOver(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
