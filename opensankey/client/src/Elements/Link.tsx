@@ -45,6 +45,7 @@ import { Type_Side, } from './ElementsAttributesConfig'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { LinkStyle } from './ElementStyle'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -228,7 +229,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement,
     drawing_area: Class_DrawingArea
   ) {
-    const link_style = drawing_area.sankey.styles_dict['LinkStyle']
+    const link_style = drawing_area.sankey.styles_dict[LinkStyle]
     super(id, drawing_area, 'g_elements_sankey', link_style)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)

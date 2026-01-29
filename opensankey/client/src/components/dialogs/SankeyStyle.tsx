@@ -141,7 +141,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {app_data.menu_configuration.ref_selected_style.current !== ''
+            {app_data.menu_configuration.ref_selected_style.current && app_data.menu_configuration.ref_selected_style.current !== ''
               ? CutName(app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name, 30)
               : 'Choix Style'}
           </MenuButton>
