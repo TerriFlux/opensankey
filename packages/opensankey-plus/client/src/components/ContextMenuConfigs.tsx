@@ -9,6 +9,7 @@ import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeAc
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { createUnitaryBoard } from './UnitaryBoard'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -25,7 +26,17 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
             return (app_data as Class_ApplicationDataOSP).has_sankey_afm
           }
         }]
-      }
+      },
+      {
+        type: 'button',
+        actionName: 'createUnitaryBoard',
+        visibilityConditions: [{
+          type: 'custom',
+          customCheck: (app_data) => {
+            return (app_data as Class_ApplicationDataOSP).has_sankey_dev
+          }
+        }]
+      }      
     ],
     actions: {
       ...ZDD_MENU_CONFIG.actions,
@@ -38,6 +49,17 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
         tooltips: {
           en: 'Reconciling actual sankey diagram',
           fr: 'Ajuster et compléter le diagramme'
+        }
+      },
+      createUnitaryBoard: {
+        type: 'action',
+        labels: {
+          en: 'Unitary board',
+          fr: 'Crée un board Sankey unitaire'
+        },
+        tooltips: {
+          en: 'Creates board for unitary sankey',
+          fr: 'Créer un tableau de bord pour des sankey unitaires'
         }
       }
     }
@@ -148,6 +170,10 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
       dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
+    },
+    createUnitaryBoard: () => {
+      const v = createUnitaryBoard(app_data)
+      app_data.setCurrentView(v.id)
     }
   }
 }

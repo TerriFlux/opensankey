@@ -12,7 +12,7 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { elementStyleConfigs, node_unitary_styles } from '../deps/OpenSankey/Elements/ElementStyle'
+import { elementStyleConfigs, node_unitary_styles, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeStyle } from '../deps/OpenSankey/Elements/ElementStyle'
 import ListIcons from '../icons/lib_of_icons.json'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
@@ -50,6 +50,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
   protected _views_order: string[] = []
   public get views_order() { return this._views_order }
+  public get master_drawing_area() { return this._master_drawing_area }
+  public set master_drawing_area(master) { this._master_drawing_area = master }
 
   protected _original_current_view: Class_DrawingArea | undefined
 
@@ -571,9 +573,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           // Normalize attribute
           link.resetAttributes()
           if (link.source.id == node_ref.id) {
-            link.style.push(new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle'])
+            link.addStyle(new_drawing_area.sankey.styles_dict['LinkOutUnitaryStyle'])
           } else {
-            link.style.push(new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle'])
+            link.addStyle(new_drawing_area.sankey.styles_dict['LinkInUnitaryStyle'])
           }
           // Search for max link value in unitary sankey to re-scale sankey
           //const link_val = link.getMaxValue() ?? 1
@@ -594,15 +596,15 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
           return
         }
         if (node.input_links_list.length == 0) {
-          node.style.push(new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle'])
+          node.addStyle(new_drawing_area.sankey.styles_dict[SankeyUnitaryNodeInputStyle])
         } else if (node.output_links_list.length == 0) {
-          node.style.push(new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle'])
+          node.addStyle(new_drawing_area.sankey.styles_dict[SankeyUnitaryNodeOutputStyle])
         }
         node.resetAttributes()
         //node.resetPositionAttributes()
       })
 
-    new_drawing_area.sankey.nodes_dict[node_ref.id].style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeStyle']]
+    new_drawing_area.sankey.nodes_dict[node_ref.id].addStyle(new_drawing_area.sankey.styles_dict[SankeyUnitaryNodeStyle])
     new_drawing_area.sankey.default_style.shape_position_type = 'parametric'
     // new_drawing_area.sankey.node_taggs_list.forEach(tagg => {
     //   new_drawing_area.sankey.removeTagGroup('node_taggs', tagg)
@@ -637,10 +639,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         node.resetAttributes()
         // Affect style depending on IO
         if (node.input_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeInputStyle']]
+          node.addStyle(new_drawing_area.sankey.styles_dict[SankeyUnitaryNodeInputStyle])
 
         } else if (node.output_links_list.length == 0) {
-          node.style = [new_drawing_area.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']]
+          node.addStyle(new_drawing_area.sankey.styles_dict[SankeyUnitaryNodeOutputStyle])
         }
         //node.dimensions_as_child.forEach(dim => node.removeDimensionAsChild(dim))
         //node.dimensions_as_parent.forEach(dim => node.removeDimensionAsParent(dim))
