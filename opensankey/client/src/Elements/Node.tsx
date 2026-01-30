@@ -344,6 +344,8 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public unDraw() {
     super.unDraw()
+    this.d3_selection?.selectAll('.link_cap_input').remove()
+    this.d3_selection?.selectAll('.link_cap_output').remove()
     // 🔄 UNDRAW HANDLES - RÉINTÉGRÉ DIRECTEMENT
     this._links_order
       .forEach(link => {
@@ -612,6 +614,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected drawElements() {
     super.drawElements()
     this._nodeDrawValueLabel.drawGenericLabel()
+    this._drawLinksStartCaps() // Ajouter ici
   }
   /**
    * Apply node position to it shape in d3
@@ -1120,7 +1123,7 @@ export class Class_NodeElement extends Class_NodeBase {
         Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
-        const unitary_tagg = Object.keys(this.sankey.node_taggs_dict).filter(tagg_id => this.sankey.node_taggs_dict[tagg_id].banner == 'unitary')[0]
+        const unitary_tagg = this.sankey.node_taggs_dict['unitary']?.id
         if (unitary_tagg) {
           display = /*display &&*/
             ((this._taggs_dict[unitary_tagg] && this._taggs_dict[unitary_tagg][0].is_selected)
@@ -1453,4 +1456,198 @@ export class Class_NodeElement extends Class_NodeBase {
   public set_contextualized_element(element: Class_NodeBase) {
     this.drawing_area.node_contextualised = element as Class_NodeElement
   }
+
+  /**
+   * Dessine le début des flux sur les ellipses pour un rendu plus fluide
+   */
+  /**
+   * Dessine le début des flux sur les ellipses pour un rendu plus fluide
+   */
+  private _drawLinksStartCaps() {
+    // Seulement pour les nœuds elliptiques
+    if (this.shape_type !== 'ellipse') return
+
+    // Nettoyer les caps précédents
+    this.d3_selection?.selectAll('.link_cap_output').remove()
+    this.d3_selection?.selectAll('.link_cap_input').remove()
+
+    const node_width = this.getShapeWidthToUse() + this.shape_margin_right + this.shape_margin_left
+    const node_height = this.getShapeHeightToUse() + this.shape_margin_top + this.shape_margin_bottom
+    const rx = node_width / 2
+    const ry = node_height / 2
+
+    // Tenir compte des marges !
+    const cx = (node_width / 2) - this.shape_margin_left
+    const cy = (node_height / 2) - this.shape_margin_top
+
+    // Traiter chaque côté
+    const sides: Type_Side[] = ['right', 'left', 'top', 'bottom']
+
+    sides.forEach(side => {
+      // Récupérer les liens pour ce côté dans l'ordre
+      const output_links = this._links_order.filter(link =>
+        link.is_visible && link.source === this && link.source_side === side
+      )
+      const input_links = this._links_order.filter(link =>
+        link.is_visible && link.target === this && link.target_side === side
+      )
+
+      // Dessiner les caps pour ce côté
+      this._drawCapsForSide(output_links, side, cx, cy, rx, ry, 'output')
+      this._drawCapsForSide(input_links, side, cx, cy, rx, ry, 'input')
+    })
+  }
+
+  /**
+   * Dessine les caps pour tous les liens d'un côté donné
+   */
+  private _drawCapsForSide(
+    links: Class_LinkElement[],
+    side: Type_Side,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    type: 'input' | 'output'
+  ) {
+    if (links.length === 0) return
+
+    // Calculer la somme totale des épaisseurs
+    const totalThickness = links.reduce((sum, link) => sum + link.thickness, 0)
+
+    // Offset de départ (tient compte des marges via getLinksStartingPositionOffSet)
+    const startOffset = this.getLinksStartingPositionOffSet(side)
+
+    // Cumul en cours
+    let currentCumul = 0
+
+    // Dessiner un cap par flux
+    links.forEach(link => {
+      const thickness = link.thickness
+      const color = link.getShapeColorToUse()
+
+      // Créer le cap découpé pour ce flux spécifique
+      const capPath = this._createEllipseCapPart(
+        side, cx, cy, rx, ry,
+        startOffset,           // Début de la zone totale
+        totalThickness,        // Taille totale
+        currentCumul,          // Position actuelle dans la zone
+        thickness              // Taille de ce flux
+      )
+
+      // Dessiner le cap
+      this.d3_selection?.append('path')
+        .attr('class', `link_cap_${type}`)
+        .attr('d', capPath)
+        .attr('fill', color)
+        .attr('opacity', link.shape_opacity)
+        .attr('stroke', link.shape_border_visible ? link.shape_border_color : 'none')
+        .attr('stroke-width', link.shape_border_visible ? link.shape_border_thickness : 0)
+
+      // Incrémenter le cumul
+      currentCumul += thickness
+    })
+  }
+
+  /**
+   * Crée une partie découpée du cap d'ellipse (comme draw_arrow_part)
+   */
+private _createEllipseCapPart(
+  side: Type_Side,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  startOffset: number,
+  totalThickness: number,
+  currentCumul: number,
+  linkThickness: number
+): string {
+  const capLength = 0
+  
+  if (side === 'right') {
+    const y1 = startOffset + currentCumul
+    const y2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((y1 - cy) / ry, 2)
+    const term2 = Math.pow((y2 - cy) / ry, 2)
+    
+    const x1 = cx + rx * Math.sqrt(Math.max(0, 1 - term1))
+    const x2 = cx + rx * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const xRect = cx + rx  // Bord droit du rectangle
+    const xOut = xRect + capLength
+    
+    return `M ${x1},${y1}
+            L ${xRect},${y1}
+            L ${xOut},${y1}
+            L ${xOut},${y2}
+            L ${xRect},${y2}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
+    
+  } else if (side === 'left') {
+    const y1 = startOffset + currentCumul
+    const y2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((y1 - cy) / ry, 2)
+    const term2 = Math.pow((y2 - cy) / ry, 2)
+    
+    const x1 = cx - rx * Math.sqrt(Math.max(0, 1 - term1))
+    const x2 = cx - rx * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const xRect = cx - rx  // Bord gauche du rectangle
+    const xOut = xRect - capLength
+    
+    return `M ${x1},${y1}
+            L ${xRect},${y1}
+            L ${xOut},${y1}
+            L ${xOut},${y2}
+            L ${xRect},${y2}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
+    
+  } else if (side === 'bottom') {
+    const x1 = startOffset + currentCumul
+    const x2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((x1 - cx) / rx, 2)
+    const term2 = Math.pow((x2 - cx) / rx, 2)
+    
+    const y1 = cy + ry * Math.sqrt(Math.max(0, 1 - term1))
+    const y2 = cy + ry * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const yRect = cy + ry  // Bord bas du rectangle
+    const yOut = yRect + capLength
+    
+    return `M ${x1},${y1}
+            L ${x1},${yRect}
+            L ${x1},${yOut}
+            L ${x2},${yOut}
+            L ${x2},${yRect}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
+    
+  } else { // top
+    const x1 = startOffset + currentCumul
+    const x2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((x1 - cx) / rx, 2)
+    const term2 = Math.pow((x2 - cx) / rx, 2)
+    
+    const y1 = cy - ry * Math.sqrt(Math.max(0, 1 - term1))
+    const y2 = cy - ry * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const yRect = cy - ry  // Bord haut du rectangle
+    const yOut = yRect - capLength
+    
+    return `M ${x1},${y1}
+            L ${x1},${yRect}
+            L ${x1},${yOut}
+            L ${x2},${yOut}
+            L ${x2},${yRect}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
+  }
+}
 }
