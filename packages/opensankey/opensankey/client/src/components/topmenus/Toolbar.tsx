@@ -8,7 +8,7 @@ import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
-import { LinkInUnitaryStyle, LinkOutUnitaryStyle, node_unitary_styles, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeStyle } from '../../Elements/ElementStyle'
+import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 
 const width_fitler_drawer = 270
 
@@ -500,61 +500,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
         break
       case 'element':
-        if (tagg.banner == 'unitary') {
-          app_data.drawing_area.unDraw()
-          const center_nodes = app_data.drawing_area.sankey.visible_nodes_list
-            .filter(node => node.tags_dict['unitary'].is_selected)
-          if (center_nodes.length == 0) return
-          center_nodes.forEach(n => {
-            node_unitary_styles.forEach(s => n.removeStyleById(s))
-            n.addStyle(app_data.drawing_area.sankey.styles_dict[SankeyUnitaryNodeStyle])
-            n.resetAttributes()
-          })
-          app_data.drawing_area.sankey.visible_nodes_list
-            .forEach(node => {
-
-              if (node.input_links_list.filter(l => l.is_visible).length == 0) {
-                if (node.tags_dict['unitary'].is_selected) return
-                node_unitary_styles.forEach(s => node.removeStyleById(s))
-                node.addStyle(app_data.drawing_area.sankey.styles_dict[SankeyUnitaryNodeInputStyle])
-
-              } else if (node.output_links_list.filter(l => l.is_visible).length == 0) {
-                if (node.tags_dict['unitary'].is_selected) return
-                node_unitary_styles.forEach(s => node.removeStyleById(s))
-                node.addStyle(app_data.drawing_area.sankey.styles_dict[SankeyUnitaryNodeOutputStyle])
-              }
-              node.resetAttributes()
-            })
-          center_nodes.forEach(n => n.output_links_list.filter(l => l.is_visible).forEach(l => {
-            node_unitary_styles.forEach(s => l.removeStyleById(s))
-            l.addStyle(app_data.drawing_area.sankey.styles_dict[LinkOutUnitaryStyle])
-            l.resetAttributes()
-          }))
-          center_nodes.forEach(n => n.input_links_list.filter(l => l.is_visible).forEach(l => {
-            node_unitary_styles.forEach(s => l.removeStyleById(s))
-            l.addStyle(app_data.drawing_area.sankey.styles_dict[LinkInUnitaryStyle])
-            l.resetAttributes()
-          }))
-          let max_value = 0
-          center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
-          //let scale = app_data.drawing_area.sankey.nodes_dict[center_node.id].data_value
-          app_data.drawing_area.scale = max_value / 3
-          app_data.drawing_area.nodePositioning.computeAutoSankey(false, true)
-          app_data.drawing_area.sankey.visible_nodes_list
-            .forEach(node => {
-              node.resetAttributes()
-            })
-          center_nodes.forEach(n => n.reorganizeIOLinks())
-          app_data.drawing_area.sankey.default_style.shape_position_type = 'parametric'
-          app_data.drawing_area.sankey.nodes_list
-            .forEach(node => { node.position_v = -1 })
-
-          app_data.drawing_area.nodePositioning.computeParametrization(true)
-
+        if (tagg.id == 'unitary') {
+          updateUnitaryStyles(app_data.drawing_area)
           app_data.drawing_area.draw()
           app_data.drawing_area.to_recenter = true
           app_data.drawing_area.recenter()
-          app_data.drawing_area.areaAutoFit()
         } else {
           app_data.drawing_area.bypass_compute_positions = true
           app_data.drawing_area.draw()
@@ -616,7 +566,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           ))}
         </Select>
       )
-    } else if (tagg.banner === 'multi' || tagg.banner === 'unitary') {
+    } else if (tagg.banner === 'multi') {
       const options = tagg.tags_list/*.filter(tag => active_tags.has(tag))*/.map(tag => ({
         label: tag.name,
         value: tag.id,
