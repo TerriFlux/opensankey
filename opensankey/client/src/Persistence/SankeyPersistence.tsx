@@ -926,10 +926,10 @@ export class StylePersistence {
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
-      if (style.isAttributeOverloaded(key)) {
+      //if (style.isAttributeOverloaded(key)) {
         //@ts-expect-error xxx
         json_object[key] = value
-      }
+      //}
     })
     return json_object
   }
@@ -958,14 +958,9 @@ export class StylePersistence {
       this.fromJSON_0_91(style, json_object, kwargs)
     }
 
-    const default_style = style.drawing_area.sankey.default_style
     Object.keys(style['_config']).forEach(key => {
       if (json_object[key] !== undefined) {
-        if (default_style && json_object[key] !== default_style[key as keyof Class_ElementStyle]) {
-          style['_storage'][key] = json_object[key]
-        } else if (json_object[key] !== style['_config'][key].default) {
-          style['_storage'][key] = json_object[key]
-        }
+        style['_storage'][key] = json_object[key]
       }
     })
   }

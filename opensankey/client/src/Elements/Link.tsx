@@ -1488,15 +1488,31 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_x_start() {
-    return this._position.x
+    const source_side = this.source_side
+    if (source_side === 'right') {
+      return this._position.x + this.source.shape_margin_right
+    } else if (source_side === 'left') {
+      return this._position.x - this.source.shape_margin_left
+    } else {
+      // top ou bottom : ajuster pour le centrage horizontal
+      return this._position.x
+    }
   }
 
   public get position_y_start() {
-    return this._position.y
+    const source_side = this.source_side
+    if (source_side === 'top') {
+      return this._position.y - this.source.shape_margin_top
+    } else if (source_side === 'bottom') {
+      return this._position.y + this.source.shape_margin_bottom
+    } else {
+      // left ou right : ajuster pour le centrage vertical
+      return this._position.y
+    }
   }
 
   public get position_x_end() {
-    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -1504,11 +1520,22 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._position_ending.x - shifting_end_point_x
+
+    const target_side = this.target_side
+    let base_x = this._position_ending.x - shifting_end_point_x
+
+    if (target_side === 'right') {
+      return base_x + this.target.shape_margin_right
+    } else if (target_side === 'left') {
+      return base_x - this.target.shape_margin_left
+    } else {
+      // top ou bottom
+      return base_x
+    }
   }
 
   public get position_y_end() {
-    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -1516,7 +1543,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._position_ending.y - shifting_end_point_y
+
+    const target_side = this.target_side
+    let base_y = this._position_ending.y - shifting_end_point_y
+
+    if (target_side === 'top') {
+      return base_y - this.target.shape_margin_top
+    } else if (target_side === 'bottom') {
+      return base_y + this.target.shape_margin_bottom
+    } else {
+      // left ou right
+      return base_y
+    }
   }
 
   // public set shape_local_link_scale(value: number | undefined) {
