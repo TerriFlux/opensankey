@@ -49,6 +49,7 @@ import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
+import { createUnitaryNewView } from './UnitaryBoard'
 
 interface BaseComponentPropsPlus {
   app_data: Class_ApplicationDataOSP
@@ -1313,7 +1314,7 @@ const TabLocalDataForUnitary: FC<{ app_data: Class_ApplicationDataOSP }> = ({ ap
           app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
-                app_data.createUnitaryNewView(element)
+                createUnitaryNewView(app_data,element)
               })
               app_data.menu_configuration_osp.updateComponentRelatedToViews()
               app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
@@ -1493,7 +1494,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
           app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
-                local_app_data.current.createUnitaryNewView(element)
+                createUnitaryNewView(local_app_data.current,element)
               })
               const app_data_json = local_app_data.current.toJSON()
               app_data.viewsFromJSON(app_data_json)

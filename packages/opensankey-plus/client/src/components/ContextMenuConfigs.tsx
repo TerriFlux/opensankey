@@ -9,7 +9,7 @@ import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeAc
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { createUnitaryBoard } from './UnitaryBoard'
+import { createUnitaryBoard, createUnitaryNewView } from './UnitaryBoard'
 
 // Extension de la config ZDD
 export const createZDDMenuConfigPlus = (): MenuConfig => {
@@ -185,7 +185,7 @@ export const createNodeModifierPlus = (app_data: Class_ApplicationDataOSP) => {
     ...baseModifiers,
     createUnitarySankey: () => {
       if (app_data.drawing_area.node_contextualised) {
-        const d = app_data.createUnitaryNewView(app_data.drawing_area.node_contextualised)
+        const d = createUnitaryNewView( app_data,app_data.drawing_area.node_contextualised)
         app_data.setCurrentView(d.id)
         app_data.menu_configuration_osp.updateComponentRelatedToViews()
       }

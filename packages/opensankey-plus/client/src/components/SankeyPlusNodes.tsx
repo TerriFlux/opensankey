@@ -3,6 +3,7 @@ import React, { useState, FC } from 'react'
 import { Box, Button, Input, InputGroup, InputRightElement, MenuItem } from '@chakra-ui/react'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { createUnitaryNewView } from './UnitaryBoard'
 
 interface BaseComponentPropsPlus {
   new_data_plus: Class_ApplicationDataOSP
@@ -111,7 +112,7 @@ export const ButtonNodeContextCreateUnitaryView = ({ app_data }: { app_data: Cla
       app_data.sendWaitingToast(
         () => {
           if (drawing_area.node_contextualised) {
-            const d = app_data.createUnitaryNewView(drawing_area.node_contextualised)
+            const d = createUnitaryNewView(app_data,drawing_area.node_contextualised)
             app_data.setCurrentView(d.id)
             app_data.menu_configuration_osp.updateComponentRelatedToViews()
           }

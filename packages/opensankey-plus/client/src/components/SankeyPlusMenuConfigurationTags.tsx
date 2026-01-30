@@ -891,6 +891,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                         >
                           {t('Tags.Multiple')}
                         </option>:<></>
+                        {/* <option
+                          key={'unitary' + tag_group.id}
+                          id='OneBaner'
+                          value='unitary'
+                        >
+                          {'Unitary'}
+                        </option> */}
                         {elementTagNameProp == 'data_taggs' ? <option
                           key={'sequence' + tag_group.id}
                           id='SequenceBaner'
