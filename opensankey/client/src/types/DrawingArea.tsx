@@ -1273,8 +1273,8 @@ public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_
       if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Create default source node
         const source = this.sankey.addNewDefaultNode()
         source.draw()
@@ -1356,8 +1356,8 @@ public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_
 
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Display the selection zone & set it starting position
         this._selection_zone.setVisible()
         this.starting_x_point = mouse_position[0]
@@ -1575,8 +1575,8 @@ public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_
       if (this._ghost_link !== null) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Move ghost target
         const target = this._ghost_link.target
         target.setPosXY(
@@ -1589,8 +1589,8 @@ public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_
       if (this._selection_zone.is_visible) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
         let new_x = this.starting_x_point,
           new_y = this.starting_y_point
