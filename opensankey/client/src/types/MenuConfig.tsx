@@ -158,8 +158,8 @@ export class Class_MenuConfig {
    */
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
     'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'flow', 'node', 'object'] },
-    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend','element', 'tag_flow', 'tag_node'] },
-    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag','flow_tag', 'data_tag','view'] }
+    'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
+    'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
   }
 
   protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' = 'shape'
@@ -195,6 +195,7 @@ export class Class_MenuConfig {
   private _ref_menu_opened: MutableRefObject<[boolean, (b: boolean) => void]>
   private _ref_to_toolbar_link_visual_filter_updater: MutableRefObject<(() => void)>
   private _ref_to_toolbar_level_tag_filter_updater: MutableRefObject<() => void>
+  private _ref_to_unitarytag_filter_updater: MutableRefObject<() => void>
   private _ref_to_toolbar_node_tag_updater: MutableRefObject<(() => void)>
   private _ref_to_toolbar_link_tag_updater: MutableRefObject<(() => void)>
   private _ref_to_toolbar_data_tag_updater: MutableRefObject<(() => void)>
@@ -338,6 +339,8 @@ export class Class_MenuConfig {
     this._ref_to_toolbar_link_tag_updater = useRef(() => null)
     this._ref_to_toolbar_data_tag_updater = useRef(() => null)
     this._ref_to_toolbar_level_tag_filter_updater = useRef(() => null)
+    this._ref_to_unitarytag_filter_updater = useRef(() => null)
+
     // Init context menu components updater ---------------------------------------------
 
     this._ref_to_menu_context_nodes_updater = useRef(() => null)
@@ -824,6 +827,7 @@ export class Class_MenuConfig {
     this._ref_to_nodetag_filter_updater.current()
     this._ref_to_toolbar_node_tag_updater.current()
     this._ref_to_toolbar_level_tag_filter_updater.current()
+    this._ref_to_unitarytag_filter_updater.current()
     this.updateComponentRelatedToNodesTags()
     this._ref_to_menu_config_tags_updater['node_taggs'].current()
   }
@@ -1225,7 +1229,7 @@ export class Class_MenuConfig {
 
   public get r_setter_editor_content_fo_node(): MutableRefObject<Dispatch<SetStateAction<string>> | undefined> { return this._r_setter_editor_content_fo_node }
   public get r_value_formatting_set_elements() { return this._r_value_formatting_set_elements }
-  
+
   public get r_value_type_set_elements() { return this._r_value_type_set_elements }
 
   public get ref_close_filter_drawer(): MutableRefObject<((_: boolean) => void)> { return this._ref_close_filter_drawer }
@@ -1234,6 +1238,8 @@ export class Class_MenuConfig {
   public get ref_to_toolbar_link_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_tag_updater }
   public get ref_to_toolbar_data_tag_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_data_tag_updater }
   public get ref_to_toolbar_level_tag_filter_updater(): MutableRefObject<() => void> { return this._ref_to_toolbar_level_tag_filter_updater }
+  public get ref_to_unitarytag_filter_updater(): MutableRefObject<() => void> { return this._ref_to_unitarytag_filter_updater }
+
   public get ref_to_toolbar_link_visual_filter_updater(): MutableRefObject<(() => void)> { return this._ref_to_toolbar_link_visual_filter_updater }
 
   /**

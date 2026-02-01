@@ -63,7 +63,7 @@ export type Type_Position = 'absolute' | 'relative' | 'parametric'
  */
 export type Type_Structure = 'structure' | 'data' | 'data_label' | 'reconciled' | 'free_value' | 'free_interval'
 
-export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs'
+export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs' | 'view_taggs'
 
 /**
  * Define type properties for Sankey JSON Saving format
@@ -351,6 +351,7 @@ export function checkForUrlToJSON() {
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeInputStyle']) ||
       element.style.includes(element.sankey.styles_dict['LinkOutUnitaryStyle'])
     ) {
+      if (value == 100) return ''
       return value + '%'
     }
     if (option == '%IS' && value) {
