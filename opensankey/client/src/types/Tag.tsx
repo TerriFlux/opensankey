@@ -37,7 +37,7 @@ import {
 } from '../types/Utils'
 import { default_grey_color } from '../Elements/ElementsAttributesConfig'
 import { Class_Sankey } from './Sankey'
-import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup } from './TagGroup'
+import { Class_ProtoTagGroup, Class_TagGroup, Class_DataTagGroup, Class_ViewTagGroup } from './TagGroup'
 
 // SPECIFIC TYPES ***********************************************************************
 
@@ -585,4 +585,41 @@ export class Class_DataTag extends Class_ProtoTag {
 }
 
 export class Class_LevelTag extends Class_NodeTag{
+}
+// CLASS VIEW TAG (nouveau type de tag pour les vues)
+/**
+ * Tag for view management - similar to LevelTag
+ * @export
+ * @class Class_ViewTag
+ */
+export class Class_ViewTag extends Class_NodeTag {
+  
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_ViewTag.
+   * @param {string} name
+   * @param {Class_ViewTagGroup} taggroup
+   * @param {Class_Sankey} sankey
+   * @param {string} [id]
+   * @memberof Class_ViewTag
+   */
+  constructor(
+    name: string,
+    taggroup: Class_ViewTagGroup,
+    sankey: Class_Sankey,
+    id: string | undefined = undefined
+  ) {
+    super(name, taggroup, sankey, id)
+  }
+
+  // GETTER =============================================================================
+  /**
+   * Return parent taggroup as ViewTagGroup
+   * @readonly
+   * @type {Class_ViewTagGroup}
+   * @memberof Class_ViewTag
+   */
+  public get taggroup(): Class_ViewTagGroup {
+    return this.taggroup as Class_ViewTagGroup
+  }
 }

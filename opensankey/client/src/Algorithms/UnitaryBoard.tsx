@@ -3,6 +3,7 @@ import {
     LinkOutUnitaryStyle, LinkInUnitaryStyle
 } from "../Elements/ElementStyle"
 import { Class_DrawingArea } from "../types/DrawingArea"
+import { Class_ViewTagGroup } from "../types/TagGroup"
 
 // Fonction utilitaire pour gérer les styles unitaires dynamiquement
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
@@ -11,9 +12,15 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     drawing_area.legend.position_y = 500
     drawing_area.legend.stick_to_drawing = false
     const center_nodes = drawing_area.sankey.visible_nodes_list
-        .filter(node => node.tags_dict['unitary']?.is_selected)
+        .filter(node => node.tags_dict['unitary']?.is_selected ||
+            (node.tags_dict['product_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['product_unitary']?.is_selected ||
+            (node.tags_dict['sector_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['sector_unitary']?.is_selected)
+
 
     if (center_nodes.length === 0) return
+    const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
+    const productTag = node_type?.tags_dict['produit']
+    const sectorTag = node_type?.tags_dict['secteur']
 
     // Réinitialiser tous les styles unitaires d'abord
     drawing_area.sankey.visible_nodes_list.forEach(node => {
@@ -66,8 +73,15 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     drawing_area.scale = max_value / 3
     drawing_area.nodePositioning.computeAutoSankey(false, true)
     drawing_area.sankey.visible_nodes_list
-        .forEach(node => {
-            node.resetAttributes()
+        .forEach(n => {
+            n.resetAttributes()
+            if (n.hasGivenTag(productTag)) {
+                n.shape_type = 'capsule'
+            } else {
+                n.shape_type = 'rect'
+                n.shape_margin_top = 20
+                n.shape_margin_bottom = 20
+            }
         })
     center_nodes.forEach(n => n.reorganizeIOLinks())
     drawing_area.sankey.default_style.shape_position_type = 'parametric'

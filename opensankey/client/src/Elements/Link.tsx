@@ -1122,6 +1122,21 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }
+    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
+    if (unitary_tagg) {
+      const node_type = this.sankey.node_taggs_dict['type de noeud']
+      const productTag = node_type?.tags_dict['produit']
+      const sectorTag = node_type?.tags_dict['secteur']
+      const source_is_product = this.source.hasGivenTag(productTag)
+      const source_is_sector = this.source.hasGivenTag(sectorTag)
+      const source_unitary_tagg = source_is_product ? 'product_unitary' : source_is_sector ? 'sector_unitary' : 'unitary'
+      const target_unitary_tagg = source_unitary_tagg == 'unitary' ? 'unitary' : source_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+      const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
+        this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
+        this.target.grouped_taggs_dict[target_unitary_tagg] &&
+        this.target.grouped_taggs_dict[target_unitary_tagg][0].is_selected
+      if (!visible) return false
+    }
     return (
       super.is_visible &&
       Object.values(this._child_links).length == 0 &&

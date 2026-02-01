@@ -172,7 +172,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
-    proto_element['_style'].forEach(style=>style.addReference(proto_element))
+    proto_element['_style'].forEach(style => style.addReference(proto_element))
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
@@ -927,8 +927,8 @@ export class StylePersistence {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
       //if (style.isAttributeOverloaded(key)) {
-        //@ts-expect-error xxx
-        json_object[key] = value
+      //@ts-expect-error xxx
+      json_object[key] = value
       //}
     })
     return json_object
@@ -1079,6 +1079,7 @@ export class SankeyPersistence {
     const json_object_nodeTags = {} as Type_JSON
     const json_object_fluxTags = {} as Type_JSON
     const json_object_dataTags = {} as Type_JSON
+    const json_object_viewTags = {} as Type_JSON  // NOUVEAU
     const json_object_styles = {} as Type_JSON
     // const json_object_styles_links = {} as Type_JSON
     //const json_object_styles_containers = {} as Type_JSON
@@ -1109,6 +1110,12 @@ export class SankeyPersistence {
       json_object['dataTags'] = json_object_dataTags
       sankey.data_taggs_list.forEach(tagg => {
         json_object_dataTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (sankey.view_taggs_list.length > 0) {
+      json_object['viewTags'] = json_object_viewTags
+      sankey.view_taggs_list.forEach(tagg => {
+        json_object_viewTags[tagg.id] = tagg.toJSON()
       })
     }
 
@@ -1419,6 +1426,23 @@ export class SankeyPersistence {
           const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
 
           // Set level tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+
+    json_entry = 'viewTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set view tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a view tag group
+          const tagg_id = _
+          const tagg = sankey._view_taggs[tagg_id] ?? sankey.addViewTagGroup(tagg_id, tagg_id)
+
+          // Set view tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
             {}

@@ -41,7 +41,7 @@ import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
-import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Type_Side } from './ElementsAttributesConfig'
@@ -1123,12 +1123,25 @@ export class Class_NodeElement extends Class_NodeBase {
         Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
-        const unitary_tagg = this.sankey.node_taggs_dict['unitary']?.id
+        const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
         if (unitary_tagg) {
+          const node_type = this.sankey.node_taggs_dict['type de noeud']
+          const productTag = node_type?.tags_dict['produit']
+          const sectorTag = node_type?.tags_dict['secteur']
+          const is_product = this.hasGivenTag(productTag)
+          const is_sector = this.hasGivenTag(sectorTag)
+          const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
+          const other_unitary_tagg = the_unitary_tagg == 'unitary' ? 'unitary' : the_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
           display = /*display &&*/
-            ((this._taggs_dict[unitary_tagg] && this._taggs_dict[unitary_tagg][0].is_selected)
-              || this.input_links_list.filter(l => l.source.grouped_taggs_dict[unitary_tagg] && l.source.grouped_taggs_dict[unitary_tagg][0].is_selected).length > 0
-              || this.output_links_list.filter(l => l.target.grouped_taggs_dict[unitary_tagg] && l.target.grouped_taggs_dict[unitary_tagg][0].is_selected).length > 0
+            ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
+              || this.input_links_list.filter(l => 
+                l.source.grouped_taggs_dict[other_unitary_tagg] && 
+                (l.source.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated && 
+                l.source.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+              || this.output_links_list.filter(l => 
+                l.target.grouped_taggs_dict[other_unitary_tagg] &&
+                (l.target.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated &&  
+                l.target.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
             )
         }
         are_related_node_tags_selected = display

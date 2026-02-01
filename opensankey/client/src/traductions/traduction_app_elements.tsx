@@ -344,6 +344,7 @@ export const resources_app_elements = {
       },
       
       Banner: {
+        unitary_view: 'Views',
         title_data_type: 'Data displayed',
         data: 'Data',
         filter: 'Filter',
@@ -817,7 +818,8 @@ export const resources_app_elements = {
         unit_name: 'Nom de l\'unité',
         unit_factor: 'Facteur d\'unité'
       },
-      Banner: {        
+      Banner: {       
+        unitary_view: 'Vues', 
         title_data_type: 'Données affichées',
         data: 'Données',
         filter: 'Filtres',
