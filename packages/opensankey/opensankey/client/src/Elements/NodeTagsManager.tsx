@@ -152,7 +152,7 @@ export class NodeTagsManager {
     //   where 'key_grp_tag' represent the id of a node_taggs group
     //   &  'key_tag_selected' represent the array of id of tag selected for that node_taggs group
     const level_taggs_dict = Object.fromEntries(Object.entries(this._node.sankey.level_taggs_dict))
-    const taggs_dict = { ...this._node.sankey.node_taggs_dict, ...level_taggs_dict }
+    const taggs_dict = { ...this._node.sankey.node_taggs_dict, ...level_taggs_dict, ...this._node.sankey.view_taggs_dict }
     Object.entries(json_node_object['tags'] ?? {})
       .forEach(([tagg_id, tag_ids]) => {
         const tagg = taggs_dict[tagg_id]
