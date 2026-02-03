@@ -756,13 +756,13 @@ export class Class_NodeElement extends Class_NodeBase {
         let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
         if (link_arrow_side_left) {
-          xt = + this.position_x
+          xt = + this.position_x - this.shape_margin_left
           yt = + this.position_y + node_height / 2
           current_cumul_of_side = cum_v_left
           total_cumul_of_side = sumLinkLeft
         }
         else if (link_arrow_side_right) {
-          xt = + this.position_x + node_width
+          xt = + this.position_x + node_width + this.shape_margin_right
           yt = + this.position_y + node_height / 2
           current_cumul_of_side = cum_v_right
           total_cumul_of_side = sumLinkRight
@@ -814,6 +814,8 @@ export class Class_NodeElement extends Class_NodeBase {
           cum_h_bottom += link_value
         }
       })
+
+    this._drawLinksStartCaps()
   }
 
   /**
@@ -1502,7 +1504,7 @@ export class Class_NodeElement extends Class_NodeBase {
         link.is_visible && link.source === this && link.source_side === side
       )
       const input_links = this._links_order.filter(link =>
-        link.is_visible && link.target === this && link.target_side === side
+        link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side
       )
 
       // Dessiner les caps pour ce côté
@@ -1537,7 +1539,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // Dessiner un cap par flux
     links.forEach(link => {
       const thickness = link.thickness
-      const color = link.getShapeColorToUse()
+      const color = type == 'input' ? link.getArrowColorToUse() : link.getShapeColorToUse()
 
       // Créer le cap découpé pour ce flux spécifique
       const capPath = this._createEllipseCapPart(
