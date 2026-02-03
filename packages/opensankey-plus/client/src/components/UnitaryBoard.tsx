@@ -189,14 +189,6 @@ export const createUnitaryView = (
 }
 
 /**
- * Crée un board unitaire avec tous les nœuds visibles
- * @param app_data - L'application data
- */
-export const createUnitaryBoard = (app_data: Class_ApplicationDataOSP) => {
-  return createUnitaryView(app_data, undefined)
-}
-
-/**
  * Crée une vue unitaire focalisée sur un nœud spécifique
  * @param app_data - L'application data
  * @param node_ref - Le nœud de référence
