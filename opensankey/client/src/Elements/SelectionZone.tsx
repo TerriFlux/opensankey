@@ -35,7 +35,7 @@ export class Class_ZoneSelection extends Class_BaseElement {
   constructor(
     drawing_area: Class_DrawingArea
   ) {
-    super('selection_zone',drawing_area,false, 'g_select_zone')
+    super('selection_zone', drawing_area, false, 'g_select_zone')
   }
 
   public setSize() {
@@ -99,8 +99,9 @@ export class Class_ZoneSelection extends Class_BaseElement {
         this.drawing_area.addElementToSelection(container)
       })
 
+    this.drawing_area.application_data.menu_configuration.ref_to_menu_config_updater.current()
     //return nbtype
-  
+
 
     // Return number of type of elements we selected, it will be used to open menu 
     if (newly_selected.length > 0) {
