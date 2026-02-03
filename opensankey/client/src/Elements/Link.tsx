@@ -45,6 +45,7 @@ import { Type_Side, } from './ElementsAttributesConfig'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { LinkStyle } from './ElementStyle'
 
 const side_order: { [_ in Type_Side]: number } = {
   'right': 0,
@@ -228,7 +229,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     target: Class_NodeElement,
     drawing_area: Class_DrawingArea
   ) {
-    const link_style = drawing_area.sankey.styles_dict['LinkStyle']
+    const link_style = drawing_area.sankey.styles_dict[LinkStyle]
     super(id, drawing_area, 'g_elements_sankey', link_style)
 
     this._link_control_points = new LinkControlPoints(this, drawing_area)
@@ -1121,6 +1122,21 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }
+    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
+    if (unitary_tagg) {
+      const node_type = this.sankey.node_taggs_dict['type de noeud']
+      const productTag = node_type?.tags_dict['produit']
+      const sectorTag = node_type?.tags_dict['secteur']
+      const source_is_product = this.source.hasGivenTag(productTag)
+      const source_is_sector = this.source.hasGivenTag(sectorTag)
+      const source_unitary_tagg = source_is_product ? 'product_unitary' : source_is_sector ? 'sector_unitary' : 'unitary'
+      const target_unitary_tagg = source_unitary_tagg == 'unitary' ? 'unitary' : source_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+      const visible = this.source.grouped_taggs_dict[source_unitary_tagg] &&
+        this.source.grouped_taggs_dict[source_unitary_tagg][0].is_selected ||
+        this.target.grouped_taggs_dict[target_unitary_tagg] &&
+        this.target.grouped_taggs_dict[target_unitary_tagg][0].is_selected
+      if (!visible) return false
+    }
     return (
       super.is_visible &&
       Object.values(this._child_links).length == 0 &&
@@ -1487,15 +1503,31 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get position_x_start() {
-    return this._position.x
+    const source_side = this.source_side
+    if (source_side === 'right') {
+      return this._position.x + this.source.shape_margin_right
+    } else if (source_side === 'left') {
+      return this._position.x - this.source.shape_margin_left
+    } else {
+      // top ou bottom : ajuster pour le centrage horizontal
+      return this._position.x
+    }
   }
 
   public get position_y_start() {
-    return this._position.y
+    const source_side = this.source_side
+    if (source_side === 'top') {
+      return this._position.y - this.source.shape_margin_top
+    } else if (source_side === 'bottom') {
+      return this._position.y + this.source.shape_margin_bottom
+    } else {
+      // left ou right : ajuster pour le centrage vertical
+      return this._position.y
+    }
   }
 
   public get position_x_end() {
-    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -1503,11 +1535,22 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_x = (this.is_horizontal || this.is_vertical_horizontal) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._position_ending.x - shifting_end_point_x
+
+    const target_side = this.target_side
+    let base_x = this._position_ending.x - shifting_end_point_x
+
+    if (target_side === 'right') {
+      return base_x + this.target.shape_margin_right
+    } else if (target_side === 'left') {
+      return base_x - this.target.shape_margin_left
+    } else {
+      // top ou bottom
+      return base_x
+    }
   }
 
   public get position_y_end() {
-    // If we draw an arrow for the link then we need to create a space between the node and the end of the link path (this space correspond to the size of the arrow)
+    // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
     if (this.shape_is_arrow) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
@@ -1515,7 +1558,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const sign_shifting_end_point = (is_revert) ? -1 : 1
       shifting_end_point_y = (this.is_vertical || this.is_horizontal_vertical) ? this.shape_arrow_size * sign_shifting_end_point : 0
     }
-    return this._position_ending.y - shifting_end_point_y
+
+    const target_side = this.target_side
+    let base_y = this._position_ending.y - shifting_end_point_y
+
+    if (target_side === 'top') {
+      return base_y - this.target.shape_margin_top
+    } else if (target_side === 'bottom') {
+      return base_y + this.target.shape_margin_bottom
+    } else {
+      // left ou right
+      return base_y
+    }
   }
 
   // public set shape_local_link_scale(value: number | undefined) {

@@ -41,10 +41,11 @@ import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
-import { Class_LevelTagGroup, Class_TagGroup } from '../types/TagGroup'
+import { Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Type_Side } from './ElementsAttributesConfig'
+import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
 // CLASSE PRINCIPALE AVEC LIENS RÉINTÉGRÉS *********************************************
 
@@ -82,7 +83,7 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     // Init parent class attributes
     //super(id, drawing_area, drawing_area.sankey, 'g_elements_sankey')
-    const default_node_style = drawing_area.sankey.styles_dict['NodeStyle']
+    const default_node_style = drawing_area.sankey.styles_dict[NodeStyle]
     super(id, name, drawing_area, default_node_style)
     this._nodeTooltip = new NodeTooltip(this)
 
@@ -286,6 +287,14 @@ export class Class_NodeElement extends Class_NodeBase {
     })
     return taggs
   }
+  public get tags_dict() {
+    const tags: { [_: string]: Class_Tag } = {}
+    this.tags_list.forEach(tag => {
+      if (!tags[tag.group.id])
+        tags[tag.group.id] = tag
+    })
+    return tags
+  }
   public get taggs_list() { return Object.values(this.taggs_dict) }
 
   public dimensionsUpdated() {
@@ -335,6 +344,8 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public unDraw() {
     super.unDraw()
+    this.d3_selection?.selectAll('.link_cap_input').remove()
+    this.d3_selection?.selectAll('.link_cap_output').remove()
     // 🔄 UNDRAW HANDLES - RÉINTÉGRÉ DIRECTEMENT
     this._links_order
       .forEach(link => {
@@ -603,14 +614,15 @@ export class Class_NodeElement extends Class_NodeBase {
   protected drawElements() {
     super.drawElements()
     this._nodeDrawValueLabel.drawGenericLabel()
+    this._drawLinksStartCaps() // Ajouter ici
   }
   /**
    * Apply node position to it shape in d3
    */
   public applyPosition() {
     if (this.d3_selection !== null) {
-        const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
-      this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
+        this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
       // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
       if (
         (
@@ -667,7 +679,7 @@ export class Class_NodeElement extends Class_NodeBase {
                 + this.shape_position_dy
             }
           } else if (has_container && echangeTag && this.hasGivenTag(echangeTag)) {
-             this.position_y = this._attached_container[0].position_y
+            this.position_y = this._attached_container[0].position_y
           }
         }
       }
@@ -744,13 +756,13 @@ export class Class_NodeElement extends Class_NodeBase {
         let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
 
         if (link_arrow_side_left) {
-          xt = + this.position_x
+          xt = + this.position_x - this.shape_margin_left
           yt = + this.position_y + node_height / 2
           current_cumul_of_side = cum_v_left
           total_cumul_of_side = sumLinkLeft
         }
         else if (link_arrow_side_right) {
-          xt = + this.position_x + node_width
+          xt = + this.position_x + node_width + this.shape_margin_right
           yt = + this.position_y + node_height / 2
           current_cumul_of_side = cum_v_right
           total_cumul_of_side = sumLinkRight
@@ -802,6 +814,8 @@ export class Class_NodeElement extends Class_NodeBase {
           cum_h_bottom += link_value
         }
       })
+
+    this._drawLinksStartCaps()
   }
 
   /**
@@ -1111,6 +1125,27 @@ export class Class_NodeElement extends Class_NodeBase {
         Object.entries(this._taggs_dict).filter(([key, _]) => this.sankey.node_taggs_dict[key]).forEach(([_, tag_list]) => {
           display = (tag_list.filter(tag => tag.is_selected).length > 0) ? display : false
         })
+        const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
+        if (unitary_tagg) {
+          const node_type = this.sankey.node_taggs_dict['type de noeud']
+          const productTag = node_type?.tags_dict['produit']
+          const sectorTag = node_type?.tags_dict['secteur']
+          const is_product = this.hasGivenTag(productTag)
+          const is_sector = this.hasGivenTag(sectorTag)
+          const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
+          const other_unitary_tagg = the_unitary_tagg == 'unitary' ? 'unitary' : the_unitary_tagg == 'product_unitary' ? 'sector_unitary' : 'product_unitary'
+          display = /*display &&*/
+            ((this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected)
+              || this.input_links_list.filter(l => 
+                l.source.grouped_taggs_dict[other_unitary_tagg] && 
+                (l.source.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated && 
+                l.source.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+              || this.output_links_list.filter(l => 
+                l.target.grouped_taggs_dict[other_unitary_tagg] &&
+                (l.target.grouped_taggs_dict[other_unitary_tagg][0].group as Class_ViewTagGroup).activated &&  
+                l.target.grouped_taggs_dict[other_unitary_tagg][0].is_selected).length > 0
+            )
+        }
         are_related_node_tags_selected = display
       } else {
         are_related_node_tags_selected = true
@@ -1249,31 +1284,37 @@ export class Class_NodeElement extends Class_NodeBase {
         new_node.addTag(tag)
       })
 
-      // Style handling
-      const node_importation_style = this.shape_position_type !== 'parametric' ? 'NodeImportCloseStyle' : 'NodeImportAboveStyle'
-      const node_exportation_style = this.shape_position_type !== 'parametric' ? 'NodeExportCloseStyle' : 'NodeExportBelowStyle'
-      const node_importexport_style = this.shape_position_type !== 'parametric' ? 'NodeImportExportCloseStyle' : 'NodeImportExportAboveBelowStyle'
-      const link_importation_style = this.shape_position_type !== 'parametric' ? 'LinkImportCloseStyle' : ''
-      const link_exportation_style = this.shape_position_type !== 'parametric' ? 'LinkExportCloseStyle' : ''
-      const link_importexport_style = this.shape_position_type !== 'parametric' ? 'LinkImportExportCloseStyle' : 'LinkImportExportAboveBelowStyle'
+      // Déterminer les styles en fonction du type de position
+      const isParametric = this.shape_position_type === 'parametric'
 
-      new_node.style = [
-        new_node.sankey.styles_dict['NodeSectorStyle'],
-        new_node.sankey.styles_dict[node_importexport_style],
-        importation ?
-          new_node.sankey.styles_dict[node_importation_style] :
-          new_node.sankey.styles_dict[node_exportation_style]
-      ]
+      const node_importation_style = isParametric ? NodeImportAboveStyle : NodeImportCloseStyle
+      const node_exportation_style = isParametric ? NodeExportBelowStyle : NodeExportCloseStyle
+      const node_importexport_style = isParametric ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
 
-      input_or_output_link.style = [
-        new_node.sankey.styles_dict[link_importexport_style]
-      ]
-      if (this.shape_position_type == 'parametric') {
-        input_or_output_link.style.push(
-          importation ?
-            new_node.sankey.styles_dict[link_importation_style] :
-            new_node.sankey.styles_dict[link_exportation_style]
-        )
+      const link_importation_style = isParametric ? '' : LinkImportCloseStyle
+      const link_exportation_style = isParametric ? '' : LinkExportCloseStyle
+      const link_importexport_style = isParametric ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
+
+      // Appliquer les styles au nouveau noeud
+      const styles_dict = new_node.sankey.styles_dict
+      new_node.replaceStyles([
+        styles_dict[NodeSectorStyle],
+        styles_dict[node_importexport_style],
+        styles_dict[importation ? node_importation_style : node_exportation_style]
+      ])
+
+      // Appliquer les styles au lien
+      input_or_output_link.replaceStyles([
+        styles_dict[LinkStyle],
+        styles_dict[link_importexport_style]
+      ])
+
+      // Ajouter le style spécifique d'importation/exportation en mode parametric
+      if (isParametric) {
+        const specific_link_style = importation ? link_importation_style : link_exportation_style
+        if (specific_link_style) {
+          input_or_output_link.addStyle(styles_dict[specific_link_style])
+        }
       }
 
       input_or_output_link.shape_is_recycling = false
@@ -1430,4 +1471,198 @@ export class Class_NodeElement extends Class_NodeBase {
   public set_contextualized_element(element: Class_NodeBase) {
     this.drawing_area.node_contextualised = element as Class_NodeElement
   }
+
+  /**
+   * Dessine le début des flux sur les ellipses pour un rendu plus fluide
+   */
+  /**
+   * Dessine le début des flux sur les ellipses pour un rendu plus fluide
+   */
+  private _drawLinksStartCaps() {
+    // Seulement pour les nœuds elliptiques
+    if (this.shape_type !== 'ellipse') return
+
+    // Nettoyer les caps précédents
+    this.d3_selection?.selectAll('.link_cap_output').remove()
+    this.d3_selection?.selectAll('.link_cap_input').remove()
+
+    const node_width = this.getShapeWidthToUse() + this.shape_margin_right + this.shape_margin_left
+    const node_height = this.getShapeHeightToUse() + this.shape_margin_top + this.shape_margin_bottom
+    const rx = node_width / 2
+    const ry = node_height / 2
+
+    // Tenir compte des marges !
+    const cx = (node_width / 2) - this.shape_margin_left
+    const cy = (node_height / 2) - this.shape_margin_top
+
+    // Traiter chaque côté
+    const sides: Type_Side[] = ['right', 'left', 'top', 'bottom']
+
+    sides.forEach(side => {
+      // Récupérer les liens pour ce côté dans l'ordre
+      const output_links = this._links_order.filter(link =>
+        link.is_visible && link.source === this && link.source_side === side
+      )
+      const input_links = this._links_order.filter(link =>
+        link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side
+      )
+
+      // Dessiner les caps pour ce côté
+      this._drawCapsForSide(output_links, side, cx, cy, rx, ry, 'output')
+      this._drawCapsForSide(input_links, side, cx, cy, rx, ry, 'input')
+    })
+  }
+
+  /**
+   * Dessine les caps pour tous les liens d'un côté donné
+   */
+  private _drawCapsForSide(
+    links: Class_LinkElement[],
+    side: Type_Side,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    type: 'input' | 'output'
+  ) {
+    if (links.length === 0) return
+
+    // Calculer la somme totale des épaisseurs
+    const totalThickness = links.reduce((sum, link) => sum + link.thickness, 0)
+
+    // Offset de départ (tient compte des marges via getLinksStartingPositionOffSet)
+    const startOffset = this.getLinksStartingPositionOffSet(side)
+
+    // Cumul en cours
+    let currentCumul = 0
+
+    // Dessiner un cap par flux
+    links.forEach(link => {
+      const thickness = link.thickness
+      const color = type == 'input' ? link.getArrowColorToUse() : link.getShapeColorToUse()
+
+      // Créer le cap découpé pour ce flux spécifique
+      const capPath = this._createEllipseCapPart(
+        side, cx, cy, rx, ry,
+        startOffset,           // Début de la zone totale
+        totalThickness,        // Taille totale
+        currentCumul,          // Position actuelle dans la zone
+        thickness              // Taille de ce flux
+      )
+
+      // Dessiner le cap
+      this.d3_selection?.append('path')
+        .attr('class', `link_cap_${type}`)
+        .attr('d', capPath)
+        .attr('fill', color)
+        .attr('opacity', link.shape_opacity)
+        .attr('stroke', link.shape_border_visible ? link.shape_border_color : 'none')
+        .attr('stroke-width', link.shape_border_visible ? link.shape_border_thickness : 0)
+
+      // Incrémenter le cumul
+      currentCumul += thickness
+    })
+  }
+
+  /**
+   * Crée une partie découpée du cap d'ellipse (comme draw_arrow_part)
+   */
+private _createEllipseCapPart(
+  side: Type_Side,
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  startOffset: number,
+  totalThickness: number,
+  currentCumul: number,
+  linkThickness: number
+): string {
+  const capLength = 0
+  
+  if (side === 'right') {
+    const y1 = startOffset + currentCumul
+    const y2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((y1 - cy) / ry, 2)
+    const term2 = Math.pow((y2 - cy) / ry, 2)
+    
+    const x1 = cx + rx * Math.sqrt(Math.max(0, 1 - term1))
+    const x2 = cx + rx * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const xRect = cx + rx  // Bord droit du rectangle
+    const xOut = xRect + capLength
+    
+    return `M ${x1},${y1}
+            L ${xRect},${y1}
+            L ${xOut},${y1}
+            L ${xOut},${y2}
+            L ${xRect},${y2}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
+    
+  } else if (side === 'left') {
+    const y1 = startOffset + currentCumul
+    const y2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((y1 - cy) / ry, 2)
+    const term2 = Math.pow((y2 - cy) / ry, 2)
+    
+    const x1 = cx - rx * Math.sqrt(Math.max(0, 1 - term1))
+    const x2 = cx - rx * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const xRect = cx - rx  // Bord gauche du rectangle
+    const xOut = xRect - capLength
+    
+    return `M ${x1},${y1}
+            L ${xRect},${y1}
+            L ${xOut},${y1}
+            L ${xOut},${y2}
+            L ${xRect},${y2}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
+    
+  } else if (side === 'bottom') {
+    const x1 = startOffset + currentCumul
+    const x2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((x1 - cx) / rx, 2)
+    const term2 = Math.pow((x2 - cx) / rx, 2)
+    
+    const y1 = cy + ry * Math.sqrt(Math.max(0, 1 - term1))
+    const y2 = cy + ry * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const yRect = cy + ry  // Bord bas du rectangle
+    const yOut = yRect + capLength
+    
+    return `M ${x1},${y1}
+            L ${x1},${yRect}
+            L ${x1},${yOut}
+            L ${x2},${yOut}
+            L ${x2},${yRect}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
+    
+  } else { // top
+    const x1 = startOffset + currentCumul
+    const x2 = startOffset + currentCumul + linkThickness
+    
+    const term1 = Math.pow((x1 - cx) / rx, 2)
+    const term2 = Math.pow((x2 - cx) / rx, 2)
+    
+    const y1 = cy - ry * Math.sqrt(Math.max(0, 1 - term1))
+    const y2 = cy - ry * Math.sqrt(Math.max(0, 1 - term2))
+    
+    const yRect = cy - ry  // Bord haut du rectangle
+    const yOut = yRect - capLength
+    
+    return `M ${x1},${y1}
+            L ${x1},${yRect}
+            L ${x1},${yOut}
+            L ${x2},${yOut}
+            L ${x2},${yRect}
+            L ${x2},${y2}
+            A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
+  }
+}
 }

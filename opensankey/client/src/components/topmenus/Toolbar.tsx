@@ -6,8 +6,9 @@ import {
 
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup } from '../../types/TagGroup'
+import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
+import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 
 const width_fitler_drawer = 270
 
@@ -27,11 +28,58 @@ declare const window: Window &
  * @return {*} 
  */
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const hasVisibleFilters = () => {
+    const { sankey } = app_data.drawing_area
+    
+    // Vérifier les filtres conditionnels de base
+    const has_data_type_filter = window.sankey?.data_type !== false
+    const has_value_filter = window.sankey?.value_filter !== false
+    
+    // Vérifier UnitaryTagGroupFilter
+    const view_taggs = Object.values(sankey.view_taggs_dict).filter(tagg => tagg.banner !== 'none')
+    const has_unitary_filter = view_taggs.length > 0
+    
+    // Vérifier LevelTagFilter
+    const nb_level_taggs = Object.values(sankey.level_taggs_dict).filter(tagg=>tagg.banner !== 'none').length
+    let has_level_filter = nb_level_taggs > 0
+    if (nb_level_taggs === 1) {
+      const level_tagg = Object.values(sankey.level_taggs_dict)[0]
+      has_level_filter = level_tagg.tags_list.length > 1
+    }
+    
+    // Vérifier NodeTagGroupFilter (element mode)
+    const element_taggs = [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+      .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary'))
+    const has_element_filter = element_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    
+    // Vérifier DataTagGroupFilter
+    const data_taggs = Object.values(sankey.data_taggs_dict)
+      .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi')
+    const has_data_filter = data_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    return has_data_type_filter || has_value_filter || has_unitary_filter || 
+           has_level_filter || has_element_filter || has_data_filter
+  }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
   app_data.menu_configuration.ref_toolbar.current = forceUpdate
+
+  // Vérifier si au moins un filtre sera visible
+
+  
+    if (drawerOpen && !hasVisibleFilters()) {
+       setDrawerOpen(false)
+      return
+    }
+   
+  const handleDrawerToggle = () => {
+    if (!drawerOpen && !hasVisibleFilters()) {
+      // Ne pas ouvrir le drawer si aucun filtre n'est visible
+      return
+    }
+    setDrawerOpen(!drawerOpen)
+  }
   return <>
     <Button
       id='buttonOpenFilterDrawer'
@@ -41,7 +89,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         left: width_drawer,
         top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
       }}
-      onClick={() => setDrawerOpen(!drawerOpen)}
+      onClick={handleDrawerToggle}
     >
       {
         app_data.icon_library.icon_filter_tags
@@ -86,6 +134,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
             {
               window.sankey?.value_filter != false ? <FlowValueFilter app_data={app_data} /> : <></>
             }
+            <UnitaryTagGroupFilter app_data={app_data} />
             <LevelTagFilter app_data={app_data} />
             <NodeTagGroupFilter app_data={app_data} level={false} />
             <DataTagGroupFilter app_data={app_data} />
@@ -310,8 +359,9 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
     {content}
   </FilterWrapperBox>
 }
+
 // Types pour la configuration des différents modes
-type TagFilterMode = 'element' | 'level' | 'data'
+type TagFilterMode = 'element' | 'level' | 'data' | 'unitary'
 interface TagFilterConfig {
   mode: TagFilterMode
   title_key: string
@@ -348,21 +398,20 @@ const TAG_FILTER_CONFIGS: Record<TagFilterMode, TagFilterConfig> = {
     update_method: 'updateAllComponentsRelatedToDataTags',
     ref_updater_key: 'ref_to_datatag_filter_updater'
   },
-  // flow: {
-  //   mode: 'flow',
-  //   title_key: 'fdf',
-  //   show_title_column: true,
-  //   show_palette_switch: true,
-  //   show_type_selection_header: false,
-  //   update_method: 'updateAllComponentsRelatedToFluxTags',
-  //   ref_updater_key: 'ref_to_fluxtag_filter_updater'
-  // }
+  unitary: {
+    mode: 'unitary',
+    title_key: 'unitary_view',
+    show_title_column: false,
+    show_palette_switch: false,
+    show_type_selection_header: false,
+    update_method: 'updateAllComponentsRelatedToNodeTags',
+    ref_updater_key: 'ref_to_unitarytag_filter_updater'
+  }
 }
 
 /**
  * Composant unifié pour filtrer tous les types de tags
  */
-
 export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   app_data: Class_ApplicationData
   mode: TagFilterMode
@@ -372,16 +421,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   const { sankey } = drawing_area
   // Component updater
   const [, setCount] = useState(0)
-
-  // const active_level_taggs = useMemo(
-  //   () => new Set(
-  //     sankey.visible_nodes_list.flatMap(node => [
-  //       ...node.dimensions_as_parent,
-  //       ...node.dimensions_as_child
-  //     ].map(dimension => dimension.related_level_tagg))
-  //   ),
-  //   [sankey.visible_nodes_list]
-  // )
 
   // Configuration du updater selon le mode
   if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
@@ -394,45 +433,28 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     switch (mode) {
       case 'element':
         return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
-          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+          .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
       case 'level': {
         const level_taggs = sankey.level_taggs_dict
-        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/) as unknown as Class_TagGroup[]
+        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
       }
       case 'data':
         return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
           .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-      // case 'flow':
-      //   return Object.values(app_data.drawing_area.sankey.flux_taggs_dict)
-      //     .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+      case 'unitary':
+        // MODIFIÉ : utiliser view_taggs_dict au lieu de node_taggs_dict
+        return Object.values(sankey.view_taggs_dict)
+          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
       default:
         return [] as unknown as Class_TagGroup[]
     }
   }
-  // const getActiveTagsForMode = (): Set<Class_ProtoTag> => {
-  //   switch (mode) {
-  //   case 'element':
-  //     return new Set([...sankey.nodes_list.flatMap(node => node.tags_list), ...sankey.links_list.flatMap(link => link.flux_tags_list)]) as unknown as Set<Class_ProtoTag>
-  //   case 'level': {
-  //     const level_taggs = sankey.level_taggs_dict
-  //     return new Set(Object.values(level_taggs).filter(
-  //       tagg => tagg.has_tags && tagg.banner !== 'none' /*&& active_level_taggs.has(tagg)*/
-  //     ).flatMap(tagg => tagg.tags_list)) as unknown as Set<Class_ProtoTag>
-  //   }
-  //   case 'data':
-  //     return new Set(Object.values(app_data.drawing_area.sankey.data_taggs_dict)
-  //       .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi').flatMap(tagg => tagg.tags_list))
-  //   default:
-  //     return {} as Set<Class_ProtoTag>
-  //   }
-  // }
+
   const updateComponents = () => {
     setCount(c => c + 1)
     if (config.update_method == 'updateAllComponentsRelatedToNodeTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToNodeTags()
       app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
-      // } else if (config.update_method == 'updateAllComponentsRelatedToFluxTags') {
-      //   app_data.menu_configuration.updateAllComponentsRelatedToFluxTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToDataTags') {
       app_data.menu_configuration.updateAllComponentsRelatedToDataTags()
     } else if (config.update_method == 'updateAllComponentsRelatedToLevelTags') {
@@ -449,7 +471,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     const dict_old_val = Object.fromEntries(Object.values(taggs_dict).map(t => [t.id, t.use_colors]))
 
     const applyPalette = () => {
-      //Object.values(taggs_dict).forEach(t => t.use_colors = false)
       if (checked) {
         tagg.use_colors = true
       } else {
@@ -464,8 +485,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       Object.values(taggs_dict).forEach(t => t.use_colors = dict_old_val[t.id])
       app_data.drawing_area.legend.draw()
       updateComponents()
-
-
     }
 
     app_data.history.saveUndo(revertPalette)
@@ -475,13 +494,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Gestion des actions spécifiques selon le mode
   const handleTagSelection = (tagg: Class_TagGroup, values: string[]) => {
-    //app_data.drawing_area.bypass_redraws = true
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
+      if (mode === 'unitary') drawing_area.bypass_redraws = true
       tagg.selectTagsFromId(values[0])
     }
-
 
     // Actions spécifiques selon le mode
     switch (mode) {
@@ -500,9 +518,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         break
       case 'element':
         app_data.drawing_area.bypass_compute_positions = true
-        app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.draw())
+        app_data.drawing_area.draw()
         app_data.drawing_area.bypass_compute_positions = false
         app_data.drawing_area.orderElementOnDA()
+        break
+      case 'unitary':
+        updateUnitaryStyles(app_data.drawing_area)
+        app_data.drawing_area.draw()
+        app_data.drawing_area.to_recenter = true
+        app_data.drawing_area.recenter()
         break
     }
     updateComponents()
@@ -540,7 +564,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   }
 
   // Création du sélecteur selon le type de banner
-  const createSelector = (tagg: Class_TagGroup/*, active_tags: Set<Class_ProtoTag>*/) => {
+  const createSelector = (tagg: Class_TagGroup) => {
     if (tagg.banner === 'one') {
       const selected_value = tagg.selected_tags_list[0]?.id ?? ''
       return (
@@ -551,7 +575,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             handleTagSelection(tagg, [evt.target.value])
           }}
         >
-          {tagg.tags_list/*.filter(tag => active_tags.has(tag))*/.map(tag => (
+          {tagg.tags_list.map(tag => (
             <option key={tag.id} value={tag.id}>
               {tag.name}
             </option>
@@ -559,7 +583,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         </Select>
       )
     } else if (tagg.banner === 'multi') {
-      const options = tagg.tags_list/*.filter(tag => active_tags.has(tag))*/.map(tag => ({
+      const options = tagg.tags_list.map(tag => ({
         label: tag.name,
         value: tag.id,
         selected: tag.is_selected,
@@ -581,7 +605,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Création du bouton switch/checkbox selon le mode
   const createActionButton = (tagg: Class_TagGroup) => {
     if (mode === 'element' && config.show_palette_switch) {
-      //const casted_tag = tagg as Class_NodeTagGroup
       return (
         <Switch
           justifySelf='end'
@@ -612,9 +635,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             })
             const selected_tag = level_tagg.selected_tags_list.map(t => t.id)[0]
             level_tagg.selectTagsFromId(level_tagg.tags_list[0]?.id ?? '')
-            // level_tagg.siblings.forEach(sibling => {
-            //   app_data.drawing_area.sankey.level_taggs_dict[sibling].activated = !level_tagg.activated
-            // })
             app_data.drawing_area.bypass_redraws = true
             app_data.drawing_area.sankey.showAccordingToLevelTags()
             app_data.drawing_area.nodePositioning.computeParametricVForTagg(
@@ -623,13 +643,74 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             app_data.drawing_area.resetAllVerticalIntervals()
             level_tagg.selectTagsFromId(selected_tag ?? '')
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-
             app_data.drawing_area.draw()
             app_data.drawing_area.sankey.nodes_list.forEach(n => n.reorganizeIOLinks())
             updateComponents()
-          }
-          } />
+          }}
+        />
       ) : <></>
+    } else if (mode === 'unitary') {
+      // MODIFIÉ : utiliser view_taggs_dict et gérer correctement les siblings
+      const view_tagg = tagg as Class_ViewTagGroup
+      const view_taggs = Object.values(sankey.view_taggs_dict)
+        .filter(t => t.banner !== 'none')
+
+      // S'il n'y a qu'un seul tag group unitary, pas besoin de checkbox
+      if (view_taggs.length <= 1) {
+        return <></>
+      }
+
+      // Vérifier s'il y a des siblings
+      const has_siblings = view_tagg.siblings && view_tagg.siblings.length > 0
+
+      if (!has_siblings) {
+        return <></>
+      }
+
+      return (
+        <Checkbox
+          justifySelf='end'
+          alignSelf='center'
+          variant='activate_antagonist_checkbox'
+          isChecked={view_tagg.activated}
+          isDisabled={view_tagg.activated}
+          icon={<CustomFaEyeCheckIcon />}
+          onChange={evt => {
+            if (evt.target.checked) {
+              sankey.nodeTagsUpdated()
+              sankey.drawing_area.bypass_redraws = true
+              // Activer ce groupe
+              view_tagg.activated = true
+
+              // Désactiver tous les siblings
+              view_tagg.siblings.forEach(sibling_id => {
+                const sibling = sankey.view_taggs_dict[sibling_id]
+                if (sibling) {
+                  sibling.activated = false
+                }
+              })
+
+              // Sauvegarder le tag actuellement sélectionné de ce groupe
+              const current_selected = view_tagg.selected_tags_list[0]?.id
+
+              // Sélectionner le premier tag du groupe pour forcer la mise à jour
+              if (view_tagg.tags_list.length > 0) {
+                // Si on a un tag sélectionné, on le garde, sinon on prend le premier
+                const tag_to_select = current_selected ?? view_tagg.tags_list[0].id
+                view_tagg.selectTagsFromId(tag_to_select)
+              }
+
+              // Appliquer les mêmes transformations que dans handleTagSelection pour le mode 'unitary'
+              updateUnitaryStyles(app_data.drawing_area)
+              app_data.drawing_area.draw()
+              app_data.drawing_area.to_recenter = true
+              app_data.drawing_area.recenter()
+
+              updateComponents()
+            }
+          }}
+        />
+      )
     } else if (mode === 'data') {
       return (
         <Switch
@@ -647,13 +728,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           }} />
       )
     }
-    // } else if (mode === 'flow' && config.show_palette_switch) {
-    //   return (
-    //     <Switch
-    //       isChecked={tagg.use_colors}
-    //       onChange={evt => setApplyTagGroupPalette(tagg, evt.target.checked)} />
-    //   )
-    // }
     return <></>
   }
 
@@ -662,8 +736,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     if (Object.keys(tagg.tags_dict || {}).length < 1) {
       return <></>
     }
-    const selector = createSelector(tagg/*, getActiveTagsForMode()*/)
-
+    const selector = createSelector(tagg)
     const actionButton = createActionButton(tagg)
 
     return (
@@ -710,14 +783,14 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     </FilterWrapperBox>
   ) : <></>
 }
-// Composants wrapper pour maintenir la compatibilité avec l'API existante
 
+// Composants wrapper pour maintenir la compatibilité avec l'API existante
 export const NodeTagGroupFilter = ({ app_data, level }: { app_data: Class_ApplicationData, level: boolean }) => (
   <UnifiedTagGroupFilter app_data={app_data} mode={level ? 'level' : 'element'} />
 )
 
 export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const [_,setCount] = useState(0)
+  const [_, setCount] = useState(0)
   app_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater.current = () => setCount(a => a + 1)
   const nb_level_taggs = Object.entries(app_data.drawing_area.sankey.level_taggs_dict).length
   if (nb_level_taggs == 0) {
@@ -737,6 +810,17 @@ export const LevelTagFilter = ({ app_data }: { app_data: Class_ApplicationData }
 export const DataTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) =>
   <UnifiedTagGroupFilter app_data={app_data} mode="data" />
 
-// export const FlowTagGroupFilter = ({ app_data }:{app_data:Class_ApplicationData}) =>
-//   <UnifiedTagGroupFilter app_data={app_data} mode="element" />
-// )
+export const UnitaryTagGroupFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const [_, setCount] = useState(0)
+  app_data.menu_configuration.ref_to_unitarytag_filter_updater.current = () => setCount(a => a + 1)
+
+  // MODIFIÉ : vérifier dans view_taggs_dict au lieu de node_taggs_dict
+  const view_taggs = Object.values(app_data.drawing_area.sankey.view_taggs_dict)
+    .filter(tagg => tagg.banner !== 'none')
+
+  if (view_taggs.length === 0) {
+    return <></>
+  }
+
+  return <UnifiedTagGroupFilter app_data={app_data} mode="unitary" />
+}

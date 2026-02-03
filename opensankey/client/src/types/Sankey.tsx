@@ -25,12 +25,12 @@
 // ==================================================================================================
 
 import { Class_DrawingArea } from './DrawingArea'
-import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey } from '../Elements/ElementStyle'
+import { base_styles, elementStyleConfigs, ElementStyleConfigsDict, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkImportExportAboveBelowStyle, LinkImportExportCloseStyle, LinkStyle, NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle, NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle, NodeStyle } from '../Elements/ElementStyle'
 import { Class_LinkElement, defaultLinkId, sortLinksElementsByIds } from '../Elements/Link'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_DataTag } from '../types/Tag'
-import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup } from './TagGroup'
+import { Class_NodeTagGroup, Class_FluxTagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from './TagGroup'
 import {
   default_main_sankey_id,
   default_style_id,
@@ -62,6 +62,8 @@ export class Class_Sankey {
   public _flux_taggs: { [_: string]: Class_FluxTagGroup } = {}
   public _data_taggs: { [_: string]: Class_DataTagGroup } = {}
   public _level_taggs: { [_: string]: Class_LevelTagGroup } = {}
+  public _view_taggs: { [_: string]: Class_ViewTagGroup } = {}  // NOUVEAU
+  
   protected _nodes_dimensions: { [_: string]: Class_NodeDimension } = {}
   protected _node_tags_fingerprint: string
   protected _flux_tags_fingerprint: string
@@ -109,10 +111,12 @@ export class Class_Sankey {
     this.flux_taggs_list.forEach(grp => grp.delete())
     this.data_taggs_list.forEach(grp => grp.delete())
     this.level_taggs_list.forEach(grp => grp.delete())
+      this.view_taggs_list.forEach(grp => grp.delete())  // NOUVEAU
     this._node_taggs = {}
     this._flux_taggs = {}
     this._data_taggs = {}
     this._level_taggs = {}
+    this._view_taggs = {}  // NOUVEAU
     this.dimensions_list.forEach(dim => dim.delete())
   }
 
@@ -161,6 +165,12 @@ export class Class_Sankey {
       .forEach(([idx, data_tagg_to_copy]) => {
         this.addDataTagGroup(idx, data_tagg_to_copy.name)
           .copyFrom(data_tagg_to_copy)
+      })
+    // NOUVEAU : Copie des view tags
+    Object.entries(sankey_to_copy._view_taggs)
+      .forEach(([idx, view_tagg_to_copy]) => {
+        this.addViewTagGroup(idx, view_tagg_to_copy.name)
+          .copyFrom(view_tagg_to_copy)
       })
     // Then copy styles
     Object.entries(sankey_to_copy._styles)
@@ -538,17 +548,21 @@ export class Class_Sankey {
     }
   }
 
+
   public switchElementStyle(n_style: Class_ElementStyle, add: boolean) {
     const selected_nodes = this.drawing_area.selected_elements_list
     const { ref_selected_style } = this.drawing_area.application_data.menu_configuration
-    const curr_style: { [x: string]: Class_ElementStyle[] } = {}
-    selected_nodes.map(node => {
-      curr_style[node.id] = node.style
+
+    // Sauvegarder les styles actuels pour l'undo
+    const curr_custom_styles: { [x: string]: Class_ElementStyle[] } = {}
+    selected_nodes.forEach(node => {
+      curr_custom_styles[node.id] = node.getCustomStyles()
     })
+
     // Method to get old style via undo
     const inv_switchToStyle = () => {
-      selected_nodes.map(node => {
-        node.style = curr_style[node.id]
+      selected_nodes.forEach(node => {
+        node.replaceStyles(curr_custom_styles[node.id])
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
@@ -556,14 +570,14 @@ export class Class_Sankey {
     // Method to get new style via redo
     const _switchToStyle = () => {
       ref_selected_style.current = n_style.id
-      selected_nodes.map(node => {
-        const list_id_style_node = node.style.map(s => s.id)
-        if (list_id_style_node.includes(n_style.id) && !add) {
-          const idx = node.style.findIndex(style => style.id == n_style.id)
-          node.style.splice(idx, 1)
+      selected_nodes.forEach(node => {
+        if (node.hasStyle(n_style.id) && !add) {
+          // Retirer le style
+          node.removeStyleById(n_style.id)
         }
-        if (!list_id_style_node.includes(n_style.id) && add) {
-          node.style.push(n_style)
+        if (!node.hasStyle(n_style.id) && add) {
+          // Ajouter le style
+          node.addStyle(n_style)
         }
       })
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
@@ -575,21 +589,24 @@ export class Class_Sankey {
     _switchToStyle()
   }
 
+
   public resetAttrSelectedElements() {
     const selected_nodes = this.drawing_area.selected_elements_list
 
     const curr_attr: { [x: string]: StorageType<typeof ALL_ATTRIBUTES_CONFIG> } = {}
-    selected_nodes.map(node => {
+    selected_nodes.forEach(node => {
       curr_attr[node.id] = node.attributes
     })
+
     // Method to get old attr via undo
     const inv_resetAttrToStyleVal = () => {
-      selected_nodes.map(node => node.attributes = curr_attr[node.id])
+      selected_nodes.forEach(node => node.attributes = curr_attr[node.id])
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
+
     // Method to get new attr via redo
     const _resetAttrToStyleVal = () => {
-      selected_nodes.map(node => node.resetAttributes())
+      selected_nodes.forEach(node => node.resetAttributes())
       this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     }
 
@@ -648,6 +665,22 @@ export class Class_Sankey {
     // Recursive to avoid id duplicates
     else {
       return this.addLevelTagGroup(id + '_0', name + '_0')
+    }
+  }
+  // NOUVEAU : Méthode pour ajouter un ViewTagGroup
+  public addViewTagGroup(
+    id: string,
+    name: string
+  ): Class_ViewTagGroup {
+    if (!this._view_taggs[id]) {
+      const tag_group = new Class_ViewTagGroup(id, name, this, false)
+      tag_group.activated = true
+      tag_group.banner = 'one'
+      this._view_taggs[id] = tag_group
+      return tag_group
+    }
+    else {
+      return this.addViewTagGroup(id + '_0', name + '_0')
     }
   }
 
@@ -711,17 +744,19 @@ export class Class_Sankey {
   }
 
 
-  public createTagGroup(type_group: Type_MacroTagGroup) {
-    // Get a new id
+  public createTagGroup(type_group: Type_MacroTagGroup, with_a_tag = true) {
     const n = Object.values(this.getTagGroupsAsDict(type_group)).length
     const id = type_group + n
     const name = 'Tag Group ' + n
-    // Create
+    
     if (type_group === 'level_taggs') {
       return this.addLevelTagGroup(id, name)
     }
+    else if (type_group === 'view_taggs') {  // NOUVEAU
+      return this.addViewTagGroup(id, name)
+    }
     else if (type_group === 'node_taggs') {
-      return this.addNodeTagGroup(id, name)
+      return this.addNodeTagGroup(id, name, with_a_tag)
     }
     else if (type_group === 'flux_taggs') {
       return this.addFluxTagGroup(id, name)
@@ -768,8 +803,14 @@ export class Class_Sankey {
     else if (type_group === 'data_taggs') {
       return this._data_taggs
     }
-    else {
+    else if (type_group === 'level_taggs') {
       return this._level_taggs
+    }
+    else if (type_group === 'view_taggs') {  // NOUVEAU
+      return this._view_taggs
+    }
+    else {
+      return this._level_taggs  // Fallback
     }
   }
 
@@ -847,7 +888,8 @@ export class Class_Sankey {
 
   public get level_taggs_dict() { return this._level_taggs }
   public get level_taggs_list() { return Object.values(this._level_taggs) }
-
+  public get view_taggs_dict() { return this._view_taggs }
+  public get view_taggs_list() { return Object.values(this._view_taggs) }
   // Icons
   public get icon_catalog(): { [x: string]: string } { return this._icon_catalog }
   public set icon_catalog(value: { [x: string]: string }) { this._icon_catalog = value }
@@ -901,14 +943,15 @@ export class Class_Sankey {
     if (!this.node_taggs_dict['type de noeud']) {
       return
     }
-    //this.drawing_area.bypass_redraws = true
+
     const process_nodes = this.nodes_list
     const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
     const import_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
+
     if (import_nodes.length > 0) {
-      if (import_nodes[0].style.includes(this.styles_dict['NodeImportExportCloseStyle'])) {
+      if (import_nodes[0].hasStyle(NodeImportExportCloseStyle)) {
         return 'close'
       } else {
         return 'above_below'
@@ -920,85 +963,104 @@ export class Class_Sankey {
   public setTrade = (close: boolean) => {
     const node_styles_dict = this.styles_dict
     const link_styles_dict = this.styles_dict
+
     if (!this.node_taggs_dict['type de noeud']) {
       return
     }
+
     this.drawing_area.bypass_redraws = true
     const process_nodes = this.nodes_list
     const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
+
     const import_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
     const export_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
     )
+
     if (close) {
+      // Mode "close" pour les imports
       import_nodes.forEach((n, i) => {
-        // if (i == 0) n.sibling!.style = [
-        //   node_styles_dict['NodeSectorStyle'],
-        //   node_styles_dict['NodeImportExportCloseStyle'],
-        // ]
-        n.style = [
-          node_styles_dict['default'],
-          node_styles_dict['NodeStyle'],
-          node_styles_dict['NodeImportExportCloseStyle'],
-          node_styles_dict['NodeImportCloseStyle']
-        ]
-        n.getFirstOutputLink()!.style = [
-          node_styles_dict['default'],
-          node_styles_dict['LinkStyle'],
-          link_styles_dict['LinkImportExportCloseStyle'],
-          link_styles_dict['LinkImportCloseStyle']
-        ]
+        // if (i == 0) n.sibling!.replaceStyles([
+        //   node_styles_dict[NodeSectorStyle],
+        //   node_styles_dict[NodeImportExportCloseStyle],
+        // ])
+        n.replaceStyles([
+          node_styles_dict[NodeStyle],
+          node_styles_dict[NodeImportExportCloseStyle],
+          node_styles_dict[NodeImportCloseStyle]
+        ])
+
+        const firstOutputLink = n.getFirstOutputLink()
+        if (firstOutputLink) {
+          firstOutputLink.replaceStyles([
+            node_styles_dict[LinkStyle],
+            link_styles_dict[LinkImportExportCloseStyle],
+            link_styles_dict[LinkImportCloseStyle]
+          ])
+        }
       })
+
+      // Mode "close" pour les exports
       export_nodes.forEach(n => {
-        n.style = [
-          node_styles_dict['default'],
-          node_styles_dict['NodeStyle'],
-          node_styles_dict['NodeImportExportCloseStyle'],
-          node_styles_dict['NodeExportCloseStyle']
-        ]
-        n.getFirstInputLink()!.style = [
-          node_styles_dict['default'],
-          node_styles_dict['LinkStyle'],
-          link_styles_dict['LinkImportExportCloseStyle'],
-          link_styles_dict['LinkExportCloseStyle']
-        ]
+        n.replaceStyles([
+          node_styles_dict[NodeStyle],
+          node_styles_dict[NodeImportExportCloseStyle],
+          node_styles_dict[NodeExportCloseStyle]
+        ])
+
+        const firstInputLink = n.getFirstInputLink()
+        if (firstInputLink) {
+          firstInputLink.replaceStyles([
+            node_styles_dict[LinkStyle],
+            link_styles_dict[LinkImportExportCloseStyle],
+            link_styles_dict[LinkExportCloseStyle]
+          ])
+        }
       })
     } else {
+      // Mode "above/below" pour les imports
       import_nodes.forEach((n, i) => {
-        // if (i == 0) n.sibling!.style = [
-        //   node_styles_dict['NodeSectorStyle'],
-        //   node_styles_dict['NodeImportExportAboveBelowStyle'],
-        // ]
-        n.style = [
-          node_styles_dict['default'],
-          node_styles_dict['NodeStyle'],
-          node_styles_dict['NodeSectorStyle'],
-          node_styles_dict['NodeImportExportAboveBelowStyle'],
-          node_styles_dict['NodeImportAboveStyle']
-        ]
-        n.getFirstOutputLink()!.style = [
-          node_styles_dict['default'],
-          node_styles_dict['LinkStyle'],
-          link_styles_dict['LinkImportExportAboveBelowStyle'],
-        ]
+        // if (i == 0) n.sibling!.replaceStyles([
+        //   node_styles_dict[NodeSectorStyle],
+        //   node_styles_dict[NodeImportExportAboveBelowStyle],
+        // ])
+        n.replaceStyles([
+          node_styles_dict[NodeStyle],
+          node_styles_dict[NodeSectorStyle],
+          node_styles_dict[NodeImportExportAboveBelowStyle],
+          node_styles_dict[NodeImportAboveStyle]
+        ])
+
+        const firstOutputLink = n.getFirstOutputLink()
+        if (firstOutputLink) {
+          firstOutputLink.replaceStyles([
+            node_styles_dict[LinkStyle],
+            link_styles_dict[LinkImportExportAboveBelowStyle]
+          ])
+        }
       })
+
+      // Mode "above/below" pour les exports
       export_nodes.forEach(n => {
-        n.style = [
-          node_styles_dict['default'],
-          node_styles_dict['NodeStyle'],
-          node_styles_dict['NodeSectorStyle'],
-          node_styles_dict['NodeImportExportAboveBelowStyle'],
-          node_styles_dict['NodeExportBelowStyle']
-        ]
-        n.getFirstInputLink()!.style = [
-          node_styles_dict['default'],
-          node_styles_dict['LinkStyle'],
-          link_styles_dict['LinkImportExportAboveBelowStyle']
-        ]
+        n.replaceStyles([
+          node_styles_dict[NodeStyle],
+          node_styles_dict[NodeSectorStyle],
+          node_styles_dict[NodeImportExportAboveBelowStyle],
+          node_styles_dict[NodeExportBelowStyle]
+        ])
+
+        const firstInputLink = n.getFirstInputLink()
+        if (firstInputLink) {
+          firstInputLink.replaceStyles([
+            node_styles_dict[LinkStyle],
+            link_styles_dict[LinkImportExportAboveBelowStyle]
+          ])
+        }
       })
     }
+
     this.drawing_area.nodePositioning.arrangeTrade(true)
     this.drawing_area.draw()
   }

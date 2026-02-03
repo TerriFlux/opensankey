@@ -42,7 +42,7 @@ import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
@@ -142,7 +142,7 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
   }
@@ -169,10 +169,10 @@ export class ProtoElementPersistence extends BaseElementPersistence {
       }
     } else {
       const style_id = getStringListFromJSON(json_object, 'style', [default_style_id])
-      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != 'LinkStyle' && s_id != 'NodeStyle' && proto_element.sankey.styles_dict[s_id])
+      proto_element['_style'] = [...proto_element['_style'], ...style_id.filter(s_id => s_id != 'default' && s_id != LinkStyle && s_id != NodeStyle && proto_element.sankey.styles_dict[s_id])
         .map(s_id => proto_element.sankey.styles_dict[s_id]) as Class_ElementStyle[]]
     }
-    proto_element['_style'].forEach(style=>style.addReference(proto_element))
+    proto_element['_style'].forEach(style => style.addReference(proto_element))
     const json_local_object = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (json_local_object) {
       (Object.keys(proto_element['_config']) as Array<keyof ConfigType>).forEach(key => {
@@ -926,10 +926,10 @@ export class StylePersistence {
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
-      if (style.isAttributeOverloaded(key)) {
-        //@ts-expect-error xxx
-        json_object[key] = value
-      }
+      //if (style.isAttributeOverloaded(key)) {
+      //@ts-expect-error xxx
+      json_object[key] = value
+      //}
     })
     return json_object
   }
@@ -958,14 +958,9 @@ export class StylePersistence {
       this.fromJSON_0_91(style, json_object, kwargs)
     }
 
-    const default_style = style.drawing_area.sankey.default_style
     Object.keys(style['_config']).forEach(key => {
       if (json_object[key] !== undefined) {
-        if (default_style && json_object[key] !== default_style[key as keyof Class_ElementStyle]) {
-          style['_storage'][key] = json_object[key]
-        } else if (json_object[key] !== style['_config'][key].default) {
-          style['_storage'][key] = json_object[key]
-        }
+        style['_storage'][key] = json_object[key]
       }
     })
   }
@@ -1084,6 +1079,7 @@ export class SankeyPersistence {
     const json_object_nodeTags = {} as Type_JSON
     const json_object_fluxTags = {} as Type_JSON
     const json_object_dataTags = {} as Type_JSON
+    const json_object_viewTags = {} as Type_JSON  // NOUVEAU
     const json_object_styles = {} as Type_JSON
     // const json_object_styles_links = {} as Type_JSON
     //const json_object_styles_containers = {} as Type_JSON
@@ -1114,6 +1110,12 @@ export class SankeyPersistence {
       json_object['dataTags'] = json_object_dataTags
       sankey.data_taggs_list.forEach(tagg => {
         json_object_dataTags[tagg.id] = tagg.toJSON()
+      })
+    }
+    if (sankey.view_taggs_list.length > 0) {
+      json_object['viewTags'] = json_object_viewTags
+      sankey.view_taggs_list.forEach(tagg => {
+        json_object_viewTags[tagg.id] = tagg.toJSON()
       })
     }
 
@@ -1218,9 +1220,9 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const old2new_name = {
-      'style_link': 'LinkStyle',
-      'style_node': 'NodeStyle',
-      'style_zdt': 'ContainerStyle'
+      'style_link': LinkStyle,
+      'style_node': NodeStyle,
+      'style_zdt': ContainerStyle
     };
     ['style_link', 'style_node', 'style_zdt'].forEach(style_type => {
       if (json_object[style_type] !== undefined) {
@@ -1285,7 +1287,7 @@ export class SankeyPersistence {
     if (json_object['style'] !== undefined) {
       // Set node styles from json data
       const skip = [
-        'LinkExportCloseStyle', 'LinkImportCloseStyle',
+        LinkExportCloseStyle, LinkImportCloseStyle,
         'LinkImportAboveStyle', 'LinkExportBelowStyle'
       ]
 
@@ -1424,6 +1426,23 @@ export class SankeyPersistence {
           const tagg = sankey._level_taggs[tagg_id] ?? sankey.addLevelTagGroup(tagg_id, tagg_id) // Will be renamed in fromJSON()
 
           // Set level tag group value from JSON
+          tagg.fromJSON(
+            tagg_json as Type_JSON,
+            {}
+          )
+        })
+    }
+
+    json_entry = 'viewTags'
+    if (json_object[json_entry] !== undefined) {
+      // Set view tag & tag group from json data
+      Object.entries(json_object[json_entry])
+        .forEach(([_, tagg_json]) => {
+          // Get or create a view tag group
+          const tagg_id = _
+          const tagg = sankey._view_taggs[tagg_id] ?? sankey.addViewTagGroup(tagg_id, tagg_id)
+
+          // Set view tag group value from JSON
           tagg.fromJSON(
             tagg_json as Type_JSON,
             {}

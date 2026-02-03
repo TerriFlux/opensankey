@@ -3,7 +3,7 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_LinkValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
-import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag } from './Tag'
+import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
 import { Type_JSON, getStringFromJSON, getBooleanFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON } from './Utils'
 
 // CLASS PROTO TAGGROUP *****************************************************************
@@ -849,6 +849,177 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
     this._activated = value
   }
 
+  public set siblings(value: string[]) {
+    this._siblings = value
+    this._ref_sankey.draw()
+  }
+}
+
+
+
+// CLASS VIEW TAGGROUP ******************************************************************
+/**
+ * Tag group for view management - calqué sur LevelTagGroup avec sibling et activation
+ * @export
+ * @class Class_ViewTagGroup
+ */
+export class Class_ViewTagGroup extends Class_NodeTagGroup {
+  private _activated: boolean = false
+  private _siblings: string[] = []
+
+  /**
+   * True if tag is currently on a deletion process
+   * Avoid infinite calls of delete() method
+   * @private
+   * @memberof Class_ViewTagGroup
+   */
+
+  // CONSTRUCTOR ========================================================================
+  /**
+   * Creates an instance of Class_ViewTagGroup.
+   * @param {string} id
+   * @param {string} name
+   * @param {Class_Sankey} sankey
+   * @param {boolean} [with_a_tag=false]
+   * @memberof Class_ViewTagGroup
+   */
+  constructor(
+    id: string,
+    name: string,
+    sankey: Class_Sankey,
+    with_a_tag: boolean = false
+  ) {
+    super(id, name, sankey, with_a_tag)
+    // Default banner as 'one' for view tags
+    this.banner = 'one'
+  }
+
+  // CLEANING METHODS ===================================================================
+  /**
+   * Define deletion behavior
+   * @memberof Class_ViewTagGroup
+   */
+  public delete() {
+    super.delete()
+  }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(tagg_to_copy: Class_ViewTagGroup) {
+    this._copyFrom(tagg_to_copy)
+  }
+
+  protected _copyFrom(tagg_to_copy: Class_ViewTagGroup) {
+    super._copyFrom(tagg_to_copy)
+    this._activated = tagg_to_copy._activated
+    this._siblings = [...tagg_to_copy._siblings]
+  }
+
+  protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
+    super._toJSON(json_object, _kwargs)
+    json_object['activated'] = this._activated
+    json_object['siblings'] = this._siblings
+
+  }
+
+  protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    super._fromJSON(json_object, kwargs)
+    this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
+    this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+  }
+
+  /**
+   * Function to add sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_ViewTagGroup} _
+   * @memberof Class_ViewTagGroup
+   */
+  public addSibling(_: Class_ViewTagGroup) {
+    // Add antagonist grp id to sibling
+    if (!this._siblings.includes(_.id)) {
+      this._siblings.push(_.id)
+    }
+
+    // Add this grp id to sibling antagonist list
+    if (!_._siblings.includes(this.id)) {
+      _._siblings.push(this.id)
+    }
+  }
+
+  /**
+   * Function to remove sibling to current group and referenced group,
+   * because they mutually interact at some mechanic
+   *
+   * @param {Class_ViewTagGroup} _
+   * @memberof Class_ViewTagGroup
+   */
+  public removeSibling(_: Class_ViewTagGroup) {
+    // remove antagonist grp id from sibling
+    if (this._siblings.includes(_.id)) {
+      const idx = this._siblings.indexOf(_.id)
+      this._siblings.splice(idx, 1)
+    }
+
+    // remove this grp id from sibling antagonist list
+    if (_._siblings.includes(this.id)) {
+      const idx = _._siblings.indexOf(this.id)
+      _._siblings.splice(idx, 1)
+    }
+  }
+
+  // PROTECTED METHODS ==================================================================
+  /**
+   * Create a new ViewTag for this group
+   * @protected
+   * @param {string} name
+   * @param {string} [id]
+   * @return {Class_ViewTag}
+   * @memberof Class_ViewTagGroup
+   */
+  protected createTag(name: string, id: string | undefined = undefined): Class_ViewTag {
+    const tag = new Class_ViewTag(name, this, this._ref_sankey, id)
+    if (Object.keys(this._tags).length == 0) {
+      tag.setSelected()
+    } else {
+      tag.setUnSelected()
+    }
+    return tag
+  }
+
+  // GETTERS ============================================================================
+  /**
+   * Is this view tag group currently activated
+   * @readonly
+   * @type {boolean}
+   * @memberof Class_ViewTagGroup
+   */
+  public get activated(): boolean {
+    return this._activated
+  }
+
+  /**
+   * List of sibling tag group ids
+   * @readonly
+   * @type {string[]}
+   * @memberof Class_ViewTagGroup
+   */
+  public get siblings(): string[] {
+    return this._siblings
+  }
+
+  // SETTERS ============================================================================
+  /**
+   * Set activation state
+   * @memberof Class_ViewTagGroup
+   */
+  public set activated(value: boolean) {
+    this._activated = value
+  }
+
+  /**
+   * Set siblings list and redraw
+   * @memberof Class_ViewTagGroup
+   */
   public set siblings(value: string[]) {
     this._siblings = value
     this._ref_sankey.draw()

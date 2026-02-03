@@ -94,6 +94,7 @@ export class Class_DrawingArea {
 
   public static: boolean = !!window.sankey?.publish
   public to_recenter = false
+  public is_unitary = false
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -315,8 +316,9 @@ export class Class_DrawingArea {
     // Draw Everything
     this.drawElements()
     // Fit area
-    this._legend.draw()
+
     this.areaAutoFit()
+    this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
 
@@ -430,7 +432,7 @@ export class Class_DrawingArea {
     // Draw all nodes
     this._sankey.draw()
     // Draw legend
-    this._legend.draw()
+    //this._legend.draw()
     this.drawBgImage()
 
   }
@@ -752,8 +754,8 @@ export class Class_DrawingArea {
       this._k_vert = new_k_height
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
-      this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height,this.window_fitting_height) / this._k_horiz) : this.height
-      this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width,this.window_fitting_width) / this._k_vert) : this.width
+      this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
+      this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -982,13 +984,13 @@ export class Class_DrawingArea {
 
   public moveOrderStyleInSelectedElements = (style_src: Class_ElementStyle, style_trgt: Class_ElementStyle) => {
     // Save old value that can be used in undo
-    const list_old_style: { [x: string]: Class_ElementStyle[] } = {}
-    this.selected_elements_list.forEach(n => list_old_style[n.id] = n.style)
+    const list_old_custom_styles: { [x: string]: Class_ElementStyle[] } = {}
+    this.selected_elements_list.forEach(n => list_old_custom_styles[n.id] = n.getCustomStyles())
 
     // Function undo
     const inv_changeStyleOrder = () => {
-      this.selected_nodes_list.forEach(n => {
-        n.style = list_old_style[n.id]
+      this.selected_elements_list.forEach(n => {
+        n.replaceStyles(list_old_custom_styles[n.id])
         n.draw()
       })
       this.application_data.menu_configuration.updateComponentRelatedToApparence()
@@ -997,29 +999,40 @@ export class Class_DrawingArea {
     // Function original
     const _changeStyleOrder = () => {
       this.selected_elements_list.forEach(n => {
-        const idx_src = n.style.indexOf(style_src)
-        const idx_trgt = n.style.indexOf(style_trgt)
+        // Obtenir tous les styles (y compris le défaut)
+        const all_styles = [...n.style]
 
-        // if node doesn't have both style, don't continue this iterations
-        if (idx_src == -1 || idx_trgt == -1)
+        const idx_src = all_styles.findIndex(s => s.id === style_src.id)
+        const idx_trgt = all_styles.findIndex(s => s.id === style_trgt.id)
+
+        // Si le noeud n'a pas les deux styles, ou si l'un est le style par défaut (index 0), ne rien faire
+        if (idx_src === -1 || idx_trgt === -1 || idx_src === 0 || idx_trgt === 0)
           return
 
-        // Remove element to move from the array of element order
-        const el_to_move = n.style.splice(idx_src, 1)
-        // Add the element  the element target in the order array
-        n.style.splice(idx_trgt, 0, el_to_move[0])
+        // Créer une nouvelle liste de styles personnalisés
+        const custom_styles = all_styles.slice(1) // Exclure le style par défaut
 
+        // Ajuster les indices pour les styles personnalisés (décaler de 1)
+        const custom_idx_src = idx_src - 1
+        const custom_idx_trgt = idx_trgt - 1
+
+        // Réorganiser les styles personnalisés
+        const [el_to_move] = custom_styles.splice(custom_idx_src, 1)
+        custom_styles.splice(custom_idx_trgt, 0, el_to_move)
+
+        // Appliquer la nouvelle liste de styles
+        n.replaceStyles(custom_styles)
         n.draw()
       })
       this.application_data.menu_configuration.updateComponentRelatedToApparence()
     }
+
     // Save undo/redo
     this.application_data.history.saveUndo(inv_changeStyleOrder)
     this.application_data.history.saveRedo(_changeStyleOrder)
     // Execute original function
     _changeStyleOrder()
   }
-
 
   public unDraw() {
     if (this.d3_selection_zoom_area) {
@@ -1261,8 +1274,8 @@ export class Class_DrawingArea {
       if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Create default source node
         const source = this.sankey.addNewDefaultNode()
         source.draw()
@@ -1344,8 +1357,8 @@ export class Class_DrawingArea {
 
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Display the selection zone & set it starting position
         this._selection_zone.setVisible()
         this.starting_x_point = mouse_position[0]
@@ -1563,8 +1576,8 @@ export class Class_DrawingArea {
       if (this._ghost_link !== null) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Move ghost target
         const target = this._ghost_link.target
         target.setPosXY(
@@ -1577,8 +1590,8 @@ export class Class_DrawingArea {
       if (this._selection_zone.is_visible) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] - this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] - this._elements_d3_groups_shift_y
+        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
+        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
         let new_x = this.starting_x_point,
           new_y = this.starting_y_point
