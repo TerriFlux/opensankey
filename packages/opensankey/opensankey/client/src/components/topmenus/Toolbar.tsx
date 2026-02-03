@@ -28,11 +28,58 @@ declare const window: Window &
  * @return {*} 
  */
 export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const hasVisibleFilters = () => {
+    const { sankey } = app_data.drawing_area
+    
+    // Vérifier les filtres conditionnels de base
+    const has_data_type_filter = window.sankey?.data_type !== false
+    const has_value_filter = window.sankey?.value_filter !== false
+    
+    // Vérifier UnitaryTagGroupFilter
+    const view_taggs = Object.values(sankey.view_taggs_dict).filter(tagg => tagg.banner !== 'none')
+    const has_unitary_filter = view_taggs.length > 0
+    
+    // Vérifier LevelTagFilter
+    const nb_level_taggs = Object.values(sankey.level_taggs_dict).filter(tagg=>tagg.banner !== 'none').length
+    let has_level_filter = nb_level_taggs > 0
+    if (nb_level_taggs === 1) {
+      const level_tagg = Object.values(sankey.level_taggs_dict)[0]
+      has_level_filter = level_tagg.tags_list.length > 1
+    }
+    
+    // Vérifier NodeTagGroupFilter (element mode)
+    const element_taggs = [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+      .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary'))
+    const has_element_filter = element_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    
+    // Vérifier DataTagGroupFilter
+    const data_taggs = Object.values(sankey.data_taggs_dict)
+      .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi')
+    const has_data_filter = data_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    return has_data_type_filter || has_value_filter || has_unitary_filter || 
+           has_level_filter || has_element_filter || has_data_filter
+  }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
   const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
   app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
   app_data.menu_configuration.ref_toolbar.current = forceUpdate
+
+  // Vérifier si au moins un filtre sera visible
+
+  
+    if (drawerOpen && !hasVisibleFilters()) {
+       setDrawerOpen(false)
+      return
+    }
+   
+  const handleDrawerToggle = () => {
+    if (!drawerOpen && !hasVisibleFilters()) {
+      // Ne pas ouvrir le drawer si aucun filtre n'est visible
+      return
+    }
+    setDrawerOpen(!drawerOpen)
+  }
   return <>
     <Button
       id='buttonOpenFilterDrawer'
@@ -42,7 +89,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         left: width_drawer,
         top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)
       }}
-      onClick={() => setDrawerOpen(!drawerOpen)}
+      onClick={handleDrawerToggle}
     >
       {
         app_data.icon_library.icon_filter_tags
