@@ -91,9 +91,9 @@ export const createUnitaryView = (
     // Déterminer quel groupe activer selon le node_ref
     let activate_sectors = true
     if (node_ref) {
-      if (node_ref.hasGivenTag(productTag)) {
+      if (new_drawing_area.sankey.nodes_dict[node_ref.id].hasGivenTag(productTag)) {
         activate_sectors = false
-      } else if (node_ref.hasGivenTag(sectorTag)) {
+      } else if (new_drawing_area.sankey.nodes_dict[node_ref.id].hasGivenTag(sectorTag)) {
         activate_sectors = true
       }
     }

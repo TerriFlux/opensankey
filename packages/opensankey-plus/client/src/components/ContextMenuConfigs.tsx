@@ -33,7 +33,7 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
         visibilityConditions: [{
           type: 'custom',
           customCheck: (app_data) => {
-            return (app_data as Class_ApplicationDataOSP).has_sankey_dev
+            return app_data.is_static || (app_data as Class_ApplicationDataOSP).has_sankey_dev
           }
         }]
       }      
