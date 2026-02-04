@@ -471,7 +471,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'italic': 'name_label_italic',
       'label_color': 'name_label_color',
       'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert'
+      'label_vert': 'name_label_vert',
 
     }
 
@@ -497,9 +497,14 @@ export class LinkElementPersistence extends ProtoElementPersistence {
         link.attributes['value_label_background_color_visible'] = json_local.value_label_background
       }
       link.attributes['value_label_background_type'] = 'ellipse'
+      if (json_local.name_label_horiz == 'dragged') {
+        delete link.attributes['name_label_horiz']
+        delete json_local.name_label_horiz
+      }
     }
-    
-
+    if (json_object.position_offset_label) {
+      link.attributes['name_label_position_offset'] = json_object.position_offset_label
+    }
   }
 
   public static fromJSON(
