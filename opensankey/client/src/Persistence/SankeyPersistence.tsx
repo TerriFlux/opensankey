@@ -501,9 +501,27 @@ export class LinkElementPersistence extends ProtoElementPersistence {
         delete link.attributes['name_label_horiz']
         delete json_local.name_label_horiz
       }
+      if (json_local.name_label_horiz == 'dragged') {
+        delete link.attributes['name_label_vert']
+        delete json_local.name_label_vert
+      }
+      if (json_local.value_label_horiz == 'dragged') {
+        delete link.attributes['value_label_horiz']
+        delete json_local.value_label_horiz
+      }
+      if (json_local.value_label_vert == 'dragged') {
+        delete link.attributes['value_label_vert']
+        delete json_local.value_label_vert
+      }
+
     }
     if (json_object.position_offset_label) {
       link.attributes['name_label_position_offset'] = json_object.position_offset_label
+    }
+    if (json_object.position_x_label) {
+      link.attributes['value_label_position_absolute'] = true
+      link.attributes['value_label_position_y'] = json_object.position_y_label
+      link.attributes['value_label_position_x'] = json_object.position_x_label
     }
   }
 

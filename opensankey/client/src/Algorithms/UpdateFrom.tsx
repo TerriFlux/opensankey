@@ -515,101 +515,105 @@ export const updateFrom = (
     let to_update_for_values = Object.assign([] as string[], to_update)
     if (all || add_flux) to_update_for_values = to_update_for_values.concat(to_add)
     // /!\ other sankey must but an ancient version of the current sankey because each link value has an unique id
-    if (((sync_flux_tags || sync_flux_values)) || all) {
-      // To speed up matching process between values ids (that are random)
-      // We compute corresp value ids for sync_flux_tags & sync_flux_values
-      const values_corresp_ids: { [id_flux: string]: { [id_value: string]: string } } = {}
+    // if (((sync_flux_tags || sync_flux_values)) || all) {
+    // To speed up matching process between values ids (that are random)
+    // We compute corresp value ids for sync_flux_tags & sync_flux_values
+    const values_corresp_ids: { [id_flux: string]: { [id_value: string]: string } } = {}
+    to_update_for_values
+      .forEach(id_flux => {
+        // avoid recomputation
+        const values = drawing_area.sankey.links_dict[id_flux].getAllValues()
+        const other_values = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux].getAllValues()
+        // Init corresps list
+        values_corresp_ids[id_flux] = {}
+        if (Object.keys(values).length > 0) {
+          // Case 1 : No datatags - only one value per flux
+          if (Object.values(values)[1] === undefined) {
+            values_corresp_ids[id_flux][Object.keys(values)[0]] = Object.keys(other_values)[0]
+          }
+          // Case 2 : Datatags are present
+          else {
+            Object.entries(values)
+              .forEach(([id_value, [, dtags]]) => {
+                if (dtags !== undefined) { // Should never be the case
+                  // Find values match based on datatags ids
+                  const dtags_id = dtags.map(dtag => dtag.id)
+                  Object.entries(other_values)
+                    .filter(([, [, other_dtags]]) => {
+                      if (other_dtags !== undefined)
+                        return (
+                          JSON.stringify(dtags_id) ===
+                          JSON.stringify(other_dtags.map(other_dtag => other_dtag.id))
+                        )
+                      else
+                        return false // Should never be the case
+                    })
+                    .forEach(([id_other_value,]) => {
+                      values_corresp_ids[id_flux][id_value] = id_other_value
+                    })
+                }
+              })
+          }
+        }
+      })
+
+    // Update refs between values and flux_tags
+    if ((sync_flux_tags && (add_flux || remove_flux)) || all) {
       to_update_for_values
         .forEach(id_flux => {
-          // avoid recomputation
-          const values = drawing_area.sankey.links_dict[id_flux].getAllValues()
-          const other_values = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux].getAllValues()
-          // Init corresps list
-          values_corresp_ids[id_flux] = {}
-          if (Object.keys(values).length > 0) {
-            // Case 1 : No datatags - only one value per flux
-            if (Object.values(values)[1] === undefined) {
-              values_corresp_ids[id_flux][Object.keys(values)[0]] = Object.keys(other_values)[0]
-            }
-            // Case 2 : Datatags are present
-            else {
-              Object.entries(values)
-                .forEach(([id_value, [, dtags]]) => {
-                  if (dtags !== undefined) { // Should never be the case
-                    // Find values match based on datatags ids
-                    const dtags_id = dtags.map(dtag => dtag.id)
-                    Object.entries(other_values)
-                      .filter(([, [, other_dtags]]) => {
-                        if (other_dtags !== undefined)
-                          return (
-                            JSON.stringify(dtags_id) ===
-                            JSON.stringify(other_dtags.map(other_dtag => other_dtag.id))
-                          )
-                        else
-                          return false // Should never be the case
-                      })
-                      .forEach(([id_other_value,]) => {
-                        values_corresp_ids[id_flux][id_value] = id_other_value
-                      })
-                  }
+          // Avid recomputation
+          const link = drawing_area.sankey.links_dict[id_flux]
+          const values = link.getAllValues()
+          const other_link = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux]
+          const other_values = other_link.getAllValues()
+          // Loop on all current values for given flux id_flux
+          Object.entries(values)
+            .forEach(([id_value, [value,]]) => {
+              // Remove all tags for all current fluxs
+              value.flux_tags_list
+                .forEach(tag => {
+                  value.removeTag(tag)
                 })
-            }
-          }
+              // Get corresponding value to copy
+              const id_other_value = values_corresp_ids[id_flux][id_value]
+              if (id_other_value !== undefined) {
+                const other_value = other_values[id_other_value][0]
+                // Apply same flux-tag relationship from new_layout to current sankey's fluxs
+                other_value.flux_tags_list
+                  .filter(tag => tag.group.id in drawing_area.sankey._flux_taggs)
+                  .filter(tag => tag.id in drawing_area.sankey._flux_taggs[tag.group.id].tags_dict)
+                  .forEach(tag => value.addTag(tag))
+              }
+            })
         })
-
-      // Update refs between values and flux_tags
-      if ((sync_flux_tags && (add_flux || remove_flux)) || all) {
-        to_update_for_values
-          .forEach(id_flux => {
-            // Avid recomputation
-            const link = drawing_area.sankey.links_dict[id_flux]
-            const values = link.getAllValues()
-            const other_link = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux]
-            const other_values = other_link.getAllValues()
-            // Loop on all current values for given flux id_flux
-            Object.entries(values)
-              .forEach(([id_value, [value,]]) => {
-                // Remove all tags for all current fluxs
-                value.flux_tags_list
-                  .forEach(tag => {
-                    value.removeTag(tag)
-                  })
-                // Get corresponding value to copy
-                const id_other_value = values_corresp_ids[id_flux][id_value]
-                if (id_other_value !== undefined) {
-                  const other_value = other_values[id_other_value][0]
-                  // Apply same flux-tag relationship from new_layout to current sankey's fluxs
-                  other_value.flux_tags_list
-                    .filter(tag => tag.group.id in drawing_area.sankey._flux_taggs)
-                    .filter(tag => tag.id in drawing_area.sankey._flux_taggs[tag.group.id].tags_dict)
-                    .forEach(tag => value.addTag(tag))
-                }
-              })
-          })
-      }
-
-      // Apply links values from other sankey to current links
-      if (sync_flux_values || all) {
-        to_update_for_values
-          .forEach(id_flux => {
-            // Avid recomputation
-            const link = drawing_area.sankey.links_dict[id_flux]
-            const values = link.getAllValues()
-            const other_link = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux]
-            const other_values = other_link.getAllValues()
-            // Loop on all current values for given flux id_flux
-            Object.entries(values)
-              .forEach(([id_value, [value,]]) => {
-                // Get corresponding value to copy
-                const id_other_value = values_corresp_ids[id_flux][id_value]
-                if (id_other_value !== undefined) {
-                  value.copyFrom(other_values[id_other_value][0])
-                }
-              })
-          })
-      }
     }
+
+    // Apply links values from other sankey to current links
+
+    to_update_for_values
+      .forEach(id_flux => {
+        // Avid recomputation
+        const link = drawing_area.sankey.links_dict[id_flux]
+        const values = link.getAllValues()
+        const other_link = other_drawing_area.sankey.links_dict[matching_links_id[id_flux] ?? id_flux]
+        const other_values = other_link.getAllValues()
+        // Loop on all current values for given flux id_flux
+        Object.entries(values)
+          .forEach(([id_value, [value,]]) => {
+            // Get corresponding value to copy
+            const id_other_value = values_corresp_ids[id_flux][id_value]
+            if (id_other_value !== undefined) {
+              if (sync_flux_values || all) {
+                value.copyFrom(other_values[id_other_value][0])
+              } else {
+                value.text_value = other_values[id_other_value][0].text_value
+              }
+            }
+          })
+      })
   }
+  //}
+  //}
 
 
   // Update icon catalog
