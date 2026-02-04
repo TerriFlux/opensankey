@@ -410,6 +410,9 @@ export class Class_NodeElement extends Class_NodeBase {
   public hasInputLinks() { return (this.input_links_list.length > 0) }
   public hasOutputLinks() { return (this.output_links_list.length > 0) }
 
+  public hasVisibleInputLinks() { return (this.input_links_list.filter(l=>l.is_visible).length > 0) }
+  public hasVisibleOutputLinks() { return (this.output_links_list.filter(l=>l.is_visible).length > 0) }
+
   public addInputLink(link: Class_LinkElement) {
     if (!this._input_links[link.id]) {
       this._input_links[link.id] = link
@@ -1113,6 +1116,21 @@ export class Class_NodeElement extends Class_NodeBase {
       this.draw()
     })
   }
+
+  public get is_unitary_tag() {
+      const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
+      if (unitary_tagg) {
+        const node_type = this.sankey.node_taggs_dict['type de noeud']
+        const productTag = node_type?.tags_dict['produit']
+        const sectorTag = node_type?.tags_dict['secteur']
+        const is_product = this.hasGivenTag(productTag)
+        const is_sector = this.hasGivenTag(sectorTag)
+        const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
+        return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
+      }
+      return false    
+  }
+
   public get are_related_node_tags_selected(): boolean {
     if (
       (this._are_related_node_tags_selected === undefined) ||
@@ -1356,6 +1374,8 @@ export class Class_NodeElement extends Class_NodeBase {
   public get dimensions_as_child() { return this._nodeDimensionsManager.dimensions_as_child }
 
   public get are_related_dimensions_selected(): boolean {
+    if (this.is_unitary_tag) return true
+
     if (this._are_related_dimensions_selected === undefined) {
       const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()
 

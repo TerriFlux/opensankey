@@ -520,8 +520,8 @@ export class NodePositioning {
     })
 
     // Identifier et traiter les nœuds sources en priorité
-    const source_nodes = nodes_to_process.filter(node => !node.hasInputLinks() && node.hasOutputLinks())
-    const lone_nodes = nodes_to_process.filter(node => !node.hasInputLinks() && !node.hasOutputLinks())
+    const source_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && node.hasVisibleOutputLinks())
+    const lone_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && !node.hasVisibleOutputLinks())
 
     console.log('🌱 Nœuds sources:', source_nodes.map(n => n.id))
     console.log('🏝️ Nœuds isolés:', lone_nodes.map(n => n.id))
@@ -666,7 +666,7 @@ export class NodePositioning {
       .filter(link => {
         const target = this.drawingArea.sankey.links_dict[link.id].target
         return nodes_to_process.some(n => n.id === target.id) &&
-          !recycling_links_ids.includes(link.id)
+          !recycling_links_ids.includes(link.id) && link.is_visible
       })
       .forEach(link => {
         const next_node = this.drawingArea.sankey.nodes_dict[

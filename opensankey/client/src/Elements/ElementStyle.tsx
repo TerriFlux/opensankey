@@ -226,9 +226,9 @@ elementStyleConfigs[SankeyUnitaryNodeStyle] = {
     name_label_text_align: 'middle',
     name_label_horiz: 'middle',
     name_label_vert: 'bottom',
-    name_label_font_size: 40,
+    name_label_font_size: 20,
 
-    shape_min_width: 200,
+    shape_min_width: 100,
     shape_color_visible: false,
     shape_border_visible: true,
     shape_border_color: 'black',
@@ -239,7 +239,7 @@ elementStyleConfigs[SankeyUnitaryNodeStyle] = {
     name_label_box_width: 350,
     name_label_background_visible: false,
 
-    shape_position_dx: 500
+    shape_position_dx: 250
   }
 }
 
@@ -249,13 +249,13 @@ elementStyleConfigs[SankeyUnitaryNodeInputStyle] = {
     name_label_horiz: 'left',
     name_label_vert: 'middle',
     name_label_text_align: 'right',
-    name_label_font_size: 40,
+    name_label_font_size: 20,
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
-    name_label_box_width: 500,
-    shape_position_dx: 500,
-    shape_position_dy: 50
+    name_label_box_width: 250,
+    shape_position_dx: 250,
+    shape_position_dy: 25
   }
 }
 
@@ -264,13 +264,13 @@ elementStyleConfigs[SankeyUnitaryNodeOutputStyle] = {
   config: {
     name_label_horiz: 'right',
     name_label_vert: 'middle',
-    name_label_font_size: 40,
+    name_label_font_size: 20,
     shape_min_width: 1,
     shape_min_height: 1,
     shape_visible: false,
-    name_label_box_width: 500,
-    shape_position_dx: 500,
-    shape_position_dy: 50
+    name_label_box_width: 250,
+    shape_position_dx: 250,
+    shape_position_dy: 25
   }
 } as const
 
@@ -279,7 +279,8 @@ elementStyleConfigs[LinkInUnitaryStyle] = {
   config: {
     shape_orientation: 'hh',
     shape_is_arrow: false,
-    value_label_font_size: 40,
+    value_label_color: 'black',
+    value_label_font_size: 20,
     value_label_bold: true,
     value_label_horiz: 'left',
     value_label_on_path: false,
@@ -288,6 +289,7 @@ elementStyleConfigs[LinkInUnitaryStyle] = {
     value_label_unit_type: '%ID',
     value_label_significant_digits: true,
     value_label_nb_significant_digits: 3,
+    value_label_scientific_notation: false,
     value_label_background_visible: true,
     value_label_background_color_visible: true,
     value_label_background_color: 'white',
@@ -300,15 +302,17 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
   name: 'Unitaire flux sortie',
   config: {
     shape_orientation: 'hh',
-    value_label_font_size: 40,
+    value_label_font_size: 20,
+    value_label_color: 'black',
     value_label_bold: true,
     value_label_horiz: 'right',
     value_label_vert: 'middle',
     value_label_on_path: false,
     value_label_pos_auto: false,
     value_label_unit_visible: true,
-    value_label_unit_type: '%OS', 
+    value_label_unit_type: '%OS',
     value_label_significant_digits: true,
+    value_label_scientific_notation: false,
     value_label_nb_significant_digits: 3,
     value_label_background_visible: true,
     value_label_background_color_visible: true,

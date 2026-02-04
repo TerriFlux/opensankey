@@ -862,6 +862,7 @@ export class Class_MenuConfig {
   }
 
   public updateAllComponentsRelatedToToolbar() {
+    this.ref_toolbar.current()
     this._ref_to_toolbar_updater.current()
     this._ref_to_toolbar_link_visual_filter_updater.current()
     this._ref_to_toolbar_node_tag_updater.current()

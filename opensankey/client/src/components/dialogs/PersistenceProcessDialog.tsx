@@ -708,7 +708,6 @@ export const UniversalFileConverter = ({
           <Box />
           <Button
             variant="menuconfigpanel_option_button_secondary"
-            isActive
             size='sizeButtonDialog'
             isDisabled={input_format !== 'blob' && config.input.required && !input_file}
             onClick={generic_process}

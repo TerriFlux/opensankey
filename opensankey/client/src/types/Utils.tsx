@@ -415,7 +415,7 @@ export const format_value = (
   const is_node = element instanceof Class_NodeElement
   const source = is_node ? node : link.source
   const target = is_node ? node : link.target
-
+  let is_percent = false
   if (label_values.unit_type == '%IS') {
     let total_source = 0
     // if (unit_taggs.length > 0) {
@@ -423,18 +423,22 @@ export const format_value = (
     // }
     source.input_links_list.filter(l => l.is_visible /*&& l.value!.data_tag == link.value!.data_tag*/).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
+    is_percent = true
   } else if (label_values.unit_type == '%OD') {
     let total_target = 0
     target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value && total_target ? data_value / total_target * 100 : null
+        is_percent = true
   } else if (label_values.unit_type == '%OS') {
     let total_target = 0
     source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value && total_target ? data_value / total_target * 100 : null
+        is_percent = true
   } else if (label_values.unit_type == '%ID') {
     let total_source = 0
     target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
+        is_percent = true
   } else if (label_values.unit_type == 'normalized') {
     data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
   }
@@ -445,7 +449,7 @@ export const format_value = (
   // Create data label
   if (data_value !== null && data_value !== undefined && label_values.is_visible) {
     // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-    if (label_values.unit_visible && label_values.unit != '' && label_values.unit_factor > 1) {
+    if (label_values.unit_visible && label_values.unit != ''&& !is_percent && label_values.unit_factor > 1) {
       data_value /= label_values.unit_factor
     }
 
