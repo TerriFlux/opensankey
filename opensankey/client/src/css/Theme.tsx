@@ -489,20 +489,9 @@ export const buttonStyles = {
     acc[`menuconfigpanel_option_button_${type}`] = defineStyle({
       textStyle: 'h4',
       color: `tertiaire.${level}`,
-      bg: 'none',
-      bgColor: 'none',
-      borderColor: `tertiaire.${level}`,
-      border: 'solid 2px',
-      // _hover: {
-      //   bg: `secondaire.${level}`,
-      //   bgColor: `secondaire.${level}`,
-      //   borderColor: `secondaire.${level}`,
-      // },
-      // _active: {
-      //   bg: `primaire.${level}`,
-      //   bgColor: `primaire.${level}`,
-      //   borderColor: `primaire.${level}`,
-      // },
+      bg: `primaire.${level}`,
+      bgColor: `primaire.${level}`,
+      borderColor: `primaire.${level}`,
     })
 
     acc[`menuconfigpanel_option_button_${type}_activated`] = defineStyle({
@@ -511,17 +500,7 @@ export const buttonStyles = {
       bg: `primaire.${level}`,
       bgColor: `primaire.${level}`,
       borderColor: `tertiaire.${level}`,
-      border: 'solid 2px',
-      // _hover: {
-      //   bg: `secondaire.${level}`,
-      //   bgColor: `secondaire.${level}`,
-      //   borderColor: `secondaire.${level}`,
-      // },
-      // _active: {
-      //   bg: `primaire.${level}`,
-      //   bgColor: `primaire.${level}`,
-      //   borderColor: `primaire.${level}`,
-      // },
+      border: 'solid 2px'
     })
 
 
@@ -2550,12 +2529,12 @@ const layerStyles = {
     gridTemplateColumns: '1fr 2fr 1fr',
     gridColumnGap: '0.12rem',
   },
-    options_1_2_2cols: {
+  options_1_2_2cols: {
     display: 'grid',
     gridTemplateColumns: '1fr 3fr 2fr',
     gridColumnGap: '0.12rem',
   },
-    options_2_1_2cols: {
+  options_2_1_2cols: {
     display: 'grid',
     gridTemplateColumns: '2fr 1fr 2fr',
     gridColumnGap: '0.12rem',

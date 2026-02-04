@@ -9,7 +9,7 @@ import { Class_ViewTagGroup } from "../types/TagGroup"
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     drawing_area.bypass_redraws = true
     drawing_area.legend.position_x = 50
-    drawing_area.legend.position_y = 500
+    drawing_area.legend.position_y = 250
     drawing_area.legend.stick_to_drawing = false
     const center_nodes = drawing_area.sankey.visible_nodes_list
         .filter(node => node.tags_dict['unitary']?.is_selected ||
@@ -23,10 +23,10 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     const sectorTag = node_type?.tags_dict['secteur']
 
     // Réinitialiser tous les styles unitaires d'abord
-    drawing_area.sankey.visible_nodes_list.forEach(node => {
+    drawing_area.sankey.nodes_list.forEach(node => {
         node_unitary_styles.forEach(s => node.removeStyleById(s))
     })
-    drawing_area.sankey.visible_links_list.forEach(link => {
+    drawing_area.sankey.links_list.forEach(link => {
         node_unitary_styles.forEach(s => link.removeStyleById(s))
     })
 
@@ -40,12 +40,12 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     const centerNodeIds = new Set(center_nodes.map(n => n.id))
 
     // Appliquer les styles aux autres nœuds
-    drawing_area.sankey.visible_nodes_list
+    drawing_area.sankey.nodes_list
         .forEach(node => {
             if (centerNodeIds.has(node.id)) return
 
-            const visibleInputLinks = node.input_links_list.filter(l => l.is_visible)
-            const visibleOutputLinks = node.output_links_list.filter(l => l.is_visible)
+            const visibleInputLinks = node.input_links_list.filter(l => l.source == center_nodes[0])
+            const visibleOutputLinks = node.output_links_list.filter(l => l.target == center_nodes[0])
 
             if (visibleInputLinks.length === 0) {
                 node.addStyle(drawing_area.sankey.styles_dict[SankeyUnitaryNodeInputStyle])
@@ -57,11 +57,11 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
 
     // Styler les liens
     center_nodes.forEach(n => {
-        n.output_links_list.filter(l => l.is_visible).forEach(l => {
+        n.output_links_list.forEach(l => {
             l.addStyle(drawing_area.sankey.styles_dict[LinkOutUnitaryStyle])
             l.resetAttributes()
         })
-        n.input_links_list.filter(l => l.is_visible).forEach(l => {
+        n.input_links_list.forEach(l => {
             l.addStyle(drawing_area.sankey.styles_dict[LinkInUnitaryStyle])
             l.resetAttributes()
         })
@@ -70,9 +70,9 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     let max_value = 0
     center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
     //let scale = app_data.drawing_area.sankey.nodes_dict[center_node.id].data_value
-    drawing_area.scale = max_value / 3
+    drawing_area.scale = max_value / 1.5
     drawing_area.nodePositioning.computeAutoSankey(false, true)
-    drawing_area.sankey.visible_nodes_list
+    drawing_area.sankey.nodes_list
         .forEach(n => {
             n.resetAttributes()
             if (n.hasGivenTag(productTag)) {

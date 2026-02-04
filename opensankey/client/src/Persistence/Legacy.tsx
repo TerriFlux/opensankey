@@ -453,9 +453,9 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
       s[1].name_label_horiz_shift = s[1].label_horiz_shift
     }
     //@ts-expect-error xxx
-    s[1].name_label_separator = ' - '
-    //@ts-expect-error xxx
-    s[1].name_label_separator_part = 'before'
+    s[1].name_label_separator = data_to_convert.node_label_separator
+        //@ts-expect-error xxx
+    s[1].name_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
     if (s[1].label_color) {
       //@ts-expect-error xxx
       s[1].label_color = 'white'
