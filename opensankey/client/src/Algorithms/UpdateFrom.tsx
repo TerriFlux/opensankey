@@ -150,19 +150,6 @@ export const updateFrom = (
   other_drawing_area: Class_DrawingArea,
   mode: string[]
 ) => {
-  // Transfert all attributes = Copy everything from other drawing area
-  const all = mode.includes('*')
-  // Transfer DA attributs
-  if (mode.includes('attrDrawingArea') || all) {
-    // const scale_to_keep = drawing_area.scale
-    drawing_area._copyAttrFrom(other_drawing_area)
-    // drawing_area._scale = scale_to_keep
-    drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
-    if (other_drawing_area.legend)
-      drawing_area.legend.copyFrom(other_drawing_area.legend)
-    drawing_area.list_g_element = other_drawing_area.list_g_element
-  }
-
   const matching_taggs_id: { [_: string]: { [_: string]: string } } = {}
   const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
   const matching_nodes_id: { [_: string]: string } = {}
@@ -177,6 +164,33 @@ export const updateFrom = (
   )
   const revert_matching_links_id: { [id: string]: string } = {}
   Object.entries(matching_links_id).forEach(([k, v]) => revert_matching_links_id[v] = k)
+  const revert_matching_nodes_id: { [id: string]: string } = {}
+  Object.entries(matching_nodes_id).forEach(([k, v]) => revert_matching_nodes_id[v] = k)
+  // Transfert all attributes = Copy everything from other drawing area
+  const all = mode.includes('*')
+  // Transfer DA attributs
+  if (mode.includes('attrDrawingArea') || all) {
+    // const scale_to_keep = drawing_area.scale
+    drawing_area._copyAttrFrom(other_drawing_area)
+    // drawing_area._scale = scale_to_keep
+    drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
+    if (other_drawing_area.legend)
+      drawing_area.legend.copyFrom(other_drawing_area.legend)
+    // ✅ Mapper les IDs en utilisant les matching_ids
+    drawing_area.list_g_element = other_drawing_area.list_g_element.map(id => {
+      // Vérifier si c'est un node, link ou container et utiliser le bon mapping
+      if (revert_matching_nodes_id[id]) {
+        return revert_matching_nodes_id[id]
+      } else if (revert_matching_links_id[id]) {
+        return revert_matching_links_id[id]
+      } else {
+        // Si pas de match trouvé, garder l'ID original (containers ou autres)
+        return id
+      }
+    })
+  }
+
+
 
   if (mode.includes('attrDrawingArea') || all) {
 

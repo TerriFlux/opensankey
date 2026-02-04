@@ -493,7 +493,12 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       if (json_local.local_link_scale) {
         link.attributes['shape_local_link_scale'] = +json_local.local_link_scale / link.sankey.drawing_area.scale
       }
+      if (json_local.value_label_background != undefined) {
+        link.attributes['value_label_background_color_visible'] = json_local.value_label_background
+      }
+      link.attributes['value_label_background_type'] = 'ellipse'
     }
+    
 
   }
 
@@ -841,7 +846,7 @@ export class StylePersistence {
       'vert_shift': 'shape_middle_recycling',
       'arrow': 'shape_is_arrow',
       'arrow_size': 'shape_arrow_size',
-      'dashed': 'shape_is_dashed',
+      //'dashed': 'shape_is_dashed',
       'color': 'shape_color',
       'color_rule': 'shape_color_rule',
       'opacity': 'shape_opacity',
@@ -904,7 +909,10 @@ export class StylePersistence {
       'node_height': 'shape_min_height',
       //'color': 'shape_color',
       //'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable'
+      colorSustainable: 'shape_color_sustainable',
+      value_label_background:'value_label_background_color_visible',
+      dashed:'shape_border_dashed',
+      thickness: 'shape_border_thickness'
     }
 
     const default_style = style.drawing_area.sankey.default_style
