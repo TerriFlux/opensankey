@@ -453,21 +453,30 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
    * Retire un style de l'élément par son ID
    */
   public removeStyleById(styleId: string): void {
-    const index = this._style.findIndex(s => s.id === styleId)
+    // Vérifier si le style existe
+    const stylesToRemove = this._style.filter(s => s.id === styleId)
 
-    if (index === -1) {
+    if (stylesToRemove.length === 0) {
       console.warn(`Style ${styleId} not found on element ${this.id}`)
       return
     }
 
-    // Ne pas permettre de retirer le style par défaut (premier dans la liste)
-    if (index === 0) {
+    // Vérifier si le style par défaut est concerné
+    if (this._style[0]?.id === styleId) {
       console.warn(`Cannot remove default style from element ${this.id}`)
       return
     }
 
-    const [removedStyle] = this._style.splice(index, 1)
-    removedStyle.removeReference(this)
+    // Filtrer tous les styles avec cet id sauf le premier (default)
+    this._style = this._style.filter((s, index) => s.id !== styleId || index === 0)
+
+    // Nettoyer les références pour tous les styles retirés
+    stylesToRemove.forEach(style => {
+      if (style !== this._style[0]) {
+        style.removeReference(this)
+      }
+    })
+
     this.draw()
   }
 
@@ -1136,7 +1145,7 @@ export class Class_ElementStyle {
       delete this._references[ref.id]
     }
   }
-  public get attributes() { return this._storage}
+  public get attributes() { return this._storage }
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }

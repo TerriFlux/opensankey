@@ -1063,6 +1063,12 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       n.position_x += this._elements_d3_groups_shift_x
       n.position_y += this._elements_d3_groups_shift_y
+      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
+      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
+    })
+    this.sankey.links_list.forEach(n => {
+      if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
+      if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()

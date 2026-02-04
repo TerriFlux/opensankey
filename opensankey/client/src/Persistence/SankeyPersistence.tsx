@@ -471,7 +471,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'italic': 'name_label_italic',
       'label_color': 'name_label_color',
       'label_horiz': 'name_label_horiz',
-      'label_vert': 'name_label_vert'
+      'label_vert': 'name_label_vert',
 
     }
 
@@ -493,8 +493,36 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       if (json_local.local_link_scale) {
         link.attributes['shape_local_link_scale'] = +json_local.local_link_scale / link.sankey.drawing_area.scale
       }
-    }
+      if (json_local.value_label_background != undefined) {
+        link.attributes['value_label_background_color_visible'] = json_local.value_label_background
+      }
+      link.attributes['value_label_background_type'] = 'ellipse'
+      if (json_local.name_label_horiz == 'dragged') {
+        delete link.attributes['name_label_horiz']
+        delete json_local.name_label_horiz
+      }
+      if (json_local.name_label_horiz == 'dragged') {
+        delete link.attributes['name_label_vert']
+        delete json_local.name_label_vert
+      }
+      if (json_local.value_label_horiz == 'dragged') {
+        delete link.attributes['value_label_horiz']
+        delete json_local.value_label_horiz
+      }
+      if (json_local.value_label_vert == 'dragged') {
+        delete link.attributes['value_label_vert']
+        delete json_local.value_label_vert
+      }
 
+    }
+    if (json_object.position_offset_label) {
+      link.attributes['name_label_position_offset'] = json_object.position_offset_label
+    }
+    if (json_object.position_x_label) {
+      link.attributes['value_label_position_absolute'] = true
+      link.attributes['value_label_position_y'] = json_object.position_y_label
+      link.attributes['value_label_position_x'] = json_object.position_x_label
+    }
   }
 
   public static fromJSON(
@@ -841,7 +869,7 @@ export class StylePersistence {
       'vert_shift': 'shape_middle_recycling',
       'arrow': 'shape_is_arrow',
       'arrow_size': 'shape_arrow_size',
-      'dashed': 'shape_is_dashed',
+      //'dashed': 'shape_is_dashed',
       'color': 'shape_color',
       'color_rule': 'shape_color_rule',
       'opacity': 'shape_opacity',
@@ -904,7 +932,10 @@ export class StylePersistence {
       'node_height': 'shape_min_height',
       //'color': 'shape_color',
       //'opacity': 'shape_opacity',
-      'colorSustainable': 'shape_color_sustainable'
+      colorSustainable: 'shape_color_sustainable',
+      value_label_background:'value_label_background_color_visible',
+      dashed:'shape_border_dashed',
+      thickness: 'shape_border_thickness'
     }
 
     const default_style = style.drawing_area.sankey.default_style

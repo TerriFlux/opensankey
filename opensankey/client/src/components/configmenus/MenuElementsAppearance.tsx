@@ -833,7 +833,7 @@ const LabelContentComponent = ({
             </Button>
             <Button variant={nodeLabelValues.separator_part == 'after' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
               onClick={() => {
-                nodeLabelValues.separator_part = 'before'
+                nodeLabelValues.separator_part = 'after'
               }}
             >
               {app_data.t('Menu.after')}
