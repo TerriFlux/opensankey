@@ -463,12 +463,10 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
               //app_data.views_dict[view_id].name = name
               JSON_data.id = view_id
               app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
+              if (i == 0) app_data.setCurrentView(view_id)
+              app_data.menu_configuration.updateAllMenuComponents()
+              app_data.menu_configuration_osp.updateComponentRelatedToViews()
             })
-            app_data.menu_configuration.updateAllMenuComponents()
-            app_data.menu_configuration_osp.updateComponentRelatedToViews()
-            app_data.menu_configuration.updateComponentSaveDiagramJSON()
-            app_data.menu_configuration.updateComponentLoadDiagramJSON()
-            if (i == 0) app_data.setCurrentView(view_id)
           }
 
         })
@@ -1314,7 +1312,7 @@ const TabLocalDataForUnitary: FC<{ app_data: Class_ApplicationDataOSP }> = ({ ap
           app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
-                createUnitaryNewView(app_data,element)
+                createUnitaryNewView(app_data, element)
               })
               app_data.menu_configuration_osp.updateComponentRelatedToViews()
               app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
@@ -1494,7 +1492,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
           app_data.sendWaitingToast(
             () => {
               list_selected_nodes_for_unitary.current.forEach(element => {
-                createUnitaryNewView(local_app_data.current,element)
+                createUnitaryNewView(local_app_data.current, element)
               })
               const app_data_json = local_app_data.current.toJSON()
               app_data.viewsFromJSON(app_data_json)

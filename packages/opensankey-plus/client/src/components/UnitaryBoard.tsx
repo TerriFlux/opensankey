@@ -1,9 +1,8 @@
 import { updateUnitaryStyles } from "../deps/OpenSankey/Algorithms/UnitaryBoard"
-import { elementStyleConfigs, node_unitary_styles } from "../deps/OpenSankey/Elements/ElementStyle"
+import { elementStyleConfigs, node_exchanges_style, node_unitary_styles } from "../deps/OpenSankey/Elements/ElementStyle"
 import { Class_NodeElement } from "../deps/OpenSankey/Elements/Node"
 import { DrawingAreaPersistence } from "../deps/OpenSankey/Persistence/SankeyPersistence"
 import { compressJSONToGzip } from "../deps/OpenSankey/Persistence/UniversalJSONCompression"
-import { Class_DrawingArea } from "../deps/OpenSankey/types/DrawingArea"
 import { Class_Tag } from "../deps/OpenSankey/types/Tag"
 import { Class_ViewTagGroup } from "../deps/OpenSankey/types/TagGroup"
 import { makeId } from "../deps/OpenSankey/types/Utils"
@@ -62,9 +61,18 @@ export const createUnitaryView = (
   // Filtrer les nœuds par type
   const products_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(productTag))
   const sector_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(sectorTag))
-  const other_nodes = new_drawing_area.sankey.nodes_list.filter(n => 
-    !n.hasGivenTag(echangeTag) && 
-    !n.hasGivenTag(productTag) && 
+  const exchange_nodes = new_drawing_area.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag))
+  exchange_nodes.forEach(n => {
+    node_exchanges_style.forEach(s => {
+      n.removeStyleById(s)
+      n.links_order.forEach(l => l.removeStyleById(s))
+    })
+    n.removeTag(echangeTag)
+    n.addTag(sectorTag)
+  })
+  const other_nodes = new_drawing_area.sankey.nodes_list.filter(n =>
+    !n.hasGivenTag(echangeTag) &&
+    !n.hasGivenTag(productTag) &&
     !n.hasGivenTag(sectorTag)
   )
 
