@@ -227,10 +227,9 @@ export class Class_NodeElement extends Class_NodeBase {
   public get master_node() { return this._master_node }
   public set master_node(_) {
     this._master_node = _
-    _?.add_slave_nodes(this)
+    _?._slave_nodes.push(this)
   }
   public get slave_nodes() { return this._slave_nodes }
-  public add_slave_nodes(_: Class_NodeElement) { this._slave_nodes.push(_) }
   public get sibling() { return this._sibling_node }
   public set sibling(_) { this._sibling_node = _ }
   /**
@@ -667,7 +666,7 @@ export class Class_NodeElement extends Class_NodeBase {
               candidate._attached_container.some(item =>
                 this._attached_container.includes(item)
               )
-            if (same_container || (no_container && !has_container)) {
+            if (same_container || (no_container && !has_container) && nodeAbove != this) {
               nodeAbove = candidate
               break
             }
