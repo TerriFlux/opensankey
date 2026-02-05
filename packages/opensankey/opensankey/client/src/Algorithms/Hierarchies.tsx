@@ -173,7 +173,7 @@ const updateDisaggregationExpansionDimensions = (
       newNode.removeDimensionAsChild(n_dim_as_child)
     }
 
-    updateForcedDimensions(newNode, contextualised_node, 'child',child)
+    updateForcedDimensions(newNode, contextualised_node, 'child', child)
   }
 
   // Dimensions as parent
@@ -208,7 +208,7 @@ const updateAggregationExpansionDimensions = (
       newNode.removeDimensionAsParent(n_dim_as_parent)
     }
 
-    updateForcedDimensions(newNode, contextualised_node, 'parent',parent)
+    updateForcedDimensions(newNode, contextualised_node, 'parent', parent)
   }
 
   //Dimensions as child
@@ -227,7 +227,7 @@ const updateForcedDimensions = (
   newNode: Class_NodeElement,
   contextualised_node: Class_NodeElement,
   dimensionType: 'child' | 'parent',
-  child_or_parent:Class_NodeElement
+  child_or_parent: Class_NodeElement
 ) => {
   const dimensions = dimensionType === 'child'
     ? contextualised_node.dimensions_as_child
@@ -272,8 +272,10 @@ const updateNodePositioning = (
 
   nodes.forEach((n, i) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
+    n.position_x = contextualised_node.position_x + (expand_left ? -contextualised_node.shape_position_dx : contextualised_node.shape_position_dx)
     if (new_data.drawing_area.sankey.styles_dict[default_style_id].shape_position_type === 'parametric' && i === 0) {
       n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
+
     }
   })
 }
@@ -635,7 +637,7 @@ const createDisaggregationExpansionNodes = (
   new_data: Class_ApplicationData,
   config: DisaggregationExpansionConfig
 ): Class_NodeElement[] => {
-  return config.children.map(child => {
+  return config.children.map((child, i) => {
     const newNode = new_data.drawing_area.sankey.addNewNode(
       child.id + config.suffix,
       child.name
@@ -648,6 +650,7 @@ const createDisaggregationExpansionNodes = (
 
     updateNodeDimensions(newNode, config.contextualised_node, child)
     newNode.position_x = config.contextualised_node.position_x
+    newNode.position_y = config.contextualised_node.position_y + i
     newNode.position_v = -1
 
     return newNode
@@ -705,7 +708,7 @@ export const aggregate = (
     // handleExchangeNodes(new_data, contextualised_node, aggregateNode, 'aggregate')
   }
   const undo = () => {
-    disaggregate(new_data,parent_node,contextualised_node.id)
+    disaggregate(new_data, parent_node, contextualised_node.id)
   }
   new_data.history.saveUndo(undo)
   new_data.history.saveRedo(Do)
@@ -901,9 +904,9 @@ export const disaggregate = (
     if (n.hasGivenTag(echangeTag!)) {
       return
     }
-    if (n.position_u == aggregateNode.position_u ) {
+    if (n.position_u == aggregateNode.position_u) {
       column.push(n)
-    } 
+    }
   })
   column.sort((n1, n2) => n1.position_y - n2.position_y)
 
@@ -913,7 +916,7 @@ export const disaggregate = (
     column.forEach(n => {
       n.position_v = -1
       const levelTagg = new_data.drawing_area.sankey.level_taggs_dict[parent_dim.id]
-      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v,levelTagg.selected_tags_list[0] as Class_LevelTag)
+      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v, levelTagg.selected_tags_list[0] as Class_LevelTag)
       new_data.drawing_area.sankey.sortNodes()
     })
 
@@ -932,15 +935,15 @@ export const disaggregate = (
     })
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
-      parent_dim.children.forEach(child=>{
-        child.input_links_list.filter(l=>l.source.hasGivenTag(echangeTag)).forEach(l=>l.source.dimensions_as_child[0].setForceToShowChildren())
-        child.output_links_list.filter(l=>l.target.hasGivenTag(echangeTag)).forEach(l=>l.target.dimensions_as_child[0].setForceToShowChildren())
+      parent_dim.children.forEach(child => {
+        child.input_links_list.filter(l => l.source.hasGivenTag(echangeTag)).forEach(l => l.source.dimensions_as_child[0].setForceToShowChildren())
+        child.output_links_list.filter(l => l.target.hasGivenTag(echangeTag)).forEach(l => l.target.dimensions_as_child[0].setForceToShowChildren())
       })
     }
   }
 
   const undo = () => {
-    aggregate(new_data,child_node,parent_dim.parent.id)
+    aggregate(new_data, child_node, parent_dim.parent.id)
   }
   new_data.history.saveUndo(undo)
   new_data.history.saveRedo(Do)
@@ -982,6 +985,9 @@ export const disaggregationExpansion = (
   // Positionnement et finalisation
   updateNodePositioning(new_data, newNodes, contextualised_node, expand_left)
   finalizeOperation(new_data, newNodes)
+  new_data.drawing_area.to_recenter = true
+  new_data.drawing_area.recenter()
+  new_data.drawing_area.to_recenter = false
 }
 
 /**
@@ -1131,7 +1137,7 @@ const contractAfterExpand = (
   // Supprimer les nœuds enfants temporaires
   children.forEach(c => {
     new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
-    parent_node.dimensions_as_parent.forEach(dim=>dim.removeNodeFromChildren(expand_left ? c.source : c.target))
+    parent_node.dimensions_as_parent.forEach(dim => dim.removeNodeFromChildren(expand_left ? c.source : c.target))
   })
 
   // Restaurer les liens du parent
