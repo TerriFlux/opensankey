@@ -147,30 +147,16 @@ export class NodeActions {
     }
   }
 
-  expandLeft = (_dim_name: string) => {
+  expandLeft = (dim_name: string) => {
     if (!this.contextualised_node) return
-
-    // const childDims = this.contextualised_node.master_node ?
-    //   this.contextualised_node.master_node.dimensions_as_parent :
-    //   this.contextualised_node.dimensions_as_parent
-    // //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
-    // if (childDims.length > 0) {
-    const child = this.contextualised_node.sankey.nodes_dict[_]
+    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
     disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
-    //}
   }
 
-  expandRight = (_: string) => {
+  expandRight = (dim_name: string) => {
     if (!this.contextualised_node) return
-
-    // const childDims = this.contextualised_node.master_node ?
-    //   this.contextualised_node.master_node.dimensions_as_parent :
-    //   this.contextualised_node.dimensions_as_parent
-    // //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
-    // if (childDims.length > 0) {
-    const child = this.contextualised_node.sankey.nodes_dict[_]
+    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
     disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
-    //}
   }
 
   contractLeft = () => {
