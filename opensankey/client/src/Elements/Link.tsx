@@ -169,8 +169,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _tooltip_text: string = ''
 
-  public parallel_curve: Class_LinkElement | undefined
-  public sibling: Class_LinkElement | undefined
   private _child_links: { [tag_name: string]: Class_LinkElement } = {}
   private _is_multi_link = false
   private _multi_link_tag: Class_DataTag | undefined
@@ -521,9 +519,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public getShapeColorToUse(): string {
-    if (this.sibling) {
-      return this.sibling.getShapeColorToUse()
-    }
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
