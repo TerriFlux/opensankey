@@ -1759,31 +1759,23 @@ export class NodePositioning {
     }
     let new_current_v = current_v
     let desagregated_nodes = ([...new Set(node.dimensions_as_parent.flatMap(d => d.children))] as Class_NodeElement[]).filter(n => n.hasGivenTag(tag))
-    //desagregated_nodes.filter(n => n.is_visible)
-    desagregated_nodes.forEach(d => {
-      //const d = node.nodeDimensionAsParent(node)
-      //if (!d) return new_current_v + 1
-      //if (d.children.includes(node)) return new_current_v + 1
-      //const desagregated_nodes = d.children
+    desagregated_nodes.forEach(nn => {
+
 
       const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
-      if (desagregated_nodes.length > 0) {
-        let current_y = node.position_y /*+ node.getShapeHeightToUse() / 2*/ - shift_y /*- desagregated_nodes[0].getShapeHeightToUse()*/
-        //let current_y = node.position_y + node.getShapeHeightToUse() / 2 - shift_y - desagregated_nodes[0].getShapeHeightToUse()
 
-        desagregated_nodes.forEach(nn => {
-          if (nn.master_node) {
-            return
-          }
-          nn.position_v = -1
-          nn.position_x = node.position_x
-          nn.position_u = node.position_u
-          nn.position_y = current_y
-          current_y += nn.getShapeHeightToUse() + nn.shape_position_dy
-          if (tag.group.tags_list[tag.group.tags_list.indexOf(tag)])
-            new_current_v = this.applyVDesagregate(nn, new_current_v, tag.group.tags_list[tag.group.tags_list.indexOf(tag)] as Class_LevelTag)
-        })
+      let current_y = node.position_y  - shift_y 
+      if (nn.master_node) {
+        return
       }
+      nn.position_v = -1
+      nn.position_x = node.position_x
+      nn.position_u = node.position_u
+      nn.position_y = current_y
+      current_y += nn.getShapeHeightToUse() + nn.shape_position_dy
+      if (tag.group.tags_list[tag.group.tags_list.indexOf(tag)])
+        new_current_v = this.applyVDesagregate(nn, new_current_v, tag.group.tags_list[tag.group.tags_list.indexOf(tag)] as Class_LevelTag)
+
     })
     return new_current_v + 1
   }

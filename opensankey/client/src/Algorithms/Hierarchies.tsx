@@ -912,13 +912,13 @@ export const disaggregate = (
 
 
   const Do = () => {
-    let current_v = aggregateNode.position_v
-    column.forEach(n => {
-      n.position_v = -1
-      const levelTagg = new_data.drawing_area.sankey.level_taggs_dict[parent_dim.id]
-      current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v, levelTagg.selected_tags_list[0] as Class_LevelTag)
-      new_data.drawing_area.sankey.sortNodes()
-    })
+    //let current_v = aggregateNode.position_v
+    // column.forEach(n => {
+    //   n.position_v = -1
+    //   const levelTagg = new_data.drawing_area.sankey.level_taggs_dict[parent_dim.id]
+    //   current_v = new_data.drawing_area.nodePositioning.applyVDesagregate(n, current_v, levelTagg.selected_tags_list[0] as Class_LevelTag)
+    //   new_data.drawing_area.sankey.sortNodes()
+    // })
 
     const vertical_spacing = aggregateNode.shape_position_dy!
     const current_height = aggregateNode.getShapeHeightToUse()
@@ -929,6 +929,7 @@ export const disaggregate = (
 
     new_nodes.forEach((n, i) => {
       n.position_u = aggregateNode.position_u
+      n.position_x = aggregateNode.position_x
       if ((new_data.drawing_area.sankey.styles_dict[default_style_id] as Class_ElementStyle).shape_position_type == 'parametric' && i == 0) {
         n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
       }
