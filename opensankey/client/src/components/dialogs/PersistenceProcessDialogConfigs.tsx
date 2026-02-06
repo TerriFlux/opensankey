@@ -368,8 +368,8 @@ export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_flux_matrix: {
-      default: true,
-      type: (() => true) as (() => boolean),
+      default: false,
+      type: (() => false) as (() => boolean),
       labels: {
         en: 'Sheet SUT or IOT',
         fr: 'Onglet TER ou TES'
