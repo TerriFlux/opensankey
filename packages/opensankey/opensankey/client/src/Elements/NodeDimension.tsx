@@ -299,6 +299,9 @@ export class Class_NodeDimension {
         return
       }
       const last_child_tag = c.tags_list.filter(tag => tag.group.id == this.id).at(-1)
+      if (!last_child_tag) {
+        return
+      }
       if (last_child_tag == last_tag) {
         return
       }
