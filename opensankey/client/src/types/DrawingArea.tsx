@@ -423,6 +423,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public drawElements() {
+    if (this.bypass_redraws) return
     // Draw grid
     this.drawBackground()
     this.drawGrid()
@@ -865,15 +866,6 @@ export class Class_DrawingArea {
     this.application_data.history.saveUndo(inv_updateSelectedNodesTagAssignation)
     this.application_data.history.saveRedo(_updateSelectedNodesTagAssignation)
     _updateSelectedNodesTagAssignation()
-  }
-
-
-  public callComputeAutoSankey(
-    launched_from_process: boolean,
-    optimise_crossings: boolean
-  ) {
-    this.nodePositioning.computeAutoSankeyWithToast(launched_from_process, optimise_crossings)
-
   }
 
   /**

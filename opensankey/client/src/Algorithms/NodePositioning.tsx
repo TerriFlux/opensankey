@@ -1764,7 +1764,7 @@ export class NodePositioning {
 
       const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
 
-      let current_y = node.position_y  - shift_y 
+      let current_y = node.position_y - shift_y
       if (nn.master_node) {
         return
       }
@@ -1786,94 +1786,83 @@ export class NodePositioning {
    * Auto-compute sankey with waiting toast
    */
   public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean) {
-    this.drawingArea.application_data.sendWaitingToast(
-      () => {
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
-          const inv_computeAutoSankey = () => {
-            this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-            // Reposition node to old pos
-            this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-              n.position_x = node_pos[n.id].x
-              n.position_y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.drawingArea.areaAutoFit()
-          }
-          this.drawingArea.saveUndo(inv_computeAutoSankey)
-        }
+    // If it's not launched_from_process then we assume it's user input so we save it undoing
+    if (!launched_from_process) {
+      const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
+      const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
 
-        // Compute auto pos of nodes
-        this.computeAutoSankey(launched_from_process, optimize_crossing)
-        this.computeParametrization(true)
-
-        if (launched_from_process) {
-          // Split trade nodes
-          // this.splitTrade()
-          // Computes u v,x and initial y for trade nodes
-          //this.arrangeTrade(true)
-        }
-
-        // Default color + auto reorg of links
+      const inv_computeAutoSankey = () => {
+        this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+        // Reposition node to old pos
         this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-          //n.resetPositionAttribute('dy')
-          n.reorganizeIOLinks()
+          n.position_x = node_pos[n.id].x
+          n.position_y = node_pos[n.id].y
+          // Reset old node IO order
+          n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+          n.draw()
         })
-
-        if (launched_from_process) {
-          // Update default data on recycling mode
-          this.drawingArea.sankey.links_list.forEach(l => {
-            if (l.shape_is_recycling) {
-              l.shape_starting_tangeant = 0.01
-              l.shape_ending_tangeant = 0.01
-            }
-          })
-        }
-
-        this.drawingArea.draw()
-        this.drawingArea.to_recenter = true
-        this.drawingArea.recenter()
-        this.drawingArea.to_recenter = false
-        // Update area
-        //this.drawingArea.areaAutoFit()
-        // Toggle saving indicator
-        this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
-
-        // If it's not launched_from_process then we assume it's user input so we save it undoing
-        if (!launched_from_process) {
-          const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
-          const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
-
-          const _computeAutoSankey = () => {
-            this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
-
-            // Reposition node to old pos
-            this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-              n.position_x = node_pos[n.id].x
-              n.position_y = node_pos[n.id].y
-              // Reset old node IO order
-              n.reorganizeIOFromListIds(node_pos[n.id].links_order)
-              n.draw()
-            })
-            this.drawingArea.areaAutoFit()
-          }
-          this.drawingArea.saveRedo(_computeAutoSankey)
-        }
-      },
-      {
-        success: {
-          title: this.drawingArea.application_data.t('toast.compute_auto_sankey.success.title')
-        },
-        loading: {
-          title: this.drawingArea.application_data.t('toast.compute_auto_sankey.loading.title')
-        }
+        this.drawingArea.areaAutoFit()
       }
-    )
+      this.drawingArea.saveUndo(inv_computeAutoSankey)
+    }
+
+    // Compute auto pos of nodes
+    this.computeAutoSankey(launched_from_process, optimize_crossing)
+    this.computeParametrization(true)
+
+    if (launched_from_process) {
+      // Split trade nodes
+      // this.splitTrade()
+      // Computes u v,x and initial y for trade nodes
+      //this.arrangeTrade(true)
+    }
+
+    // Default color + auto reorg of links
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      //n.resetPositionAttribute('dy')
+      n.reorganizeIOLinks()
+    })
+
+    if (launched_from_process) {
+      // Update default data on recycling mode
+      this.drawingArea.sankey.links_list.forEach(l => {
+        if (l.shape_is_recycling) {
+          l.shape_starting_tangeant = 0.01
+          l.shape_ending_tangeant = 0.01
+        }
+      })
+    }
+
+    this.drawingArea.draw()
+    this.drawingArea.to_recenter = true
+    this.drawingArea.recenter()
+    this.drawingArea.to_recenter = false
+    // Update area
+    //this.drawingArea.areaAutoFit()
+    // Toggle saving indicator
+    this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+
+    // If it's not launched_from_process then we assume it's user input so we save it undoing
+    if (!launched_from_process) {
+      const node_pos = Object.fromEntries(this.drawingArea.sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y, links_order: n.links_order_visible.map(l => l.id) }]))
+      const link_recy = Object.fromEntries(this.drawingArea.sankey.visible_links_list.map(l => [l.id, l.shape_is_recycling]))
+
+      const _computeAutoSankey = () => {
+        this.drawingArea.sankey.visible_links_list.forEach(l => l.shape_is_recycling = link_recy[l.id])
+
+        // Reposition node to old pos
+        this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+          n.position_x = node_pos[n.id].x
+          n.position_y = node_pos[n.id].y
+          // Reset old node IO order
+          n.reorganizeIOFromListIds(node_pos[n.id].links_order)
+          n.draw()
+        })
+        this.drawingArea.areaAutoFit()
+      }
+      this.drawingArea.saveRedo(_computeAutoSankey)
+    }
   }
 
   /**
