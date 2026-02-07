@@ -1057,10 +1057,14 @@ export class Class_DrawingArea {
       n.position_y += this._elements_d3_groups_shift_y
       if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
       if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
+      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
+      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
     })
     this.sankey.links_list.forEach(n => {
       if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
       if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
+      if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
+      if (n.name_label_position_y) n.name_label_position_y += this._elements_d3_groups_shift_y
     })
     this.sankey.nodes_list.forEach(n => {
       n.draw()
@@ -1072,6 +1076,10 @@ export class Class_DrawingArea {
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
+    this.legend.position_x += this._elements_d3_groups_shift_x
+    this.legend.position_y += this._elements_d3_groups_shift_y 
+    this.legend.draw()
+
     this.areaAutoFit()
     this.orderElementOnDA()
   }
