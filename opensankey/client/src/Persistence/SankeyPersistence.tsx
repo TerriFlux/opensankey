@@ -240,10 +240,13 @@ export class ContainerPersistence extends NodeBasePersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _container: Class_ContainerElement,
-    _json_object: Type_JSON,
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    if (json_object.is_image) {
+      container.name_label_is_visible = false
+    }
   }
 
   public static fromJSON_0_9(
@@ -393,11 +396,14 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _link: Class_LinkElement,
-    _json_object: Type_JSON,
+    link: Class_LinkElement,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-
+    link.value_label_bold = true
+    link.name_label_bold = true
+    link.name_label_font_size = (json_object.local as Type_JSON).label_font_size as number ?? link.name_label_font_size
+    link.name_label_font_family = link.value_label_font_family
   }
 
   public static fromJSON_0_9(
@@ -519,9 +525,14 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       link.attributes['name_label_position_offset'] = json_object.position_offset_label
     }
     if (json_object.position_x_label) {
+      link.attributes['name_label_on_path'] = false
+      link.attributes['value_label_on_path'] = false
+      link.attributes['name_label_position_absolute'] = true
       link.attributes['value_label_position_absolute'] = true
       link.attributes['value_label_position_y'] = json_object.position_y_label
       link.attributes['value_label_position_x'] = json_object.position_x_label
+      link.attributes['name_label_position_y'] = json_object.position_y_label
+      link.attributes['name_label_position_x'] = json_object.position_x_label
     }
   }
 
@@ -630,6 +641,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ) {
     super.fromJSON_pre_0_9(node, json_object, kwargs)
+    node.name_label_background_visible = false
+    if (json_object.local && (json_object.local as Type_JSON).label_visible == false) {
+      node.name_label_is_visible = false
+    }
   }
 
   public static fromJSON_0_9(
@@ -933,8 +948,8 @@ export class StylePersistence {
       //'color': 'shape_color',
       //'opacity': 'shape_opacity',
       colorSustainable: 'shape_color_sustainable',
-      value_label_background:'value_label_background_color_visible',
-      dashed:'shape_border_dashed',
+      value_label_background: 'value_label_background_color_visible',
+      dashed: 'shape_border_dashed',
       thickness: 'shape_border_thickness'
     }
 
@@ -1213,10 +1228,29 @@ export class SankeyPersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _sankey: Class_Sankey,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
   ) {
+    SankeyPersistence.load_tags(json_object, sankey)
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
   }
 
   public static fromJSON_0_9(
@@ -1537,7 +1571,7 @@ export class DrawingAreaPersistence {
     Object.values(json_object.style_node).forEach(s => {
       if (s.position == 'parametric') s.position = 'absolute'
     })
-    console.log(json_object.version)
+    SankeyPersistence.fromJSON_pre_0_9(drawing_area.sankey, json_object)
   }
 
   public static fromJSON_0_9(

@@ -454,7 +454,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     }
     //@ts-expect-error xxx
     s[1].name_label_separator = data_to_convert.node_label_separator
-        //@ts-expect-error xxx
+    //@ts-expect-error xxx
     s[1].name_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
     if (s[1].label_color) {
       //@ts-expect-error xxx
@@ -560,13 +560,25 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
         //@ts-expect-error xxx
         n.style = ['NodeSectorStyle']
       } else if (n.tags['type de noeud'].includes('echange')) {
-        const close = n.trade_close || data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].position === 'relative'
+        const close = n.trade_close && data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].position === 'relative'
         if (close) {
           //@ts-expect-error xxx
           n.style = ['NodeSectorStyle', 'NodeImportExportCloseStyle']
         } else {
           //@ts-expect-error xxx
-          n.style = ['NodeSectorStyle', 'NodeImportExportAboveBelowStyle']
+          n.style = ['NodeSectorStyle'/*, 'NodeImportExportAboveBelowStyle'*/]
+          if (!n.local) n.local = {}
+          if (data_to_convert.style_node['NodeImportStyle'].label_visible == false && n.local!.label_visible != true) {
+            n.local!.label_visible = false
+          }
+          if (data_to_convert.style_node['NodeImportStyle'].show_value == false && n.local!.show_value != true) {
+            n.local!.show_value = false
+          }
+          n.tags['type de noeud'] = ['secteur']
+
+          n.local.shape_visible = false
+          n.local.label_vert = 'middle'
+          n.local.node_width = 0
         }
         if (n.inputLinksId.length > 0) {
           if (close) {
@@ -2436,7 +2448,7 @@ const convert_links: convert_linksFuncType = (
     // Convert legacy recycling position -> new positions
     if (l.local) {
       if (l.local.user_scale) {
-        l.local.user_scale = l.local.user_scale/data.user_scale
+        l.local.user_scale = l.local.user_scale / data.user_scale
       }
 
       if (!l.local.recycling) {
@@ -2509,7 +2521,7 @@ const convert_links: convert_linksFuncType = (
     }
     if (l.local.label_position == 'frozen') {
       //@ts-expect-error xxx
-      l.local.name_label_pos_auto = true
+      l.local.name_label_pos_auto = false
     }
     if (l.x_label) {
       //@ts-expect-error xxx
