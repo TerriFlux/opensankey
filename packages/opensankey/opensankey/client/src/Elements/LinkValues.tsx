@@ -790,6 +790,7 @@ export class Class_LinkValue {
     if (json_extension_object) {
       this.data_value = getNumberOrNullFromJSON(json_extension_object, 'data_value')
       this.result_value = getNumberOrNullFromJSON(json_object, 'value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
       if (json_extension_object['free_mini'] != undefined) {
         this.result_min = getNumberOrNullFromJSON(json_extension_object, 'free_mini')
       }
