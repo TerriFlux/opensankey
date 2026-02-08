@@ -74,7 +74,8 @@ elementStyleConfigs[LinkStyle] = {
     'name_label_font_size': 20,
     'value_label_is_visible': true,
     'value_label_vert': 'middle',
-    'value_label_font_size': 20
+    'value_label_font_size': 20,
+    'value_label_box_width':300
   }
 }
 

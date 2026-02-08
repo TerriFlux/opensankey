@@ -1076,9 +1076,11 @@ export class Class_DrawingArea {
     this.sankey.containers_list.forEach(n => {
       n.draw()
     })
-    this.legend.position_x += this._elements_d3_groups_shift_x
-    this.legend.position_y += this._elements_d3_groups_shift_y 
-    this.legend.draw()
+    if (this.legend.stick_to_drawing) {
+      this.legend.position_x += this._elements_d3_groups_shift_x
+      this.legend.position_y += this._elements_d3_groups_shift_y 
+      this.legend.draw()
+    }
 
     this.areaAutoFit()
     this.orderElementOnDA()
