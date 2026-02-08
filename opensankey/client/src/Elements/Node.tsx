@@ -616,7 +616,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected drawElements() {
     super.drawElements()
     this._nodeDrawValueLabel.drawGenericLabel()
-    this._drawLinksStartCaps() // Ajouter ici
+    //this._drawLinksStartCaps() // Ajouter ici
   }
   /**
    * Apply node position to it shape in d3

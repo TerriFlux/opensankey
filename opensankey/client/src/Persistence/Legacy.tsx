@@ -455,7 +455,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
     //@ts-expect-error xxx
     s[1].name_label_separator = data_to_convert.node_label_separator
     //@ts-expect-error xxx
-    s[1].name_label_separator_part = data_to_convert.node_label_separator_first ? 'before' : 'after'
+    s[1].name_label_separator_part = data_to_convert.node_label_separator_first == true |  data_to_convert.node_label_separator_first == undefined ? 'before' : 'after'
     if (s[1].label_color) {
       //@ts-expect-error xxx
       s[1].label_color = 'white'
@@ -568,17 +568,19 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
           //@ts-expect-error xxx
           n.style = ['NodeSectorStyle'/*, 'NodeImportExportAboveBelowStyle'*/]
           if (!n.local) n.local = {}
-          if (data_to_convert.style_node['NodeImportStyle'].label_visible == false && n.local!.label_visible != true) {
-            n.local!.label_visible = false
-          }
-          if (data_to_convert.style_node['NodeImportStyle'].show_value == false && n.local!.show_value != true) {
-            n.local!.show_value = false
-          }
+          // if (data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].label_visible == false && n.local!.label_visible != true) {
+          //   n.local!.label_visible = false
+          // }
+          // if (data_to_convert.style_node['NodeImportStyle'] && data_to_convert.style_node['NodeImportStyle'].show_value == false && n.local!.show_value != true) {
+          //   n.local!.show_value = false
+          // }
           n.tags['type de noeud'] = ['secteur']
 
           n.local.shape_visible = false
           n.local.label_vert = 'middle'
           n.local.node_width = 0
+          //n.local.label_box_width = 500
+
         }
         if (n.inputLinksId.length > 0) {
           if (close) {
@@ -593,10 +595,21 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             delete data_to_convert.links[n.inputLinksId[0]].local!['starting_tangeant']
             delete data_to_convert.links[n.inputLinksId[0]].local!['ending_tangeant']
           } else {
-            //@ts-expect-error xxx
-            data_to_convert.links[n.inputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkExportBelowStyle']
-            //@ts-expect-error xxx
-            n.style.push('NodeExportBelowStyle')
+            if (!n.local) n.local = {}
+            n.local.label_horiz = 'right'
+            if (data_to_convert.style_node['NodeExportStyle']) {
+              const values = ["label_vert_valeur", "label_vert_valeur_shift", "label_horiz_valeur", "bold", "label_visible", "show_value", "value_font_size", ""]
+              values.forEach(v => {
+                //@ts-expect-error xxx
+                if (n.local[v] == undefined)
+                  //@ts-expect-error xxx
+                  n.local[v] = data_to_convert.style_node['NodeExportStyle'][v]
+              })
+              n.local.name_label_horiz_shift = data_to_convert.style_node['NodeExportStyle'].label_horiz_shift
+            }
+            data_to_convert.links[n.inputLinksId[0]].local!.value_label_is_visible = false
+            data_to_convert.links[n.inputLinksId[0]].local!.label_unit_visible = false
+
           }
         } else {
           if (!data_to_convert.links[n.outputLinksId[0]]) {
@@ -614,10 +627,26 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             delete data_to_convert.links[n.outputLinksId[0]].local!['starting_tangeant']
             delete data_to_convert.links[n.outputLinksId[0]].local!['ending_tangeant']
           } else {
-            //@ts-expect-error xxx
-            data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkImportAboveStyle']
-            //@ts-expect-error xxx
-            n.style.push('NodeImportAboveStyle')
+            if (!n.local) n.local = {}
+            n.local.label_horiz = 'left'
+            if (data_to_convert.style_node['NodeImportStyle']) {
+              const values = ["label_vert_valeur", "label_vert_valeur_shift", "label_horiz_valeur", "bold", "label_visible", "show_value", "value_font_size", ""]
+              values.forEach(v => {
+                //@ts-expect-error xxx
+                if (n.local[v] == undefined)
+                  //@ts-expect-error xxx
+                  n.local[v] = data_to_convert.style_node['NodeImportStyle'][v]
+              })
+              n.local.name_label_horiz_shift = data_to_convert.style_node['NodeImportStyle'].label_horiz_shift
+            }
+            data_to_convert.links[n.outputLinksId[0]].local!.value_label_is_visible = false
+            data_to_convert.links[n.outputLinksId[0]].local!.label_unit_visible = false
+
+
+            // //@ts-expect-error xxx
+            // data_to_convert.links[n.outputLinksId[0]].style = ['LinkImportExportAboveBelowStyle', 'LinkImportAboveStyle']
+            // //@ts-expect-error xxx
+            // n.style.push('NodeImportAboveStyle')
           }
         }
       }
@@ -1833,7 +1862,7 @@ const convert_nodes: convert_nodesFuncType = (
                 children_tags: children_tags
               }
             }
-          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (!n.dimensions['Primaire'] || !n.dimensions['Primaire'].parent_name)) {
+          } else if (!(n.tags['Primaire'] as string[]).includes('1') && (n.dimensions['Primaire'] && !n.dimensions['Primaire'].parent_name)) {
             n.dimensions[leveltagg_id] = {}
             n.dimensions[leveltagg_id].antitag = true
           }
