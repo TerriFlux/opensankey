@@ -1138,7 +1138,7 @@ const contractAfterExpand = (
   // Supprimer les nœuds enfants temporaires
   children.forEach(c => {
     new_data.drawing_area.sankey.deleteNode(expand_left ? c.source : c.target)
-    parent_node.dimensions_as_parent.forEach(dim => dim.removeNodeFromChildren(expand_left ? c.source : c.target))
+    //parent_node.dimensions_as_parent.forEach(dim => dim.removeNodeFromChildren(expand_left ? c.source : c.target))
   })
 
   // Restaurer les liens du parent
