@@ -871,6 +871,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     _kwargs?: Type_JSON
   ) {
     const json_legend = json_object['legend'] as Type_JSON
+    if (!json_legend) return
+    if (!json_legend['legend_position']) return
     json_legend['x'] = +(json_legend['legend_position'] as Type_JSON)[0]
     json_legend['y'] = +(json_legend['legend_position'] as Type_JSON)[1]
   }
