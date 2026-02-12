@@ -240,10 +240,13 @@ export class ContainerPersistence extends NodeBasePersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _container: Class_ContainerElement,
-    _json_object: Type_JSON,
+    container: Class_ContainerElement,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
+    if (json_object.is_image) {
+      container.name_label_is_visible = false
+    }
   }
 
   public static fromJSON_0_9(
@@ -325,24 +328,82 @@ export class ContainerPersistence extends NodeBasePersistence {
       }
     })
     if (container.attributes['name_label_fo_content']) {
-      container.attributes['name_label_fo_content'] = (container.attributes['name_label_fo_content'] as string)
-        // Alignements
-        .replace(/class="ql-align-center"/g, 'style="text-align: center"')
-        .replace(/class="ql-align-right"/g, 'style="text-align: right"')
-        .replace(/class="ql-align-left"/g, 'style="text-align: left"')
-        .replace(/class="ql-align-justify"/g, 'style="text-align: justify"')
+      const html = container.attributes['name_label_fo_content'] as string
 
-        // Tailles standard Quill
-        .replace(/class="ql-size-small"/g, 'style="font-size: 0.75em"')
-        .replace(/class="ql-size-large"/g, 'style="font-size: 1.5em"')
-        .replace(/class="ql-size-huge"/g, 'style="font-size: 2.5em"')
+      // Parse HTML avec DOMParser
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(html, 'text/html')
 
-        // Tailles custom (9px à 120px) - si tu as des ql-size-25px par exemple
-        .replace(/class="ql-size-(\d+)px"/g, 'style="font-size: $1px"')
+      // Fonction pour fusionner un nouveau style dans l'attribut style existant
+      const mergeStyle = (element: Element, newStyleRule: string) => {
+        const existingStyle = element.getAttribute('style') || ''
+        const styles = new Map<string, string>()
 
-        // Fonts
-        .replace(/class="ql-font-serif"/g, 'style="font-family: serif"')
-        .replace(/class="ql-font-monospace"/g, 'style="font-family: monospace"')
+        // Parse les styles existants
+        existingStyle.split(';').forEach(rule => {
+          const [prop, value] = rule.split(':').map(s => s.trim())
+          if (prop && value) {
+            styles.set(prop, value)
+          }
+        })
+
+        // Ajoute le nouveau style
+        const [prop, value] = newStyleRule.split(':').map(s => s.trim())
+        if (prop && value) {
+          styles.set(prop, value)
+        }
+
+        // Reconstruit l'attribut style
+        const merged = Array.from(styles.entries())
+          .map(([p, v]) => `${p}: ${v}`)
+          .join('; ')
+
+        if (merged) {
+          element.setAttribute('style', merged)
+        }
+      }
+
+      // Map des conversions Quill class -> CSS style
+      const classToStyle: Record<string, string> = {
+        'ql-align-center': 'text-align: center',
+        'ql-align-right': 'text-align: right',
+        'ql-align-left': 'text-align: left',
+        'ql-align-justify': 'text-align: justify',
+        'ql-size-small': 'font-size: 0.75em',
+        'ql-size-large': 'font-size: 1.5em',
+        'ql-size-huge': 'font-size: 2.5em',
+        'ql-font-serif': 'font-family: serif',
+        'ql-font-monospace': 'font-family: monospace'
+      }
+
+      // Traite tous les éléments qui ont des classes
+      doc.body.querySelectorAll('[class]').forEach(element => {
+        const classes = Array.from(element.classList)
+
+        classes.forEach(className => {
+          // Classes standard
+          if (className in classToStyle) {
+            mergeStyle(element, classToStyle[className])
+            element.classList.remove(className)
+          }
+          // Classes custom font-size (ql-size-25px)
+          else if (/^ql-size-(\d+)px$/.test(className)) {
+            const match = className.match(/^ql-size-(\d+)px$/)
+            if (match) {
+              mergeStyle(element, `font-size: ${match[1]}px`)
+              element.classList.remove(className)
+            }
+          }
+        })
+
+        // Supprime l'attribut class s'il est vide
+        if (element.classList.length === 0) {
+          element.removeAttribute('class')
+        }
+      })
+
+      // Récupère le HTML nettoyé
+      container.attributes['name_label_fo_content'] = doc.body.innerHTML
     }
     // Load tied_to_nodes flag
     container['_tied_to_nodes'] = getBooleanFromJSON(
@@ -393,11 +454,15 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _link: Class_LinkElement,
-    _json_object: Type_JSON,
+    link: Class_LinkElement,
+    json_object: Type_JSON,
     _kwargs?: Type_JSON
   ) {
-
+    link.value_label_bold = true
+    link.name_label_bold = true
+    link.name_label_font_size = (json_object.local as Type_JSON).label_font_size as number ?? link.name_label_font_size
+    link.name_label_font_family = link.value_label_font_family
+    link.value_label_significant_digits = true
   }
 
   public static fromJSON_0_9(
@@ -458,8 +523,8 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       'label_on_path': 'value_label_on_path',
       'label_pos_auto': 'value_label_pos_auto',
       'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_significant_digits',
-      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      'scientific_precision': 'value_label_nb_significant_digits',
+      //'nb_scientific_precision': 'value_label_nb_significant_digits',
       'custom_digit': 'value_label_custom_digit',
       'nb_digit': 'value_label_nb_digit',
       'label_unit_visible': 'value_label_unit_visible',
@@ -518,10 +583,15 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     if (json_object.position_offset_label) {
       link.attributes['name_label_position_offset'] = json_object.position_offset_label
     }
-    if (json_object.position_x_label) {
+    if (json_local && json_local.label_position == 'frozen' && json_object.position_x_label) {
+      link.attributes['name_label_on_path'] = false
+      link.attributes['value_label_on_path'] = false
+      link.attributes['name_label_position_absolute'] = true
       link.attributes['value_label_position_absolute'] = true
       link.attributes['value_label_position_y'] = json_object.position_y_label
       link.attributes['value_label_position_x'] = json_object.position_x_label
+      link.attributes['name_label_position_y'] = json_object.position_y_label
+      link.attributes['name_label_position_x'] = json_object.position_x_label
     }
   }
 
@@ -630,6 +700,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ) {
     super.fromJSON_pre_0_9(node, json_object, kwargs)
+    if (json_object.local && (json_object.local as Type_JSON).label_visible == false) {
+      node.name_label_is_visible = false
+    }
+    node.name_label_text_align = 'left'
   }
 
   public static fromJSON_0_9(
@@ -667,7 +741,7 @@ export class NodeElementPersistence extends NodeBasePersistence {
       'value_font_size': 'value_label_font_size',
       'label_horiz_valeur': 'value_label_horiz',
       'label_vert_valeur': 'value_label_vert',
-      'to_precision': 'value_label_scientific_notation',
+      //'to_precision': 'value_label_scientific_notation',
       'scientific_precision': 'value_label_significant_digits',
       'nb_scientific_precision': 'value_label_nb_significant_digits',
       'custom_digit': 'value_label_custom_digit',
@@ -728,10 +802,10 @@ export class NodeElementPersistence extends NodeBasePersistence {
       node.attributes['icon_horiz'] = 'middle'
     }
     node.name_label_text_align = 'middle'
-    if (json_local?.name_label_horiz == 'left') node.name_label_text_align = 'right'
-    if (json_local?.name_label_horiz == 'right') node.name_label_text_align = 'left'
+    if (json_local?.label_horiz == 'left') node.name_label_text_align = 'right'
+    if (json_local?.label_horiz == 'right') node.name_label_text_align = 'left'
 
-    if (json_local?.value_label_vert == 'middle') {
+    if (json_local?.label_vert_valeur == 'middle') {
       json_local.value_label_vert_shift = +json_local.value_label_vert_shift + +json_local.value_label_font_size * 0.35
     }
   }
@@ -770,7 +844,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = legend.legend_bg_opacity
     if (legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
-    if (legend.stick_to_drawing) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
+    if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
     return json_object
   }
@@ -882,9 +956,9 @@ export class StylePersistence {
       'orthogonal_label_position': 'value_label_vert',
       'label_on_path': 'value_label_on_path',
       'label_pos_auto': 'value_label_pos_auto',
-      'to_precision': 'value_label_scientific_notation',
-      'scientific_precision': 'value_label_significant_digits',
-      'nb_scientific_precision': 'value_label_nb_significant_digits',
+      //'to_precision': 'value_label_scientific_notation',
+      'scientific_precision': 'value_label_nb_significant_digits',
+      //'nb_scientific_precision': 'value_label_nb_significant_digits',
       'custom_digit': 'value_label_custom_digit',
       'nb_digit': 'value_label_nb_digit',
       'label_unit_visible': 'value_label_unit_visible',
@@ -933,14 +1007,14 @@ export class StylePersistence {
       //'color': 'shape_color',
       //'opacity': 'shape_opacity',
       colorSustainable: 'shape_color_sustainable',
-      value_label_background:'value_label_background_color_visible',
-      dashed:'shape_border_dashed',
+      value_label_background: 'value_label_background_color_visible',
+      dashed: 'shape_border_dashed',
       thickness: 'shape_border_thickness'
     }
 
     const default_style = style.drawing_area.sankey.default_style
     Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
-      if (!json_object[jsonKey]) {
+      if (json_object[jsonKey] == undefined) {
         return
       }
       if (!ALL_ATTRIBUTES_CONFIG[attrKey]) {
@@ -1010,12 +1084,21 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    Object.entries(json_container_object)
-      .forEach(([_, container_json]) => {
-        const name = (container_json as Type_JSON)['name'] as string
-        const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
-        fromJSON(container, container_json as Type_JSON, kwargs)
-      })
+    if (json_object.version == 0.8 && (json_object.file_name as String)?.includes('Agricole Référentiel Flux')) {
+      Object.entries(json_container_object).reverse()
+        .forEach(([_, container_json]) => {
+          const name = (container_json as Type_JSON)['name'] as string
+          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
+          fromJSON(container, container_json as Type_JSON, kwargs)
+        })
+      } else {
+      Object.entries(json_container_object)
+        .forEach(([_, container_json]) => {
+          const name = (container_json as Type_JSON)['name'] as string
+          const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
+          fromJSON(container, container_json as Type_JSON, kwargs)
+        })        
+      }
   }
 
   private static load_nodes(
@@ -1050,7 +1133,7 @@ export class SankeyPersistence {
         node.dimensionsFromJSON(
           node_json as Type_JSON,
           //+json_object.version == 0.91 || +json_object.version == 0.90,
-          json_object.version !== '0.8',
+          json_object.version !== '0.8' && json_object.version !== '0.92',
           {},
           {},
           {}
@@ -1213,10 +1296,29 @@ export class SankeyPersistence {
     return json_object
   }
   public static fromJSON_pre_0_9(
-    _sankey: Class_Sankey,
-    _json_object: Type_JSON,
-    _kwargs?: Type_JSON
+    sankey: Class_Sankey,
+    json_object: Type_JSON,
+    kwargs?: Type_JSON
   ) {
+    SankeyPersistence.load_tags(json_object, sankey)
+    SankeyPersistence.load_links(
+      sankey,
+      json_object,
+      LinkElementPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_nodes(
+      sankey,
+      json_object,
+      NodeElementPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
+    SankeyPersistence.load_containers(
+      sankey,
+      json_object,
+      ContainerPersistence.fromJSON_pre_0_9,
+      kwargs
+    )
   }
 
   public static fromJSON_0_9(
@@ -1266,6 +1368,12 @@ export class SankeyPersistence {
             } else {
               new_style = sankey.createNewElementStyle(style_id, style_id, true)
               StylePersistence.fromJSON(0.91, new_style, style_json as Type_JSON)
+              if (style_type == 'style_node') {
+                new_style.value_label_unit_visible = sankey._styles[LinkStyle].value_label_unit_visible
+                new_style.value_label_unit = sankey._styles[LinkStyle].value_label_unit
+                new_style.value_label_unit_factor = sankey._styles[LinkStyle].value_label_unit_factor
+                new_style.value_label_box_width = style_json.label_box_width
+              }
               new_style.name = getStringFromJSON(style_json, 'name', new_style.id)
               sankey._styles[style_id] = new_style
             }
@@ -1376,7 +1484,8 @@ export class SankeyPersistence {
         kwargs
       )
     )
-    sankey.nodes_list.forEach(node => node.dimensions_as_child.forEach(dim => dim.normalize()))
+    if (json_object.version != 0.8)
+      sankey.nodes_list.forEach(node => node.dimensions_as_child.forEach(dim => dim.normalize()))
     SankeyPersistence.load_containers(
       sankey,
       json_object,
@@ -1537,7 +1646,7 @@ export class DrawingAreaPersistence {
     Object.values(json_object.style_node).forEach(s => {
       if (s.position == 'parametric') s.position = 'absolute'
     })
-    console.log(json_object.version)
+    SankeyPersistence.fromJSON_pre_0_9(drawing_area.sankey, json_object)
   }
 
   public static fromJSON_0_9(

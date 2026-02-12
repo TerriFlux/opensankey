@@ -169,8 +169,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _tooltip_text: string = ''
 
-  public parallel_curve: Class_LinkElement | undefined
-  public sibling: Class_LinkElement | undefined
   private _child_links: { [tag_name: string]: Class_LinkElement } = {}
   private _is_multi_link = false
   private _multi_link_tag: Class_DataTag | undefined
@@ -521,9 +519,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public getShapeColorToUse(): string {
-    if (this.sibling) {
-      return this.sibling.getShapeColorToUse()
-    }
     this.drawing_area.d3_selection_def_gradient?.select('#def_gradient_' + this.source.id + '-' + this.target.id).remove()
 
     // Apply gradient if needed
@@ -669,7 +664,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
-      if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
+      const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
+      const productTag = node_type?.tags_dict['produit']
+      if (this.source.hasGivenTag(productTag)) {
+        return this.source.getShapeColorToUse()
+      } else if (this.target.hasGivenTag(productTag)) {
+        return this.target.getShapeColorToUse()
+      } else if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
         return this.source.getShapeColorToUse()
       } else if (this.target.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
         return this.target.getShapeColorToUse()

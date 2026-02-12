@@ -66,7 +66,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
             }
           }]
         },
-        { type: 'button', actionName: 'resetTradeNode' },
         { type: 'button', actionName: 'arrangeNodesToGrid' }
       ]
     },

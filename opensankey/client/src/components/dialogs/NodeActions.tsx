@@ -138,7 +138,7 @@ export class NodeActions {
       this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
-      const child = childDims.filter(dim=>dim.children.filter(c=>c.id==dim_name).length>0)[0].children[0].id
+      const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
@@ -147,30 +147,16 @@ export class NodeActions {
     }
   }
 
-  expandLeft = (_dim_name: string) => {
+  expandLeft = (dim_name: string) => {
     if (!this.contextualised_node) return
-
-    const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent :
-      this.contextualised_node.dimensions_as_parent
-    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
-    if (childDims.length > 0) {
-      const child = childDims[0].children[0]
-      disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
-    }
+    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
+    disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
   }
 
-  expandRight = (_: string) => {
+  expandRight = (dim_name: string) => {
     if (!this.contextualised_node) return
-
-    const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent :
-      this.contextualised_node.dimensions_as_parent
-    //this.app_data.drawing_area.sankey.default_node_style.position.auto_x = true
-    if (childDims.length > 0) {
-      const child = childDims[0].children[0]
-      disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
-    }
+    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
+    disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
   }
 
   contractLeft = () => {
@@ -598,7 +584,7 @@ export class NodeActions {
       resetAttr: nodeActions.resetAttr,
 
       startAnimation: nodeActions.startAnimation,
-      createTiedZdt:nodeActions.createTiedZdt,
+      createTiedZdt: nodeActions.createTiedZdt,
       reorg: nodeActions.reorg,
       moveToFirstPlan: nodeActions.moveToFirstPlan,
       moveToLastPlan: nodeActions.moveToLastPlan,

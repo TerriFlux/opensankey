@@ -197,7 +197,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public applyPosition() {
     if (this.d3_selection !== null) {
-      const position_y = this.position_y + this.drawing_area.getNavBarHeight()
+      const position_y = this.position_y //+ this.drawing_area.getNavBarHeight()
       const scale_da = this.drawing_area.getZoomScale()
       this.d3_selection.attr(
         'transform',

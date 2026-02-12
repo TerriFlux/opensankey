@@ -605,6 +605,8 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                 <MenuList
                   maxHeight="300px"
                   overflowY="auto"
+                  maxWidth="250px"  // ← Limite la largeur
+                  minWidth="200px"  // ← Largeur minimale
                   onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Escape') {
                       onClose()
