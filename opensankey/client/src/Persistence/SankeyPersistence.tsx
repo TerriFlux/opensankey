@@ -549,10 +549,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       Object.entries(fromJsonMapping_0_91_to_0_92).forEach(([jsonKey, attrKey]) => {
         if (json_local[jsonKey] !== undefined) {
           const key = attrKey as keyof ConfigType
-          const currentValue = link.getStyleProperty(key)
-          if (json_local[jsonKey] !== currentValue) {
+          //const currentValue = link.getStyleProperty(key)
+          //if (json_local[jsonKey] !== currentValue) {
             link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
-          }
+          //}
         }
       })
       if (json_local.local_link_scale) {
@@ -871,6 +871,8 @@ export class LegendPersistence extends ProtoElementPersistence {
     _kwargs?: Type_JSON
   ) {
     const json_legend = json_object['legend'] as Type_JSON
+    if (!json_legend) return
+    if (!json_legend['legend_position']) return
     json_legend['x'] = +(json_legend['legend_position'] as Type_JSON)[0]
     json_legend['y'] = +(json_legend['legend_position'] as Type_JSON)[1]
   }
@@ -1485,7 +1487,7 @@ export class SankeyPersistence {
       )
     )
     if (json_object.version != 0.8)
-      sankey.nodes_list.forEach(node => node.dimensions_as_child.forEach(dim => dim.normalize()))
+      sankey.nodes_list.forEach(node => node.dimensions_as_parent.forEach(dim => dim.normalize()))
     SankeyPersistence.load_containers(
       sankey,
       json_object,

@@ -1957,6 +1957,7 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => n.position_v = -1)
     if (default_style.shape_position_type == 'parametric')
       this.nodePositioning.computeParametrization(false)
+    this.bypass_redraws = false
   }
 
   public setAbsoluteMode() {

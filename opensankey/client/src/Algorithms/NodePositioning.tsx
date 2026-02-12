@@ -245,7 +245,7 @@ export class NodePositioning {
       }
 
       // Si le nœud n'a pas de liens entrants, sa profondeur est 0
-      const incomingLinks = node.input_links_list.filter(link =>
+      const incomingLinks = node.input_links_list.filter(link=>link.is_visible).filter(link =>
         nodes_to_process.some(n => n.id === this.drawingArea.sankey.links_dict[link.id].source.id)
       )
 
@@ -1574,9 +1574,9 @@ export class NodePositioning {
   // PARAMETRIZATION METHODS ============================================================
 
   /**
-   * Computes u,v for nodes in the drawing area
-   * Utilise l'algorithme amélioré
-   */
+  * Computes u,v for nodes in the drawing area
+  * Utilise l'algorithme amélioré
+  */
   public computeParametrization(use_horizontal_index: boolean) {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
@@ -1599,9 +1599,9 @@ export class NodePositioning {
     }
     const first_level_tagg = this.drawingArea.sankey.level_taggs_list.filter(
       tagg => tagg.activated
-    )[0]?.tags_list[0] as Class_LevelTag
-    if (first_level_tagg)
-      this.computeParametricV(first_level_tagg)
+    )[0]?.tags_list[0]
+    //if (first_level_tagg)
+    this.computeParametricV(first_level_tagg as Class_LevelTag)
     // // Sort input and output links for each node based on their connected nodes' position_v
     // this.drawingArea.sankey.nodes_list.forEach(node => {
     //   // Get current links order
@@ -1697,7 +1697,7 @@ export class NodePositioning {
   }
 
   // Fonction principale refactorisée
-  public computeParametricV(tag: Class_LevelTag) {
+  public computeParametricV(tag: Class_LevelTag | undefined) {
     const columns = this.computeColumns()
 
     if (this.drawingArea.sankey.level_taggs_list.length == 0) {
@@ -1709,7 +1709,7 @@ export class NodePositioning {
     }
 
     //this.drawingArea.sankey.level_taggs_list.forEach(tagGroup => {
-    this.applyVForLevelTag(columns, tag)
+    this.applyVForLevelTag(columns, tag as Class_LevelTag )
     //})
 
     this.drawingArea.sankey.sortNodes()

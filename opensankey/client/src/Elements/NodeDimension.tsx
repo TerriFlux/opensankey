@@ -141,7 +141,7 @@ export class Class_NodeDimension {
 
   public removeNodeFromChildren(_: Class_NodeElement) {
     const idx = this._children.indexOf(_)
-    if (idx !== undefined) {
+    if (idx !== -1) {
       this._children.splice(idx, 1)
       // If all children has been deleted, clear this
       if (!this.has_children)
