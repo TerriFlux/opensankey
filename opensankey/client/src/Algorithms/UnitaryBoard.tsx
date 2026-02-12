@@ -3,7 +3,7 @@ import {
     LinkOutUnitaryStyle, LinkInUnitaryStyle
 } from "../Elements/ElementStyle"
 import { Class_DrawingArea } from "../types/DrawingArea"
-import { Class_ViewTagGroup } from "../types/TagGroup"
+import { Class_DataTagGroup, Class_ViewTagGroup } from "../types/TagGroup"
 
 // Fonction utilitaire pour gérer les styles unitaires dynamiquement
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
@@ -67,10 +67,24 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
         })
     })
 
-    let max_value = 0
-    center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
-    //let scale = app_data.drawing_area.sankey.nodes_dict[center_node.id].data_value
-    drawing_area.scale = max_value / 1.5
+    const unit_taggs = drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+    if (unit_taggs.length > 0) {
+      const selectedTag = unit_taggs[0].tags_list.filter(tag => tag.is_selected)[0]
+      unit_taggs[0].tags_list.forEach(tag => {
+        unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
+        tag.setSelected()
+        let linksMaxValue = 0
+        center_nodes.forEach(n => linksMaxValue = Math.max(linksMaxValue, n.data_value))
+        linksMaxValue += 1
+          tag.scale = linksMaxValue/1.5
+      })
+      unit_taggs[0].tags_list.forEach(tag2 => tag2.setUnSelected())
+      selectedTag.setSelected()
+    } else {
+        let max_value = 0
+        center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
+        drawing_area.scale = max_value / 1.5
+    }
     drawing_area.nodePositioning.computeAutoSankey(false, true)
     drawing_area.sankey.nodes_list
         .forEach(n => {
