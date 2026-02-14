@@ -88,8 +88,15 @@ initializeTooltipSystem()
 export class Class_ApplicationData {
 
   protected _has_sankey_dev: boolean = false
+  protected _has_sankey_plus: boolean = false
+  protected _has_sankey_afm: boolean = false
+
   public get has_sankey_dev() { return this._has_sankey_dev }
   public set has_sankey_dev(_) { this._has_sankey_dev = _ }
+  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
+  public set has_sankey_plus(_) { this._has_sankey_plus = _ }
+  public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
+  public set has_sankey_afm(_) { this._has_sankey_afm = _ }
 
   public createNewMenuConfiguration(): Class_MenuConfig {
     this._toast = useToast()
@@ -1186,8 +1193,6 @@ export class Class_ApplicationData {
 
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
-
-  //public get is_reconcilied(): boolean { return this.drawing_area.sankey.linkValueHasReconciliedData() }
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }

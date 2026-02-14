@@ -79,7 +79,6 @@ export const SpreadSheet = (
     a.push({ id: 'empty', source: '', target: '' })
     return a
   }
-  //@ts-expect-error xxx
   const col_sizes = app_data.has_sankey_afm ? [0.05, 0.05, 0.03, 0.03] : [0.055, 0.055, 0.045]
   // Générer les colonnes dynamiquement
   const getColumns = (): Column[] => {
@@ -91,7 +90,6 @@ export const SpreadSheet = (
     ]
 
     // Ajouter la colonne "Valeurs calculées" seulement si l'utilisateur est développeur
-    //@ts-expect-error xxx
     if (app_data.has_sankey_afm) {
       baseColumns.push({ columnId: 'value_result', width: innerW * col_sizes[3], resizable: true })
     }
@@ -106,7 +104,6 @@ export const SpreadSheet = (
       { type: 'header', text: app_data.t('Flux.trgt') },
       { type: 'header', text: app_data.t('Flux.value') }
     ]
-    //@ts-expect-error xxx
     if (app_data.has_sankey_afm) {
       baseCells.push({ type: 'header', text: app_data.t('Flux.calculated_value') })
     }
@@ -129,7 +126,6 @@ export const SpreadSheet = (
       ]
 
       // Ajouter la cellule "Valeurs calculées" seulement si l'utilisateur est développeur
-      //@ts-expect-error xxx
       if (app_data.has_sankey_afm) {
         baseCells.push({ type: 'number', value: flux.value_result as number })
       }

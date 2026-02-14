@@ -643,9 +643,10 @@ export const TooltipValueSurcharge = (k: string, t: TFunction) => {
 }
 
 
-export const OSTooltip = ({ label, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
+export const OSTooltip = ({ label,disabled=false, delay = 500, placement = 'auto', isAlwaysOpen = false, children }: React.PropsWithChildren<{
   delay?: number,
   label: string,
+  disabled?: boolean,
   placement?: PlacementWithLogical
   isAlwaysOpen?: boolean
   children: ReactNode
@@ -659,7 +660,7 @@ export const OSTooltip = ({ label, delay = 500, placement = 'auto', isAlwaysOpen
       key={element_key}
       openDelay={delay}
       placement={placement}
-      label={label}
+      label={disabled ? label+'. OpenSankey+ required.' : label}
       closeDelay={100}
       isOpen={true}
       hasArrow={true}
@@ -671,7 +672,7 @@ export const OSTooltip = ({ label, delay = 500, placement = 'auto', isAlwaysOpen
       key={element_key}
       openDelay={delay}
       placement={placement}
-      label={label}
+      label={disabled ? label+'. OpenSankey+ required.' : label}
       closeDelay={100}
     >
       {children}
