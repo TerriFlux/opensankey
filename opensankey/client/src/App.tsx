@@ -100,7 +100,7 @@ export const OpenSankeyApp = ({
     app_data.file_name = window.sankey.diagram
     loadUniversalJSON(window.sankey.diagram as string).then(data => {
       app_data.fromJSON(data as Type_JSON)
-      app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
+      app_data.file_name = window.sankey.diagram as string
     }).catch(e => console.log(e))
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
     app_data.fromJSON(JSON.parse(json_data))

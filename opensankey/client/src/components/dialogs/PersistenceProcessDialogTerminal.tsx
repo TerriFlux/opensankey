@@ -299,7 +299,7 @@ const Counter = ({
   })
 
   if (result && result.split('\n').length > 2) {
-    if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('CONVERSION TERMINÉE')) {
+    if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('TERMINÉE')) {
       finishProcess(false)
     } else if (result.includes('FAILED') || result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR')) {
       finishProcess(true)

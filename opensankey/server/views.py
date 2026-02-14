@@ -116,64 +116,6 @@ def start():
 def goto(adress):
     return render_template(adress)
 
-# @opensankey.route("/excel/save", methods=["POST"])
-# def save_excel():
-#     """
-#     HTTP POST request to save Sankey as Excel
-
-#     Request :
-#         - Sankey data as JSON
-
-#     Response :
-#         - 200 : OK
-#         - 401 : Error when saving sankey data
-#         - 402 : Error when saving mfa data
-#     """
-#     # Extract Sankey structure from JSON
-#     # try:
-#     data = request.form["data"]
-#     sankey_as_data = data
-#     sankey_as_json = json.loads(sankey_as_data)
-#     io_json = IOJson()
-#     ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
-#     #sankey = extract_sankey_from_json(sankey_as_json)
-#     options = request.form["options"]
-#     options_save_excel = json.loads(options)
-#     # except Exception as excpt:
-#     #     return Response(
-#     #         response='save_excel: ' + str(excpt),
-#     #         status=500)
-#     # Save Sankey structure in Excel
-#     # try:
-#     cwd = os.getcwd()
-#     excel_filename = os.path.join(cwd, "tutu.xlsx")
-#     io_excel = IOExcel()
-#     io_excel.write_sankey(excel_filename, mode="w", **options_save_excel)
-#     if options_save_excel["layout"]:
-#         # Ajoute le fichier json dans un onglet layout
-#         wb = openpyxl.load_workbook(excel_filename)
-#         layout_sheet = wb.create_sheet()
-#         layout_sheet.title = "layout"
-#         splitted_layout = cut_layout(sankey_as_data)
-#         cpt = 1
-#         for i in splitted_layout:
-#             layout_sheet["A" + str(cpt)].value = i
-#             cpt = cpt + 1
-#         wb.save("tutu.xlsx")
-#     return send_file(excel_filename, as_attachment=True)
-#     # except Exception as excpt:
-#     #     response = Response(response="write_sankey : " + str(excpt), status=500)
-#     #     return response
-#     return Response(status=200)
-
-# @opensankey.route("/excel/save/post_clean", methods=["POST"])
-# def clean_excel():
-#     cwd = os.getcwd()
-#     excel_filename = os.path.join(cwd, "tutu.xlsx")
-#     os.remove(excel_filename)
-#     response = Response(status=200)
-#     return response
-
 
 @opensankey.route("/upload/check_process", methods=["POST"])
 def check_process():
@@ -432,7 +374,7 @@ def launch_conversion():
                     output_format=output_format,
                     logname=log_filename
                 )
-                trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=50))
+                trace.logger.info("{:->{w}}".format(" CHARGEMENT TERMINÉE", w=50))
                 return Response(response="{}", status=200, mimetype="application/json")
                 # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 

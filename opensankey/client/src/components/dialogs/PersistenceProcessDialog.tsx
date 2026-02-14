@@ -271,66 +271,65 @@ export const retrieveJSONResults = (
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
   app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/, false)
-  app_data.sendWaitingToast(
-    () => {
-      app_data.drawing_area.bypass_redraws = true
-      app_data.drawing_area.sankey.nodes_list.forEach(n => {
-        const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
-        if (!tagg) {
-          return
-        }
-        const product_tag = tagg.tags_dict['produit']
-        const sector_tag = tagg.tags_dict['secteur']
-        //const echange_tag = tagg.tags_dict['echange']
-        if (n.hasGivenTag(product_tag)) {
-          // Vérifier si les styles corrects ne sont pas déjà appliqués
-          if (!n.hasStyle(NodeProductStyle)) {
-            // Retirer tous les styles personnalisés existants
-            n.removeAllStyles()
 
-            // Ajouter les styles appropriés
-            n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-            n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
-          }
-        }
-        // Pour les noeuds secteur
-        else if (n.hasGivenTag(sector_tag)) {
-          // Vérifier si les styles corrects ne sont pas déjà appliqués
-          if (!n.hasStyle(NodeSectorStyle)) {
-            // Retirer tous les styles personnalisés existants
-            n.removeAllStyles()
+  app_data.drawing_area.bypass_redraws = true
+  app_data.drawing_area.sankey.nodes_list.forEach(n => {
+    const tagg = app_data.drawing_area.sankey.node_taggs_dict['type de noeud']
+    if (!tagg) {
+      return
+    }
+    const product_tag = tagg.tags_dict['produit']
+    const sector_tag = tagg.tags_dict['secteur']
+    //const echange_tag = tagg.tags_dict['echange']
+    if (n.hasGivenTag(product_tag)) {
+      // Vérifier si les styles corrects ne sont pas déjà appliqués
+      if (!n.hasStyle(NodeProductStyle)) {
+        // Retirer tous les styles personnalisés existants
+        n.removeAllStyles()
 
-            // Ajouter les styles appropriés
-            n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
-            n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
-          }
-        }
-      })
-      app_data.drawing_area.legend.masked = false
-      if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
-        app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
-      } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
-        applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+        // Ajouter les styles appropriés
+        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeProductStyle])
       }
-      const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
-      if (unit_taggs.length > 0) {
-        app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
-        app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
-      }
+    }
+    // Pour les noeuds secteur
+    else if (n.hasGivenTag(sector_tag)) {
+      // Vérifier si les styles corrects ne sont pas déjà appliqués
+      if (!n.hasStyle(NodeSectorStyle)) {
+        // Retirer tous les styles personnalisés existants
+        n.removeAllStyles()
 
-      // Case 1 : Apply extracted layout if present -> contains positions
-      if (apply_layout_current_sankey) {
-        app_data.drawing_area.nodePositioning.computeScale()
-        app_data.updateFromJSON(current_json)
-      } else if (JSON_data['layout']) {
-        app_data.drawing_area.nodePositioning.computeScale()
-        app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
-      } else {
-        app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
-        app_data.drawing_area.sankey.setTrade(true)
+        // Ajouter les styles appropriés
+        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeStyle])
+        n.addStyle(app_data.drawing_area.sankey.styles_dict[NodeSectorStyle])
       }
-      app_data.drawing_area.draw()
-    })
+    }
+  })
+  app_data.drawing_area.legend.masked = false
+  if (app_data.drawing_area.sankey.flux_taggs_list.length > 0) {
+    app_data.drawing_area.sankey.flux_taggs_list[0].use_colors = true
+  } else if (app_data.drawing_area.sankey.node_taggs_list.filter(tagg => tagg.id != 'type de noeud').length == 0) {
+    applyRandomColors(app_data, app_data.drawing_area.sankey.links_list)
+  }
+  const unit_taggs = app_data.drawing_area.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
+  if (unit_taggs.length > 0) {
+    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_type = 'unit_tag'
+    app_data.drawing_area.sankey.styles_dict['default'].value_label_unit_visible = true
+  }
+
+  // Case 1 : Apply extracted layout if present -> contains positions
+  if (apply_layout_current_sankey) {
+    app_data.drawing_area.nodePositioning.computeScale()
+    app_data.updateFromJSON(current_json)
+  } else if (JSON_data['layout']) {
+    app_data.drawing_area.nodePositioning.computeScale()
+    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+  } else {
+    app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+    app_data.drawing_area.sankey.setTrade(true)
+  }
+  app_data.drawing_area.draw()
+
 }
 
 /**
@@ -476,31 +475,35 @@ export const UniversalFileConverter = ({
       method: 'POST',
       body: form_data
     }
+    app_data.sendWaitingToast(
+      async () => {
+        try {
 
-    try {
-      const response = await fetch(url, fetchData)
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer()
-        //const uint8Array = new Uint8Array(arrayBuffer)
-        const decompressed = await decompressGzipDataFixed(arrayBuffer)
-        const jsonData = JSON.parse(decompressed)
-        if (input_format == 'example_json') {
-          app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
-        } else {
-          retrieveJSONResults(app_data, jsonData, auto_layout, output_options_json as Type_JSON)
+          const response = await fetch(url, fetchData)
+          if (response.ok) {
+            const arrayBuffer = await response.arrayBuffer()
+            //const uint8Array = new Uint8Array(arrayBuffer)
+            const decompressed = await decompressGzipDataFixed(arrayBuffer)
+            const jsonData = JSON.parse(decompressed)
+            if (input_format == 'example_json') {
+              app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
+            } else {
+              retrieveJSONResults(app_data, jsonData, auto_layout, output_options_json as Type_JSON)
+            }
+            //setAutoLoad(false)
+          }
+        } catch (error) {
+          setResult('FAILED Erreur chargement JSON:' + error)
+          setProcessing(false)
+          //setStarted(false)
+          setFailure(true)
+          return
         }
-        //setAutoLoad(false)
-      }
-    } catch (error) {
-      setResult('FAILED Erreur chargement JSON:' + error)
-      setProcessing(false)
-      //setStarted(false)
-      setFailure(true)
-      return
-    }
-    //setStarted(false)
-    setProcessing(false)
-    setFailure(false)
+
+        //setStarted(false)
+        setProcessing(false)
+        setFailure(false)
+      })
   }
 
   const downloadFileResult = () => {
@@ -537,7 +540,7 @@ export const UniversalFileConverter = ({
           //@ts-expect-error xxx
           root_filename = input_file.name.split('.')[0] + 'reconciled'
         }
-        
+
         const filename = `${root_filename}${extensions[output_format] || ''}`
 
         FileSaver.saveAs(blob, filename)
