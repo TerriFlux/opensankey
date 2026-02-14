@@ -403,19 +403,22 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         >
         Format
         </Button> */}
-        <Button
-          variant={'menuconfigpanel_option_button'}
-          onClick={() => {
-            app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
-            app_data.menu_configuration.r_value_type_set_elements.current(
-              selected_links,
-              unit_data_tagg!,
-              refreshThisAndUpdateRelatedComponents
-            )
-          }}
-        >
-          Type
-        </Button>
+        <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+          <Button
+            isDisabled={!app_data.has_sankey_plus}
+            variant={'menuconfigpanel_option_button'}
+            onClick={() => {
+              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
+              app_data.menu_configuration.r_value_type_set_elements.current(
+                selected_links,
+                unit_data_tagg!,
+                refreshThisAndUpdateRelatedComponents
+              )
+            }}
+          >
+            Type
+          </Button>
+        </OSTooltip>
       </Box>
     </Box>
 
@@ -441,12 +444,15 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         >
           Text
         </Button>
-        <Button
-          variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-          onClick={setModeRichText}
-        >
-          Rich
-        </Button>
+        <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+          <Button
+            isDisabled={!app_data.has_sankey_plus}
+            variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+            onClick={setModeRichText}
+          >
+            Rich
+          </Button>
+        </OSTooltip>
       </Box>
     </Box>
 
