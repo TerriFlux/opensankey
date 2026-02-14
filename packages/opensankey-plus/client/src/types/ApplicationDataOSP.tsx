@@ -1,21 +1,10 @@
-// ==================================================================================================
-// Authors :
-//  - Vincent CLAVEL
-//  - Julien ALAPETITE
-//  - Vincent LE DOZE
-// Date : 28/08/2024
-// All rights reserved for TerriFlux
-// ==================================================================================================
 import { useToast } from '@chakra-ui/react'
 import pako from 'pako'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { default_main_sankey_id, getJSONOrUndefinedFromJSON, getStringFromJSON, makeId, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { Class_MenuConfigOSP } from './MenuConfigOSP'
 import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHistory'
-import { elementStyleConfigs, node_unitary_styles, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle, SankeyUnitaryNodeStyle } from '../deps/OpenSankey/Elements/ElementStyle'
-import ListIcons from '../icons/lib_of_icons.json'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
-import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
@@ -37,9 +26,6 @@ declare const window: Window &
 export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   public override static_path: string = 'static/sankeyanimation'
-
-  protected _has_sankey_plus: boolean = false
-  protected _has_sankey_afm: boolean = false
 
   protected _master_drawing_area: Class_DrawingArea | undefined
   protected _views: {
@@ -426,7 +412,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
     // Event to clone current sankey into a new view --------------------------------------------
 
-    if (this._has_sankey_plus && evtCtrlX) {
+    if (this.has_sankey_plus && evtCtrlX) {
       // Prevent default event on ctrl + a
       evt.preventDefault()
       const view_id = makeId('view')
@@ -732,11 +718,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public get logo_sankey_plus(): string { return this._logo_sankey_plus }
 
 
-  public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
-  public set has_sankey_plus(_) { this._has_sankey_plus = _ }
 
-  public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
-  public set has_sankey_afm(_) { this._has_sankey_afm = _ }
 
   // Override getter & setter so we can get new type
   public get menu_configuration_osp(): Class_MenuConfigOSP { return this._menu_configuration as Class_MenuConfigOSP }
