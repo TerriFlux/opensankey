@@ -108,7 +108,7 @@ export const setDiagram = (
   }
   loadUniversalJSON(diagrams[diagram_url] + '.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
-    app_data.sendWaitingToast(() => app_data.file_name = window.sankey.diagram as string)
+    app_data.file_name = window.sankey.diagram as string
   }).catch(e => console.log(e))
   app_data.menu_configuration.ref_toolbar.current()
 }

@@ -703,13 +703,11 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public sendWaitingToast(
-    funct: () => void,
+    funct: () => void | Promise<void>,  // Accepte async
     intake?: Type_TextForToastPromise
   ) {
-    // Create and save process id
     const funct_id = randomId()
     this._toast_processes.push(funct_id)
-    // Add to the processing queue
     if (this._toast_bypass)
       funct()
     else
@@ -1071,26 +1069,24 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _sendWaitingToast(
-    funct: () => void,
+    funct: () => void | Promise<void>,
     funct_id: string,
     intake?: Type_TextForToastPromise
   ) {
-    // Check if process has to wait
     if (this._toast_processes[0] !== funct_id) {
-      // Create a recursive timeout as delaying method to ensure that
-      // all functions are called with respect to their creation order
       setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
-    }
-    // Otherwise send
-    else {
+    } else {
       this._toast!.promise(
-        new Promise((resolve) => {
-          setTimeout(() => {
-            funct() // run
-            this._toast_processes.splice(0, 1) // pop process from processes list
-            resolve(200) // end
-          },
-            500) // Leave 500ms of delay in order to give enough time to load spinner component
+        new Promise(async (resolve, reject) => {
+          try {
+            await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
+            await funct()  // Attendre la fin de la fonction (sync ou async)
+            this._toast_processes.splice(0, 1)
+            resolve(200)
+          } catch (error) {
+            this._toast_processes.splice(0, 1)
+            reject(error)
+          }
         }),
         {
           success: {
