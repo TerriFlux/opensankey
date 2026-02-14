@@ -182,8 +182,9 @@ export const LabelDisplayModeSelector = ({
             {app_data.icon_library.icon_text_mode_simple}
           </Button>
         </OSTooltip>
-        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
+        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')} disabled={!app_data.has_sankey_plus}>
           <Button
+            isDisabled={!app_data.has_sankey_plus}
             variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
             sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
             onClick={setModeRichText}
@@ -191,8 +192,9 @@ export const LabelDisplayModeSelector = ({
             {app_data.icon_library.icon_text_mode_rich}
           </Button>
         </OSTooltip>
-        <OSTooltip label={t('Menu.display_mode.tooltips.value')}>
+        <OSTooltip label={t('Menu.display_mode.tooltips.value')} disabled={!app_data.has_sankey_plus}>
           <Button
+            isDisabled={!app_data.has_sankey_plus}
             variant={display_mode_name_label.current === 'value' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
             sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
             onClick={setModeValue}
@@ -1067,7 +1069,9 @@ export const MenuConfigurationAppearance = ({
             >
               {t('Menu.tabs.value')}
             </Button>
+            <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
             <Button
+              isDisabled={!app_data.has_sankey_plus}
               variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               onClick={() => {
                 app_data.menu_configuration.tab_selected = 'icon'
@@ -1076,6 +1080,7 @@ export const MenuConfigurationAppearance = ({
             >
               {t('Menu.tabs.icon')}
             </Button>
+            </OSTooltip>
           </Box>
 
           {/* ========== ONGLET FORME ========== */}
@@ -1196,9 +1201,9 @@ export const MenuConfigurationAppearance = ({
                         </Box>
                       </> : <></>
                       }
-                      {selection.hasNodes  && !menu_for_style ?
-                      <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
-                        <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
+                      {selection.hasNodes && !menu_for_style ?
+                        <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
+                          <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
                         </WrapperBoxSubSectionMenu> : <></>}
                     </Box>
                   </Box>
@@ -1461,7 +1466,7 @@ export const MenuConfigurationAppearance = ({
             </MenuSectionCheckbox>
           )}
 
-          {activeTab === 'icon' && (
+          {activeTab === 'icon' && app_data.has_sankey_plus && (
             <MenuSectionCheckbox
               elements={elements}
               attributePath='Noeud.labels'
