@@ -1540,7 +1540,7 @@ const CheckLoad: FC<{
           if (response.ok) {
             response.json().then(
               function (data) {
-                if (data.output.includes('FINISHED') || data.output.includes('COMPLETED') || data.output.includes('CONVERSION TERMINÉE')) {
+                if (data.output.includes('FINISHED') || data.output.includes('COMPLETED') || data.output.includes('TERMINÉE')) {
                   setCheckStatus(false)
                   setLaunchRetriveResult(true)
                 } else if (data.output.includes('FAILED')) {
