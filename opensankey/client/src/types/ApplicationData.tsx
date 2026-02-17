@@ -537,8 +537,8 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON,
     draw: boolean = true
   ) {
-    this.sendWaitingToast(
-      () => {
+    // this.sendWaitingToast(
+    //   () => {
         // Always bypass redrawings
         this._drawing_area.bypass_redraws = true
         // Reset everything
@@ -554,7 +554,7 @@ export class Class_ApplicationData {
           this._drawing_area.draw()
           this._drawing_area.recenter()
         }
-      })
+      // })
   }
 
   /**
