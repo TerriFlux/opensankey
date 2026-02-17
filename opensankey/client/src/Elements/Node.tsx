@@ -817,7 +817,7 @@ export class Class_NodeElement extends Class_NodeBase {
         }
       })
 
-    this._drawLinksStartCaps()
+    //this._drawLinksStartCaps()
   }
 
   /**
