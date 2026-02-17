@@ -475,8 +475,8 @@ export const UniversalFileConverter = ({
       method: 'POST',
       body: form_data
     }
-    app_data.sendWaitingToast(
-      async () => {
+    // app_data.sendWaitingToast(
+    //   async () => {
         try {
 
           const response = await fetch(url, fetchData)
@@ -503,7 +503,7 @@ export const UniversalFileConverter = ({
         //setStarted(false)
         setProcessing(false)
         setFailure(false)
-      })
+      // })
   }
 
   const downloadFileResult = () => {
@@ -535,7 +535,7 @@ export const UniversalFileConverter = ({
           json: '.json'
         }
         //@ts-expect-error xxx
-        let root_filename = input_file ? input_file.name : 'output'
+        let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
         if (config.title == "ProcessDialog.reconciliation") {
           //@ts-expect-error xxx
           root_filename = input_file.name.split('.')[0] + 'reconciled'

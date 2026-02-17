@@ -373,7 +373,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     <Box layerStyle='options_2cols'>
       <RowSetter2Cols
         attributePath={'Flux.labels'}
-        attributeKey={value_option}
+        attributeKey={'value'}
       >
         <ConfigMenuNumberInput
           t={t}
@@ -403,9 +403,9 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         >
         Format
         </Button> */}
-        <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+        <OSTooltip label={''} disabled={!app_data.has_sankey_afm}>
           <Button
-            isDisabled={!app_data.has_sankey_plus}
+            isDisabled={!app_data.has_sankey_afm}
             variant={'menuconfigpanel_option_button'}
             onClick={() => {
               app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
