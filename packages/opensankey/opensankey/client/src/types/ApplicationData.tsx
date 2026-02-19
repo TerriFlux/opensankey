@@ -671,7 +671,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', /*'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog'*/]
+      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
     )
     //}
   }
