@@ -396,7 +396,7 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
       new_bbox.x < this.bbox.x || new_bbox.y < this.bbox.y || 
       new_bbox.x + new_bbox.width > (this.bbox.x + this.bbox.width) || new_bbox.y + new_bbox.height > (this.bbox.y + this.bbox.height)
     )) {
-      this._node.drawing_area.areaAutoFit()
+      //this._node.drawing_area.areaAutoFit()
     }
     this._node.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }

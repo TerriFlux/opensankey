@@ -170,9 +170,9 @@ export const updateFrom = (
   const all = mode.includes('*')
   // Transfer DA attributs
   if (mode.includes('attrDrawingArea') || all) {
-    // const scale_to_keep = drawing_area.scale
+    const scale_to_keep = drawing_area.scale
     drawing_area._copyAttrFrom(other_drawing_area)
-    // drawing_area._scale = scale_to_keep
+    drawing_area._scale = scale_to_keep
     drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
     if (other_drawing_area.legend)
       drawing_area.legend.copyFrom(other_drawing_area.legend)
@@ -235,25 +235,26 @@ export const updateFrom = (
 
   // Update level_tag_dict ------------------------------------------------------------
 
-  //if (mode.includes('tagLevel') || all) {
-  // Finds the corresponding tag group by ids
-  // const [to_remove, to_add, to_update] = Class_Sankey.get_sync_lists(drawing_area.sankey._level_taggs, other_drawing_area.sankey._level_taggs, matching_taggs_id['levelTags'])
+  if (mode.includes('tagLevel') || all) {
+    // Finds the corresponding tag group by ids
+    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._level_taggs, other_drawing_area.sankey._level_taggs, matching_taggs_id['levelTags'])
 
-  // // Update taggs
-  // to_remove
-  //   .forEach(id => {
-  //     drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
-  //   })
-  // to_add
-  //   .forEach(id => {
-  //     const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
-  //     drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
-  //     drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
-  //   })
-  // to_update
-  //   .forEach(id => {
-  //     drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
-  //   })
+    // // Update taggs
+    // to_remove
+    //   .forEach(id => {
+    //     drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
+    //   })
+    // to_add
+    //   .forEach(id => {
+    //     const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
+    //     drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
+    //     drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
+    //   })
+    to_update
+      .forEach(id => {
+        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
+      })
+  }
   if (mode.includes('tagLevel') || all) {
     if (matching_taggs_id?.['levelTags']) {
       matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
