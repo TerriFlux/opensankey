@@ -295,10 +295,10 @@ export const updateFrom = (
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._flux_taggs, other_drawing_area.sankey._flux_taggs, matching_taggs_id['fluxTags'])
 
     // Update taggs
-    to_remove
-      .forEach(id => {
-        drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
-      })
+    // to_remove
+    //   .forEach(id => {
+    //     drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
+    //   })
     to_add
       .forEach(id => {
         const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id]
