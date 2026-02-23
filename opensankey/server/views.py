@@ -344,9 +344,9 @@ def launch_conversion():
         input_format = request.form.get("input_format", "excel")
         output_format = request.form.get("output_format", "json")
 
-        input_options = json.loads(request.form.get('input_options', '{}'))
-        output_options = json.loads(request.form.get('output_options', '{}'))
-
+        # input_options = json.loads(request.form.get('input_options', '{}'))
+        # output_options = json.loads(request.form.get('output_options', '{}'))
+        options = {**json.loads(request.form.get('input_options', '{}')), **json.loads(request.form.get('output_options', '{}'))}
         ext_map = {
             'excel': '.xlsx',
             'json': '.json',
@@ -421,8 +421,7 @@ def launch_conversion():
                 output_file_name,
                 input_format,
                 output_format,
-                input_options,
-                output_options,
+                options,
                 log_filename,
                 sankey_as_data
             ),
@@ -448,8 +447,7 @@ def conversion_thread(
     output_file_name,
     input_format,
     output_format,
-    input_options,
-    output_options,
+    options,
     log_filename,
     sankey_as_data
 ):
@@ -482,8 +480,7 @@ def conversion_thread(
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
     trace.logger.info(f"Output: {Path(output_file_name).name}")
-    trace.logger.info(f"Input options: {input_options}")
-    trace.logger.info(f"Output options: {output_options}")
+    trace.logger.info(f"options: {options}")
     trace.logger.info("=" * 80)
 
     t_total_start = perf_counter()
@@ -500,7 +497,7 @@ def conversion_thread(
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
-        ok, msg = io_input.load_sankey(input_file_name, **input_options)
+        ok, msg = io_input.load_sankey(input_file_name, **options)
         max_line_length = 50
         if input_format == 'excel':
             try:
@@ -514,7 +511,7 @@ def conversion_thread(
                         
                         # Ajouter le layout aux options de sortie pour JSON
                         if output_format == 'json':
-                            output_options['layout'] = layout_json
+                            options['layout'] = layout_json
                             trace.logger.info("✓ Layout extracted and will be included in JSON")
                     else:
                         trace.logger.debug("No layout sheet found in Excel file")
@@ -541,9 +538,9 @@ def conversion_thread(
         # Écrire avec les options de sortie
         trace.logger.info("📝 Écriture du fichier de sortie...")
         t_write_start = perf_counter()
-        io_output.write_sankey(output_file_name, **output_options)
+        io_output.write_sankey(output_file_name, **options)
         if input_format != 'excel':
-            if "layout" in output_options and output_options["layout"]:
+            if "layout" in options and options["layout"]:
                 # Ajoute le fichier json dans un onglet layout
                 wb = openpyxl.load_workbook(output_file_name)
                 layout_sheet = wb.create_sheet()
