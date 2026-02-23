@@ -323,7 +323,8 @@ def launch_optim():
 
         # input_options = json.loads(request.form.get('input_options', '{}'))
         # output_options = json.loads(request.form.get('output_options', '{}'))
-        options = {**json.loads(request.form.get('input_options', '{}')), **json.loads(request.form.get('output_options', '{}'))}
+        options = {**json.loads(request.form.get('input_options', '{}')), **
+                   json.loads(request.form.get('output_options', '{}'))}
         # Stocker l'état
         set_process_state(
             process_started=True,
