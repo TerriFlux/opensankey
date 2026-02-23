@@ -212,25 +212,6 @@ export const updateFrom = (
       .forEach(id => {
         drawing_area.sankey.styles_dict[id].copyFrom(other_drawing_area.sankey.styles_dict[id])
       })
-
-    // Link styles can be to remove, to add or to update
-    // const [ls_to_remove, ls_to_add, ls_to_update] = Class_Sankey.get_sync_lists(drawing_area.sankey._link_styles, other_drawing_area.sankey._link_styles, {})
-
-    // // Update styles
-    // ls_to_remove
-    //   .forEach(id => {
-    //     drawing_area.sankey._link_styles[id].delete()
-    //   })
-    // ls_to_add
-    //   .forEach(id => {
-    //     const ls = other_drawing_area.sankey._link_styles[id]
-    //     drawing_area.sankey.addNewLinkStyle(ls.id, ls.name)
-    //     drawing_area.sankey._link_styles[ls.id].copyFrom(ls)
-    //   })
-    // ls_to_update
-    //   .forEach(id => {
-    //     drawing_area.sankey._link_styles[id].copyFrom(other_drawing_area.sankey._link_styles[id])
-    //   })
   }
 
   // Update level_tag_dict ------------------------------------------------------------
@@ -411,6 +392,8 @@ export const updateFrom = (
         .forEach(id => {
           const n = other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id]
           drawing_area.sankey.nodes_dict[id].setPosXY(n.position_x, n.position_y)
+          drawing_area.sankey.nodes_dict[id].position_u = n.position_u
+          drawing_area.sankey.nodes_dict[id].position_v = n.position_v
         })
     }
   }
