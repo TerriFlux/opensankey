@@ -346,7 +346,8 @@ def launch_conversion():
 
         # input_options = json.loads(request.form.get('input_options', '{}'))
         # output_options = json.loads(request.form.get('output_options', '{}'))
-        options = {**json.loads(request.form.get('input_options', '{}')), **json.loads(request.form.get('output_options', '{}'))}
+        options = {**json.loads(request.form.get('input_options', '{}')), **
+                   json.loads(request.form.get('output_options', '{}'))}
         ext_map = {
             'excel': '.xlsx',
             'json': '.json',
@@ -475,7 +476,6 @@ def conversion_thread(
     """
     trace.logger_init(log_filename, "a")
 
-
     trace.logger.info("=" * 80)
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
@@ -506,9 +506,10 @@ def conversion_thread(
                     if "layout" in excel_file.sheet_names:
                         layout_table = pd.read_excel(input_file_name, "layout")
                         trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
-                        layout_json_str = layout_table.columns[0] + "".join([layout_table.iloc[_][0] for _ in layout_table.index])
+                        layout_json_str = layout_table.columns[0] + \
+                            "".join([layout_table.iloc[_][0] for _ in layout_table.index])
                         layout_json = json.loads(layout_json_str)
-                        
+
                         # Ajouter le layout aux options de sortie pour JSON
                         if output_format == 'json':
                             options['layout'] = layout_json
@@ -517,7 +518,7 @@ def conversion_thread(
                         trace.logger.debug("No layout sheet found in Excel file")
             except Exception as e:
                 trace.logger.warning(f"Could not extract layout: {e}")
-            
+
         t_read = perf_counter() - t_read_start
 
         if not ok:
