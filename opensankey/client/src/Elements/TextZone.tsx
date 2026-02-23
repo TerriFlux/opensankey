@@ -22,13 +22,6 @@ export class Class_ContainerElement extends Class_NodeBase {
     drawing_area.list_g_element.push(this.id)
   }
 
-  public updateSizeAndPosition() {
-    if (this.tied_to_nodes && this._attached_node.length > 0) {
-      this.computeSizeAndPositionFromAttachedNodes()
-    }
-    this.draw()
-  }
-
   protected _copyFrom(container_to_copy: Class_NodeBase) {
     super._copyFrom(container_to_copy)
     const cast_copy = container_to_copy as unknown as Class_ContainerElement
@@ -138,15 +131,12 @@ export class Class_ContainerElement extends Class_NodeBase {
 
   public draw() {
     super.draw()
-    if (this.tied_to_nodes && this._attached_node.filter(node => node.is_visible).length > 0) {
-      this.computeSizeAndPositionFromAttachedNodes()
-      this.applyPosition()
-    }
-  }
-  public applyPosition() {
-    super.applyPosition()
     this.drawElements()
   }
+  // public applyPosition() {
+  //   super.applyPosition()
+
+  // }
 
   public get attached_node() { return this._attached_node }
   public get tied_to_nodes(): boolean { return this._tied_to_nodes }
