@@ -168,8 +168,6 @@ export abstract class DrawLabelBase {
     const d3_selection_g_FO = this.d3_selection.append('foreignObject')
       .attr('id', `${this.prefix}_fo_${this.getElementId()}`)
       .attr('class', 'element_fo')
-      .attr('width', 1000)
-      .attr('height', 1000)
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
 
@@ -218,9 +216,9 @@ export abstract class DrawLabelBase {
               className: 'element_fo_background'
             }
           )
-        } else {
+        } /*else {
           requestAnimationFrame(measureAndResize)
-        }
+        }*/
       }
     }
     if (this._label_values.inside_vert && this._label_values.inside_horiz) {

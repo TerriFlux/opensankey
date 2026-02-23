@@ -1070,16 +1070,16 @@ export const MenuConfigurationAppearance = ({
               {t('Menu.tabs.value')}
             </Button>
             <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
-            <Button
-              isDisabled={!app_data.has_sankey_plus}
-              variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                app_data.menu_configuration.tab_selected = 'icon'
-                setActiveTab('icon')
-              }}
-            >
-              {t('Menu.tabs.icon')}
-            </Button>
+              <Button
+                isDisabled={!app_data.has_sankey_plus}
+                variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  app_data.menu_configuration.tab_selected = 'icon'
+                  setActiveTab('icon')
+                }}
+              >
+                {t('Menu.tabs.icon')}
+              </Button>
             </OSTooltip>
           </Box>
 
@@ -1330,7 +1330,7 @@ export const MenuConfigurationAppearance = ({
                       </Box>
 
 
-                      <Box as='span' layerStyle='options_2cols'>
+                      <Box as='span' layerStyle='options_3cols'>
                         <OverloadedCheckbox
                           elements={links_elements}
                           config={LINK_SHAPE_SPECIFIC_CONFIG}
@@ -1344,7 +1344,7 @@ export const MenuConfigurationAppearance = ({
                         >
                           {t('Flux.apparence.shape_is_structure')}
                         </OverloadedCheckbox>
-
+                        </Box>
                         {/* Value of link local scale to override scale from DA, can be undefined */}
                         <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
                           <>
@@ -1367,6 +1367,46 @@ export const MenuConfigurationAppearance = ({
 
                           </>
                         </OSTooltip>
+                      {/* </Box> */}
+                      <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        {[
+                          ['starting_curve', 0, (1 - linkShapeValues.ending_curve)],
+                          ['ending_curve', linkShapeValues.starting_curve * 100, 100]
+                        ].map(p => {
+                          return <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            elements={links_elements}
+                            attributePath={'Flux.apparence'}
+                            attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            refreshParentComponent={refreshAll}
+                            minimum_value={p[1] as number}
+                            maximum_value={p[2] as number}
+                            percent={true}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                        })}
+                      </Box>
+                      <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.handle')}</Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        {[
+                          ['starting_tangeant', 0, 100],
+                          ['ending_tangeant', 0, 100],
+                        ].map(p => {
+                          return <ElementAttrSetterNumberInput2Cols
+                            app_data={app_data}
+                            elements={links_elements}
+                            attributePath={'Flux.apparence'}
+                            attributeKey={p[0] as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG}
+                            prefix={'shape'}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            refreshParentComponent={refreshAll}
+                            minimum_value={p[1] as number}
+                            maximum_value={p[2] as number}
+                            percent={true}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'shape_' + String(p[0]) as keyof typeof LINK_SHAPE_SPECIFIC_CONFIG, LINK_SHAPE_SPECIFIC_CONFIG)} />
+                        })}
                       </Box>
                     </Box>
                   </Box>

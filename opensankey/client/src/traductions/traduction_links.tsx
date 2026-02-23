@@ -54,6 +54,8 @@ export const resources_flux = {
           }
         },
         apparence: {
+          anchor: 'Anchors',
+          handle: 'Handles',
           apparence: 'Appearance',
           flow: 'Flow',
           fond: 'shape background',
@@ -199,6 +201,8 @@ export const resources_flux = {
           }
         },
         apparence: {
+          anchor: 'Ancres',
+          handle: 'Poignées',
           apparence: 'Apparence',
           fond: 'Fond',
           couleur: 'Couleur',
@@ -246,7 +250,7 @@ export const resources_flux = {
         },
         labels: {
           source: 'Noeud source',
-          target: 'Noeud destination',          
+          target: 'Noeud destination',
           percent: '%',
           ratio: 'Ratio',
           label: 'Label',
