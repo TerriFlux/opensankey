@@ -119,7 +119,7 @@ export const ContextZDT = (
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.detachTiedNodes')} </Button>
 
   // Select nodes 'inside' zdt
@@ -130,14 +130,17 @@ export const ContextZDT = (
       .forEach(n => {
         n.getListDescendantOfNode().forEach(node => {
           zdt_to_contextualise.attachNodeToCont(node)
-          //new_data_plus.drawing_area.addNodeToSelection(node)
+        })
+        n.getListAncestorOfNode().forEach(node => {
+          zdt_to_contextualise.attachNodeToCont(node)
         })
         zdt_to_contextualise.attachNodeToCont(n)
+        zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
       })
     zdt_to_contextualise.draw()
     closeContextMenu()
   }}
-  variant='contextmenu_button'
+    variant='contextmenu_button'
   >{t('Menu.SNI')}
   </Button>
 
