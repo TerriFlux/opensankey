@@ -485,14 +485,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
-      if (mode === 'unitary') drawing_area.bypass_redraws = true
+      drawing_area.bypass_redraws = true
       tagg.selectTagsFromId(values[0])
     }
 
     // Actions spécifiques selon le mode
     switch (mode) {
       case 'level':
+        app_data.drawing_area.bypass_redraws = true
         if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
+          //app_data.drawing_area.nodePositioning.computeParametrization(true)
           app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
         }
         app_data.drawing_area.sankey.showAccordingToLevelTags()
