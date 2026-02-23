@@ -205,12 +205,12 @@ export interface FormatAttributeConfig<T> {
   tooltips: { en: string; fr: string }
   visibilityConditions?: MenuCondition[]
 }
-export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object> 
+export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object>
 // ==================================================================================================
 // OPTIONS D'ENTRÉE (INPUT)
 // ==================================================================================================
 
-export const INPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
+export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== BASE (communes à tous les formats) ===================
   base: {
     // À compléter plus tard selon tes besoins
@@ -218,7 +218,18 @@ export const INPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
 
   // =================== EXCEL ===================
   excel: {
-    // À compléter plus tard
+    propagate_flux_to_children: {
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Propagate fluxes to children',
+        fr: 'Propager les flux aux enfants'
+      },
+      tooltips: {
+        en: 'Create child fluxes when they exist only on parent nodes',
+        fr: 'Créer les flux enfants lorsqu\'ils n\'existent que sur les nœuds parents'
+      }
+    } satisfies FormatAttributeConfig<boolean>
   },
 
   // =================== JSON ===================
@@ -245,7 +256,7 @@ export const INPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
 } as const
 
 // Définir base en dehors
-const BASE_OUTPUT_CONFIG : FormatConfigStructure = {
+const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
 
   with_values: {
     default: true,
@@ -289,8 +300,8 @@ const BASE_OUTPUT_CONFIG : FormatConfigStructure = {
   example_json: {}
 } as const
 
-export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
-  base : {
+export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
+  base: {
     ...BASE_OUTPUT_CONFIG,
   },
   excel: {
@@ -401,19 +412,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
       ]
     } satisfies FormatAttributeConfig<boolean>,
 
-    write_ratio_constraints: {
-      default: false,
-      type: (() => false) as (() => boolean),
-      labels: {
-        en: 'Sheet constraints',
-        fr: 'Onglet contraintes'
-      },
-      tooltips: {
-        en: 'Include ratio constraints in the Excel export',
-        fr: 'Ecrire les contraintes simples dans l\'onglet contraintes'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
-
     layout: {
       default: true,
       type: (() => true) as (() => boolean),
@@ -463,20 +461,20 @@ export const OUTPUT_ATTRIBUTES_CONFIG : FormatConfigStructure = {
 export type FormatType = 'base' | 'excel' | 'json' | 'blob' | 'example_excel' | 'example_json'
 
 // Valeurs par défaut pour chaque format
-export const getDefaultOutputOptions = (config:FormatAttributeConfig<boolean | number | string>|object ): Record<string,unknown> => {
+export const getDefaultOutputOptions = (config: FormatAttributeConfig<boolean | number | string> | object): Record<string, unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default
     return acc
-  }, {} as Record<string,unknown>)
+  }, {} as Record<string, unknown>)
 }
 
-export const getDefaultInputOptions = (config: FormatAttributeConfig<boolean | number | string>|object): Record<string,unknown> => {
+export const getDefaultInputOptions = (config: FormatAttributeConfig<boolean | number | string> | object): Record<string, unknown> => {
   return Object.keys(config).reduce((acc, key) => {
     // @ts-expect-error Type inference limitation
     acc[key] = config[key].default
     return acc
-  }, {} as Record<string,unknown>)
+  }, {} as Record<string, unknown>)
 }
 
 // export type ConfigAttribute<C, F extends FormatType, K> =
