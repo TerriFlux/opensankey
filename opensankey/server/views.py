@@ -305,7 +305,6 @@ def retrieve_json():
                 input_format,
                 'json',
                 {},
-                {},
                 logname,
                 {}
             ),
