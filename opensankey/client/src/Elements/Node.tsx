@@ -1505,7 +1505,6 @@ export class Class_NodeElement extends Class_NodeBase {
    * Dessine le début des flux sur les ellipses pour un rendu plus fluide
    */
   private _drawLinksStartCaps() {
-    return
     // Seulement pour les nœuds elliptiques
     if (this.shape_type !== 'ellipse') return
 
