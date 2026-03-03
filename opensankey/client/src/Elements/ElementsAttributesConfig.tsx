@@ -1817,8 +1817,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
-      en: 'Starting curve position',
-      fr: 'Position départ courbure'
+      en: 'Start',
+      fr: 'Départ'
     },
     tooltips: {
       en: 'Position of the starting point of curvature as ratio of link length',
@@ -1833,8 +1833,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
-      en: 'Ending curve position',
-      fr: 'Position fin courbure'
+      en: 'End',
+      fr: 'Arrivée'
     },
     tooltips: {
       en: 'Position of the ending point of curvature as ratio of link length',
@@ -1849,8 +1849,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
-      en: 'Starting tangeant',
-      fr: 'Courbure de départ'
+      en: 'Start',
+      fr: 'Départ'
     },
     tooltips: {
       en: 'Setting the radius of the starting curvature for Bezier curves',
@@ -1865,8 +1865,8 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     category: 'shape' as const,
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
-      en: 'Ending tangeant',
-      fr: 'Courbure de fin'
+      en: 'End',
+      fr: 'Arrivée'
     },
     tooltips: {
       en: 'Setting the radius of the ending curvature for Bezier curves',

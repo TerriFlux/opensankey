@@ -567,74 +567,74 @@ export class Class_LinkValue {
     if (this.data_value == null) {
       return null
     }
-    if (this.value_option == 'unit_ratio') {
-      const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)
-      if (ratio_unit_tag_value == this) return this.data_value
-      return (ratio_unit_tag_value?.valueResult??ratio_unit_tag_value?.valueData??1) * this.data_value!
-    } else if (this.value_option == '%IS') {
-      const multiplier = this.data_value / 100
-      if (this.parent == this.link) {
-        let total_source = 0
-        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-        return total_source * multiplier
-      } /*else {
-        const data_tags_id = this.data_tags_id
-        const data_tags: Class_ProtoTag[] = []
-        this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
-        let total_source = 0
-        this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-        return total_source * multiplier
-      }*/
-    } else if (this.value_option == '%OS') {
-      let total_target = 0
-      let ok = true
-      this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
-        if (!l.valueCurrent) {
-          ok = false
-          return
-        }
-        total_target += l.valueCurrent
-      })
-      if (!ok || !total_target) return null
-      return total_target * (this.data_value) / (100 - this.data_value)
+    // if (this.value_option == 'unit_ratio') {
+    //   const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)
+    //   if (ratio_unit_tag_value == this) return this.data_value
+    //   return (ratio_unit_tag_value?.valueResult??ratio_unit_tag_value?.valueData??1) * this.data_value!
+    // } else if (this.value_option == '%IS') {
+    //   const multiplier = this.data_value / 100
+    //   if (this.parent == this.link) {
+    //     let total_source = 0
+    //     this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    //     return total_source * multiplier
+    //   } /*else {
+    //     const data_tags_id = this.data_tags_id
+    //     const data_tags: Class_ProtoTag[] = []
+    //     this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+    //     let total_source = 0
+    //     this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
+    //     return total_source * multiplier
+    //   }*/
+    // } else if (this.value_option == '%OS') {
+    //   let total_target = 0
+    //   let ok = true
+    //   this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
+    //     if (!l.valueCurrent) {
+    //       ok = false
+    //       return
+    //     }
+    //     total_target += l.valueCurrent
+    //   })
+    //   if (!ok || !total_target) return null
+    //   return total_target * (this.data_value) / (100 - this.data_value)
 
-    } else if (this.value_option == '%OD') {
-      const multiplier = this.data_value / 100
-      if (this.parent == this.link) {
-        let total_target = 0
-        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-        return total_target * multiplier
-      } /*else {
-        const data_tags_id = this.data_tags_id
-        const data_tags: Class_ProtoTag[] = []
-        this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
-        let total_target = 0
-        this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-        return total_target * multiplier
-      }*/
-    } else if (this.value_option == '%ID') {
-      let total_target = 0
-      let ok = true
-      this.link!.target.input_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
-        if (!l.valueCurrent) {
-          ok = false
-          return
-        }
-        total_target += l.valueCurrent
-      })
-      if (!ok) return null
-      return total_target * (this.data_value) / (100 - this.data_value)
-    } else if (this.value_option == '%PS') {
-      const multiplier = this.data_value / 100
-      const parent_source = this.link!.source.dimensions_as_child[0].parent!
-      const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
-      return parent_link?parent_link.valueCurrent!*multiplier : null
-    } else if (this.value_option == '%PD') {
-      const multiplier = this.data_value / 100
-      const parent_target = this.link!.target.dimensions_as_child[0].parent!
-      const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
-      return parent_link? parent_link.valueCurrent!*multiplier: null
-    }
+    // } else if (this.value_option == '%OD') {
+    //   const multiplier = this.data_value / 100
+    //   if (this.parent == this.link) {
+    //     let total_target = 0
+    //     this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    //     return total_target * multiplier
+    //   } /*else {
+    //     const data_tags_id = this.data_tags_id
+    //     const data_tags: Class_ProtoTag[] = []
+    //     this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
+    //     let total_target = 0
+    //     this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
+    //     return total_target * multiplier
+    //   }*/
+    // } else if (this.value_option == '%ID') {
+    //   let total_target = 0
+    //   let ok = true
+    //   this.link!.target.input_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
+    //     if (!l.valueCurrent) {
+    //       ok = false
+    //       return
+    //     }
+    //     total_target += l.valueCurrent
+    //   })
+    //   if (!ok) return null
+    //   return total_target * (this.data_value) / (100 - this.data_value)
+    // } else if (this.value_option == '%PS') {
+    //   const multiplier = this.data_value / 100
+    //   const parent_source = this.link!.source.dimensions_as_child[0].parent!
+    //   const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
+    //   return parent_link?parent_link.valueCurrent!*multiplier : null
+    // } else if (this.value_option == '%PD') {
+    //   const multiplier = this.data_value / 100
+    //   const parent_target = this.link!.target.dimensions_as_child[0].parent!
+    //   const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
+    //   return parent_link? parent_link.valueCurrent!*multiplier: null
+    // }
     return null
   }
 

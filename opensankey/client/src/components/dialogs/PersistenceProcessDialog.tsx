@@ -532,12 +532,12 @@ export const UniversalFileConverter = ({
           json: '.json'
         }
         //@ts-expect-error xxx
-        let root_filename = input_file ? input_file.name : 'output'
+        let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
         if (config.title == "ProcessDialog.reconciliation") {
           //@ts-expect-error xxx
           root_filename = input_file.name.split('.')[0] + 'reconciled'
         }
-        
+
         const filename = `${root_filename}${extensions[output_format] || ''}`
 
         FileSaver.saveAs(blob, filename)

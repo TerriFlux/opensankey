@@ -261,6 +261,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
     return [...new Set(nodeList)]
   }
+  public getListAncestorOfNode(): Class_NodeElement[] {
+    let nodeList: Class_NodeElement[] = []
+    this.dimensions_as_child.forEach(dim => {
+      nodeList = [...nodeList, dim.parent as Class_NodeElement, ...dim.parent.getListAncestorOfNode()]
+    })
+    return [...new Set(nodeList)]
+  }
 
   // TAGS METHODS =======================================================================
   public hasGivenTag(tag: Class_Tag) { return this._nodeTagsManager.hasGivenTag(tag) }
@@ -680,7 +687,7 @@ export class Class_NodeElement extends Class_NodeBase {
                 + nodeAbove.getShapeHeightToUse()
                 + this.shape_position_dy
             }
-          } else if (has_container && echangeTag && this.hasGivenTag(echangeTag)) {
+          } else if (has_container /*&& echangeTag && this.hasGivenTag(echangeTag)*/) {
             this.position_y = this._attached_container[0].position_y
           }
         }
@@ -817,7 +824,7 @@ export class Class_NodeElement extends Class_NodeBase {
         }
       })
 
-    this._drawLinksStartCaps()
+    //this._drawLinksStartCaps()
   }
 
   /**

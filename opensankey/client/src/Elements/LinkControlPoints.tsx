@@ -492,7 +492,7 @@ export class LinkControlPoints {
 
       this.drawControlPoint()
       this.link.drawing_area.application_data.menu_configuration.updateComponentRelatedToApparence()
-      this.link.drawing_area.areaAutoFit()
+      //this.link.drawing_area.areaAutoFit()
       // Save current attribute val after mutating them in dragHandlers events
       const ghost = {
         'shape_starting_curve': this.link.shape_starting_curve,

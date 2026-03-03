@@ -116,64 +116,6 @@ def start():
 def goto(adress):
     return render_template(adress)
 
-# @opensankey.route("/excel/save", methods=["POST"])
-# def save_excel():
-#     """
-#     HTTP POST request to save Sankey as Excel
-
-#     Request :
-#         - Sankey data as JSON
-
-#     Response :
-#         - 200 : OK
-#         - 401 : Error when saving sankey data
-#         - 402 : Error when saving mfa data
-#     """
-#     # Extract Sankey structure from JSON
-#     # try:
-#     data = request.form["data"]
-#     sankey_as_data = data
-#     sankey_as_json = json.loads(sankey_as_data)
-#     io_json = IOJson()
-#     ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
-#     #sankey = extract_sankey_from_json(sankey_as_json)
-#     options = request.form["options"]
-#     options_save_excel = json.loads(options)
-#     # except Exception as excpt:
-#     #     return Response(
-#     #         response='save_excel: ' + str(excpt),
-#     #         status=500)
-#     # Save Sankey structure in Excel
-#     # try:
-#     cwd = os.getcwd()
-#     excel_filename = os.path.join(cwd, "tutu.xlsx")
-#     io_excel = IOExcel()
-#     io_excel.write_sankey(excel_filename, mode="w", **options_save_excel)
-#     if options_save_excel["layout"]:
-#         # Ajoute le fichier json dans un onglet layout
-#         wb = openpyxl.load_workbook(excel_filename)
-#         layout_sheet = wb.create_sheet()
-#         layout_sheet.title = "layout"
-#         splitted_layout = cut_layout(sankey_as_data)
-#         cpt = 1
-#         for i in splitted_layout:
-#             layout_sheet["A" + str(cpt)].value = i
-#             cpt = cpt + 1
-#         wb.save("tutu.xlsx")
-#     return send_file(excel_filename, as_attachment=True)
-#     # except Exception as excpt:
-#     #     response = Response(response="write_sankey : " + str(excpt), status=500)
-#     #     return response
-#     return Response(status=200)
-
-# @opensankey.route("/excel/save/post_clean", methods=["POST"])
-# def clean_excel():
-#     cwd = os.getcwd()
-#     excel_filename = os.path.join(cwd, "tutu.xlsx")
-#     os.remove(excel_filename)
-#     response = Response(status=200)
-#     return response
-
 
 @opensankey.route("/upload/check_process", methods=["POST"])
 def check_process():
@@ -363,7 +305,6 @@ def retrieve_json():
                 input_format,
                 'json',
                 {},
-                {},
                 logname,
                 {}
             ),
@@ -392,113 +333,113 @@ def launch_conversion():
     - input_format : 'excel' ou 'json'
     - output_format : 'excel' ou 'json'
     """
-    try:
-        tmp_dir = tempfile.mkdtemp()  # diff
-        log_dir = tempfile.mkdtemp()
-        log_filename = log_dir + os.path.sep + "rollover.log"
-        # session["logname"] = log_filename
-        trace.logger_init(log_filename, "w")
+    # try:
+    tmp_dir = tempfile.mkdtemp()  # diff
+    log_dir = tempfile.mkdtemp()
+    log_filename = log_dir + os.path.sep + "rollover.log"
+    # session["logname"] = log_filename
+    trace.logger_init(log_filename, "w")
 
-        input_format = request.form.get("input_format", "excel")
-        output_format = request.form.get("output_format", "json")
+    input_format = request.form.get("input_format", "excel")
+    output_format = request.form.get("output_format", "json")
 
-        input_options = json.loads(request.form.get('input_options', '{}'))
-        output_options = json.loads(request.form.get('output_options', '{}'))
+    # input_options = json.loads(request.form.get('input_options', '{}'))
+    # output_options = json.loads(request.form.get('output_options', '{}'))
+    options = {**json.loads(request.form.get('input_options', '{}')), **
+                json.loads(request.form.get('output_options', '{}'))}
+    ext_map = {
+        'excel': '.xlsx',
+        'json': '.json',
+        'blob': '.json'
+    }
+    if input_format != "example_excel" and input_format != "example_json":
+        input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
+    output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
 
-        ext_map = {
-            'excel': '.xlsx',
-            'json': '.json',
-            'blob': '.json'
-        }
-        if input_format != "example_excel" and input_format != "example_json":
-            input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
-        output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
+    if input_format == "example_excel" or input_format == "example_json":
+        data_folder = os.environ.get("MFAData")
+        exemple = request.form["file_name"]
+        input_file_name = os.path.join(data_folder, exemple)
+        extension = os.path.splitext(input_file_name)[1]
+        if extension == '.xlsx':
+            input_format = 'excel'
+        else:
+            # input_format = 'json'
+            output_file_name = input_file_name
+            set_process_state(
+                process_started=True,
+                input_filename=input_file_name,
+                output_file_name=output_file_name,
+                input_format=input_format,
+                output_format=output_format,
+                logname=log_filename
+            )
+            trace.logger.info("{:->{w}}".format(" CHARGEMENT TERMINÉE", w=50))
+            return Response(response="{}", status=200, mimetype="application/json")
+            # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 
-        if input_format == "example_excel" or input_format == "example_json":
-            data_folder = os.environ.get("MFAData")
-            exemple = request.form["file_name"]
-            input_file_name = os.path.join(data_folder, exemple)
-            extension = os.path.splitext(input_file_name)[1]
-            if extension == '.xlsx':
-                input_format = 'excel'
-            else:
-                # input_format = 'json'
-                output_file_name = input_file_name
-                set_process_state(
-                    process_started=True,
-                    input_filename=input_file_name,
-                    output_file_name=output_file_name,
-                    input_format=input_format,
-                    output_format=output_format,
-                    logname=log_filename
-                )
-                trace.logger.info("{:->{w}}".format(" CONVERSION TERMINÉE", w=50))
-                return Response(response="{}", status=200, mimetype="application/json")
-                # return handle_json_or_compressed(data_folder, exemple, input_file_name)
+    elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
+        input_file = request.files["file"]
+        input_file.save(input_file_name)
 
-        elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
-            input_file = request.files["file"]
-            input_file.save(input_file_name)
+    # Stocker l'état dans le stockage global
+    set_process_state(
+        process_started=True,
+        input_filename=input_file_name,
+        output_file_name=output_file_name,
+        input_format=input_format,
+        output_format=output_format,
+        logname=log_filename
+    )
+    sankey_as_data = None
+    if (input_format == "blob"):
+        data = request.form["data"]
+        sankey_as_data = data
+        sankey_as_json = json.loads(sankey_as_data)
+        io_json = IOJson()
+        ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
+        if not ok:
+            trace.logger.error(f"FAILED load_sankey_from_json failed: {log}")
+            return Response(
+                json.dumps({"error": str(log)}),
+                status=500,
+                mimetype="application/json"
+            )
+        io_json.write_sankey(input_file_name)
+        input_format = "json"
 
-        # Stocker l'état dans le stockage global
-        set_process_state(
-            process_started=True,
-            input_filename=input_file_name,
-            output_file_name=output_file_name,
-            input_format=input_format,
-            output_format=output_format,
-            logname=log_filename
-        )
-        sankey_as_data = None
-        if (input_format == "blob"):
-            data = request.form["data"]
-            sankey_as_data = data
-            sankey_as_json = json.loads(sankey_as_data)
-            io_json = IOJson()
-            ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
-            if not ok:
-                trace.logger.error(f"FAILED load_sankey_from_json failed: {log}")
-                return Response(
-                    json.dumps({"error": str(log)}),
-                    status=500,
-                    mimetype="application/json"
-                )
-            io_json.write_sankey(input_file_name)
-            input_format = "json"
+    # Decide threading based on file size
+    # file_stats = os.stat(input_file_name)
+    # use_thread = file_stats.st_size > 500000  # 500KB threshold
 
-        # Decide threading based on file size
-        # file_stats = os.stat(input_file_name)
-        # use_thread = file_stats.st_size > 500000  # 500KB threshold
+    # if use_thread:
+    # Use threading for large files
+    thread = Thread(
+        target=conversion_thread,
+        args=(
+            input_file_name,
+            output_file_name,
+            input_format,
+            output_format,
+            options,
+            log_filename,
+            sankey_as_data
+        ),
+    )
+    thread.daemon = True
 
-        # if use_thread:
-        # Use threading for large files
-        thread = Thread(
-            target=conversion_thread,
-            args=(
-                input_file_name,
-                output_file_name,
-                input_format,
-                output_format,
-                input_options,
-                output_options,
-                log_filename,
-                sankey_as_data
-            ),
-        )
-        thread.daemon = True
+    thread.start()
+    trace.logger.debug("Conversion thread launched")
 
-        thread.start()
-        trace.logger.debug("Conversion thread launched")
+    return Response(response="{}", status=200, mimetype="application/json")
 
-        return Response(response="{}", status=200, mimetype="application/json")
-
-    except Exception as excpt:
-        trace.logger.error(f"launch_conversion failed: {str(excpt)}")
-        return Response(
-            json.dumps({"error": str(excpt)}),
-            status=500,
-            mimetype="application/json"
-        )
+    # except Exception as excpt:
+    #     trace.logger.error(f"launch_conversion failed: {str(excpt)}")
+    #     return Response(
+    #         json.dumps({"error": str(excpt)}),
+    #         status=500,
+    #         mimetype="application/json"
+    #     )
 
 
 def conversion_thread(
@@ -506,8 +447,7 @@ def conversion_thread(
     output_file_name,
     input_format,
     output_format,
-    input_options,
-    output_options,
+    options,
     log_filename,
     sankey_as_data
 ):
@@ -535,13 +475,11 @@ def conversion_thread(
     """
     trace.logger_init(log_filename, "a")
 
-
     trace.logger.info("=" * 80)
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
     trace.logger.info(f"Output: {Path(output_file_name).name}")
-    trace.logger.info(f"Input options: {input_options}")
-    trace.logger.info(f"Output options: {output_options}")
+    trace.logger.info(f"options: {options}")
     trace.logger.info("=" * 80)
 
     t_total_start = perf_counter()
@@ -558,7 +496,7 @@ def conversion_thread(
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
-        ok, msg = io_input.load_sankey(input_file_name, **input_options)
+        ok, msg = io_input.load_sankey(input_file_name, **options)
         max_line_length = 50
         if input_format == 'excel':
             try:
@@ -567,18 +505,19 @@ def conversion_thread(
                     if "layout" in excel_file.sheet_names:
                         layout_table = pd.read_excel(input_file_name, "layout")
                         trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
-                        layout_json_str = layout_table.columns[0] + "".join([layout_table.iloc[_][0] for _ in layout_table.index])
+                        layout_json_str = layout_table.columns[0] + \
+                            "".join([layout_table.iloc[_][0] for _ in layout_table.index])
                         layout_json = json.loads(layout_json_str)
-                        
+
                         # Ajouter le layout aux options de sortie pour JSON
                         if output_format == 'json':
-                            output_options['layout'] = layout_json
+                            options['layout'] = layout_json
                             trace.logger.info("✓ Layout extracted and will be included in JSON")
                     else:
                         trace.logger.debug("No layout sheet found in Excel file")
             except Exception as e:
                 trace.logger.warning(f"Could not extract layout: {e}")
-            
+
         t_read = perf_counter() - t_read_start
 
         if not ok:
@@ -599,9 +538,9 @@ def conversion_thread(
         # Écrire avec les options de sortie
         trace.logger.info("📝 Écriture du fichier de sortie...")
         t_write_start = perf_counter()
-        io_output.write_sankey(output_file_name, **output_options)
+        io_output.write_sankey(output_file_name, **options)
         if input_format != 'excel':
-            if "layout" in output_options and output_options["layout"]:
+            if "layout" in options and options["layout"]:
                 # Ajoute le fichier json dans un onglet layout
                 wb = openpyxl.load_workbook(output_file_name)
                 layout_sheet = wb.create_sheet()

@@ -109,7 +109,7 @@ export const LinkValueTypeSelector = ({
   const [node_ref, set_node_ref] = useState(current_node_ref)
   if (node_ref !== current_node_ref) set_node_ref(current_node_ref)
 
-  const current_dir = value_option === '%IS' || value_option === '%ID' ? 'input' : 'output'
+  const current_dir = (value_option === '%IS' || value_option === '%ID') ? 'input' : (value_option === '%OS' || value_option === '%OD') ? 'output' : 'parent'
   const [dir, set_dir] = useState(current_dir)
   if (dir !== current_dir) set_dir(current_dir)
 
@@ -373,7 +373,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     <Box layerStyle='options_2cols'>
       <RowSetter2Cols
         attributePath={'Flux.labels'}
-        attributeKey={value_option}
+        attributeKey={'value'}
       >
         <ConfigMenuNumberInput
           t={t}
@@ -403,9 +403,9 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         >
         Format
         </Button> */}
-        <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+        <OSTooltip label={''} disabled={!app_data.has_sankey_afm}>
           <Button
-            isDisabled={!app_data.has_sankey_plus}
+            isDisabled={!app_data.has_sankey_afm}
             variant={'menuconfigpanel_option_button'}
             onClick={() => {
               app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
