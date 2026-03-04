@@ -670,10 +670,19 @@ export class Class_LinkElement extends Class_LinkAttribute {
         return this.source.getShapeColorToUse()
       } else if (this.target.hasGivenTag(productTag)) {
         return this.target.getShapeColorToUse()
-      } else if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
-        return this.source.getShapeColorToUse()
-      } else if (this.target.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
-        return this.target.getShapeColorToUse()
+      } else {
+        const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+        const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+
+        // Tag commun entre source et target -> priorité
+        const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
+        if (common_tag) {
+          return common_tag.color
+        } else if (source_color_tags.length > 0) {
+          return this.source.getShapeColorToUse()
+        } else if (target_color_tags.length > 0) {
+          return this.target.getShapeColorToUse()
+        }
       }
     }
     const type_source = this.shape_color_rule
