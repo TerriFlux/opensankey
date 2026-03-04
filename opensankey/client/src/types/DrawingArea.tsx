@@ -323,7 +323,7 @@ export class Class_DrawingArea {
     this.setEventsListeners()
 
     // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    //this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
 
     this.orderElementOnDA()
   }
