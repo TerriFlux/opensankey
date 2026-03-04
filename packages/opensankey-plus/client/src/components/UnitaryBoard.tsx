@@ -7,6 +7,7 @@ import { Class_Tag } from "../deps/OpenSankey/types/Tag"
 import { Class_ViewTagGroup } from "../deps/OpenSankey/types/TagGroup"
 import { makeId } from "../deps/OpenSankey/types/Utils"
 import { Class_ApplicationDataOSP } from "../types/ApplicationDataOSP"
+import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from "../types/DrawingAreaOSP"
 
 /**
  * Crée une vue unitaire - soit un board avec tous les nœuds, soit une vue focalisée sur un nœud spécifique
@@ -37,9 +38,9 @@ export const createUnitaryView = (
   // Copy current sankey
   const name = node_ref ? 'Unitary view of ' + node_ref.name : 'Board Unitary View'
   const id = new_drawing_area.id
-  const copy = DrawingAreaPersistence.toJSON(base_drawing_area, { keep_siblings: true })
+  const copy = DrawingAreaPersistenceOSP.toJSON(base_drawing_area as Class_DrawingAreaOSP, { keep_siblings: true })
   copy.id = id
-  DrawingAreaPersistence.fromJSON(new_drawing_area, copy)
+  DrawingAreaPersistenceOSP.fromJSON(new_drawing_area, copy)
   new_drawing_area.name = name
 
   // Supprimer les containers
@@ -189,7 +190,7 @@ export const createUnitaryView = (
   // Sauvegarder la vue
   app_data.views_dict[new_drawing_area.id] = {
     'name': new_drawing_area.name,
-    'json': compressJSONToGzip(DrawingAreaPersistence.toJSON(new_drawing_area))
+    'json': compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(new_drawing_area))
   }
   app_data.pushViewIdInViewOrder(new_drawing_area.id)
 

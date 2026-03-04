@@ -69,7 +69,13 @@ new_structure[0].children!.push({
   widgetName: 'ButtonNodeContextAssignTag', // Réutiliser le même widget
   widgetProps: {
     context: 'node' // Pour différencier le contexte si nécessaire
-  }
+  },
+  visibilityConditions: [{
+    type: 'custom',
+    customCheck: (app_data) => {
+      return Object.values(app_data.drawing_area.sankey.node_taggs_dict).length > 0
+    }
+  }]
 })
 new_structure[5].children!.push({
   type: 'button',

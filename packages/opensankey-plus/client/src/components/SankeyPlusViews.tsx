@@ -42,7 +42,7 @@ import {
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
-import { Class_DrawingAreaOSP } from '../types/DrawingAreaOSP'
+import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
@@ -1348,7 +1348,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
   const [file_name, set_file_name] = useState<string>('')
   const [selected_data_id, set_selected_data_id] = useState<string>('')
   const [, setUpdate] = useState(0)
-  const local_app_data = useRef(new Class_ApplicationDataOSP(false))
+  const local_app_data = useRef<Class_ApplicationDataOSP>(new Class_ApplicationDataOSP(false))
   const list_data = useRef<{ [x: string]: { name: string, data: Type_JSON } }>({})
   const list_selected_nodes_for_unitary = useRef<Class_NodeElement[]>([])
   const entries_for_nodes: typeElementSelectable = local_app_data.current.drawing_area.sankey.visible_nodes_list_sorted.map((d) => { return { 'label': d.name, 'value': d.id, selected: list_selected_nodes_for_unitary.current.includes(d) } })
@@ -1360,7 +1360,7 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
   if (Object.keys(list_data.current).length > 0 && !(selected_data_id in list_data.current)) {
     list_selected_nodes_for_unitary.current = []
     const new_sel_key = Object.keys(list_data.current)[0]
-    DrawingAreaPersistence.fromJSON(local_app_data.current.drawing_area, list_data.current[new_sel_key].data)
+    DrawingAreaPersistenceOSP.fromJSON(local_app_data.current.drawing_area as Class_DrawingAreaOSP, list_data.current[new_sel_key].data)
     set_selected_data_id(new_sel_key)
   }
 
@@ -1543,7 +1543,7 @@ const CheckLoad: FC<{
                 if (data.output.includes('FINISHED') || data.output.includes('COMPLETED') || data.output.includes('TERMINÉE')) {
                   setCheckStatus(false)
                   setLaunchRetriveResult(true)
-                } else if (data.output.includes('FAILED')) {
+                } else if (data.output.includes('FAILED') || data.output.includes('ÉCHOUÉE') || data.output.includes('ÉCHOUÉ')) {
                   setCheckStatus(false)
 
                 }
