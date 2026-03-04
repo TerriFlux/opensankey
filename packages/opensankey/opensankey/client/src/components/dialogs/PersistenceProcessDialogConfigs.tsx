@@ -330,7 +330,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    with_node: {
+    with_nodes_sheets: {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
