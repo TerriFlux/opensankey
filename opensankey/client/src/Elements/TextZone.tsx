@@ -128,6 +128,11 @@ export class Class_ContainerElement extends Class_NodeBase {
       })
     }
   }
+  
+  public applyPosition() {
+    super.applyPosition()
+    this.drawShape()
+  }
 
   public draw() {
     super.draw()
