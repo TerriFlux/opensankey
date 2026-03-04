@@ -68,7 +68,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'editStyle',
       children: [
-        { type: 'button', actionName: 'editName' },
+        // { type: 'button', actionName: 'editName' },
         { type: 'button', actionName: 'resetAttr' },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]

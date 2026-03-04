@@ -24,24 +24,24 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         },
         { type: 'button', actionName: 'computeAutoPosition' },
         { type: 'button', actionName: 'computeAutoPositionOptim' },
-        {
-          type: 'button', actionName: 'toggleAutoX',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
-        {
-          type: 'button', actionName: 'toggleAutoY',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
+        // {
+        //   type: 'button', actionName: 'toggleAutoX',
+        //   visibilityConditions: [{
+        //     type: 'custom',
+        //     customCheck: (app_data) => {
+        //       return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+        //     }
+        //   }]
+        // },
+        // {
+        //   type: 'button', actionName: 'toggleAutoY',
+        //   visibilityConditions: [{
+        //     type: 'custom',
+        //     customCheck: (app_data) => {
+        //       return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+        //     }
+        //   }]
+        // },
         {
           type: 'button', actionName: 'toggleTradeMode',
           visibilityConditions: [{
@@ -218,25 +218,26 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     toggleParametricMode: {
       type: 'toggle',
       labels: {
-        en: 'Absolute Coordinate',
-        fr: 'Coordonnées absolues'
+        en: 'Absolute coordinate mode',
+        fr: 'Mode position en coordonnées absolues'
       },
       labelsToggle: {
         en: {
-          true: 'Switch to absolute coordinates',
-          false: 'Switch to parametric mode'
+          true: 'Absolute coordinate mode',
+          false: 'Constant vertical offset mode'
         },
         fr: {
-          true: 'Passer en coordonnées absolues',
-          false: 'Passer en mode paramétrique'
+          true: 'Mode position en coordonnées absolues',
+          false: 'Mode position avec écart vertical constant'
         }
       },
       tooltips: {
-        en: 'Toggle between parametric and absolute positioning mode',
-        fr: 'Basculer entre le mode paramétrique et absolu'
+        en: 'Toggle between absolute coordinate mode and constant vertical offset mode',
+        fr: 'Basculer entre le mode coordonnées absolues et le mode écart vertical constant'
       },
       getToggleValue: 'toggleParametricModeValue'
     },
+
     resetVerticalIntervals: {
       type: 'action',
       labels: {
@@ -248,28 +249,28 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: 'Réinitialiser les intervalles verticaux'
       }
     },
-    toggleAutoX: {
-      type: 'toggle',
-      labels: {
-        en: 'Auto X position',
-        fr: 'Position X auto'
-      },
-      labelsToggle: {
-        en: {
-          true: 'Disable auto horizontal positioning',
-          false: 'Enable auto horizontal positioning'
-        },
-        fr: {
-          true: 'Désactiver positionnement horizontal auto',
-          false: 'Activer positionnement horizontal auto'
-        }
-      },
-      tooltips: {
-        en: 'Toggle automatic horizontal positioning of nodes',
-        fr: 'Basculer le positionnement horizontal automatique des nœuds'
-      },
-      getToggleValue: 'toggleAutoXValue'
-    },
+    // toggleAutoX: {
+    //   type: 'toggle',
+    //   labels: {
+    //     en: 'Auto X position',
+    //     fr: 'Position X auto'
+    //   },
+    //   labelsToggle: {
+    //     en: {
+    //       true: 'Disable auto horizontal positioning',
+    //       false: 'Enable auto horizontal positioning'
+    //     },
+    //     fr: {
+    //       true: 'Désactiver positionnement horizontal auto',
+    //       false: 'Activer positionnement horizontal auto'
+    //     }
+    //   },
+    //   tooltips: {
+    //     en: 'Toggle automatic horizontal positioning of nodes',
+    //     fr: 'Basculer le positionnement horizontal automatique des nœuds'
+    //   },
+    //   getToggleValue: 'toggleAutoXValue'
+    // },
 
     toggleTradeMode: {
       type: 'toggle',
@@ -364,7 +365,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     //   }
     // }
 
-    
+
   },
 
   sectionTitles: {
@@ -403,10 +404,10 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',
     resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
-    toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
-    toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
-    toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
-    toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
+    // toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
+    // toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
+    // toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
+    // toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
     toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
@@ -414,7 +415,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
-    
+
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated
       app_data.drawing_area.draw()

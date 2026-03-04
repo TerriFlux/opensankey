@@ -234,8 +234,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
   return (
     (contextualised_node !== undefined) &&
     (has_node_style)
-  ) ? <>
-      <Menu placement='end'>
+  ) ? <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
           as={Button}
@@ -268,7 +267,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
               })
           }
         </MenuList>
-      </Menu></> :
+      </Menu> :
     <></>
 }
 
