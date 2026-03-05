@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import { Select } from '@chakra-ui/react'
+import { Select, InputGroup, InputLeftAddon } from '@chakra-ui/react'
 import { TFunction } from 'i18next'
 import { ValueOptionType, value_option_percent_constants_source, value_option_percent_constants_target } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
@@ -351,47 +351,112 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   return <Box layerStyle='menu_sub_section'>
     <SankeyLinkSelection app_data={app_data} />
-
-    {/* Data tags selector */}
-    {data_taggs_list.map(data_tagg => {
-      return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
-        <Select
-          name={data_tagg.id}
-          variant='menuconfigpanel_option_select'
-          value={data_tagg.selected_tags_list[0].id}
-          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            data_tagg.selectTagsFromId(evt.target.value)
-            refreshThisAndUpdateRelatedComponents()
-          }}
-        >
-          {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
-        </Select>
-      </BOX2COLSTITLEH4>
-    })}
-
-    {/* Value input and format button */}
-    <Box layerStyle='options_2cols'>
-      <RowSetter2Cols
-        attributePath={'Flux.labels'}
-        attributeKey={'value'}
+    {/* Édition origine / destination du flux */}
+    <Box
+      display='grid'
+      gridTemplateColumns='9fr 1fr'
+      gridTemplateRows='1fr 1fr'
+      gridColumnGap='0.25rem'
+      gridRowGap='0.25rem'
+      height='4.25rem'
+    >
+      <Box
+        display='grid'
+        gridTemplateColumns='1fr'
+        gridTemplateRows='1fr 1fr'
+        gridRowGap='0.25rem'
       >
-        <ConfigMenuNumberInput
-          t={t}
-          default_value={default_value}
-          function_on_blur={(_: number | null) => {
-            Class_LinkElement.updateLinks(
-              app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
-            )
-            drawing_area.updateScaleAtLinkValueSetting()
-          }}
-          minimum_value={0}
-          stepper={true}
-          step={1}
-          unit_text={unit_text}
-        />
-      </RowSetter2Cols>
+        <OSTooltip label={t('Flux.tooltips.src')}>
+          <InputGroup variant='menuconfigpanel_option_input'>
+            <InputLeftAddon height='1.5rem' width='5rem'>
+              {t('Flux.src')}
+            </InputLeftAddon>
+            <Select
+              variant='select_custom_style'
+              isDisabled={selected_links.length !== 1}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const new_source = sankey.nodes_dict[event.target.value]
+                if (new_source !== null) {
+                  selected_links.forEach(link => link.source = new_source)
+                  refreshThisAndUpdateRelatedComponents()
+                }
+              }}
+              value={selected_links.length > 0 ? selected_links[0].source.id : ''}
+            >
+              <>
+                <option hidden key={'no_source'} value=''> </option>
+                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+              </>
+            </Select>
+          </InputGroup>
+        </OSTooltip>
+
+        <OSTooltip label={t('Flux.tooltips.trgt')}>
+          <InputGroup variant='menuconfigpanel_option_input'>
+            <InputLeftAddon height='1.5rem' width='5rem'>
+              {t('Flux.trgt')}
+            </InputLeftAddon>
+            <Select
+              variant='select_custom_style'
+              isDisabled={selected_links.length !== 1}
+              onChange={(event: React.ChangeEvent<HTMLSelectElement>) => {
+                const new_target = sankey.nodes_dict[event.target.value]
+                if (new_target !== null) {
+                  selected_links.forEach(link => link.target = new_target)
+                  refreshThisAndUpdateRelatedComponents()
+                }
+              }}
+              value={selected_links.length > 0 ? selected_links[0].target.id : ''}
+            >
+              <>
+                <option hidden key={'no_target'} value=''> </option>
+                {sankey.nodes_list.map((n, i) => <option key={i} value={n.id}>{n.name}</option>)}
+              </>
+            </Select>
+          </InputGroup>
+        </OSTooltip>
+      </Box>
+      {/* Data tags selector */}
+      {data_taggs_list.map(data_tagg => {
+        return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
+          <Select
+            name={data_tagg.id}
+            variant='menuconfigpanel_option_select'
+            value={data_tagg.selected_tags_list[0].id}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              data_tagg.selectTagsFromId(evt.target.value)
+              refreshThisAndUpdateRelatedComponents()
+            }}
+          >
+            {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+          </Select>
+        </BOX2COLSTITLEH4>
+      })}
+    </Box>
+
+      {/* Value input and format button */}
       <Box layerStyle='options_2cols'>
-        {/* <Button
+        <RowSetter2Cols
+          attributePath={'Flux.labels'}
+          attributeKey={'value'}
+        >
+          <ConfigMenuNumberInput
+            t={t}
+            default_value={default_value}
+            function_on_blur={(_: number | null) => {
+              Class_LinkElement.updateLinks(
+                app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
+              )
+              drawing_area.updateScaleAtLinkValueSetting()
+            }}
+            minimum_value={0}
+            stepper={true}
+            step={1}
+            unit_text={unit_text}
+          />
+        </RowSetter2Cols>
+        <Box layerStyle='options_2cols'>
+          {/* <Button
           variant={'menuconfigpanel_option_button'}
           onClick={() => {
             app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_formatting_editor.current(true)
@@ -403,59 +468,57 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         >
         Format
         </Button> */}
-        <OSTooltip label={''} disabled={!app_data.has_sankey_afm}>
-          <Button
-            isDisabled={!app_data.has_sankey_afm}
-            variant={'menuconfigpanel_option_button'}
-            onClick={() => {
-              app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
-              app_data.menu_configuration.r_value_type_set_elements.current(
-                selected_links,
-                unit_data_tagg!,
-                refreshThisAndUpdateRelatedComponents
-              )
-            }}
-          >
-            Type
-          </Button>
-        </OSTooltip>
+          <OSTooltip label={''} disabled={!app_data.has_sankey_afm}>
+            <Button
+              isDisabled={!app_data.has_sankey_afm}
+              variant={'menuconfigpanel_option_button'}
+              onClick={() => {
+                app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_value_type_editor.current(true)
+                app_data.menu_configuration.r_value_type_set_elements.current(
+                  selected_links,
+                  unit_data_tagg!,
+                  refreshThisAndUpdateRelatedComponents
+                )
+              }}
+            >
+              Type
+            </Button>
+          </OSTooltip>
+        </Box>
       </Box>
-    </Box>
 
-    {/* Text display and mode selector */}
-    <Box layerStyle='options_2cols'>
-      <RowSetter2Cols
-        attributePath={'Flux.data'}
-        attributeKey={'affichage'}
-      >
-        <ConfigMenuTextInput
-          t={t}
-          default_value={first_link_value?.text_value}
-          function_on_blur={(_: string | null) =>
-            Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
-          }
-          multiValue={is_label_indeterminated}
-        />
-      </RowSetter2Cols>
+      {/* Text display and mode selector */}
       <Box layerStyle='options_2cols'>
-        <Button
-          variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-          onClick={setModeSimpleText}
+        <RowSetter2Cols
+          attributePath={'Flux.data'}
+          attributeKey={'affichage'}
         >
-          Text
-        </Button>
-        <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+          <ConfigMenuTextInput
+            t={t}
+            default_value={first_link_value?.text_value}
+            function_on_blur={(_: string | null) =>
+              Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
+            }
+            multiValue={is_label_indeterminated}
+          />
+        </RowSetter2Cols>
+        <Box layerStyle='options_2cols'>
           <Button
-            isDisabled={!app_data.has_sankey_plus}
-            variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-            onClick={setModeRichText}
+            variant={displayMode === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            onClick={setModeSimpleText}
           >
-            Rich
+            Text
           </Button>
-        </OSTooltip>
+          <OSTooltip label={''} disabled={!app_data.has_sankey_plus}>
+            <Button
+              isDisabled={!app_data.has_sankey_plus}
+              variant={displayMode === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
+              onClick={setModeRichText}
+            >
+              Rich
+            </Button>
+          </OSTooltip>
+        </Box>
       </Box>
-    </Box>
-
-
   </Box>
 }
