@@ -256,7 +256,8 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'selectInputLinks' }
       ]
     },
-    { type: 'button', actionName: 'startAnimation' }
+    { type: 'button', actionName: 'startAnimation' },
+    { type: 'button', actionName: 'copyElement' }
   ],
 
   actions: {
@@ -534,6 +535,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Input', fr: 'Entrants' },
       tooltips: { en: 'Select input links', fr: 'Sélectionne tous les flux entrants vers le/les nœud(s)' }
+    },
+
+    copyElement: {
+      type: 'action',
+      labels: { en: 'Copy node(s)', fr: 'Copier le(s) nœud(s)' },
+      tooltips: { en: 'Duplicate the selected node(s)', fr: 'Dupliquer le(s) nœud(s) sélectionné(s)' },
+      closeMenuAfter: true
     }
   },
 

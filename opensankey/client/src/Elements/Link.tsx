@@ -960,6 +960,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           drawing_area.purgeSelection()
           // Add link to selection
           drawing_area.addElementToSelection(this)
+          drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
         }
       }
     }, this._clickDelay)

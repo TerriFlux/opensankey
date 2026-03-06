@@ -29,7 +29,7 @@ import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRando
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft
+  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -1512,6 +1512,7 @@ export class Class_IconLibrary {
 
   protected _icon_attr_view = <FontAwesomeIcon icon={faListCheck} />
   protected _icon_copy = <FontAwesomeIcon icon={faCopy} />
+  protected _icon_style_paint = <FontAwesomeIcon icon={faBrush} />
 
   protected _icon_delete = <FontAwesomeIcon icon={faDeleteLeft} />
 
@@ -1659,6 +1660,7 @@ private normalizeIcon = (svg: JSX.Element) => (
   public get icon_next() { return this._icon_next }
   public get icon_attr_view() { return this._icon_attr_view }
   public get icon_copy() { return this._icon_copy }
+  public get icon_style_paint() { return this._icon_style_paint }
 
   public get icon_palette_color() { return this._icon_palette_color }
   public get icon_random() { return this._icon_random }
