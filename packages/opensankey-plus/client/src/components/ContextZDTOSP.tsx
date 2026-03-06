@@ -155,6 +155,24 @@ export const ContextZDT = (
     {t('Noeud.lastPlan')}
   </Button>
 
+  const btn_copy = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      const sankey = drawing_area.sankey
+      const offset = 50
+      drawing_area.purgeSelection()
+      selected_zdt.forEach(container => {
+        const new_container = sankey.addNewContainer(container.id + '_copy', container.name)
+        new_container.copyFrom(container)
+        new_container.position_x = container.position_x + offset
+        new_container.position_y = container.position_y + offset
+        new_container.draw()
+        drawing_area.addElementToSelection(new_container)
+      })
+      closeContextMenu()
+    }}>
+    {t('Menu.copyElement')}
+  </Button>
 
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
@@ -166,6 +184,7 @@ export const ContextZDT = (
       zIndex: '1',
     }}>
     <ButtonGroup orientation='vertical' isAttached>
+      {btn_copy}
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}

@@ -35,6 +35,7 @@ export const resources_app_elements = {
         'updateFOZdd': 'Update Foreign object on drawing area',
         SNI: 'Use as geometric frame',
         detachTiedNodes: 'Use as simple frame',
+        copyElement: 'Copy shape(s)',
 
 
         'import_icon': 'Select icon',
@@ -498,6 +499,7 @@ export const resources_app_elements = {
 
         SNI: 'Utiliser comme cadre géométrique',
         detachTiedNodes: 'Utiliser comme cadre simple',
+        copyElement: 'Copier la/les forme(s)',
 
         'toBeautify': 'Embellir le fichier JSON',
 
