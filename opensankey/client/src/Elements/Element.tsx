@@ -93,8 +93,15 @@ export abstract class Class_BaseElement {
     // Right mouse button clicks
     this.d3_selection?.on(
       'click',
-      (event: MouseEvent<HTMLButtonElement, MouseEvent>) =>
-        this.eventSimpleLMBClick(event))
+      (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        if (this.drawing_area.isInStylePaintMode()) {
+          d3.selectAll('.sankey-tooltip').remove()
+          if (this instanceof Class_ProtoElement)
+            this.drawing_area.applyStyleFromPaintSource(this)
+          return
+        }
+        this.eventSimpleLMBClick(event)
+      })
     if (!this.drawing_area.static) {
 
       this.d3_selection?.on(
@@ -121,6 +128,10 @@ export abstract class Class_BaseElement {
       // In edition mode we don't use drag event on elements
       else if (this.drawing_area.isInEditionMode()) {
         this.d3_selection?.on('mousedown.drag', null) // Remove dag event
+      }
+      // In style paint mode we don't use drag event on elements
+      else if (this.drawing_area.isInStylePaintMode()) {
+        this.d3_selection?.on('mousedown.drag', null)
       }
     }
     // Right mouse button maintained
@@ -573,6 +584,14 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
         this._storage[key] = element_to_copy._storage[key]
       }
     })
+  }
+
+  public snapshotStorage(): Partial<ConfigType> {
+    return { ...this._storage } as Partial<ConfigType>
+  }
+
+  public restoreStorage(snapshot: Partial<ConfigType>): void {
+    this._storage = { ...snapshot } as Partial<ConfigType>
   }
   protected _copyFrom(element_to_copy: Class_ProtoElement) {
     super._copyFrom(element_to_copy)

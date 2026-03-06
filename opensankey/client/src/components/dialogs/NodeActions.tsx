@@ -534,6 +534,25 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  copyElement = () => {
+    const sankey = this.drawing_area.sankey
+    const offset = 50
+
+    this.drawing_area.purgeSelection()
+
+    this.selected_nodes.forEach(node => {
+      const new_node = sankey.addNewNode(node.id + '_copy', node.name)
+      new_node.copyFrom(node)
+      new_node.position_x = node.position_x + offset
+      new_node.position_y = node.position_y + offset
+      new_node.draw()
+      this.drawing_area.addElementToSelection(new_node)
+    })
+
+    this.closeContextMenu()
+    this.refreshAndSave()
+  }
+
   static createModifier = (app_data: Class_ApplicationData) => {
     const nodeActions = new NodeActions(app_data)
 
@@ -590,6 +609,7 @@ export class NodeActions {
       moveToLastPlan: nodeActions.moveToLastPlan,
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
+      copyElement: nodeActions.copyElement,
 
       // Actions dynamiques générées pour les dimensions
       // ...setChildActions,

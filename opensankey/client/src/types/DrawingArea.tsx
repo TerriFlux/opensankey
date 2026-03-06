@@ -165,7 +165,8 @@ export class Class_DrawingArea {
 
   protected _group_to_select: string = '.gg_nodes,.gg_links,.gg_labels'
 
-  private _mode: 'edition' | 'selection' = 'edition'
+  private _mode: 'edition' | 'selection' | 'style_paint' = 'edition'
+  private _style_paint_source: Class_ProtoElement | null = null
 
   private _ghost_link: Class_LinkElement | null = null
   private _ghost_link_source: Class_NodeElement | null = null
@@ -551,6 +552,7 @@ export class Class_DrawingArea {
     element.setSelected()
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
   public addLegendToSelection(): void {
@@ -593,7 +595,10 @@ export class Class_DrawingArea {
     // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
     //  this mean that the hook referenced go from true -> false -> true before the rerender
     // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    if (reset) {
+      this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+    }
   }
 
   public deleteSelectedLinks() {
@@ -613,6 +618,7 @@ export class Class_DrawingArea {
     // TODO reset config menu
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
     // Clean selection dict
     this._selection = {}
     this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
@@ -1710,6 +1716,65 @@ export class Class_DrawingArea {
     this._mode = 'edition'
     this.drawCursor()
   }
+
+  public isInStylePaintMode(): boolean { return this._mode === 'style_paint' }
+  public get style_paint_source() { return this._style_paint_source }
+
+  public enterStylePaintMode(source: Class_ProtoElement): void {
+    this._style_paint_source = source
+    this._mode = 'style_paint'
+    this.drawCursor()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
+    this._legend.setEventsListeners()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+  }
+
+  public exitStylePaintMode(): void {
+    this._style_paint_source = null
+    this.setSelectionMode()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
+    this._legend.setEventsListeners()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+  }
+
+  public applyStyleFromPaintSource(target: Class_ProtoElement): void {
+    if (!this._style_paint_source) return
+    const source = this._style_paint_source
+    // Même type uniquement (nœud→nœud, flux→flux)
+    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return
+    // Capturer l'état avant pour undo
+    const old_storage = target.snapshotStorage()
+    const old_custom_styles = target.getCustomStyles()
+    // Capturer l'état source pour redo
+    const new_custom_styles = source.style.slice(1)
+    const new_storage = source.snapshotStorage()
+    // Undo : restaurer l'ancien état
+    const undo = () => {
+      target.removeAllStyles()
+      old_custom_styles.forEach(s => target.addStyle(s))
+      target.restoreStorage(old_storage)
+      target.draw()
+    }
+    // Redo : ré-appliquer le style source
+    const redo = () => {
+      target.removeAllStyles()
+      new_custom_styles.forEach(s => target.addStyle(s))
+      target.restoreStorage(new_storage)
+      target.draw()
+    }
+    this.application_data.history.saveUndo(undo)
+    this.application_data.history.saveRedo(redo)
+    // Appliquer
+    target.removeAllStyles()
+    new_custom_styles.forEach(s => target.addStyle(s))
+    target.copyAttrFrom(source)
+    target.draw()
+  }
+
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
@@ -1736,8 +1801,10 @@ export class Class_DrawingArea {
    */
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
+    const mode_style_paint = this.isInStylePaintMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
-    this.d3_selection?.classed('selection_mode', !mode_edition)
+    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint)
+    this.d3_selection?.classed('style_paint_mode', mode_style_paint)
   }
 
   public get sankey() { return this._sankey }

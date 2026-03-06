@@ -20,7 +20,9 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
 
   // Local State to update this & subcomponent
   const [, setUpdater] = useState(0)
-  const refreshThis = () => setUpdater(a => a + 1)
+  const refreshThis = () => {
+    setUpdater(a => a + 1)
+  }
   new_data.menu_configuration.ref_to_toolbar_bottom_updater.current = refreshThis
 
   let btn_mouse_mode_edition = <></>
@@ -92,6 +94,21 @@ const ComponentMouseMode = (
           }
         }}>
         {icon_library.icon_DA_selection}
+      </Button>
+      <Button
+        variant={drawing_area.isInStylePaintMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        isDisabled={!drawing_area.isInStylePaintMode() && drawing_area.selected_elements_list.length !== 1}
+        size={size}
+        onClick={() => {
+          if (drawing_area.isInStylePaintMode()) {
+            drawing_area.exitStylePaintMode()
+          } else {
+            const selected = drawing_area.selected_elements_list[0]
+            if (selected) drawing_area.enterStylePaintMode(selected)
+          }
+          updateParentComponent()
+        }}>
+        {icon_library.icon_style_paint}
       </Button>
     </ButtonGroup>
   </OSTooltip>
