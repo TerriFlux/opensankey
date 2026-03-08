@@ -145,6 +145,8 @@ export const resources_app_elements = {
 
         // ✅ Transformation reste car non géré par une config spécifique
         Transformation: {
+          verticalize_short: 'Transpose',
+          verticalize: 'Transpose diagram',
           amp_short: 'Layout',
           amp: 'Change the layout',
           amp_import: 'From other diagram',
@@ -209,6 +211,7 @@ export const resources_app_elements = {
           enregistrer: 'Save as',
           preference: 'Set & Modify your own applications settings (saved in your OpenSankey+ account)',
           amp: 'Modify the layout of the diagram',
+          verticalize: 'Transpose the diagram: swap horizontal and vertical axes (positions, link directions, shapes)',
           style: 'Define style of nodes or links',
           DisplayWelcome: 'Display welcome message',
           doc: 'Open the documentation',
@@ -385,6 +388,7 @@ export const resources_app_elements = {
         hlp_1_txt_9: 'Dropdown to filter node/link/data according to their group tag or to choose to display the diagram with color palette from a tag group.',
         tooltipAdjustH: 'Adjust horizontaly drawing area to the screen size',
         tooltipAdjustV: 'Adjust verticaly drawing area to the screen size',
+        tooltipTranspose: 'Transpose the diagram: swap horizontal and vertical axes',
         tooltipStructure: 'Visualisation settings for the diagram\'s structure',
         tooltipSelection: 'Allows to drag an element',
         tooltipHelp: 'Show the help dialog',
@@ -600,6 +604,8 @@ export const resources_app_elements = {
           // title_style_flow: 'Flux',
         },
         Transformation: {
+          verticalize_short: 'Transposer',
+          verticalize: 'Transposer le diagramme',
           amp_short: 'M.E.P',
           amp: 'Modifier la mise en page',
           amp_import: 'Depuis autre diagramme',
@@ -661,6 +667,7 @@ export const resources_app_elements = {
           enregistrer: 'Enregistrer sous',
           preference: 'Créez & Modifiez vos paramètres personnalisés d\'utilisation (liés à votre compte OpenSankey+)',
           amp: 'Modifier la mise en page du diagramme',
+          verticalize: 'Transposer le diagramme : inverser les axes horizontal et vertical (positions, sens des flux, formes)',
           style: 'Définir des styles par groupe de noeuds ou de flux',
           DisplayWelcome: 'Afficher le message d\'accueil',
           doc: 'Ouvrir la documentation',
@@ -860,6 +867,7 @@ export const resources_app_elements = {
         hlp_1_txt_9: 'Menu déroulant pour filtrer les noeuds/flux/données selon leur groupe d\'étiquette associée ou bien pour appliquer des couleurs au diagramme avec la palette de couleurs du groupe d\'étiquette.',
         tooltipAdjustH: 'Réajuster horizontalement la zone de dessin à la taille de l\'écran',
         tooltipAdjustV: 'Réajuster verticalement la zone de dessin à la taille de l\'écran',
+        tooltipTranspose: 'Transposer le diagramme : inverser les axes horizontal et vertical',
         tooltipStructure: 'Paramétrage visuel de la structure du diagramme',
         tooltipSelection: 'Sélectionnez ou déplacez un élément',
         tooltipHelp: 'Affichez le dialogue d\'aide',

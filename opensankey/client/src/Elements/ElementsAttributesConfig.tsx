@@ -34,7 +34,7 @@ import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
-export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' | 'capsule'
+export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' | 'capsule' | 'capsule_h'
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'

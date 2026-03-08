@@ -1721,12 +1721,13 @@ export const ShapeTypeSelector = ({
     { value: 'rect', position: 'center', icon: icon_library.icon_rect_shape }
   ]
   if (prefix === 'shape') {
-    shapeTypes.push({ value: 'capsule', position: 'right', icon: icon_library.icon_capsule_shape })
+    shapeTypes.push({ value: 'capsule', position: 'center', icon: icon_library.icon_capsule_shape })
+    shapeTypes.push({ value: 'capsule_h', position: 'right', icon: icon_library.icon_capsule_h_shape })
   }
 
   return (
     <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
-      <Box layerStyle='options_3cols'>
+      <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'}>
         {shapeTypes.map(({ value, position, icon }) => (
           <Button
             key={value}
