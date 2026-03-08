@@ -172,10 +172,11 @@ export abstract class DrawLabelBase {
       .attr('y', label_pos_y)
 
     const width_attr = this._label_values.horiz == 'middle' && this._label_values.vert == 'middle' ? '100%' : 'max-content'
+    const max_width_style = Math.max(this._label_values.box_width, this._element.shape_min_width) + 'px'
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
       .style('width', width_attr)
-      .style('max-width', `${this._element.shape_min_width}px`)
+      .style('max-width', max_width_style)
       .html(fo_content)
 
     const measureAndResize = () => {
@@ -864,6 +865,10 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       label_margin_bottom = this.node.getShapeWidthToUse() / 2
       label_margin_top = this.node.getShapeWidthToUse() / 2
     }
+    if (this.node.shape_type === 'capsule_h') {
+      label_margin_left = this.node.getShapeHeightToUse() / 2
+      label_margin_right = this.node.getShapeHeightToUse() / 2
+    }
 
     if (this._label_values.position_absolute) {
       label_pos_x = this._label_values.position_x
@@ -910,6 +915,10 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     let margin_bottom = this.node.shape_margin_top
     if (this.node.shape_type === 'capsule') {
       margin_bottom = this.node.getShapeWidthToUse() / 2
+    }
+    if (this.node.shape_type === 'capsule_h') {
+      margin_top = this.node.shape_margin_top
+      margin_bottom = this.node.shape_margin_bottom
     }
 
     if (this._label_values.position_absolute) {
@@ -1172,7 +1181,10 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const [label_pos_x, label_pos_y] = this.getLabelPos()
     const dx = this._label_values.font_size / 2
 
-    textElement.attr('transform', `translate(${-dx}, 0) rotate(-90, ${label_pos_x}, ${label_pos_y})`)
+    // For vertical links, use +90° so text reads top→bottom (natural flow direction).
+    // For horizontal links, keep -90° so text reads bottom→top (left-to-right flow convention).
+    const angle = this.link.is_vertical ? 90 : -90
+    textElement.attr('transform', `translate(${-dx}, 0) rotate(${angle}, ${label_pos_x}, ${label_pos_y})`)
 
     return -dx
   }
@@ -1264,8 +1276,40 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
         label_baseline = 'middle'
       }
 
+      // For vertical links with vertical_text, the -90° rotation inverts the text-anchor direction.
+      // With -90°: text-anchor:'start' goes UP (outside the link), 'end' goes DOWN (inside).
+      // Flip start↔end so horiz positioning places text correctly inside/outside the link.
+      // if (this.link.is_vertical && this._label_values.vertical_text) {
+      //   if (label_anchor === 'start') label_anchor = 'end'
+      //   else if (label_anchor === 'end') label_anchor = 'start'
+      // }
+
       // ✅ TOUJOURS appliquer vert_shift
       label_pos_y += this._label_values.vert_shift
+    }
+
+    // For vertical links with vertical_text, remap axes:
+    // horiz controls label_pos_x (within link cross-section), vert controls label_pos_y (along flow)
+    if (this.link.is_vertical && this._label_values.vertical_text && !this._label_values.position_absolute) {
+      const cx = this.link.position_x_start
+      const half_thickness = this.link.thickness / 2
+      if (this._label_values.horiz === 'left') {
+        label_pos_x = cx - half_thickness + this._label_values.horiz_shift
+        label_anchor = 'start'
+      } else if (this._label_values.horiz === 'middle') {
+        label_pos_x = cx + this._label_values.horiz_shift
+        label_anchor = 'middle'
+      } else {
+        label_pos_x = cx + half_thickness + this._label_values.horiz_shift
+        label_anchor = 'end'
+      }
+      if (this._label_values.vert === 'top') {
+        label_pos_y = this.link.position_y_start + this._label_values.vert_shift
+      } else if (this._label_values.vert === 'bottom') {
+        label_pos_y = this.link.position_y_end + this._label_values.vert_shift
+      } else {
+        label_pos_y = (this.link.position_y_start + this.link.position_y_end) / 2 + this._label_values.vert_shift
+      }
     }
 
     return [label_pos_x, label_pos_y, label_anchor, label_baseline]

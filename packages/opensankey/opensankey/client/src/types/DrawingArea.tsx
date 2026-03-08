@@ -35,7 +35,10 @@ import {
   default_grid_size,
   default_grid_visible,
   default_scale,
-  initial_show_structure
+  initial_show_structure,
+  Type_Orientation,
+  Type_TextHPos,
+  Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
 import {
   Class_NodeElement,
@@ -770,6 +773,85 @@ export class Class_DrawingArea {
       this.drawBackground()
       this.drawGrid()
     }
+  }
+
+  /**
+   * Transpose the diagram (self-inverse): swap x↔y for all nodes/containers,
+   * swap link orientations, swap DA dimensions, swap capsule↔capsule_h shapes,
+   * and swap label horiz↔vert positions. Calling twice restores original state.
+   */
+  public verticalizeDiagram = () => {
+    const hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
+      v === 'top' ? 'left' : v === 'bottom' ? 'right' : 'middle'
+    const vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
+      h === 'left' ? 'top' : h === 'right' ? 'bottom' : 'middle'
+    const flipOrientation = (o: Type_Orientation): Type_Orientation => {
+      if (o === 'hh') return 'vv'
+      if (o === 'vv') return 'hh'
+      if (o === 'hv') return 'vh'
+      return 'hv'
+    }
+
+    const doVerticalize = () => {
+      const sankey = this.sankey
+
+      // Swap drawing area dimensions
+      const tmp_w = this._width
+      this._width = this._height
+      this._height = tmp_w
+      this.drawBackground()
+      this.drawGrid()
+
+      sankey.nodes_list.forEach(n => {
+        const px = n.position_x; const py = n.position_y
+        n.position_x = py
+        n.position_y = px
+        const w = n.shape_min_width; const h = n.shape_min_height
+        n.shape_min_width = h
+        n.shape_min_height = w
+        if (n.shape_type === 'capsule') n.shape_type = 'capsule_h'
+        else if (n.shape_type === 'capsule_h') n.shape_type = 'capsule'
+        // const nh = n.name_label_horiz; const nv = n.name_label_vert
+        // n.name_label_horiz = hPosFromV(nv)
+        // n.name_label_vert = vPosFromH(nh)
+        // const vh = n.value_label_horiz; const vv = n.value_label_vert
+        // n.value_label_horiz = hPosFromV(vv)
+        // n.value_label_vert = vPosFromH(vh)
+        n.shape_margin_bottom = n.shape_margin_right
+        n.shape_margin_right = n.shape_margin_bottom
+        n.shape_margin_top = n.shape_margin_left
+        n.shape_margin_left = n.shape_margin_top
+        n.draw()
+      })
+
+      sankey.links_list.forEach(l => {
+        l.shape_orientation = flipOrientation(l.shape_orientation)
+        if (!l.name_label_on_path) l.name_label_vertical_text = !l.name_label_vertical_text
+        if (!l.value_label_on_path) l.value_label_vertical_text = !l.value_label_vertical_text
+        l.draw()
+      })
+
+      sankey.containers_list.forEach(c => {
+        const px = c.position_x; const py = c.position_y
+        c.position_x = py
+        c.position_y = px
+        const w = c.shape_min_width; const h = c.shape_min_height
+        c.shape_min_width = h
+        c.shape_min_height = w
+        // c.shape_margin_bottom = c.shape_margin_right
+        // c.shape_margin_right = c.shape_margin_bottom
+        // c.shape_margin_top = c.shape_margin_left
+        // c.shape_margin_left = c.shape_margin_top
+        c.draw()
+      })
+      this.areaAutoFit()
+      this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+
+    // Transposing twice is self-inverse, same function for undo and redo
+    this.application_data.history.saveUndo(doVerticalize)
+    this.application_data.history.saveRedo(doVerticalize)
+    doVerticalize()
   }
 
   public inverseSelectedLinks = () => {

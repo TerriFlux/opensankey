@@ -196,6 +196,14 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
       </Button>
     </OSTooltip>
 
+    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipTranspose')}>
+      <Button variant='toolbar_button_6'
+        size={size}
+        onClick={() => app_data.drawing_area.verticalizeDiagram()}>
+        {app_data.icon_library.icon_verticalize_diagram}
+      </Button>
+    </OSTooltip>
+
     <OSTooltip
       placement={app_data.is_static ? 'left' : 'top'}
       label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
