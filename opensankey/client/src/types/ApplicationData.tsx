@@ -191,7 +191,15 @@ export class Class_ApplicationData {
     'tagFlux',
     'tagData',
     'tagLevel',
-    'attrDrawingArea'
+    'attrDrawingArea',
+    'addFreeLabel',
+    'removeFreeLabel',
+    'attrFreeLabel',
+    'posFreeLabel',
+    'styleDA',
+    'styleNode',
+    'styleFlux',
+    'styleFreeLabel'
   ]
 
   //@ts-expect-error xxx
@@ -1192,6 +1200,12 @@ export class Class_ApplicationData {
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
+
+  /** Override in subclasses to expose named views as layout sources */
+  public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
+
+  /** Override in subclasses to build a temporary DA from a view id */
+  public getDrawingAreaFromViewId(_id: string): Class_DrawingArea | undefined { return undefined }
 
 }
 

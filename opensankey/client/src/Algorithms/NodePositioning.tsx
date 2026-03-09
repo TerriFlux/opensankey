@@ -1869,10 +1869,17 @@ export class NodePositioning {
    * Reposition visible nodes so that their left/top side is close to a grid line
    */
   protected _arrangeNodesToGrid() {
+    const grid_size = this.drawingArea.grid_size
     this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-      const shift_x = node.position_x - (node.position_x % this.drawingArea.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-      const shift_y = node.position_y - (node.position_y % this.drawingArea.grid_size)// get position so that the node position_y is set to previous vertical grid line
+      const shift_x = node.position_x - (node.position_x % grid_size)
+      const shift_y = node.position_y - (node.position_y % grid_size)
       node.setPosXY(shift_x, shift_y)
+    })
+    Object.values(this.drawingArea.sankey.containers_dict).forEach(container => {
+      if (container.tied_to_nodes) return
+      container.position_x = container.position_x - (container.position_x % grid_size)
+      container.position_y = container.position_y - (container.position_y % grid_size)
+      container.draw()
     })
   }
 
@@ -1965,6 +1972,11 @@ export class NodePositioning {
     const app_data = this.drawingArea.application_data
     const { sankey } = this.drawingArea
     const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y }]))
+    const container_pos = Object.fromEntries(
+      Object.entries(sankey.containers_dict)
+        .filter(([, c]) => !c.tied_to_nodes)
+        .map(([id, c]) => [id, { x: c.position_x, y: c.position_y }])
+    )
 
     const _arrangeNodesToGrid = () => {
       this._arrangeNodesToGrid()
@@ -1974,6 +1986,14 @@ export class NodePositioning {
     const inv_arrangeNodesToGrid = () => {
       sankey.visible_nodes_list.forEach(n => {
         n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
+      })
+      Object.entries(container_pos).forEach(([id, pos]) => {
+        const container = sankey.containers_dict[id]
+        if (container) {
+          container.position_x = pos.x
+          container.position_y = pos.y
+          container.draw()
+        }
       })
     }
 
