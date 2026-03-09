@@ -104,6 +104,12 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
   const { icon_add_element, icon_remove_element, icon_open_selector } = icon_library
   const [update, setUpdate] = useState(false)
 
+  const styles_dict = app_data.drawing_area.sankey.styles_dict
+  const selected_style_id = (app_data.menu_configuration.ref_selected_style.current in styles_dict)
+    ? app_data.menu_configuration.ref_selected_style.current
+    : default_style_id
+  const selected_style = styles_dict[selected_style_id]
+
   // const config = elementType === 'nodes' ? {
   //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
@@ -141,9 +147,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {app_data.menu_configuration.ref_selected_style.current && app_data.menu_configuration.ref_selected_style.current !== ''
-              ? CutName(app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name, 30)
-              : 'Choix Style'}
+            {CutName(selected_style.name, 30)}
           </MenuButton>
           <MenuList>
             {Object.keys(app_data.drawing_area.sankey.styles_dict).map(id => (
@@ -165,9 +169,9 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
         <Button
           variant='menuconfigpanel_del_button'
           size='sizeConfigButton'
-          isDisabled={app_data.menu_configuration.ref_selected_style.current === default_style_id}
+          isDisabled={selected_style_id === default_style_id}
           onClick={() => {
-            app_data.drawing_area.sankey.deleteElementStyle(app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current])
+            app_data.drawing_area.sankey.deleteElementStyle(selected_style)
             app_data.menu_configuration.ref_selected_style.current = default_style_id
             updateAll()
             app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -185,10 +189,13 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
           <InputGroup variant='menuconfigpanel_option_input'>
             <Input
               variant='menuconfigpanel_option_input'
-              disabled={app_data.menu_configuration.ref_selected_style.current === default_style_id}
-              value={app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name}
+              disabled={selected_style_id === default_style_id}
+              defaultValue={selected_style.name}
+              key={selected_style_id}
               onChange={(evt) => {
-                app_data.drawing_area.sankey.styles_dict[app_data.menu_configuration.ref_selected_style.current].name = evt.target.value
+                selected_style.name = evt.target.value
+              }}
+              onBlur={() => {
                 updateAll()
                 app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
               }}

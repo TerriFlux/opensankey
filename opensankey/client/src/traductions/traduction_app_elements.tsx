@@ -2,7 +2,7 @@ export const resources_app_elements = {
   en: {
     translation: {
       Menu: {
-        ElOrder:'Order overlaps of elements',
+        ElOrder: 'Order overlaps of elements',
         presentation_OS: 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         presentation_OS_limit_node: 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
         Aucun: 'None',
@@ -153,6 +153,9 @@ export const resources_app_elements = {
           amp_manual: 'Positioning',
           trans_topo: 'Topological',
           fmep: 'Source diagram',
+          sourceType: 'Source',
+          sourceFile: 'File',
+          sourceView: 'View',
           ad: 'Apply',
           undo: 'Cancel',
           Shortcuts: 'Shortcuts selections',
@@ -166,6 +169,14 @@ export const resources_app_elements = {
           Values: 'Link values',
           Views: 'Views',
           freeLabels: 'Text boxes',
+          ZdT: 'TBox',
+          Ajouts: 'Additions',
+          Suppressions: 'Deletions',
+          addFreeLabel: 'Add TBox',
+          removeFreeLabel: 'Del. TBox',
+          attrFreeLabel: 'Attr. TBox',
+          posFreeLabel: 'Pos. TBox',
+          Styles: 'Styles',
           addNode: 'Aj. Nodes',
           removeNode: 'Sup. Nodes',
           addFlux: 'Aj. Flux',
@@ -192,12 +203,14 @@ export const resources_app_elements = {
             Values: 'Transfer the values of the links of the imported sankey to the current',
             tagLevel: 'Transfer nodes details of imported sankey to current',
             attrGeneral: 'Transfer the attributes of the drawing area of the imported sankey to the current',
+            Styles: 'Transfer element styles from the imported sankey to the current',
           }
         },
+        Styles: 'Styles',
 
         tooltips: {
           // ❌ SUPPRIMÉ : noeud.* et flux.* (maintenant dans ELEMENTS_SELECTION_CONFIG)
-          
+
           LegX: 'Horizontal distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth: 'Width (in px) for the legend space',
@@ -228,11 +241,11 @@ export const resources_app_elements = {
           style_attr_applicated: 'Select which attributes in the style can be applicated, it also unlock the corresponding input',
         },
       },
-      
+
       SpreadSheet: {
         paste: 'Paste'
       },
-      
+
       MEP: {
         onBlur: 'Value is applied when we leave the input or we press enter',
         Echelle: 'Scale',
@@ -308,7 +321,7 @@ export const resources_app_elements = {
           importExportAboveBelow: 'Import/export at the top and bottom of the diagram',
         }
       },
-      
+
       Tags: {
         Nom: 'Name',
         Leg: 'Legend',
@@ -345,7 +358,7 @@ export const resources_app_elements = {
           down: 'Move the tag group down in the node filter menu'
         }
       },
-      
+
       Banner: {
         unitary_view: 'Views',
         title_data_type: 'Data displayed',
@@ -402,7 +415,7 @@ export const resources_app_elements = {
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
         open_configuration_menu: 'Open configuration menu.'
       },
-      
+
       useTemplate: 'Use this template',
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
@@ -434,7 +447,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
-        ElOrder:'Ordre d\'affichage',
+        ElOrder: 'Ordre d\'affichage',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -538,9 +551,9 @@ export const resources_app_elements = {
         rand_link_color: 'Couleurs aléatoires flux',
         load_file: 'Lecture du fichier',
         compute_file: 'En traitement...',
-        open_file:'Charger fichier',
-        download_file:'Télécharger fichier',
-        reinit:'Réinitialiser',   
+        open_file: 'Charger fichier',
+        download_file: 'Télécharger fichier',
+        reinit: 'Réinitialiser',
         loaded_file: 'Chargement terminé',
         failure_file: 'Chargement échoué',
         choseTransforDifficulty: 'Types d\'éléments',
@@ -612,6 +625,9 @@ export const resources_app_elements = {
           amp_manuelle: 'Positionnement des noeuds',
           trans_topo: 'Topologiques',
           fmep: 'Diagramme source',
+          sourceType: 'Source',
+          sourceFile: 'Fichier',
+          sourceView: 'Vue',
           ad: 'Appliquer',
           undo: 'Annuler',
           Shortcuts: 'Raccourcis sélections',
@@ -625,6 +641,14 @@ export const resources_app_elements = {
           Values: 'Valeurs des flux',
           Views: 'Vues',
           freeLabels: 'Zones de texte',
+          ZdT: 'ZdT',
+          Ajouts: 'Ajouts',
+          Suppressions: 'Suppressions',
+          addFreeLabel: 'Aj. ZdT',
+          removeFreeLabel: 'Sup. ZdT',
+          attrFreeLabel: 'Attr. ZdT',
+          posFreeLabel: 'Pos. ZdT',
+          Styles: 'Styles',
           addNode: 'Aj. Noeuds',
           removeNode: 'Sup. Noeuds',
           addFlux: 'Aj. Flux',
@@ -650,8 +674,10 @@ export const resources_app_elements = {
             Values: 'Transfert les valeurs des flux du sankey importé vers l\'actuel',
             tagLevel: 'Transfert les nieveaux de détails du sankey importé vers l\'actuel',
             attrGeneral: 'Transfert les attributs de la zone de dessin du sankey importé vers l\'actuel',
+            Styles: 'Transfert les styles des éléments du sankey importé vers l\'actuel',
           }
         },
+        Styles: 'Styles',
         tooltips: {
           LegX: 'Ecart horizontal (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
@@ -825,8 +851,8 @@ export const resources_app_elements = {
         unit_name: 'Nom de l\'unité',
         unit_factor: 'Facteur d\'unité'
       },
-      Banner: {       
-        unitary_view: 'Vues', 
+      Banner: {
+        unitary_view: 'Vues',
         title_data_type: 'Données affichées',
         data: 'Données',
         filter: 'Filtres',
