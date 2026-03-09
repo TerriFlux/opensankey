@@ -663,7 +663,7 @@ export const resources_app_elements = {
           tagData: 'Données',
           tagNode_assign: 'Assigner une étiquette',
           tagFlux_assign: 'Assigner une étiquette',
-          attrGeneral: 'Zone de dessin',
+          attrGeneral: 'Attributs généraux',
           title: 'Mise en page',
           tooltips: {
             Shortcuts: 'Raccourcie de sélection des attributs à transférer du sankey importé',
@@ -752,7 +752,7 @@ export const resources_app_elements = {
         nodeStyleVisual: 'Formes des noeuds',
         nodeStyleLabels: 'Libellés des noeuds',
         GestionCouleurs: 'Gestion des couleurs',
-        ZoneDessin: 'Zone de dessin',
+        ZoneDessin: 'X',
         Positionnement: 'Positionnement',
         positioningMode: 'Mode de positionnement',
         autoX: 'Positionnement horizontal automatique',
