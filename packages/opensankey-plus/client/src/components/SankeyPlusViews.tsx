@@ -1,7 +1,9 @@
 // Standard libs
 import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
+import Draggable from 'react-draggable'
 import {
   Box,
+  CloseButton,
   Select,
   Input,
   InputGroup,
@@ -27,7 +29,8 @@ import {
   Tab,
   TabPanels,
   TabPanel,
-  Spinner
+  Spinner,
+  Text,
 
 } from '@chakra-ui/react'
 
@@ -40,6 +43,7 @@ import {
 } from '../deps/OpenSankey/types/Utils'
 
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
+import { UpdateModeGrid } from '../deps/OpenSankey/components/dialogs/SankeyMenuDialogs'
 import { ConfigMenuTextInput, OSMultiSelect, typeElementSelectable, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { FilterWrapperBox } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/DrawingAreaOSP'
@@ -888,21 +892,15 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   { app_data }
 ): JSX.Element => {
 
-  const { t, icon_library } = app_data
-  const {
-    icon_activated,
-    icon_unactivated
-  } = icon_library
-  const [state, setState] = useState(false)
+  const { t } = app_data
+  const [display_menu, set_display_menu] = useState(false)
   const [, setUpdater] = useState(0)
-  const show_modal = state
-  // const update_modes = state.update_modes
+  const [selected_source, set_selected_source] = useState(default_main_sankey_id)
+  const nodeRef = useRef(null)
 
-  const switchThis = (_: boolean) => {
-    setState(_)
-  }
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
-  app_data.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = switchThis
+  app_data.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = set_display_menu
+  app_data.menu_configuration_osp.ref_to_modal_view_attr_updater.current = () => setUpdater((a: number) => a + 1)
 
   const updateComponent = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
@@ -913,282 +911,122 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   const has_master_sankey = app_data.has_master_sankey
   const is_view_master = app_data.is_view_master
 
-  if (has_sankey_plus && has_master_sankey && !is_view_master) {
+  if (!has_sankey_plus || !has_master_sankey || is_view_master) return <></>
 
-    return <Modal
-      isOpen={show_modal}
-      onClose={
-        () => {
-          switchThis(false)
-        }}
-      variant='modal_dialog'
-    >
-      <ModalContent
-        maxWidth='inherit'
-      >
-        <ModalHeader>{t('view.setTransparentAttr')}</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <Box
-            display='grid'
-            gridAutoFlow='row'
-            gridRowGap='0.25rem'
-            height='100%'
-          >
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Menu.Transformation.Topology')}
-              </Box>
-              <Box layerStyle='options_4cols'>
-                <Button
-                  variant={
-                    drawing_area_plus.heredited_attr.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('addNode')) {
-                      drawing_area_plus.heredited_attr.push('addNode')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('addNode'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.addNode')}
-                </Button>
+  const simple_attr = ['posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrDrawingArea']
+  const all_attr = app_data.transform_layout_all_attr
 
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('removeNode')) {
-                      drawing_area_plus.heredited_attr.push('removeNode')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('removeNode'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.removeNode')}
-                </Button>
+  const view_id = drawing_area_plus.id
+  const attrs_by_source = app_data.heredited_attr[view_id] ?? {}
 
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('addFlux')) {
-                      drawing_area_plus.heredited_attr.push('addFlux')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('addFlux'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.addFlux')}
-                </Button>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('removeFlux')) {
-                      drawing_area_plus.heredited_attr.push('removeFlux')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('removeFlux'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.removeFlux')}
-                </Button>
-              </Box>
-            </Box>
+  // Sources disponibles = maître + toutes les autres vues sauf la vue courante
+  const view_sources = [
+    { id: default_main_sankey_id, name: t('view.actual') },
+    ...app_data.views_order
+      .filter(id => id !== default_main_sankey_id && id !== view_id)
+      .map(id => ({ id, name: app_data.views_dict[id].name }))
+  ]
 
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>
-                {t('Menu.Transformation.Geometry')}
-              </Box>
-              <Box layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('posNode')) {
-                      drawing_area_plus.heredited_attr.push('posNode')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('posNode'), 1)
-                    }
-                    updateComponent()
-                  }}>
-                  {t('Menu.Transformation.PosNoeud')}
-                </Button>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('posFlux')) {
-                      drawing_area_plus.heredited_attr.push('posFlux')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('posFlux'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.posFlux')}
-                </Button>
-              </Box>
-            </Box>
+  // S'assurer que selected_source est valide pour la vue courante
+  const valid_source = view_sources.some(s => s.id === selected_source) ? selected_source : default_main_sankey_id
+  const heredited = attrs_by_source[valid_source] ?? []
 
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
-
-              <Box as='span' layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('Values')) {
-                      drawing_area_plus.heredited_attr.push('Values')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('Values'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {drawing_area_plus.heredited_attr.includes('Values') ? icon_activated : icon_unactivated}
-                </Button>
-              </Box>
-
-            </Box>
-
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-              <Box as='span' layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('attrNode')) {
-                      drawing_area_plus.heredited_attr.push('attrNode')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('attrNode'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.attrNode')}
-                </Button>
-
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('attrFlux')) {
-                      drawing_area_plus.heredited_attr.push('attrFlux')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('attrFlux'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.attrFlux')}
-                </Button>
-              </Box>
-            </Box>
-
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-              <Box layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('tagNode')) {
-                      drawing_area_plus.heredited_attr.push('tagNode')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('tagNode'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.tagNode')}
-                </Button>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('tagFlux')) {
-                      drawing_area_plus.heredited_attr.push('tagFlux')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('tagFlux'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.tagFlux')}
-                </Button>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('tagData')) {
-                      drawing_area_plus.heredited_attr.push('tagData')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('tagData'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {t('Menu.Transformation.tagData')}
-                </Button>
-              </Box>
-            </Box>
-
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-
-              <Box as='span' layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('tagLevel')) {
-                      drawing_area_plus.heredited_attr.push('tagLevel')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('tagLevel'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {drawing_area_plus.heredited_attr.includes('tagLevel') ? icon_activated : icon_unactivated}
-                </Button>
-              </Box>
-            </Box>
-
-            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-              <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
-
-              <Box as='span' layerStyle='options_4cols'>
-                <Button
-                  variant={drawing_area_plus.heredited_attr.includes('attrGeneral') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (!drawing_area_plus.heredited_attr.includes('attrGeneral')) {
-                      drawing_area_plus.heredited_attr.push('attrGeneral')
-                    } else {
-                      drawing_area_plus.heredited_attr.splice(drawing_area_plus.heredited_attr.indexOf('attrGeneral'), 1)
-                    }
-                    updateComponent()
-                  }}
-                >
-                  {drawing_area_plus.heredited_attr.includes('attrGeneral') ? icon_activated : icon_unactivated}
-                </Button>
-              </Box>
-            </Box>
-          </Box>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button
-            onClick={() => {
-              const master_view = app_data.master_view
-              if (master_view) {
-                updateFrom(drawing_area_plus, master_view, drawing_area_plus.heredited_attr)
-                app_data.draw()
-              }
-            }}
-          >
-            {t('view.updateViewWithMasterVar')}
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+  const setAttrForSource = (src: string, attrs: string[]) => {
+    if (!app_data.heredited_attr[view_id]) app_data.heredited_attr[view_id] = {}
+    app_data.heredited_attr[view_id][src] = attrs
   }
-  return <></>
+
+  const content = <Box layerStyle='menuconfigpanel_grid'>
+
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.sourceType')}</Box>
+      <Box layerStyle='options_4cols'>
+        {view_sources.map(s => (
+          <Button
+            key={s.id}
+            variant={s.id === valid_source ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => set_selected_source(s.id)}
+          >
+            {s.name}{(attrs_by_source[s.id]?.length ?? 0) > 0 ? ' *' : ''}
+          </Button>
+        ))}
+      </Box>
+    </Box>
+
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Shortcuts')}</Box>
+      <Box layerStyle='options_4cols'>
+        <Button
+          variant='menuconfigpanel_option_button'
+          onClick={() => { setAttrForSource(valid_source, []); updateComponent() }}
+        >{t('Menu.Transformation.unSelectAll')}</Button>
+        <Button
+          variant='menuconfigpanel_option_button'
+          onClick={() => { setAttrForSource(valid_source, [...simple_attr]); updateComponent() }}
+        >Basiques</Button>
+        <Button
+          variant='menuconfigpanel_option_button'
+          onClick={() => { setAttrForSource(valid_source, [...all_attr]); updateComponent() }}
+        >{t('Menu.Transformation.selectAll')}</Button>
+      </Box>
+    </Box>
+
+    <UpdateModeGrid
+      attrs={heredited}
+      onToggle={key => {
+        const next = heredited.includes(key)
+          ? heredited.filter((k: string) => k !== key)
+          : [...heredited, key]
+        setAttrForSource(valid_source, next)
+        updateComponent()
+      }}
+      t={t}
+      show_expert_rows={true}
+    />
+
+    <Button
+      onClick={() => {
+        ;[default_main_sankey_id, ...app_data.views_order].forEach((source_id: string) => {
+          const attrs = attrs_by_source[source_id]
+          if (attrs && attrs.length > 0) {
+            const source_da = app_data.getDrawingAreaFromViewId(source_id)
+            if (source_da) updateFrom(drawing_area_plus, source_da, attrs)
+          }
+        })
+        app_data.draw()
+      }}
+    >
+      {t('view.updateViewWithMasterVar')}
+    </Button>
+
+  </Box>
+
+  return <Draggable
+    nodeRef={nodeRef}
+    handle='.title_menu'
+    defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 4 }}
+    bounds={{ left: 0, top: 0 }}
+  >
+    <Box
+      ref={nodeRef}
+      layerStyle='menu_draggable_layout'
+      hidden={!display_menu}
+      position='absolute'
+      minW='10vw'
+      maxW='40vw'
+      zIndex='2'
+    >
+      <Box className='title_menu' layerStyle='menu_draggable_title_layout'>
+        <Text justifySelf='start' fontStyle='h1' margin='0'>
+          {t('view.setTransparentAttr')}
+        </Text>
+        <CloseButton justifySelf='end' onClick={() => set_display_menu(false)} />
+      </Box>
+      <Box layerStyle='menu_draggable_content_layout'>
+        {content}
+      </Box>
+    </Box>
+  </Draggable>
 }
 
 /**

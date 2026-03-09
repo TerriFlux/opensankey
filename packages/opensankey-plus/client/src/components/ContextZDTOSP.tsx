@@ -2,6 +2,7 @@ import { Box, Button, ButtonGroup, Divider } from '@chakra-ui/react'
 import React, { useState } from 'react'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { ButtonContainerContextAssignStyle } from '../deps/OpenSankey/components/dialogs/MenuContextWidgetFactory'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }
@@ -188,6 +189,7 @@ export const ContextZDT = (
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}
+      <ButtonContainerContextAssignStyle app_data={app_data} />
     </ButtonGroup>
   </Box> : <></>
 }

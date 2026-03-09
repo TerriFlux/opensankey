@@ -192,6 +192,7 @@ export const createUnitaryView = (
     'name': new_drawing_area.name,
     'json': compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(new_drawing_area))
   }
+  app_data.heredited_attr[new_drawing_area.id] = {}
   app_data.pushViewIdInViewOrder(new_drawing_area.id)
 
   return new_drawing_area

@@ -33,6 +33,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       json: Uint8Array
     }
   }
+  // heredited_attr[target_view_id][source_view_id] = string[] of attr keys to inherit from that source
+  protected _heredited_attr: { [target_id: string]: { [source_id: string]: string[] } } = {}
   protected _views_order: string[] = []
   public get views_order() { return this._views_order }
   public get master_drawing_area() { return this._master_drawing_area }
@@ -186,6 +188,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       delete this._master_drawing_area
       this._views = {}
       this._views_order = []
+      this._heredited_attr = {}
       super.reset(kwargs)
     }
   }
@@ -245,6 +248,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._views_order.forEach(id => {
       json_entry_views[id] = JSON.parse(pako.inflate(this._views[id].json, { to: 'string' }));
       (json_entry_views[id] as Type_JSON)['name'] = this._views[id].name
+      if (Object.keys(this._heredited_attr[id] ?? {}).length > 0) (json_entry_views[id] as Type_JSON)['heredited_attr'] = this._heredited_attr[id]
       if (kwargs && kwargs['save_only_visible_elements']) {
         this.extractViewFromJSON(this._views[id].json, id)
         json_entry_views[id] = DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP, kwargs)
@@ -292,6 +296,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         this._views[view_id] = {
           name: (view_json as Type_JSON)['name'] as string,
           'json': compressJSONToGzip(view_json as Type_JSON) as Uint8Array
+        }
+        const raw_attr = (view_json as Type_JSON)['heredited_attr']
+        if (Array.isArray(raw_attr)) {
+          // migration ancien format: heredited_attr était string[], source dans heredited_source_id
+          const legacy_src = ((view_json as Type_JSON)['heredited_source_id'] as string | undefined) ?? default_main_sankey_id
+          this._heredited_attr[view_id] = { [legacy_src]: raw_attr as string[] }
+        } else {
+          this._heredited_attr[view_id] = (raw_attr as { [source_id: string]: string[] } | undefined) ?? {}
         }
       })
     let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
@@ -495,6 +507,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       'name': view_name,
       'json': compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(new_drawing_area as Class_DrawingAreaOSP))
     }
+    this._heredited_attr[view_id] = {}
     this.pushViewIdInViewOrder(new_drawing_area.id)
     this._drawing_area.sankey.setInvisible()
     this._drawing_area.purgeSelection()
@@ -544,9 +557,17 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Set original view in temporary var so it can be used when
       // we change view and don't want to save current modification
       if (id !== default_main_sankey_id) {
-        // Update view with attr heredited from master
+        // Update view with heredited attr from configured source (master by default)
         this._drawing_area.bypass_redraws = true
-        updateFrom(this._drawing_area, this._master_drawing_area!, (this._drawing_area as Class_DrawingAreaOSP).heredited_attr)
+        const attrs_by_source = this._heredited_attr[id] ?? {}
+        // Apply in cascade following views_order
+        ;[default_main_sankey_id, ...this._views_order].forEach((source_id: string) => {
+          const attrs = attrs_by_source[source_id]
+          if (attrs && attrs.length > 0) {
+            const source_da = this.getDrawingAreaFromViewId(source_id)
+            if (source_da) updateFrom(this._drawing_area, source_da, attrs)
+          }
+        })
         // Create a clone of current view's DA
         if (!this.is_static) {
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
@@ -618,6 +639,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // Clean
       delete this._views[id] // Remove for view dict
       this._views_order.splice(this._views_order.indexOf(id), 1) // Remove id from view_order
+      delete this._heredited_attr[id]
       // Go to master
       if (id == this.drawing_area.id) {
         this.deleteCurrentOriginalView()
@@ -724,9 +746,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   public set menu_configuration_osp(_) { this._menu_configuration = _ }
 
 
-  public get views_dict() {
-    return this._views
-  }
+  public get views_dict() { return this._views }
+  public get heredited_attr() { return this._heredited_attr }
 
   public get master_view(): Class_DrawingArea | undefined {
     if (this.has_views)
@@ -773,5 +794,29 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
   }
 
   public get user_preferences() { return this._user_preferences }
+
+  public get layout_view_sources(): Array<{ id: string, name: string }> {
+    if (!this.has_views) return []
+    const sources: Array<{ id: string, name: string }> = []
+    if (this._master_drawing_area) {
+      sources.push({ id: default_main_sankey_id, name: 'Vue principale' })
+    }
+    this._views_order.forEach(id => {
+      if (id !== default_main_sankey_id && this._views[id]) {
+        sources.push({ id, name: this._views[id].name })
+      }
+    })
+    return sources
+  }
+
+  public getDrawingAreaFromViewId(id: string): Class_DrawingArea | undefined {
+    if (id === default_main_sankey_id) return this._master_drawing_area
+    if (!(id in this._views)) return undefined
+    const tmp_DA = this.createNewDrawingArea('__tmp_layout_source__')
+    tmp_DA.bypass_redraws = true
+    const decompressed_string = pako.inflate(new Uint8Array(this._views[id].json), { to: 'string' })
+    DrawingAreaPersistenceOSP.fromJSON(tmp_DA as Class_DrawingAreaOSP, JSON.parse(decompressed_string))
+    return tmp_DA
+  }
 
 }

@@ -17,6 +17,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   private _ref_to_banner_views_opened: MutableRefObject<boolean>
   private _ref_to_views_config_updater: MutableRefObject<() => void>
   private _ref_to_modal_view_attributes_switcher: MutableRefObject<(_: boolean) => void>
+  private _ref_to_modal_view_attr_updater: MutableRefObject<() => void>
 
   private _ref_show_modal_unitary_view: MutableRefObject<(_: boolean) => void>
   private _ref_update_modal_unitary_view: MutableRefObject<() => void>
@@ -29,6 +30,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
     this._ref_to_views_config_updater = useRef(() => null)
 
     this._ref_to_modal_view_attributes_switcher = useRef((_: boolean) => null)
+    this._ref_to_modal_view_attr_updater = useRef(() => null)
     this._ref_show_modal_unitary_view = useRef((_: boolean) => null)
     this._ref_update_modal_unitary_view = useRef(() => null)
 
@@ -53,6 +55,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public updateComponentRelatedToViews() {
     this._ref_to_banner_views_updater.current()
     this._ref_to_views_config_updater.current()
+    this._ref_to_modal_view_attr_updater.current()
     this.updateComponentSaveDiagramJSON()
     this.updateComponentLoadDiagramJSON()
   }
@@ -83,6 +86,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
   public get ref_to_banner_views_opened() { return this._ref_to_banner_views_opened }
   public get ref_to_views_config_updater(): MutableRefObject<() => void> { return this._ref_to_views_config_updater }
   public get ref_to_modal_view_attributes_switcher(): MutableRefObject<(_: boolean) => void> { return this._ref_to_modal_view_attributes_switcher }
+  public get ref_to_modal_view_attr_updater(): MutableRefObject<() => void> { return this._ref_to_modal_view_attr_updater }
   public get ref_show_modal_unitary_view(): MutableRefObject<(_: boolean) => void> { return this._ref_show_modal_unitary_view }
   public get ref_update_modal_unitary_view(): MutableRefObject<() => void> { return this._ref_update_modal_unitary_view }
 
