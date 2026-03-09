@@ -131,7 +131,7 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true }: 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
         <Box layerStyle='options_4cols'>
-          {btn('attrDrawingArea', t('Menu.Transformation.attrGeneral'))}
+          {btn('attrDrawingArea','X')}
         </Box>
       </Box>
     </OSTooltip>
@@ -140,7 +140,7 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true }: 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Styles')}</Box>
         <Box layerStyle='options_4cols'>
-          {btn('styleDA', t('Menu.Transformation.attrGeneral'))}
+          {btn('styleDA', 'X')}
           {btn_disabled('styleNode', nodeLabel, !attrs.includes('styleDA'))}
           {btn_disabled('styleFlux', fluxLabel, !attrs.includes('styleDA'))}
           {btn_disabled('styleFreeLabel', zdtLabel, !attrs.includes('styleDA'))}
