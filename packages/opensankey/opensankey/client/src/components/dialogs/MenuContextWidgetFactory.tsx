@@ -271,6 +271,53 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
     <></>
 }
 
+export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area } = app_data
+  const [, setUpdate] = useState(0)
+  const contextualised_container = drawing_area.contextualised_container
+  const selected_containers = drawing_area.selected_containers_list
+  const has_styles = drawing_area.sankey.styles_list.length > 0
+  return (
+    (contextualised_container !== undefined) &&
+    (has_styles)
+  ) ? <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {'Assigner styles'}
+        </MenuButton>
+        <MenuList>
+          {
+            drawing_area.sankey.styles_list
+              .map((_) => {
+                const has_style = contextualised_container.style.includes(_)
+                return <MenuItem
+                  display='flex'
+                  closeOnSelect={false}
+                  onClick={() => {
+                    selected_containers.forEach(container => {
+                      if (!has_style) {
+                        container.addStyle(_)
+                      } else {
+                        container.removeStyle(_)
+                      }
+                    })
+                    setUpdate(a => a + 1)
+                  }}
+                >
+                  {_.name}
+                  {checked(has_style)}
+                </MenuItem>
+              })
+          }
+        </MenuList>
+      </Menu> :
+    <></>
+}
+
 export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area } = app_data
   const [, setUpdate] = useState(0)

@@ -536,19 +536,53 @@ export class NodeActions {
 
   copyElement = () => {
     const sankey = this.drawing_area.sankey
+    this.drawing_area.bypass_redraws = true
     const offset = 50
 
     this.drawing_area.purgeSelection()
 
+    const selected_node_ids = new Set(this.selected_nodes.map(n => n.id))
+    const matching_link_id: { [_: string]: string } = {}
+    // Map original node id → new node (captures actual id assigned by addNewNode)
+    const node_copy_map = new Map<string, Class_NodeElement>()
+
     this.selected_nodes.forEach(node => {
       const new_node = sankey.addNewNode(node.id + '_copy', node.name)
+      node_copy_map.set(node.id, new_node)
       new_node.copyFrom(node)
       new_node.position_x = node.position_x + offset
       new_node.position_y = node.position_y + offset
-      new_node.draw()
       this.drawing_area.addElementToSelection(new_node)
     })
 
+    // Copier les flux dont les deux extrémités sont dans la sélection
+    this.selected_nodes.forEach(node => {
+      node.output_links_list.forEach(link => {
+        if (selected_node_ids.has(link.target.id)) {
+          const new_source = node_copy_map.get(node.id)
+          const new_target = node_copy_map.get(link.target.id)
+          if (new_source && new_target) {
+            const new_link = sankey.addNewLink(new_source, new_target)
+            new_link.copyFrom(link)
+            // copyFrom reassigns source/target to the originals — restore the copied nodes
+            new_link.source = new_source
+            new_link.target = new_target
+            matching_link_id[link.id] = new_link.id
+            this.drawing_area.addElementToSelection(new_link)
+          }
+        }
+      })
+    })
+
+    // Restaurer l'ordre des liens sur les nœuds copiés
+    this.selected_nodes.forEach(node => {
+      const new_node = node_copy_map.get(node.id)
+      if (new_node) {
+        new_node.keepLinkOrderingFrom(node, matching_link_id)
+      }
+    })
+
+    this.drawing_area.draw()
     this.closeContextMenu()
     this.refreshAndSave()
   }
