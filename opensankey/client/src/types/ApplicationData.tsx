@@ -970,8 +970,11 @@ export class Class_ApplicationData {
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
+      // Exit style paint mode if active
+      if (app_ref.drawing_area.isInStylePaintMode())
+        app_ref.drawing_area.exitStylePaintMode()
       // Set app in selection mode
-      if (app_ref.drawing_area.isInEditionMode())
+      else if (app_ref.drawing_area.isInEditionMode())
         app_ref.drawing_area.switchMode()
 
       // Deselect all element
