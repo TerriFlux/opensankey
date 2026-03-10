@@ -495,11 +495,19 @@ export class NodeActions {
   createTiedZdt = () => {
     const cont = this.drawing_area.sankey.addNewDefaultContainer()
     cont.tied_to_nodes = true
-    this.drawing_area.selected_nodes_list.forEach(node => {
-      node.getListDescendantOfNode().forEach(n => {
+    this.drawing_area.selected_nodes_list.forEach(n => {
+      // node.getListDescendantOfNode().forEach(n => {
+      //   cont.attachNodeToCont(n)
+      // })
+      // cont.attachNodeToCont(node)
+        n.getListDescendantOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        n.getListAncestorOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
         cont.attachNodeToCont(n)
-      })
-      cont.attachNodeToCont(node)
+        cont.computeSizeAndPositionFromAttachedNodes()
     })
     this.drawing_area.draw()
   }
