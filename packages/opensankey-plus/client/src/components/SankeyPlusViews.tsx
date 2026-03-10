@@ -940,17 +940,16 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.sourceType')}</Box>
-      <Box layerStyle='options_4cols'>
+      <Select
+        value={valid_source}
+        onChange={evt => set_selected_source(evt.target.value)}
+      >
         {view_sources.map(s => (
-          <Button
-            key={s.id}
-            variant={s.id === valid_source ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => set_selected_source(s.id)}
-          >
+          <option key={s.id} value={s.id}>
             {s.name}{(attrs_by_source[s.id]?.length ?? 0) > 0 ? ' *' : ''}
-          </Button>
+          </option>
         ))}
-      </Box>
+      </Select>
     </Box>
 
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
