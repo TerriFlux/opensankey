@@ -131,9 +131,9 @@ export class Class_MenuConfig {
       'tutoriel',
       // 'documentation',
     ],
-    [
-      'contact',
-    ]
+  //   [
+  //     'contact',
+  //   ]
   ]
 
   protected _flow_color_origin_type: ('flow' | 'source' | 'target' | 'gradient' | 'auto')[] = ['flow', 'source', 'target']
