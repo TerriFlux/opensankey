@@ -495,7 +495,7 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
     'element': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_element'), disabled: false },
-    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false },
+    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object0'), disabled: false },
     'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
     'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
     'legend': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_legend'), disabled: false },
