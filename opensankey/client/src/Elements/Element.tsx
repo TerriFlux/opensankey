@@ -98,6 +98,8 @@ export abstract class Class_BaseElement {
           d3.selectAll('.sankey-tooltip').remove()
           if (this instanceof Class_ProtoElement)
             this.drawing_area.applyStyleFromPaintSource(this)
+          if (!event.ctrlKey && !event.metaKey)
+            this.drawing_area.exitStylePaintMode()
           return
         }
         this.eventSimpleLMBClick(event)
