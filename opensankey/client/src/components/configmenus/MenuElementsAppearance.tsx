@@ -639,20 +639,22 @@ const LabelContentComponent = ({
                 })
               }}
             />
-            <Button
-              variant={iconColorSustainable ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                base_elements.forEach(el => {
-                  if ('icon_color_sustainable' in el) {
-                    el.icon_color_sustainable = !iconColorSustainable
-                    el.draw()
-                  }
-                })
-                refreshParentComponent()
-              }}
-            >
-              {iconColorSustainable ? app_data.icon_library.icon_locked : app_data.icon_library.icon_unlocked}
-            </Button>
+            <OSTooltip label={iconColorSustainable ? t('color_lock.locked') : t('color_lock.unlocked')}>
+              <Button
+                variant={iconColorSustainable ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  base_elements.forEach(el => {
+                    if ('icon_color_sustainable' in el) {
+                      el.icon_color_sustainable = !iconColorSustainable
+                      el.draw()
+                    }
+                  })
+                  refreshParentComponent()
+                }}
+              >
+                {iconColorSustainable ? app_data.icon_library.icon_locked : app_data.icon_library.icon_unlocked}
+              </Button>
+            </OSTooltip>
           </Box>
         </>
       )}

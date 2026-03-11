@@ -69,7 +69,7 @@ import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
 import { Class_NodeBase } from '../../Elements/NodeBase'
-import { AttributeConfig, BASE_LABEL_CONFIG, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, VALUE_LABEL_CONFIG, getShapeAttributeKey, ShapePrefix, getLabelAttributeKey, BASE_SHAPE_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { AttributeConfig, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
 
 // Déclaration du type pour l'EyeDropper API
 declare global {
@@ -1646,7 +1646,7 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
   elements,
   config,
   prefix,
-  attributePath,
+  attributePath: _attributePath,
   colorAttributeKey,
   sustainableAttributeKey,
   refreshParentComponent
@@ -1663,13 +1663,6 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
 
   const colorValue = values[colorAttributeKey as string] as string
   const sustainableValue = values[sustainableAttributeKey as string] as boolean
-
-  type label_type = keyof typeof BASE_LABEL_CONFIG
-  type shape_type = keyof typeof BASE_SHAPE_CONFIG
-  const is_label = prefix == 'name_label' || prefix == 'value_label' || prefix == 'icon'
-  const tooltip_color_key = is_label
-    ? getLabelAttributeKey(prefix, colorAttributeKey as label_type)
-    : getShapeAttributeKey(prefix, colorAttributeKey as shape_type)
 
   // Calcul des overloads
   const fullColorAttributeKey = `${prefix}_${String(colorAttributeKey)}` as keyof typeof config
@@ -1696,12 +1689,12 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
         />
       </InputIndicatorWrapper>
 
-      <OSTooltip label={t(`${attributePath}.tooltips.${tooltip_color_key}`)}>
-        <InputIndicatorWrapper
-          isOverloaded={isSustainableOverloaded}
-          isMultiValue={isSustainableMultiValue}
-          t={t}
-        >
+      <InputIndicatorWrapper
+        isOverloaded={isSustainableOverloaded}
+        isMultiValue={isSustainableMultiValue}
+        t={t}
+      >
+        <OSTooltip label={sustainableValue ? t('color_lock.locked') : t('color_lock.unlocked')}>
           <Button
             variant={sustainableValue ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
             onClick={() => {
@@ -1717,8 +1710,8 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
           >
             {sustainableValue ? icon_locked : icon_unlocked}
           </Button>
-        </InputIndicatorWrapper>
-      </OSTooltip>
+        </OSTooltip>
+      </InputIndicatorWrapper>
     </Box>
   )
 }
