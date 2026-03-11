@@ -203,9 +203,12 @@ export class Class_NodeElement extends Class_NodeBase {
     this._links_order = []
 
     // Fill with link that exist in current sankey and avoid duplicates in link order list
+    // Only include links that are actually connected to this (copied) node
     node_to_copy.links_order
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id] ?? link_to_copy.id] as Class_LinkElement
+        const copied_id = matching_link_id[link_to_copy.id]
+        if (!copied_id) return // external link, not copied — skip
+        const link = this.drawing_area.sankey.links_dict[copied_id] as Class_LinkElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
