@@ -152,6 +152,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _history?: Class_ApplicationHistory
+  protected _clipboard_node_ids: string[] = []
 
   /**
    * Configuration Menu
@@ -925,6 +926,8 @@ export class Class_ApplicationData {
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
     const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
+    const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
+    const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
@@ -1050,6 +1053,19 @@ export class Class_ApplicationData {
     else if (evtCtrlY || evtCtrlShiftZ) {
       evt.preventDefault()
       this._history!.applyRedo()
+    }
+    // Copy selected nodes
+    else if (evtCtrl && evtKeyC) {
+      evt.preventDefault()
+      this._clipboard_node_ids = app_ref.drawing_area.selected_nodes_list.map(n => n.id)
+    }
+    // Paste copied nodes
+    else if (evtCtrl && evtKeyV) {
+      evt.preventDefault()
+      if (this._clipboard_node_ids.length > 0) {
+        app_ref.drawing_area.copyNodes(this._clipboard_node_ids)
+        app_ref.saveInCache()
+      }
     }
   }
 

@@ -539,9 +539,8 @@ export const NODE_MENU_CONFIG: MenuConfig = {
 
     copyElement: {
       type: 'action',
-      labels: { en: 'Copy node(s)', fr: 'Copier le(s) nœud(s)' },
-      tooltips: { en: 'Duplicate the selected node(s)', fr: 'Dupliquer le(s) nœud(s) sélectionné(s)' },
-      closeMenuAfter: true
+      labels: { en: 'Copy element(s)', fr: 'Copier les éléments' },
+      tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées' }
     }
   },
 
