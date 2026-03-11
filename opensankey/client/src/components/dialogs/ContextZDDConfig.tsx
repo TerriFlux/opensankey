@@ -4,10 +4,8 @@ import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
-    {
-      type: 'button',
-      actionName: 'fromNew'
-    },
+    { type: 'button', actionName: 'clearCurrentView' },
+    { type: 'button', actionName: 'deleteAllViews' },
     {
       type: 'submenu',
       titleKey: 'Positionnement',
@@ -121,15 +119,27 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       },
       getToggleValue: 'toggleZDTActivatedValue'
     },
-    fromNew: {
+    clearCurrentView: {
       type: 'action',
       labels: {
-        en: 'Empty diagram',
+        en: 'Clear view',
+        fr: 'Vider la vue'
+      },
+      tooltips: {
+        en: 'Clear all nodes and links in the current view',
+        fr: 'Supprimer tous les nœuds et flux de la vue courante'
+      }
+    },
+
+    deleteAllViews: {
+      type: 'action',
+      labels: {
+        en: 'New diagram',
         fr: 'Nouveau diagramme'
       },
       tooltips: {
-        en: 'Create a new empty Sankey diagram',
-        fr: 'Créer un nouveau diagramme de Sankey vide'
+        en: 'Delete all views and reset to an empty diagram',
+        fr: 'Supprimer toutes les vues et réinitialiser un diagramme vide'
       }
     },
 
@@ -400,7 +410,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.styles_dict['default']
   return {
-    fromNew: () => app_data.reinitialization(),
+    clearCurrentView: () => { app_data.reset({ only_current_view: true }); app_data.drawing_area.draw() },
+    deleteAllViews: () => app_data.reinitialization(),
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
