@@ -107,7 +107,6 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-      {sep}
       <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
@@ -171,7 +170,6 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_node !== undefined) &&
     (has_node_tags)
   ) ? <>
-      {sep}
       <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
