@@ -3,6 +3,8 @@ import {
   Box, Button, ButtonGroup, MenuItem, MenuDivider, MenuButton, Menu, MenuList,
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faArrowsUpDown, faLocationDot } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -35,7 +37,7 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
     bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
   >
     {btn_mouse_mode_edition}
-    {!new_data.is_static ? <ComponentUndoRedo
+    {!new_data.is_static ? <ComponentPositionMode
       app_data={new_data}
       updateParentComponent={refreshThis}
     /> : <></>}
@@ -114,40 +116,32 @@ const ComponentMouseMode = (
   </OSTooltip>
 }
 
-/**
- * Components that contains buttons to apply undo or redo function,
- * called in ToolBarBottom Component
- *
- * @param {*} {new_data}
- * @return {*}
- */
-const ComponentUndoRedo = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
-  const { history, icon_library } = app_data
+
+const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
+  const { t, drawing_area } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  { /* Buttons to apply undo or redo function */ }
-  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
-    <Button
-      variant={history.can_undo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
-      isDisabled={!history.can_undo}
-      id='button_selection_edition'
-      size={size}
-      onClick={() => {
-        history.applyUndo()
-        updateParentComponent()
-      }}>
-      {icon_library.icon_undo}
-    </Button>
-    <Button
-      variant={history.can_redo ? 'toolbar_button_undo_redo_activated' : 'toolbar_button_undo_redo'}
-      isDisabled={!history.can_redo}
-      id='button_selection_edition'
-      size={size}
-      onClick={() => {
-        history.applyRedo()
-        updateParentComponent()
-      }}>
-      {icon_library.icon_redo}
-    </Button>
+  const isParametric = drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
+    <OSTooltip placement='top' label={t('Banner.posMode_parametric')}>
+      <Button
+        variant={isParametric ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        size={size}
+        onClick={() => {
+          if (!isParametric) { drawing_area.setParametricMode(); updateParentComponent() }
+        }}>
+        <FontAwesomeIcon icon={faArrowsUpDown} />
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
+      <Button
+        variant={!isParametric ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        size={size}
+        onClick={() => {
+          if (isParametric) { drawing_area.setAbsoluteMode(); updateParentComponent() }
+        }}>
+        <FontAwesomeIcon icon={faLocationDot} />
+      </Button>
+    </OSTooltip>
   </ButtonGroup>
 }
 
@@ -193,14 +187,6 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
         size={size}
         onClick={() => app_data.drawing_area.areaAutoFit(false)}>
         {app_data.icon_library.icon_area_fit_vert}
-      </Button>
-    </OSTooltip>
-
-    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipTranspose')}>
-      <Button variant='toolbar_button_6'
-        size={size}
-        onClick={() => app_data.drawing_area.verticalizeDiagram()}>
-        {app_data.icon_library.icon_verticalize_diagram}
       </Button>
     </OSTooltip>
 

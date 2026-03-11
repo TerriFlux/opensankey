@@ -12,16 +12,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'Positionnement',
       children: [
-        { type: 'button', actionName: 'toggleParametricMode' },
-        {
-          type: 'button', actionName: 'resetVerticalIntervals',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
+        { type: 'button', actionName: 'transposeDA' },
         { type: 'button', actionName: 'computeAutoPosition' },
         { type: 'button', actionName: 'computeAutoPositionOptim' },
         // {
@@ -177,6 +168,18 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: 'Basculer la visibilité de la légende'
       },
       getToggleValue: 'maskLegendValue'
+    },
+
+    transposeDA: {
+      type: 'action',
+      labels: {
+        en: 'Transpose diagram',
+        fr: 'Transposer le diagramme'
+      },
+      tooltips: {
+        en: 'Transpose the diagram: swap horizontal and vertical axes',
+        fr: 'Transposer le diagramme : inverser les axes horizontal et vertical'
+      }
     },
 
     computeAutoPosition: {
@@ -345,8 +348,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     openStyleModal: {
       type: 'action',
       labels: {
-        en: 'Shape styles',
-        fr: 'Styles des formes'
+        en: 'Element styles',
+        fr: 'Styles des éléments'
       },
       tooltips: {
         en: 'Open the node visual style configuration dialog',
@@ -374,8 +377,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     //   fr: 'Zone de dessin'
     // },
     Positionnement: {
-      en: 'Automatic Positioning',
-      fr: 'Positionnement Automatique'
+      en: 'Positioning',
+      fr: 'Positionnement'
     },
     GestionCouleurs: {
       en: 'Color Management',
@@ -398,6 +401,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const getNodeStyle = () => sankey.styles_dict['default']
   return {
     fromNew: () => app_data.reinitialization(),
+    transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
