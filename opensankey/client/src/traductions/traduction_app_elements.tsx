@@ -440,6 +440,10 @@ export const resources_app_elements = {
         dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
         diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
         start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+      },
+      color_lock: {
+        locked: 'Custom color — this color is fixed and will not be overridden by the element\'s own color',
+        unlocked: 'Inherits the element\'s color (node, link or text zone) — click to lock a custom color'
       }
     }
   },
@@ -932,6 +936,10 @@ export const resources_app_elements = {
         dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
         diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
         start: 'Commencez à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+      },
+      color_lock: {
+        locked: 'Couleur personnalisée — cette couleur est fixée et ne sera pas remplacée par la couleur propre de l\'élément',
+        unlocked: 'Hérite la couleur propre de l\'élément (nœud, flux ou zone de texte) — cliquez pour verrouiller une couleur personnalisée'
       }
     }
   }
