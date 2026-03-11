@@ -407,6 +407,14 @@ export const UniversalFileConverter = ({
     setAutoLayout(input_format == 'blob')
     setConfig(config)
 
+    // Reset options to defaults for the new config
+    set_input_options_excel(getDefaultInputOptions(input_config['excel']))
+    set_input_options_json(getDefaultInputOptions(input_config['json']))
+    set_input_options_base(getDefaultOutputOptions(input_config['base']))
+    set_output_options_excel(getDefaultOutputOptions(output_config['excel']))
+    set_output_options_json(getDefaultOutputOptions(output_config['json']))
+    set_output_options_base(getDefaultOutputOptions(output_config['base']))
+
     setLaunchAtOpening(launch_at_opening)
     set_show_terminal(false)
     if (config.failure_status) {
