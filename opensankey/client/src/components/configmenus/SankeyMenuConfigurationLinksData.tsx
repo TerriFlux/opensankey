@@ -416,23 +416,23 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           </InputGroup>
         </OSTooltip>
       </Box>
-      {/* Data tags selector */}
-      {data_taggs_list.map(data_tagg => {
-        return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
-          <Select
-            name={data_tagg.id}
-            variant='menuconfigpanel_option_select'
-            value={data_tagg.selected_tags_list[0].id}
-            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              data_tagg.selectTagsFromId(evt.target.value)
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
-          </Select>
-        </BOX2COLSTITLEH4>
-      })}
     </Box>
+    {/* Data tags selector */}
+    {data_taggs_list.map(data_tagg => {
+      return <BOX2COLSTITLEH4 key={data_tagg.id} title={data_tagg.name}>
+        <Select
+          name={data_tagg.id}
+          variant='menuconfigpanel_option_select'
+          value={data_tagg.selected_tags_list[0].id}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            data_tagg.selectTagsFromId(evt.target.value)
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        >
+          {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+        </Select>
+      </BOX2COLSTITLEH4>
+    })}
 
       {/* Value input and format button */}
       <Box layerStyle='options_2cols'>

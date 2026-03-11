@@ -533,60 +533,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     </Button>
   </OSTooltip>
 
-  // Button to open tab with documentation of application
-  // const button_documentation = <OSTooltip
-  //   placement='bottom'
-  //   label={t('Menu.tooltips.doc')}
-  // >
-  //   <Button
-  //     variant='menutop_button'
-  //     size='sizeMenuTopButton'
-  //     onClick={() => GoToUserDoc()}
-  //   >
-  //     <Box
-  //       layerStyle='menutop_button_style'
-  //     >
-  //       <Box
-  //         gridRow='1'
-  //       >
-  //         {new_data.icon_library.icon_doc}
-  //       </Box>
-  //       <Box
-  //         gridRow='2'
-  //       >
-  //         {t('Menu.doc')}
-  //       </Box>
-  //     </Box>
-  //   </Button>
-  // </OSTooltip>
-
-  // Button to open contact of Terriflux
-  const button_contact = <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.support')}
-  >
-    <Button
-      variant='menutop_button'
-      size='sizeMenuTopButton'
-      onClick={() => ref_setter_show_modal_support.current!(true)}
-    >
-      <Box
-        layerStyle='menutop_button_style'
-      >
-        <Box
-          gridRow='1'
-        >
-          {new_data.icon_library.icon_contact}
-        </Box>
-        <Box
-          gridRow='2'
-        >
-          {t('Menu.support')}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
-
   // Button to launch tour of application
   const button_tour = <ButtonLaunchGuide new_data={new_data} />
 
@@ -605,9 +551,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     // 'welcome': button_welcome,
     'tour': button_tour,
     'tutoriel': button_tutoriel,
-    // 'documentation': button_documentation,
-    // Other
-    'contact': button_contact,
     ...additionalMenus.current.external_top_buttons_item
   }
   return <>
