@@ -111,21 +111,21 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     toggleZDTActivated: {
       type: 'toggle',
       labels: {
-        en: 'ZDT',
-        fr: 'ZDT'
+        en: 'Text Zone',
+        fr: 'Zone de texte'
       },
       tooltips: {
-        en: 'ZDT',
-        fr: 'ZDT'
+        en: 'Text Zone',
+        fr: 'Zone de texte'
       },
       labelsToggle: {
         en: {
-          true: 'Deactivate ZDT ',
-          false: 'Activate ZDT'
+          true: 'Deactivate Text Zone ',
+          false: 'Activate Text Zone'
         },
         fr: {
-          true: 'Désactiver ZDT',
-          false: 'Activer ZDT'
+          true: 'Désactiver zone de texte',
+          false: 'Activer zone de texte'
         }
       },
       getToggleValue: 'toggleZDTActivatedValue'

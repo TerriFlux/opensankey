@@ -641,7 +641,7 @@ export const resources_app_elements = {
           Values: 'Valeurs des flux',
           Views: 'Vues',
           freeLabels: 'Zones de texte',
-          ZdT: 'ZdT',
+          ZdT: 'Zones de texte',
           Ajouts: 'Ajouts',
           Suppressions: 'Suppressions',
           addFreeLabel: 'Aj. ZdT',
