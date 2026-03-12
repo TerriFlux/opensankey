@@ -98,6 +98,7 @@ export class Class_ContainerElement extends Class_NodeBase {
   public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    if (this.drawing_area.static) return
     super.eventSimpleRMBClick(_event)
     if (this.drawing_area.isInSelectionMode()) {
       _event.preventDefault()
