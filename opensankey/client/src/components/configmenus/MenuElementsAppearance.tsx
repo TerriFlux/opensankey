@@ -1229,7 +1229,7 @@ export const MenuConfigurationAppearance = ({
                                   prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
                                 />
                               </Box>
-                              <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+                              <OSTooltip label={t('Flux.apparence.tooltips.color_source.' + linkShapeValues.color_rule, t('Flux.apparence.tooltips.color_source.def'))}>
                                 <Select
                                   value={linkShapeValues.color_rule}
                                   onChange={(evt) => {
