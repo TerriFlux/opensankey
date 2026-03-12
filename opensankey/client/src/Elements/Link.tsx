@@ -666,24 +666,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
-      if (this.source.hasGivenTag(productTag)) {
-        return this.source.getShapeColorToUse()
-      } else if (this.target.hasGivenTag(productTag)) {
-        return this.target.getShapeColorToUse()
-      } else {
-        const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
-        const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+      const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+      const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
 
-        // Tag commun entre source et target -> priorité
-        const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
-        if (common_tag) {
-          return common_tag.color
-        } else if (source_color_tags.length > 0) {
-          return this.source.getShapeColorToUse()
-        } else if (target_color_tags.length > 0) {
-          return this.target.getShapeColorToUse()
-        }
+      // 1. Common color tag between source and target → priority
+      const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
+      if (common_tag) return common_tag.color
+
+      // 2. Only one side has a color tag → take that side
+      if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
+      if (target_color_tags.length > 0 && source_color_tags.length === 0) return this.target.getShapeColorToUse()
+
+      // 3. Both have color tags (no common) → prefer the product node
+      if (source_color_tags.length > 0 && target_color_tags.length > 0) {
+        if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
+        if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+        return this.source.getShapeColorToUse()
       }
+
+      // 4. No color tags → prefer the product node
+      if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
+      if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+
+      // 5. Fallback: source color
+      return this.source.getShapeColorToUse()
     }
     const type_source = this.shape_color_rule
     if (type_source == 'source') {
