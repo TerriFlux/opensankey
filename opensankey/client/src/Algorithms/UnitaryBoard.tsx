@@ -1,6 +1,8 @@
 import {
     node_unitary_styles, SankeyUnitaryNodeStyle, SankeyUnitaryNodeInputStyle, SankeyUnitaryNodeOutputStyle,
-    LinkOutUnitaryStyle, LinkInUnitaryStyle
+    LinkOutUnitaryStyle, LinkInUnitaryStyle,
+    node_exchanges_style,
+    product_sector_styles
 } from "../Elements/ElementStyle"
 import { Class_DrawingArea } from "../types/DrawingArea"
 import { Class_DataTagGroup, Class_ViewTagGroup } from "../types/TagGroup"
@@ -25,9 +27,13 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     // Réinitialiser tous les styles unitaires d'abord
     drawing_area.sankey.nodes_list.forEach(node => {
         node_unitary_styles.forEach(s => node.removeStyleById(s))
+        node_exchanges_style.forEach(s => node.removeStyleById(s))
+        product_sector_styles.forEach(s => node.removeStyleById(s))
     })
     drawing_area.sankey.links_list.forEach(link => {
         node_unitary_styles.forEach(s => link.removeStyleById(s))
+        node_exchanges_style.forEach(s => link.removeStyleById(s))
+        product_sector_styles.forEach(s => link.removeStyleById(s))
     })
 
     // Appliquer le style central aux nœuds sélectionnés
