@@ -9,7 +9,7 @@
 // External imports =================================================================================
 
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, NavigateFunction, Route, Routes, useNavigate } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 import {
@@ -86,7 +86,8 @@ function shuffle(array: number[]) {
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataSA,
-  setLicenses: React.MutableRefObject<() => void>
+  setLicenses: React.MutableRefObject<() => void>,
+  navigate: NavigateFunction
 ) => void
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
@@ -97,7 +98,8 @@ type FType_InitializeAdditionalMenusSA = (
 export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
   new_data_app,
-  setLicenses
+  setLicenses,
+  navigate
 ) => {
   initializeAdditionalMenusOSP(
     additionalMenus,
@@ -125,7 +127,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
   additionalMenus.current.additional_bottom_item.push(
-    <BannerSubscriptionOSP app_data={new_data_app} />
+    <BannerSubscriptionOSP app_data={new_data_app} onClickSubscribe={() => navigate('/license/checkout')} />
   )
 
   // Index sankeytheque key in menu top order
@@ -180,6 +182,8 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
 export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDataSA }) => {
 
+  const navigate = useNavigate()
+
   const setLicenses = useRef(() => {
     console.log('=== setLicenses function called ===')
 
@@ -217,7 +221,8 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
         initializeAdditionalMenusSA(
           additionalMenus,
           new_data as Class_ApplicationDataSA,
-          setLicenses
+          setLicenses,
+          navigate
         )
       }}
       moduleDialogs={moduleDialogsSA}
