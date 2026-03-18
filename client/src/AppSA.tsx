@@ -14,9 +14,11 @@ import { HelmetProvider } from 'react-helmet-async'
 
 import {
   Box,
+  Button,
   Center,
   ChakraProvider,
-  Spinner
+  Spinner,
+  Tooltip
 } from '@chakra-ui/react'
 
 import TextLoop from 'react-text-loop'
@@ -52,7 +54,6 @@ import { MetaTags } from './components/MetaTags'
 import i18next from 'i18next'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
-import { BannerSubscriptionOSP } from './deps/OpenSankey+/components/SankeyPlusViews'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
@@ -83,11 +84,24 @@ function shuffle(array: number[]) {
   return array
 }
 
+const BannerSubscriptionSA = ({ app_data }: { app_data: Class_ApplicationDataSA }) => {
+  const navigate = useNavigate()
+  const { t } = app_data
+  if (app_data.has_sankey_plus || app_data.is_static) return <></>
+  return <Tooltip label={t('Menu.get_premium_tooltip')} placement='bottom'>
+    <Button
+      variant='button_banner_subscription'
+      onClick={() => navigate('/license/checkout')}
+    >
+      {t('Menu.get_premium')}
+    </Button>
+  </Tooltip>
+}
+
 type FType_InitializeAdditionalMenusSA = (
   additional_menus: MutableRefObject<Type_AdditionalMenus>,
   new_data: Class_ApplicationDataSA,
-  setLicenses: React.MutableRefObject<() => void>,
-  navigate: NavigateFunction
+  setLicenses: React.MutableRefObject<() => void>
 ) => void
 /**
  * Since AdditionalMenus is an OS var specially created to add external element in menus
@@ -98,8 +112,7 @@ type FType_InitializeAdditionalMenusSA = (
 export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   additionalMenus,
   new_data_app,
-  setLicenses,
-  navigate
+  setLicenses
 ) => {
   initializeAdditionalMenusOSP(
     additionalMenus,
@@ -127,7 +140,7 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
     />
   )
   additionalMenus.current.additional_bottom_item.push(
-    <BannerSubscriptionOSP app_data={new_data_app} onClickSubscribe={() => navigate('/license/checkout')} />
+    <BannerSubscriptionSA app_data={new_data_app} />
   )
 
   // Index sankeytheque key in menu top order
@@ -182,8 +195,6 @@ export const moduleDialogsSA: FType_ModuleDialogs = (
 
 export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDataSA }) => {
 
-  const navigate = useNavigate()
-
   const setLicenses = useRef(() => {
     console.log('=== setLicenses function called ===')
 
@@ -221,8 +232,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
         initializeAdditionalMenusSA(
           additionalMenus,
           new_data as Class_ApplicationDataSA,
-          setLicenses,
-          navigate
+          setLicenses
         )
       }}
       moduleDialogs={moduleDialogsSA}
