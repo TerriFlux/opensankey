@@ -54,6 +54,7 @@ export type Type_AdditionalMenus = {
 
   extra_background_element: JSX.Element
   additional_nav_item: JSX.Element[],
+  additional_bottom_item: JSX.Element[],
 
   formations_menu: object,
   template_module_key: string[]
@@ -282,6 +283,7 @@ export class Class_MenuConfig {
     extra_background_element: <></>,
 
     additional_nav_item: [],
+    additional_bottom_item: [],
 
     formations_menu: {},
     template_module_key: ['essential'],

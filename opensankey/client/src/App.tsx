@@ -52,6 +52,7 @@ declare const window: Window &
   typeof globalThis & {
     sankey: {
       diagram?: string,
+      diagram_layout?: string,
       header?: string,
       publish?: boolean
       logo?: string,
@@ -101,6 +102,11 @@ export const OpenSankeyApp = ({
     loadUniversalJSON(window.sankey.diagram as string).then(data => {
       app_data.fromJSON(data as Type_JSON)
       app_data.file_name = window.sankey.diagram as string
+      if (window.sankey.diagram_layout) {
+        loadUniversalJSON(window.sankey.diagram_layout).then(layout_data => {
+          app_data.updateFromJSON(layout_data as Type_JSON)
+        }).catch(e => console.log(e))
+      }
     }).catch(e => console.log(e))
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
     app_data.fromJSON(JSON.parse(json_data))

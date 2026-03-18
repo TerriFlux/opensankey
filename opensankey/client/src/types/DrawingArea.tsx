@@ -390,7 +390,7 @@ export class Class_DrawingArea {
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && !this.static) {
       // Draw horizontal lines
-      const number_of_horizontal_lines = this._zoom_height / this.grid_size
+      const number_of_horizontal_lines = Math.min(200, this._zoom_height / this.grid_size)
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
@@ -403,7 +403,7 @@ export class Class_DrawingArea {
           .style('stroke-dasharray', 4)
       }
       // Draw vertical lines
-      const number_of_vertical_lines = this._zoom_width / this.grid_size
+      const number_of_vertical_lines = Math.min(200, this._zoom_width / this.grid_size)
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')

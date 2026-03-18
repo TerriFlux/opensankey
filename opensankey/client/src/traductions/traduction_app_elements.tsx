@@ -192,6 +192,7 @@ export const resources_app_elements = {
           tagNode_assign: 'Assign a label',
           tagFlux_assign: 'Assign a label',
           attrGeneral: 'Drawing area',
+          scale: 'Scale',
           title: 'Layout',
           oher_file: 'Other file',
           tooltips: {
@@ -670,6 +671,7 @@ export const resources_app_elements = {
           tagNode_assign: 'Assigner étiquettes',
           tagFlux_assign: 'Assigner étiquettes',
           attrGeneral: 'Attributs généraux',
+          scale: 'Échelle',
           title: 'Mise en page',
           tooltips: {
             Shortcuts: 'Raccourcie de sélection des attributs à transférer du sankey importé',
