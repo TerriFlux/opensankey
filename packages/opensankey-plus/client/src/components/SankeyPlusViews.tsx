@@ -565,6 +565,23 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 }
 
 /**
+ * CTA button shown in navbar when user does not have OpenSankey+ license.
+ * Redirects to /license/checkout.
+ */
+export const BannerSubscriptionOSP = ({ app_data }: { app_data: Class_ApplicationDataOSP }) => {
+  const { t } = app_data
+  if (app_data.has_sankey_plus || app_data.is_static) return <></>
+  return <OSTooltip label={t('Menu.get_premium_tooltip')} placement='bottom'>
+    <Button
+      variant='button_banner_subscription'
+      onClick={() => { window.location.href = '/license/checkout' }}
+    >
+      {t('Menu.get_premium')}
+    </Button>
+  </OSTooltip>
+}
+
+/**
  * View selector for navbar or menuconfig
  * @param {*} {
  *   app_data

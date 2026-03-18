@@ -44,6 +44,8 @@ export const resources_app_elements = {
 
         'presentation_OS': 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         'presentation_OS_limit_node': 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
+        'get_premium': '✦ Unlock OpenSankey+',
+        'get_premium_tooltip': 'Unlock advanced features: views, animations, icons, gradients...',
         'presentation_OSP': 'OpenSankey+ is a paid license that unlocks new features for creating beautiful Sankey diagrams for presentations.\n\nThis license includes advanced formatting features such as the addition of illustrative images or icons for nodes, the addition of color gradients on flows and animations, and more.\n\n But above all, OpenSankey+ lets you generate slideshows to explain your Sankey diagrams, thanks to the "Views" mechanism, which records their visual states (with / without certain filters activated, for example) to simplify navigation between them.\n\n',
         'presentation_OSS': 'SankeySuite is a paid license that unlocks all the advanced charting and analysis features of Sankey.\n\n This license includes flow data reconciliation functionalities to identify inconsistencies or calculate flows whose values are not directly accessible.\n\n It also includes OpenSankey+ functionalities.\n\n',
         view_actual_file: 'Views',
@@ -488,6 +490,8 @@ export const resources_app_elements = {
         'excel': 'Extraire données',
         'pub': 'Publier',
         'setResolutionPNG': 'Choisissez la résolution désirée pour l\'exportation',
+        'get_premium': '✦ Débloquer OpenSankey+',
+        'get_premium_tooltip': 'Débloquez les fonctionnalités avancées : vues, animations, icônes, dégradés...',
         'sankeyOSPDisabled': 'Paramètre désactivé car vous n\'avez pas OpenSankey+',
         'featureLocked': 'Licence',
         'Hierarchy': 'Hiérarchies',
