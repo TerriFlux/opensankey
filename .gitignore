@@ -56,3 +56,5 @@ client/public/meta/manifest.json
 env.bat
 preferences/**
 client/.env
+.claude/settings.local.json
+dbg_constraints__summary_txt_filename

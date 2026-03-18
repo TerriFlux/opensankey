@@ -52,6 +52,7 @@ import { MetaTags } from './components/MetaTags'
 import i18next from 'i18next'
 import { ButtonOpenModalSankeyTheque, ModalSankeyTheque } from './components/SankeyTheque'
 import { UserPagesButtons } from './deps/LoginComponent/UserPages/UserPages'
+import { BannerSubscriptionOSP } from './deps/OpenSankey+/components/SankeyPlusViews'
 import { FType_ModuleDialogs } from './deps/OpenSankey+/deps/OpenSankey/Modules'
 import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/MenuConfig'
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
@@ -122,6 +123,9 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
       setLicenses={setLicenses}
       returnToApp={returnToApp}
     />
+  )
+  additionalMenus.current.additional_bottom_item.push(
+    <BannerSubscriptionOSP app_data={new_data_app} />
   )
 
   // Index sankeytheque key in menu top order
