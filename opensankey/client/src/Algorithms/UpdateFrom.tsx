@@ -191,7 +191,7 @@ export const updateFrom = (
   const all = mode.includes('*')
   // Transfer DA attributs
   if (mode.includes('attrDrawingArea') || all) {
-    const scale_to_keep = drawing_area.scale
+    const scale_to_keep = mode.includes('scale') ? other_drawing_area.scale : drawing_area.scale
     drawing_area._copyAttrFrom(other_drawing_area)
     drawing_area._scale = scale_to_keep
     drawing_area._scaleValueToPx.domain([0, drawing_area._scale])

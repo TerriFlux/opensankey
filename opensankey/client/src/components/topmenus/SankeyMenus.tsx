@@ -210,8 +210,11 @@ export const SankeyMenu = (
                 layerStyle='menubottom_item_style'
                 justifySelf='end'
                 paddingRight='1.5rem'
+                display='flex'
+                alignItems='center'
+                gap='0.5rem'
               >
-              12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
+                {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
               </Box>
             </Box> :
             <></>

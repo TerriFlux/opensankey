@@ -132,6 +132,7 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true }: 
         <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
         <Box layerStyle='options_4cols'>
           {btn('attrDrawingArea','X')}
+          {btn('scale', t('Menu.Transformation.scale'))}
         </Box>
       </Box>
     </OSTooltip>

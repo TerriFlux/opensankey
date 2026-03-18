@@ -560,6 +560,10 @@ export class Class_ApplicationData {
         // Then draw if asked
         if (draw) {
           this._drawing_area.sankey.sortNodes()
+          // If the JSON has no geometric info, auto-layout the diagram
+          if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
+            this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+          }
           this._drawing_area.draw()
           this._drawing_area.recenter()
         }
@@ -680,7 +684,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
+      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
     )
     //}
   }
