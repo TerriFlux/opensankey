@@ -1137,6 +1137,31 @@ export const buttonStyles = {
       bgColor: 'transparent',
     }
   }),
+  button_banner_subscription: defineStyle({
+    border: '1px solid',
+    borderColor: 'gray.400',
+    borderRadius: '4px',
+    lineHeight: 'unset',
+    padding: '0.15rem 0.5rem',
+    margin: '0',
+    bg: 'transparent',
+    bgColor: 'transparent',
+    marginInlineStart: 0,
+    color: 'gray.700',
+    fontSize: '0.7rem',
+    fontWeight: 'semibold',
+    whiteSpace: 'nowrap',
+    _hover: {
+      borderColor: 'gray.600',
+      bg: 'gray.100',
+      bgColor: 'gray.100',
+      color: 'gray.800',
+    },
+    _active: {
+      bg: 'gray.200',
+      bgColor: 'gray.200',
+    },
+  }),
   menutop_button_view_activated: defineStyle({
     textStyle: 'h4',
     fontSize: default_font_size,

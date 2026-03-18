@@ -62,6 +62,7 @@ declare const window: Window &
     sankey: {
       publish?: boolean
       diagram?: string
+      diagram_layout?: string
     }
   }
 
@@ -97,6 +98,11 @@ const App: FC = () => {
           const data = await loadUniversalJSON(window.sankey.diagram as string)
           newDataApp.fromJSON(data as Type_JSON)
           newDataApp.file_name = window.sankey.diagram as string
+
+          if (window.sankey.diagram_layout) {
+            const layout_data = await loadUniversalJSON(window.sankey.diagram_layout)
+            newDataApp.updateFromJSON(layout_data as Type_JSON)
+          }
 
           setDataApp(newDataApp)
         } catch (error) {

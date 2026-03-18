@@ -871,9 +871,10 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         margin='0.25rem'
         alignSelf='center'
         justifySelf='end'
-        display='grid'
-        gridTemplateColumns='1fr 2fr'
-        gridColumnGap='0.25rem'
+        display='flex'
+        flexDirection='row'
+        alignItems='center'
+        gap='0.25rem'
         width='unset'
       >
         {!new_data.is_static ? <Menu variant='selector_lang'>
