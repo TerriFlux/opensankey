@@ -2,12 +2,8 @@
  * Get stripe config code
  * @return {*}
  */
-export async function getStripePublishableKey(){
-  // Get server api url
-  const path = window.location.origin
-  const url = path + '/stripe/config'
-  // use server as proxy to fetch informations
-  // -> Avoid "Same-Origin" problem with CORS
+export async function getStripeConfig(): Promise<{ publicKey: string, pricingTableId: string }> {
+  const url = window.location.origin + '/stripe/config'
   return fetch(url)
     .then(response => {
       if (response.ok)
@@ -15,9 +11,10 @@ export async function getStripePublishableKey(){
       else
         return Promise.reject(response)
     })
-    .then( response_json => {
-      return response_json.publicKey
-    })
+}
+
+export async function getStripePublishableKey(){
+  return getStripeConfig().then(cfg => cfg.publicKey)
 }
 
 export type LicenseType = 'osplusmensuel' | 'osplusannuel'

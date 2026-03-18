@@ -53,6 +53,7 @@ if "STRIPE_SECRET_KEY" in os.environ:
         "price_id_osplusmensuel": os.environ["STRIPE_PRICE_ID_OSPLUSMENSUEL"],
         "price_id_osplusannuel": os.environ["STRIPE_PRICE_ID_OSPLUSANNUEL"],
         "endpoint_secret": os.environ["STRIPE_ENDPOINT_SECRET"],
+        "pricing_table_id": os.environ.get("STRIPE_PRICING_TABLE_ID", ""),
     }
     CLIENT_ROOT_URL = os.environ["CLIENT_ROOT_URL"]
 
@@ -76,7 +77,10 @@ def get_publishable_key():
     :return: Jsonified publicKey
     :rtype: json
     """
-    stripe_config = {"publicKey": STRIPE_KEYS["publishable_key"]}
+    stripe_config = {
+        "publicKey": STRIPE_KEYS["publishable_key"],
+        "pricingTableId": STRIPE_KEYS["pricing_table_id"],
+    }
     return jsonify(stripe_config)
 
 

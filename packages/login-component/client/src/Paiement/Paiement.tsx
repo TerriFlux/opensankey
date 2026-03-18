@@ -12,7 +12,7 @@ import {
   Spinner,
 } from '@chakra-ui/react'
 
-import { getStripePublishableKey } from './PaiementFunctions'
+import { getStripeConfig } from './PaiementFunctions'
 import { Presentation } from '../Register/Presentation'
 
 // Déclarer le type pour le custom element Stripe
@@ -30,15 +30,17 @@ declare global {
  */
 export const PaiementCheckout = () => {
   const [publishableKey, setPublishableKey] = useState('')
+  const [pricingTableId, setPricingTableId] = useState('')
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const loadStripeAndKey = async () => {
       try {
-        // Récupérer la clé publique
-        const key = await getStripePublishableKey()
-        setPublishableKey(key)
-        
+        // Récupérer la config Stripe (clé publique + pricing table ID)
+        const cfg = await getStripeConfig()
+        setPublishableKey(cfg.publicKey)
+        setPricingTableId(cfg.pricingTableId)
+
         // Charger le script Stripe Pricing Table
         const script = document.createElement('script')
         script.src = 'https://js.stripe.com/v3/pricing-table.js'
@@ -59,7 +61,7 @@ export const PaiementCheckout = () => {
         setIsLoading(false)
       }
     }
-    
+
     loadStripeAndKey()
   }, [])
 
@@ -73,9 +75,8 @@ export const PaiementCheckout = () => {
 
   return (
     <Box id="checkout" padding="2rem">
-      {/* IMPORTANT: Remplacez prctbl_XXXXXXXXXXXXX par votre pricing-table-id */}
-      <stripe-pricing-table 
-        pricing-table-id="prctbl_1SPlTDQOfq6v5jMC58EwiQx7"
+      <stripe-pricing-table
+        pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
       >
       </stripe-pricing-table>
