@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react'
 import { Navigate, NavigateFunction, useNavigate, useSearchParams } from 'react-router-dom'
-import i18next, { TFunction } from 'i18next'
+import { TFunction } from 'i18next'
 
 import {
   Box,
@@ -78,7 +78,7 @@ export const PaiementCheckout = () => {
       <stripe-pricing-table
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
-        locale={i18next.language}
+        locale={navigator.language.slice(0, 2)}
       >
       </stripe-pricing-table>
     </Box>
