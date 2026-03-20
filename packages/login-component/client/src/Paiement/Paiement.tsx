@@ -78,7 +78,7 @@ export const PaiementCheckout = () => {
       <stripe-pricing-table
         pricing-table-id={pricingTableId}
         publishable-key={publishableKey}
-        locale={i18next.language.slice(0, 2)}
+        locale={'fr'}
       >
       </stripe-pricing-table>
     </Box>
