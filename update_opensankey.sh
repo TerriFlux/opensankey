@@ -15,7 +15,7 @@ fi
 HOME_DIR="/home/ubuntu"
 ENV_DIR="${HOME_DIR}/${ENV}_opensankey"
 APP_DIR="${ENV_DIR}/sankeyapplication"
-VENV_ACTIVATE="${ENV_DIR}/bin/activate"
+VENV_ACTIVATE="${ENV_DIR}/${ENV}_opensankey/bin/activate"
 
 echo "=== Déploiement ${ENV} (${APP_DIR}) ==="
 
