@@ -548,26 +548,14 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public getInputLinkEndingPoint(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
-      if (!this._input_links_ending_point[link.id]) {
-        this.drawLinks()
-        return undefined
-      }
-      else {
-        return this._input_links_ending_point[link.id]
-      }
+      return this._input_links_ending_point[link.id]
     }
     return undefined
   }
 
   public getOutputLinkStartingPoint(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
-      if (!this._output_links_starting_point[link.id]) {
-        this.drawLinks()
-        return undefined
-      }
-      else {
-        return this._output_links_starting_point[link.id]
-      }
+      return this._output_links_starting_point[link.id]
     }
     return undefined
   }
