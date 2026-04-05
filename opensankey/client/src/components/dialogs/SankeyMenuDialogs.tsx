@@ -25,14 +25,13 @@
 // ==================================================================================================
 
 import React, { useState, } from 'react'
-import {Box,Button,Input,Select} from '@chakra-ui/react'
+import { Box, Button, Input, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Type_JSON } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { DecompressedJSONData, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../../Algorithms/UpdateFrom'
-import { DrawingAreaPersistence } from '../../Persistence/SankeyPersistence'
 
 
 // ===========================================================================
@@ -45,9 +44,16 @@ export type UpdateModeGridProps = {
   t: (key: string) => string
   /** When true: show Ajouts/Suppressions/Values/Tags/tagLevel rows (default true) */
   show_expert_rows?: boolean
+  /** Optional extra tab injected by OSP or other extensions */
+  extra_tab?: {
+    label: string
+    /** If provided and returns true: tab header is greyed and content disabled */
+    disabled?: () => boolean
+    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
+  }
 }
 
-export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true }: UpdateModeGridProps) => {
+export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, extra_tab }: UpdateModeGridProps) => {
   const btn = (key: string, label: string) => (
     <Button
       variant={attrs.includes(key) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -61,94 +67,138 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true }: 
       onClick={() => { if (!disabled) onToggle(key) }}
     >{label}</Button>
   )
-  const nodeLabel = t('Menu.Transformation.attrNode')
-  const fluxLabel = t('Menu.Transformation.attrFlux')
-  const zdtLabel  = t('Menu.Transformation.ZdT')
 
-  return <>
-    {show_expert_rows && <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Ajouts')}</Box>
-      <Box layerStyle='options_4cols'>
-        {btn('addNode', nodeLabel)}{btn('addFlux', fluxLabel)}{btn('addFreeLabel', zdtLabel)}
-      </Box>
-    </Box>}
+  const nodeLabel  = t('Menu.Transformation.attrNode')
+  const fluxLabel  = t('Menu.Transformation.attrFlux')
+  const zdtLabel   = t('Menu.Transformation.ZdT')
+  const addLabel   = t('Menu.Transformation.Ajouts')
+  const delLabel   = t('Menu.Transformation.Suppressions')
+  const attrLabel  = t('Menu.Transformation.Attribut')
+  const geoLabel   = t('Menu.Transformation.Geometry')
+  const majLabel   = t('Menu.Transformation.updateTags')
 
-    {show_expert_rows && <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Suppressions')}</Box>
-      <Box layerStyle='options_4cols'>
-        {btn('removeNode', nodeLabel)}{btn('removeFlux', fluxLabel)}{btn('removeFreeLabel', zdtLabel)}
-      </Box>
-    </Box>}
+  // Column header cell
+  const hdr = (label: string) => (
+    <Box fontSize='xs' textAlign='center' fontWeight='semibold' px='1'>{label}</Box>
+  )
 
-    <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('attrNode', nodeLabel)}{btn('attrFlux', fluxLabel)}{btn('attrFreeLabel', zdtLabel)}
-        </Box>
-      </Box>
-    </OSTooltip>
+  // Grid cols: 4 (expert) or 2 (simple)
+  const elemGrid = show_expert_rows
+    ? { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '4px' }
+    : { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '4px' }
 
-    <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('posNode', nodeLabel)}{btn('posFlux', fluxLabel)}{btn('posFreeLabel', zdtLabel)}
-        </Box>
+  const elemRow = (label: string, addKey: string, removeKey: string, attrKey: string, posKey: string) => (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1'>
+      <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
+      <Box sx={elemGrid}>
+        {show_expert_rows && btn(addKey, '+')}
+        {show_expert_rows && btn(removeKey, '−')}
+        {btn(attrKey, 'X')}
+        {btn(posKey, 'X')}
       </Box>
-    </OSTooltip>
+    </Box>
+  )
 
-    {show_expert_rows && <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('Values', t('Menu.Transformation.Values'))}
-        </Box>
-      </Box>
-    </OSTooltip>}
+  const tagGrid = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '4px' }
 
-    {show_expert_rows && <OSTooltip label={t('Menu.Transformation.tooltips.Tags')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('tagNode', t('Menu.Transformation.tagNode'))}
-          {btn('tagFlux', t('Menu.Transformation.tagFlux'))}
-          {btn('tagData', t('Menu.Transformation.tagData'))}
-        </Box>
+  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string) => (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1'>
+      <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
+      <Box sx={tagGrid}>
+        {btn(addKey, '+')}{btn(removeKey, '−')}{btn(updateKey, 'X')}
       </Box>
-    </OSTooltip>}
+    </Box>
+  )
 
-    {show_expert_rows && <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('tagLevel', t('Menu.Transformation.tagLevel'))}
-        </Box>
-      </Box>
-    </OSTooltip>}
+  const elemHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    <Box />
+    <Box sx={elemGrid}>
+      {show_expert_rows && hdr(addLabel)}
+      {show_expert_rows && hdr(delLabel)}
+      {hdr(attrLabel)}
+      {hdr(geoLabel)}
+    </Box>
+  </Box>
 
-    <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('attrDrawingArea','X')}
-          {btn('scale', t('Menu.Transformation.scale'))}
-        </Box>
-      </Box>
-    </OSTooltip>
+  const tagHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    <Box />
+    <Box sx={tagGrid}>{hdr(addLabel)}{hdr(delLabel)}{hdr(majLabel)}</Box>
+  </Box>
 
-    <OSTooltip label={t('Menu.Transformation.tooltips.Styles')}>
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Styles')}</Box>
-        <Box layerStyle='options_4cols'>
-          {btn('styleDA', 'X')}
-          {btn_disabled('styleNode', nodeLabel, !attrs.includes('styleDA'))}
-          {btn_disabled('styleFlux', fluxLabel, !attrs.includes('styleDA'))}
-          {btn_disabled('styleFreeLabel', zdtLabel, !attrs.includes('styleDA'))}
-        </Box>
-      </Box>
-    </OSTooltip>
-  </>
+  const tabSx = {
+    display: 'inline-flex !important', width: 'auto !important', height: 'auto !important',
+    padding: '2px 8px !important', margin: '0 !important', borderRadius: '4px !important',
+    fontSize: '0.75rem', fontWeight: 'semibold', cursor: 'pointer',
+    border: '1px solid', borderColor: 'gray.300', color: 'gray.600',
+    _selected: { bg: 'gray.100', color: 'gray.800', borderColor: 'gray.500' },
+  }
+
+  const tp = (children: React.ReactNode) => (
+    <TabPanel p='1'>{children}</TabPanel>
+  )
+
+  return <Tabs variant='unstyled' isLazy mt='0' key={show_expert_rows ? 'expert' : 'simple'}>
+    <TabList sx={{ display: 'flex !important', flexDirection: 'row !important', flexWrap: 'wrap', gap: '4px', mb: '1', alignItems: 'center', height: 'fit-content !important', minHeight: '0 !important', padding: '0 !important', border: 'none !important' }}>
+      <Tab sx={tabSx}>{t('Menu.Transformation.elementsTitle')}</Tab>
+      {show_expert_rows && <Tab sx={tabSx}>{t('Menu.Transformation.tagGroupsTitle')}</Tab>}
+      {show_expert_rows && <Tab sx={tabSx}>{t('Menu.Transformation.dataTitle')}</Tab>}
+      <Tab sx={tabSx}>{t('Menu.Transformation.attrGeneral')}</Tab>
+      {show_expert_rows && extra_tab && <Tab sx={extra_tab.disabled?.() ? { ...tabSx, opacity: 0.45, cursor: 'default' } : tabSx}>{extra_tab.label}</Tab>}
+    </TabList>
+    <TabPanels border='1px solid' borderColor='gray.200' borderRadius='4px'>
+
+      {tp(<>
+        {elemHeader}
+        {elemRow(nodeLabel, 'addNode',      'removeNode',      'attrNode',      'posNode')}
+        {elemRow(fluxLabel, 'addFlux',      'removeFlux',      'attrFlux',      'posFlux')}
+        {elemRow(zdtLabel,  'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel')}
+      </>)}
+
+      {show_expert_rows && tp(<>
+        {tagHeader}
+        {tagRow(t('Menu.Transformation.tagNode'),  'addTagNode',  'removeTagNode',  'tagNode')}
+        {tagRow(t('Menu.Transformation.tagFlux'),  'addTagFlux',  'removeTagFlux',  'tagFlux')}
+        {tagRow(t('Menu.Transformation.tagLevel'), 'addTagLevel', 'removeTagLevel', 'tagLevel')}
+      </>)}
+
+      {show_expert_rows && tp(<>
+        {tagHeader}
+        {tagRow(t('Menu.Transformation.tagData'), 'addTagData', 'removeTagData', 'tagData')}
+        <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+            <Box layerStyle='options_4cols'>{btn('Values', 'X')}</Box>
+          </Box>
+        </OSTooltip>
+      </>)}
+
+      {tp(<>
+        <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+            <Box layerStyle='options_4cols'>
+              {btn('attrDrawingArea', 'X')}
+              {btn('scale', t('Menu.Transformation.scale'))}
+            </Box>
+          </Box>
+        </OSTooltip>
+        <OSTooltip label={t('Menu.Transformation.tooltips.Styles')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Styles')}</Box>
+            <Box layerStyle='options_4cols'>
+              {btn('styleDA', 'X')}
+              {btn_disabled('styleNode', nodeLabel, !attrs.includes('styleDA'))}
+              {btn_disabled('styleFlux', fluxLabel, !attrs.includes('styleDA'))}
+              {btn_disabled('styleFreeLabel', zdtLabel, !attrs.includes('styleDA'))}
+            </Box>
+          </Box>
+        </OSTooltip>
+      </>)}
+
+      {show_expert_rows && extra_tab && tp(extra_tab.render(attrs, onToggle, t))}
+
+    </TabPanels>
+  </Tabs>
 }
 
 // ===========================================================================
@@ -169,7 +219,7 @@ export const ApplyLayoutDialog = ({
   const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
 
-  ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
+  ref_to_updater_modal_apply_layout.current = () => setForceUpdate((b: boolean) => !b)
 
   const simple_element_to_transform = [
     'posNode', 'posFlux',
@@ -177,8 +227,8 @@ export const ApplyLayoutDialog = ({
     'attrDrawingArea'
   ]
   const default_element_to_transform = [
-    'posNode', 'posFlux',
-    'attrNode', 'attrFlux',
+    'posNode', 'posFlux', 'posFreeLabel',
+    'attrNode', 'attrFlux', 'attrFreeLabel',
     'attrDrawingArea'
   ]
 
@@ -236,6 +286,7 @@ export const ApplyLayoutDialog = ({
 
     <UpdateModeGrid
       attrs={data_var_to_update}
+      extra_tab={menu_configuration.extra_apply_layout_tab}
       onToggle={key => {
         const elem_style_keys = ['styleNode', 'styleFlux', 'styleFreeLabel']
         if (!data_var_to_update.includes(key)) {
@@ -282,10 +333,12 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const [selected_view_id, set_selected_view_id] = useState<string>(view_sources[0]?.id ?? '')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const applySourceDA = (tmp_DA: ReturnType<typeof app_data.createNewDrawingArea>) => {
+  const applySourceDA = (tmp_DA: ReturnType<typeof app_data.createNewDrawingArea>, source_json?: Type_JSON) => {
+    const expanded_mode = app_data.expandLayoutMode(data_var_to_update)
     app_data.drawing_area.bypass_redraws = true
-    updateFrom(app_data.drawing_area, tmp_DA, data_var_to_update)
+    updateFrom(app_data.drawing_area, tmp_DA, expanded_mode)
     app_data.drawing_area.draw()
+    app_data.post_apply_layout_callback?.(tmp_DA, source_json ?? null, expanded_mode)
   }
 
   const handleFileLoad = async () => {
@@ -296,9 +349,9 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       const json_object: DecompressedJSONData = await decompressUploadedFileUniversal(file)
       const tmp_DA = app_data.createNewDrawingArea()
       tmp_DA.bypass_redraws = true
-      DrawingAreaPersistence.fromJSON(tmp_DA, json_object as Type_JSON)
+      app_data.loadDrawingAreaFromJSON(tmp_DA, json_object as Type_JSON)
       tmp_DA.afterFromJSON()
-      applySourceDA(tmp_DA)
+      applySourceDA(tmp_DA, json_object as Type_JSON)
     } catch (error) {
       console.error('❌ Erreur lors du traitement du fichier:', error)
       alert(`Erreur lors du chargement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
