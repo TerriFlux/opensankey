@@ -123,20 +123,13 @@ def check_process():
     if not state['process_started']:
         if 'logname' not in state:
             return Response(json.dumps({}), status=200, mimetype="application/json")
-        trace.logger.debug(state["logname"])
-        trace.logger.debug("not started")
         return Response(json.dumps({"not_started": True}), status=200, mimetype="application/json")
     try:
-        trace.logger.debug(state['logname'])
-        trace.logger.debug('open')
         logname = state['logname']
         if os.path.isfile(logname):
-            trace.logger.debug('is file')
             f = open(logname, "r")
-            trace.logger.debug('opened')
             results = f.read()
-            f.close()  # ← AJOUT: fermer le fichier
-            trace.logger.debug('read')
+            f.close()
             results_dict = {
                 "log_name": logname,
                 "output": results
@@ -521,7 +514,14 @@ def conversion_thread(
         t_read = perf_counter() - t_read_start
 
         if not ok:
-            raise Exception(f"Erreur de chargement: {msg}")
+            t_total = perf_counter() - t_total_start
+            trace.logger.error("=" * 80)
+            trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
+            for line in msg.split("\n"):
+                if line.strip():
+                    trace.logger.error(f"  {line}")
+            trace.logger.error("=" * 80)
+            return
 
         # Taille du fichier d'entrée
         input_size = Path(input_file_name).stat().st_size / (1024 * 1024)
