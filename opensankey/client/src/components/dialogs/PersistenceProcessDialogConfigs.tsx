@@ -218,6 +218,19 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 
   // =================== EXCEL ===================
   excel: {
+    error_on_new_nodes: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Warn on nodes created from fluxes',
+        fr: 'Signaler les nœuds créés depuis les flux'
+      },
+      tooltips: {
+        en: 'If a flux references a node not listed in the nodes sheet, the node is created but reported in the info log; details are available in the debug tab',
+        fr: 'Si un flux référence un nœud absent de l\'onglet nœuds, le nœud est créé mais signalé dans les infos ; le détail est disponible dans l\'onglet debug'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     propagate_flux_to_children: {
       default: false,
       type: (() => false) as (() => boolean),
