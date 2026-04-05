@@ -231,6 +231,19 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    error_on_new_flux: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Block flux creation from secondary sheets',
+        fr: 'Bloquer la création de flux depuis les onglets secondaires'
+      },
+      tooltips: {
+        en: 'If checked: fluxes referenced in data/constraints/min-max sheets but absent from base sheets (results, matrix) are NOT created and the load fails. If unchecked: fluxes are created but listed in the info log; details are available in the debug tab.',
+        fr: 'Si coché : les flux référencés dans les onglets données/contraintes/min-max mais absents des onglets de base (résultats, matrice) ne sont PAS créés et le chargement échoue. Si décoché : les flux sont créés mais listés dans les infos ; le détail est disponible dans l\'onglet debug.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     propagate_flux_to_children: {
       default: false,
       type: (() => false) as (() => boolean),
