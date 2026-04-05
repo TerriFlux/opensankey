@@ -227,23 +227,23 @@ export const updateFrom = (
 
   // Update level_tag_dict ------------------------------------------------------------
 
-  if (mode.includes('tagLevel') || all) {
-    // Finds the corresponding tag group by ids
+  if (mode.includes('tagLevel') || mode.includes('addTagLevel') || mode.includes('removeTagLevel') || all) {
+    const add_tag_level    = mode.includes('addTagLevel')    || all
+    const remove_tag_level = mode.includes('removeTagLevel') || all
+    const update_tag_level = mode.includes('tagLevel')       || all
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._level_taggs, other_drawing_area.sankey._level_taggs, matching_taggs_id['levelTags'])
-
-    // // Update taggs
-    // to_remove
-    //   .forEach(id => {
-    //     drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
-    //   })
-    // to_add
-    //   .forEach(id => {
-    //     const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
-    //     drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
-    //     drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
-    //   })
-    to_update
-      .forEach(id => {
+    if (remove_tag_level)
+      to_remove.forEach(id => {
+        drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
+      })
+    if (add_tag_level)
+      to_add.forEach(id => {
+        const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
+        drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
+        drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
+      })
+    if (update_tag_level)
+      to_update.forEach(id => {
         drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
       })
   }
@@ -257,72 +257,82 @@ export const updateFrom = (
         })
       )
     }
+    // Copy force_show_children on node dimensions
+    Object.values(drawing_area.sankey.nodes_dict).forEach(node => {
+      const src_node = other_drawing_area.sankey.nodes_dict[node.id]
+      if (!src_node) return
+      node.dimensions_as_child.forEach(dim => {
+        const src_dim = src_node.dimensions_as_child.find(d => d.id === dim.id)
+        if (src_dim?.force_show_children) dim.setForceToShowChildren(true)
+      })
+    })
   }
 
   // Update node_tag_dict ------------------------------------------------------------
-  if (mode.includes('tagNode') || all) {
-    // Finds the corresponding tag group by ids
-    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._node_taggs, other_drawing_area.sankey._node_taggs, matching_taggs_id['nodeTags'])
 
-    // Update taggs
-    to_remove
-      .forEach(id => {
+  if (mode.includes('tagNode') || mode.includes('addTagNode') || mode.includes('removeTagNode') || all) {
+    const add_tag_node    = mode.includes('addTagNode')    || all
+    const remove_tag_node = mode.includes('removeTagNode') || all
+    const update_tag_node = mode.includes('tagNode')       || all
+    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._node_taggs, other_drawing_area.sankey._node_taggs, matching_taggs_id['nodeTags'])
+    if (remove_tag_node)
+      to_remove.forEach(id => {
         drawing_area.sankey.removeTagGroupWithId('node_taggs', id)
       })
-    to_add
-      .forEach(id => {
+    if (add_tag_node)
+      to_add.forEach(id => {
         const ntagg = other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id]
         drawing_area.sankey.addNodeTagGroup(ntagg.id, ntagg.name)
         drawing_area.sankey._node_taggs[id].copyFrom(ntagg)
       })
-    to_update
-      .forEach(id => {
+    if (update_tag_node)
+      to_update.forEach(id => {
         drawing_area.sankey._node_taggs[id].copyFrom(other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id], matching_tags_id['nodeTags'][id])
       })
   }
 
   // Update flux_tag_dict ------------------------------------------------------------
-  if (mode.includes('tagFlux') || all) {
-    // Finds the corresponding tag group by ids
-    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._flux_taggs, other_drawing_area.sankey._flux_taggs, matching_taggs_id['fluxTags'])
 
-    // Update taggs
-    // to_remove
-    //   .forEach(id => {
-    //     drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
-    //   })
-    to_add
-      .forEach(id => {
+  if (mode.includes('tagFlux') || mode.includes('addTagFlux') || mode.includes('removeTagFlux') || all) {
+    const add_tag_flux    = mode.includes('addTagFlux')    || all
+    const remove_tag_flux = mode.includes('removeTagFlux') || all
+    const update_tag_flux = mode.includes('tagFlux')       || all
+    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._flux_taggs, other_drawing_area.sankey._flux_taggs, matching_taggs_id['fluxTags'])
+    if (remove_tag_flux)
+      to_remove.forEach(id => {
+        drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
+      })
+    if (add_tag_flux)
+      to_add.forEach(id => {
         const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id]
         drawing_area.sankey.addFluxTagGroup(ftagg.id, ftagg.name)
         drawing_area.sankey._flux_taggs[id].copyFrom(ftagg)
       })
-    to_update
-      .forEach(id => {
+    if (update_tag_flux)
+      to_update.forEach(id => {
         drawing_area.sankey._flux_taggs[id].copyFrom(other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id], matching_tags_id['fluxTags'][id])
       })
   }
 
   // Update data_tag_dict ------------------------------------------------------------
 
-  if (mode.includes('tagData') || all) {
-
-    // Finds the corresponding tag group by ids
+  if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || all) {
+    const add_tag_data    = mode.includes('addTagData')    || all
+    const remove_tag_data = mode.includes('removeTagData') || all
+    const update_tag_data = mode.includes('tagData')       || all
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._data_taggs, other_drawing_area.sankey._data_taggs, matching_taggs_id['dataTags'])
-
-    // Update taggs
-    to_remove
-      .forEach(id => {
+    if (remove_tag_data)
+      to_remove.forEach(id => {
         drawing_area.sankey.removeTagGroupWithId('data_taggs', id)
       })
-    to_add
-      .forEach(id => {
+    if (add_tag_data)
+      to_add.forEach(id => {
         const dtagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id]
         drawing_area.sankey.addDataTagGroup(dtagg.id, dtagg.name)
         drawing_area.sankey._data_taggs[id].copyFrom(dtagg)
       })
-    to_update
-      .forEach(id => {
+    if (update_tag_data)
+      to_update.forEach(id => {
         drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id], matching_tags_id['dataTags'][id])
       })
   }
@@ -330,7 +340,7 @@ export const updateFrom = (
   // Nodes  ---------------------------------------------------------------------------
 
   const add_nodes = mode.includes('addNode')
-  const remove_nodes = mode.includes('removeNodes')
+  const remove_nodes = mode.includes('removeNode')
   const sync_nodes_tags = mode.includes('tagNode')
   const sync_nodes_positions = mode.includes('posNode')
   const sync_nodes_attr = mode.includes('attrNode')

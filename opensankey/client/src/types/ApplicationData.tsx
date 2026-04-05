@@ -113,6 +113,11 @@ export class Class_ApplicationData {
     return drawing_area
   }
 
+  /** Load a drawing area from JSON. Override in subclasses to use a subclass-specific persistence layer. */
+  public loadDrawingAreaFromJSON(drawing_area: Class_DrawingArea, json_object: Type_JSON): void {
+    DrawingAreaPersistence.fromJSON(drawing_area, json_object)
+  }
+
   public createNewIconLibrary(): Class_IconLibrary {
     return new Class_IconLibrary()
   }
@@ -125,6 +130,11 @@ export class Class_ApplicationData {
 
   // Attributes to transfer between sankeys
   public data_var_to_update: string[] = []
+  /** Called after applying a layout from an external source.
+   * tmp_DA is the already-converted source DrawingArea.
+   * json is the raw source file JSON (null for view sources).
+   * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
+  public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -180,19 +190,28 @@ export class Class_ApplicationData {
    */
   protected _transform_layout_all_attr: string[] = [
     'addNode',
-    'addFlux',
     'removeNode',
-    'removeFlux',
     'posNode',
-    'Values',
     'attrNode',
+    'addFlux',
+    'removeFlux',
     'posFlux',
     'attrFlux',
+    'Values',
+    'addTagNode',
+    'removeTagNode',
     'tagNode',
+    'addTagFlux',
+    'removeTagFlux',
     'tagFlux',
+    'addTagData',
+    'removeTagData',
     'tagData',
+    'addTagLevel',
+    'removeTagLevel',
     'tagLevel',
     'attrDrawingArea',
+    'scale',
     'addFreeLabel',
     'removeFreeLabel',
     'attrFreeLabel',
@@ -200,7 +219,7 @@ export class Class_ApplicationData {
     'styleDA',
     'styleNode',
     'styleFlux',
-    'styleFreeLabel'
+    'styleFreeLabel',
   ]
 
   //@ts-expect-error xxx
@@ -1217,6 +1236,42 @@ export class Class_ApplicationData {
   public set app_name(value: string) { this._app_name = value }
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
+
+  /**
+   * Group aliases for diagram_layout_options.
+   * Override in subclasses to add module-specific groups.
+   */
+  protected get _layout_groups(): Record<string, string[]> {
+    return {
+      allNodes:      ['addNode', 'removeNode', 'posNode', 'attrNode'],
+      allFlux:       ['addFlux', 'removeFlux', 'posFlux', 'attrFlux', 'Values'],
+      allTagNode:    ['addTagNode', 'removeTagNode', 'tagNode'],
+      allTagFlux:    ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagData:    ['addTagData', 'removeTagData', 'tagData'],
+      allTagLevel:   ['addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags:       ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
+      allStyles:     ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
+      allDA:         ['attrDrawingArea', 'scale'],
+    }
+  }
+
+  /**
+   * Expands group aliases in a mode array into their constituent keys.
+   * Unknown keys are passed through as-is (they may be valid leaf keys).
+   */
+  public expandLayoutMode(mode: string[]): string[] {
+    const groups = this._layout_groups
+    const result: string[] = []
+    mode.forEach(key => {
+      if (groups[key]) {
+        groups[key].forEach(k => { if (!result.includes(k)) result.push(k) })
+      } else {
+        if (!result.includes(key)) result.push(key)
+      }
+    })
+    return result
+  }
 
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
