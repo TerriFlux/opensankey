@@ -53,6 +53,7 @@ import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfi
 import {ImportImageAsSvgBg} from './components/UtilsOSP'
 import { AFMEditionMenu } from './components/AFMSankeyMenu'
 import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
+import { Class_MenuConfigOSP } from './types/MenuConfigOSP'
 
 /**
  * Generic Type that with given argument return a functionType that return a given type,
@@ -227,11 +228,18 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
 
   const app_data = new_data as Class_ApplicationDataOSP
 
+  const mc = app_data.menu_configuration as Class_MenuConfigOSP
+
+  // Grey out tagNode/tagFlux/tagData rows in UpdateModeGrid when no OSP licence
+  const _osp_tag_keys = ['tagNode', 'addTagNode', 'removeTagNode', 'tagFlux', 'addTagFlux', 'removeTagFlux', 'tagData', 'addTagData', 'removeTagData']
+  mc.apply_layout_is_row_disabled = (key: string) =>
+    _osp_tag_keys.includes(key) && !app_data.has_sankey_plus
+
   // Inject OSP extra tab into the layout transfer dialog (copyViews + icon_catalog)
-  app_data.menu_configuration.extra_apply_layout_tab = {
+  mc.extra_apply_layout_tab = {
     label: app_data.t('Menu.Transformation.Views'),
     disabled: () => !app_data.has_sankey_plus,
-    render: (attrs, onToggle, t) => renderApplyLayoutExtraTabOSP(app_data, attrs, onToggle, t)
+    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => renderApplyLayoutExtraTabOSP(app_data, attrs, onToggle, t)
   }
 
   // Copy views from source file when 'copyViews' is selected
