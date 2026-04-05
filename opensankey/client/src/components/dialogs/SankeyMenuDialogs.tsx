@@ -44,6 +44,8 @@ export type UpdateModeGridProps = {
   t: (key: string) => string
   /** When true: show Ajouts/Suppressions/Values/Tags/tagLevel rows (default true) */
   show_expert_rows?: boolean
+  /** If provided, keys returning true will have their row greyed out */
+  is_row_disabled?: (key: string) => boolean
   /** Optional extra tab injected by OSP or other extensions */
   extra_tab?: {
     label: string
@@ -53,7 +55,7 @@ export type UpdateModeGridProps = {
   }
 }
 
-export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, extra_tab }: UpdateModeGridProps) => {
+export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, extra_tab, is_row_disabled }: UpdateModeGridProps) => {
   const btn = (key: string, label: string) => (
     <Button
       variant={attrs.includes(key) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
@@ -101,14 +103,17 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
 
   const tagGrid = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '4px' }
 
-  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string) => (
-    <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1'>
-      <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
-      <Box sx={tagGrid}>
-        {btn(addKey, '+')}{btn(removeKey, '−')}{btn(updateKey, 'X')}
+  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string) => {
+    const disabled = is_row_disabled?.(updateKey) ?? false
+    return (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1' opacity={disabled ? 0.45 : 1} pointerEvents={disabled ? 'none' : undefined}>
+        <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
+        <Box sx={tagGrid}>
+          {btn(addKey, '+')}{btn(removeKey, '−')}{btn(updateKey, 'X')}
+        </Box>
       </Box>
-    </Box>
-  )
+    )
+  }
 
   const elemHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
     <Box />
@@ -229,7 +234,8 @@ export const ApplyLayoutDialog = ({
   const default_element_to_transform = [
     'posNode', 'posFlux', 'posFreeLabel',
     'attrNode', 'attrFlux', 'attrFreeLabel',
-    'attrDrawingArea'
+    'attrDrawingArea',
+    'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'
   ]
 
   const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
@@ -287,6 +293,7 @@ export const ApplyLayoutDialog = ({
     <UpdateModeGrid
       attrs={data_var_to_update}
       extra_tab={menu_configuration.extra_apply_layout_tab}
+      is_row_disabled={menu_configuration.apply_layout_is_row_disabled}
       onToggle={key => {
         const elem_style_keys = ['styleNode', 'styleFlux', 'styleFreeLabel']
         if (!data_var_to_update.includes(key)) {
