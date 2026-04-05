@@ -41,6 +41,7 @@ import {
   BannerViewsOSP,
   ViewsConfig,
   ModalCreateUnitaryViewOSP,
+  renderApplyLayoutExtraTabOSP,
 } from './components/SankeyPlusViews'
 
 import {
@@ -225,6 +226,23 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   )
 
   const app_data = new_data as Class_ApplicationDataOSP
+
+  // Inject OSP extra tab into the layout transfer dialog (copyViews + icon_catalog)
+  app_data.menu_configuration.extra_apply_layout_tab = {
+    label: app_data.t('Menu.Transformation.Views'),
+    disabled: () => !app_data.has_sankey_plus,
+    render: (attrs, onToggle, t) => renderApplyLayoutExtraTabOSP(app_data, attrs, onToggle, t)
+  }
+
+  // Copy views from source file when 'copyViews' is selected
+  app_data.post_apply_layout_callback = (_tmp_DA, json, mode) => {
+    const effective_mode = mode ?? app_data.data_var_to_update
+    if (json && effective_mode.includes('copyViews')) {
+      app_data.addViewsFromJSON(json)
+    }
+  }
+
+
   const modules_dialogs_OSP = [
     <ContextZDT
       app_data={app_data}

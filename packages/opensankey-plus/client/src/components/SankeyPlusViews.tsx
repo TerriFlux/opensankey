@@ -59,6 +59,47 @@ interface BaseComponentPropsPlus {
   app_data: Class_ApplicationDataOSP
 }
 
+// ===========================================================================
+// Extra tab for ApplyLayoutDialog — injected via menu_configuration.extra_apply_layout_tab
+// ===========================================================================
+
+/**
+ * Render function for the OSP extra tab in UpdateModeGrid (inside the layout transfer dialog).
+ * Provides copyViews and icon_catalog toggles.
+ * Called as extra_tab.render(attrs, onToggle, t) — NOT a React component.
+ */
+export const renderApplyLayoutExtraTabOSP = (
+  app_data: Class_ApplicationDataOSP,
+  attrs: string[],
+  onToggle: (key: string) => void,
+  t: (key: string) => string
+): React.ReactNode => {
+  const has_licence = app_data.has_sankey_plus
+  const is_in_view = !app_data.is_view_master
+  const disabled = !has_licence || is_in_view
+  const tooltip = !has_licence
+    ? t('templates.need_osp')
+    : is_in_view
+      ? t('Menu.Transformation.disabled_view')
+      : ''
+  const btn = (key: string, label: string, dis = false) => (
+    <Button
+      key={key}
+      isDisabled={dis}
+      variant={attrs.includes(key) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+      onClick={() => { if (!dis) onToggle(key) }}
+    >{label}</Button>
+  )
+  return (
+    <OSTooltip label={tooltip}>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1'>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Views')}</Box>
+        <Box>{btn('copyViews', 'X', disabled)}</Box>
+      </Box>
+    </OSTooltip>
+  )
+}
+
 export const logo_view = <svg
   xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 24 24'

@@ -7,6 +7,7 @@ import { Class_ApplicationHistory } from '../deps/OpenSankey/types/ApplicationHi
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOSP'
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
+import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 
 declare const window: Window &
@@ -98,7 +99,23 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @type {string[]}
    * @memberof Class_ApplicationDataOSP
    */
-  protected _transform_layout_all_attr: string[] = [...this.transform_layout_all_attr, 'freeLabels', 'icon_catalog']
+  protected _transform_layout_all_attr: string[] = [...this.transform_layout_all_attr, 'icon_catalog', 'copyViews']
+
+  protected get _layout_groups(): Record<string, string[]> {
+    return {
+      allNodes:      ['addNode', 'removeNode', 'posNode', 'attrNode'],
+      allFlux:       ['addFlux', 'removeFlux', 'posFlux', 'attrFlux', 'Values'],
+      allTagNode:    ['addTagNode', 'removeTagNode', 'tagNode'],
+      allTagFlux:    ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagData:    ['addTagData', 'removeTagData', 'tagData'],
+      allTagLevel:   ['addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags:       ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
+      allStyles:     ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
+      allDA:         ['attrDrawingArea', 'scale'],
+      allOSP:        ['icon_catalog', 'copyViews'],
+    }
+  }
 
   // PRIVATE ATTRIBUTES =================================================================
 
@@ -325,6 +342,64 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     if (this.drawing_area.id != default_main_sankey_id && (kwargs && kwargs['only_current_view'])) {
       this._views[this.drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this.drawing_area as Class_DrawingAreaOSP, kwargs))
     }
+  }
+
+  /**
+   * Copy views from a source file into the current application data.
+   * Views that already exist (same id) are skipped.
+   * Called after applySourceDA when 'copyViews' is in data_var_to_update.
+   *
+   * @param {Type_JSON} json_object - Raw source JSON (full file, including 'views' key)
+   * @memberof Class_ApplicationDataOSP
+   */
+  public addViewsFromJSON(json_object: Type_JSON) {
+    console.log('[addViewsFromJSON] called, json keys:', Object.keys(json_object))
+    // Apply OSP legacy conversion in-place before reading 'views'
+    convert_data_plus_legacy(json_object)
+    console.log('[addViewsFromJSON] after legacy conversion, views key present:', 'views' in json_object)
+    const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
+    if (!views_json) {
+      console.warn('[addViewsFromJSON] no views key found, aborting')
+      return
+    }
+    console.log('[addViewsFromJSON] views found:', Object.keys(views_json))
+    // Ensure master is set on current app
+    if (!this._master_drawing_area) {
+      console.log('[addViewsFromJSON] setting master_drawing_area')
+      this._master_drawing_area = this._drawing_area
+    }
+    // Register each sub-view from the source file
+    Object.entries(views_json).forEach(([view_id, view_json]) => {
+      if (view_id === default_main_sankey_id) return
+      if (this._views[view_id]) {
+        console.log('[addViewsFromJSON] view already exists, skipping:', view_id)
+        return
+      }
+      console.log('[addViewsFromJSON] registering view:', view_id)
+      this._views_order.push(view_id)
+      this._views[view_id] = {
+        name: (view_json as Type_JSON)['name'] as string,
+        json: compressJSONToGzip(view_json as Type_JSON) as Uint8Array
+      }
+      const raw_attr = (view_json as Type_JSON)['heredited_attr']
+      if (Array.isArray(raw_attr)) {
+        const legacy_src = ((view_json as Type_JSON)['heredited_source_id'] as string | undefined) ?? default_main_sankey_id
+        this._heredited_attr[view_id] = { [legacy_src]: raw_attr as string[] }
+      } else {
+        this._heredited_attr[view_id] = (raw_attr as { [source_id: string]: string[] } | undefined) ?? {}
+      }
+    })
+    // Switch to the active view from the source file if it exists in the imported views
+    let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
+    console.log('[addViewsFromJSON] current_view from JSON:', active_view_id)
+    if (active_view_id === default_main_sankey_id) active_view_id = Object.keys(views_json).find(id => id !== default_main_sankey_id) ?? default_main_sankey_id
+    console.log('[addViewsFromJSON] active_view_id resolved to:', active_view_id, '— exists:', active_view_id in this._views)
+    if (active_view_id !== default_main_sankey_id && this._views[active_view_id]) {
+      this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+      this._drawing_area.draw()
+    }
+    ;(this.menu_configuration as Class_MenuConfigOSP).updateComponentRelatedToViews()
+    console.log('[addViewsFromJSON] done, views_order:', this._views_order)
   }
 
   /**
@@ -817,6 +892,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const decompressed_string = pako.inflate(new Uint8Array(this._views[id].json), { to: 'string' })
     DrawingAreaPersistenceOSP.fromJSON(tmp_DA as Class_DrawingAreaOSP, JSON.parse(decompressed_string))
     return tmp_DA
+  }
+
+  public loadDrawingAreaFromJSON(drawing_area: Class_DrawingArea, json_object: Type_JSON): void {
+    DrawingAreaPersistenceOSP.fromJSON(drawing_area as Class_DrawingAreaOSP, json_object)
   }
 
 }
