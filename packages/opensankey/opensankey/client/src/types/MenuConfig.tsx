@@ -254,6 +254,8 @@ export class Class_MenuConfig {
   private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
+  /** If provided, row keys returning true will be greyed in UpdateModeGrid */
+  public apply_layout_is_row_disabled?: (key: string) => boolean = undefined
   /** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
   public extra_apply_layout_tab?: {
     label: string
