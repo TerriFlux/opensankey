@@ -222,12 +222,12 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
-        en: 'Warn on nodes created from fluxes',
-        fr: 'Signaler les nœuds créés depuis les flux'
+        en: 'Block node creation from fluxes',
+        fr: 'Bloquer la création de nœuds depuis les flux'
       },
       tooltips: {
-        en: 'If a flux references a node not listed in the nodes sheet, the node is created but reported in the info log; details are available in the debug tab',
-        fr: 'Si un flux référence un nœud absent de l\'onglet nœuds, le nœud est créé mais signalé dans les infos ; le détail est disponible dans l\'onglet debug'
+        en: 'If checked: nodes referenced in fluxes but absent from the nodes sheet are NOT created and the load fails with a summary error. If unchecked: nodes are created but listed in the info log; details are available in the debug tab.',
+        fr: 'Si coché : les nœuds référencés dans les flux mais absents de l\'onglet nœuds ne sont PAS créés et le chargement échoue avec un récapitulatif. Si décoché : les nœuds sont créés mais listés dans les infos ; le détail est disponible dans l\'onglet debug.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
