@@ -254,6 +254,13 @@ export class Class_MenuConfig {
   private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
+  /** Optional extra tab injected into UpdateModeGrid by OSP or other extensions */
+  public extra_apply_layout_tab?: {
+    label: string
+    /** If provided and returns true: tab header is greyed and content disabled */
+    disabled?: () => boolean
+    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
+  } = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
 
