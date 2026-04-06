@@ -262,8 +262,9 @@ export class Class_LinkValueTree {
   public extend(data_tag: Class_DataTag) {
     // What kind of children
     const [allValues, allTrees] = this.kindOfChildren()
-    // Case 1 : Last node tree before values
-    if (allValues && (!allTrees)) {
+    const isEmpty = Object.keys(this.children).length === 0
+    // Case 1 : Last node tree before values (or empty children — same treatment)
+    if (allValues && (!allTrees || isEmpty)) {
       // Tag must be from this tree's data_tag group
       if (data_tag.group === this.data_tag_group) {
         // If not already existing, create a new child // given data_tag

@@ -298,13 +298,15 @@ export const ApplyLayoutDialog = ({
         const elem_style_keys = ['styleNode', 'styleFlux', 'styleFreeLabel']
         if (!data_var_to_update.includes(key)) {
           data_var_to_update.push(key)
-          if (key === 'Values' && !data_var_to_update.includes('tagData'))
-            data_var_to_update.push('tagData')
+          // Values requires addTagData to create missing value slots in target
+          if (key === 'Values' && !data_var_to_update.includes('addTagData'))
+            data_var_to_update.push('addTagData')
           // element style buttons require styleDA
           if (elem_style_keys.includes(key) && !data_var_to_update.includes('styleDA'))
             data_var_to_update.push('styleDA')
         } else {
-          if (key === 'tagData' && data_var_to_update.includes('Values')) return
+          // Prevent removing addTagData while Values depends on it
+          if (key === 'addTagData' && data_var_to_update.includes('Values')) return
           data_var_to_update.splice(data_var_to_update.indexOf(key), 1)
           // disabling styleDA also disables element styles
           if (key === 'styleDA')
