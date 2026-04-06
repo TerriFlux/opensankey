@@ -1330,8 +1330,8 @@ export const NAME_LABEL_CONFIG = {
   ...NAME_LABEL_BASE_CONFIG,
 
   separator: {
-    default: ' - ',
-    type: (() => ' - ') as (() => string),
+    default: '',
+    type: (() => '') as (() => string),
     category: 'name_label' as const,
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
