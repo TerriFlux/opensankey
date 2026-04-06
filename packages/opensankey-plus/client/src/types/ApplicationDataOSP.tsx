@@ -99,21 +99,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @type {string[]}
    * @memberof Class_ApplicationDataOSP
    */
-  protected _transform_layout_all_attr: string[] = [...this.transform_layout_all_attr, 'icon_catalog', 'copyViews']
+  protected get _transform_layout_all_attr(): string[] {
+    return [...super._transform_layout_all_attr, ...this._layout_groups['allOSP']]
+  }
 
   protected get _layout_groups(): Record<string, string[]> {
     return {
-      allNodes:      ['addNode', 'removeNode', 'posNode', 'attrNode'],
-      allFlux:       ['addFlux', 'removeFlux', 'posFlux', 'attrFlux', 'Values'],
-      allTagNode:    ['addTagNode', 'removeTagNode', 'tagNode'],
-      allTagFlux:    ['addTagFlux', 'removeTagFlux', 'tagFlux'],
-      allTagData:    ['addTagData', 'removeTagData', 'tagData'],
-      allTagLevel:   ['addTagLevel', 'removeTagLevel', 'tagLevel'],
-      allTags:       ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
-      allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
-      allStyles:     ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
-      allDA:         ['attrDrawingArea', 'scale'],
-      allOSP:        ['icon_catalog', 'copyViews'],
+      ...super._layout_groups,
+      allOSP: ['icon_catalog', 'copyViews'],
     }
   }
 
