@@ -139,9 +139,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // Is the color defined by tags
     const taggs_activated = this.taggs_list
       .filter(tagg => tagg.use_colors)
-    if (
-      (taggs_activated.length > 0)
-    ) {
+    if (taggs_activated.length > 0) {
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
@@ -150,7 +148,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
       if (selected_tags_for_colormap.length > 0) {
         shape_color = selected_tags_for_colormap[0].color
+      } else {
+        // Node has no tag in the active color group: keep its own color
+        shape_color = this.shape_color
       }
+    } else {
+      // Node doesn't belong to any color-group tag: keep its own color
+      shape_color = this.shape_color
     }
 
     return shape_color

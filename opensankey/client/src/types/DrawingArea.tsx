@@ -937,6 +937,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.legend.draw()
     }
 
     const inv_updateSelectedLinksTagAssignation = () => {
@@ -950,6 +951,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.legend.draw()
     }
 
     this.application_data.history.saveUndo(inv_updateSelectedLinksTagAssignation)
@@ -981,6 +983,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.legend.draw()
     }
 
     const inv_updateSelectedNodesTagAssignation = () => {
@@ -994,6 +997,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.legend.draw()
     }
 
     this.application_data.history.saveUndo(inv_updateSelectedNodesTagAssignation)
