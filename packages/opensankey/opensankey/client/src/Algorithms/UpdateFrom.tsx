@@ -238,13 +238,13 @@ export const updateFrom = (
       })
     if (add_tag_level)
       to_add.forEach(id => {
-        const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
+        const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id]
         drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
         drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
       })
     if (update_tag_level)
       to_update.forEach(id => {
-        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
+        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id])
       })
   }
   if (mode.includes('tagLevel') || all) {
@@ -281,13 +281,13 @@ export const updateFrom = (
       })
     if (add_tag_node)
       to_add.forEach(id => {
-        const ntagg = other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id]
+        const ntagg = other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags']?.[id] ?? id]
         drawing_area.sankey.addNodeTagGroup(ntagg.id, ntagg.name)
         drawing_area.sankey._node_taggs[id].copyFrom(ntagg)
       })
     if (update_tag_node)
       to_update.forEach(id => {
-        drawing_area.sankey._node_taggs[id].copyFrom(other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id], matching_tags_id['nodeTags'][id])
+        drawing_area.sankey._node_taggs[id].copyFrom(other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags']?.[id] ?? id], matching_tags_id['nodeTags']?.[id])
       })
   }
 
@@ -304,20 +304,22 @@ export const updateFrom = (
       })
     if (add_tag_flux)
       to_add.forEach(id => {
-        const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id]
+        const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags']?.[id] ?? id]
         drawing_area.sankey.addFluxTagGroup(ftagg.id, ftagg.name)
         drawing_area.sankey._flux_taggs[id].copyFrom(ftagg)
       })
     if (update_tag_flux)
       to_update.forEach(id => {
-        drawing_area.sankey._flux_taggs[id].copyFrom(other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id], matching_tags_id['fluxTags'][id])
+        drawing_area.sankey._flux_taggs[id].copyFrom(other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags']?.[id] ?? id], matching_tags_id['fluxTags']?.[id])
       })
   }
 
   // Update data_tag_dict ------------------------------------------------------------
 
-  if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || all) {
-    const add_tag_data    = mode.includes('addTagData')    || all
+  // Values requires addTagData to create missing value slots in target
+  const implicit_add_tag_data = mode.includes('Values') && !mode.includes('addTagData')
+  if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || implicit_add_tag_data || all) {
+    const add_tag_data    = mode.includes('addTagData') || implicit_add_tag_data || all
     const remove_tag_data = mode.includes('removeTagData') || all
     const update_tag_data = mode.includes('tagData')       || all
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._data_taggs, other_drawing_area.sankey._data_taggs, matching_taggs_id['dataTags'])
@@ -327,13 +329,13 @@ export const updateFrom = (
       })
     if (add_tag_data)
       to_add.forEach(id => {
-        const dtagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id]
+        const dtagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id]
         drawing_area.sankey.addDataTagGroup(dtagg.id, dtagg.name)
         drawing_area.sankey._data_taggs[id].copyFrom(dtagg)
       })
     if (update_tag_data)
       to_update.forEach(id => {
-        drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id], matching_tags_id['dataTags'][id])
+        drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id], matching_tags_id['dataTags']?.[id])
       })
   }
 
@@ -536,23 +538,31 @@ export const updateFrom = (
           if (Object.values(values)[1] === undefined) {
             values_corresp_ids[id_flux][Object.keys(values)[0]] = Object.keys(other_values)[0]
           }
-          // Case 2 : Datatags are present
+          // Case 2 : Datatags are present — match by name to handle differing IDs
           else {
+            // Build a map: source_tag_id → target_tag_id using matching_tags_id
+            // matching_tags_id['dataTags'][tagg_id][source_tag_id] = target_tag_id
+            const src_to_tgt_tag: { [src_tag_id: string]: string } = {}
+            Object.values(matching_tags_id['dataTags'] ?? {}).forEach(tag_map => {
+              Object.entries(tag_map).forEach(([src_id, tgt_id]) => {
+                src_to_tgt_tag[src_id] = tgt_id
+              })
+            })
             Object.entries(values)
               .forEach(([id_value, [, dtags]]) => {
-                if (dtags !== undefined) { // Should never be the case
-                  // Find values match based on datatags ids
-                  const dtags_id = dtags.map(dtag => dtag.id)
+                if (dtags !== undefined) {
+                  // Resolve target dtag IDs to source dtag IDs for comparison
+                  const tgt_ids_as_src = dtags.map(dtag => {
+                    // Find the source ID whose target mapping is this dtag.id
+                    const src_id = Object.entries(src_to_tgt_tag).find(([, v]) => v === dtag.id)?.[0]
+                    return src_id ?? dtag.id
+                  })
                   Object.entries(other_values)
-                    .filter(([, [, other_dtags]]) => {
-                      if (other_dtags !== undefined)
-                        return (
-                          JSON.stringify(dtags_id) ===
-                          JSON.stringify(other_dtags.map(other_dtag => other_dtag.id))
-                        )
-                      else
-                        return false // Should never be the case
-                    })
+                    .filter(([, [, other_dtags]]) =>
+                      other_dtags !== undefined &&
+                      JSON.stringify(tgt_ids_as_src) ===
+                      JSON.stringify(other_dtags.map(d => d.id))
+                    )
                     .forEach(([id_other_value,]) => {
                       values_corresp_ids[id_flux][id_value] = id_other_value
                     })

@@ -188,39 +188,14 @@ export class Class_ApplicationData {
    * @type {string[]}
    * @memberof Class_ApplicationData
    */
-  protected _transform_layout_all_attr: string[] = [
-    'addNode',
-    'removeNode',
-    'posNode',
-    'attrNode',
-    'addFlux',
-    'removeFlux',
-    'posFlux',
-    'attrFlux',
-    'Values',
-    'addTagNode',
-    'removeTagNode',
-    'tagNode',
-    'addTagFlux',
-    'removeTagFlux',
-    'tagFlux',
-    'addTagData',
-    'removeTagData',
-    'tagData',
-    'addTagLevel',
-    'removeTagLevel',
-    'tagLevel',
-    'attrDrawingArea',
-    'scale',
-    'addFreeLabel',
-    'removeFreeLabel',
-    'attrFreeLabel',
-    'posFreeLabel',
-    'styleDA',
-    'styleNode',
-    'styleFlux',
-    'styleFreeLabel',
-  ]
+  protected get _transform_layout_all_attr(): string[] {
+    return this.expandLayoutMode(
+      ['allNodes', 'allFlux', 'allFreeLabels',
+        'allTagNode', 'allTagFlux',
+        'allTagData', 'allTagLevel',
+        'allDA',
+        'allStyles'])
+  }
 
   //@ts-expect-error xxx
   protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
@@ -567,26 +542,26 @@ export class Class_ApplicationData {
   ) {
     // this.sendWaitingToast(
     //   () => {
-        // Always bypass redrawings
-        this._drawing_area.bypass_redraws = true
-        // Reset everything
-        this.reset(kwargs)
-        this._drawing_area.bypass_redraws = true
-        // Read json file
-        this._fromJSON(json_object, kwargs)
-        // Post processing & menu updating
-        this._afterFromJSON()
-        // Then draw if asked
-        if (draw) {
-          this._drawing_area.sankey.sortNodes()
-          // If the JSON has no geometric info, auto-layout the diagram
-          if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
-            this._drawing_area.nodePositioning.computeAutoSankey(true, true)
-          }
-          this._drawing_area.draw()
-          this._drawing_area.recenter()
-        }
-      // })
+    // Always bypass redrawings
+    this._drawing_area.bypass_redraws = true
+    // Reset everything
+    this.reset(kwargs)
+    this._drawing_area.bypass_redraws = true
+    // Read json file
+    this._fromJSON(json_object, kwargs)
+    // Post processing & menu updating
+    this._afterFromJSON()
+    // Then draw if asked
+    if (draw) {
+      this._drawing_area.sankey.sortNodes()
+      // If the JSON has no geometric info, auto-layout the diagram
+      if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
+        this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+      }
+      this._drawing_area.draw()
+      this._drawing_area.recenter()
+    }
+    // })
   }
 
   /**
@@ -1243,16 +1218,17 @@ export class Class_ApplicationData {
    */
   protected get _layout_groups(): Record<string, string[]> {
     return {
-      allNodes:      ['addNode', 'removeNode', 'posNode', 'attrNode'],
-      allFlux:       ['addFlux', 'removeFlux', 'posFlux', 'attrFlux', 'Values'],
-      allTagNode:    ['addTagNode', 'removeTagNode', 'tagNode'],
-      allTagFlux:    ['addTagFlux', 'removeTagFlux', 'tagFlux'],
-      allTagData:    ['addTagData', 'removeTagData', 'tagData'],
-      allTagLevel:   ['addTagLevel', 'removeTagLevel', 'tagLevel'],
-      allTags:       ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allNodes: ['addNode', 'removeNode', 'posNode', 'attrNode'],
+      allFlux: ['addFlux', 'removeFlux', 'posFlux', 'attrFlux'],
       allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
-      allStyles:     ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
-      allDA:         ['attrDrawingArea', 'scale'],
+      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode'],
+      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagData: ['addTagData', 'removeTagData', 'tagData'],
+      allTagLevel: ['addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allStyles: ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
+      allDA: ['attrDrawingArea', 'scale'],
+      allValues: ['Values']
     }
   }
 
