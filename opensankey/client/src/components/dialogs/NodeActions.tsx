@@ -515,7 +515,7 @@ export class NodeActions {
   moveToFirstPlan = () => {
     this.drawing_area.selected_nodes_list.forEach(node => {
       const idx_to_shift = this.drawing_area.list_g_element.indexOf(node.id)
-      this.drawing_area.moveOrderElementInDA(idx_to_shift, this.drawing_area.list_g_element.length - 1)
+      this.drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     //this.closeContextMenu()
   }
@@ -523,7 +523,7 @@ export class NodeActions {
   moveToLastPlan = () => {
     this.drawing_area.selected_nodes_list.forEach(node => {
       const idx_to_shift = this.drawing_area.list_g_element.indexOf(node.id)
-      this.drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+      this.drawing_area.moveOrderElementInDA(idx_to_shift, this.drawing_area.list_g_element.length - 1)
     })
     //this.closeContextMenu()
   }
