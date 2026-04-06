@@ -111,7 +111,7 @@ elementStyleConfigs[NodeImportExportCloseStyle] = {
     'shape_visible': false,
     'shape_min_width': 1,
     'name_label_box_width': 300,
-    'name_label_separator': ' - ',
+    'name_label_separator': '',
     'name_label_separator_part': 'before',
     'shape_position_type': 'relative',
     'shape_position_dy': 20,
@@ -148,7 +148,7 @@ elementStyleConfigs[NodeImportExportAboveBelowStyle] = {
     'value_label_is_visible': true,
     'value_label_vert': 'middle',
     'name_label_vert': 'middle',
-    'name_label_separator': ' - ',
+    'name_label_separator': '',
     'shape_position_type': 'parametric'
   }
 }
