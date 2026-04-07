@@ -652,6 +652,24 @@ export class Class_LinkValue {
     this.result_value = null
   }
 
+  // Target (destination) value -- when null, same as source value
+  public get valueResultTarget() {
+    return this.result_value_target
+  }
+
+  public set valueResultTarget(_) {
+    this.result_value_target = _
+  }
+
+  public get valueDataTarget() {
+    return this.data_value_target
+  }
+
+  public set valueDataTarget(_) {
+    this.data_value_target = _
+    this.result_value_target = null
+  }
+
   public value_option: ValueOptionType = 'value'
 
   protected data_value: number | null = null
@@ -661,6 +679,10 @@ export class Class_LinkValue {
   protected result_value: number | null = null
   public result_min: number | null = null
   public result_max: number | null = null
+
+  // Target (destination) values -- null means same as source
+  protected data_value_target: number | null = null
+  protected result_value_target: number | null = null
 
   public text_value: string | null = null
 
@@ -721,6 +743,9 @@ export class Class_LinkValue {
     this.result_min = element.result_min
     this.result_max = element.result_max
 
+    this.data_value_target = element.data_value_target
+    this.result_value_target = element.result_value_target
+
     this.text_value = element.text_value
     this.value_option = element.value_option
     this.ratio_unit_tag = element.ratio_unit_tag
@@ -744,6 +769,12 @@ export class Class_LinkValue {
     }
     this.data_value = element.valueData === null ? null : this.data_value! + element.valueData!
     this.result_value = element.valueResult === null ? null : this.result_value! + element.valueResult!
+    if (element.data_value_target !== null) {
+      this.data_value_target = (this.data_value_target ?? 0) + element.data_value_target
+    }
+    if (element.result_value_target !== null) {
+      this.result_value_target = (this.result_value_target ?? 0) + element.result_value_target
+    }
   }
 
   /**
@@ -768,6 +799,9 @@ export class Class_LinkValue {
     // }
     if (this.result_min != null) json_object['result_min'] = this.result_min
     if (this.result_max != null) json_object['result_max'] = this.result_max
+
+    if (this.data_value_target != null) json_object['data_value_target'] = this.data_value_target
+    if (this.result_value_target != null) json_object['result_value_target'] = this.result_value_target
 
     if (this.text_value) json_object['text_value'] = this.text_value
     if (this.value_option !== 'value') json_object['value_option'] = this.value_option
@@ -828,6 +862,9 @@ export class Class_LinkValue {
       this.result_value = getNumberOrNullFromJSON(json_object, 'result_value')
       this.result_max = getNumberOrNullFromJSON(json_object, 'result_max')
       this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
+
+      this.data_value_target = getNumberOrNullFromJSON(json_object, 'data_value_target')
+      this.result_value_target = getNumberOrNullFromJSON(json_object, 'result_value_target')
 
       this.text_value = getStringFromJSON(json_object, 'text_value',this.text_value!)
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType

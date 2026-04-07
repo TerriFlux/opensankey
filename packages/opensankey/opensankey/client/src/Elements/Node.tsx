@@ -751,8 +751,8 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
 
-        // Thickness of the link influence arrow size
-        const link_value = link.thickness
+        // Thickness of the link influence arrow size (use target thickness since arrows are drawn at target)
+        const link_value = link.thicknessTarget
 
         let xt: number
         let yt: number
@@ -836,7 +836,8 @@ export class Class_NodeElement extends Class_NodeBase {
     this.getLinksOrdered(side)
       .filter(link => link.is_visible)
       .forEach(link => {
-        sum = sum + link.thickness
+        // Use source thickness if this node is the link's source, target thickness otherwise
+        sum = sum + (link.source === this ? link.thicknessSource : link.thicknessTarget)
       })
     return sum
   }
@@ -911,11 +912,12 @@ export class Class_NodeElement extends Class_NodeBase {
           }
           return
         }
-        // Get positioning parameters
-        const thickness = link.thickness
+        // Get positioning parameters - use source or target thickness depending on which end this node is
+        const is_source = link.source === this
+        const thickness = is_source ? link.thicknessSource : link.thicknessTarget
         const handle_position_shift = 5
         // Current node is link's source
-        if (link.source === this && !doublon.includes(link)) {
+        if (is_source && !doublon.includes(link)) {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.source_side === 'right') {
@@ -1548,8 +1550,8 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     if (links.length === 0) return
 
-    // Calculer la somme totale des épaisseurs
-    const totalThickness = links.reduce((sum, link) => sum + link.thickness, 0)
+    // Calculer la somme totale des épaisseurs (using appropriate thickness per link end)
+    const totalThickness = links.reduce((sum, link) => sum + (link.source === this ? link.thicknessSource : link.thicknessTarget), 0)
 
     // Offset de départ (tient compte des marges via getLinksStartingPositionOffSet)
     const startOffset = this.getLinksStartingPositionOffSet(side)
@@ -1559,7 +1561,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Dessiner un cap par flux
     links.forEach(link => {
-      const thickness = link.thickness
+      const thickness = link.source === this ? link.thicknessSource : link.thicknessTarget
       const color = type == 'input' ? link.getArrowColorToUse() : link.getShapeColorToUse()
 
       // Créer le cap découpé pour ce flux spécifique
