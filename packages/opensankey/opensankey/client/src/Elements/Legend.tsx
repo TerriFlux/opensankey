@@ -361,7 +361,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
             // Ajout du label
             tagElement?.append('text')
               .attr('class', 'name_tag')
-              .attr('x', 35)
+              .attr('x', this._legend_police + 5)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
               .text(tag.name)
