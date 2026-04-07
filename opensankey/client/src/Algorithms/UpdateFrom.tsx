@@ -252,7 +252,7 @@ export const updateFrom = (
       matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
       Object.values(drawing_area.sankey._level_taggs).forEach(tagg =>
         tagg.tags_list.forEach(tag => {
-          const sourceTag = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]]?.tags_dict?.[tag.id]
+          const sourceTag = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]??tagg.id]?.tags_dict?.[tag.id]
           if (sourceTag) tag.is_selected = sourceTag.is_selected
         })
       )
@@ -266,6 +266,7 @@ export const updateFrom = (
         if (src_dim?.force_show_children) dim.setForceToShowChildren(true)
       })
     })
+    drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
   }
 
   // Update node_tag_dict ------------------------------------------------------------
