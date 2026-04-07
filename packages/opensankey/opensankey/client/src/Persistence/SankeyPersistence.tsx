@@ -26,7 +26,7 @@
 
 import {
   default_style_id, getBooleanFromJSON, getJSONFromJSON, getJSONOrUndefinedFromJSON, getNumberFromJSON,
-  getNumberOrUndefinedFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, Type_Structure, type Type_JSON
+  getNumberOrUndefinedFromJSON, getStringListFromJSON, getStringOrUndefinedFromJSON, Type_MacroTagGroup, Type_Structure, type Type_JSON
 } from '../types/Utils'
 import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
@@ -1235,6 +1235,16 @@ export class SankeyPersistence {
       })
     }
 
+    // Save tag groups order
+    const taggs_order: Type_JSON = {}
+    const taggs_types: string[] = ['node_taggs', 'flux_taggs', 'data_taggs', 'level_taggs', 'view_taggs']
+    taggs_types.forEach(type => {
+      const order = sankey.getTagGroupsOrder(type as Type_MacroTagGroup)
+      if (order.length > 0) taggs_order[type] = order
+    })
+    if (Object.keys(taggs_order).length > 0)
+      json_object['taggs_order'] = taggs_order
+
     json_object['style'] = json_object_styles
     sankey.styles_list.forEach(style => {
       json_object_styles[style.id] = StylePersistence.toJSON(style);
@@ -1594,6 +1604,20 @@ export class SankeyPersistence {
 
     if (Object.keys(sankey._level_taggs).length > 1) {
       sankey.removeTagGroupWithId('level_taggs', 'Primaire')
+    }
+
+    // Read tag groups order
+    if (json_object['taggs_order'] !== undefined) {
+      const taggs_order = json_object['taggs_order'] as Type_JSON
+      const taggs_types: string[] = ['node_taggs', 'flux_taggs', 'data_taggs', 'level_taggs', 'view_taggs']
+      taggs_types.forEach(type => {
+        if (taggs_order[type] !== undefined) {
+          sankey.setTagGroupsOrder(
+            type as Type_MacroTagGroup,
+            getStringListFromJSON(taggs_order, type, [])
+          )
+        }
+      })
     }
   }
 }
