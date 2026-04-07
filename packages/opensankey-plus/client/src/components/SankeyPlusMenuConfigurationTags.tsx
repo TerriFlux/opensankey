@@ -78,7 +78,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   // Data -------------------------------------------------------------------------------
 
   const { t, icon_library } = new_data
-  const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color } = icon_library
+  const { icon_add_element, icon_remove_element, icon_element_visible, icon_element_invisible, icon_random, icon_palette_color, icon_move_element_up, icon_move_element_down } = icon_library
   // Get related tag groups & tags - Can be NodeTags, FluxTags or DataTags --------------
 
   const tags_group_dict = new_data.drawing_area.sankey.getTagGroupsAsDict(elementTagNameProp)
@@ -565,6 +565,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
     _handleUsePalette()
   }
 
+  // Position mode toggles --------------------------------------------------------------
+  const [showTagPositionMode, setShowTagPositionMode] = useState(false)
+  const [showGrpPositionMode, setShowGrpPositionMode] = useState(false)
+
   // Tags tables ------------------------------------------------------------------------
   let variant_table_edit_tag = 'table_edit_tag_node'
   let title = t('Tags.EEG')
@@ -572,6 +576,10 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   if (elementTagNameProp == 'data_taggs') variant_table_edit_tag = 'table_edit_tag_data'
   if (elementTagNameProp == 'flux_taggs' || elementTagNameProp == 'node_taggs') variant_table_edit_tag = 'table_edit_tag_link'
   if (elementTagNameProp == 'level_taggs') title = t('Tags.EditDimensionLevel')
+  const variant_table_edit_tag_final = showTagPositionMode ? variant_table_edit_tag + '_pos' : variant_table_edit_tag
+
+  let variant_table_edit_grp = elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'
+  const variant_table_edit_grp_final = showGrpPositionMode ? variant_table_edit_grp + '_pos' : variant_table_edit_grp
 
   const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={title}>
     <>
@@ -646,35 +654,51 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       {/* Tableaux d'étiquettes  -------------------------------------------------------- */}
       {/* Entete du Tableau des étiquettes  */}
       <TableContainer>
-        <Table variant={variant_table_edit_tag} >
+        <Table variant={variant_table_edit_tag_final} >
           <Thead>
             <Tr >
               <Th>
-                {/* Bouton ajout d'une étiquette  */}
-                <OSTooltip label={t('Tags.tooltips.add')}>
-                  <Button
-                    variant='menuconfigpanel_add_button'
-                    size='sizeConfigButton'
-                    value='+'
-                    onClick={handleAddTagButton}>
-                    {icon_add_element}
-                  </Button>
-                </OSTooltip>
+                <Box layerStyle='options_2cols'>
+                  {/* Bouton ajout d'une étiquette  */}
+                  <OSTooltip label={t('Tags.tooltips.add')}>
+                    <Button
+                      variant='menuconfigpanel_add_button'
+                      size='sizeConfigButton'
+                      value='+'
+                      onClick={handleAddTagButton}>
+                      {icon_add_element}
+                    </Button>
+                  </OSTooltip>
+                  {/* Bouton toggle mode position */}
+                  <OSTooltip label={t('Tags.tooltips.position')}>
+                    <Button
+                      variant={showTagPositionMode ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_add_button'}
+                      size='sizeConfigButton'
+                      onClick={() => setShowTagPositionMode(!showTagPositionMode)}>
+                      {icon_move_element_up}
+                    </Button>
+                  </OSTooltip>
+                </Box>
               </Th>
               {/* Nom de l'étqiuette  */}
               <Th>
                 {t('Tags.Nom')}
               </Th>
-              {/* Etiquette visible  */}
-              {elementTagNameProp !== 'data_taggs' ?
-                <Th>
-                  {t('Tags.Visible')}
-                </Th> : <></>
-              }
-              {elementTagNameProp !== 'level_taggs' ?
-                <Th>
-                  {t('Tags.Couleur')}
-                </Th> : <></>
+              {showTagPositionMode ?
+                <Th>{t('Tags.Position')}</Th>
+                : <>
+                  {/* Etiquette visible  */}
+                  {elementTagNameProp !== 'data_taggs' ?
+                    <Th>
+                      {t('Tags.Visible')}
+                    </Th> : <></>
+                  }
+                  {elementTagNameProp !== 'level_taggs' ?
+                    <Th>
+                      {t('Tags.Couleur')}
+                    </Th> : <></>
+                  }
+                </>
               }
             </Tr>
           </Thead>
@@ -683,7 +707,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
           <Tbody>
             {
               tags_entry.length > 0 ?
-                tags_entry.map(tag => {
+                tags_entry.map((tag, tag_idx) => {
                   return (
                     <Tr
                       key={tag.id}
@@ -722,41 +746,86 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           </InputGroup>
                         </OSTooltip>
                       </Td>
-                      {/* Rendre ou non visible  */}
-                      {
-                        elementTagNameProp !== 'data_taggs' ?
-                          <Td >
-                            <OSTooltip label={t('Tags.tooltips.visible')}>
-                              <Button
-                                variant='menuconfigpanel_option_button_in_table'
-                                name={'element_visible' + tag.id}
-                                id={tag.id}
-                                onClick={
-                                  () => {
-                                    toggleTagSelected(tag)
-                                  }}
-                              >
-                                {tag.is_selected ? icon_element_visible : icon_element_invisible}
-                              </Button>
-                            </OSTooltip>
-                          </Td> :
-                          <></>
-                      }
-                      {/* Choix de la couleur*/}
-                      {
-                        elementTagNameProp !== 'level_taggs' ?
-                          <Td w='100%'>
-                            <OSTooltip label={t('Tags.tooltips.couleur')}>
-                              <Box>
-                                <MenuColorPicker
-                                  initialColor={tag.color}
-                                  onColorChange={(new_color) => {
-                                    handleTagColor(tag, new_color)
-                                  }}
-                                /></Box>
-                            </OSTooltip>
-                          </Td> :
-                          <></>
+                      {showTagPositionMode ?
+                        /* Boutons monter/descendre l'étiquette */
+                        <Td>
+                          <Box layerStyle="options_2cols">
+                            <Button
+                              variant='menuconfigpanel_option_button_in_table'
+                              isDisabled={tag_idx === 0}
+                              onClick={() => {
+                                new_data.history.saveUndo(() => {
+                                  tags_group_entry.moveTagDown(tag.id)
+                                  updateThisAndToggleSavingIndicator()
+                                })
+                                new_data.history.saveRedo(() => {
+                                  tags_group_entry.moveTagUp(tag.id)
+                                  updateThisAndToggleSavingIndicator()
+                                })
+                                tags_group_entry.moveTagUp(tag.id)
+                                updateThisAndToggleSavingIndicator()
+                              }}
+                            >
+                              {icon_move_element_up}
+                            </Button>
+                            <Button
+                              variant='menuconfigpanel_option_button_in_table'
+                              isDisabled={tag_idx === tags_entry.length - 1}
+                              onClick={() => {
+                                new_data.history.saveUndo(() => {
+                                  tags_group_entry.moveTagUp(tag.id)
+                                  updateThisAndToggleSavingIndicator()
+                                })
+                                new_data.history.saveRedo(() => {
+                                  tags_group_entry.moveTagDown(tag.id)
+                                  updateThisAndToggleSavingIndicator()
+                                })
+                                tags_group_entry.moveTagDown(tag.id)
+                                updateThisAndToggleSavingIndicator()
+                              }}
+                            >
+                              {icon_move_element_down}
+                            </Button>
+                          </Box>
+                        </Td>
+                        : <>
+                          {/* Rendre ou non visible  */}
+                          {
+                            elementTagNameProp !== 'data_taggs' ?
+                              <Td >
+                                <OSTooltip label={t('Tags.tooltips.visible')}>
+                                  <Button
+                                    variant='menuconfigpanel_option_button_in_table'
+                                    name={'element_visible' + tag.id}
+                                    id={tag.id}
+                                    onClick={
+                                      () => {
+                                        toggleTagSelected(tag)
+                                      }}
+                                  >
+                                    {tag.is_selected ? icon_element_visible : icon_element_invisible}
+                                  </Button>
+                                </OSTooltip>
+                              </Td> :
+                              <></>
+                          }
+                          {/* Choix de la couleur*/}
+                          {
+                            elementTagNameProp !== 'level_taggs' ?
+                              <Td w='100%'>
+                                <OSTooltip label={t('Tags.tooltips.couleur')}>
+                                  <Box>
+                                    <MenuColorPicker
+                                      initialColor={tag.color}
+                                      onColorChange={(new_color) => {
+                                        handleTagColor(tag, new_color)
+                                      }}
+                                    /></Box>
+                                </OSTooltip>
+                              </Td> :
+                              <></>
+                          }
+                        </>
                       }
                     </Tr>
                   )
@@ -775,32 +844,47 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
     <WrapperBoxSubSectionMenu new_data={new_data} title={elementTagNameProp == 'level_taggs' ? t('Tags.EditDimension') : t('Tags.EGE')}>
       {/* Groupe d'étiquette  */}
       <TableContainer>
-        <Table variant={elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'}>
+        <Table variant={variant_table_edit_grp_final}>
           {/* Entete du tableau de grouep d'etiquette  */}
           <Thead>
             <Tr>
               {/* Ajouter un groupe */}
               <Th>
-                <OSTooltip label={t('Tags.tooltips.add_grp')}>
-                  <Button
-                    variant='menuconfigpanel_add_button'
-                    size='sizeConfigButton'
-                    onClick={handleAddTagGrpButton}>
-                    {icon_add_element}
-                  </Button>
-                </OSTooltip>
+                <Box layerStyle='options_2cols'>
+                  <OSTooltip label={t('Tags.tooltips.add_grp')}>
+                    <Button
+                      variant='menuconfigpanel_add_button'
+                      size='sizeConfigButton'
+                      onClick={handleAddTagGrpButton}>
+                      {icon_add_element}
+                    </Button>
+                  </OSTooltip>
+                  {/* Bouton toggle mode position */}
+                  <OSTooltip label={t('Tags.tooltips.position')}>
+                    <Button
+                      variant={showGrpPositionMode ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_add_button'}
+                      size='sizeConfigButton'
+                      onClick={() => setShowGrpPositionMode(!showGrpPositionMode)}>
+                      {icon_move_element_up}
+                    </Button>
+                  </OSTooltip>
+                </Box>
               </Th>
               {/* Autre entetes  */}
               <Th>{t('Tags.Nom')}</Th>
-              <Th>{t('Tags.Bannière')}</Th>
-              {/* {(elementTagNameProp == 'data_taggs') ? <Th>{t('Tags.sequence')}</Th> : <></>} */}
-              {elementTagNameProp == 'data_taggs' ? <Th>{t('Tags.unit')}</Th> : <></>}
+              {showGrpPositionMode ?
+                <Th>{t('Tags.Position')}</Th>
+                : <>
+                  <Th>{t('Tags.Bannière')}</Th>
+                  {elementTagNameProp == 'data_taggs' ? <Th>{t('Tags.unit')}</Th> : <></>}
+                </>
+              }
             </Tr>
           </Thead>
           {/* Liste des groupes d'étiquettes  */}
           <Tbody>
             {
-              tags_group_list.map(tag_group => {
+              tags_group_list.map((tag_group, grp_idx) => {
 
                 let dataTagg_special_column = <></>
                 const tag_group_as_data_grp = tag_group as Class_DataTagGroup
@@ -862,47 +946,76 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                         </InputGroup>
                       </OSTooltip>
                     </Td>
-                    {/* Banniere  */}
-                    <Td><OSTooltip label={t('Tags.tooltips.banner')}>
-                      <Select
-                        variant='menuconfigpanel_option_select_table'
-                        onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
-                          handleBanner(tag_group, (evt.target.value as tag_banner_type))}
-                        value={tag_group.banner}
-                      >
-                        <option
-                          key={'none' + tag_group.id}
-                          id='NoneBaner'
-                          value='none'
-                        >
-                          {t('Menu.Aucun')}
-                        </option>
-                        <option
-                          key={'one' + tag_group.id}
-                          id='OneBaner'
-                          value='one'
-                        >
-                          {t('Tags.Unique')}
-                        </option>
-                        <option
-                          key={'multi' + tag_group.id}
-                          id='MultipleBaner'
-                          value='multi'
-                        >
-                          {t('Tags.Multiple')}
-                        </option>:<></>
-                        {elementTagNameProp == 'data_taggs' ? <option
-                          key={'sequence' + tag_group.id}
-                          id='SequenceBaner'
-                          value='sequence'
-                        >
-                          {t('Tags.Sequence')}
-                        </option> : <></>}
-                      </Select>
-                    </OSTooltip>
-                    </Td>
-                    {/* is Sequence  */}
-                    {dataTagg_special_column}
+                    {showGrpPositionMode ?
+                      /* Boutons monter/descendre le groupe */
+                      <Td>
+                        <Box layerStyle="options_2cols">
+                          <Button
+                            variant='menuconfigpanel_option_button_in_table'
+                            isDisabled={grp_idx === 0}
+                            onClick={() => {
+                              new_data.drawing_area.sankey.moveTagGroupUp(elementTagNameProp, tag_group.id)
+                              updateThisAndToggleSavingIndicator()
+                            }}
+                          >
+                            {icon_move_element_up}
+                          </Button>
+                          <Button
+                            variant='menuconfigpanel_option_button_in_table'
+                            isDisabled={grp_idx === tags_group_list.length - 1}
+                            onClick={() => {
+                              new_data.drawing_area.sankey.moveTagGroupDown(elementTagNameProp, tag_group.id)
+                              updateThisAndToggleSavingIndicator()
+                            }}
+                          >
+                            {icon_move_element_down}
+                          </Button>
+                        </Box>
+                      </Td>
+                      : <>
+                        {/* Banniere  */}
+                        <Td><OSTooltip label={t('Tags.tooltips.banner')}>
+                          <Select
+                            variant='menuconfigpanel_option_select_table'
+                            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) =>
+                              handleBanner(tag_group, (evt.target.value as tag_banner_type))}
+                            value={tag_group.banner}
+                          >
+                            <option
+                              key={'none' + tag_group.id}
+                              id='NoneBaner'
+                              value='none'
+                            >
+                              {t('Menu.Aucun')}
+                            </option>
+                            <option
+                              key={'one' + tag_group.id}
+                              id='OneBaner'
+                              value='one'
+                            >
+                              {t('Tags.Unique')}
+                            </option>
+                            <option
+                              key={'multi' + tag_group.id}
+                              id='MultipleBaner'
+                              value='multi'
+                            >
+                              {t('Tags.Multiple')}
+                            </option>:<></>
+                            {elementTagNameProp == 'data_taggs' ? <option
+                              key={'sequence' + tag_group.id}
+                              id='SequenceBaner'
+                              value='sequence'
+                            >
+                              {t('Tags.Sequence')}
+                            </option> : <></>}
+                          </Select>
+                        </OSTooltip>
+                        </Td>
+                        {/* is Sequence  */}
+                        {dataTagg_special_column}
+                      </>
+                    }
                   </Tr>
                 )
               })
