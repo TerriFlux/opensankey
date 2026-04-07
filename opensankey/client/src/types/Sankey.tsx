@@ -63,6 +63,15 @@ export class Class_Sankey {
   public _data_taggs: { [_: string]: Class_DataTagGroup } = {}
   public _level_taggs: { [_: string]: Class_LevelTagGroup } = {}
   public _view_taggs: { [_: string]: Class_ViewTagGroup } = {}  // NOUVEAU
+
+  // Tag groups ordering
+  private _taggs_order: { [type: string]: string[] } = {
+    'node_taggs': [],
+    'flux_taggs': [],
+    'data_taggs': [],
+    'level_taggs': [],
+    'view_taggs': [],
+  }
   
   protected _nodes_dimensions: { [_: string]: Class_NodeDimension } = {}
   protected _node_tags_fingerprint: string
@@ -117,6 +126,7 @@ export class Class_Sankey {
     this._data_taggs = {}
     this._level_taggs = {}
     this._view_taggs = {}  // NOUVEAU
+    Object.keys(this._taggs_order).forEach(k => this._taggs_order[k] = [])
     this.dimensions_list.forEach(dim => dim.delete())
   }
 
@@ -659,6 +669,8 @@ export class Class_Sankey {
       tag_group.activated = true
       // Update
       this._level_taggs[id] = tag_group
+      if (!this._taggs_order['level_taggs'].includes(id))
+        this._taggs_order['level_taggs'].push(id)
       // Return
       return tag_group
     }
@@ -677,6 +689,8 @@ export class Class_Sankey {
       tag_group.activated = true
       tag_group.banner = 'one'
       this._view_taggs[id] = tag_group
+      if (!this._taggs_order['view_taggs'].includes(id))
+        this._taggs_order['view_taggs'].push(id)
       return tag_group
     }
     else {
@@ -694,6 +708,8 @@ export class Class_Sankey {
       const tag_group = new Class_NodeTagGroup(id, name, this, with_a_tag)
       // Update
       this._node_taggs[id] = tag_group
+      if (!this._taggs_order['node_taggs'].includes(id))
+        this._taggs_order['node_taggs'].push(id)
       // Return
       return tag_group
     }
@@ -713,6 +729,8 @@ export class Class_Sankey {
       const tag_group = new Class_FluxTagGroup(id, name, this, with_a_tag)
       // Update
       this._flux_taggs[id] = tag_group
+      if (!this._taggs_order['flux_taggs'].includes(id))
+        this._taggs_order['flux_taggs'].push(id)
       // Return
       return tag_group
     }
@@ -734,6 +752,8 @@ export class Class_Sankey {
       this.links_list.forEach(link => link.addDataTagGroup(tag_group))
       // Update
       this._data_taggs[id] = tag_group
+      if (!this._taggs_order['data_taggs'].includes(id))
+        this._taggs_order['data_taggs'].push(id)
       // Return
       return tag_group
     }
@@ -778,6 +798,12 @@ export class Class_Sankey {
       tag_group.delete()
       // Remove reference to tag group
       delete macro_tag_group[id]
+      // Remove from order
+      const order = this._taggs_order[type_group]
+      if (order) {
+        const idx = order.indexOf(id)
+        if (idx >= 0) order.splice(idx, 1)
+      }
     }
   }
 
@@ -790,7 +816,13 @@ export class Class_Sankey {
 
 
   public getTagGroupsAsList(type_group: Type_MacroTagGroup) {
-    return Object.values(this.getTagGroupsAsDict(type_group))
+    const dict = this.getTagGroupsAsDict(type_group)
+    const order = this._taggs_order[type_group]
+    if (order && order.length > 0)
+      return order
+        .filter(id => id in dict)
+        .map(id => dict[id])
+    return Object.values(dict)
   }
 
   public getTagGroupsAsDict(type_group: Type_MacroTagGroup) {
@@ -812,6 +844,36 @@ export class Class_Sankey {
     else {
       return this._level_taggs  // Fallback
     }
+  }
+
+  public moveTagGroupUp(type_group: Type_MacroTagGroup, id: string) {
+    const order = this._taggs_order[type_group]
+    if (order) {
+      const idx = order.indexOf(id)
+      if (idx > 0) {
+        order.splice(idx, 1)
+        order.splice(idx - 1, 0, id)
+      }
+    }
+  }
+
+  public moveTagGroupDown(type_group: Type_MacroTagGroup, id: string) {
+    const order = this._taggs_order[type_group]
+    if (order) {
+      const idx = order.indexOf(id)
+      if (idx >= 0 && idx < order.length - 1) {
+        order.splice(idx, 1)
+        order.splice(idx + 1, 0, id)
+      }
+    }
+  }
+
+  public getTagGroupsOrder(type_group: Type_MacroTagGroup) {
+    return this._taggs_order[type_group] ?? []
+  }
+
+  public setTagGroupsOrder(type_group: Type_MacroTagGroup, order: string[]) {
+    this._taggs_order[type_group] = order
   }
 
   public nodeTagsUpdated() { this._node_tags_fingerprint = randomId() }
