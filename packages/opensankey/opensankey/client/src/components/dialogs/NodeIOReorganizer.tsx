@@ -52,6 +52,7 @@ export const NodeIOReorganizer = ({
   const [direction_selected, setSelectedDirection] = useState<string | undefined>(undefined)
   const [side_selected, setSelectedSide] = useState<Type_Side | undefined>(undefined)
   const [tab_colored, setTabColored] = useState(false)
+  const [show_all_links, setShowAllLinks] = useState(false)
 
 
   // ✅ TOUS LES useEffect AVANT le return
@@ -119,7 +120,7 @@ export const NodeIOReorganizer = ({
   // ... le reste du code reste identique
 
   const filtered_links_to_reorganize_length = side_selected
-    ? links_to_reorganize[side_selected].filter(link => link.is_visible).length
+    ? links_to_reorganize[side_selected].filter(link => show_all_links || link.is_visible).length
     : 0
 
   // ✅ Fonctions de réorganisation
@@ -236,6 +237,23 @@ export const NodeIOReorganizer = ({
         </Select>
       </Box>
 
+      {/* Flux visibles / Tous les flux */}
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <OSTooltip label={t('Noeud.PF.tooltips.filter_links')}>
+          <Box as='span' layerStyle='menuconfigpanel_option_name'>
+            {t('Noeud.PF.filter_links')}
+          </Box>
+        </OSTooltip>
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={show_all_links ? 'all' : 'visible'}
+          onChange={(evt) => setShowAllLinks(evt.target.value === 'all')}
+        >
+          <option value='visible'>{t('Noeud.PF.visible_links')}</option>
+          <option value='all'>{t('Noeud.PF.all_links')}</option>
+        </Select>
+      </Box>
+
       {/* Mettre les couleurs des flux dans le tableau */}
       <Checkbox
         variant='menuconfigpanel_option_checkbox'
@@ -276,7 +294,7 @@ export const NodeIOReorganizer = ({
             {(provided) => (
               <Tbody {...provided.droppableProps} ref={provided.innerRef}>
                 {links_to_reorganize[side_selected].map((link, link_idx) => {
-                  if (!link.is_visible) return <React.Fragment key={link.id} />
+                  if (!show_all_links && !link.is_visible) return <React.Fragment key={link.id} />
 
                   idx_link_io_visible += 1
                   const color = link.getShapeColorToUse()
