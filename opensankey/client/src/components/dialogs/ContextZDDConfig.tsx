@@ -4,7 +4,7 @@ import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
-    { type: 'button', actionName: 'clearCurrentView' },
+    { type: 'button', actionName: 'clearCurrentView', visibilityConditions: [{ type: 'custom', customCheck: (app_data) => 'has_views' in app_data && (app_data as unknown as { has_views: boolean }).has_views }] },
     { type: 'button', actionName: 'deleteAllViews' },
     {
       type: 'submenu',
