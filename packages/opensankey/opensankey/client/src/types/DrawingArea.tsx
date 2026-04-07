@@ -94,6 +94,11 @@ export class Class_DrawingArea {
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
 
+  // Scrollbars
+  private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  private _scrollbar_size = 10
+
 
   public static: boolean = !!window.sankey?.publish
   public to_recenter = false
@@ -377,6 +382,9 @@ export class Class_DrawingArea {
     }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
+
+    // Scrollbars (outside g_drawing so they stay fixed in viewport)
+    this._initScrollbars()
   }
 
   /**
@@ -1762,6 +1770,191 @@ export class Class_DrawingArea {
     }
   }
 
+  // SCROLLBARS ==========================================================================
+
+  /**
+   * Create scrollbar SVG elements (track + thumb) for horizontal and vertical scrolling.
+   * Placed directly in the SVG root so they stay fixed in viewport coordinates.
+   */
+  private _initScrollbars() {
+    if (!this.d3_selection_zoom_area) return
+    const sb = this._scrollbar_size
+
+    // Horizontal scrollbar
+    this._d3_scrollbar_h = this.d3_selection_zoom_area.append('g')
+      .attr('class', 'scrollbar scrollbar-h')
+      .attr('visibility', 'hidden')
+      .style('pointer-events', 'all')
+    // Track
+    this._d3_scrollbar_h.append('rect')
+      .attr('class', 'scrollbar-track')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('height', sb)
+      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
+    // Thumb
+    this._d3_scrollbar_h.append('rect')
+      .attr('class', 'scrollbar-thumb')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('height', sb)
+      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
+      .style('cursor', 'pointer')
+
+    // Vertical scrollbar
+    this._d3_scrollbar_v = this.d3_selection_zoom_area.append('g')
+      .attr('class', 'scrollbar scrollbar-v')
+      .attr('visibility', 'hidden')
+      .style('pointer-events', 'all')
+    // Track
+    this._d3_scrollbar_v.append('rect')
+      .attr('class', 'scrollbar-track')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('width', sb)
+      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
+    // Thumb
+    this._d3_scrollbar_v.append('rect')
+      .attr('class', 'scrollbar-thumb')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('width', sb)
+      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
+      .style('cursor', 'pointer')
+
+    // Helper to get content extent via getBBox
+    const getContentScreenExtent = () => {
+      if (!this.d3_selection_zoom_area || !this.d3_selection) return null
+      const svgN = this.d3_selection_zoom_area.node()
+      const gN = this.d3_selection.node()
+      if (!svgN || !gN) return null
+      const t = d3.zoomTransform(svgN)
+      let bbox: DOMRect
+      try { bbox = gN.getBBox() } catch { return null }
+      const r = svgN.getBoundingClientRect()
+      return {
+        screenW: bbox.width * t.k,
+        screenH: bbox.height * t.k,
+        viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
+        viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
+        k: t.k
+      }
+    }
+
+    // Drag behavior for horizontal thumb
+    const hThumbNode = this._d3_scrollbar_h.select('.scrollbar-thumb').node() as SVGRectElement | null
+    if (hThumbNode) {
+      d3.select<SVGRectElement, unknown>(hThumbNode).call(
+        d3.drag<SVGRectElement, unknown>()
+          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
+            if (!this.d3_selection_zoom_area) return
+            const ext = getContentScreenExtent()
+            if (!ext || ext.screenW <= ext.viewW) return
+            const trackW = ext.viewW - 2 * sb
+            const ratio = ext.screenW / trackW
+            this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
+          })
+      )
+    }
+
+    // Drag behavior for vertical thumb
+    const vThumbNode = this._d3_scrollbar_v.select('.scrollbar-thumb').node() as SVGRectElement | null
+    if (vThumbNode) {
+      d3.select<SVGRectElement, unknown>(vThumbNode).call(
+        d3.drag<SVGRectElement, unknown>()
+          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
+            if (!this.d3_selection_zoom_area) return
+            const ext = getContentScreenExtent()
+            if (!ext || ext.screenH <= ext.viewH) return
+            const trackH = ext.viewH - 2 * sb
+            const ratio = ext.screenH / trackH
+            this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
+          })
+      )
+    }
+  }
+
+  /**
+   * Update scrollbar positions and sizes based on the current D3 zoom transform.
+   * Uses getBBox() on g_drawing to get the real content extent, then maps it
+   * to viewport coordinates via the zoom transform.
+   * Scrollbars stay visible as long as content overflows the viewport.
+   */
+  private _updateScrollbars() {
+    if (!this.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
+    const svgNode = this.d3_selection_zoom_area.node()
+    if (!svgNode) return
+    const gNode = this.d3_selection?.node()
+    if (!gNode) return
+
+    const sb = this._scrollbar_size
+    // The SVG has height=window.innerHeight but is placed after the navbar,
+    // so its bottom overflows past the viewport. Use window_fitting dimensions
+    // which correctly account for navbar and bottom bar.
+    const viewW = this.window_fitting_width
+    const viewH = this.window_fitting_height
+    if (viewW <= 0 || viewH <= 0) return
+    // Offset from SVG top to the actual visible area (navbar pushes content down)
+    const navH = this.getNavBarHeight()
+
+    // Get the real bounding box of all content in g_drawing's local coordinate system
+    // This handles negative coordinates correctly since getBBox returns the untransformed extent
+    let bbox: DOMRect
+    try {
+      bbox = gNode.getBBox()
+    } catch {
+      return // getBBox can throw if element has no rendered content
+    }
+    if (bbox.width === 0 && bbox.height === 0) return
+
+    // Map content bbox to screen coordinates using the zoom transform
+    const transform = d3.zoomTransform(svgNode)
+    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
+    const screenLeft = transform.x + bbox.x * transform.k
+    const screenRight = transform.x + (bbox.x + bbox.width) * transform.k
+    const screenTop = transform.y + bbox.y * transform.k
+    const screenBottom = transform.y + (bbox.y + bbox.height) * transform.k
+    const screenW = screenRight - screenLeft
+    const screenH = screenBottom - screenTop
+
+    // Horizontal scrollbar: content wider than viewport
+    // interrupt() cancels any pending d3 transition that could override opacity
+    this._d3_scrollbar_h.interrupt()
+    if (screenW > viewW * 1.01) {
+      const trackW = viewW - 2 * sb
+      const thumbW = Math.max(30, (viewW / screenW) * trackW)
+      const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
+      const thumbX = sb + scrollFraction * (trackW - thumbW)
+
+      this._d3_scrollbar_h
+        .attr('visibility', 'visible')
+        .attr('transform', `translate(0, ${navH + viewH - sb - 4})`)
+      this._d3_scrollbar_h.select('.scrollbar-track')
+        .attr('x', sb).attr('width', trackW)
+      this._d3_scrollbar_h.select('.scrollbar-thumb')
+        .attr('x', thumbX)
+        .attr('width', thumbW)
+    } else {
+      this._d3_scrollbar_h.attr('visibility', 'hidden')
+    }
+
+    // Vertical scrollbar: content taller than viewport
+    this._d3_scrollbar_v.interrupt()
+    if (screenH > viewH * 1.01) {
+      const trackH = viewH - 2 * sb
+      const thumbH = Math.max(30, (viewH / screenH) * trackH)
+      const scrollFraction = Math.max(0, Math.min(1, -screenTop / (screenH - viewH)))
+      const thumbY = sb + scrollFraction * (trackH - thumbH)
+
+      this._d3_scrollbar_v
+        .attr('visibility', 'visible')
+        .attr('transform', `translate(${viewW - sb - 4}, ${navH})`)
+      this._d3_scrollbar_v.select('.scrollbar-track')
+        .attr('y', sb).attr('height', trackH)
+      this._d3_scrollbar_v.select('.scrollbar-thumb')
+        .attr('y', thumbY)
+        .attr('height', thumbH)
+    } else {
+      this._d3_scrollbar_v.attr('visibility', 'hidden')
+    }
+  }
+
   /**
    * Define event when mouse scrolls in drawing area
    * Note : Under the hood, this calls eventZoom method throught this.zoomListener
@@ -1823,6 +2016,9 @@ export class Class_DrawingArea {
           handle.draw()
         })
       }, 500)
+
+      // Update scrollbars
+      this._updateScrollbars()
     }
   }
 
