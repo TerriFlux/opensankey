@@ -45,12 +45,14 @@ export const resources_flux = {
           ratio_target_parent: 'Ratio parent flux(right)',
           unit_ratio: 'Coeff. units conversion',
           edit_value: 'Edit value',
+          value_target: 'Dest. value',
           affichage: 'Label',
           tooltips: {
             data_type: 'Data type',
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
-            affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
+            affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram',
+            value_target: 'Destination value for tapered links (leave empty for uniform thickness)'
           }
         },
         apparence: {
@@ -194,12 +196,14 @@ export const resources_flux = {
           ratio_source_parent: 'Ratio flux parent(à gauche)',
           ratio_target_parent: 'Ratio flux parent(à droite)',
           unit_ratio: 'Coeff. conversion unités',
+          value_target: 'Valeur dest.',
           affichage: 'Label',
           tooltips: {
             data_type: 'Type de données',
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
-            affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
+            affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            value_target: 'Valeur à la destination pour les flux en forme de trapèze (laisser vide pour une épaisseur uniforme)'
           }
         },
         apparence: {
