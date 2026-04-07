@@ -689,7 +689,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
 
       // 5. Fallback: source color
-      return this.source.getShapeColorToUse()
+      return this.shape_color //this.source.getShapeColorToUse()
     }
     const type_source = this.shape_color_rule
     if (type_source == 'source') {
@@ -1380,6 +1380,33 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * Target (destination) value for the link.
+   * When null, the link has uniform thickness (same as source).
+   * When set, the link tapers from source value to target value.
+   */
+  public get valueCurrentTarget(): number | null {
+    if (this._is_computing) return null
+    this._is_computing = true
+    let value_target = null
+    if (this.drawing_area.type_data === 'data') {
+      value_target = this.value?.valueDataTarget ?? null
+    } else {
+      value_target = this.value?.valueResultTarget ?? (this.value?.value_option == 'value' ? this.value?.valueDataTarget : null) ?? null
+    }
+    this._is_computing = false
+    return value_target
+  }
+
+  public set valueCurrentTarget(_: number | null) {
+    const value = this.value
+    if (value !== null) {
+      value.valueDataTarget = _
+      value.valueResultTarget = null
+      this.redrawNodesSourceTarget()
+    }
+  }
+
+  /**
    * Either search correct current value with data_taggs,
    *  or return directly the value when there is no data_taggs
    * @return string
@@ -1497,26 +1524,53 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * Get thickness of stroke shape
+   * Clamp a raw pixel thickness to the drawing area min/max limits
+   */
+  private _clampThickness(linkValueInPx: number): number {
+    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
+      return this.drawing_area.minimum_flux
+    }
+    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
+    return Math.max(2, linkValueInPx)
+  }
+
+  /**
+   * Get thickness of stroke shape (source side).
+   * This is the main thickness used everywhere for backward compatibility.
    * @readonly
    * @memberof Class_LinkElement
    */
   public get thickness() {
-    // Get link value for current dataTaggs selected
     const data_value = this.valueCurrent
-    // Scale this value for the drawing area
-    const linkValueInPx = (data_value !== null /*&& (!this.linkIsStructure())*/) ? this.scaleValueToPx(data_value) : 2
+    const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
+    return this._clampThickness(linkValueInPx)
+  }
 
-    // If link processed size is inferior to min. limit return min. limit
-    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
-      return this.drawing_area.minimum_flux
-    }
-    // If link processed size is superior to max. limit return max. limit
-    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
-      return this.drawing_area.maximum_flux
-    }
+  /**
+   * Alias for thickness at the source end of the link.
+   */
+  public get thicknessSource() {
+    return this.thickness
+  }
 
-    return Math.max(2, linkValueInPx)
+  /**
+   * Get thickness at the target (destination) end of the link.
+   * When valueCurrentTarget is null, returns same as thicknessSource (uniform link).
+   */
+  public get thicknessTarget() {
+    const target_value = this.valueCurrentTarget
+    if (target_value === null) return this.thickness
+    const linkValueInPx = this.scaleValueToPx(target_value)
+    return this._clampThickness(linkValueInPx)
+  }
+
+  /**
+   * Whether this link has different source and target thicknesses (tapered/trapezoid shape).
+   */
+  public get isTapered() {
+    return this.valueCurrentTarget !== null && this.thicknessSource !== this.thicknessTarget
   }
 
   public get position_x_start() {
@@ -1745,11 +1799,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'text_value'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
-    value: K extends 'valueCurrent' ? number | null : string,
+    value: K extends 'text_value' ? string : number | null,
     refreshParentComponent: () => void
   ) => {
     const dict_old_val: { [id: string]: number | string | null } = {}

@@ -1213,6 +1213,18 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return font_size
   }
 
+  /**
+   * Get the effective thickness at the label's horizontal position.
+   * For tapered links, interpolates between source and target thickness.
+   */
+  protected getThicknessAtLabelPos(): number {
+    if (!this.link.isTapered) return this.link.thickness
+    const horiz = this._label_values.horiz || 'left'
+    if (horiz === 'left') return this.link.thicknessSource
+    if (horiz === 'right') return this.link.thicknessTarget
+    return (this.link.thicknessSource + this.link.thicknessTarget) / 2
+  }
+
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
     let label_pos_y_end = this.link.position_y_end
@@ -1220,6 +1232,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     let label_pos_x = this.link.position_x_start
     let label_anchor = 'start'
     let label_baseline = 'text-before-edge'
+    const thickness = this.getThicknessAtLabelPos()
 
     if (this._label_values.position_absolute) {
       label_pos_x = this._label_values.position_x
@@ -1246,7 +1259,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       const inside_vert = this._label_values.inside_vert ?? false
       let shouldPlaceTop = this._label_values.vert === 'top'
 
-      if (this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness) {
+      if (this._specific_label_values.pos_auto && this.getFontSize() > thickness) {
         const horiz = this._label_values.horiz || 'left'
         if (horiz === 'left') {
           shouldPlaceTop = !going_up
@@ -1257,18 +1270,18 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
       if (shouldPlaceTop) {
         if (inside_vert) {
-          label_pos_y -= this.link.thickness / 2 - this.getFontSize()
+          label_pos_y -= thickness / 2 - this.getFontSize()
           label_baseline = 'text-before-edge'
         } else {
-          label_pos_y -= this.link.thickness / 2
+          label_pos_y -= thickness / 2
           label_baseline = 'text-after-edge'
         }
-      } else if (this._label_values.vert === 'bottom' || this._specific_label_values.pos_auto && this.getFontSize() > this.link.thickness) {
+      } else if (this._label_values.vert === 'bottom' || this._specific_label_values.pos_auto && this.getFontSize() > thickness) {
         if (inside_vert) {
-          label_pos_y += this.link.thickness / 2
+          label_pos_y += thickness / 2
           label_baseline = 'text-after-edge'
         } else {
-          label_pos_y += this.link.thickness / 2 + this.getFontSize()
+          label_pos_y += thickness / 2 + this.getFontSize()
           label_baseline = 'text-before-edge'
         }
       } else if (this._label_values.vert === 'middle') {
@@ -1423,7 +1436,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const yf = this.link.position_y_end
     const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
     const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
-    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline') {
+    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && !this.link.isTapered) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)

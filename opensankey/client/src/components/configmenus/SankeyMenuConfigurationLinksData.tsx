@@ -29,7 +29,7 @@ import { Select, InputGroup, InputLeftAddon } from '@chakra-ui/react'
 import { TFunction } from 'i18next'
 import { ValueOptionType, value_option_percent_constants_source, value_option_percent_constants_target } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
-import { Box, Button } from '@chakra-ui/react'
+import { Box, Button, Checkbox } from '@chakra-ui/react'
 import {
   RowSetter2Cols, DataTagSelector, OSTooltip,
   BOX2COLSTITLEH4,
@@ -322,6 +322,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     first_link?.value?.valueData ?? null :
     first_link?.valueCurrent
 
+  const default_value_target = first_link?.valueCurrentTarget
+
   const is_label_indeterminated = !selected_links.every(el => el.value?.text_value === first_link_value?.text_value)
 
   // ✅ Gestion des data tags
@@ -486,6 +488,52 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           </OSTooltip>
         </Box>
       </Box>
+
+      {/* Target (destination) value - checkbox to enable, disabled without OSP+ */}
+      <OSTooltip label={t('Flux.data.tooltips.value_target')} disabled={!app_data.has_sankey_plus}>
+        <Box layerStyle='options_2cols'>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isDisabled={!app_data.has_sankey_plus}
+            isChecked={default_value_target !== null}
+            onChange={(evt) => {
+              if (evt.target.checked) {
+                // Enable: set target value = current source value
+                Class_LinkElement.updateLinks(
+                  app_data, selected_links, 'valueCurrentTarget', first_link?.valueCurrent ?? 0, refreshThisAndUpdateRelatedComponents
+                )
+              } else {
+                // Disable: clear target value
+                Class_LinkElement.updateLinks(
+                  app_data, selected_links, 'valueCurrentTarget', null as unknown as number, refreshThisAndUpdateRelatedComponents
+                )
+              }
+            }}
+          >
+            {t('Flux.data.value_target')}
+          </Checkbox>
+        </Box>
+      </OSTooltip>
+      {default_value_target !== null && app_data.has_sankey_plus && <Box layerStyle='options_2cols'>
+        <RowSetter2Cols
+          attributePath={'Flux.data'}
+          attributeKey={'value_target'}
+        >
+          <ConfigMenuNumberInput
+            t={t}
+            default_value={default_value_target}
+            function_on_blur={(_: number | null) => {
+              Class_LinkElement.updateLinks(
+                app_data, selected_links, 'valueCurrentTarget', _!, refreshThisAndUpdateRelatedComponents
+              )
+            }}
+            minimum_value={0}
+            stepper={true}
+            step={1}
+            unit_text={unit_text}
+          />
+        </RowSetter2Cols>
+      </Box>}
 
       {/* Text display and mode selector */}
       <Box layerStyle='options_2cols'>
