@@ -747,7 +747,7 @@ interface OverloadedButtonProps {
   elements: ElementsType
   config: any
   attributePath: string,
-  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
   variant: string
   onClick: () => void
@@ -799,7 +799,7 @@ interface OverloadedButtonGroupProps<T = string> {
   elements: ElementsType
   config: any
   attributePath: string,
-  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
   currentValue: T
   items: ButtonGroupItem<T>[]
@@ -876,7 +876,7 @@ export const OverloadedButtonGroup = <T extends string>({
 interface OverloadedCheckboxProps {
   elements: ElementsType
   config: any
-  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon'
+  prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
   isChecked: boolean
   onChange: (checked: boolean) => void

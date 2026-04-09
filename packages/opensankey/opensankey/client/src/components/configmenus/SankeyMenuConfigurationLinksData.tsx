@@ -489,7 +489,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
         </Box>
       </Box>
 
-      {/* Target (destination) value - checkbox to enable, disabled without OSP+ */}
+      {/* Target (destination) value - checkbox + value on same line, disabled without OSP+ */}
       <OSTooltip label={t('Flux.data.tooltips.value_target')} disabled={!app_data.has_sankey_plus}>
         <Box layerStyle='options_2cols'>
           <Checkbox
@@ -512,28 +512,23 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           >
             {t('Flux.data.value_target')}
           </Checkbox>
+          {default_value_target !== null && app_data.has_sankey_plus && (
+            <ConfigMenuNumberInput
+              t={t}
+              default_value={default_value_target}
+              function_on_blur={(_: number | null) => {
+                Class_LinkElement.updateLinks(
+                  app_data, selected_links, 'valueCurrentTarget', _!, refreshThisAndUpdateRelatedComponents
+                )
+              }}
+              minimum_value={0}
+              stepper={true}
+              step={1}
+              unit_text={unit_text}
+            />
+          )}
         </Box>
       </OSTooltip>
-      {default_value_target !== null && app_data.has_sankey_plus && <Box layerStyle='options_2cols'>
-        <RowSetter2Cols
-          attributePath={'Flux.data'}
-          attributeKey={'value_target'}
-        >
-          <ConfigMenuNumberInput
-            t={t}
-            default_value={default_value_target}
-            function_on_blur={(_: number | null) => {
-              Class_LinkElement.updateLinks(
-                app_data, selected_links, 'valueCurrentTarget', _!, refreshThisAndUpdateRelatedComponents
-              )
-            }}
-            minimum_value={0}
-            stepper={true}
-            step={1}
-            unit_text={unit_text}
-          />
-        </RowSetter2Cols>
-      </Box>}
 
       {/* Text display and mode selector */}
       <Box layerStyle='options_2cols'>

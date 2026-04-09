@@ -1,6 +1,6 @@
 import colormap from 'colormap'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_LinkValue } from '../Elements/LinkValues'
+import { Class_ElementValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
@@ -431,7 +431,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
-    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_LinkValue)[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
