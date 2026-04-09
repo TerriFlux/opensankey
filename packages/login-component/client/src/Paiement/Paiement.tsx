@@ -86,6 +86,30 @@ export const PaiementCheckout = () => {
 }
 
 /**
+ * Notify the OpenSankey+ trial analytics endpoint that the anonymous trial UUID stored in
+ * this browser has just converted to a paid licence. Idempotent: only pings once per browser.
+ *
+ * Inlined here on purpose: LoginComponent must not depend on OpenSankey+. The localStorage
+ * keys are documented in submodules/OpenSankey+/client/src/utils/trial.ts and must stay in sync.
+ */
+const notifyTrialConverted = (): void => {
+  try {
+    if (localStorage.getItem('os_plus_trial_converted')) return
+    const uuid = localStorage.getItem('os_plus_trial_uuid')
+    if (!uuid) return
+    localStorage.setItem('os_plus_trial_converted', '1')
+    fetch('/api/trial/converted', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uuid, converted_at: Date.now() }),
+      keepalive: true,
+    }).catch(() => { /* analytics ping is best-effort */ })
+  } catch {
+    // localStorage unavailable — ignore
+  }
+}
+
+/**
  * Create the right redirection after paiement.
  * Ie. if paiement succeeded or not.
  */
@@ -101,6 +125,9 @@ export const PaiementReturn = () => {
         .then((res) => res.json())
         .then((data) => {
           setStatus(data.status)
+          if (data.status === 'complete') {
+            notifyTrialConverted()
+          }
         })
         .catch((error) => {
           console.error('Erreur lors de la vérification du statut:', error)
