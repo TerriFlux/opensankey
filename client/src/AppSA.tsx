@@ -139,9 +139,9 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
       returnToApp={returnToApp}
     />
   )
-  additionalMenus.current.additional_bottom_item.push(
-    <BannerSubscriptionSA app_data={new_data_app} />
-  )
+  // Bottom-bar subscription banner is now provided by BannerTrialOSP, pushed by
+  // initializeAdditionalMenusOSP above. It is state-aware (offer trial / N days left /
+  // expired → unlock) and hidden for real licence holders.
 
   // Index sankeytheque key in menu top order
   const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))

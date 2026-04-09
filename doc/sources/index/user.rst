@@ -6,3 +6,4 @@ Documentation Utilisateur
 
     user_introduction
     user_tools
+    ../pages/user_trial

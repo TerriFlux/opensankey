@@ -20,6 +20,8 @@ from flask import request
 from flask import redirect
 from flask import send_from_directory
 from flask import Response
+from flask import jsonify
+from threading import Lock
 from opensankey.server.views import set_process_state
 from SankeyExcelParser.io_base import IOJson, IOExcel
 import SankeyExcelParser.su_trace as trace
@@ -365,3 +367,101 @@ def launch_optim():
 
     # Réponse immédiate
     return Response(json.dumps({"output": "OK"}), status=200, mimetype="application/json")
+
+
+# ==================================================================================================
+# OpenSankey+ free-trial analytics — anonymous, file-based counters
+# --------------------------------------------------------------------------------------------------
+# Stores aggregate counts in plain text files under ./cache. No PII (no IP, no UA), only an
+# anonymous client-generated UUID. The UUID lets us correlate "started" with "converted" without
+# ever knowing who the user is.
+#
+# Files written:
+#   - cache/trial_counter.txt  : single integer, total number of trial starts (incremented in place)
+#   - cache/trial_events.jsonl : append-only JSONL, one event per line
+#                                {"event": "started"|"converted", "uuid": "...", "ts": <ms>}
+#
+# A module-level threading.Lock serialises writes within a single Flask process. Multi-worker
+# deployments (gunicorn, uwsgi) may very rarely lose a count under heavy concurrency, which is an
+# acceptable tradeoff for a soft analytics counter.
+# ==================================================================================================
+
+_TRIAL_LOCK = Lock()
+_TRIAL_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "cache",
+)
+_TRIAL_COUNTER_FILE = os.path.join(_TRIAL_DIR, "trial_counter.txt")
+_TRIAL_EVENTS_FILE = os.path.join(_TRIAL_DIR, "trial_events.jsonl")
+
+
+def _trial_record_event(event: str, payload: dict) -> int:
+    """
+    Append an event line to trial_events.jsonl and, for "started" events, increment the
+    counter file. Returns the new counter value (or -1 if not a started event).
+    """
+    os.makedirs(_TRIAL_DIR, exist_ok=True)
+    line = json.dumps({"event": event, **payload}, ensure_ascii=False)
+    with _TRIAL_LOCK:
+        with open(_TRIAL_EVENTS_FILE, "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+        if event != "started":
+            return -1
+        try:
+            with open(_TRIAL_COUNTER_FILE, "r", encoding="utf-8") as f:
+                current = int(f.read().strip() or "0")
+        except (FileNotFoundError, ValueError):
+            current = 0
+        new_value = current + 1
+        with open(_TRIAL_COUNTER_FILE, "w", encoding="utf-8") as f:
+            f.write(str(new_value))
+        return new_value
+
+
+def _trial_get_uuid() -> str:
+    """Read a UUID string from the request body, returning '' if missing/invalid."""
+    try:
+        data = request.get_json(silent=True) or {}
+        uuid = data.get("uuid", "")
+        if isinstance(uuid, str) and 0 < len(uuid) <= 64:
+            return uuid
+    except Exception:
+        pass
+    return ""
+
+
+@sankeyapp.route("/api/trial/started", methods=["POST"])
+def trial_started():
+    """
+    Anonymous notification: a browser has just started the OpenSankey+ free trial.
+    Body: {"uuid": "<client-generated uuid>", "started_at": <ms>, "catchup"?: true}
+    """
+    uuid = _trial_get_uuid()
+    if not uuid:
+        return jsonify({"ok": False, "error": "missing uuid"}), 400
+    data = request.get_json(silent=True) or {}
+    payload = {
+        "uuid": uuid,
+        "ts": int(data.get("started_at") or (time.time() * 1000)),
+    }
+    if data.get("catchup"):
+        payload["catchup"] = True
+    _trial_record_event("started", payload)
+    return jsonify({"ok": True}), 200
+
+
+@sankeyapp.route("/api/trial/converted", methods=["POST"])
+def trial_converted():
+    """
+    Anonymous notification: a browser whose trial UUID is <uuid> has converted to a paid licence.
+    Body: {"uuid": "<client-generated uuid>", "converted_at": <ms>}
+    """
+    uuid = _trial_get_uuid()
+    if not uuid:
+        return jsonify({"ok": False, "error": "missing uuid"}), 400
+    data = request.get_json(silent=True) or {}
+    _trial_record_event("converted", {
+        "uuid": uuid,
+        "ts": int(data.get("converted_at") or (time.time() * 1000)),
+    })
+    return jsonify({"ok": True}), 200
