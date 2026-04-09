@@ -33,7 +33,7 @@ import {
 } from '../deps/OpenSankey/types/Utils'
 
 import { MenuColorPicker, WrapperBoxSubSectionMenu } from '../deps/OpenSankey/components/configmenus/MenuCommon'
-import { Class_LinkValue } from '../deps/OpenSankey/Elements/LinkValues'
+import { Class_ElementValue, Class_LinkValue } from '../deps/OpenSankey/Elements/LinkValues'
 import { Class_DataTagGroup, Class_FluxTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ProtoTagGroup, Class_TagGroup } from '../deps/OpenSankey/types/TagGroup'
 
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
@@ -209,7 +209,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       elementsRef: string[],
       grp: (Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup),
       color: string,
-      dict_link_value: { [_: string]: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } }
+      dict_link_value: { [_: string]: { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } }
 
     }
 
@@ -251,7 +251,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
             return l_val[1] !== undefined && l_val[1].includes(tag)
           })
           if (val_to_restor[0][1])
-            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0])
+            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0] as Class_LinkValue)
         })
       }
 
@@ -290,7 +290,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       activated: boolean,
       banner: tag_banner_type,
       dict_tag: { [x: string]: [id: string, name: string, color: string, elementsRef: string[]] }
-      dict_link_value: { [_: string]: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } }
+      dict_link_value: { [_: string]: { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } }
     }
 
 
@@ -335,7 +335,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
           const l_values = old_val.dict_link_value[l.id]
           const val_to_restor = Object.values(l_values)
           if (val_to_restor[0][1])
-            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0])
+            new_data.drawing_area.sankey.links_dict[l.id].setValuesForDataTags(val_to_restor[0][1], val_to_restor[0][0] as Class_LinkValue)
         })
       }
 
