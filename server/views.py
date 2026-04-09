@@ -9,12 +9,14 @@ import os
 import time
 import tempfile
 import json
+from datetime import datetime
 
 # External modules
 from threading import Thread
 import traceback
 
 from flask import Blueprint
+from flask import current_app
 from flask import render_template
 from flask import request
 from flask import redirect
@@ -393,6 +395,42 @@ _TRIAL_DIR = os.path.join(
 )
 _TRIAL_COUNTER_FILE = os.path.join(_TRIAL_DIR, "trial_counter.txt")
 _TRIAL_EVENTS_FILE = os.path.join(_TRIAL_DIR, "trial_events.jsonl")
+_TRIAL_NOTIFY_RECIPIENT = "julien.alapetite@terriflux.fr"
+
+
+def _trial_send_notification(app, uuid: str, started_at_ms: int, total_count: int) -> None:
+    """
+    Background-thread email notifier. Sends a short heads-up to the trial admin every time
+    someone starts the OpenSankey+ free trial. Best-effort: any error is swallowed and logged.
+    Runs inside an explicit app context so flask_mail can resolve the configured server.
+    """
+    try:
+        from logincomponent.server.mailing import mail, send, MAIL_SENDING_ADRESS
+        from flask_mail import Message
+    except Exception as exc:  # pragma: no cover - import-time failures only
+        trace.logger.warning("trial: cannot import mailing module (%s)", exc)
+        return
+
+    started_iso = datetime.utcfromtimestamp(started_at_ms / 1000).strftime("%Y-%m-%d %H:%M:%S UTC")
+    body = (
+        "Une nouvelle personne vient de démarrer la période d'essai OpenSankey+.\n\n"
+        f"  UUID anonyme : {uuid}\n"
+        f"  Démarré le   : {started_iso}\n"
+        f"  Total essais : {total_count}\n\n"
+        "Détail complet : cache/trial_events.jsonl\n"
+        "Stats           : python scripts/trial_stats.py\n"
+    )
+    msg = Message(
+        subject="[OpenSankey+] Nouvel essai démarré",
+        sender=("Contact TerriFlux", MAIL_SENDING_ADRESS) if MAIL_SENDING_ADRESS else None,
+        recipients=[_TRIAL_NOTIFY_RECIPIENT],
+        body=body,
+    )
+    try:
+        with app.app_context():
+            send(msg)
+    except Exception as exc:
+        trace.logger.warning("trial: failed to send notification email (%s)", exc)
 
 
 def _trial_record_event(event: str, payload: dict) -> int:
@@ -444,9 +482,24 @@ def trial_started():
         "uuid": uuid,
         "ts": int(data.get("started_at") or (time.time() * 1000)),
     }
-    if data.get("catchup"):
+    is_catchup = bool(data.get("catchup"))
+    if is_catchup:
         payload["catchup"] = True
-    _trial_record_event("started", payload)
+    new_total = _trial_record_event("started", payload)
+
+    # Heads-up email to the trial admin. Skip catchup pings to avoid noise on existing users
+    # whose browsers replay the start event after the analytics endpoint went live. Fire-and-forget.
+    if not is_catchup:
+        try:
+            app = current_app._get_current_object()
+            Thread(
+                target=_trial_send_notification,
+                args=(app, uuid, payload["ts"], new_total),
+                daemon=True,
+            ).start()
+        except Exception as exc:
+            trace.logger.warning("trial: could not spawn notification thread (%s)", exc)
+
     return jsonify({"ok": True}), 200
 
 

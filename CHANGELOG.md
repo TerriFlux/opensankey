@@ -6,6 +6,7 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 - [submodules/OpenSankey+/CHANGELOG.md](submodules/OpenSankey+/CHANGELOG.md)
 - [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)
 - [submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md)
+- [submodules/LoginComponent/CHANGELOG.md](submodules/LoginComponent/CHANGELOG.md)
 
 ---
 
@@ -60,6 +61,8 @@ Cette section consolide les évolutions livrées en avril 2026, tous modules con
   - onglet « Vues » désactivé sans licence OSP (absent en mode basique) ;
   - lignes grisées dans les grilles pour les fonctionnalités sans licence ;
   - styles ajoutés au profil par défaut.
+- **Essai gratuit OpenSankey+ — 30 jours opt-in** : nouveau mécanisme de période d'essai entièrement client-side (`localStorage`), sans login, sans empreinte numérique. Au premier chargement, une fenêtre d'accueil propose à l'utilisateur d'activer 30 jours d'OpenSankey+ d'un clic ; une bannière permanente en bas de page reflète l'état (« Démarrer l'essai » / « N jours restants » / « Débloquer »). À l'expiration, les fonctionnalités OS+ se reverrouillent automatiquement et une fenêtre invite à souscrire ou à continuer en gratuit. Mécanisme analytics anonymes côté serveur via deux endpoints `POST /api/trial/started` et `POST /api/trial/converted` (UUID anonyme uniquement, aucune PII), compteur fichier sous `cache/`, CLI de lecture `python scripts/trial_stats.py`. Notification email à `julien.alapetite@terriflux.fr` à chaque démarrage d'essai. Documentation utilisateur complète : 7 scénarios couverts dans [doc/sources/pages/user_trial.rst](doc/sources/pages/user_trial.rst).
+- **Changelogs par module** : adoption du format [Keep a Changelog](https://keepachangelog.com/) avec un fichier `CHANGELOG.md` par module (sankeyapplication, OpenSankey+, OpenSankey, SankeyExcelParser, LoginComponent) et un récapitulatif consolidé en tête du changelog racine, conçu pour générer les release notes.
 
 ### Modifications
 - **Mise en page** : amélioration des groupes de layout (`groups` exposés en getter), améliorations diverses de `UpdateModeGrid`.
@@ -101,6 +104,8 @@ Cette section consolide les évolutions livrées en avril 2026, tous modules con
 
 ### Ajouts
 - `feat(ui/server)` : case à cocher `error_on_new_nodes` côté UI et serveur, suppression du bruit de debug (4296a91).
+- **`feat(trial)` : essai gratuit OpenSankey+ de 30 jours, opt-in, sans login.** Le serveur expose deux routes anonymes `POST /api/trial/started` et `POST /api/trial/converted`, avec un compteur fichier (`cache/trial_counter.txt`) et un journal d'événements append-only (`cache/trial_events.jsonl`). Aucune donnée personnelle n'est journalisée, seul un UUID anonyme généré côté client. Une notification email est envoyée à `julien.alapetite@terriflux.fr` à chaque démarrage d'essai (best-effort, en thread daemon). CLI de lecture des compteurs : `python scripts/trial_stats.py [--by-day | --raw]`. La bannière `BannerSubscriptionSA` est retirée de `AppSA.tsx` au profit de `BannerTrialOSP` exposée par OpenSankey+, qui couvre les deux entrées (SA et OS+ standalone). Documentation utilisateur complète dans [doc/sources/pages/user_trial.rst](doc/sources/pages/user_trial.rst).
+- **`docs` : changelogs par module + récapitulatif consolidé** au format [Keep a Changelog](https://keepachangelog.com/), couvrant mars et avril 2026 (847e8af).
 
 ### Modifications
 - `chore` : mises à jour répétées du submodule OpenSankey+ pour intégrer les évolutions d'avril (94efb62, a531608, 897eddf, 0c312de, 1a96eb8, 3bb4d1b, 985ee42, 19107b0, 68e8b7a, 32fe1fa).
