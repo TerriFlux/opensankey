@@ -1583,29 +1583,32 @@ export class Class_NodeElement extends Class_NodeBase {
     const link_in = this.input_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For input links, what arrives at the node = target value (or source if no target set)
+        const v = link.valueCurrentTarget ?? link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_in = Math.max(max_digit_in, decimal_digit.length)
         }
-        return link
+        return v
       })
 
     const pow_in = Math.pow(10, max_digit_in)
-    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
+    link_in.forEach(v => input_val += (v ?? 0) * pow_in)
 
     let max_digit_out = 0
     const link_out = this.output_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        const v = link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_out = Math.max(max_digit_out, decimal_digit.length)
         }
-        return link
+        return v
       })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
+    link_out.forEach(v => output_val += (v ?? 0) * pow_out)
     return Math.max(input_val / pow_in, output_val / pow_out)
   }
 
@@ -1618,37 +1621,56 @@ export class Class_NodeElement extends Class_NodeBase {
     const link_in = this.input_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For input links, what arrives at the node = target value (or source if no target set)
+        const v = link.valueCurrentTarget ?? link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_in = Math.max(max_digit_in, decimal_digit.length)
         }
-        return link
+        return { link, v }
       })
 
     const pow_in = Math.pow(10, max_digit_in)
-    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
+    link_in.forEach(({ v }) => input_val += (v ?? 0) * pow_in)
 
     let max_digit_out = 0
     const link_out = this.output_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For output links, what leaves the node = source value
+        const v = link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_out = Math.max(max_digit_out, decimal_digit.length)
         }
-        return link
+        return { link, v }
       })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
+    link_out.forEach(({ v }) => output_val += (v ?? 0) * pow_out)
 
-    return format_value(
+    const total_in = input_val / pow_in
+    const total_out = output_val / pow_out
+    const has_in = link_in.length > 0
+    const has_out = link_out.length > 0
+
+    const fmt = (v: number) => format_value(
       this.sankey.drawing_area.type_data,
-      Math.max(input_val / pow_in, output_val / pow_out),
+      v,
       this,
       this.value_label_unit,
       'value_label'
     )
+
+    // No flux at all
+    if (!has_in && !has_out) return ''
+    // Only one direction: show that value
+    if (!has_in) return fmt(total_out)
+    if (!has_out) return fmt(total_in)
+    // Both directions equal: show single value
+    if (total_in === total_out) return fmt(total_in)
+    // Both directions differ: show "in→out" (entering total → leaving total)
+    return fmt(total_in) + '\u2192' + fmt(total_out)
   }
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_nodes_list
