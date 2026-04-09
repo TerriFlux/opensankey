@@ -35,7 +35,7 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_LinkValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
@@ -197,7 +197,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _source: Class_NodeElement
   private _target: Class_NodeElement
-  private _values: Class_LinkValueTree | Class_LinkValue
+  private _values: Class_ElementValueTree | Class_LinkValue
   private _arrow_shape: string | undefined
 
   // Boolean var only used when enlarging thickness when mouse hovering link
@@ -239,7 +239,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
-    this._values = this.createLinkValue(this)
+    this._values = this.createValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
         this._values = this._values.expand(data_tagg as Class_DataTagGroup)
@@ -263,8 +263,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.draw()
   }
 
-  public createLinkValue(
-    parent: Class_LinkValueTree | Class_LinkElement
+  public createValue(
+    parent: Class_ElementValueTree | Class_LinkElement
   ) {
     return new Class_LinkValue(parent as Class_LinkElement)
   }
@@ -333,13 +333,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.tooltip_text = _.tooltip_text
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue(this)
+      this._values = this.createValue(this)
       this._values.copyFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values = new Class_ElementValueTree(this, first_data_tag_group)
         this._values.copyFrom(_._values)
       }
     }
@@ -348,13 +348,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public copyValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue(this)
+      this._values = this.createValue(this)
       this._values.copyFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values = new Class_ElementValueTree(this, first_data_tag_group)
         this._values.copyFrom(_._values)
       }
     }
@@ -363,14 +363,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public addValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
-      //this._values = this.createLinkValue(this)
+      //this._values = this.createValue(this)
       (this._values as Class_LinkValue).addFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        //this._values = new Class_LinkValueTree(this, first_data_tag_group)
-        (this._values as Class_LinkValueTree).addFrom(_._values)
+        //this._values = new Class_ElementValueTree(this, first_data_tag_group)
+        (this._values as Class_ElementValueTree).addFrom(_._values)
       }
     }
   }
@@ -492,16 +492,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public removeDataTagGroup(tagg: Class_DataTagGroup) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // Prune values tree
-      this._values = this._values.prune(tagg)
+      this._values = this._values.prune(tagg) as Class_ElementValueTree | Class_LinkValue
       // Set to recompute visibility from tags after -> less data tagg = differents values = different flux tags
       this.tagsUpdated()
     }
   }
 
   public addDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // Extend current value tree branch
       this._values.extend(tag)
       // Set to recompute visibility from tags after -> new data tag = new value = new flux tags
@@ -510,7 +510,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public removeDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // reduce current value tree branch
       this._values.reduce(tag)
       // Set to recompute visibility from tags after -> less data tag = differente value = different flux tags
@@ -773,8 +773,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public setValuesForDataTags(tags: Class_DataTag[], val: Class_LinkValue) {
-    if (this._values instanceof Class_LinkValueTree) {
-      this._values.setLinkValueForDataTags(tags, val)
+    if (this._values instanceof Class_ElementValueTree) {
+      this._values.setValueForDataTags(tags, val)
     } else {
       this._values = val
     }
@@ -1308,11 +1308,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public valueForTags(_: Class_ProtoTag[]) {
+  public valueForTags(_: Class_ProtoTag[]): Class_LinkValue | null {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(_ as Class_DataTag[])
+      return this._values.getValueForDataTags(_ as Class_DataTag[]) as Class_LinkValue | null
   }
 
   public valueForTag(tag: Class_DataTag | undefined) {
@@ -1344,11 +1344,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get value() {
+  public get value(): Class_LinkValue | null {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[])
+      return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[]) as Class_LinkValue | null
   }
 
   private _is_computing = false

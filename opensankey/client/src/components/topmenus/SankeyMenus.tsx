@@ -350,6 +350,12 @@ const ConfigMenu = ({ app_data, additional_menus }: {
         overflowY: 'auto',
         overflowX: 'hidden'
       }}
+      onMouseDownCapture={() => {
+        // Auto-exit edition mode as soon as the user interacts with the configuration menu
+        if (app_data.drawing_area.isInEditionMode()) {
+          app_data.drawing_area.switchMode()
+        }
+      }}
     >
       <ConfigContent app_data={app_data} additional_menus={additional_menus} />
     </Box>

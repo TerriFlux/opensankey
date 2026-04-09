@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { MultiSelect } from 'react-multi-select-component'
-import { Box, Button } from '@chakra-ui/react'
-import { ConfigMenuTextInput, OSTooltip } from './MenuCommon'
+import { Box, Button, Checkbox, Divider, Select } from '@chakra-ui/react'
+import { ConfigMenuTextInput, ConfigMenuNumberInput, OSTooltip } from './MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ContainerElement } from '../../Elements/TextZone'
@@ -730,9 +730,116 @@ export const UnifiedElementSelection = ({
 // EXPORTS DE COMPATIBILITÉ
 // ==================================================================================
 
-export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => (
-  <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
-)
+export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const [, setUpdate] = useState(0)
+  app_data.menu_configuration.ref_to_menu_config_nodes_stock_updater.current = () => setUpdate(a => a + 1)
+
+  const nodes = app_data.drawing_area.selected_nodes_list
+  const firstNode = nodes.length > 0 ? nodes[0] : null
+  const showStock = app_data.has_sankey_dev && firstNode
+
+  const refreshStock = () => {
+    nodes.forEach(n => n.draw())
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setUpdate(a => a + 1)
+  }
+
+  return <>
+    <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="full" />
+    {showStock && (() => {
+      const sv = firstNode.stock_value
+      const data_taggs_list = app_data.drawing_area.sankey.data_taggs_list
+      return <>
+        <Divider my={2} />
+        <Checkbox
+          size='sm'
+          isChecked={firstNode.has_stock}
+          onChange={(e) => {
+            nodes.forEach(n => { n.has_stock = e.target.checked; n.draw() })
+            refreshStock()
+          }}
+        >
+          <Box as='span' fontSize='xs'>Stock</Box>
+        </Checkbox>
+        {firstNode.has_stock && <>
+          {data_taggs_list.length > 0 &&
+            <Box layerStyle='options_2cols'>
+              {data_taggs_list.map(data_tagg => {
+                const selected = data_tagg.selected_tags_list
+                if (selected.length === 0 && data_tagg.tags_list.length > 0) {
+                  data_tagg.tags_list[0].setSelected()
+                }
+                return <React.Fragment key={data_tagg.id}>
+                  <Box as='span' fontSize='xs'>{data_tagg.name}</Box>
+                  <Select
+                    size='xs'
+                    variant='menuconfigpanel_option_select'
+                    value={selected.length > 0 ? selected[0].id : ''}
+                    onChange={(evt) => {
+                      data_tagg.selectTagsFromId(evt.target.value)
+                      refreshStock()
+                    }}
+                  >
+                    {data_tagg.tags_list.map(tag =>
+                      <option key={tag.id} value={tag.id}>{tag.name}</option>
+                    )}
+                  </Select>
+                </React.Fragment>
+              })}
+            </Box>
+          }
+          {(() => {
+            const unit_text = firstNode.stock_label_unit_visible ? firstNode.stock_label_unit : undefined
+            return <>
+              <Box layerStyle='options_2cols'>
+                <Box as='span' fontSize='xs'>Stock initial</Box>
+                <ConfigMenuNumberInput
+                  t={app_data.t}
+                  default_value={sv?.stockInitialData ?? null}
+                  function_on_blur={(v) => {
+                    nodes.forEach(n => { const s = n.stock_value; if (s) s.stockInitialData = v })
+                    refreshStock()
+                  }}
+                  stepper={true}
+                  step={1}
+                  unit_text={unit_text}
+                />
+              </Box>
+              <Box layerStyle='options_2cols'>
+                <Box as='span' fontSize='xs'>{'\u0394 Stock'}</Box>
+                <ConfigMenuNumberInput
+                  t={app_data.t}
+                  default_value={sv?.stockVariationData ?? null}
+                  function_on_blur={(v) => {
+                    nodes.forEach(n => { const s = n.stock_value; if (s) s.stockVariationData = v })
+                    refreshStock()
+                  }}
+                  stepper={true}
+                  step={1}
+                  unit_text={unit_text}
+                />
+              </Box>
+            </>
+          })()}
+        </>}
+        {app_data.has_sankey_afm &&
+          <Checkbox
+            size='sm'
+            isChecked={firstNode.has_material_balance}
+            onChange={(e) => {
+              nodes.forEach(n => { n.has_material_balance = e.target.checked })
+              refreshStock()
+            }}
+          >
+            <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
+              <Box as='span' fontSize='xs'>{`Bilan mati\u00e8re`}</Box>
+            </OSTooltip>
+          </Checkbox>
+        }
+      </>
+    })()}
+  </>
+}
 
 export const SankeyNodeSelectionSimple = ({ app_data }: { app_data: Class_ApplicationData }) => (
   <UnifiedElementSelection app_data={app_data} config={NODE_CONFIG} mode="simple" />

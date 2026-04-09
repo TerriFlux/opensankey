@@ -1475,8 +1475,11 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
+          const newLink1 = this.sankey.links_list[this.sankey.links_list.length - 1]
           this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addElementToSelection(newLink1)
+          this.addElementToSelection(newLink1.source)
+          this.addElementToSelection(newLink1.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -1491,8 +1494,11 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this._ghost_link.target as Class_NodeElement
           )
+          const newLink2 = this.sankey.links_list[this.sankey.links_list.length - 1]
           this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addElementToSelection(newLink2)
+          this.addElementToSelection(newLink2.source)
+          this.addElementToSelection(newLink2.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
         // In case we get there still deref ghost link
@@ -1562,6 +1568,8 @@ export class Class_DrawingArea {
           LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
+          this.addElementToSelection(l.source)
+          this.addElementToSelection(l.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -1582,6 +1590,8 @@ export class Class_DrawingArea {
 
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
+          this.addElementToSelection(l.source)
+          this.addElementToSelection(l.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
 

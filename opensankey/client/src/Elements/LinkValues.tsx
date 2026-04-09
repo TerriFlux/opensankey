@@ -1,27 +1,47 @@
 import type { Class_DataTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
 import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
-import { Class_LinkElement } from './Link'
+import type { Class_LinkElement } from './Link'
+import type { Class_NodeElement } from './Node'
 
-// CLASS LINK TREE VALUE ****************************************************************
+// Duck-typing helper to detect link parents without importing Class_LinkElement at runtime
+// (avoids circular import: Node -> LinkValues -> Link -> Node)
+function isLinkElement(o: unknown): o is Class_LinkElement {
+  return o !== null && typeof o === 'object' && 'source' in (o as object) && 'target' in (o as object)
+}
+
+// Parent type for value tree and leaf: either a tree node, a link, or a node (for stock values)
+export type ValueParentElement = Class_LinkElement | Class_NodeElement
+
+// CONSTANTS **************************************************************************
+
+export const value_option_percent_constants_source = ['%IS', '%OS','%PS']
+export const value_option_percent_constants_target = ['%ID', '%OD','%PD']
+export const value_option_percent_constants = [...value_option_percent_constants_source,...value_option_percent_constants_target]
+export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio'] as const
+export type ValueOptionType = typeof value_option_constants[number]
+
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
+export type UnitType = typeof unit_constants[number]
+
+// CLASS ELEMENT VALUE TREE ************************************************************
 /**
- * Define a node for value
+ * Generic tree node for organizing values by data tags.
+ * Children are either all trees (inner nodes) or all values (leaves).
  * @export
- * @class Class_LinkValueTree
- * @implements {TreeNodeInterface}
+ * @class Class_ElementValueTree
  */
-
-export class Class_LinkValueTree {
+export class Class_ElementValueTree {
 
   // PUBLIC ATTRIBUTES ==================================================================
-  public parent: Class_LinkValueTree | Class_LinkElement
-  public children: { [tag_id: string]: Class_LinkValue; } | { [tag_id: string]: Class_LinkValueTree; }
+  public parent: Class_ElementValueTree | ValueParentElement
+  public children: { [tag_id: string]: Class_ElementValue; } | { [tag_id: string]: Class_ElementValueTree; }
 
   public data_tag_group: Class_DataTagGroup
 
-  public unit_data_tag(child: Class_LinkValueTree | Class_LinkValue): Class_DataTag | undefined {
+  public unit_data_tag(child: Class_ElementValueTree | Class_ElementValue): Class_DataTag | undefined {
     if (this.data_tag_group.is_unit) return this.data_tag_group.tags_dict[this.getDataTagIdFromChild(child) as string]
-    if (this.parent instanceof Class_LinkValueTree) {
+    if (this.parent instanceof Class_ElementValueTree) {
       return this.parent.unit_data_tag(this)
     }
     return undefined
@@ -31,79 +51,62 @@ export class Class_LinkValueTree {
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
-  /**
-   * Creates an instance of Class_LinkValueTree.
-   * @param {(Class_LinkValueTree | Class_LinkElement)} parent
-   * @param {Class_DataTagGroup} tag_group
-   * @memberof Class_LinkValueTree
-   */
   constructor(
-    parent: Class_LinkValueTree | Class_LinkElement,
+    parent: Class_ElementValueTree | ValueParentElement,
     data_tag_group: Class_DataTagGroup
   ) {
-    // Instanciate parent
     this.parent = parent
-    // Instanciate taggroup
     this.data_tag_group = data_tag_group
-    // Instanciate children
     this.children = {}
     data_tag_group.tags_list.forEach(tag => {
-      this.children[tag.id] = this.createLinkValue(this)
+      this.children[tag.id] = this.createValue(this)
     })
   }
 
-  protected createLinkValue(_: Class_LinkValueTree | Class_LinkElement): Class_LinkValue {
-    if (this.parent instanceof Class_LinkValueTree) {
-      return this.parent.createLinkValue(_)
+  protected createValue(_: Class_ElementValueTree | ValueParentElement): Class_ElementValue {
+    if (this.parent instanceof Class_ElementValueTree) {
+      return this.parent.createValue(_)
     }
-    return (this.parent as Class_LinkElement).createLinkValue(_)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (typeof (this.parent as any).createValue === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (this.parent as any).createValue(_)
+    }
+    // Fallback: create a LinkValue (default for backward compat)
+    return new Class_LinkValue(_)
   }
 
   // CLEANING METHODS ====================================================================
-  /**
-   * Define deletion behavior
-   * - Remove self from parent
-   * - Delete childrens
-   * @memberof Class_LinkValueTree
-   */
   public delete() {
     if (!this._is_currently_deleted) {
-      // Set as currently deleted
       this._is_currently_deleted = true
-      // Delete children
       Object.keys(this.children)
         .forEach(id => {
           this.children[id].delete()
         })
       this.children = {}
-      // Unref from parent
-      if (this.parent instanceof Class_LinkValueTree)
+      if (this.parent instanceof Class_ElementValueTree)
         this.parent.removeChild(this)
-      // // Unref taggroup
-      // this.data_tag_group = null
     }
   }
 
   // COPY METHODS =======================================================================
-  public copyFrom(element: Class_LinkValueTree) {
-    // Check types of children
+  public copyFrom(element: Class_ElementValueTree) {
     const [allValues, allTrees] = element.kindOfChildren()
-    // Clean children
     Object.values(this.children)
       .forEach(child => child.delete())
-    // Copy children recursively
     Object.keys(element.children)
       .forEach(tag_id => {
         const child_to_copy = element.children[tag_id]
-        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
-          const new_child = new Class_LinkValueTree(
+        if ((child_to_copy instanceof Class_ElementValueTree) && (allTrees)) {
+          const new_child = new Class_ElementValueTree(
             this,
-            this.link?.sankey.data_taggs_dict[child_to_copy.data_tag_group.id] as Class_DataTagGroup ?? child_to_copy.data_tag_group) // Fallback should never happen !!
+            this.rootElement?.sankey.data_taggs_dict[child_to_copy.data_tag_group.id] as Class_DataTagGroup ?? child_to_copy.data_tag_group)
           this.children[tag_id] = new_child
           new_child.copyFrom(child_to_copy)
         }
-        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
-          const new_child = this.createLinkValue(this)
+        else if ((child_to_copy instanceof Class_ElementValue) && allValues) {
+          const new_child = this.createValue(this)
           this.children[tag_id] = new_child
           new_child.copyFrom(child_to_copy)
         }
@@ -142,18 +145,16 @@ export class Class_LinkValueTree {
       .forEach(child => child.set_only_data())
   }
 
-  public addFrom(element: Class_LinkValueTree) {
-    // Check types of children
+  public addFrom(element: Class_ElementValueTree) {
     const [allValues, allTrees] = element.kindOfChildren()
-    // Copy children recursively
     Object.keys(element.children)
       .forEach(tag_id => {
         const child_to_copy = element.children[tag_id]
-        if ((child_to_copy instanceof Class_LinkValueTree) && (allTrees)) {
-          (this.children[tag_id] as Class_LinkValueTree).addFrom(child_to_copy)
+        if ((child_to_copy instanceof Class_ElementValueTree) && (allTrees)) {
+          (this.children[tag_id] as Class_ElementValueTree).addFrom(child_to_copy)
         }
-        else if ((child_to_copy instanceof Class_LinkValue) && allValues) {
-          (this.children[tag_id] as Class_LinkValue).addFrom(child_to_copy)
+        else if ((child_to_copy instanceof Class_ElementValue) && allValues) {
+          (this.children[tag_id] as Class_ElementValue).addFrom(child_to_copy)
         }
       })
   }
@@ -175,13 +176,8 @@ export class Class_LinkValueTree {
     matching_taggs_id: { [_: string]: string; } = {},
     matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
-    // All parentality relations are sets via sankey struct with fromJSON + addDataTag
-    // So it is not necessary to read datatag group -> it should be the same as in JSON
-    // if (this.data_tag_group.id !== json_object['datatag_group'])
-    //   console.error('Erreur lecture valeur dans JSON : datatag group are not matching')
-    // else {
     Object.entries(json_object)
-      .filter(([id,]) => id !== 'datatag_group') // Skip this entry in JSON
+      .filter(([id,]) => id !== 'datatag_group')
       .forEach(([id, sub_json_object]) => {
         if (typeof sub_json_object === 'object')
           this.children[id]?.fromJSON(
@@ -190,19 +186,11 @@ export class Class_LinkValueTree {
             matching_tags_id
           )
       })
-    //}
   }
 
   // PUBLIC METHODS =====================================================================
-  /**
-   * Add new children related to new tagGroup
-   * Always add in the bottom of the tree
-   * @param {Class_DataTagGroup} data_tag_group
-   * @return {*}
-   * @memberof Class_LinkValueTree
-   */
   public expand(data_tag_group: Class_DataTagGroup) {
-    if (this.data_tag_group !== data_tag_group) // Protection against tag group already present
+    if (this.data_tag_group !== data_tag_group)
       Object.keys(this.children)
         .forEach(id => {
           this.children[id] = this.children[id].expand(data_tag_group)
@@ -210,101 +198,60 @@ export class Class_LinkValueTree {
     return this
   }
 
-  /**
-   * Remove all children related to given tag group
-   * - Either prune bottom of tree (simple case)
-   * - Or slice tree to keep sub-combinations of tags
-   * @param {Class_DataTagGroup} data_tag_group
-   * @return {*}
-   * @memberof Class_LinkValueTree
-   */
   public prune(data_tag_group: Class_DataTagGroup) {
-    // If data_tag_group correspond to this tree's tag group - do the pruning process
     if (this.data_tag_group === data_tag_group) {
-      // Keep parent ref in memory
       const parent = this.parent
-      // Keep first child ref in memory
       const id = Object.keys(this.children)[0]
       const child = this.children[id]
-      // Delete ref to first child
       delete this.children[id]
-      // Re-attach tree together
-      if (parent instanceof Class_LinkValueTree) {
-        // When pruning this, first child is preserve because ref has been deleted from children table
+      if (parent instanceof Class_ElementValueTree) {
         parent.removeAndReplaceChild(this, child)
         return parent
       }
       else {
-        // Parent is LinkElement
         return child
       }
     }
-
-    // If data_tag_group is different than the one used by
     else {
-      // Recurse, only if children are also trees
       Object.keys(this.children)
         .forEach(id => {
           const child = this.children[id]
-          if (child instanceof Class_LinkValueTree)
+          if (child instanceof Class_ElementValueTree)
             child.prune(data_tag_group)
         })
       return this
     }
   }
 
-  /**
-   * Add new child from given data_tag
-   * @param {Class_Tag} data_tag
-   * @return {*}
-   * @memberof Class_LinkValueTree
-   */
   public extend(data_tag: Class_DataTag) {
-    // What kind of children
     const [allValues, allTrees] = this.kindOfChildren()
     const isEmpty = Object.keys(this.children).length === 0
-    // Case 1 : Last node tree before values (or empty children — same treatment)
     if (allValues && (!allTrees || isEmpty)) {
-      // Tag must be from this tree's data_tag group
       if (data_tag.group === this.data_tag_group) {
-        // If not already existing, create a new child // given data_tag
         if (!this.children[data_tag.id]) {
-          const _ = this.createLinkValue(this)
+          const _ = this.createValue(this)
           this.children[data_tag.id] = _
         }
-        // Return child // given data_tag
         return this.children[data_tag.id]
       }
     }
-
-    // Case 2 : Current children's are also tree
     else if ((!allValues) && allTrees) {
-      // If data_tag's group correspond to this tree's data_tag group - add new child
       if (data_tag.group === this.data_tag_group) {
-        // If not already existing, create a new child // given data_tag
         if (!this.children[data_tag.id]) {
-          const ref_child = Object.values(this.children)[0] // Never undefined beacause of test on (!allValues && AllTrees)
-          if (ref_child instanceof Class_LinkValueTree) {
-            // Create and reference
-            const _ = new Class_LinkValueTree(this, ref_child.data_tag_group)
+          const ref_child = Object.values(this.children)[0]
+          if (ref_child instanceof Class_ElementValueTree) {
+            const _ = new Class_ElementValueTree(this, ref_child.data_tag_group)
             this.children[data_tag.id] = _
-            // Recursivly copy values / sub-trees
             _.copyFrom(ref_child)
           }
         }
-        // Return child // given data_tag
         return this.children[data_tag.id]
       }
-
-      // Tag group is different than the one used
       else {
-        // Go deeper recursivley
-        let output: Class_LinkValue | Class_LinkValueTree | undefined = undefined
+        let output: Class_ElementValue | Class_ElementValueTree | undefined = undefined
         Object.values(this.children)
           .forEach(child => {
-            // Child can only be Class_LinkValueTree because of test on (!allValues && AllTrees)
             const _ = child.extend(data_tag)
-            // Return something not undefined if possible
             if (_ && (!output)) output = _
           })
         return output
@@ -313,52 +260,32 @@ export class Class_LinkValueTree {
     return undefined
   }
 
-  /**
-   * Remove child related to given dataTag
-   * @param {Class_Tag} data_tag
-   * @memberof Class_LinkValueTree
-   */
   public reduce(data_tag: Class_DataTag) {
-    // Tag is from correct data_tag group
     if (data_tag.group === this.data_tag_group) {
       this.removeChildFromDataTagId(data_tag.id)
     }
-
-    // Recursive call
     else {
       Object.values(this.children)
         .forEach(child => {
-          if (child instanceof Class_LinkValueTree)
+          if (child instanceof Class_ElementValueTree)
             child.reduce(data_tag)
         })
     }
   }
 
-  /**
-   * Remove given child from children (ie prune tree)
-   * @private
-   * @param {(Class_LinkValue | Class_LinkValueTree)} child
-   * @memberof Class_LinkValueTree
-   */
-  public removeChild(child: Class_LinkValue | Class_LinkValueTree) {
-    // Get child's id
+  public removeChild(child: Class_ElementValue | Class_ElementValueTree) {
     const id = this.getDataTagIdFromChild(child)
-    // Remove it
     if (id) this.removeChildFromDataTagId(id)
   }
 
-  public getValueForDataTags(data_tags: Class_DataTag[]): Class_LinkValue | null {
-    // Failsafe
+  public getValueForDataTags(data_tags: Class_DataTag[]): Class_ElementValue | null {
     if (data_tags.length === 0) return null
-    // Get value recursively
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
     const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
-    // Failsafe
     if (matching_tags.length !== 1) return null
-    // Recursive
     const child = this.children[matching_tags[0].id]
     if (child !== undefined) {
-      if (child instanceof Class_LinkValue) return child
+      if (child instanceof Class_ElementValue) return child
       else return child.getValueForDataTags(remaining_tags)
     }
     else {
@@ -366,22 +293,18 @@ export class Class_LinkValueTree {
     }
   }
 
-  public setLinkValueForDataTags(data_tags: Class_DataTag[], val: Class_LinkValue) {
-    // Failsafe
+  public setValueForDataTags(data_tags: Class_DataTag[], val: Class_ElementValue) {
     if (data_tags.length === 0) return
-    // Get value recursively
     const matching_tags = data_tags.filter(tag => (tag.group === this.data_tag_group))
     const remaining_tags = data_tags.filter(tag => (tag.group !== this.data_tag_group))
-    // Failsafe
     if (matching_tags.length !== 1) return null
-    // Recursive
     const child = this.children[matching_tags[0].id]
     if (child == undefined) {
       this.children[matching_tags[0].id] = val
     }
     else {
-      if (child instanceof Class_LinkValueTree)
-        child.setLinkValueForDataTags(remaining_tags, val)
+      if (child instanceof Class_ElementValueTree)
+        child.setValueForDataTags(remaining_tags, val)
     }
   }
 
@@ -395,12 +318,7 @@ export class Class_LinkValueTree {
     }
   }
 
-  /**
-   * Find corresponding id for given child
-   * @param {(Class_LinkValue | Class_LinkValueTree)} child
-   * @memberof Class_LinkValueTree
-   */
-  public getDataTagIdFromChild(child: Class_LinkValue | Class_LinkValueTree): string | undefined {
+  public getDataTagIdFromChild(child: Class_ElementValue | Class_ElementValueTree): string | undefined {
     let id = undefined
     Object.keys(this.children)
       .forEach(tag_id => {
@@ -411,16 +329,10 @@ export class Class_LinkValueTree {
     return id
   }
 
-  /**
-   * Return combinason of datatags if to reach given child
-   * @param {(Class_LinkValue | Class_LinkValueTree)} child
-   * @return {*}  {string[]}
-   * @memberof Class_LinkValueTree
-   */
-  public getDataTagsIdCombination(child: Class_LinkValue | Class_LinkValueTree): string[] {
+  public getDataTagsIdCombination(child: Class_ElementValue | Class_ElementValueTree): string[] {
     const id = this.getDataTagIdFromChild(child)
     if (id) {
-      if (this.parent instanceof Class_LinkValueTree) {
+      if (this.parent instanceof Class_ElementValueTree) {
         const prev_id = this.parent.getDataTagsIdCombination(this)
         prev_id.push(id)
         return prev_id
@@ -430,12 +342,6 @@ export class Class_LinkValueTree {
     return []
   }
 
-  /**
-   * Browse children & search for the maximum value among them
-   *
-   * @return {*}
-   * @memberof Class_LinkValueTree
-   */
   public getMaxValue() {
     let max: number | null = null
     Object.entries(this.children)
@@ -447,7 +353,7 @@ export class Class_LinkValueTree {
   }
 
   public getAllValues() {
-    let out: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } = {}
+    let out: { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } = {}
     Object.values(this.children)
       .forEach(child => {
         const _ = child.getAllValues()
@@ -467,26 +373,23 @@ export class Class_LinkValueTree {
 
   // PRIVATE METHODS ====================================================================
   private kindOfChildren() {
-    let allLinkValue = true
-    let allLinkValueTree = true
+    let allElementValue = true
+    let allElementValueTree = true
     Object.values(this.children)
       .forEach(child => {
-        allLinkValue = allLinkValue && (child instanceof Class_LinkValue)
-        allLinkValueTree = allLinkValueTree && (child instanceof Class_LinkValueTree)
+        allElementValue = allElementValue && (child instanceof Class_ElementValue)
+        allElementValueTree = allElementValueTree && (child instanceof Class_ElementValueTree)
       })
-    return [allLinkValue, allLinkValueTree]
+    return [allElementValue, allElementValueTree]
   }
 
   private removeAndReplaceChild(
-    child: Class_LinkValue | Class_LinkValueTree,
-    new_child: Class_LinkValue | Class_LinkValueTree
+    child: Class_ElementValue | Class_ElementValueTree,
+    new_child: Class_ElementValue | Class_ElementValueTree
   ) {
-    // Get current child id
     const id = this.getDataTagIdFromChild(child)
-    // Delete current child
     if (id) {
       this.removeChildFromDataTagId(id)
-      // Replace and update cross refs
       this.children[id] = new_child
       new_child.parent = this
     }
@@ -500,233 +403,92 @@ export class Class_LinkValueTree {
   }
 
   // GETTERS / SETTERS ==================================================================
+  public get rootElement(): ValueParentElement | null {
+    if (this.parent instanceof Class_ElementValueTree) return this.parent.rootElement
+    return this.parent
+  }
+
   public get link(): Class_LinkElement | null {
-    if (this.parent instanceof Class_LinkValueTree) return this.parent.link
-    else return this.parent as Class_LinkElement
+    const root = this.rootElement
+    return isLinkElement(root) ? root : null
   }
 
   public get data_tag() {
-    if (this.parent instanceof Class_LinkValueTree)
+    if (this.parent instanceof Class_ElementValueTree)
       return this.parent.data_tag_group.tags_dict[this.parent.getDataTagIdFromChild(this) ?? ''] ?? null
 
     else
       return null
   }
 }
-export const value_option_percent_constants_source = ['%IS', '%OS','%PS']
-export const value_option_percent_constants_target = ['%ID', '%OD','%PD']
-export const value_option_percent_constants = [...value_option_percent_constants_source,...value_option_percent_constants_target]
-export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio'] as const
-export type ValueOptionType = typeof value_option_constants[number]
-export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
-export type UnitType = typeof unit_constants[number]
 
-// CLASS LINK VALUE *********************************************************************
+// Backward-compatible alias
+export { Class_ElementValueTree as Class_LinkValueTree }
+
+// CLASS ELEMENT VALUE (BASE) ***********************************************************
 /**
- * Define a link value object
+ * Abstract base class for element values (link flux, stock, etc.).
+ * Provides common infrastructure: parent chain, id, tags, tree operations.
+ * Subclasses define their own value fields.
  *
  * @export
- * @class Class_LinkValue
+ * @class Class_ElementValue
  */
-export class Class_LinkValue {
+export class Class_ElementValue {
 
   // PUBLIC ATTRIBUTES ==================================================================
-  public parent: Class_LinkValueTree | Class_LinkElement
+  public parent: Class_ElementValueTree | ValueParentElement
 
-  public unit_data_tag() : Class_DataTag | undefined{
-    if (this.parent instanceof Class_LinkValueTree) {
+  public unit_data_tag(): Class_DataTag | undefined {
+    if (this.parent instanceof Class_ElementValueTree) {
       return this.parent.unit_data_tag(this)
     }
     return undefined
   }
-  
-  private _ratio_unit_tag: Class_DataTag | null
-
-  public get ratio_unit_tag() {return this._ratio_unit_tag}
-  public set ratio_unit_tag(_) {this._ratio_unit_tag = _}
-
-  public get has_result() {
-    return this.result_value !== null || this.value_option != 'value'
-  }
-
-  public get has_intervals() {
-    return this.result_max !== null || this.result_min!== null
-  }
-
-  public get has_data() {
-    return this.data_value !== null || this.value_option != 'value'
-  }
-  public set_only_data() {
-    this.data_value = this.result_value
-    this.result_value = null
-  }
-
-  public get valueResult(): number | null {
-    if (this.result_value != undefined) {
-      return this.result_value
-    }
-    if (this.data_value == null) {
-      return null
-    }
-    // if (this.value_option == 'unit_ratio') {
-    //   const ratio_unit_tag_value = this.link?.valueForTag(this._ratio_unit_tag!)
-    //   if (ratio_unit_tag_value == this) return this.data_value
-    //   return (ratio_unit_tag_value?.valueResult??ratio_unit_tag_value?.valueData??1) * this.data_value!
-    // } else if (this.value_option == '%IS') {
-    //   const multiplier = this.data_value / 100
-    //   if (this.parent == this.link) {
-    //     let total_source = 0
-    //     this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    //     return total_source * multiplier
-    //   } /*else {
-    //     const data_tags_id = this.data_tags_id
-    //     const data_tags: Class_ProtoTag[] = []
-    //     this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
-    //     let total_source = 0
-    //     this.link!.source.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
-    //     return total_source * multiplier
-    //   }*/
-    // } else if (this.value_option == '%OS') {
-    //   let total_target = 0
-    //   let ok = true
-    //   this.link!.source.output_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
-    //     if (!l.valueCurrent) {
-    //       ok = false
-    //       return
-    //     }
-    //     total_target += l.valueCurrent
-    //   })
-    //   if (!ok || !total_target) return null
-    //   return total_target * (this.data_value) / (100 - this.data_value)
-
-    // } else if (this.value_option == '%OD') {
-    //   const multiplier = this.data_value / 100
-    //   if (this.parent == this.link) {
-    //     let total_target = 0
-    //     this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    //     return total_target * multiplier
-    //   } /*else {
-    //     const data_tags_id = this.data_tags_id
-    //     const data_tags: Class_ProtoTag[] = []
-    //     this.link?.sankey.data_taggs_list.forEach((tagg, i) => data_tags.push(tagg.tags_dict[data_tags_id[i]]))
-    //     let total_target = 0
-    //     this.link!.target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
-    //     return total_target * multiplier
-    //   }*/
-    // } else if (this.value_option == '%ID') {
-    //   let total_target = 0
-    //   let ok = true
-    //   this.link!.target.input_links_list.filter(l => l != this.link && l.is_visible).forEach(l => {
-    //     if (!l.valueCurrent) {
-    //       ok = false
-    //       return
-    //     }
-    //     total_target += l.valueCurrent
-    //   })
-    //   if (!ok) return null
-    //   return total_target * (this.data_value) / (100 - this.data_value)
-    // } else if (this.value_option == '%PS') {
-    //   const multiplier = this.data_value / 100
-    //   const parent_source = this.link!.source.dimensions_as_child[0].parent!
-    //   const parent_link = parent_source.output_links_list.find(l=>l.target==this.link!.target)
-    //   return parent_link?parent_link.valueCurrent!*multiplier : null
-    // } else if (this.value_option == '%PD') {
-    //   const multiplier = this.data_value / 100
-    //   const parent_target = this.link!.target.dimensions_as_child[0].parent!
-    //   const parent_link = parent_target.output_links_list.find(l=>l.source==this.link!.source)
-    //   return parent_link? parent_link.valueCurrent!*multiplier: null
-    // }
-    return null
-  }
-
-  public set valueResult(_) {
-    this.result_value = _
-  }
-
-  public get valueData() {
-    return this.data_value
-  }
-
-  public set valueData(_) {
-    this.data_value = _
-    this.result_value = null
-  }
-
-  // Target (destination) value -- when null, same as source value
-  public get valueResultTarget() {
-    return this.result_value_target
-  }
-
-  public set valueResultTarget(_) {
-    this.result_value_target = _
-  }
-
-  public get valueDataTarget() {
-    return this.data_value_target
-  }
-
-  public set valueDataTarget(_) {
-    this.data_value_target = _
-    this.result_value_target = null
-  }
-
-  public value_option: ValueOptionType = 'value'
-
-  protected data_value: number | null = null
-  protected data_min: number | null = null
-  protected data_max: number | null = null
-
-  protected result_value: number | null = null
-  public result_min: number | null = null
-  public result_max: number | null = null
-
-  // Target (destination) values -- null means same as source
-  protected data_value_target: number | null = null
-  protected result_value_target: number | null = null
 
   public text_value: string | null = null
 
+  // VALUE VECTORS =====================================================================
+  // Each vector has length = vectorSize (set by subclass).
+  // Each index represents a different quantity (e.g. source/target for links, initial/variation for stocks).
+  protected _data_value: (number | null)[]
+  protected _data_min: (number | null)[]
+  protected _data_max: (number | null)[]
+  protected _result_value: (number | null)[]
+  protected _result_min: (number | null)[]
+  protected _result_max: (number | null)[]
+
+  /** Subclasses override to define vector size */
+  protected get vectorSize(): number { return 1 }
 
   // PRIVATE ATTRIBUTES ==================================================================
-  /**
-   * id of value
-   */
   private _id: string
-
-  /**
-   * FluxTags
-   * @private
-   * @type {{ [_: string]: Class_Tag }}
-   * @memberof Class_LinkElement
-   */
   private _flux_tags: Class_Tag[] = []
-
-  // Sorted tag by group
   private _taggs_dict: { [x: string]: Class_Tag[]; } = {}
-
   private _is_currently_deleted = false
 
   // CONSTRUCTOR ========================================================================
-  constructor(parent: Class_LinkValueTree | Class_LinkElement) {
-    // Parents / Children relations
+  constructor(parent: Class_ElementValueTree | ValueParentElement) {
     this.parent = parent
-    // Id
+    const n = this.vectorSize
+    this._data_value = new Array(n).fill(null)
+    this._data_min = new Array(n).fill(null)
+    this._data_max = new Array(n).fill(null)
+    this._result_value = new Array(n).fill(null)
+    this._result_min = new Array(n).fill(null)
+    this._result_max = new Array(n).fill(null)
     const name = (this.link?.id ?? '') + '_value_'
     this.data_tags_id
       .forEach(tag_id => name + '_' + tag_id)
     this._id = makeId(name)
-    this._ratio_unit_tag = null
   }
 
   // CLEANING METHODS ===================================================================
   public delete() {
     if (!this._is_currently_deleted) {
-      // Set as currently deleted
       this._is_currently_deleted = true
-      // Unref from parent
-      if (this.parent instanceof Class_LinkValueTree)
+      if (this.parent instanceof Class_ElementValueTree)
         this.parent.removeChild(this)
-      // Remove reference of self in related tags
       this.flux_tags_list.forEach(tag => tag.removeReference(this))
       this._flux_tags = []
       this._taggs_dict = {}
@@ -734,21 +496,18 @@ export class Class_LinkValue {
   }
 
   // COPY METHODS =======================================================================
-  public copyFrom(element: Class_LinkValue) {
-    this.data_value = element.data_value
-    this.data_min = element.data_min
-    this.data_max = element.data_max
-
-    this.result_value = element.result_value
-    this.result_min = element.result_min
-    this.result_max = element.result_max
-
-    this.data_value_target = element.data_value_target
-    this.result_value_target = element.result_value_target
-
+  public copyFrom(element: Class_ElementValue) {
+    // Copy value vectors
+    const n = Math.min(this._data_value.length, element._data_value.length)
+    for (let i = 0; i < n; i++) {
+      this._data_value[i] = element._data_value[i]
+      this._data_min[i] = element._data_min[i]
+      this._data_max[i] = element._data_max[i]
+      this._result_value[i] = element._result_value[i]
+      this._result_min[i] = element._result_min[i]
+      this._result_max[i] = element._result_max[i]
+    }
     this.text_value = element.text_value
-    this.value_option = element.value_option
-    this.ratio_unit_tag = element.ratio_unit_tag
     // Tags - Cleaning
     this.flux_tags_list.forEach(tag => tag.removeReference(this))
     this._flux_tags = []
@@ -760,52 +519,14 @@ export class Class_LinkValue {
       })
   }
 
-
-  public addFrom(element: Class_LinkValue) {
-    if (element.value_option=='%PS' || element.value_option=='%PD' ) {
-      // TODO
-      this.value_option = element.value_option
-      this.data_value = element.data_value
-    }
-    this.data_value = element.valueData === null ? null : this.data_value! + element.valueData!
-    this.result_value = element.valueResult === null ? null : this.result_value! + element.valueResult!
-    if (element.data_value_target !== null) {
-      this.data_value_target = (this.data_value_target ?? 0) + element.data_value_target
-    }
-    if (element.result_value_target !== null) {
-      this.result_value_target = (this.result_value_target ?? 0) + element.result_value_target
-    }
+  public addFrom(_element: Class_ElementValue) {
+    // Base: no-op, subclasses implement value-specific addition
   }
 
-  /**
-   * Extract this link value as JSON
-   *
-   * @return {*}
-   * @memberof Class_LinkValue
-   */
-  public toJSON() {
-    // Init output JSON
+  // SERIALIZATION ======================================================================
+  public toJSON(_kwargs?: Type_JSON): Type_JSON {
     const json_object: Type_JSON = {}
     json_object['id'] = this._id
-    // Fill data
-    json_object['id'] = this._id
-    if (this.data_value != null) json_object['data_value'] = this.data_value
-    if (this.data_min != null) json_object['data_min'] = this.data_min
-    if (this.data_max != null) json_object['data_max'] = this.data_max
-
-    if (this.result_value != null) json_object['result_value'] = this.result_value
-    // if (kwargs && kwargs['has_results'] && this.valueResult) {
-    //   json_object['result_value'] = this.valueResult!
-    // }
-    if (this.result_min != null) json_object['result_min'] = this.result_min
-    if (this.result_max != null) json_object['result_max'] = this.result_max
-
-    if (this.data_value_target != null) json_object['data_value_target'] = this.data_value_target
-    if (this.result_value_target != null) json_object['result_value_target'] = this.result_value_target
-
-    if (this.text_value) json_object['text_value'] = this.text_value
-    if (this.value_option !== 'value') json_object['value_option'] = this.value_option
-    if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
     if (this.flux_taggs_list.length > 0) {
       json_object['tags'] = Object.fromEntries(
         this.flux_taggs_list
@@ -816,73 +537,19 @@ export class Class_LinkValue {
               .map(tag => tag.id)
           ]))
     }
-    // Output
     return json_object
   }
 
-  private fromJSONLegacy(json_object: Type_JSON) {
-    const json_extension_object = getJSONOrUndefinedFromJSON(json_object, 'extension')
-    if (json_extension_object) {
-      this.data_value = getNumberOrNullFromJSON(json_extension_object, 'data_value')
-      this.result_value = getNumberOrNullFromJSON(json_object, 'value')
-      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
-      if (json_extension_object['free_mini'] != undefined) {
-        this.result_min = getNumberOrNullFromJSON(json_extension_object, 'free_mini')
-      }
-      if (json_extension_object['free_maxi'] != undefined) {
-        this.result_max = getNumberOrNullFromJSON(json_extension_object, 'free_maxi')
-      }
-    } else {
-      this.result_value = getNumberOrNullFromJSON(json_object, 'value')
-      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
-    }
-  }
-
-  /**
-   * Read this link value from JSON
-   *
-   * @param {Type_JSON} json_object
-   * @memberof Class_LinkValue
-   */
   public fromJSON(
     json_object: Type_JSON,
     matching_taggs_id: { [_: string]: string; } = {},
     _matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
     this._id = getStringFromJSON(json_object, 'id', this._id)
-    // Update attributes
-    if (Object.prototype.hasOwnProperty.call(json_object, 'value')) { // Value key => Legacy JSON
-      this.fromJSONLegacy(json_object)
-    }
-    else {
-      this.data_value = getNumberOrNullFromJSON(json_object, 'data_value')
-      this.data_max = getNumberOrNullFromJSON(json_object, 'data_max')
-      this.data_min = getNumberOrNullFromJSON(json_object, 'data_min')
-
-      this.result_value = getNumberOrNullFromJSON(json_object, 'result_value')
-      this.result_max = getNumberOrNullFromJSON(json_object, 'result_max')
-      this.result_min = getNumberOrNullFromJSON(json_object, 'result_min')
-
-      this.data_value_target = getNumberOrNullFromJSON(json_object, 'data_value_target')
-      this.result_value_target = getNumberOrNullFromJSON(json_object, 'result_value_target')
-
-      this.text_value = getStringFromJSON(json_object, 'text_value',this.text_value!)
-      this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
-      const { data_taggs_list } = this.link?.sankey ?? { data_taggs_list: [] }
-      const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
-      this.ratio_unit_tag = (unit_data_tagg?.tags_dict[getStringFromJSON(json_object, 'ratio_unit_tag', '')] ?? null)
-    }
     // Get Flux tags
-    // In JSON here are how supposed tags var is :
-    // tags: {key_grp_tag: [key_tag, ...] }
-    // where 'key_grp_tag' represent the id of a flux tag group
-    // &  '[key_tag, ...]' represent the array of id of tag selected
-    // for that flux tag group
     const flux_taggs_dict = (this.link?.drawing_area.sankey.flux_taggs_dict ?? {})
     Object.entries(json_object['tags'] ?? {})
       .filter(([_id_tagg, list]) => {
-
-
         const tagg_id = _id_tagg
         const tag_ids = list
         return (
@@ -905,34 +572,20 @@ export class Class_LinkValue {
   }
 
   public expand(data_tag_group: Class_DataTagGroup) {
-    const new_parent = new Class_LinkValueTree(this.parent, data_tag_group)
-    // Copy values from child in grandchildren
+    const new_parent = new Class_ElementValueTree(this.parent, data_tag_group)
     data_tag_group.tags_list.forEach(tag => {
       const _ = new_parent.extend(tag)
-      if (_ instanceof Class_LinkValue) // Should always be the case here, but needed
+      if (_ instanceof Class_ElementValue)
         _.copyFrom(this)
     })
-    // Clean self
     this.delete()
-    // Return new parent
     return new_parent
   }
 
-  /**
-   * Check if given flux tag is referenced by value
-   * @param {Class_Tag} tag
-   * @return {*}
-   * @memberof Class_LinkElement
-   */
   public hasGivenTag(tag: Class_Tag) {
     return this._flux_tags.includes(tag)
   }
 
-  /**
-   * Add and cross-reference a Flux tag with this value
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
-   */
   public addTag(tag: Class_Tag) {
     if (!this.hasGivenTag(tag)) {
       this._flux_tags.push(tag)
@@ -942,11 +595,6 @@ export class Class_LinkValue {
     }
   }
 
-  /**
-   * Remove given tag and cross-reference from link
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkElement
-   */
   public removeTag(tag: Class_Tag) {
     if (this.hasGivenTag(tag)) {
       const idx = this._flux_tags.indexOf(tag)
@@ -957,34 +605,25 @@ export class Class_LinkValue {
     }
   }
 
-  /**
-   * Function that can be used instead of the one in Class_linkValueTree so the recursive function stop & return a value
-   *
-   * @return {*}
-   * @memberof Class_LinkValue
-   */
-  public getMaxValue() {
-    return Math.max(this.data_value ?? 0, this.result_value ?? 0)
+  public get has_result(): boolean { return false }
+  public get has_intervals(): boolean { return false }
+  public get has_data(): boolean { return false }
+  public set_only_data() { /* subclasses override */ }
+
+  public getMaxValue(): number {
+    return 0
   }
 
-  public getAllValues() {
-    const tmp: { [_: string]: [Class_LinkValue, Class_DataTag[] | undefined]; } = {}
+  public getAllValues(): { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } {
+    const tmp: { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } = {}
     if (this.data_tag)
       tmp[this.id] = [this, [this.data_tag]]
-
     else
       tmp[this.id] = [this, undefined]
     return tmp
   }
 
   // PRIVATE ===================================================
-  /**
-   * Add tag to dict of tag sorted by group
-   *
-   * @private
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkValue
-   */
   private addTagToGroupTagDict(tag: Class_Tag) {
     const grp_id = tag.group.id
     if (grp_id in this._taggs_dict) {
@@ -995,21 +634,11 @@ export class Class_LinkValue {
     }
   }
 
-  /**
-   * Remove tag from dict of tag sorted by group
-   *
-   * @private
-   * @param {Class_Tag} tag
-   * @memberof Class_LinkValue
-   */
   private removeTagToGroupTagDict(tag: Class_Tag) {
     const grp_id = tag.group.id
     if (grp_id in this._taggs_dict) {
       const idx = this._taggs_dict[grp_id].indexOf(tag)
       this._taggs_dict[grp_id].splice(idx, 1)
-
-      // After removing a tag check if the flow has other tag from the group,
-      //  if not remove tag group entries from flow so are_related_flux_tags_selected don't take into account groupTag not linked to flow
       if (Object.values(this._taggs_dict[grp_id]).length == 0) {
         delete this._taggs_dict[grp_id]
       }
@@ -1017,49 +646,26 @@ export class Class_LinkValue {
   }
 
   // GETTERS / SETTERS ==================================================================
-  /**
-   * Id of value
-   *
-   * @readonly
-   * @memberof Class_LinkValue
-   */
   public get id() { return this._id }
 
-  /**
-   * Related link of value
-   *
-   * @readonly
-   * @type {(Class_LinkElement | null)}
-   * @memberof Class_LinkValue
-   */
-  public get link(): Class_LinkElement | null {
-    if (this.parent instanceof Class_LinkValueTree) return this.parent.link
-    else return this.parent
+  public get rootElement(): ValueParentElement | null {
+    if (this.parent instanceof Class_ElementValueTree) return this.parent.rootElement
+    return this.parent
   }
 
-  /**
-   * Dict as [id: tag] of flux tags related to this value
-   * @readonly
-   * @memberof Class_LinkElement
-   */
+  public get link(): Class_LinkElement | null {
+    const root = this.rootElement
+    return isLinkElement(root) ? root : null
+  }
+
   public get flux_tags_dict() {
     return this._flux_tags
   }
 
-  /**
-   * Array of flux tags related to this value
-   * @readonly
-   * @memberof Class_LinkElement
-   */
   public get flux_tags_list() {
     return Object.values(this._flux_tags)
   }
 
-  /**
-   * Dict as [id: tag group] of tag groups related to link
-   * @readonly
-   * @memberof Class_LinkElement
-   */
   public get flux_taggs_dict() {
     const taggs: { [_: string]: Class_TagGroup; } = {}
     this.flux_tags_list
@@ -1074,36 +680,331 @@ export class Class_LinkValue {
     return this._taggs_dict
   }
 
-  /**
-   * Array of tag groups related to link
-   * @readonly
-   * @memberof Class_LinkElement
-   */
   public get flux_taggs_list() {
     return Object.values(this.flux_taggs_dict)
   }
 
   public get data_tags_id() {
-    if (this.parent instanceof Class_LinkValueTree)
+    if (this.parent instanceof Class_ElementValueTree)
       return this.parent.getDataTagsIdCombination(this)
-
     else
       return []
   }
 
   public get data_tagg() {
-    if (this.parent instanceof Class_LinkValueTree)
+    if (this.parent instanceof Class_ElementValueTree)
       return this.parent.data_tag_group
-
     else
       return null
   }
 
   public get data_tag() {
-    if (this.parent instanceof Class_LinkValueTree)
+    if (this.parent instanceof Class_ElementValueTree)
       return this.data_tagg?.tags_dict[this.parent.getDataTagIdFromChild(this) ?? ''] ?? null
-
     else
       return null
+  }
+}
+
+// CLASS LINK VALUE *********************************************************************
+/**
+ * Value object for link flux.
+ * Holds data/result/target/min/max scalars for a single flux.
+ *
+ * @export
+ * @class Class_LinkValue
+ * @extends {Class_ElementValue}
+ */
+export class Class_LinkValue extends Class_ElementValue {
+
+  // Vector indices for links: 0 = source, 1 = target
+  static readonly SRC = 0
+  static readonly TGT = 1
+
+  // LINK-SPECIFIC ATTRIBUTES ===========================================================
+  private _ratio_unit_tag: Class_DataTag | null
+
+  public get ratio_unit_tag() { return this._ratio_unit_tag }
+  public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
+
+  public value_option: ValueOptionType = 'value'
+
+  protected get vectorSize() { return 2 }
+
+  // CONSTRUCTOR ========================================================================
+  constructor(parent: Class_ElementValueTree | ValueParentElement) {
+    super(parent)
+    this._ratio_unit_tag = null
+  }
+
+  // OVERRIDES ==========================================================================
+  public get has_result() {
+    return this._result_value[Class_LinkValue.SRC] !== null || this.value_option != 'value'
+  }
+
+  public get has_intervals() {
+    return this._result_max[Class_LinkValue.SRC] !== null || this._result_min[Class_LinkValue.SRC] !== null
+  }
+
+  public get has_data() {
+    return this._data_value[Class_LinkValue.SRC] !== null || this.value_option != 'value'
+  }
+
+  public set_only_data() {
+    this._data_value[Class_LinkValue.SRC] = this._result_value[Class_LinkValue.SRC]
+    this._result_value[Class_LinkValue.SRC] = null
+  }
+
+  // FLUX ACCESSORS (source = index 0) ==================================================
+  public get valueResult(): number | null {
+    if (this._result_value[Class_LinkValue.SRC] != undefined) {
+      return this._result_value[Class_LinkValue.SRC]
+    }
+    if (this._data_value[Class_LinkValue.SRC] == null) {
+      return null
+    }
+    return null
+  }
+
+  public set valueResult(_) {
+    this._result_value[Class_LinkValue.SRC] = _
+  }
+
+  public get valueData() {
+    return this._data_value[Class_LinkValue.SRC]
+  }
+
+  public set valueData(_) {
+    this._data_value[Class_LinkValue.SRC] = _
+    this._result_value[Class_LinkValue.SRC] = null
+  }
+
+  // Target (destination) value = index 1
+  public get valueResultTarget() {
+    return this._result_value[Class_LinkValue.TGT]
+  }
+
+  public set valueResultTarget(_) {
+    this._result_value[Class_LinkValue.TGT] = _
+  }
+
+  public get valueDataTarget() {
+    return this._data_value[Class_LinkValue.TGT]
+  }
+
+  public set valueDataTarget(_) {
+    this._data_value[Class_LinkValue.TGT] = _
+    this._result_value[Class_LinkValue.TGT] = null
+  }
+
+  // Min/Max accessors (source = index 0)
+  public get result_min() { return this._result_min[Class_LinkValue.SRC] }
+  public set result_min(_: number | null) { this._result_min[Class_LinkValue.SRC] = _ }
+  public get result_max() { return this._result_max[Class_LinkValue.SRC] }
+  public set result_max(_: number | null) { this._result_max[Class_LinkValue.SRC] = _ }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(element: Class_ElementValue) {
+    if (element instanceof Class_LinkValue) {
+      this.value_option = element.value_option
+      this.ratio_unit_tag = element.ratio_unit_tag
+    }
+    // Copy vectors via base class
+    super.copyFrom(element)
+  }
+
+  public addFrom(element: Class_ElementValue) {
+    if (!(element instanceof Class_LinkValue)) return
+    if (element.value_option=='%PS' || element.value_option=='%PD' ) {
+      this.value_option = element.value_option
+      this._data_value[Class_LinkValue.SRC] = element.valueData
+    }
+    this._data_value[Class_LinkValue.SRC] = element.valueData === null ? null : (this._data_value[Class_LinkValue.SRC] ?? 0) + element.valueData!
+    this._result_value[Class_LinkValue.SRC] = element.valueResult === null ? null : (this._result_value[Class_LinkValue.SRC] ?? 0) + element.valueResult!
+    if (element.valueDataTarget !== null) {
+      this._data_value[Class_LinkValue.TGT] = (this._data_value[Class_LinkValue.TGT] ?? 0) + element.valueDataTarget
+    }
+    if (element.valueResultTarget !== null) {
+      this._result_value[Class_LinkValue.TGT] = (this._result_value[Class_LinkValue.TGT] ?? 0) + element.valueResultTarget
+    }
+  }
+
+  // SERIALIZATION ======================================================================
+  public toJSON(_kwargs?: Type_JSON) {
+    const json_object = super.toJSON(_kwargs)
+    // Source values (index 0)
+    if (this._data_value[Class_LinkValue.SRC] != null) json_object['data_value'] = this._data_value[Class_LinkValue.SRC] as number
+    if (this._data_min[Class_LinkValue.SRC] != null) json_object['data_min'] = this._data_min[Class_LinkValue.SRC] as number
+    if (this._data_max[Class_LinkValue.SRC] != null) json_object['data_max'] = this._data_max[Class_LinkValue.SRC] as number
+
+    if (this._result_value[Class_LinkValue.SRC] != null) json_object['result_value'] = this._result_value[Class_LinkValue.SRC] as number
+    if (this._result_min[Class_LinkValue.SRC] != null) json_object['result_min'] = this._result_min[Class_LinkValue.SRC] as number
+    if (this._result_max[Class_LinkValue.SRC] != null) json_object['result_max'] = this._result_max[Class_LinkValue.SRC] as number
+
+    // Target values (index 1)
+    if (this._data_value[Class_LinkValue.TGT] != null) json_object['data_value_target'] = this._data_value[Class_LinkValue.TGT] as number
+    if (this._result_value[Class_LinkValue.TGT] != null) json_object['result_value_target'] = this._result_value[Class_LinkValue.TGT] as number
+
+    if (this.text_value) json_object['text_value'] = this.text_value
+    if (this.value_option !== 'value') json_object['value_option'] = this.value_option
+    if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
+    return json_object
+  }
+
+  private fromJSONLegacy(json_object: Type_JSON) {
+    const json_extension_object = getJSONOrUndefinedFromJSON(json_object, 'extension')
+    if (json_extension_object) {
+      this._data_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_extension_object, 'data_value')
+      this._result_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+      if (json_extension_object['free_mini'] != undefined) {
+        this._result_min[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_extension_object, 'free_mini')
+      }
+      if (json_extension_object['free_maxi'] != undefined) {
+        this._result_max[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_extension_object, 'free_maxi')
+      }
+    } else {
+      this._result_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'value')
+      this.text_value = getStringOrNullFromJSON(json_object, 'display_value')
+    }
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: { [_: string]: string; } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
+  ) {
+    super.fromJSON(json_object, matching_taggs_id, matching_tags_id)
+    if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
+      this.fromJSONLegacy(json_object)
+    }
+    else {
+      this._data_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_value')
+      this._data_max[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_max')
+      this._data_min[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_min')
+
+      this._result_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'result_value')
+      this._result_max[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'result_max')
+      this._result_min[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'result_min')
+
+      this._data_value[Class_LinkValue.TGT] = getNumberOrNullFromJSON(json_object, 'data_value_target')
+      this._result_value[Class_LinkValue.TGT] = getNumberOrNullFromJSON(json_object, 'result_value_target')
+
+      this.text_value = getStringFromJSON(json_object, 'text_value', this.text_value!)
+      this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
+      const { data_taggs_list } = this.link?.sankey ?? { data_taggs_list: [] }
+      const unit_data_tagg = data_taggs_list.find(tagg => tagg.is_unit)
+      this.ratio_unit_tag = (unit_data_tagg?.tags_dict[getStringFromJSON(json_object, 'ratio_unit_tag', '')] ?? null)
+    }
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public getMaxValue() {
+    return Math.max(this._data_value[Class_LinkValue.SRC] ?? 0, this._result_value[Class_LinkValue.SRC] ?? 0)
+  }
+}
+
+
+// CLASS STOCK VALUE ********************************************************************
+/**
+ * Value object for node stocks.
+ * Holds initial and variation data/result (vector of size 2).
+ *
+ * @export
+ * @class Class_StockValue
+ * @extends {Class_ElementValue}
+ */
+export class Class_StockValue extends Class_ElementValue {
+
+  // Vector indices for stocks: 0 = initial, 1 = variation
+  static readonly INI = 0
+  static readonly VAR = 1
+
+  protected get vectorSize() { return 2 }
+
+  // CONSTRUCTOR ========================================================================
+  constructor(parent: Class_ElementValueTree | ValueParentElement) {
+    super(parent)
+  }
+
+  // OVERRIDES ==========================================================================
+  public get has_result(): boolean {
+    return this._result_value[Class_StockValue.INI] !== null || this._result_value[Class_StockValue.VAR] !== null
+  }
+
+  public get has_intervals(): boolean {
+    return false
+  }
+
+  public get has_data(): boolean {
+    return this._data_value[Class_StockValue.INI] !== null || this._data_value[Class_StockValue.VAR] !== null
+  }
+
+  public set_only_data() {
+    this._data_value[Class_StockValue.INI] = this._result_value[Class_StockValue.INI]
+    this._result_value[Class_StockValue.INI] = null
+    this._data_value[Class_StockValue.VAR] = this._result_value[Class_StockValue.VAR]
+    this._result_value[Class_StockValue.VAR] = null
+  }
+
+  // STOCK ACCESSORS ====================================================================
+  public get stockInitialData() { return this._data_value[Class_StockValue.INI] }
+  public set stockInitialData(_: number | null) { this._data_value[Class_StockValue.INI] = _ }
+  public get stockInitialResult() { return this._result_value[Class_StockValue.INI] }
+  public set stockInitialResult(_: number | null) { this._result_value[Class_StockValue.INI] = _ }
+
+  public get stockVariationData() { return this._data_value[Class_StockValue.VAR] }
+  public set stockVariationData(_: number | null) { this._data_value[Class_StockValue.VAR] = _ }
+  public get stockVariationResult() { return this._result_value[Class_StockValue.VAR] }
+  public set stockVariationResult(_: number | null) { this._result_value[Class_StockValue.VAR] = _ }
+
+  public get has_stock_data(): boolean {
+    return this._data_value[Class_StockValue.INI] !== null || this._data_value[Class_StockValue.VAR] !== null
+  }
+
+  // COPY METHODS =======================================================================
+  public copyFrom(element: Class_ElementValue) {
+    super.copyFrom(element)
+  }
+
+  public addFrom(element: Class_ElementValue) {
+    if (!(element instanceof Class_StockValue)) return
+    for (const i of [Class_StockValue.INI, Class_StockValue.VAR]) {
+      if (element._data_value[i] !== null)
+        this._data_value[i] = (this._data_value[i] ?? 0) + element._data_value[i]!
+      if (element._result_value[i] !== null)
+        this._result_value[i] = (this._result_value[i] ?? 0) + element._result_value[i]!
+    }
+  }
+
+  // SERIALIZATION ======================================================================
+  public toJSON(_kwargs?: Type_JSON) {
+    const json_object = super.toJSON(_kwargs)
+    if (this._data_value[Class_StockValue.INI] != null) json_object['initial_stock'] = this._data_value[Class_StockValue.INI] as number
+    if (this._result_value[Class_StockValue.INI] != null) json_object['initial_stock_result'] = this._result_value[Class_StockValue.INI] as number
+    if (this._data_value[Class_StockValue.VAR] != null) json_object['stock_variation'] = this._data_value[Class_StockValue.VAR] as number
+    if (this._result_value[Class_StockValue.VAR] != null) json_object['stock_variation_result'] = this._result_value[Class_StockValue.VAR] as number
+    return json_object
+  }
+
+  public fromJSON(
+    json_object: Type_JSON,
+    matching_taggs_id: { [_: string]: string; } = {},
+    matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
+  ) {
+    super.fromJSON(json_object, matching_taggs_id, matching_tags_id)
+    this._data_value[Class_StockValue.INI] = getNumberOrNullFromJSON(json_object, 'initial_stock')
+    this._result_value[Class_StockValue.INI] = getNumberOrNullFromJSON(json_object, 'initial_stock_result')
+    this._data_value[Class_StockValue.VAR] = getNumberOrNullFromJSON(json_object, 'stock_variation')
+    this._result_value[Class_StockValue.VAR] = getNumberOrNullFromJSON(json_object, 'stock_variation_result')
+  }
+
+  // PUBLIC METHODS =====================================================================
+  public getMaxValue() {
+    const ini_d = this._data_value[Class_StockValue.INI] ?? 0
+    const ini_r = this._result_value[Class_StockValue.INI] ?? 0
+    const var_d = this._data_value[Class_StockValue.VAR] ?? 0
+    const var_r = this._result_value[Class_StockValue.VAR] ?? 0
+    return Math.max(ini_d, ini_r, ini_d + var_d, ini_r + var_r)
   }
 }

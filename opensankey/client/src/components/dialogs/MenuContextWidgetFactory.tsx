@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import { MenuList, MenuButton, MenuItem, Menu } from '@chakra-ui/react'
+import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
@@ -360,4 +360,66 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
         </MenuList>
       </Menu></> :
     <></>
+}
+
+export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area, menu_configuration } = app_data
+  const node = drawing_area.node_contextualised
+  const [, setUpdate] = useState(0)
+
+  if (!node) return <></>
+
+  const stock_val = node.stock_value
+
+  const refreshAll = () => {
+    node.drawStockBox()
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setUpdate(a => a + 1)
+  }
+
+  return <Box display='flex' flexDirection='column' gap='4px'>
+    <Checkbox
+      isChecked={node.stock_label_is_visible}
+      onChange={(e) => {
+        drawing_area.selected_nodes_list.forEach(n => {
+          n.stock_label_is_visible = e.target.checked
+          n.draw()
+        })
+        menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        setUpdate(a => a + 1)
+      }}
+    >
+      <Text fontSize='sm'>Afficher stocks</Text>
+    </Checkbox>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='70px'>Stock ini.</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={stock_val?.stockInitialData ?? null}
+        function_on_blur={(v) => {
+          drawing_area.selected_nodes_list.forEach(n => {
+            const s = n.stock_value; if (s) s.stockInitialData = v
+          })
+          refreshAll()
+        }}
+        stepper={true}
+        step={1}
+      />
+    </Box>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='70px'>{'\u0394 Stock'}</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={stock_val?.stockVariationData ?? null}
+        function_on_blur={(v) => {
+          drawing_area.selected_nodes_list.forEach(n => {
+            const s = n.stock_value; if (s) s.stockVariationData = v
+          })
+          refreshAll()
+        }}
+        stepper={true}
+        step={1}
+      />
+    </Box>
+  </Box>
 }

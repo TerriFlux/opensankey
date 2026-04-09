@@ -628,6 +628,17 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Délégation aux managers
     node._nodeTagsManager.toJSON(json_object)
 
+    // Stock & material balance
+    if (node.has_stock) {
+      json_object['has_stock'] = true
+      if (node._stock_values.has_data) {
+        json_object['stock_values'] = node._stock_values.toJSON()
+      }
+    }
+    if (!node.has_material_balance) {
+      json_object['has_material_balance'] = false
+    }
+
     if (kwargs && kwargs['save_only_elements_with_tags']) {
       if (node.input_links_list.length > 0) {
         json_object['inputLinksId'] = node.input_links_list.filter(l => l.source.are_related_node_tags_selected && l.target.are_related_node_tags_selected).map(l => l.id)
@@ -817,6 +828,17 @@ export class NodeElementPersistence extends NodeBasePersistence {
 
     // Délégation aux managers
     node._nodeTagsManager.fromJSON(json_node_object)
+
+    // Stock & material balance
+    if (json_node_object['has_stock'] !== undefined) {
+      node.has_stock = json_node_object['has_stock'] as boolean
+    }
+    if (json_node_object['stock_values']) {
+      node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
+    }
+    if (json_node_object['has_material_balance'] !== undefined) {
+      node.has_material_balance = json_node_object['has_material_balance'] as boolean
+    }
 
   }
 }
@@ -1033,10 +1055,10 @@ export class StylePersistence {
   public static toJSON(style: Class_ElementStyle): Type_JSON {
     const json_object = {} as Type_JSON
     Object.entries(style.attributes).forEach(([key, value]) => {
-      //if (style.isAttributeOverloaded(key)) {
-      //@ts-expect-error xxx
-      json_object[key] = value
-      //}
+      if (style.isAttributeOverloaded(key)) {
+        //@ts-expect-error xxx
+        json_object[key] = value
+      }
     })
     return json_object
   }

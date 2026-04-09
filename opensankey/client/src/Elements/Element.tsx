@@ -39,7 +39,7 @@ import {
   AttributeConfig,
   IconLabelAttributeTypes,
   LinkLabelSpecificValues, ALL_ATTRIBUTES_CONFIG, LinkShapeSpecificValues,
-  NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes,
+  NameLabelAttributeTypes, NodeShapeSpecificAttributeTypes, ShapeAttributeTypes, StockLabelAttributeTypes,
   Type_Orientation, ValueLabelAttributeTypes,
   ConfigType
 } from './ElementsAttributesConfig'
@@ -769,6 +769,38 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
 
+  // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
+  stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
+  stock_label_font_family!: StockLabelAttributeTypes['font_family']
+  stock_label_font_size!: StockLabelAttributeTypes['font_size']
+  stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_horiz!: StockLabelAttributeTypes['horiz']
+  stock_label_vert!: StockLabelAttributeTypes['vert']
+  stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
+  stock_label_inside_vert!: StockLabelAttributeTypes['inside_vert']
+  stock_label_box_width!: StockLabelAttributeTypes['box_width']
+  stock_label_background_visible!: StockLabelAttributeTypes['background_visible']
+  stock_label_background_color!: StockLabelAttributeTypes['background_color']
+  stock_label_background_opacity!: StockLabelAttributeTypes['background_opacity']
+  stock_label_background_color_visible!: StockLabelAttributeTypes['background_color_visible']
+  stock_label_background_color_sustainable!: StockLabelAttributeTypes['background_color_sustainable']
+  stock_label_background_border_visible!: StockLabelAttributeTypes['background_border_visible']
+  stock_label_background_border_color!: StockLabelAttributeTypes['background_border_color']
+  stock_label_background_border_color_sustainable!: StockLabelAttributeTypes['background_border_color_sustainable']
+  stock_label_background_border_thickness!: StockLabelAttributeTypes['background_border_thickness']
+  stock_label_background_border_dashed!: StockLabelAttributeTypes['background_border_dashed']
+  stock_label_background_border_radius!: StockLabelAttributeTypes['background_border_radius']
+  // Number formatting & units
+  stock_label_scientific_notation!: StockLabelAttributeTypes['scientific_notation']
+  stock_label_significant_digits!: StockLabelAttributeTypes['significant_digits']
+  stock_label_nb_significant_digits!: StockLabelAttributeTypes['nb_significant_digits']
+  stock_label_custom_digit!: StockLabelAttributeTypes['custom_digit']
+  stock_label_nb_digit!: StockLabelAttributeTypes['nb_digit']
+  stock_label_unit_visible!: StockLabelAttributeTypes['unit_visible']
+  stock_label_unit_type!: StockLabelAttributeTypes['unit_type']
+  stock_label_unit!: StockLabelAttributeTypes['unit']
+  stock_label_unit_factor!: StockLabelAttributeTypes['unit_factor']
+
   shape_orphan_node_visible!: boolean
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
@@ -1069,6 +1101,17 @@ export class Class_ElementStyle {
 
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+
+  // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
+  stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
+  stock_label_font_size!: StockLabelAttributeTypes['font_size']
+  stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_horiz!: StockLabelAttributeTypes['horiz']
+  stock_label_vert!: StockLabelAttributeTypes['vert']
+  stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
+  stock_label_inside_vert!: StockLabelAttributeTypes['inside_vert']
+  stock_label_background_color!: StockLabelAttributeTypes['background_color']
+  stock_label_background_border_color!: StockLabelAttributeTypes['background_border_color']
 
   shape_orphan_node_visible!: boolean
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']

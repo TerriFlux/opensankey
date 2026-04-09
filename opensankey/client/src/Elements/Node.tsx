@@ -41,9 +41,10 @@ import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
-import { Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
+import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Type_Side } from './ElementsAttributesConfig'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
@@ -73,6 +74,23 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _node_tags_fingerprint: string = ''
   protected _are_related_dimensions_selected: boolean | undefined = undefined
   protected _tooltip_text: string = ''
+
+  // Stock values (parallel to link values but for nodes)
+  public has_stock: boolean = false
+  public has_material_balance: boolean = true
+  public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  /**
+   * Get current stock value based on selected data tags.
+   * Returns the leaf Class_StockValue matching current datatag selection.
+   */
+  public get stock_value(): Class_StockValue | null {
+    if (this._stock_values instanceof Class_StockValue)
+      return this._stock_values
+    else
+      return this._stock_values.getValueForDataTags(this.sankey.selected_data_tags_list) as Class_StockValue | null
+  }
+
   /**
    * Creates an instance of Class_NodeBase.
    */
@@ -91,6 +109,18 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
     this._nodeTagsManager = new NodeTagsManager(this)
     drawing_area.list_g_element.unshift(this.id)
+
+    // Init stock values tree (expand for each data tag group, like link values)
+    this._stock_values = new Class_StockValue(this)
+    drawing_area.sankey.data_taggs_list.forEach(data_tagg => {
+      this._stock_values = this._stock_values.expand(data_tagg as Class_DataTagGroup) as Class_StockValue | Class_ElementValueTree
+    })
+  }
+
+  public createValue(
+    parent: Class_ElementValueTree | Class_NodeElement
+  ) {
+    return new Class_StockValue(parent)
   }
 
   protected _links_visibilities_fingerprint: string = ''
@@ -112,6 +142,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _orderD3Elements() {
     super._orderD3Elements()
     this._nodeDrawValueLabel.d3_selection?.raise()
+    this.d3_selection?.selectAll('.stock_box').raise()
   }
 
   public copyTagsReferencingFrom(
@@ -245,6 +276,137 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _draw() {
     super._draw()
     this._nodeDrawValueLabel.drawGenericLabel()
+    this.drawStockBox()
+  }
+
+  /**
+   * Draw stock indicator box near the node shape.
+   * Position controlled by stock_horiz, stock_vert, stock_inside.
+   * Box width = stock_box_width * nodeWidth (ratio).
+   */
+  public drawStockBox() {
+    this.d3_selection?.selectAll('.stock_box').remove()
+
+    const stock_val = this.stock_value
+    if (!this.has_stock || !this.stock_label_is_visible || !stock_val?.has_stock_data) return
+    if (!this.d3_selection_g_shape) return
+    const nodeW = this.getShapeWidthToUse()
+    const nodeH = this.getShapeHeightToUse()
+
+    // Read attributes from config system (stock_label_*)
+    const baseFontSize = this.stock_label_font_size
+    const horiz = this.stock_label_horiz
+    const vert = this.stock_label_vert
+    const insideH = this.stock_label_inside_horiz
+    const insideV = this.stock_label_inside_vert
+    const boxWidthRatio = this.stock_label_box_width ?? 0.6
+    const bgColor = this.stock_label_background_color_sustainable
+      ? this.stock_label_background_color : this.getShapeColorToUse()
+    const bgVisible = this.stock_label_background_color_visible
+    const borderVisible = this.stock_label_background_border_visible
+    const borderColor = this.stock_label_background_border_color_sustainable
+      ? this.stock_label_background_border_color : this.getShapeColorToUse()
+    const borderThickness = this.stock_label_background_border_thickness
+    const borderDashed = this.stock_label_background_border_dashed
+    const borderRadius = this.stock_label_background_border_radius
+    const bgOpacity = this.stock_label_background_opacity
+    const textColor = this.stock_label_color
+
+    const padding = 4
+    const margin = 4
+    const MIN_FONT_SIZE = 6
+
+    // Build text lines (SF redundant with SI + delta)
+    // Use format_value to handle units, decimals, scientific notation, etc.
+    const lines: string[] = []
+    const si = stock_val.stockInitialData
+    const dv = stock_val.stockVariationData
+    const unitName = this.stock_label_unit ?? ''
+    const formatStock = (v: number) =>
+      format_value('free_value', v, this, unitName, 'stock_label')
+    if (si !== null) lines.push('SI: ' + formatStock(si))
+    if (dv !== null) {
+      const sign = dv >= 0 ? '+' : ''
+      lines.push('\u0394S: ' + sign + formatStock(dv))
+    }
+    if (lines.length === 0) return
+
+    // Box width = ratio of node width
+    const boxW = boxWidthRatio > 0 ? nodeW * boxWidthRatio : nodeW * 0.6
+
+    // Auto-shrink font size to fit inside node when stock label is inside
+    let fontSize = baseFontSize
+    // Vertical fit: if inside vertically, lines must fit in node height
+    if (insideV) {
+      const availableH = nodeH - 2 * margin - 2 * padding
+      const maxFontFromH = Math.floor(availableH / lines.length) - 3
+      if (maxFontFromH < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromH)
+    }
+    // Horizontal fit: estimate text width (~0.6 * fontSize per char)
+    if (insideH) {
+      const longestLine = lines.reduce((m, l) => Math.max(m, l.length), 0)
+      const availableW = boxW - 2 * padding
+      const maxFontFromW = Math.floor(availableW / (longestLine * 0.6))
+      if (maxFontFromW < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromW)
+    }
+
+    const lineH = fontSize + 3
+    const boxH = lines.length * lineH + padding * 2
+
+    // Compute X position
+    let boxX = 0
+    if (horiz === 'left') {
+      boxX = insideH ? margin : -boxW - margin
+    } else if (horiz === 'right') {
+      boxX = insideH ? nodeW - boxW - margin : nodeW + margin
+    } else {
+      boxX = (nodeW - boxW) / 2
+    }
+
+    // Compute Y position
+    let boxY = 0
+    if (vert === 'top') {
+      boxY = insideV ? margin : -boxH - margin
+    } else if (vert === 'bottom') {
+      boxY = insideV ? nodeH - boxH - margin : nodeH + margin
+    } else {
+      boxY = (nodeH - boxH) / 2
+    }
+
+    const g = this.d3_selection?.append('g')
+      .classed('stock_box', true)
+
+    // Background rect
+    if (this.stock_label_background_visible) {
+      g?.append('rect')
+        .attr('x', boxX)
+        .attr('y', boxY)
+        .attr('width', boxW)
+        .attr('height', boxH)
+        .attr('rx', borderRadius)
+        .attr('fill', bgVisible ? bgColor : 'none')
+        .attr('fill-opacity', bgOpacity)
+        .attr('stroke', borderVisible ? borderColor : 'none')
+        .attr('stroke-width', borderThickness)
+        .attr('stroke-dasharray', borderDashed ? '4,2' : '')
+    }
+
+    // Text
+    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
+    const textX = textAnchor === 'end' ? boxX + boxW - padding
+      : textAnchor === 'start' ? boxX + padding
+        : boxX + boxW / 2
+
+    lines.forEach((text, i) => {
+      g?.append('text')
+        .attr('x', textX)
+        .attr('y', boxY + padding + (i + 1) * lineH - 2)
+        .attr('text-anchor', textAnchor)
+        .attr('font-size', fontSize)
+        .attr('font-family', this.stock_label_font_family)
+        .attr('fill', textColor)
+        .text(text)
+    })
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
