@@ -163,7 +163,7 @@ export class Class_MenuConfig {
     'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
   }
 
-  protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' = 'shape'
+  protected _tab_selected: 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock' = 'shape'
   protected _elements_configurable_selected: { [x: string]: keyTypeElements[] } = {
     'data': [],
     'style': [],
@@ -217,6 +217,9 @@ export class Class_MenuConfig {
 
   // Update component SankeyNodeDimEdition
   private _ref_to_menu_config_nodes_dim_selection_updater: MutableRefObject<() => void>
+
+  // Update stock data section in Structure/Données > Noeuds
+  private _ref_to_menu_config_nodes_stock_updater: MutableRefObject<() => void>
 
   // Update component OpenSankeyConfigurationNodesAttributes
   private _ref_to_menu_config_apparence_updater: MutableRefObject<() => void>
@@ -319,6 +322,7 @@ export class Class_MenuConfig {
 
     // Nodes
     this._ref_to_menu_config_nodes_selection_updater = useRef(() => null)
+    this._ref_to_menu_config_nodes_stock_updater = useRef(() => null)
 
     this._ref_to_menu_config_apparence_updater = useRef(() => null)
     this._ref_to_menu_config_styles_updater = useRef(() => null)
@@ -547,8 +551,7 @@ export class Class_MenuConfig {
     this.openConfigMenu()
     // Leave enough time for menus to open
     setTimeout(() => {
-      this._elements_configurable_selected.data = ['flow']
-      // this._elements_configurable_selected.context = ['flow']
+      this._elements_configurable_selected.data = ['node', 'flow']
       this._elements_configurable_selected.style = ['element']
       this._ref_to_menu_config_updater.current()
     }, 200)
@@ -756,6 +759,7 @@ export class Class_MenuConfig {
     this.updateComponentRelatedToApparence()
     this.updateComponentRelatedToNodesTags()
     this.updateComponentRelatedToNodesTooltips()
+    this._ref_to_menu_config_nodes_stock_updater.current()
   }
 
   /**
@@ -1091,6 +1095,10 @@ export class Class_MenuConfig {
 
   public get ref_to_menu_config_nodes_selection_updater(): MutableRefObject<() => void> {
     return this._ref_to_menu_config_nodes_selection_updater
+  }
+
+  public get ref_to_menu_config_nodes_stock_updater(): MutableRefObject<() => void> {
+    return this._ref_to_menu_config_nodes_stock_updater
   }
 
   public get ref_to_menu_config_nodes_dim_selection_updater(): MutableRefObject<() => void> {
