@@ -8,6 +8,22 @@ export const resources_app_elements = {
   //=======================================================
   en: {
     translation: {
+      Trial: {
+        welcome_title: 'Try OpenSankey+ free for 30 days',
+        welcome_body: 'Unlock advanced features for 30 days, no account required: views, animations, icons, gradients, tags…',
+        welcome_hint: 'No credit card, no registration. You can switch back to free OpenSankey at any time.',
+        welcome_start: 'Start my 30-day trial',
+        welcome_later: 'Maybe later',
+        banner_active: '✦ OpenSankey+ trial — {{days}} days left',
+        banner_active_tooltip: 'Your free OpenSankey+ trial is active. Click to subscribe and keep all features.',
+        banner_start: '✦ Start 30-day OpenSankey+ trial',
+        banner_start_tooltip: 'Try OpenSankey+ free for 30 days. No account, no credit card.',
+        expired_title: 'OpenSankey+ trial period ended',
+        expired_body: 'Your 30-day free trial of OpenSankey+ has ended. Advanced features (views, animations, icons, gradients…) are now locked.',
+        expired_hint: 'You can keep using OpenSankey for free, or subscribe to OpenSankey+ to unlock everything again.',
+        continue_free: 'Continue with the free version',
+        subscribe: 'Subscribe to OpenSankey+',
+      },
       'connect': 'LogIn',
       MEP: {
         onValidate: 'Don\'t forget to load the file',
@@ -477,6 +493,22 @@ export const resources_app_elements = {
   //=======================================================
   fr: {
     translation: {
+      Trial: {
+        welcome_title: 'Essayez OpenSankey+ gratuitement pendant 30 jours',
+        welcome_body: 'Débloquez les fonctionnalités avancées pendant 30 jours, sans créer de compte : vues, animations, icônes, dégradés, étiquettes…',
+        welcome_hint: 'Sans carte bancaire, sans inscription. Vous pouvez revenir à OpenSankey gratuit à tout moment.',
+        welcome_start: 'Démarrer mon essai de 30 jours',
+        welcome_later: 'Plus tard',
+        banner_active: '✦ Essai OpenSankey+ — {{days}} jours restants',
+        banner_active_tooltip: 'Votre essai gratuit OpenSankey+ est actif. Cliquez pour souscrire et conserver toutes les fonctionnalités.',
+        banner_start: '✦ Démarrer l\'essai OpenSankey+ de 30 jours',
+        banner_start_tooltip: 'Essayez OpenSankey+ gratuitement pendant 30 jours. Sans compte, sans carte bancaire.',
+        expired_title: 'Période d\'essai OpenSankey+ terminée',
+        expired_body: 'Votre essai gratuit de 30 jours d\'OpenSankey+ est terminé. Les fonctionnalités avancées (vues, animations, icônes, dégradés…) sont à présent verrouillées.',
+        expired_hint: 'Vous pouvez continuer à utiliser OpenSankey gratuitement, ou souscrire à OpenSankey+ pour tout débloquer à nouveau.',
+        continue_free: 'Continuer en version gratuite',
+        subscribe: 'Souscrire à OpenSankey+',
+      },
       'connect': 'Connexion',
       MEP: {
         onValidate: 'Pensez à ouvrir le fichier',

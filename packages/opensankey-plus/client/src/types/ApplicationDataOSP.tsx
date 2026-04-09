@@ -9,6 +9,7 @@ import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from './DrawingAreaOS
 import { compressJSONToGzip } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
+import { isTrialActive } from '../utils/trial'
 
 declare const window: Window &
   typeof globalThis & {
@@ -26,6 +27,26 @@ declare const window: Window &
 export class Class_ApplicationDataOSP extends Class_ApplicationData {
 
   public override static_path: string = 'static/sankeyanimation'
+
+  /**
+   * OpenSankey+ free trial: as long as the 30-day trial is active, grant OS+
+   * access regardless of the underlying licence flag. A real licence (set via
+   * `has_sankey_plus = true` from the auth layer) always wins on its own merit;
+   * the trial only adds access, never removes it.
+   */
+  public override get has_sankey_plus(): boolean {
+    return this._has_sankey_plus || this.is_static || isTrialActive()
+  }
+  public override set has_sankey_plus(_: boolean) { this._has_sankey_plus = _ }
+
+  /**
+   * True only when the user holds a real OS+ licence (or runs in static mode),
+   * ignoring the free-trial bonus. Used by trial-related UI to decide whether
+   * to nag the user about subscribing.
+   */
+  public get has_real_sankey_plus_licence(): boolean {
+    return this._has_sankey_plus || this.is_static
+  }
 
   protected _master_drawing_area: Class_DrawingArea | undefined
   protected _views: {

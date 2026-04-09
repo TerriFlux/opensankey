@@ -47,6 +47,7 @@ import {
 import {
   ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
+import { BannerTrialOSP, ModalTrialExpiredOSP, ModalTrialWelcomeOSP } from './components/ModalTrialOSP'
 import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
 import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
 import {SankeySettingsEditionElementTags} from './components/SankeyPlusMenuConfigurationTags'
@@ -93,6 +94,11 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
 
   additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
+
+  // Trial state-aware bottom-bar CTA. Hidden when the user holds a real OS+ licence.
+  additionalMenus.current.additional_bottom_item.push(
+    <BannerTrialOSP app_data={new_data_plus} />
+  )
 
   // Add an option for flow color rule
   if (has_sankey_plus) {
@@ -265,6 +271,12 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalCreateUnitaryViewOSP
+      app_data={app_data}
+    />,
+    <ModalTrialWelcomeOSP
+      app_data={app_data}
+    />,
+    <ModalTrialExpiredOSP
       app_data={app_data}
     />
   ]
