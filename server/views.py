@@ -405,7 +405,7 @@ def _trial_send_notification(app, uuid: str, started_at_ms: int, total_count: in
     Runs inside an explicit app context so flask_mail can resolve the configured server.
     """
     try:
-        from logincomponent.server.mailing import mail, send, MAIL_SENDING_ADRESS
+        from logincomponent.server.mailing import send, MAIL_SENDING_ADRESS
         from flask_mail import Message
     except Exception as exc:  # pragma: no cover - import-time failures only
         trace.logger.warning("trial: cannot import mailing module (%s)", exc)
