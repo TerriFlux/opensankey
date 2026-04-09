@@ -41,6 +41,15 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - `feat(ui)` : injection de `is_row_disabled` pour les lignes de tags OSP (89a83bc).
 - `feat(ui)` : onglet « Vues » désactivé en l'absence de licence OSP (87ca6b2).
 - `feat(ui/server)` : case à cocher `error_on_new_nodes`, nettoyage du bruit de debug (bd28a6b).
+- **`feat(trial)` : période d'essai OpenSankey+ de 30 jours, opt-in, sans login** :
+  - nouveau module utilitaire `client/src/utils/trial.ts` (lecture/écriture `localStorage`, génération d'UUID anonyme v4, envoi des pings analytics en `keepalive`) avec API `markTrialOffered`, `startTrial`, `getTrialState`, `isTrialActive`, `isTrialExpired`, `markTrialConverted` ;
+  - nouveau composant `client/src/components/ModalTrialOSP.tsx` qui exporte trois éléments :
+    - `ModalTrialWelcomeOSP` : fenêtre d'accueil affichée une seule fois au premier chargement, avec boutons « Démarrer mon essai de 30 jours » et « Plus tard » ;
+    - `ModalTrialExpiredOSP` : fenêtre d'expiration affichée à J+31 si l'essai avait été démarré, avec boutons « Continuer en gratuit » et « Souscrire » ;
+    - `BannerTrialOSP` : bannière permanente du bas, automate à 4 états (offrir / N jours restants / expiré → débloquer / licence → masquée) ;
+  - override du getter `Class_ApplicationDataOSP.has_sankey_plus` pour retourner `true` tant que l'essai est actif (le getter `has_real_sankey_plus_licence` permet de distinguer la licence réelle de l'essai côté UI) ;
+  - injection des deux modales dans `moduleDialogsOSP` et de la bannière dans `additional_bottom_item` via `initializeAdditionalMenusOSP` (couvre à la fois `AppOSP` standalone et `AppSA` du shell SankeyApplication) ;
+  - 11 clés de traduction FR/EN ajoutées sous le namespace `Trial` (welcome_*, banner_*, expired_*).
 
 ### Corrections
 - `fix(node)` : affichage du libellé `in→out` quand la somme des flux entrants diffère de la somme des sortants (456d15b).
