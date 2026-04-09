@@ -1076,6 +1076,7 @@ export class Class_NodeElement extends Class_NodeBase {
         }
         // Get positioning parameters - use source or target thickness depending on which end this node is
         const is_source = link.source === this
+        const is_self_loop = link.source === this && link.target === this
         const thickness = is_source ? link.thicknessSource : link.thicknessTarget
         const handle_position_shift = 5
         // Current node is link's source
@@ -1133,7 +1134,10 @@ export class Class_NodeElement extends Class_NodeBase {
           doublon.push(link)
         }
         // Or current node is link's target
-        else if (link.target === this) {
+        // For self-loops we run BOTH branches in the same iteration so the
+        // ending point is also computed (otherwise _input_links_ending_point
+        // is never set and the link's _position_ending stays at (0,0)).
+        if ((!is_source || is_self_loop) && link.target === this) {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.target_side === 'right') {
