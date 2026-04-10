@@ -1351,7 +1351,7 @@ export const ConfigMenuNumberInput = ({
               if (!menu_for_style) {
                 clearTimeout(is_modifying.current)
               }
-              let new_value = value === null ? value : Number(value)
+              let new_value = (value === null || value === '') ? null : Number(value)
               if (fixed_dec > 0 && new_value !== null) {
                 new_value = +new_value?.toFixed(2)
               }
