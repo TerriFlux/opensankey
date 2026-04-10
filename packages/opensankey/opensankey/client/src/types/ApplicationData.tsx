@@ -917,7 +917,7 @@ export class Class_ApplicationData {
     const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
     const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
     const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
-    const evtKeyDel = (evt.key === 'Delete') && evtOnDrawingArea
+    const evtKeyDel = (evt.key === 'Delete' || evt.key === 'Backspace') && evtOnDrawingArea
     const evtKeyEsc = (evt.key === 'Escape') // Allow escape event even when focused on input so we can close menus
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
