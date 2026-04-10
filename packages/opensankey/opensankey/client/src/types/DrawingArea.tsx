@@ -1991,13 +1991,13 @@ export class Class_DrawingArea {
           [event.x, event.y]
         )
       }
-      // Horizontal displacement
+      // Horizontal displacement (Shift+scroll for mouse, or trackpad horizontal swipe via deltaX)
       else if (event.shiftKey) {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, event.deltaY, 0)
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
       }
-      // Vertical displacement
+      // Combined / trackpad two-finger pan: use both deltaX and deltaY
       else {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.deltaY)
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
       }
     }
   }
