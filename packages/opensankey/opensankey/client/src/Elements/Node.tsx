@@ -288,7 +288,19 @@ export class Class_NodeElement extends Class_NodeBase {
     this.d3_selection?.selectAll('.stock_box').remove()
 
     const stock_val = this.stock_value
-    if (!this.has_stock || !this.stock_label_is_visible || !stock_val?.has_stock_data) return
+    if (!this.has_stock || !this.stock_label_is_visible || !stock_val) return
+    // Pick data vs result depending on the drawing area display mode,
+    // mirroring Link.valueCurrent: 'data' shows raw data, anything else
+    // (reconciled / calculated) shows the result, falling back to data.
+    const type_data = this.drawing_area.type_data
+    const use_result = type_data !== 'data'
+    const si = use_result
+      ? (stock_val.stockInitialResult ?? stock_val.stockInitialData)
+      : stock_val.stockInitialData
+    const dv = use_result
+      ? (stock_val.stockVariationResult ?? stock_val.stockVariationData)
+      : stock_val.stockVariationData
+    if (si === null && dv === null) return
     if (!this.d3_selection_g_shape) return
     const nodeW = this.getShapeWidthToUse()
     const nodeH = this.getShapeHeightToUse()
@@ -319,8 +331,6 @@ export class Class_NodeElement extends Class_NodeBase {
     // Build text lines (SF redundant with SI + delta)
     // Use format_value to handle units, decimals, scientific notation, etc.
     const lines: string[] = []
-    const si = stock_val.stockInitialData
-    const dv = stock_val.stockVariationData
     const unitName = this.stock_label_unit ?? ''
     const formatStock = (v: number) =>
       format_value('free_value', v, this, unitName, 'stock_label')
