@@ -94,6 +94,10 @@ export abstract class Class_BaseElement {
     this.d3_selection?.on(
       'click',
       (event: MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        // Prevent browser default on Cmd+Click (Mac opens new tab)
+        if (event.metaKey) {
+          event.preventDefault()
+        }
         if (this.drawing_area.isInStylePaintMode()) {
           d3.selectAll('.sankey-tooltip').remove()
           if (this instanceof Class_ProtoElement)
