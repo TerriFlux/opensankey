@@ -104,6 +104,7 @@ export class Class_ContainerElement extends Class_NodeBase {
       _event.preventDefault()
       this.drawing_area.pointer_pos = [_event.pageX, _event.pageY]
       if (!this.drawing_area.selected_containers_list.includes(this)) {
+        this.drawing_area.purgeSelection()
         this.drawing_area.addElementToSelection(this)
       }
       this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()

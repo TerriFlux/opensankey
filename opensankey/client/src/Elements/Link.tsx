@@ -985,6 +985,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event.preventDefault()
     this.drawing_area.pointer_pos = [event.pageX, event.pageY]
     if (!this.drawing_area.selected_links_list.includes(this)) {
+      this.drawing_area.purgeSelection()
       this.drawing_area.addElementToSelection(this)
     }
     this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()

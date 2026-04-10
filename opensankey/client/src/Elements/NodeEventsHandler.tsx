@@ -436,6 +436,7 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     event.preventDefault()
     this._node.drawing_area.pointer_pos = [event.pageX, event.pageY]
     if (!this._node.selected_elements_list.includes(this._node)) {
+      this._node.drawing_area.purgeSelection()
       this._node.drawing_area.addElementToSelection(this._node)
     }
     this._node.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
