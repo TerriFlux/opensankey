@@ -80,6 +80,7 @@ Cette section consolide les évolutions livrées en avril 2026, tous modules con
 - **Import Excel** : restauration du comportement bloquant pour `error_on_new_nodes` ; libellé et tooltip mis à jour pour refléter ce blocage.
 - **Issue [#130](https://gitlab.com/su-model/sankeyapplication/-/work_items/130)** : correctif intégré côté OpenSankey.
 - **Self-loops (flux d'un nœud sur lui-même)** : un flux dont source et cible sont identiques s'affichait à (0,0) au lieu de boucler sur le nœud — `updateLinksPositions` ne calculait que le point de départ et jamais le point d'arrivée pour ce cas. Les deux extrémités sont maintenant calculées dans la même itération ([opensankey#800](https://gitlab.com/su-model/opensankey/-/issues/800)).
+- **Contraintes ratio_flux avec Min (≥) ou Max (≤)** : les contraintes d'inégalité sans Coef produisaient des résultats faux — `coef_eq` par défaut à 1.0 créait une contrainte d'égalité parasite forçant le flux de référence à zéro, les types `ineq_inf`/`ineq_sup` étaient inversés et les coefficients non normalisés (ratio perdu dans le solveur).
 
 ---
 
