@@ -52,6 +52,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
   - 11 clés de traduction FR/EN ajoutées sous le namespace `Trial` (welcome_*, banner_*, expired_*).
 
 ### Corrections
+- `fix(mac)` : compatibilité macOS des raccourcis clavier (via submodule OpenSankey) et mise à jour de la documentation des raccourcis.
 - `fix(node)` : affichage du libellé `in→out` quand la somme des flux entrants diffère de la somme des sortants (456d15b).
 
 ### Modifications
