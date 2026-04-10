@@ -913,9 +913,11 @@ export class Class_ApplicationData {
     app_ref: Class_ApplicationData) {
     // Events booleans ----------------------------------------------------------------
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
-    const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
-    const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
-    const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
+    const isMac = navigator.platform.toUpperCase().includes('MAC')
+    const evtModifier = isMac ? evt.metaKey : evt.ctrlKey
+    const evtCtrl = evtModifier && (!evt.shiftKey) && (!evt.altKey)
+    const evtCtrlShift = evtModifier && (evt.shiftKey) && (!evt.altKey)
+    const evtCtrlAlt = evtModifier && (!evt.shiftKey) && (evt.altKey)
     const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
     const evtKeyDel = (evt.key === 'Delete' || evt.key === 'Backspace') && evtOnDrawingArea
     const evtKeyEsc = (evt.key === 'Escape') // Allow escape event even when focused on input so we can close menus
