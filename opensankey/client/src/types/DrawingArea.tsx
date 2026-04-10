@@ -1979,7 +1979,8 @@ export class Class_DrawingArea {
       this.d3_selection_zoom_area
     ) {
       // Zoom in / out
-      if (event.ctrlKey || event.metaKey) {
+      const isMac = navigator.platform.toUpperCase().includes('MAC')
+      if (isMac ? event.metaKey : event.ctrlKey) {
         // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
