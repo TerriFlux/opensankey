@@ -2029,10 +2029,10 @@ export const tableStyles = {
 
   table_welcome_buttons: table.definePartsStyle({
     table: {
-      margin: '1rem',
+      margin: '0.5rem',
       justifySelf: 'center',
       borderCollapse: 'separate',
-      borderSpacing: '0.25rem',
+      borderSpacing: '0.15rem',
     },
     thead: {
       bg: 'primaire.2',
@@ -2052,7 +2052,12 @@ export const tableStyles = {
         },
       }
     },
-    td: {},
+    td: {
+      paddingTop: '0.15rem !important',
+      paddingBottom: '0.15rem !important',
+      paddingInlineStart: '0.5rem',
+      paddingInlineEnd: '0.5rem',
+    },
     tr: {
       'td:first-child': {
         textAlign: 'end',
