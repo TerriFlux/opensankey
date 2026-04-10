@@ -20,6 +20,7 @@ VENV_ACTIVATE="${ENV_DIR}/${ENV}_opensankey/bin/activate"
 echo "=== Déploiement ${ENV} (${APP_DIR}) ==="
 
 # --- Activate venv ---
+echo ">>> source $VENV_ACTIVATE"
 source "$VENV_ACTIVATE"
 
 # --- EIGEN_INCLUDE ---
