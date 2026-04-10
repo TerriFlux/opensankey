@@ -951,8 +951,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       else if (drawing_area.isInSelectionMode()) {
         // SHIFT
 
-        // CTRL
-        if (event.ctrlKey) {
+        // CTRL (or CMD on Mac)
+        if (event.ctrlKey || event.metaKey) {
           this.addOrRemoveLinkFromSelection()
           this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
           this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']

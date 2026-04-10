@@ -48,6 +48,11 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - `feat(ui/server)` : case à cocher `error_on_new_nodes`, nettoyage du bruit de debug (37ec8a51, 1215e20c).
 
 ### Corrections
+- `fix(mac)` : compatibilité macOS des raccourcis clavier et interactions souris :
+  - touche `Backspace` acceptée en plus de `Delete` pour la suppression d'éléments (`ApplicationData.tsx`) ;
+  - `Cmd+Click` (metaKey) pris en charge pour la multi-sélection de nœuds (`NodeEventsHandler.tsx`), liens (`Link.tsx`) et le zoom molette (`DrawingArea.tsx`) ;
+  - purge de sélection inhibée lorsque `Cmd` est maintenu (`DrawingArea.tsx`) ;
+  - documentation des raccourcis mise à jour (EN+FR) : mention des équivalents Mac (Cmd, Backspace, Fn+F-keys) dans `traduction_rcc_shortcuts.tsx`.
 - `fix(node)` : affichage du libellé `in→out` quand la somme des flux entrants diffère de la somme des sortants (0b47be14).
 - `fix` : inversion `moveToFirstPlan` / `moveToLastPlan` pour les nœuds (d779c643).
 - `fix` : séparateur de libellé par défaut désormais vide (libellé complet affiché par défaut) (2e675423).

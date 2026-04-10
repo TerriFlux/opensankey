@@ -157,7 +157,7 @@ public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.Mou
     if (!labelType) return
 
     // ✅ Sélectionner l'élément et ouvrir l'onglet
-    this.selectElementAndOpenTab(labelType, event.ctrlKey)
+    this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
   }
 }
 

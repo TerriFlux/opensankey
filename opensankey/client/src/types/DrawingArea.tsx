@@ -1676,7 +1676,7 @@ export class Class_DrawingArea {
         }
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
-      if ((!event.shiftKey) && (!event.ctrlKey)) {
+      if ((!event.shiftKey) && (!event.ctrlKey) && (!event.metaKey)) {
         const just_closed = this.closeAllContextMenus()
         if (!just_closed) this.purgeSelection()
       }
@@ -1979,8 +1979,8 @@ export class Class_DrawingArea {
       this.d3_selection_zoom_area
     ) {
       // Zoom in / out
-      if (event.ctrlKey) {
-        // Avoid CTRL + Scroll default behavior in Browser
+      if (event.ctrlKey || event.metaKey) {
+        // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
         const scale = 1 - (event.deltaY / Math.abs(event.deltaY)) / 10
