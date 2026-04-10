@@ -459,7 +459,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Events booleans ----------------------------------------------------------------
 
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
-    const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
+    const isMac = navigator.platform.toUpperCase().includes('MAC')
+    const evtModifier = isMac ? evt.metaKey : evt.ctrlKey
+    const evtCtrl = evtModifier && (!evt.shiftKey) && (!evt.altKey)
     const evtKeyF7 = (evt.key === 'F7')
     const evtKeyF8 = (evt.key === 'F8')
     const evtKeyF9 = (evt.key === 'F9')
