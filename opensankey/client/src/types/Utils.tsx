@@ -384,6 +384,16 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
       return source_text + '\u2192' + target_text
     }
 
+    // Intervals: display [min - max] with result fallback to data
+    if (link.value?.value_option === 'intervals') {
+      const min = link.value?.result_min ?? link.value?.data_min
+      const max = link.value?.result_max ?? link.value?.data_max
+      if (min !== null || max !== null) {
+        return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
+      }
+      return ''
+    }
+
     if (type_data == 'data' || type_data == 'data_label') {
       if (!link.value?.valueData) return ''
       const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)

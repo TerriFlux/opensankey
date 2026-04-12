@@ -46,13 +46,22 @@ export const resources_flux = {
           unit_ratio: 'Coeff. units conversion',
           edit_value: 'Edit value',
           value_target: 'Dest. value',
+          tab_basic: 'Basic',
+          tab_afm: 'AFM',
+          data_min: 'Min',
+          data_max: 'Max',
+          uncertainty: 'Uncertainty',
           affichage: 'Label',
           tooltips: {
             data_type: 'Data type',
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
             affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram',
-            value_target: 'Destination value for tapered links (leave empty for uniform thickness)'
+            value_target: 'Destination value for tapered links (leave empty for uniform thickness)',
+            data_min: 'Minimum bound for the flow value (used for reconciliation)',
+            data_max: 'Maximum bound for the flow value (used for reconciliation)',
+            uncertainty: 'Relative uncertainty in % on the flow value (used for reconciliation)',
+            tab_basic_disabled: 'Select "Value" as data type in the AFM tab to enable this panel'
           }
         },
         apparence: {
@@ -107,6 +116,10 @@ export const resources_flux = {
           }
         },
         labels: {
+          value: 'Value',
+          intervals: 'Intervals',
+          percent: '%',
+          ratio: 'Ratio',
           label: 'Label',
           vdb: 'Label value',
           len: 'Black label',
@@ -197,13 +210,22 @@ export const resources_flux = {
           ratio_target_parent: 'Ratio flux parent(à droite)',
           unit_ratio: 'Coeff. conversion unités',
           value_target: 'Valeur dest.',
+          tab_basic: 'Basique',
+          tab_afm: 'AFM',
+          data_min: 'Min',
+          data_max: 'Max',
+          uncertainty: 'Incertitude',
           affichage: 'Label',
           tooltips: {
             data_type: 'Type de données',
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
             affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey',
-            value_target: 'Valeur à la destination pour les flux en forme de trapèze (laisser vide pour une épaisseur uniforme)'
+            value_target: 'Valeur à la destination pour les flux en forme de trapèze (laisser vide pour une épaisseur uniforme)',
+            data_min: 'Borne inférieure de la valeur du flux (utilisée pour la réconciliation)',
+            data_max: 'Borne supérieure de la valeur du flux (utilisée pour la réconciliation)',
+            uncertainty: 'Incertitude relative en % sur la valeur du flux (utilisée pour la réconciliation)',
+            tab_basic_disabled: 'Sélectionnez "Valeur" comme type de données dans l\'onglet AFM pour activer ce panneau'
           }
         },
         apparence: {
@@ -260,6 +282,7 @@ export const resources_flux = {
           source: 'Noeud source',
           target: 'Noeud destination',
           percent: '%',
+          intervals: 'Intervalles',
           ratio: 'Ratio',
           label: 'Label',
           vdb: 'Valeur',
