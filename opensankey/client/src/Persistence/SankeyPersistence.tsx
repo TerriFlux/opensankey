@@ -32,7 +32,7 @@ import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
   default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure
 } from '../Elements/ElementsAttributesConfig'
-import { getStringFromJSON } from '../types/Utils'
+import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -1667,6 +1667,8 @@ export class DrawingAreaPersistence {
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
+    if (drawing_area.data_source !== 'reconciled') json_object['data_source'] = drawing_area.data_source
+    if (drawing_area.interval_display !== 'free_value') json_object['interval_display'] = drawing_area.interval_display
     if (drawing_area.magnetic_nodes) json_object['magnetic_nodes'] = drawing_area.magnetic_nodes
 
     if (drawing_area.show_background_image) json_object['show_background_image'] = drawing_area.show_background_image
@@ -1757,6 +1759,13 @@ export class DrawingAreaPersistence {
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
     drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
     drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure
+    // New split attributes — if present, use them; otherwise derive from legacy type_data
+    if ('data_source' in json_object) {
+      drawing_area['_data_source'] = getStringFromJSON(json_object, 'data_source', 'reconciled') as Type_DataSource
+    }
+    if ('interval_display' in json_object) {
+      drawing_area['_interval_display'] = getStringFromJSON(json_object, 'interval_display', 'free_value') as Type_IntervalDisplay
+    }
     drawing_area['_width'] = getNumberFromJSON(json_object, 'width', drawing_area.width)
     drawing_area['_magnetic_nodes'] = getBooleanFromJSON(json_object, 'magnetic_nodes', drawing_area.magnetic_nodes)
 

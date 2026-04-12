@@ -26,7 +26,7 @@
 
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
-import { Type_JSON, Type_Structure, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
   default_black_color,
@@ -162,6 +162,8 @@ export class Class_DrawingArea {
 
   // Display
   private _type_data: Type_Structure = initial_show_structure
+  private _data_source: Type_DataSource = 'reconciled'
+  private _interval_display: Type_IntervalDisplay = 'free_value'
 
   // Objects containeds in drawing area -------------------------------------------------
 
@@ -290,6 +292,8 @@ export class Class_DrawingArea {
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
+    this._data_source = drawing_area_to_copy._data_source
+    this._interval_display = drawing_area_to_copy._interval_display
     this._width = drawing_area_to_copy._width
 
     this._show_background_image = drawing_area_to_copy._show_background_image
@@ -2283,8 +2287,32 @@ export class Class_DrawingArea {
   public get filter_label(): number { return this._filter_label }
   public set filter_label(value: number) { this._filter_label = value }
 
-  public get type_data(): Type_Structure { return this._type_data }
-  public set type_data(value: Type_Structure) { this._type_data = value }
+  public get type_data(): Type_Structure {
+    if (this._data_source === 'structure') return 'structure'
+    if (this._data_source === 'data' || this._data_source === 'data_label') {
+      if (this._interval_display === 'free_interval') return 'free_interval'
+      if (this._interval_display === 'free_value') return 'free_value'
+      return this._data_source
+    }
+    // reconciled
+    return this._interval_display === 'structure' ? 'reconciled' : this._interval_display
+  }
+  public set type_data(value: Type_Structure) {
+    // Legacy setter — maps single value to the two new attributes
+    if (value === 'structure') { this._data_source = 'structure' }
+    else if (value === 'data') { this._data_source = 'data'; this._interval_display = 'structure' }
+    else if (value === 'data_label') { this._data_source = 'data_label'; this._interval_display = 'structure' }
+    else if (value === 'reconciled') { this._data_source = 'reconciled'; this._interval_display = 'structure' }
+    else if (value === 'free_value') { this._data_source = 'reconciled'; this._interval_display = 'free_value' }
+    else if (value === 'free_interval') { this._data_source = 'reconciled'; this._interval_display = 'free_interval' }
+    this._type_data = value
+  }
+
+  public get data_source(): Type_DataSource { return this._data_source }
+  public set data_source(value: Type_DataSource) { this._data_source = value }
+
+  public get interval_display(): Type_IntervalDisplay { return this._interval_display }
+  public set interval_display(value: Type_IntervalDisplay) { this._interval_display = value }
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }

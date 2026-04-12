@@ -273,9 +273,6 @@ export const FilterWrapperBox = ({ app_data, title, defaultOpen, children }: Rea
 
 export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?: boolean }) => {
   const { t } = app_data
-  const [_, sIsDataTypeReconcilied] = useState(['reconciled', 'free_value', 'free_interval'].includes(app_data.drawing_area.type_data))
-  const data_type_not_reconcilied = ['data', 'structure'].includes(app_data.drawing_area.type_data)
-  const [s_type_value, sTypeValue] = useState<'data' | 'data_label' | 'structure' | 'reconciled'>(data_type_not_reconcilied ? (app_data.drawing_area.type_data as 'data' | 'structure' | 'reconciled') : 'reconciled')
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
 
@@ -288,24 +285,21 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
   let has_results = false
   app_data.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
   let has_intervals = false
-  app_data.drawing_area.sankey.links_list.forEach(l => has_intervals = has_intervals || l.has_intervals)
+  app_data.drawing_area.sankey.links_list.forEach(l => has_intervals = has_intervals || l.has_intervals || l.value?.value_option === 'intervals')
 
   const content = <>
-    <Box
-      layerStyle='menuconfig_grid'
-    >
+    {/* Selector 1: Data source */}
+    <Box layerStyle='menuconfig_grid'>
       <Box fontStyle='h3' >
         {t('Banner.sdr')}
       </Box>
       <Select
-        value={s_type_value}
+        value={app_data.drawing_area.data_source}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-          app_data.drawing_area.type_data = evt.target.value as 'data' | 'data_label' | 'structure' | 'reconciled'
-          sTypeValue(evt.target.value as 'data' | 'structure' | 'reconciled' | 'data_label')
-          if (evt.target.value === 'reconciled') {
-            sIsDataTypeReconcilied(true)
-          } else {
-            sIsDataTypeReconcilied(false)
+          app_data.drawing_area.data_source = evt.target.value as 'data' | 'data_label' | 'structure' | 'reconciled'
+          // Reset free_value if not available for the new data source
+          if (evt.target.value !== 'reconciled' && app_data.drawing_area.interval_display === 'free_value') {
+            app_data.drawing_area.interval_display = 'free_interval'
           }
           setCount(a => a + 1)
           redrawNodeLinkLegend()
@@ -318,24 +312,24 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
         </> : <option key='reconciled' value='reconciled' >{t('Banner.only_data')}</option>}
       </Select>
     </Box>
+    {/* Selector 2: Interval display */}
     {has_intervals && window.sankey?.data_type_intervals !== false ?
-      <Box
-        layerStyle='menuconfig_grid'
-      //display={s_is_data_type_reconcilied && app_data.is_reconcilied ? '' : 'none'}
-      >
+      <Box layerStyle='menuconfig_grid'>
         <Box fontStyle='h3' >
           {t('Banner.indetermined_value')}
         </Box>
         <Select
-          value={app_data.drawing_area.type_data}
+          value={app_data.drawing_area.interval_display}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-            app_data.drawing_area.type_data = evt.target.value as 'reconciled' | 'free_value' | 'free_interval'
+            app_data.drawing_area.interval_display = evt.target.value as 'structure' | 'free_value' | 'free_interval'
             setCount(a => a + 1)
             redrawNodeLinkLegend()
           }}>
-          <option key='none' value='reconciled' >{t('Banner.structure')}</option>
+          <option key='none' value='structure' >{t('Banner.structure')}</option>
           <option key='free_interval' value='free_interval' >{t('Banner.free_interval')}</option>
-          <option key='free_value' value='free_value' >{t('Banner.free_value')}</option>
+          {has_results && app_data.drawing_area.data_source === 'reconciled' && (
+            <option key='free_value' value='free_value' >{t('Banner.free_value')}</option>
+          )}
         </Select>
       </Box> : <></>}
   </>
