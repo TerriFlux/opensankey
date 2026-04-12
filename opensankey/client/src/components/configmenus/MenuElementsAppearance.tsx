@@ -58,6 +58,8 @@ import {
   NAME_LABEL_CONFIG,
   VALUE_LABEL_CONFIG,
   ICON_LABEL_BASE_CONFIG,
+  STOCK_LABEL_CONFIG,
+  LabelPrefix,
   BASE_LABEL_CONFIG,
   LINKS_LABEL_SPECIFIC_CONFIG,
   ALL_ATTRIBUTES_CONFIG,
@@ -241,6 +243,175 @@ export const LabelDisplayModeSelector = ({
  * Affichée uniquement pour les modes simple_text et value
  */
 
+// ===================================================================================
+// Reusable component: Unit + number formatting (decimals, scientific, significant digits)
+// Works with any label config that has the unit_* / nb_digit / significant_digits attrs
+// ===================================================================================
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePath, refreshParentComponent }: {
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  prefix: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any
+  attributePath: string
+  refreshParentComponent: () => void
+}) => {
+  const { t } = app_data
+  const labelValues = elements.length > 0
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? getElementsLabelValues(elements as any, prefix, refreshParentComponent) as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    : Object.fromEntries(Object.entries(config).map(([k, v]: [string, any]) => [k, v.default])) as any
+  const unit_tagg = app_data.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
+  const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+
+  return (<>
+    <Box layerStyle='options_1_2_2cols'>
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
+        isChecked={labelValues.unit_visible}
+        onChange={(evt: React.ChangeEvent<HTMLInputElement>) => { labelValues.unit_visible = evt.target.checked }}
+      >
+        <OSTooltip label={t(`${attributePath}.tooltips.${prefix}_unit_visible`)}>
+          {t(`${attributePath}.${prefix}_unit_visible`)}
+        </OSTooltip>
+      </Checkbox>
+      {labelValues.unit_visible ? <>
+        <InputIndicatorWrapper
+          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit_type` as keyof typeof config, config)}
+          isMultiValue={isConfigValueIndeterminate(elements, config, 'unit_type', prefix)}
+          t={app_data.t}
+        >
+          <Select
+            value={labelValues.unit_type}
+            onChange={(evt) => { labelValues.unit_type = evt.target.value }}
+          >
+            {unit_constants.map(el => (
+              <option key={'value_' + el} value={el}>{app_data.t('Flux.labels.' + el)}</option>
+            ))}
+          </Select>
+        </InputIndicatorWrapper>
+
+        {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
+          <ElementAttrSetterSelect2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'unit'}
+            config={config}
+            prefix={prefix}
+            options={unit_tagg.tags_list.map(el => ({ key: 'value_' + el.id, value: el.id, label: el.name }))}
+            refreshParentComponent={refreshParentComponent}
+          />
+        )}
+
+        {labelValues.unit_type == 'unit_name' && (
+          <InputIndicatorWrapper
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_unit` as keyof typeof config, config)}
+            isMultiValue={isConfigValueIndeterminate(elements, config, 'unit', prefix)}
+            t={app_data.t}
+          >
+            <Input
+              variant='menuconfigpanel_option_input'
+              value={labelValues.unit ?? ''}
+              placeholder="nom de l'unité"
+              onChange={(evt) => { labelValues.unit = evt.target.value }}
+              onBlur={(evt) => { labelValues.unit = evt.target.value || '' }}
+            />
+          </InputIndicatorWrapper>
+        )}
+      </> : <></>}
+    </Box>
+
+    <Box layerStyle='options_5cols'>
+      <OverloadedCheckbox
+        elements={elements}
+        config={config}
+        prefix={prefix}
+        attributeKey={'custom_digit'}
+        isChecked={labelValues.custom_digit}
+        onChange={(checked) => { labelValues.custom_digit = checked }}
+        getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'custom_digit', prefix)}
+        tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'custom_digit')}`)}
+        t={t}
+      >
+        <Box display="flex" alignItems="center" gap={1}>.##</Box>
+      </OverloadedCheckbox>
+
+      {labelValues.custom_digit ? (
+        <ConfigMenuNumberInput
+          t={t}
+          default_value={labelValues.nb_digit}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          stepper={true}
+          function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
+          multiValue={isConfigValueIndeterminate(elements, config, 'nb_digit', prefix)}
+          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof config, config)}
+        />
+      ) : <Box />}
+
+      <OverloadedCheckbox
+        elements={elements}
+        config={config}
+        prefix={prefix}
+        attributeKey={'scientific_notation'}
+        isChecked={labelValues.scientific_notation}
+        onChange={(checked) => { labelValues.scientific_notation = checked }}
+        getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'scientific_notation', prefix)}
+        tooltipLabel={t(`${attributePath}.tooltips.${prefix}_scientific_notation`)}
+        t={t}
+      >
+        <Box display="flex" alignItems="center" gap={1}>#e^#</Box>
+      </OverloadedCheckbox>
+
+      <OverloadedCheckbox
+        elements={elements}
+        config={config}
+        prefix={prefix}
+        attributeKey={'significant_digits'}
+        isChecked={labelValues.significant_digits}
+        onChange={(checked) => { labelValues.significant_digits = checked }}
+        getIsIndeterminate={() => isConfigValueIndeterminate(elements, config, 'significant_digits', prefix)}
+        tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'significant_digits')}`)}
+        t={t}
+      >
+        <Box display="flex" alignItems="center" gap={1}>#.##</Box>
+      </OverloadedCheckbox>
+
+      {labelValues.significant_digits ? (
+        <ConfigMenuNumberInput
+          t={t}
+          default_value={labelValues.nb_significant_digits}
+          menu_for_style={menu_for_style}
+          minimum_value={0}
+          stepper={true}
+          function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
+          multiValue={isConfigValueIndeterminate(elements, config, 'nb_significant_digits', prefix)}
+          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof config, config)}
+        />
+      ) : <Box />}
+    </Box>
+
+    <Box layerStyle='options_2cols'>
+      <ElementAttrSetterNumberInput2Cols
+        app_data={app_data}
+        elements={elements}
+        attributePath={attributePath}
+        attributeKey={'unit_factor'}
+        config={config}
+        prefix={prefix}
+        refreshParentComponent={refreshParentComponent}
+        stepper={false}
+        isOverloaded={isElementAttributeOverloaded(elements, prefix + '_unit_factor' as keyof typeof config, config)}
+      />
+    </Box>
+  </>)
+}
+
 // ✅ Sous-composant pour le contenu des labels
 const LabelContentComponent = ({
   app_data,
@@ -266,9 +437,6 @@ const LabelContentComponent = ({
     }
   //@ts-expect-error xxx
   const selection = analyzeSelection(elements)
-  const unit_tagg = app_data.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
-
-
 
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
   const base_elements = elements as Class_NodeBase[] | Class_LinkElement[]
@@ -295,182 +463,14 @@ const LabelContentComponent = ({
     <Box layerStyle='menuconfigpanel_grid'>
       {(prefix === 'value_label' || displayMode == 'value') && (<>
         <Divider />
-        <Box layerStyle='options_1_2_2cols'>
-          <Checkbox
-            variant='menuconfigpanel_part_title_1_checkbox'
-            icon={<CustomFaEyeCheckIcon />}
-            isChecked={labelValues.unit_visible}
-            onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-              labelValues.unit_visible = evt.target.checked
-            }}
-          >
-            <OSTooltip label={t(`${String(attributePath)}.tooltips.value_label_unit_visible`)}>
-              {t(`${String(attributePath)}.value_label_unit_visible`)}
-            </OSTooltip>
-          </Checkbox>
-          {labelValues.unit_visible ? <>
-            <InputIndicatorWrapper
-              isOverloaded={isElementAttributeOverloaded(
-                elements,
-                `${prefix}_unit_type` as keyof typeof VALUE_LABEL_CONFIG,
-                VALUE_LABEL_CONFIG
-              )}
-              isMultiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'unit_type', prefix)}
-              t={app_data.t}
-            >
-              <Select
-                value={labelValues.unit_type}
-                onChange={(evt) => {
-                  labelValues.unit_type = evt.target.value
-                }}
-              >
-                {unit_constants.map(el => (
-                  <option key={'value_' + el} value={el}>
-                    {app_data.t('Flux.labels.' + el)}
-                  </option>
-                ))}
-              </Select>
-            </InputIndicatorWrapper>
-
-            {/* Select pour unit tag (quand type = other_unit_tag) */}
-            {labelValues.unit_type == 'other_unit_tag' && unit_tagg && (
-              <ElementAttrSetterSelect2Cols
-                app_data={app_data}
-                elements={elements}
-                attributePath={attributePath}
-                attributeKey={'unit'}
-                config={VALUE_LABEL_CONFIG}
-                prefix={prefix}
-                options={unit_tagg.tags_list.map(el => ({
-                  key: 'value_' + el.id,
-                  value: el.id,
-                  label: el.name
-                }))}
-                refreshParentComponent={refreshParentComponent}
-              />
-            )}
-
-            {/* Text input et number input pour unit_name */}
-            {labelValues.unit_type == 'unit_name' && (<>
-              <InputIndicatorWrapper
-                isOverloaded={isElementAttributeOverloaded(
-                  elements,
-                  `${prefix}_unit` as keyof typeof VALUE_LABEL_CONFIG,
-                  VALUE_LABEL_CONFIG
-                )}
-                isMultiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'unit', prefix)}
-                t={app_data.t}
-              >
-                <Input
-                  variant='menuconfigpanel_option_input'
-                  value={labelValues.unit ?? ''}
-                  placeholder="nom de l'unité"
-                  onChange={(evt) => {
-                    labelValues.unit = evt.target.value
-                  }}
-                  onBlur={(evt) => {
-                    labelValues.unit = evt.target.value || ''
-                  }}
-                />
-              </InputIndicatorWrapper>
-            </>
-            )}
-          </> : <></>}
-        </Box>
-        <Box layerStyle='options_5cols'>
-          {/* Checkbox 1 : Décimales personnalisées */}
-          <OverloadedCheckbox
-            elements={elements}
-            config={VALUE_LABEL_CONFIG}
-            prefix={prefix as any}
-            attributeKey={'custom_digit'}
-            isChecked={labelValues.custom_digit}
-            onChange={(checked) => { labelValues.custom_digit = checked }}
-            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'custom_digit', prefix)}
-            tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'custom_digit')}`)}
-            t={t}
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              .##
-            </Box>
-          </OverloadedCheckbox>
-
-          {/* Input 1 : Nombre de décimales */}
-          {labelValues.custom_digit ? (
-            <ConfigMenuNumberInput
-              t={t}
-              default_value={labelValues.nb_digit}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              stepper={true}
-              function_on_blur={(value) => { labelValues.nb_digit = value ?? 0 }}
-              multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_digit', prefix)}
-              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_digit` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
-            />
-          ) : <Box />}
-
-          {/* Checkbox 2 : Notation scientifique */}
-          <OverloadedCheckbox
-            elements={elements}
-            config={VALUE_LABEL_CONFIG}
-            prefix={prefix as any}
-            attributeKey={'scientific_notation'}
-            isChecked={labelValues.scientific_notation}
-            onChange={(checked) => { labelValues.scientific_notation = checked }}
-            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'scientific_notation', prefix)}
-            tooltipLabel={t('Flux.labels.tooltips.value_label_scientific_notation')}
-            t={t}
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              #e^#
-            </Box>
-          </OverloadedCheckbox>
-          {/* Checkbox 3 : Chiffres significatifs */}
-          <OverloadedCheckbox
-            elements={elements}
-            config={VALUE_LABEL_CONFIG}
-            prefix={prefix as any}
-            attributeKey={'significant_digits'}
-            isChecked={labelValues.significant_digits}
-            onChange={(checked) => { labelValues.significant_digits = checked }}
-            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'significant_digits', prefix)}
-            tooltipLabel={t(`${attributePath}.tooltips.${getLabelAttributeKey(prefix, 'significant_digits')}`)}
-            t={t}
-          >
-            <Box display="flex" alignItems="center" gap={1}>
-              #.##
-            </Box>
-          </OverloadedCheckbox>
-
-          {/* Input 2 : Nombre de chiffres significatifs */}
-          {labelValues.significant_digits ? (
-            <ConfigMenuNumberInput
-              t={t}
-              default_value={labelValues.nb_significant_digits}
-              menu_for_style={menu_for_style}
-              minimum_value={0}
-              stepper={true}
-              function_on_blur={(value) => { labelValues.nb_significant_digits = value ?? 0 }}
-              multiValue={isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'nb_significant_digits', prefix)}
-              isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_nb_significant_digits` as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
-            />
-
-          ) : <Box />}
-        </Box>
-        <Box layerStyle='options_2cols'>
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
-            attributePath={attributePath}
-            attributeKey={'unit_factor'}
-            config={VALUE_LABEL_CONFIG}
-            prefix={prefix}
-            refreshParentComponent={refreshParentComponent}
-            stepper={false}
-            isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('unit_factor') as keyof typeof VALUE_LABEL_CONFIG, VALUE_LABEL_CONFIG)}
-          />
-        </Box>
-        {/* </Box> */}
+        <NumberFormatComponent
+          app_data={app_data}
+          elements={elements}
+          prefix={prefix}
+          config={VALUE_LABEL_CONFIG}
+          attributePath={attributePath}
+          refreshParentComponent={refreshParentComponent}
+        />
       </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
@@ -639,20 +639,22 @@ const LabelContentComponent = ({
                 })
               }}
             />
-            <Button
-              variant={iconColorSustainable ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                base_elements.forEach(el => {
-                  if ('icon_color_sustainable' in el) {
-                    el.icon_color_sustainable = !iconColorSustainable
-                    el.draw()
-                  }
-                })
-                refreshParentComponent()
-              }}
-            >
-              {iconColorSustainable ? app_data.icon_library.icon_locked : app_data.icon_library.icon_unlocked}
-            </Button>
+            <OSTooltip label={iconColorSustainable ? t('color_lock.locked') : t('color_lock.unlocked')}>
+              <Button
+                variant={iconColorSustainable ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  base_elements.forEach(el => {
+                    if ('icon_color_sustainable' in el) {
+                      el.icon_color_sustainable = !iconColorSustainable
+                      el.draw()
+                    }
+                  })
+                  refreshParentComponent()
+                }}
+              >
+                {iconColorSustainable ? app_data.icon_library.icon_locked : app_data.icon_library.icon_unlocked}
+              </Button>
+            </OSTooltip>
           </Box>
         </>
       )}
@@ -931,7 +933,7 @@ export const MenuConfigurationAppearance = ({
 
   const display_mode_name_label = useRef<'simple_text' | 'rich_text' | 'value'>('simple_text')
   // ✅ State pour l'onglet actif : 5 onglets
-  type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon'
+  type ActiveTab = 'shape' | 'name_label' | 'value_label' | 'icon' | 'stock'
   const [activeTab, setActiveTab] = useState<ActiveTab>('shape')
   if (activeTab !== app_data.menu_configuration.tab_selected)
     setActiveTab(app_data.menu_configuration.tab_selected)
@@ -1010,6 +1012,10 @@ export const MenuConfigurationAppearance = ({
   const iconValues = allElements.length > 0
     ? getIconValues(elements, refreshAll)
     : Object.fromEntries(Object.entries(ICON_LABEL_BASE_CONFIG).map(([key, value]) => [key, value.default]))
+
+  const stockLabelValues = allElements.length > 0
+    ? getElementsLabelValues(elements, 'stock_label', refreshAll)
+    : Object.fromEntries(Object.entries(STOCK_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
   const showContent = allElements.length > 0 || menu_for_style
   const container_element = elements[0] as Class_ContainerElement
@@ -1227,7 +1233,7 @@ export const MenuConfigurationAppearance = ({
                                   prefix={'shape'} attributeKey={'color_rule'} elements={elements} config={LINK_SHAPE_SPECIFIC_CONFIG} t={app_data.t}
                                 />
                               </Box>
-                              <OSTooltip label={t('Flux.apparence.tooltips.color_source.def')}>
+                              <OSTooltip label={t('Flux.apparence.tooltips.color_source.' + linkShapeValues.color_rule, t('Flux.apparence.tooltips.color_source.def'))}>
                                 <Select
                                   value={linkShapeValues.color_rule}
                                   onChange={(evt) => {
@@ -1484,7 +1490,7 @@ export const MenuConfigurationAppearance = ({
             </MenuSectionCheckbox>
           )}
 
-          {activeTab === 'value_label' && (
+          {activeTab === 'value_label' && (<>
             <MenuSectionCheckbox
               elements={elements}
               attributePath='Noeud.labels'
@@ -1504,7 +1510,27 @@ export const MenuConfigurationAppearance = ({
                 />
               )}
             </MenuSectionCheckbox>
-          )}
+
+            {/* Stock section under value, same level with eye checkbox */}
+            {app_data.has_sankey_dev && selection.hasNodes && selection.nodes.some(n => n.has_stock) && (
+              <MenuSectionCheckbox
+                elements={elements}
+                attributePath='Noeud.labels'
+                attributeKey={'is_visible'}
+                config={STOCK_LABEL_CONFIG}
+                prefix={'stock_label'}
+                refreshParentComponent={refreshAll}
+              >
+                {stockLabelValues.is_visible && (
+                  <StockTabContent
+                    app_data={app_data}
+                    nodes={selection.nodes}
+                    refreshAll={refreshAll}
+                  />
+                )}
+              </MenuSectionCheckbox>
+            )}
+          </>)}
 
           {activeTab === 'icon' && app_data.has_sankey_plus && (
             <MenuSectionCheckbox
@@ -1538,10 +1564,166 @@ export const MenuConfigurationAppearance = ({
               }
             </MenuSectionCheckbox>
           )}
+
         </>
       )
       }
     </Box >
+  )
+}
+
+/**
+ * Stock tab content: position + background/border using same components as labels
+ */
+const StockTabContent = ({
+  app_data,
+  nodes,
+  refreshAll
+}: {
+  app_data: Class_ApplicationData
+  nodes: Class_NodeElement[]
+  refreshAll: () => void
+}) => {
+  const [, setUpdate] = useState(0)
+  const firstNode = nodes[0]
+  if (!firstNode) return <></>
+
+  const elements = nodes as Class_NodeBase[]
+  const { t } = app_data
+  const prefix = 'stock_label' as LabelPrefix
+  const bgPrefix = 'stock_label_background' as ShapePrefix
+  const attributePath = 'Noeud.labels'
+
+  const labelValues = getElementsLabelValues(elements, prefix, refreshAll)
+  const refresh = () => {
+    nodes.forEach(n => n.draw())
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    refreshAll()
+    setUpdate(a => a + 1)
+  }
+
+  return (
+    <Box layerStyle='menuconfigpanel_grid'>
+      {/* ===== Position (same pattern as LabelContentComponent) ===== */}
+        <Box layerStyle='options_3cols'>
+          <Box layerStyle='options_4cols'>
+            <OverloadedButtonGroup
+              elements={elements}
+              config={STOCK_LABEL_CONFIG}
+              attributePath={attributePath}
+              prefix={prefix}
+              attributeKey="horiz"
+              currentValue={labelValues.horiz}
+              items={[
+                { value: 'left', icon: app_data.icon_library.icon_text_align_left },
+                { value: 'middle', icon: app_data.icon_library.icon_text_align_center },
+                { value: 'right', icon: app_data.icon_library.icon_text_align_right }
+              ]}
+              onChange={(value) => { labelValues.horiz = value }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'horiz', prefix)}
+              t={t}
+            />
+            <OverloadedButton
+              elements={elements}
+              config={STOCK_LABEL_CONFIG}
+              prefix={prefix}
+              attributePath={attributePath}
+              attributeKey="inside_horiz"
+              variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
+              onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
+            >
+              {app_data.icon_library.icon_label_inside_horiz}
+            </OverloadedButton>
+          </Box>
+
+          <Box layerStyle='options_4cols'>
+            <OverloadedButtonGroup
+              elements={elements}
+              config={STOCK_LABEL_CONFIG}
+              attributePath={attributePath}
+              prefix={prefix}
+              attributeKey="vert"
+              currentValue={labelValues.vert}
+              items={[
+                { value: 'bottom', icon: app_data.icon_library.icon_text_vert_pos_bottom },
+                { value: 'middle', icon: app_data.icon_library.icon_text_vert_pos_center },
+                { value: 'top', icon: app_data.icon_library.icon_text_vert_pos_top }
+              ]}
+              onChange={(value) => { labelValues.vert = value }}
+              getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'vert', prefix)}
+              t={t}
+            />
+            <OverloadedButton
+              elements={elements}
+              config={STOCK_LABEL_CONFIG}
+              prefix={prefix}
+              attributePath={attributePath}
+              attributeKey="inside_vert"
+              variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
+              onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
+            >
+              {app_data.icon_library.icon_label_inside_vert}
+            </OverloadedButton>
+          </Box>
+        </Box>
+
+        {/* ===== Font size ===== */}
+        <Box layerStyle='options_2cols'>
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'font_size'}
+            config={STOCK_LABEL_CONFIG}
+            prefix={prefix}
+            refreshParentComponent={refresh}
+            unit_text='px'
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_font_size` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
+          />
+          <ElementAttrSetterNumberInput2Cols
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            attributeKey={'box_width'}
+            config={STOCK_LABEL_CONFIG}
+            prefix={prefix}
+            refreshParentComponent={refresh}
+            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_box_width` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
+          />
+        </Box>
+
+        {/* ===== Unit & number formatting (factorized) ===== */}
+        <Divider />
+        <NumberFormatComponent
+          app_data={app_data}
+          elements={elements}
+          prefix={prefix}
+          config={STOCK_LABEL_CONFIG}
+          attributePath={attributePath}
+          refreshParentComponent={refresh}
+        />
+
+        {/* ===== Background (fond + bordure, same as label background) ===== */}
+        <Divider />
+        <MenuSectionCheckbox
+          elements={elements}
+          attributePath={attributePath}
+          attributeKey={'visible'}
+          config={BASE_SHAPE_CONFIG}
+          prefix={bgPrefix}
+          refreshParentComponent={refresh}
+        >
+          {getShapeValues(elements, bgPrefix, refresh).visible && (
+            <MenuShapeAttributes
+              app_data={app_data}
+              elements={elements}
+              attributePath={attributePath}
+              prefix={bgPrefix}
+              refreshUI={refresh}
+            />
+          )}
+        </MenuSectionCheckbox>
+    </Box>
   )
 }
 
@@ -1721,12 +1903,13 @@ export const ShapeTypeSelector = ({
     { value: 'rect', position: 'center', icon: icon_library.icon_rect_shape }
   ]
   if (prefix === 'shape') {
-    shapeTypes.push({ value: 'capsule', position: 'right', icon: icon_library.icon_capsule_shape })
+    shapeTypes.push({ value: 'capsule', position: 'center', icon: icon_library.icon_capsule_shape })
+    shapeTypes.push({ value: 'capsule_h', position: 'right', icon: icon_library.icon_capsule_h_shape })
   }
 
   return (
     <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
-      <Box layerStyle='options_3cols'>
+      <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'}>
         {shapeTypes.map(({ value, position, icon }) => (
           <Button
             key={value}

@@ -1137,6 +1137,31 @@ export const buttonStyles = {
       bgColor: 'transparent',
     }
   }),
+  button_banner_subscription: defineStyle({
+    border: '1px solid',
+    borderColor: 'gray.400',
+    borderRadius: '4px',
+    lineHeight: 'unset',
+    padding: '0.15rem 0.5rem',
+    margin: '0',
+    bg: 'transparent',
+    bgColor: 'transparent',
+    marginInlineStart: 0,
+    color: 'gray.700',
+    fontSize: '0.7rem',
+    fontWeight: 'semibold',
+    whiteSpace: 'nowrap',
+    _hover: {
+      borderColor: 'gray.600',
+      bg: 'gray.100',
+      bgColor: 'gray.100',
+      color: 'gray.800',
+    },
+    _active: {
+      bg: 'gray.200',
+      bgColor: 'gray.200',
+    },
+  }),
   menutop_button_view_activated: defineStyle({
     textStyle: 'h4',
     fontSize: default_font_size,
@@ -1991,17 +2016,23 @@ export const tableStyles = {
   base: table.definePartsStyle({}),
   table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
   table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
-  table_edit_tag_node: createTableStyle('0.5fr 2fr 0.75fr 0.5fr 1.5fr'),
+  table_edit_tag_node: createTableStyle('0.5fr 2fr 0.75fr 0.5fr'),
   table_edit_tag_link: createTableStyle('0.5fr 2fr 0.5fr 0.75fr'),
   table_edit_tag_data: createTableStyle('0.5fr 1.5fr 0.75fr'),
+  // Variants position : supprimer + nom + flèches
+  table_edit_grp_tag_node_link_pos: createTableStyle('0.5fr 2fr 1fr'),
+  table_edit_grp_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
+  table_edit_tag_node_pos: createTableStyle('0.5fr 2fr 1fr'),
+  table_edit_tag_link_pos: createTableStyle('0.5fr 2fr 1fr'),
+  table_edit_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_node_io: createTableStyle('2fr 2fr'),
 
   table_welcome_buttons: table.definePartsStyle({
     table: {
-      margin: '1rem',
+      margin: '0.5rem',
       justifySelf: 'center',
       borderCollapse: 'separate',
-      borderSpacing: '0.25rem',
+      borderSpacing: '0.15rem',
     },
     thead: {
       bg: 'primaire.2',
@@ -2021,7 +2052,12 @@ export const tableStyles = {
         },
       }
     },
-    td: {},
+    td: {
+      paddingTop: '0.15rem !important',
+      paddingBottom: '0.15rem !important',
+      paddingInlineStart: '0.5rem',
+      paddingInlineEnd: '0.5rem',
+    },
     tr: {
       'td:first-child': {
         textAlign: 'end',

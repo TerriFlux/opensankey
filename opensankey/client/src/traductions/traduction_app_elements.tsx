@@ -2,7 +2,7 @@ export const resources_app_elements = {
   en: {
     translation: {
       Menu: {
-        ElOrder:'Order overlaps of elements',
+        ElOrder: 'Order overlaps of elements',
         presentation_OS: 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         presentation_OS_limit_node: 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
         Aucun: 'None',
@@ -145,12 +145,17 @@ export const resources_app_elements = {
 
         // ✅ Transformation reste car non géré par une config spécifique
         Transformation: {
+          verticalize_short: 'Transpose',
+          verticalize: 'Transpose diagram',
           amp_short: 'Layout',
           amp: 'Change the layout',
           amp_import: 'From other diagram',
           amp_manual: 'Positioning',
           trans_topo: 'Topological',
           fmep: 'Source diagram',
+          sourceType: 'Source',
+          sourceFile: 'File',
+          sourceView: 'View',
           ad: 'Apply',
           undo: 'Cancel',
           Shortcuts: 'Shortcuts selections',
@@ -164,6 +169,14 @@ export const resources_app_elements = {
           Values: 'Link values',
           Views: 'Views',
           freeLabels: 'Text boxes',
+          ZdT: 'TBox',
+          Ajouts: 'Additions',
+          Suppressions: 'Deletions',
+          addFreeLabel: 'Add TBox',
+          removeFreeLabel: 'Del. TBox',
+          attrFreeLabel: 'Attr. TBox',
+          posFreeLabel: 'Pos. TBox',
+          Styles: 'Styles',
           addNode: 'Aj. Nodes',
           removeNode: 'Sup. Nodes',
           addFlux: 'Aj. Flux',
@@ -173,12 +186,17 @@ export const resources_app_elements = {
           attrNode: 'Nodes',
           attrFlux: 'Flux',
           tagLevel: 'Levels of detail',
-          tagNode: 'Nodes',
-          tagFlux: 'Flux',
-          tagData: 'Data',
+          tagNode: 'Node tags',
+          tagFlux: 'Flux tags',
+          tagData: 'Data tags',
           tagNode_assign: 'Assign a label',
           tagFlux_assign: 'Assign a label',
           attrGeneral: 'Drawing area',
+          scale: 'Scale',
+          updateTags: 'Update',
+          elementsTitle: 'Elements',
+          tagGroupsTitle: 'Tag groups',
+          dataTitle: 'Data',
           title: 'Layout',
           oher_file: 'Other file',
           tooltips: {
@@ -190,12 +208,14 @@ export const resources_app_elements = {
             Values: 'Transfer the values of the links of the imported sankey to the current',
             tagLevel: 'Transfer nodes details of imported sankey to current',
             attrGeneral: 'Transfer the attributes of the drawing area of the imported sankey to the current',
+            Styles: 'Transfer element styles from the imported sankey to the current',
           }
         },
+        Styles: 'Styles',
 
         tooltips: {
           // ❌ SUPPRIMÉ : noeud.* et flux.* (maintenant dans ELEMENTS_SELECTION_CONFIG)
-          
+
           LegX: 'Horizontal distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegY: 'Vertical distance (in px) between the upper left corner of the legend and the upper left corner of the window',
           LegWidth: 'Width (in px) for the legend space',
@@ -209,6 +229,7 @@ export const resources_app_elements = {
           enregistrer: 'Save as',
           preference: 'Set & Modify your own applications settings (saved in your OpenSankey+ account)',
           amp: 'Modify the layout of the diagram',
+          verticalize: 'Transpose the diagram: swap horizontal and vertical axes (positions, link directions, shapes)',
           style: 'Define style of nodes or links',
           DisplayWelcome: 'Display welcome message',
           doc: 'Open the documentation',
@@ -225,11 +246,11 @@ export const resources_app_elements = {
           style_attr_applicated: 'Select which attributes in the style can be applicated, it also unlock the corresponding input',
         },
       },
-      
+
       SpreadSheet: {
         paste: 'Paste'
       },
-      
+
       MEP: {
         onBlur: 'Value is applied when we leave the input or we press enter',
         Echelle: 'Scale',
@@ -305,7 +326,7 @@ export const resources_app_elements = {
           importExportAboveBelow: 'Import/export at the top and bottom of the diagram',
         }
       },
-      
+
       Tags: {
         Nom: 'Name',
         Leg: 'Legend',
@@ -342,7 +363,7 @@ export const resources_app_elements = {
           down: 'Move the tag group down in the node filter menu'
         }
       },
-      
+
       Banner: {
         unitary_view: 'Views',
         title_data_type: 'Data displayed',
@@ -385,9 +406,12 @@ export const resources_app_elements = {
         hlp_1_txt_9: 'Dropdown to filter node/link/data according to their group tag or to choose to display the diagram with color palette from a tag group.',
         tooltipAdjustH: 'Adjust horizontaly drawing area to the screen size',
         tooltipAdjustV: 'Adjust verticaly drawing area to the screen size',
+        tooltipTranspose: 'Transpose the diagram: swap horizontal and vertical axes',
         tooltipStructure: 'Visualisation settings for the diagram\'s structure',
         tooltipSelection: 'Allows to drag an element',
         tooltipHelp: 'Show the help dialog',
+        posMode_parametric: 'Constant vertical offset mode',
+        posMode_absolute: 'Absolute coordinate mode',
         tooltipAjoutNode: 'Adds a node to the mouse click',
         tooltipLiason: 'Allows you to select the edit mode to draw nodes and flows or the selection mode to select nodes and flows in order to modify their attributes.',
         select_sibling: 'Select siblings',
@@ -398,7 +422,7 @@ export const resources_app_elements = {
         hlp_data_tag_filter: 'Choose data and apply color of tagds',
         open_configuration_menu: 'Open configuration menu.'
       },
-      
+
       useTemplate: 'Use this template',
       DisplayWelcome: 'Welcome',
       dontSeeAgain: 'Don\'t show again',
@@ -421,6 +445,10 @@ export const resources_app_elements = {
         dontSeeAgain: 'By checking this box, the welcome screen will no longer appear on the next page load. To display this welcome screen again, go to Help->Home.',
         diaporama: 'Presentation of the various features of the tool, from the most basic to the most advanced as well as mouse/keyboard combination for edition.',
         start: 'Start drawing your flows. To do this, click in the drawing area, drag without releasing, then release.'
+      },
+      color_lock: {
+        locked: 'Custom color — this color is fixed and will not be overridden by the element\'s own color',
+        unlocked: 'Inherits the element\'s color (node, link or text zone) — click to lock a custom color'
       }
     }
   },
@@ -430,7 +458,7 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
-        ElOrder:'Ordre d\'affichage',
+        ElOrder: 'Ordre d\'affichage',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
         Aucun: 'Aucun',
@@ -501,8 +529,8 @@ export const resources_app_elements = {
         tagNode: 'Etiquette Noeuds',
         tagFlux: 'Etiquette Flux',
         tagData: 'Etiquette Données',
-        tagNode_assign: 'Assigner une étiquette',
-        tagFlux_assign: 'Assigner une étiquette',
+        tagNode_assign: 'Assigner étiquettes',
+        tagFlux_assign: 'Assigner étiquettes',
         SaveJSON: 'Enregistrer JSON',
         SaveValue: 'Enregistrer avec les valeurs des flux',
         VisibleElement: 'Enregistrer que les éléments visibles',
@@ -534,9 +562,9 @@ export const resources_app_elements = {
         rand_link_color: 'Couleurs aléatoires flux',
         load_file: 'Lecture du fichier',
         compute_file: 'En traitement...',
-        open_file:'Charger fichier',
-        download_file:'Télécharger fichier',
-        reinit:'Réinitialiser',   
+        open_file: 'Charger fichier',
+        download_file: 'Télécharger fichier',
+        reinit: 'Réinitialiser',
         loaded_file: 'Chargement terminé',
         failure_file: 'Chargement échoué',
         choseTransforDifficulty: 'Types d\'éléments',
@@ -600,12 +628,17 @@ export const resources_app_elements = {
           // title_style_flow: 'Flux',
         },
         Transformation: {
+          verticalize_short: 'Transposer',
+          verticalize: 'Transposer le diagramme',
           amp_short: 'M.E.P',
           amp: 'Modifier la mise en page',
           amp_import: 'Depuis autre diagramme',
           amp_manuelle: 'Positionnement des noeuds',
           trans_topo: 'Topologiques',
           fmep: 'Diagramme source',
+          sourceType: 'Source',
+          sourceFile: 'Fichier',
+          sourceView: 'Vue',
           ad: 'Appliquer',
           undo: 'Annuler',
           Shortcuts: 'Raccourcis sélections',
@@ -619,6 +652,14 @@ export const resources_app_elements = {
           Values: 'Valeurs des flux',
           Views: 'Vues',
           freeLabels: 'Zones de texte',
+          ZdT: 'Zones de texte',
+          Ajouts: 'Ajouts',
+          Suppressions: 'Suppressions',
+          addFreeLabel: 'Aj. ZdT',
+          removeFreeLabel: 'Sup. ZdT',
+          attrFreeLabel: 'Attr. ZdT',
+          posFreeLabel: 'Pos. ZdT',
+          Styles: 'Styles',
           addNode: 'Aj. Noeuds',
           removeNode: 'Sup. Noeuds',
           addFlux: 'Aj. Flux',
@@ -628,12 +669,17 @@ export const resources_app_elements = {
           attrNode: 'Noeuds',
           attrFlux: 'Flux',
           tagLevel: 'Niveaux de détail',
-          tagNode: 'Noeuds',
-          tagFlux: 'Flux',
-          tagData: 'Données',
-          tagNode_assign: 'Assigner une étiquette',
-          tagFlux_assign: 'Assigner une étiquette',
-          attrGeneral: 'Zone de dessin',
+          tagNode: 'Étiquettes nœud',
+          tagFlux: 'Étiquettes flux',
+          tagData: 'Étiquettes données',
+          tagNode_assign: 'Assigner étiquettes',
+          tagFlux_assign: 'Assigner étiquettes',
+          attrGeneral: 'Attributs généraux',
+          scale: 'Échelle',
+          updateTags: 'Mise à jour',
+          elementsTitle: 'Éléments',
+          tagGroupsTitle: 'Groupes d\'étiquettes',
+          dataTitle: 'Données',
           title: 'Mise en page',
           tooltips: {
             Shortcuts: 'Raccourcie de sélection des attributs à transférer du sankey importé',
@@ -644,8 +690,10 @@ export const resources_app_elements = {
             Values: 'Transfert les valeurs des flux du sankey importé vers l\'actuel',
             tagLevel: 'Transfert les nieveaux de détails du sankey importé vers l\'actuel',
             attrGeneral: 'Transfert les attributs de la zone de dessin du sankey importé vers l\'actuel',
+            Styles: 'Transfert les styles des éléments du sankey importé vers l\'actuel',
           }
         },
+        Styles: 'Styles',
         tooltips: {
           LegX: 'Ecart horizontal (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
           LegY: 'Ecart vertical (en px) entre le coin supérieur gauche de la légende par rapport au coin supérieur gauche de la fenêtre',
@@ -661,6 +709,7 @@ export const resources_app_elements = {
           enregistrer: 'Enregistrer sous',
           preference: 'Créez & Modifiez vos paramètres personnalisés d\'utilisation (liés à votre compte OpenSankey+)',
           amp: 'Modifier la mise en page du diagramme',
+          verticalize: 'Transposer le diagramme : inverser les axes horizontal et vertical (positions, sens des flux, formes)',
           style: 'Définir des styles par groupe de noeuds ou de flux',
           DisplayWelcome: 'Afficher le message d\'accueil',
           doc: 'Ouvrir la documentation',
@@ -719,7 +768,7 @@ export const resources_app_elements = {
         nodeStyleVisual: 'Formes des noeuds',
         nodeStyleLabels: 'Libellés des noeuds',
         GestionCouleurs: 'Gestion des couleurs',
-        ZoneDessin: 'Zone de dessin',
+        ZoneDessin: 'X',
         Positionnement: 'Positionnement',
         positioningMode: 'Mode de positionnement',
         autoX: 'Positionnement horizontal automatique',
@@ -818,8 +867,8 @@ export const resources_app_elements = {
         unit_name: 'Nom de l\'unité',
         unit_factor: 'Facteur d\'unité'
       },
-      Banner: {       
-        unitary_view: 'Vues', 
+      Banner: {
+        unitary_view: 'Vues',
         title_data_type: 'Données affichées',
         data: 'Données',
         filter: 'Filtres',
@@ -860,9 +909,12 @@ export const resources_app_elements = {
         hlp_1_txt_9: 'Menu déroulant pour filtrer les noeuds/flux/données selon leur groupe d\'étiquette associée ou bien pour appliquer des couleurs au diagramme avec la palette de couleurs du groupe d\'étiquette.',
         tooltipAdjustH: 'Réajuster horizontalement la zone de dessin à la taille de l\'écran',
         tooltipAdjustV: 'Réajuster verticalement la zone de dessin à la taille de l\'écran',
+        tooltipTranspose: 'Transposer le diagramme : inverser les axes horizontal et vertical',
         tooltipStructure: 'Paramétrage visuel de la structure du diagramme',
         tooltipSelection: 'Sélectionnez ou déplacez un élément',
         tooltipHelp: 'Affichez le dialogue d\'aide',
+        posMode_parametric: 'Mode écart vertical constant',
+        posMode_absolute: 'Mode coordonnées absolues',
         tooltipLiason: 'Permet de sélectionner le mode édition pour dessiner noeuds et flux ou le mode sélection pour sélectionner noeuds et flux afin de changer leurs attributs.',
         select_sibling: 'Selectionner ses frères ',
         fullscreen: 'Passer en mode mode plein écran',
@@ -894,6 +946,10 @@ export const resources_app_elements = {
         dontSeeAgain: 'En cochant cette case il n\'y aura plus d\'écran d\'accueil au prochaine chargement de la page. Pour réafficher cet accueil aller dans Aide->Accueil.',
         diaporama: 'Présentation des différentes fonctionnalités de l\'outil des plus basiques aux plus avancées, ainsi que les combinaisons souris/claviers d\'édition.',
         start: 'Commencez à tracer vos flux. Pour cela cliquez dans la zone de dessin, faites glisser sans relâcher, puis relâchez.'
+      },
+      color_lock: {
+        locked: 'Couleur personnalisée — cette couleur est fixée et ne sera pas remplacée par la couleur propre de l\'élément',
+        unlocked: 'Hérite la couleur propre de l\'élément (nœud, flux ou zone de texte) — cliquez pour verrouiller une couleur personnalisée'
       }
     }
   }

@@ -35,7 +35,7 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_LinkValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
@@ -197,7 +197,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   private _source: Class_NodeElement
   private _target: Class_NodeElement
-  private _values: Class_LinkValueTree | Class_LinkValue
+  private _values: Class_ElementValueTree | Class_LinkValue
   private _arrow_shape: string | undefined
 
   // Boolean var only used when enlarging thickness when mouse hovering link
@@ -239,7 +239,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._link_tooltip = new LinkTooltip(this)
 
     // Values
-    this._values = this.createLinkValue(this)
+    this._values = this.createValue(this)
     drawing_area.sankey.data_taggs_list
       .forEach(data_tagg => {
         this._values = this._values.expand(data_tagg as Class_DataTagGroup)
@@ -263,8 +263,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.draw()
   }
 
-  public createLinkValue(
-    parent: Class_LinkValueTree | Class_LinkElement
+  public createValue(
+    parent: Class_ElementValueTree | Class_LinkElement
   ) {
     return new Class_LinkValue(parent as Class_LinkElement)
   }
@@ -333,13 +333,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this.tooltip_text = _.tooltip_text
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue(this)
+      this._values = this.createValue(this)
       this._values.copyFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values = new Class_ElementValueTree(this, first_data_tag_group)
         this._values.copyFrom(_._values)
       }
     }
@@ -348,13 +348,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public copyValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
-      this._values = this.createLinkValue(this)
+      this._values = this.createValue(this)
       this._values.copyFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        this._values = new Class_LinkValueTree(this, first_data_tag_group)
+        this._values = new Class_ElementValueTree(this, first_data_tag_group)
         this._values.copyFrom(_._values)
       }
     }
@@ -363,14 +363,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public addValues(_: Class_LinkElement) {
     // Values
     if (_._values instanceof Class_LinkValue) {
-      //this._values = this.createLinkValue(this)
+      //this._values = this.createValue(this)
       (this._values as Class_LinkValue).addFrom(_._values)
     }
-    else if (_._values instanceof Class_LinkValueTree) {
+    else if (_._values instanceof Class_ElementValueTree) {
       const first_data_tag_group = this.sankey.data_taggs_dict[_._values.data_tag_group.id] as Class_DataTagGroup
       if (first_data_tag_group) {
-        //this._values = new Class_LinkValueTree(this, first_data_tag_group)
-        (this._values as Class_LinkValueTree).addFrom(_._values)
+        //this._values = new Class_ElementValueTree(this, first_data_tag_group)
+        (this._values as Class_ElementValueTree).addFrom(_._values)
       }
     }
   }
@@ -492,16 +492,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public removeDataTagGroup(tagg: Class_DataTagGroup) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // Prune values tree
-      this._values = this._values.prune(tagg)
+      this._values = this._values.prune(tagg) as Class_ElementValueTree | Class_LinkValue
       // Set to recompute visibility from tags after -> less data tagg = differents values = different flux tags
       this.tagsUpdated()
     }
   }
 
   public addDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // Extend current value tree branch
       this._values.extend(tag)
       // Set to recompute visibility from tags after -> new data tag = new value = new flux tags
@@ -510,7 +510,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public removeDataTag(tag: Class_DataTag) {
-    if (this._values instanceof Class_LinkValueTree) {
+    if (this._values instanceof Class_ElementValueTree) {
       // reduce current value tree branch
       this._values.reduce(tag)
       // Set to recompute visibility from tags after -> less data tag = differente value = different flux tags
@@ -666,15 +666,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
       const node_type = this.drawing_area.sankey.node_taggs_dict['type de noeud']
       const productTag = node_type?.tags_dict['produit']
-      if (this.source.hasGivenTag(productTag)) {
+      const source_color_tags = this.source.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+      const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
+
+      // 1. Common color tag between source and target → priority
+      const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
+      if (common_tag) return common_tag.color
+
+      // 2. Only one side has a color tag → take that side
+      if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
+      if (target_color_tags.length > 0 && source_color_tags.length === 0) return this.target.getShapeColorToUse()
+
+      // 3. Both have color tags (no common) → prefer the product node
+      if (source_color_tags.length > 0 && target_color_tags.length > 0) {
+        if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
+        if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
         return this.source.getShapeColorToUse()
-      } else if (this.target.hasGivenTag(productTag)) {
-        return this.target.getShapeColorToUse()
-      } else if (this.source.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
-        return this.source.getShapeColorToUse()
-      } else if (this.target.taggs_list.filter(tagg => tagg.use_colors).length > 0) {
-        return this.target.getShapeColorToUse()
       }
+
+      // 4. No color tags → prefer the product node
+      if (this.source.hasGivenTag(productTag)) return this.source.getShapeColorToUse()
+      if (this.target.hasGivenTag(productTag)) return this.target.getShapeColorToUse()
+
+      // 5. Fallback: source color
+      return this.shape_color //this.source.getShapeColorToUse()
     }
     const type_source = this.shape_color_rule
     if (type_source == 'source') {
@@ -758,8 +773,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public setValuesForDataTags(tags: Class_DataTag[], val: Class_LinkValue) {
-    if (this._values instanceof Class_LinkValueTree) {
-      this._values.setLinkValueForDataTags(tags, val)
+    if (this._values instanceof Class_ElementValueTree) {
+      this._values.setValueForDataTags(tags, val)
     } else {
       this._values = val
     }
@@ -936,8 +951,8 @@ export class Class_LinkElement extends Class_LinkAttribute {
       else if (drawing_area.isInSelectionMode()) {
         // SHIFT
 
-        // CTRL
-        if (event.ctrlKey) {
+        // CTRL (or CMD on Mac)
+        if (event.ctrlKey || event.metaKey) {
           this.addOrRemoveLinkFromSelection()
           this.drawing_area.application_data.menu_configuration.elements_configurable_selected.data = ['flow']
           this.drawing_area.application_data.menu_configuration.elements_configurable_selected.style = ['element']
@@ -951,6 +966,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
           drawing_area.purgeSelection()
           // Add link to selection
           drawing_area.addElementToSelection(this)
+          drawing_area.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
         }
       }
     }, this._clickDelay)
@@ -969,6 +985,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     event.preventDefault()
     this.drawing_area.pointer_pos = [event.pageX, event.pageY]
     if (!this.drawing_area.selected_links_list.includes(this)) {
+      this.drawing_area.purgeSelection()
       this.drawing_area.addElementToSelection(this)
     }
     this.drawing_area.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
@@ -1292,11 +1309,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
   }
 
-  public valueForTags(_: Class_ProtoTag[]) {
+  public valueForTags(_: Class_ProtoTag[]): Class_LinkValue | null {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(_ as Class_DataTag[])
+      return this._values.getValueForDataTags(_ as Class_DataTag[]) as Class_LinkValue | null
   }
 
   public valueForTag(tag: Class_DataTag | undefined) {
@@ -1328,11 +1345,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @readonly
    * @memberof Class_LinkElement
    */
-  public get value() {
+  public get value(): Class_LinkValue | null {
     if (this._values instanceof Class_LinkValue)
       return this._values
     else
-      return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[])
+      return this._values.getValueForDataTags(this.selected_data_tags_list as Class_DataTag[]) as Class_LinkValue | null
   }
 
   private _is_computing = false
@@ -1359,6 +1376,33 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (value !== null) {
       value.valueData = _
       value.valueResult = null
+      this.redrawNodesSourceTarget()
+    }
+  }
+
+  /**
+   * Target (destination) value for the link.
+   * When null, the link has uniform thickness (same as source).
+   * When set, the link tapers from source value to target value.
+   */
+  public get valueCurrentTarget(): number | null {
+    if (this._is_computing) return null
+    this._is_computing = true
+    let value_target = null
+    if (this.drawing_area.type_data === 'data') {
+      value_target = this.value?.valueDataTarget ?? null
+    } else {
+      value_target = this.value?.valueResultTarget ?? (this.value?.value_option == 'value' ? this.value?.valueDataTarget : null) ?? null
+    }
+    this._is_computing = false
+    return value_target
+  }
+
+  public set valueCurrentTarget(_: number | null) {
+    const value = this.value
+    if (value !== null) {
+      value.valueDataTarget = _
+      value.valueResultTarget = null
       this.redrawNodesSourceTarget()
     }
   }
@@ -1481,26 +1525,53 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
-   * Get thickness of stroke shape
+   * Clamp a raw pixel thickness to the drawing area min/max limits
+   */
+  private _clampThickness(linkValueInPx: number): number {
+    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
+      return this.drawing_area.minimum_flux
+    }
+    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
+      return this.drawing_area.maximum_flux
+    }
+    return Math.max(2, linkValueInPx)
+  }
+
+  /**
+   * Get thickness of stroke shape (source side).
+   * This is the main thickness used everywhere for backward compatibility.
    * @readonly
    * @memberof Class_LinkElement
    */
   public get thickness() {
-    // Get link value for current dataTaggs selected
     const data_value = this.valueCurrent
-    // Scale this value for the drawing area
-    const linkValueInPx = (data_value !== null /*&& (!this.linkIsStructure())*/) ? this.scaleValueToPx(data_value) : 2
+    const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
+    return this._clampThickness(linkValueInPx)
+  }
 
-    // If link processed size is inferior to min. limit return min. limit
-    if (this.drawing_area.minimum_flux && linkValueInPx < this.drawing_area.minimum_flux) {
-      return this.drawing_area.minimum_flux
-    }
-    // If link processed size is superior to max. limit return max. limit
-    if (this.drawing_area.maximum_flux && linkValueInPx > this.drawing_area.maximum_flux) {
-      return this.drawing_area.maximum_flux
-    }
+  /**
+   * Alias for thickness at the source end of the link.
+   */
+  public get thicknessSource() {
+    return this.thickness
+  }
 
-    return Math.max(2, linkValueInPx)
+  /**
+   * Get thickness at the target (destination) end of the link.
+   * When valueCurrentTarget is null, returns same as thicknessSource (uniform link).
+   */
+  public get thicknessTarget() {
+    const target_value = this.valueCurrentTarget
+    if (target_value === null) return this.thickness
+    const linkValueInPx = this.scaleValueToPx(target_value)
+    return this._clampThickness(linkValueInPx)
+  }
+
+  /**
+   * Whether this link has different source and target thicknesses (tapered/trapezoid shape).
+   */
+  public get isTapered() {
+    return this.valueCurrentTarget !== null && this.thicknessSource !== this.thicknessTarget
   }
 
   public get position_x_start() {
@@ -1729,11 +1800,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'text_value'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
-    value: K extends 'valueCurrent' ? number | null : string,
+    value: K extends 'text_value' ? string : number | null,
     refreshParentComponent: () => void
   ) => {
     const dict_old_val: { [id: string]: number | string | null } = {}

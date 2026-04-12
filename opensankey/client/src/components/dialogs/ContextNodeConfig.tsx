@@ -68,7 +68,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'submenu',
       titleKey: 'editStyle',
       children: [
-        { type: 'button', actionName: 'editName' },
+        // { type: 'button', actionName: 'editName' },
         { type: 'button', actionName: 'resetAttr' },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
@@ -256,7 +256,26 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'selectInputLinks' }
       ]
     },
-    { type: 'button', actionName: 'startAnimation' }
+    // Stock values (has_sankey_dev + has_stock)
+    {
+      type: 'submenu',
+      titleKey: 'stockValues',
+      visibilityConditions: [
+        {
+          type: 'custom',
+          customCheck: (app_data) => {
+            if (!app_data.has_sankey_dev) return false
+            const node = app_data.drawing_area.node_contextualised
+            return !!node?.has_stock
+          }
+        }
+      ],
+      children: [
+        { type: 'widget', widgetName: 'MenuContextNodeStock' }
+      ]
+    },
+    { type: 'button', actionName: 'startAnimation' },
+    { type: 'button', actionName: 'copyElement' }
   ],
 
   actions: {
@@ -534,6 +553,12 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Input', fr: 'Entrants' },
       tooltips: { en: 'Select input links', fr: 'Sélectionne tous les flux entrants vers le/les nœud(s)' }
+    },
+
+    copyElement: {
+      type: 'action',
+      labels: { en: 'Copy element(s)', fr: 'Copier les éléments' },
+      tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées' }
     }
   },
 
@@ -554,7 +579,8 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     editStyle: { en: 'Edition', fr: 'Édition' },
     maskAttr: { en: 'Display', fr: 'Affichage' },
     changePlan: { en: 'Change plan', fr: 'Changer plan' },
-    associatedElements: { en: 'Associated Elements', fr: 'Élements associés' }
+    associatedElements: { en: 'Associated Elements', fr: 'Élements associés' },
+    stockValues: { en: 'Stock Values', fr: 'Valeurs de stock' }
   },
 
   maxDepth: 5

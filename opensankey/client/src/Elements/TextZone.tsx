@@ -98,11 +98,13 @@ export class Class_ContainerElement extends Class_NodeBase {
   public eventSimpleRMBClick(
     _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
+    if (this.drawing_area.static) return
     super.eventSimpleRMBClick(_event)
     if (this.drawing_area.isInSelectionMode()) {
       _event.preventDefault()
       this.drawing_area.pointer_pos = [_event.pageX, _event.pageY]
       if (!this.drawing_area.selected_containers_list.includes(this)) {
+        this.drawing_area.purgeSelection()
         this.drawing_area.addElementToSelection(this)
       }
       this.drawing_area.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
@@ -127,6 +129,11 @@ export class Class_ContainerElement extends Class_NodeBase {
         n.applyPosition()
       })
     }
+  }
+  
+  public applyPosition() {
+    super.applyPosition()
+    this.drawShape()
   }
 
   public draw() {

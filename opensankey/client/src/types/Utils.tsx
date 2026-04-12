@@ -317,6 +317,7 @@ export const WrapperInitializeAdditionalMenus = ({ new_data, initializeAdditiona
 
     extra_background_element: <></>,
     additional_nav_item: [],
+    additional_bottom_item: [],
 
     formations_menu: {},
 
@@ -342,7 +343,7 @@ export function checkForUrlToJSON() {
   return url_var
 
 }
-  export const formatValueWithOption = (element:Class_BaseShape,value: number | string, option: ValueOptionType,prefix:'name_label'|'value_label') =>{
+  export const formatValueWithOption = (element:Class_BaseShape,value: number | string, option: ValueOptionType,prefix:'name_label'|'value_label'|'stock_label') =>{
   //@ts-expect-error xxx
    const label_values = getNameLabelValues(element, prefix)
     if (
@@ -373,23 +374,32 @@ export function checkForUrlToJSON() {
   }
 
 export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement,prefix:'name_label'|'value_label') => {
+    // Helper: append target value as "source→target" when target is set and differs from source
+    const withTarget = (source_text: string) => {
+      const tgt = link.valueCurrentTarget
+      if (tgt === null || tgt === undefined) return source_text
+      const src = link.valueCurrent
+      if (src === tgt) return source_text
+      const target_text = format_value(type_data, tgt, link, link.unit_name(prefix), prefix)
+      return source_text + '\u2192' + target_text
+    }
+
     if (type_data == 'data' || type_data == 'data_label') {
       if (!link.value?.valueData) return ''
-      return formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)/*else if (link.value?.value_option == 'unit_ratio' ) {
-          return link.value?.unit_factor+link.sankey.unit_data_tag!+'/'+link.sankey.unit_first_datatag
-        }*/
+      const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
+      return withTarget(src_text as string)
     }
     if (link.value?.result_min !== null) {
       if (type_data === 'free_interval') {
         return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name(prefix),prefix) + ']'
       }
       if (type_data === 'free_value') {
-        return format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)
+        return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
       }
       return ''
     }
 
-    return format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)
+    return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
 }
 
 export const format_value = (
@@ -397,7 +407,7 @@ export const format_value = (
   data_value: number | undefined | null,
   element: Class_LinkElement | Class_NodeBase,
   unit_name: string,
-  prefix:'name_label'|'value_label'
+  prefix:'name_label'|'value_label'|'stock_label'
 ) => {
   const label_values = getNameLabelValues(element, prefix)
   /*==========================================================================*/

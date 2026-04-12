@@ -42,6 +42,7 @@ import { ModalDocumentation } from './components/welcome/SplashScreen'
 import { Class_ApplicationData } from './types/ApplicationData'
 import { FType_InitializeAdditionalMenus, FType_ModuleDialogs } from './Modules'
 import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
+import { updateFrom } from './Algorithms/UpdateFrom'
 import { ZDDModifierType } from './components/dialogs/ContextZDDConfig'
 import { LinkModifierType } from './components/dialogs/ContextLinkConfig'
 import { NodeModifierType } from './components/dialogs/NodeActions'
@@ -52,6 +53,8 @@ declare const window: Window &
   typeof globalThis & {
     sankey: {
       diagram?: string,
+      diagram_layout?: string,
+      diagram_layout_options?: string[],
       header?: string,
       publish?: boolean
       logo?: string,
@@ -99,8 +102,22 @@ export const OpenSankeyApp = ({
     console.log(window.sankey.diagram)
     app_data.file_name = window.sankey.diagram
     loadUniversalJSON(window.sankey.diagram as string).then(data => {
-      app_data.fromJSON(data as Type_JSON)
+      app_data.fromJSON(data as Type_JSON, {},false)
       app_data.file_name = window.sankey.diagram as string
+      if (window.sankey.diagram_layout) {
+        loadUniversalJSON(window.sankey.diagram_layout).then(layout_data => {
+          const layout_mode = app_data.expandLayoutMode(window.sankey.diagram_layout_options ?? app_data.transform_layout_all_attr)
+          console.log('layout mode', layout_mode)
+          const tmp_DA = app_data.createNewDrawingArea()
+          tmp_DA.bypass_redraws = true
+          app_data.loadDrawingAreaFromJSON(tmp_DA, layout_data as Type_JSON)
+          tmp_DA.afterFromJSON()
+          app_data.drawing_area.bypass_redraws = true
+          updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
+          app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+          app_data.drawing_area.draw()
+        }).catch(e => console.log(e))
+      }
     }).catch(e => console.log(e))
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
     app_data.fromJSON(JSON.parse(json_data))

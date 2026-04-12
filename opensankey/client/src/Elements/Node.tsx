@@ -41,9 +41,10 @@ import { Class_Tag } from '../types/Tag'
 import { NodeTooltip } from './TooltipsNode'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
-import { Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
+import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
+import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Type_Side } from './ElementsAttributesConfig'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
@@ -73,6 +74,23 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _node_tags_fingerprint: string = ''
   protected _are_related_dimensions_selected: boolean | undefined = undefined
   protected _tooltip_text: string = ''
+
+  // Stock values (parallel to link values but for nodes)
+  public has_stock: boolean = false
+  public has_material_balance: boolean = true
+  public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  /**
+   * Get current stock value based on selected data tags.
+   * Returns the leaf Class_StockValue matching current datatag selection.
+   */
+  public get stock_value(): Class_StockValue | null {
+    if (this._stock_values instanceof Class_StockValue)
+      return this._stock_values
+    else
+      return this._stock_values.getValueForDataTags(this.sankey.selected_data_tags_list) as Class_StockValue | null
+  }
+
   /**
    * Creates an instance of Class_NodeBase.
    */
@@ -91,6 +109,18 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeDrawValueLabel = new NodeDrawValueLabel(this)
     this._nodeTagsManager = new NodeTagsManager(this)
     drawing_area.list_g_element.unshift(this.id)
+
+    // Init stock values tree (expand for each data tag group, like link values)
+    this._stock_values = new Class_StockValue(this)
+    drawing_area.sankey.data_taggs_list.forEach(data_tagg => {
+      this._stock_values = this._stock_values.expand(data_tagg as Class_DataTagGroup) as Class_StockValue | Class_ElementValueTree
+    })
+  }
+
+  public createValue(
+    parent: Class_ElementValueTree | Class_NodeElement
+  ) {
+    return new Class_StockValue(parent)
   }
 
   protected _links_visibilities_fingerprint: string = ''
@@ -112,6 +142,7 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _orderD3Elements() {
     super._orderD3Elements()
     this._nodeDrawValueLabel.d3_selection?.raise()
+    this.d3_selection?.selectAll('.stock_box').raise()
   }
 
   public copyTagsReferencingFrom(
@@ -139,9 +170,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // Is the color defined by tags
     const taggs_activated = this.taggs_list
       .filter(tagg => tagg.use_colors)
-    if (
-      (taggs_activated.length > 0)
-    ) {
+    if (taggs_activated.length > 0) {
       const tagg_for_colormap = taggs_activated[0]
       const tags_for_colormap = this.tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
@@ -150,7 +179,13 @@ export class Class_NodeElement extends Class_NodeBase {
 
       if (selected_tags_for_colormap.length > 0) {
         shape_color = selected_tags_for_colormap[0].color
+      } else {
+        // Node has no tag in the active color group: keep its own color
+        shape_color = this.shape_color
       }
+    } else {
+      // Node doesn't belong to any color-group tag: keep its own color
+      shape_color = this.shape_color
     }
 
     return shape_color
@@ -203,9 +238,12 @@ export class Class_NodeElement extends Class_NodeBase {
     this._links_order = []
 
     // Fill with link that exist in current sankey and avoid duplicates in link order list
+    // Only include links that are actually connected to this (copied) node
     node_to_copy.links_order
       .forEach(link_to_copy => {
-        const link = this.drawing_area.sankey.links_dict[matching_link_id[link_to_copy.id] ?? link_to_copy.id] as Class_LinkElement
+        const copied_id = matching_link_id[link_to_copy.id]
+        if (!copied_id) return // external link, not copied — skip
+        const link = this.drawing_area.sankey.links_dict[copied_id] as Class_LinkElement
         if ((link !== undefined) && (!this._links_order.includes(link)))
           this._links_order.push(link)
       })
@@ -238,6 +276,147 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _draw() {
     super._draw()
     this._nodeDrawValueLabel.drawGenericLabel()
+    this.drawStockBox()
+  }
+
+  /**
+   * Draw stock indicator box near the node shape.
+   * Position controlled by stock_horiz, stock_vert, stock_inside.
+   * Box width = stock_box_width * nodeWidth (ratio).
+   */
+  public drawStockBox() {
+    this.d3_selection?.selectAll('.stock_box').remove()
+
+    const stock_val = this.stock_value
+    if (!this.has_stock || !this.stock_label_is_visible || !stock_val) return
+    // Pick data vs result depending on the drawing area display mode,
+    // mirroring Link.valueCurrent: 'data' shows raw data, anything else
+    // (reconciled / calculated) shows the result, falling back to data.
+    const type_data = this.drawing_area.type_data
+    const use_result = type_data !== 'data'
+    const si = use_result
+      ? (stock_val.stockInitialResult ?? stock_val.stockInitialData)
+      : stock_val.stockInitialData
+    const dv = use_result
+      ? (stock_val.stockVariationResult ?? stock_val.stockVariationData)
+      : stock_val.stockVariationData
+    if (si === null && dv === null) return
+    if (!this.d3_selection_g_shape) return
+    const nodeW = this.getShapeWidthToUse()
+    const nodeH = this.getShapeHeightToUse()
+
+    // Read attributes from config system (stock_label_*)
+    const baseFontSize = this.stock_label_font_size
+    const horiz = this.stock_label_horiz
+    const vert = this.stock_label_vert
+    const insideH = this.stock_label_inside_horiz
+    const insideV = this.stock_label_inside_vert
+    const boxWidthRatio = this.stock_label_box_width ?? 0.6
+    const bgColor = this.stock_label_background_color_sustainable
+      ? this.stock_label_background_color : this.getShapeColorToUse()
+    const bgVisible = this.stock_label_background_color_visible
+    const borderVisible = this.stock_label_background_border_visible
+    const borderColor = this.stock_label_background_border_color_sustainable
+      ? this.stock_label_background_border_color : this.getShapeColorToUse()
+    const borderThickness = this.stock_label_background_border_thickness
+    const borderDashed = this.stock_label_background_border_dashed
+    const borderRadius = this.stock_label_background_border_radius
+    const bgOpacity = this.stock_label_background_opacity
+    const textColor = this.stock_label_color
+
+    const padding = 4
+    const margin = 4
+    const MIN_FONT_SIZE = 6
+
+    // Build text lines (SF redundant with SI + delta)
+    // Use format_value to handle units, decimals, scientific notation, etc.
+    const lines: string[] = []
+    const unitName = this.stock_label_unit ?? ''
+    const formatStock = (v: number) =>
+      format_value('free_value', v, this, unitName, 'stock_label')
+    if (si !== null) lines.push('SI: ' + formatStock(si))
+    if (dv !== null) {
+      const sign = dv >= 0 ? '+' : ''
+      lines.push('\u0394S: ' + sign + formatStock(dv))
+    }
+    if (lines.length === 0) return
+
+    // Box width = ratio of node width
+    const boxW = boxWidthRatio > 0 ? nodeW * boxWidthRatio : nodeW * 0.6
+
+    // Auto-shrink font size to fit inside node when stock label is inside
+    let fontSize = baseFontSize
+    // Vertical fit: if inside vertically, lines must fit in node height
+    if (insideV) {
+      const availableH = nodeH - 2 * margin - 2 * padding
+      const maxFontFromH = Math.floor(availableH / lines.length) - 3
+      if (maxFontFromH < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromH)
+    }
+    // Horizontal fit: estimate text width (~0.6 * fontSize per char)
+    if (insideH) {
+      const longestLine = lines.reduce((m, l) => Math.max(m, l.length), 0)
+      const availableW = boxW - 2 * padding
+      const maxFontFromW = Math.floor(availableW / (longestLine * 0.6))
+      if (maxFontFromW < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromW)
+    }
+
+    const lineH = fontSize + 3
+    const boxH = lines.length * lineH + padding * 2
+
+    // Compute X position
+    let boxX = 0
+    if (horiz === 'left') {
+      boxX = insideH ? margin : -boxW - margin
+    } else if (horiz === 'right') {
+      boxX = insideH ? nodeW - boxW - margin : nodeW + margin
+    } else {
+      boxX = (nodeW - boxW) / 2
+    }
+
+    // Compute Y position
+    let boxY = 0
+    if (vert === 'top') {
+      boxY = insideV ? margin : -boxH - margin
+    } else if (vert === 'bottom') {
+      boxY = insideV ? nodeH - boxH - margin : nodeH + margin
+    } else {
+      boxY = (nodeH - boxH) / 2
+    }
+
+    const g = this.d3_selection?.append('g')
+      .classed('stock_box', true)
+
+    // Background rect
+    if (this.stock_label_background_visible) {
+      g?.append('rect')
+        .attr('x', boxX)
+        .attr('y', boxY)
+        .attr('width', boxW)
+        .attr('height', boxH)
+        .attr('rx', borderRadius)
+        .attr('fill', bgVisible ? bgColor : 'none')
+        .attr('fill-opacity', bgOpacity)
+        .attr('stroke', borderVisible ? borderColor : 'none')
+        .attr('stroke-width', borderThickness)
+        .attr('stroke-dasharray', borderDashed ? '4,2' : '')
+    }
+
+    // Text
+    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
+    const textX = textAnchor === 'end' ? boxX + boxW - padding
+      : textAnchor === 'start' ? boxX + padding
+        : boxX + boxW / 2
+
+    lines.forEach((text, i) => {
+      g?.append('text')
+        .attr('x', textX)
+        .attr('y', boxY + padding + (i + 1) * lineH - 2)
+        .attr('text-anchor', textAnchor)
+        .attr('font-size', fontSize)
+        .attr('font-family', this.stock_label_font_family)
+        .attr('fill', textColor)
+        .text(text)
+    })
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
@@ -545,26 +724,14 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public getInputLinkEndingPoint(link: Class_LinkElement) {
     if (this._input_links[link.id] !== undefined) {
-      if (!this._input_links_ending_point[link.id]) {
-        this.drawLinks()
-        return undefined
-      }
-      else {
-        return this._input_links_ending_point[link.id]
-      }
+      return this._input_links_ending_point[link.id]
     }
     return undefined
   }
 
   public getOutputLinkStartingPoint(link: Class_LinkElement) {
     if (this._output_links[link.id] !== undefined) {
-      if (!this._output_links_starting_point[link.id]) {
-        this.drawLinks()
-        return undefined
-      }
-      else {
-        return this._output_links_starting_point[link.id]
-      }
+      return this._output_links_starting_point[link.id]
     }
     return undefined
   }
@@ -756,8 +923,8 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
 
-        // Thickness of the link influence arrow size
-        const link_value = link.thickness
+        // Thickness of the link influence arrow size (use target thickness since arrows are drawn at target)
+        const link_value = link.thicknessTarget
 
         let xt: number
         let yt: number
@@ -841,7 +1008,8 @@ export class Class_NodeElement extends Class_NodeBase {
     this.getLinksOrdered(side)
       .filter(link => link.is_visible)
       .forEach(link => {
-        sum = sum + link.thickness
+        // Use source thickness if this node is the link's source, target thickness otherwise
+        sum = sum + (link.source === this ? link.thicknessSource : link.thicknessTarget)
       })
     return sum
   }
@@ -916,11 +1084,13 @@ export class Class_NodeElement extends Class_NodeBase {
           }
           return
         }
-        // Get positioning parameters
-        const thickness = link.thickness
+        // Get positioning parameters - use source or target thickness depending on which end this node is
+        const is_source = link.source === this
+        const is_self_loop = link.source === this && link.target === this
+        const thickness = is_source ? link.thicknessSource : link.thicknessTarget
         const handle_position_shift = 5
         // Current node is link's source
-        if (link.source === this && !doublon.includes(link)) {
+        if (is_source && !doublon.includes(link)) {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.source_side === 'right') {
@@ -974,7 +1144,10 @@ export class Class_NodeElement extends Class_NodeBase {
           doublon.push(link)
         }
         // Or current node is link's target
-        else if (link.target === this) {
+        // For self-loops we run BOTH branches in the same iteration so the
+        // ending point is also computed (otherwise _input_links_ending_point
+        // is never set and the link's _position_ending stays at (0,0)).
+        if ((!is_source || is_self_loop) && link.target === this) {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.target_side === 'right') {
@@ -1424,29 +1597,32 @@ export class Class_NodeElement extends Class_NodeBase {
     const link_in = this.input_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For input links, what arrives at the node = target value (or source if no target set)
+        const v = link.valueCurrentTarget ?? link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_in = Math.max(max_digit_in, decimal_digit.length)
         }
-        return link
+        return v
       })
 
     const pow_in = Math.pow(10, max_digit_in)
-    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
+    link_in.forEach(v => input_val += (v ?? 0) * pow_in)
 
     let max_digit_out = 0
     const link_out = this.output_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        const v = link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_out = Math.max(max_digit_out, decimal_digit.length)
         }
-        return link
+        return v
       })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
+    link_out.forEach(v => output_val += (v ?? 0) * pow_out)
     return Math.max(input_val / pow_in, output_val / pow_out)
   }
 
@@ -1459,37 +1635,56 @@ export class Class_NodeElement extends Class_NodeBase {
     const link_in = this.input_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For input links, what arrives at the node = target value (or source if no target set)
+        const v = link.valueCurrentTarget ?? link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_in = Math.max(max_digit_in, decimal_digit.length)
         }
-        return link
+        return { link, v }
       })
 
     const pow_in = Math.pow(10, max_digit_in)
-    link_in.forEach(link => input_val += (link.valueCurrent ?? 0) * pow_in)
+    link_in.forEach(({ v }) => input_val += (v ?? 0) * pow_in)
 
     let max_digit_out = 0
     const link_out = this.output_links_list
       .filter(link => link.is_visible)
       .map(link => {
-        const decimal_digit = String(link.valueCurrent).split('.')[1]
+        // For output links, what leaves the node = source value
+        const v = link.valueCurrent
+        const decimal_digit = String(v).split('.')[1]
         if (decimal_digit !== undefined) {
           max_digit_out = Math.max(max_digit_out, decimal_digit.length)
         }
-        return link
+        return { link, v }
       })
 
     const pow_out = Math.pow(10, max_digit_out)
-    link_out.forEach(link => output_val += (link.valueCurrent ?? 0) * pow_out)
+    link_out.forEach(({ v }) => output_val += (v ?? 0) * pow_out)
 
-    return format_value(
+    const total_in = input_val / pow_in
+    const total_out = output_val / pow_out
+    const has_in = link_in.length > 0
+    const has_out = link_out.length > 0
+
+    const fmt = (v: number) => format_value(
       this.sankey.drawing_area.type_data,
-      Math.max(input_val / pow_in, output_val / pow_out),
+      v,
       this,
       this.value_label_unit,
       'value_label'
     )
+
+    // No flux at all
+    if (!has_in && !has_out) return ''
+    // Only one direction: show that value
+    if (!has_in) return fmt(total_out)
+    if (!has_out) return fmt(total_in)
+    // Both directions equal: show single value
+    if (total_in === total_out) return fmt(total_in)
+    // Both directions differ: show "in→out" (entering total → leaving total)
+    return fmt(total_in) + '\u2192' + fmt(total_out)
   }
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_nodes_list
@@ -1553,8 +1748,8 @@ export class Class_NodeElement extends Class_NodeBase {
   ) {
     if (links.length === 0) return
 
-    // Calculer la somme totale des épaisseurs
-    const totalThickness = links.reduce((sum, link) => sum + link.thickness, 0)
+    // Calculer la somme totale des épaisseurs (using appropriate thickness per link end)
+    const totalThickness = links.reduce((sum, link) => sum + (link.source === this ? link.thicknessSource : link.thicknessTarget), 0)
 
     // Offset de départ (tient compte des marges via getLinksStartingPositionOffSet)
     const startOffset = this.getLinksStartingPositionOffSet(side)
@@ -1564,7 +1759,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     // Dessiner un cap par flux
     links.forEach(link => {
-      const thickness = link.thickness
+      const thickness = link.source === this ? link.thicknessSource : link.thicknessTarget
       const color = type == 'input' ? link.getArrowColorToUse() : link.getShapeColorToUse()
 
       // Créer le cap découpé pour ce flux spécifique

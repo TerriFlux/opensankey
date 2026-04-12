@@ -25,7 +25,7 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import { MenuList, MenuButton, MenuItem, Menu } from '@chakra-ui/react'
+import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
@@ -107,7 +107,6 @@ export const ButtonLinkContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_link !== undefined) &&
     (has_flux_tags)
   ) ? <>
-      {sep}
       <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
@@ -171,7 +170,6 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
     (contextualised_node !== undefined) &&
     (has_node_tags)
   ) ? <>
-      {sep}
       <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
@@ -234,8 +232,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
   return (
     (contextualised_node !== undefined) &&
     (has_node_style)
-  ) ? <>
-      <Menu placement='end'>
+  ) ? <Menu placement='end'>
         <MenuButton
           variant='contextmenu_button'
           as={Button}
@@ -268,7 +265,54 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
               })
           }
         </MenuList>
-      </Menu></> :
+      </Menu> :
+    <></>
+}
+
+export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area } = app_data
+  const [, setUpdate] = useState(0)
+  const contextualised_container = drawing_area.contextualised_container
+  const selected_containers = drawing_area.selected_containers_list
+  const has_styles = drawing_area.sankey.styles_list.length > 0
+  return (
+    (contextualised_container !== undefined) &&
+    (has_styles)
+  ) ? <Menu placement='end'>
+        <MenuButton
+          variant='contextmenu_button'
+          as={Button}
+          rightIcon={<ChevronRightIcon />}
+          className="dropdown-basic"
+        >
+          {'Assigner styles'}
+        </MenuButton>
+        <MenuList>
+          {
+            drawing_area.sankey.styles_list
+              .map((_) => {
+                const has_style = contextualised_container.style.includes(_)
+                return <MenuItem
+                  display='flex'
+                  closeOnSelect={false}
+                  onClick={() => {
+                    selected_containers.forEach(container => {
+                      if (!has_style) {
+                        container.addStyle(_)
+                      } else {
+                        container.removeStyle(_)
+                      }
+                    })
+                    setUpdate(a => a + 1)
+                  }}
+                >
+                  {_.name}
+                  {checked(has_style)}
+                </MenuItem>
+              })
+          }
+        </MenuList>
+      </Menu> :
     <></>
 }
 
@@ -316,4 +360,66 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
         </MenuList>
       </Menu></> :
     <></>
+}
+
+export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area, menu_configuration } = app_data
+  const node = drawing_area.node_contextualised
+  const [, setUpdate] = useState(0)
+
+  if (!node) return <></>
+
+  const stock_val = node.stock_value
+
+  const refreshAll = () => {
+    node.drawStockBox()
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setUpdate(a => a + 1)
+  }
+
+  return <Box display='flex' flexDirection='column' gap='4px'>
+    <Checkbox
+      isChecked={node.stock_label_is_visible}
+      onChange={(e) => {
+        drawing_area.selected_nodes_list.forEach(n => {
+          n.stock_label_is_visible = e.target.checked
+          n.draw()
+        })
+        menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        setUpdate(a => a + 1)
+      }}
+    >
+      <Text fontSize='sm'>Afficher stocks</Text>
+    </Checkbox>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='70px'>Stock ini.</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={stock_val?.stockInitialData ?? null}
+        function_on_blur={(v) => {
+          drawing_area.selected_nodes_list.forEach(n => {
+            const s = n.stock_value; if (s) s.stockInitialData = v
+          })
+          refreshAll()
+        }}
+        stepper={true}
+        step={1}
+      />
+    </Box>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='70px'>{'\u0394 Stock'}</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={stock_val?.stockVariationData ?? null}
+        function_on_blur={(v) => {
+          drawing_area.selected_nodes_list.forEach(n => {
+            const s = n.stock_value; if (s) s.stockVariationData = v
+          })
+          refreshAll()
+        }}
+        stepper={true}
+        step={1}
+      />
+    </Box>
+  </Box>
 }

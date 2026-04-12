@@ -298,10 +298,10 @@ const Counter = ({
     return () => clearInterval(interval)
   })
 
-  if (result && result.split('\n').length > 2) {
+  if (result) {
     if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('TERMINÉE')) {
       finishProcess(false)
-    } else if (result.includes('FAILED') || result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR')) {
+    } else if (result.includes('FAILED') ||  result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR') || result.includes('ÉCHOUÉE') || result.includes('ÉCHOUÉ')) {
       finishProcess(true)
     }
   }

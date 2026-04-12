@@ -35,7 +35,10 @@ import {
   default_grid_size,
   default_grid_visible,
   default_scale,
-  initial_show_structure
+  initial_show_structure,
+  Type_Orientation,
+  Type_TextHPos,
+  Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
 import {
   Class_NodeElement,
@@ -90,6 +93,11 @@ export class Class_DrawingArea {
   public d3_selection_legend: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_handlers: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   public d3_selection_zone_select: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+
+  // Scrollbars
+  private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  private _scrollbar_size = 10
 
 
   public static: boolean = !!window.sankey?.publish
@@ -165,7 +173,8 @@ export class Class_DrawingArea {
 
   protected _group_to_select: string = '.gg_nodes,.gg_links,.gg_labels'
 
-  private _mode: 'edition' | 'selection' = 'edition'
+  private _mode: 'edition' | 'selection' | 'style_paint' = 'edition'
+  private _style_paint_source: Class_ProtoElement | null = null
 
   private _ghost_link: Class_LinkElement | null = null
   private _ghost_link_source: Class_NodeElement | null = null
@@ -323,7 +332,7 @@ export class Class_DrawingArea {
     this.setEventsListeners()
 
     // Unset saving indicator
-    this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+    //this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
 
     this.orderElementOnDA()
   }
@@ -373,6 +382,9 @@ export class Class_DrawingArea {
     }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
+
+    // Scrollbars (outside g_drawing so they stay fixed in viewport)
+    this._initScrollbars()
   }
 
   /**
@@ -386,7 +398,7 @@ export class Class_DrawingArea {
     // Draw only if asked OR outside publishing mode
     if (this.grid_visible && !this.static) {
       // Draw horizontal lines
-      const number_of_horizontal_lines = this._zoom_height / this.grid_size
+      const number_of_horizontal_lines = Math.min(200, this._zoom_height / this.grid_size)
       for (let row = 0; row < number_of_horizontal_lines; row++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-horiz')
@@ -399,7 +411,7 @@ export class Class_DrawingArea {
           .style('stroke-dasharray', 4)
       }
       // Draw vertical lines
-      const number_of_vertical_lines = this._zoom_width / this.grid_size
+      const number_of_vertical_lines = Math.min(200, this._zoom_width / this.grid_size)
       for (let column = 0; column < number_of_vertical_lines; column++) {
         this.d3_selection_grid?.append('line')
           .attr('class', 'line line-vert')
@@ -551,6 +563,7 @@ export class Class_DrawingArea {
     element.setSelected()
     // Update related menus
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
   }
 
   public addLegendToSelection(): void {
@@ -593,7 +606,10 @@ export class Class_DrawingArea {
     // Sometime this function is used then updateAllComponentsRelatedToNodes is also called,
     //  this mean that the hook referenced go from true -> false -> true before the rerender
     // & since it doesn't see a changement of value it doesn't trigger the redraw of the component
-    if (reset) this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+    if (reset) {
+      this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
+    }
   }
 
   public deleteSelectedLinks() {
@@ -613,6 +629,7 @@ export class Class_DrawingArea {
     // TODO reset config menu
     this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
     this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+    this.application_data.menu_configuration.ref_to_toolbar_bottom_updater.current()
     // Clean selection dict
     this._selection = {}
     this.application_data.menu_configuration.ref_to_menu_config_containers_updater.current()
@@ -681,6 +698,51 @@ export class Class_DrawingArea {
     }
     this.saveRedo(redo)
     // End Save Redo -----------------------------------
+  }
+
+  public copyNodes(node_ids: string[]) {
+    const sankey = this.sankey
+    this.bypass_redraws = true
+    const offset = 50
+    const source_nodes = node_ids.map(id => sankey.nodes_dict[id]).filter(n => n !== undefined)
+    this.purgeSelection()
+    const selected_node_ids = new Set(node_ids)
+    const matching_link_id: { [_: string]: string } = {}
+    const node_copy_map = new Map<string, Class_NodeElement>()
+
+    source_nodes.forEach(node => {
+      const new_node = sankey.addNewNode(node.id + '_copy', node.name)
+      node_copy_map.set(node.id, new_node)
+      new_node.copyFrom(node)
+      new_node.position_x = node.position_x + offset
+      new_node.position_y = node.position_y + offset
+      this.addElementToSelection(new_node)
+    })
+
+    source_nodes.forEach(node => {
+      node.output_links_list.forEach(link => {
+        if (selected_node_ids.has(link.target.id)) {
+          const new_source = node_copy_map.get(node.id)
+          const new_target = node_copy_map.get(link.target.id)
+          if (new_source && new_target) {
+            const new_link = sankey.addNewLink(new_source, new_target)
+            new_link.copyFrom(link)
+            new_link.source = new_source
+            new_link.target = new_target
+            matching_link_id[link.id] = new_link.id
+            this.addElementToSelection(new_link)
+          }
+        }
+      })
+    })
+
+    source_nodes.forEach(node => {
+      const new_node = node_copy_map.get(node.id)
+      if (new_node) new_node.keepLinkOrderingFrom(node, matching_link_id)
+    })
+
+    this.bypass_redraws = false
+    this.draw()
   }
 
   public updateScaleAtLinkValueSetting() {
@@ -766,6 +828,85 @@ export class Class_DrawingArea {
     }
   }
 
+  /**
+   * Transpose the diagram (self-inverse): swap x↔y for all nodes/containers,
+   * swap link orientations, swap DA dimensions, swap capsule↔capsule_h shapes,
+   * and swap label horiz↔vert positions. Calling twice restores original state.
+   */
+  public verticalizeDiagram = () => {
+    const hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
+      v === 'top' ? 'left' : v === 'bottom' ? 'right' : 'middle'
+    const vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
+      h === 'left' ? 'top' : h === 'right' ? 'bottom' : 'middle'
+    const flipOrientation = (o: Type_Orientation): Type_Orientation => {
+      if (o === 'hh') return 'vv'
+      if (o === 'vv') return 'hh'
+      if (o === 'hv') return 'vh'
+      return 'hv'
+    }
+
+    const doVerticalize = () => {
+      const sankey = this.sankey
+
+      // Swap drawing area dimensions
+      const tmp_w = this._width
+      this._width = this._height
+      this._height = tmp_w
+      this.drawBackground()
+      this.drawGrid()
+
+      sankey.nodes_list.forEach(n => {
+        const px = n.position_x; const py = n.position_y
+        n.position_x = py
+        n.position_y = px
+        const w = n.shape_min_width; const h = n.shape_min_height
+        n.shape_min_width = h
+        n.shape_min_height = w
+        if (n.shape_type === 'capsule') n.shape_type = 'capsule_h'
+        else if (n.shape_type === 'capsule_h') n.shape_type = 'capsule'
+        // const nh = n.name_label_horiz; const nv = n.name_label_vert
+        // n.name_label_horiz = hPosFromV(nv)
+        // n.name_label_vert = vPosFromH(nh)
+        // const vh = n.value_label_horiz; const vv = n.value_label_vert
+        // n.value_label_horiz = hPosFromV(vv)
+        // n.value_label_vert = vPosFromH(vh)
+        n.shape_margin_bottom = n.shape_margin_right
+        n.shape_margin_right = n.shape_margin_bottom
+        n.shape_margin_top = n.shape_margin_left
+        n.shape_margin_left = n.shape_margin_top
+        n.draw()
+      })
+
+      sankey.links_list.forEach(l => {
+        l.shape_orientation = flipOrientation(l.shape_orientation)
+        if (!l.name_label_on_path) l.name_label_vertical_text = !l.name_label_vertical_text
+        if (!l.value_label_on_path) l.value_label_vertical_text = !l.value_label_vertical_text
+        l.draw()
+      })
+
+      sankey.containers_list.forEach(c => {
+        const px = c.position_x; const py = c.position_y
+        c.position_x = py
+        c.position_y = px
+        const w = c.shape_min_width; const h = c.shape_min_height
+        c.shape_min_width = h
+        c.shape_min_height = w
+        // c.shape_margin_bottom = c.shape_margin_right
+        // c.shape_margin_right = c.shape_margin_bottom
+        // c.shape_margin_top = c.shape_margin_left
+        // c.shape_margin_left = c.shape_margin_top
+        c.draw()
+      })
+      this.areaAutoFit()
+      this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    }
+
+    // Transposing twice is self-inverse, same function for undo and redo
+    this.application_data.history.saveUndo(doVerticalize)
+    this.application_data.history.saveRedo(doVerticalize)
+    doVerticalize()
+  }
+
   public inverseSelectedLinks = () => {
     const _inverseSelectedLinks = () => {
       // Inverse link source & target
@@ -804,6 +945,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.legend.draw()
     }
 
     const inv_updateSelectedLinksTagAssignation = () => {
@@ -817,6 +959,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
+      this.legend.draw()
     }
 
     this.application_data.history.saveUndo(inv_updateSelectedLinksTagAssignation)
@@ -848,6 +991,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.legend.draw()
     }
 
     const inv_updateSelectedNodesTagAssignation = () => {
@@ -861,6 +1005,7 @@ export class Class_DrawingArea {
       })
       // Full update
       this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
+      this.legend.draw()
     }
 
     this.application_data.history.saveUndo(inv_updateSelectedNodesTagAssignation)
@@ -1330,8 +1475,11 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this.sankey.nodes_dict[node_id]
           )
+          const newLink1 = this.sankey.links_list[this.sankey.links_list.length - 1]
           this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addElementToSelection(newLink1)
+          this.addElementToSelection(newLink1.source)
+          this.addElementToSelection(newLink1.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -1346,8 +1494,11 @@ export class Class_DrawingArea {
             this._ghost_link.source as Class_NodeElement,
             this._ghost_link.target as Class_NodeElement
           )
+          const newLink2 = this.sankey.links_list[this.sankey.links_list.length - 1]
           this.purgeSelectionOfElement(false)
-          this.addElementToSelection(this.sankey.links_list[this.sankey.links_list.length - 1])
+          this.addElementToSelection(newLink2)
+          this.addElementToSelection(newLink2.source)
+          this.addElementToSelection(newLink2.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
         // In case we get there still deref ghost link
@@ -1417,6 +1568,8 @@ export class Class_DrawingArea {
           LinkElementPersistence.toJSON(l, ghost_link_json) //For undo/redo
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
+          this.addElementToSelection(l.source)
+          this.addElementToSelection(l.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
           // Delete old target node
           this.deleteNode(this._ghost_link?.target as Class_NodeElement)
@@ -1437,6 +1590,8 @@ export class Class_DrawingArea {
 
           this.purgeSelectionOfElement(false)
           this.addElementToSelection(l)
+          this.addElementToSelection(l.source)
+          this.addElementToSelection(l.target)
           this.application_data.menu_configuration.openConfigMenuElementsLinks()
         }
 
@@ -1521,7 +1676,7 @@ export class Class_DrawingArea {
         }
       }
     } else if (this.isInSelectionMode() && event.button == 0) {
-      if ((!event.shiftKey) && (!event.ctrlKey)) {
+      if ((!event.shiftKey) && (!event.ctrlKey) && (!event.metaKey)) {
         const just_closed = this.closeAllContextMenus()
         if (!just_closed) this.purgeSelection()
       }
@@ -1625,6 +1780,191 @@ export class Class_DrawingArea {
     }
   }
 
+  // SCROLLBARS ==========================================================================
+
+  /**
+   * Create scrollbar SVG elements (track + thumb) for horizontal and vertical scrolling.
+   * Placed directly in the SVG root so they stay fixed in viewport coordinates.
+   */
+  private _initScrollbars() {
+    if (!this.d3_selection_zoom_area) return
+    const sb = this._scrollbar_size
+
+    // Horizontal scrollbar
+    this._d3_scrollbar_h = this.d3_selection_zoom_area.append('g')
+      .attr('class', 'scrollbar scrollbar-h')
+      .attr('visibility', 'hidden')
+      .style('pointer-events', 'all')
+    // Track
+    this._d3_scrollbar_h.append('rect')
+      .attr('class', 'scrollbar-track')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('height', sb)
+      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
+    // Thumb
+    this._d3_scrollbar_h.append('rect')
+      .attr('class', 'scrollbar-thumb')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('height', sb)
+      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
+      .style('cursor', 'pointer')
+
+    // Vertical scrollbar
+    this._d3_scrollbar_v = this.d3_selection_zoom_area.append('g')
+      .attr('class', 'scrollbar scrollbar-v')
+      .attr('visibility', 'hidden')
+      .style('pointer-events', 'all')
+    // Track
+    this._d3_scrollbar_v.append('rect')
+      .attr('class', 'scrollbar-track')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('width', sb)
+      .style('fill', '#e0e0e0').style('fill-opacity', 0.3)
+    // Thumb
+    this._d3_scrollbar_v.append('rect')
+      .attr('class', 'scrollbar-thumb')
+      .attr('rx', sb / 2).attr('ry', sb / 2)
+      .attr('width', sb)
+      .style('fill', '#78A7C2').style('fill-opacity', 0.85)
+      .style('cursor', 'pointer')
+
+    // Helper to get content extent via getBBox
+    const getContentScreenExtent = () => {
+      if (!this.d3_selection_zoom_area || !this.d3_selection) return null
+      const svgN = this.d3_selection_zoom_area.node()
+      const gN = this.d3_selection.node()
+      if (!svgN || !gN) return null
+      const t = d3.zoomTransform(svgN)
+      let bbox: DOMRect
+      try { bbox = gN.getBBox() } catch { return null }
+      const r = svgN.getBoundingClientRect()
+      return {
+        screenW: bbox.width * t.k,
+        screenH: bbox.height * t.k,
+        viewW: Math.min(r.width, window.innerWidth - Math.max(0, r.left)),
+        viewH: Math.min(r.height, window.innerHeight - Math.max(0, r.top)),
+        k: t.k
+      }
+    }
+
+    // Drag behavior for horizontal thumb
+    const hThumbNode = this._d3_scrollbar_h.select('.scrollbar-thumb').node() as SVGRectElement | null
+    if (hThumbNode) {
+      d3.select<SVGRectElement, unknown>(hThumbNode).call(
+        d3.drag<SVGRectElement, unknown>()
+          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
+            if (!this.d3_selection_zoom_area) return
+            const ext = getContentScreenExtent()
+            if (!ext || ext.screenW <= ext.viewW) return
+            const trackW = ext.viewW - 2 * sb
+            const ratio = ext.screenW / trackW
+            this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
+          })
+      )
+    }
+
+    // Drag behavior for vertical thumb
+    const vThumbNode = this._d3_scrollbar_v.select('.scrollbar-thumb').node() as SVGRectElement | null
+    if (vThumbNode) {
+      d3.select<SVGRectElement, unknown>(vThumbNode).call(
+        d3.drag<SVGRectElement, unknown>()
+          .on('drag', (event: d3.D3DragEvent<SVGRectElement, unknown, unknown>) => {
+            if (!this.d3_selection_zoom_area) return
+            const ext = getContentScreenExtent()
+            if (!ext || ext.screenH <= ext.viewH) return
+            const trackH = ext.viewH - 2 * sb
+            const ratio = ext.screenH / trackH
+            this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
+          })
+      )
+    }
+  }
+
+  /**
+   * Update scrollbar positions and sizes based on the current D3 zoom transform.
+   * Uses getBBox() on g_drawing to get the real content extent, then maps it
+   * to viewport coordinates via the zoom transform.
+   * Scrollbars stay visible as long as content overflows the viewport.
+   */
+  private _updateScrollbars() {
+    if (!this.d3_selection_zoom_area || !this._d3_scrollbar_h || !this._d3_scrollbar_v) return
+    const svgNode = this.d3_selection_zoom_area.node()
+    if (!svgNode) return
+    const gNode = this.d3_selection?.node()
+    if (!gNode) return
+
+    const sb = this._scrollbar_size
+    // The SVG has height=window.innerHeight but is placed after the navbar,
+    // so its bottom overflows past the viewport. Use window_fitting dimensions
+    // which correctly account for navbar and bottom bar.
+    const viewW = this.window_fitting_width
+    const viewH = this.window_fitting_height
+    if (viewW <= 0 || viewH <= 0) return
+    // Offset from SVG top to the actual visible area (navbar pushes content down)
+    const navH = this.getNavBarHeight()
+
+    // Get the real bounding box of all content in g_drawing's local coordinate system
+    // This handles negative coordinates correctly since getBBox returns the untransformed extent
+    let bbox: DOMRect
+    try {
+      bbox = gNode.getBBox()
+    } catch {
+      return // getBBox can throw if element has no rendered content
+    }
+    if (bbox.width === 0 && bbox.height === 0) return
+
+    // Map content bbox to screen coordinates using the zoom transform
+    const transform = d3.zoomTransform(svgNode)
+    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
+    const screenLeft = transform.x + bbox.x * transform.k
+    const screenRight = transform.x + (bbox.x + bbox.width) * transform.k
+    const screenTop = transform.y + bbox.y * transform.k
+    const screenBottom = transform.y + (bbox.y + bbox.height) * transform.k
+    const screenW = screenRight - screenLeft
+    const screenH = screenBottom - screenTop
+
+    // Horizontal scrollbar: content wider than viewport
+    // interrupt() cancels any pending d3 transition that could override opacity
+    this._d3_scrollbar_h.interrupt()
+    if (screenW > viewW * 1.01) {
+      const trackW = viewW - 2 * sb
+      const thumbW = Math.max(30, (viewW / screenW) * trackW)
+      const scrollFraction = Math.max(0, Math.min(1, -screenLeft / (screenW - viewW)))
+      const thumbX = sb + scrollFraction * (trackW - thumbW)
+
+      this._d3_scrollbar_h
+        .attr('visibility', 'visible')
+        .attr('transform', `translate(0, ${navH + viewH - sb - 4})`)
+      this._d3_scrollbar_h.select('.scrollbar-track')
+        .attr('x', sb).attr('width', trackW)
+      this._d3_scrollbar_h.select('.scrollbar-thumb')
+        .attr('x', thumbX)
+        .attr('width', thumbW)
+    } else {
+      this._d3_scrollbar_h.attr('visibility', 'hidden')
+    }
+
+    // Vertical scrollbar: content taller than viewport
+    this._d3_scrollbar_v.interrupt()
+    if (screenH > viewH * 1.01) {
+      const trackH = viewH - 2 * sb
+      const thumbH = Math.max(30, (viewH / screenH) * trackH)
+      const scrollFraction = Math.max(0, Math.min(1, -screenTop / (screenH - viewH)))
+      const thumbY = sb + scrollFraction * (trackH - thumbH)
+
+      this._d3_scrollbar_v
+        .attr('visibility', 'visible')
+        .attr('transform', `translate(${viewW - sb - 4}, ${navH})`)
+      this._d3_scrollbar_v.select('.scrollbar-track')
+        .attr('y', sb).attr('height', trackH)
+      this._d3_scrollbar_v.select('.scrollbar-thumb')
+        .attr('y', thumbY)
+        .attr('height', thumbH)
+    } else {
+      this._d3_scrollbar_v.attr('visibility', 'hidden')
+    }
+  }
+
   /**
    * Define event when mouse scrolls in drawing area
    * Note : Under the hood, this calls eventZoom method throught this.zoomListener
@@ -1639,8 +1979,9 @@ export class Class_DrawingArea {
       this.d3_selection_zoom_area
     ) {
       // Zoom in / out
-      if (event.ctrlKey) {
-        // Avoid CTRL + Scroll default behavior in Browser
+      const isMac = navigator.platform.toUpperCase().includes('MAC')
+      if (isMac ? event.metaKey : event.ctrlKey) {
+        // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
         event.preventDefault()
         // Get Scrolling factor ; either 1.1 or 0.9
         const scale = 1 - (event.deltaY / Math.abs(event.deltaY)) / 10
@@ -1651,13 +1992,13 @@ export class Class_DrawingArea {
           [event.x, event.y]
         )
       }
-      // Horizontal displacement
+      // Horizontal displacement (Shift+scroll for mouse, or trackpad horizontal swipe via deltaX)
       else if (event.shiftKey) {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, event.deltaY, 0)
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaY, 0)
       }
-      // Vertical displacement
+      // Combined / trackpad two-finger pan: use both deltaX and deltaY
       else {
-        this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.deltaY)
+        this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.deltaX, -event.deltaY)
       }
     }
   }
@@ -1686,6 +2027,9 @@ export class Class_DrawingArea {
           handle.draw()
         })
       }, 500)
+
+      // Update scrollbars
+      this._updateScrollbars()
     }
   }
 
@@ -1710,6 +2054,65 @@ export class Class_DrawingArea {
     this._mode = 'edition'
     this.drawCursor()
   }
+
+  public isInStylePaintMode(): boolean { return this._mode === 'style_paint' }
+  public get style_paint_source() { return this._style_paint_source }
+
+  public enterStylePaintMode(source: Class_ProtoElement): void {
+    this._style_paint_source = source
+    this._mode = 'style_paint'
+    this.drawCursor()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
+    this._legend.setEventsListeners()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+  }
+
+  public exitStylePaintMode(): void {
+    this._style_paint_source = null
+    this.setSelectionMode()
+    this.sankey.visible_nodes_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
+    this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
+    this._legend.setEventsListeners()
+    this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
+  }
+
+  public applyStyleFromPaintSource(target: Class_ProtoElement): void {
+    if (!this._style_paint_source) return
+    const source = this._style_paint_source
+    // Même type uniquement (nœud→nœud, flux→flux)
+    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return
+    // Capturer l'état avant pour undo
+    const old_storage = target.snapshotStorage()
+    const old_custom_styles = target.getCustomStyles()
+    // Capturer l'état source pour redo
+    const new_custom_styles = source.style.slice(1)
+    const new_storage = source.snapshotStorage()
+    // Undo : restaurer l'ancien état
+    const undo = () => {
+      target.removeAllStyles()
+      old_custom_styles.forEach(s => target.addStyle(s))
+      target.restoreStorage(old_storage)
+      target.draw()
+    }
+    // Redo : ré-appliquer le style source
+    const redo = () => {
+      target.removeAllStyles()
+      new_custom_styles.forEach(s => target.addStyle(s))
+      target.restoreStorage(new_storage)
+      target.draw()
+    }
+    this.application_data.history.saveUndo(undo)
+    this.application_data.history.saveRedo(redo)
+    // Appliquer
+    target.removeAllStyles()
+    new_custom_styles.forEach(s => target.addStyle(s))
+    target.copyAttrFrom(source)
+    target.draw()
+  }
+
   public switchMode() {
     if (this.isInEditionMode()) this.setSelectionMode()
     else if (this.isInSelectionMode()) this.setEditionMode()
@@ -1736,8 +2139,10 @@ export class Class_DrawingArea {
    */
   public drawCursor() {
     const mode_edition = this.isInEditionMode()
+    const mode_style_paint = this.isInStylePaintMode()
     this.d3_selection?.classed('edition_mode', mode_edition)
-    this.d3_selection?.classed('selection_mode', !mode_edition)
+    this.d3_selection?.classed('selection_mode', !mode_edition && !mode_style_paint)
+    this.d3_selection?.classed('style_paint_mode', mode_style_paint)
   }
 
   public get sankey() { return this._sankey }

@@ -1,6 +1,6 @@
 import colormap from 'colormap'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_LinkValue } from '../Elements/LinkValues'
+import { Class_ElementValue } from '../Elements/LinkValues'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_Sankey } from './Sankey'
 import { tag_banner_type, Class_ProtoTag, Class_Tag, Class_NodeTag, Class_FluxTag, Class_DataTag, Class_LevelTag, Class_ViewTag } from './Tag'
@@ -22,6 +22,7 @@ export abstract class Class_ProtoTagGroup {
 
   // List of tags
   private _tag_count: number = 0
+  private _tags_order: string[] = []
 
   // Type of banner
   private _banner: tag_banner_type = 'one'
@@ -67,6 +68,7 @@ export abstract class Class_ProtoTagGroup {
           tag.delete()
         })
       this._tags = {}
+      this._tags_order = []
       // Garbage collection will do the rest ...
     }
   }
@@ -89,6 +91,7 @@ export abstract class Class_ProtoTagGroup {
     this._name = tagg_to_copy._name
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
+    this._tags_order = [...tagg_to_copy._tags_order]
 
     // Synchro current tags
     this.tags_list
@@ -127,6 +130,7 @@ export abstract class Class_ProtoTagGroup {
     // Fill group attributes
     json_object['name'] = this._name
     json_object['banner'] = this._banner
+    json_object['tags_order'] = this._tags_order
     // Update tags infos
     const json_object_tags = {} as Type_JSON
     this.tags_list
@@ -163,6 +167,19 @@ export abstract class Class_ProtoTagGroup {
         // Update tag with json
         tag.fromJSON(tag_json as Type_JSON)
       })
+    // Read tags order (or rebuild from dict keys)
+    const saved_order = getStringListFromJSON(json_object, 'tags_order', [])
+    if (saved_order.length > 0) {
+      // Use saved order, append any tags not in saved order
+      this._tags_order = saved_order.filter(id => id in this._tags)
+      Object.keys(this._tags).forEach(id => {
+        if (!this._tags_order.includes(id)) this._tags_order.push(id)
+      })
+    } else {
+      // Legacy: no saved order, use dict key order
+      this._tags_order = Object.keys(this._tags)
+    }
+
     const nb_tags = Object.values(this._tags).length
     if (Object.values(this._tags).filter(tag => tag.color != '').length == 0) {
       // if tags has no colors they are generated from the defaut color map
@@ -193,6 +210,8 @@ export abstract class Class_ProtoTagGroup {
     const tag = this.createTag(name, id)
     this._tags[tag.id] = tag
     this._tag_count = this._tag_count + 1
+    if (!this._tags_order.includes(tag.id))
+      this._tags_order.push(tag.id)
     return tag
   }
 
@@ -206,6 +225,8 @@ export abstract class Class_ProtoTagGroup {
     if (this._tags[_.id] !== undefined) {
       _.delete()
       delete this._tags[_.id]
+      const idx = this._tags_order.indexOf(_.id)
+      if (idx >= 0) this._tags_order.splice(idx, 1)
     }
   }
 
@@ -249,6 +270,24 @@ export abstract class Class_ProtoTagGroup {
 
   public abstract updateTagsReferences(): void;
 
+  public moveTagUp(id: string) {
+    const idx = this._tags_order.indexOf(id)
+    if (idx > 0) {
+      this._tags_order.splice(idx, 1)
+      this._tags_order.splice(idx - 1, 0, id)
+    }
+  }
+
+  public moveTagDown(id: string) {
+    const idx = this._tags_order.indexOf(id)
+    if (idx >= 0 && idx < this._tags_order.length - 1) {
+      this._tags_order.splice(idx, 1)
+      this._tags_order.splice(idx + 1, 0, id)
+    }
+  }
+
+  public get tags_order() { return this._tags_order }
+
   // PROTECTED METHODS ==================================================================
   protected abstract createTag(
     name: string,
@@ -283,7 +322,13 @@ export abstract class Class_ProtoTagGroup {
   * @readonly
   * @memberof Class_ProtoTagGroup
   */
-  public abstract get tags_list(): Class_ProtoTag[];
+  public get tags_list(): Class_ProtoTag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
 
   /**
    * Return list of selected tag from the current group
@@ -386,7 +431,7 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
 
   // PUBLIC METHODS =====================================================================
   public updateTagsReferences(): void {
-    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_LinkValue)[] = []
+    const ref_updated: (Class_NodeElement | Class_LinkElement | Class_ElementValue)[] = []
     Object.values(this._tags)
       .forEach(tag => {
         tag.references
@@ -415,11 +460,17 @@ export abstract class Class_TagGroup extends Class_ProtoTagGroup {
   public get tags_dict() { return this._tags }
 
   /**
-   * Return dict tag from the current group
-   * @type {{ [_: string]: Class_Tag }}
+   * Return ordered list of tags from the current group
+   * @type {Class_Tag[]}
    * @memberof Class_TagGroup
    */
-  public get tags_list() { return Object.values(this.tags_dict) }
+  public get tags_list(): Class_Tag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
 
   /**
    * Return list of selected tag from the current group
@@ -672,11 +723,17 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   public get tags_dict() { return this._tags }
 
   /**
-   * Return dict tag from the current group
+   * Return ordered list of tags from the current group
    * @type {Class_DataTag[]}
    * @memberof Class_DataTagGroup
    */
-  public get tags_list() { return Object.values(this.tags_dict) }
+  public get tags_list(): Class_DataTag[] {
+    if (this.tags_order.length > 0)
+      return this.tags_order
+        .filter(id => id in this.tags_dict)
+        .map(id => this.tags_dict[id])
+    return Object.values(this.tags_dict)
+  }
 
   /**
    * Return list of selected tag from the current group

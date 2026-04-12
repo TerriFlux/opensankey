@@ -113,18 +113,28 @@ export class Class_ApplicationData {
     return drawing_area
   }
 
+  /** Load a drawing area from JSON. Override in subclasses to use a subclass-specific persistence layer. */
+  public loadDrawingAreaFromJSON(drawing_area: Class_DrawingArea, json_object: Type_JSON): void {
+    DrawingAreaPersistence.fromJSON(drawing_area, json_object)
+  }
+
   public createNewIconLibrary(): Class_IconLibrary {
     return new Class_IconLibrary()
   }
 
   // App
-  public version: string = '0.92'
+  public version: string = '0.93'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
 
   // Attributes to transfer between sankeys
   public data_var_to_update: string[] = []
+  /** Called after applying a layout from an external source.
+   * tmp_DA is the already-converted source DrawingArea.
+   * json is the raw source file JSON (null for view sources).
+   * mode overrides data_var_to_update when provided (e.g. when called from App.tsx with all attrs). */
+  public post_apply_layout_callback?: (tmp_DA: Class_DrawingArea, json: Type_JSON | null, mode?: string[]) => void = undefined
 
   protected _waiting_processes: { [id: string]: NodeJS.Timeout } = {}
   protected _waiting_time_for_processes: number = 50 // ms
@@ -152,6 +162,7 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _history?: Class_ApplicationHistory
+  protected _clipboard_node_ids: string[] = []
 
   /**
    * Configuration Menu
@@ -177,22 +188,14 @@ export class Class_ApplicationData {
    * @type {string[]}
    * @memberof Class_ApplicationData
    */
-  protected _transform_layout_all_attr: string[] = [
-    'addNode',
-    'addFlux',
-    'removeNode',
-    'removeFlux',
-    'posNode',
-    'Values',
-    'attrNode',
-    'posFlux',
-    'attrFlux',
-    'tagNode',
-    'tagFlux',
-    'tagData',
-    'tagLevel',
-    'attrDrawingArea'
-  ]
+  protected get _transform_layout_all_attr(): string[] {
+    return this.expandLayoutMode(
+      ['allNodes', 'allFlux', 'allFreeLabels',
+        'allTagNode', 'allTagFlux',
+        'allTagData', 'allTagLevel',
+        'allDA',
+        'allStyles'])
+  }
 
   //@ts-expect-error xxx
   protected _t: TFunction = () => null//useTranslation('translation', { useSuspense: false }).t //traductor
@@ -537,24 +540,28 @@ export class Class_ApplicationData {
     kwargs?: Type_JSON,
     draw: boolean = true
   ) {
-    this.sendWaitingToast(
-      () => {
-        // Always bypass redrawings
-        this._drawing_area.bypass_redraws = true
-        // Reset everything
-        this.reset(kwargs)
-        this._drawing_area.bypass_redraws = true
-        // Read json file
-        this._fromJSON(json_object, kwargs)
-        // Post processing & menu updating
-        this._afterFromJSON()
-        // Then draw if asked
-        if (draw) {
-          this._drawing_area.sankey.sortNodes()
-          this._drawing_area.draw()
-          this._drawing_area.recenter()
-        }
-      })
+    // this.sendWaitingToast(
+    //   () => {
+    // Always bypass redrawings
+    this._drawing_area.bypass_redraws = true
+    // Reset everything
+    this.reset(kwargs)
+    this._drawing_area.bypass_redraws = true
+    // Read json file
+    this._fromJSON(json_object, kwargs)
+    // Post processing & menu updating
+    this._afterFromJSON()
+    // Then draw if asked
+    if (draw) {
+      this._drawing_area.sankey.sortNodes()
+      // If the JSON has no geometric info, auto-layout the diagram
+      if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
+        this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+      }
+      this._drawing_area.draw()
+      this._drawing_area.recenter()
+    }
+    // })
   }
 
   /**
@@ -671,7 +678,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagNode', 'tagFlux', 'tagLevel', 'icon_catalog']
+      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
     )
     //}
   }
@@ -703,13 +710,11 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   public sendWaitingToast(
-    funct: () => void,
+    funct: () => void | Promise<void>,  // Accepte async
     intake?: Type_TextForToastPromise
   ) {
-    // Create and save process id
     const funct_id = randomId()
     this._toast_processes.push(funct_id)
-    // Add to the processing queue
     if (this._toast_bypass)
       funct()
     else
@@ -908,17 +913,21 @@ export class Class_ApplicationData {
     app_ref: Class_ApplicationData) {
     // Events booleans ----------------------------------------------------------------
     const evtOnDrawingArea = this._isDrawingAreaActive() // Avoid using hotkeys in text-inputs
-    const evtCtrl = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (!evt.altKey)
-    const evtCtrlShift = (evt.ctrlKey || evt.metaKey) && (evt.shiftKey) && (!evt.altKey)
-    const evtCtrlAlt = (evt.ctrlKey || evt.metaKey) && (!evt.shiftKey) && (evt.altKey)
+    const isMac = navigator.platform.toUpperCase().includes('MAC')
+    const evtModifier = isMac ? evt.metaKey : evt.ctrlKey
+    const evtCtrl = evtModifier && (!evt.shiftKey) && (!evt.altKey)
+    const evtCtrlShift = evtModifier && (evt.shiftKey) && (!evt.altKey)
+    const evtCtrlAlt = evtModifier && (!evt.shiftKey) && (evt.altKey)
     const evtKeyTab = (evt.key === 'Tab') && evtOnDrawingArea
-    const evtKeyDel = (evt.key === 'Delete') && evtOnDrawingArea
+    const evtKeyDel = (evt.key === 'Delete' || evt.key === 'Backspace') && evtOnDrawingArea
     const evtKeyEsc = (evt.key === 'Escape') // Allow escape event even when focused on input so we can close menus
     const evtKeyEnter = (evt.key === 'Enter')
     const evtKeyA = ((evt.key === 'a') || (evt.key === 'A')) && evtOnDrawingArea
     const evtKeyS = ((evt.key === 's') || (evt.key === 'S')) && evtOnDrawingArea
     const evtKeyZ = ((evt.key === 'z') || (evt.key === 'Z'))
     const evtKeyY = ((evt.key === 'y') || (evt.key === 'Y'))
+    const evtKeyC = ((evt.key === 'c') || (evt.key === 'C')) && evtOnDrawingArea
+    const evtKeyV = ((evt.key === 'v') || (evt.key === 'V')) && evtOnDrawingArea
     const evtCtrlA = evtCtrl && evtKeyA
     const evtCtrlS = evtCtrl && evtKeyS
     const evtCtrlShiftS = evtCtrlShift && evtKeyS
@@ -964,8 +973,11 @@ export class Class_ApplicationData {
     }
     // Event to restore application display as neutral --------------------------------
     else if (evtKeyEsc) {
+      // Exit style paint mode if active
+      if (app_ref.drawing_area.isInStylePaintMode())
+        app_ref.drawing_area.exitStylePaintMode()
       // Set app in selection mode
-      if (app_ref.drawing_area.isInEditionMode())
+      else if (app_ref.drawing_area.isInEditionMode())
         app_ref.drawing_area.switchMode()
 
       // Deselect all element
@@ -1042,6 +1054,19 @@ export class Class_ApplicationData {
       evt.preventDefault()
       this._history!.applyRedo()
     }
+    // Copy selected nodes
+    else if (evtCtrl && evtKeyC) {
+      evt.preventDefault()
+      this._clipboard_node_ids = app_ref.drawing_area.selected_nodes_list.map(n => n.id)
+    }
+    // Paste copied nodes
+    else if (evtCtrl && evtKeyV) {
+      evt.preventDefault()
+      if (this._clipboard_node_ids.length > 0) {
+        app_ref.drawing_area.copyNodes(this._clipboard_node_ids)
+        app_ref.saveInCache()
+      }
+    }
   }
 
   /**
@@ -1071,26 +1096,24 @@ export class Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _sendWaitingToast(
-    funct: () => void,
+    funct: () => void | Promise<void>,
     funct_id: string,
     intake?: Type_TextForToastPromise
   ) {
-    // Check if process has to wait
     if (this._toast_processes[0] !== funct_id) {
-      // Create a recursive timeout as delaying method to ensure that
-      // all functions are called with respect to their creation order
       setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
-    }
-    // Otherwise send
-    else {
+    } else {
       this._toast!.promise(
-        new Promise((resolve) => {
-          setTimeout(() => {
-            funct() // run
-            this._toast_processes.splice(0, 1) // pop process from processes list
-            resolve(200) // end
-          },
-            500) // Leave 500ms of delay in order to give enough time to load spinner component
+        new Promise(async (resolve, reject) => {
+          try {
+            await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
+            await funct()  // Attendre la fin de la fonction (sync ou async)
+            this._toast_processes.splice(0, 1)
+            resolve(200)
+          } catch (error) {
+            this._toast_processes.splice(0, 1)
+            reject(error)
+          }
         }),
         {
           success: {
@@ -1191,11 +1214,54 @@ export class Class_ApplicationData {
 
   public get transform_layout_all_attr(): string[] { return this._transform_layout_all_attr }
 
+  /**
+   * Group aliases for diagram_layout_options.
+   * Override in subclasses to add module-specific groups.
+   */
+  protected get _layout_groups(): Record<string, string[]> {
+    return {
+      allNodes: ['addNode', 'removeNode', 'posNode', 'attrNode'],
+      allFlux: ['addFlux', 'removeFlux', 'posFlux', 'attrFlux'],
+      allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
+      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode'],
+      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagData: ['addTagData', 'removeTagData', 'tagData'],
+      allTagLevel: ['addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allStyles: ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
+      allDA: ['attrDrawingArea', 'scale'],
+      allValues: ['Values']
+    }
+  }
+
+  /**
+   * Expands group aliases in a mode array into their constituent keys.
+   * Unknown keys are passed through as-is (they may be valid leaf keys).
+   */
+  public expandLayoutMode(mode: string[]): string[] {
+    const groups = this._layout_groups
+    const result: string[] = []
+    mode.forEach(key => {
+      if (groups[key]) {
+        groups[key].forEach(k => { if (!result.includes(k)) result.push(k) })
+      } else {
+        if (!result.includes(key)) result.push(key)
+      }
+    })
+    return result
+  }
+
   public get language(): string | undefined { return this._language }
   public set language(value: string | undefined) { this._language = value }
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
+
+  /** Override in subclasses to expose named views as layout sources */
+  public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
+
+  /** Override in subclasses to build a temporary DA from a view id */
+  public getDrawingAreaFromViewId(_id: string): Class_DrawingArea | undefined { return undefined }
 
 }
 

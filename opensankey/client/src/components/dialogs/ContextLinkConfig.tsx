@@ -27,6 +27,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     {
       type: 'button',
       actionName: 'inverseIO'
+    },
+    {
+      type: 'button',
+      actionName: 'copyElement'
     }
   ],
 
@@ -41,6 +45,19 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         en: 'Inverse the source and target of the selected link(s)',
         fr: 'Inverser la source et la cible du/des flux sélectionné(s)'
       }
+    },
+
+    copyElement: {
+      type: 'action',
+      labels: {
+        en: 'Copy link(s)',
+        fr: 'Copier le(s) flux'
+      },
+      tooltips: {
+        en: 'Duplicate the selected link(s) between the same source and target',
+        fr: 'Dupliquer le(s) flux sélectionné(s) entre la même source et la même cible'
+      },
+      closeMenuAfter: true
     },
 
     resetAttr: {
@@ -68,24 +85,24 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     moveToFirstPlan: {
       type: 'action',
       labels: {
-        en: 'Move to front',
-        fr: 'Premier plan'
+        en: 'Bring to front',
+        fr: 'Mettre au premier plan'
       },
       tooltips: {
-        en: 'Move the selected link(s) to the front layer',
-        fr: 'Déplacer le/les flux sélectionné(s) au premier plan'
+        en: 'Draw selected link(s) on top of all other elements',
+        fr: 'Afficher le(s) flux sélectionné(s) au-dessus de tous les autres éléments'
       }
     },
 
     moveToLastPlan: {
       type: 'action',
       labels: {
-        en: 'Move to back',
-        fr: 'Arrière plan'
+        en: 'Send to back',
+        fr: 'Mettre à l\'arrière-plan'
       },
       tooltips: {
-        en: 'Move the selected link(s) to the back layer',
-        fr: 'Déplacer le/les flux sélectionné(s) à l\'arrière plan'
+        en: 'Draw selected link(s) behind all other elements',
+        fr: 'Afficher le(s) flux sélectionné(s) derrière tous les autres éléments'
       }
     },
 
@@ -101,8 +118,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
           false: 'Show name label'
         },
         fr: {
-          true: 'Masquer libellé nom',
-          false: 'Afficher libellé nom'
+          true: 'Masquer libellé',
+          false: 'Afficher libellé'
         }
       },
       tooltips: {
@@ -121,12 +138,12 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       },
       labelsToggle: {
         en: {
-          true: 'Hide value label',
-          false: 'Show value label'
+          true: 'Hide value',
+          false: 'Show value'
         },
         fr: {
-          true: 'Masquer libellé valeur',
-          false: 'Afficher libellé valeur'
+          true: 'Masquer libellé',
+          false: 'Afficher libellé'
         }
       },
       tooltips: {
@@ -206,14 +223,14 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     },
 
     // Plan actions
-    moveToFirstPlan: () => {
+    moveToLastPlan: () => {
       drawing_area.selected_links_list.forEach(link => {
         const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
         drawing_area.moveOrderElementInDA(idx_to_shift, drawing_area.list_g_element.length - 1)
       })
     },
 
-    moveToLastPlan: () => {
+    moveToFirstPlan: () => {
       drawing_area.selected_links_list.forEach(link => {
         const idx_to_shift = drawing_area.list_g_element.indexOf(link.id)
         drawing_area.moveOrderElementInDA(idx_to_shift, 0)
@@ -279,6 +296,20 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
 
     toggleValueVisibilityValue: () => {
       return contextualised_link?.value_label_is_visible ?? false
+    },
+
+    copyElement: () => {
+      const sankey = drawing_area.sankey
+      drawing_area.purgeSelection()
+      selected_links.forEach(link => {
+        const new_link = sankey.addNewLink(link.source, link.target)
+        new_link.copyFrom(link)
+        new_link.draw()
+        drawing_area.addElementToSelection(new_link)
+      })
+      drawing_area.link_contextualised = undefined
+      menu_configuration.ref_to_save_in_cache_indicator.current(false)
+      menu_configuration.ref_to_menu_context_links_updater.current()
     }
   }
 }

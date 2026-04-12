@@ -10,7 +10,8 @@ const matchAndModifyJSONIds = (
   matching_taggs_id: { [_: string]: { [_: string]: string } } = {},
   matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {},
   matching_nodes_id: { [_: string]: string } = {},
-  matching_links_id: { [_: string]: string } = {}
+  matching_links_id: { [_: string]: string } = {},
+  matching_containers_id: { [_: string]: string } = {}
 ) => {
   // Loop on every tag group entries in JSON if there is data -------------------------
   const loop_taggs = {
@@ -115,6 +116,22 @@ const matchAndModifyJSONIds = (
         matching_links_id[link_id] = matching_links[0].id
       }
     })
+  // Loop on all containers -------------------------------------------------------
+  const containers_json = json_object['labels'] as Type_JSON | undefined
+  if (containers_json) {
+    Object.entries(containers_json)
+      .forEach(([container_id, _]) => {
+        const container_json = _ as Type_JSON
+        const matching_containers = sankey.containers_list
+          .filter(cont =>
+            (cont.name === getStringOrUndefinedFromJSON(container_json, 'name')) &&
+            (cont.id !== container_id)
+          )
+        if (matching_containers.length === 1) {
+          matching_containers_id[container_id] = matching_containers[0].id
+        }
+      })
+  }
 }
 
 const get_sync_lists = (
@@ -154,14 +171,18 @@ export const updateFrom = (
   const matching_tags_id: { [_: string]: { [_: string]: { [_: string]: string } } } = {}
   const matching_nodes_id: { [_: string]: string } = {}
   const matching_links_id: { [_: string]: string } = {}
+  const matching_containers_id: { [_: string]: string } = {}
   matchAndModifyJSONIds(
     other_drawing_area.sankey,
     SankeyPersistence.toJSON(drawing_area.sankey),
     matching_taggs_id,
     matching_tags_id,
     matching_nodes_id,
-    matching_links_id
+    matching_links_id,
+    matching_containers_id
   )
+  const revert_matching_containers_id: { [id: string]: string } = {}
+  Object.entries(matching_containers_id).forEach(([k, v]) => revert_matching_containers_id[v] = k)
   const revert_matching_links_id: { [id: string]: string } = {}
   Object.entries(matching_links_id).forEach(([k, v]) => revert_matching_links_id[v] = k)
   const revert_matching_nodes_id: { [id: string]: string } = {}
@@ -170,7 +191,7 @@ export const updateFrom = (
   const all = mode.includes('*')
   // Transfer DA attributs
   if (mode.includes('attrDrawingArea') || all) {
-    const scale_to_keep = drawing_area.scale
+    const scale_to_keep = mode.includes('scale') ? other_drawing_area.scale : drawing_area.scale
     drawing_area._copyAttrFrom(other_drawing_area)
     drawing_area._scale = scale_to_keep
     drawing_area._scaleValueToPx.domain([0, drawing_area._scale])
@@ -178,30 +199,20 @@ export const updateFrom = (
       drawing_area.legend.copyFrom(other_drawing_area.legend)
     // ✅ Mapper les IDs en utilisant les matching_ids
     drawing_area.list_g_element = other_drawing_area.list_g_element.map(id => {
-      // Vérifier si c'est un node, link ou container et utiliser le bon mapping
-      if (revert_matching_nodes_id[id]) {
-        return revert_matching_nodes_id[id]
-      } else if (revert_matching_links_id[id]) {
-        return revert_matching_links_id[id]
-      } else {
-        // Si pas de match trouvé, garder l'ID original (containers ou autres)
-        return id
-      }
+      if (revert_matching_nodes_id[id]) return revert_matching_nodes_id[id]
+      else if (revert_matching_links_id[id]) return revert_matching_links_id[id]
+      else if (revert_matching_containers_id[id]) return revert_matching_containers_id[id]
+      else return id
     })
   }
 
 
 
-  if (mode.includes('attrDrawingArea') || all) {
-
-    // Nodes styles can be to remove, to add or to update
+  if (mode.includes('styleDA') || all) {
+    // Sync style definitions (add / remove / update)
     const [ns_to_remove, ns_to_add, ns_to_update] = get_sync_lists(drawing_area.sankey.styles_dict, other_drawing_area.sankey.styles_dict, {})
-
-    // Update styles
     ns_to_remove
-      .forEach(id => {
-        drawing_area.sankey.styles_dict[id].delete()
-      })
+      .forEach(id => { drawing_area.sankey.styles_dict[id].delete() })
     ns_to_add
       .forEach(id => {
         const ns = other_drawing_area.sankey.styles_dict[id]
@@ -216,24 +227,24 @@ export const updateFrom = (
 
   // Update level_tag_dict ------------------------------------------------------------
 
-  if (mode.includes('tagLevel') || all) {
-    // Finds the corresponding tag group by ids
+  if (mode.includes('tagLevel') || mode.includes('addTagLevel') || mode.includes('removeTagLevel') || all) {
+    const add_tag_level    = mode.includes('addTagLevel')    || all
+    const remove_tag_level = mode.includes('removeTagLevel') || all
+    const update_tag_level = mode.includes('tagLevel')       || all
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._level_taggs, other_drawing_area.sankey._level_taggs, matching_taggs_id['levelTags'])
-
-    // // Update taggs
-    // to_remove
-    //   .forEach(id => {
-    //     drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
-    //   })
-    // to_add
-    //   .forEach(id => {
-    //     const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id]
-    //     drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
-    //     drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
-    //   })
-    to_update
-      .forEach(id => {
-        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][id] ?? id])
+    if (remove_tag_level)
+      to_remove.forEach(id => {
+        drawing_area.sankey.removeTagGroupWithId('level_taggs', id)
+      })
+    if (add_tag_level)
+      to_add.forEach(id => {
+        const ltagg = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id]
+        drawing_area.sankey.addLevelTagGroup(ltagg.id, ltagg.name)
+        drawing_area.sankey._level_taggs[id].copyFrom(ltagg)
+      })
+    if (update_tag_level)
+      to_update.forEach(id => {
+        drawing_area.sankey._level_taggs[id].copyFrom(other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags']?.[id] ?? id])
       })
   }
   if (mode.includes('tagLevel') || all) {
@@ -241,85 +252,98 @@ export const updateFrom = (
       matching_taggs_id['levelTags']['dimension 1'] = 'Primaire'
       Object.values(drawing_area.sankey._level_taggs).forEach(tagg =>
         tagg.tags_list.forEach(tag => {
-          const sourceTag = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]]?.tags_dict?.[tag.id]
+          const sourceTag = other_drawing_area.sankey._level_taggs[matching_taggs_id['levelTags'][tagg.id]??tagg.id]?.tags_dict?.[tag.id]
           if (sourceTag) tag.is_selected = sourceTag.is_selected
         })
       )
     }
+    // Copy force_show_children on node dimensions
+    Object.values(drawing_area.sankey.nodes_dict).forEach(node => {
+      const src_node = other_drawing_area.sankey.nodes_dict[node.id]
+      if (!src_node) return
+      node.dimensions_as_child.forEach(dim => {
+        const src_dim = src_node.dimensions_as_child.find(d => d.id === dim.id)
+        if (src_dim?.force_show_children) dim.setForceToShowChildren(true)
+      })
+    })
+    drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
   }
 
   // Update node_tag_dict ------------------------------------------------------------
-  if (mode.includes('tagNode') || all) {
-    // Finds the corresponding tag group by ids
-    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._node_taggs, other_drawing_area.sankey._node_taggs, matching_taggs_id['nodeTags'])
 
-    // Update taggs
-    to_remove
-      .forEach(id => {
+  if (mode.includes('tagNode') || mode.includes('addTagNode') || mode.includes('removeTagNode') || all) {
+    const add_tag_node    = mode.includes('addTagNode')    || all
+    const remove_tag_node = mode.includes('removeTagNode') || all
+    const update_tag_node = mode.includes('tagNode')       || all
+    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._node_taggs, other_drawing_area.sankey._node_taggs, matching_taggs_id['nodeTags'])
+    if (remove_tag_node)
+      to_remove.forEach(id => {
         drawing_area.sankey.removeTagGroupWithId('node_taggs', id)
       })
-    to_add
-      .forEach(id => {
-        const ntagg = other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id]
+    if (add_tag_node)
+      to_add.forEach(id => {
+        const ntagg = other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags']?.[id] ?? id]
         drawing_area.sankey.addNodeTagGroup(ntagg.id, ntagg.name)
         drawing_area.sankey._node_taggs[id].copyFrom(ntagg)
       })
-    to_update
-      .forEach(id => {
-        drawing_area.sankey._node_taggs[id].copyFrom(other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags'][id] ?? id], matching_tags_id['nodeTags'][id])
+    if (update_tag_node)
+      to_update.forEach(id => {
+        drawing_area.sankey._node_taggs[id].copyFrom(other_drawing_area.sankey._node_taggs[matching_taggs_id['nodeTags']?.[id] ?? id], matching_tags_id['nodeTags']?.[id])
       })
   }
 
   // Update flux_tag_dict ------------------------------------------------------------
-  if (mode.includes('tagFlux') || all) {
-    // Finds the corresponding tag group by ids
-    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._flux_taggs, other_drawing_area.sankey._flux_taggs, matching_taggs_id['fluxTags'])
 
-    // Update taggs
-    // to_remove
-    //   .forEach(id => {
-    //     drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
-    //   })
-    to_add
-      .forEach(id => {
-        const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id]
+  if (mode.includes('tagFlux') || mode.includes('addTagFlux') || mode.includes('removeTagFlux') || all) {
+    const add_tag_flux    = mode.includes('addTagFlux')    || all
+    const remove_tag_flux = mode.includes('removeTagFlux') || all
+    const update_tag_flux = mode.includes('tagFlux')       || all
+    const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._flux_taggs, other_drawing_area.sankey._flux_taggs, matching_taggs_id['fluxTags'])
+    if (remove_tag_flux)
+      to_remove.forEach(id => {
+        drawing_area.sankey.removeTagGroupWithId('flux_taggs', id)
+      })
+    if (add_tag_flux)
+      to_add.forEach(id => {
+        const ftagg = other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags']?.[id] ?? id]
         drawing_area.sankey.addFluxTagGroup(ftagg.id, ftagg.name)
         drawing_area.sankey._flux_taggs[id].copyFrom(ftagg)
       })
-    to_update
-      .forEach(id => {
-        drawing_area.sankey._flux_taggs[id].copyFrom(other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags'][id] ?? id], matching_tags_id['fluxTags'][id])
+    if (update_tag_flux)
+      to_update.forEach(id => {
+        drawing_area.sankey._flux_taggs[id].copyFrom(other_drawing_area.sankey._flux_taggs[matching_taggs_id['fluxTags']?.[id] ?? id], matching_tags_id['fluxTags']?.[id])
       })
   }
 
   // Update data_tag_dict ------------------------------------------------------------
 
-  if (mode.includes('tagData') || all) {
-
-    // Finds the corresponding tag group by ids
+  // Values requires addTagData to create missing value slots in target
+  const implicit_add_tag_data = mode.includes('Values') && !mode.includes('addTagData')
+  if (mode.includes('tagData') || mode.includes('addTagData') || mode.includes('removeTagData') || implicit_add_tag_data || all) {
+    const add_tag_data    = mode.includes('addTagData') || implicit_add_tag_data || all
+    const remove_tag_data = mode.includes('removeTagData') || all
+    const update_tag_data = mode.includes('tagData')       || all
     const [to_remove, to_add, to_update] = get_sync_lists(drawing_area.sankey._data_taggs, other_drawing_area.sankey._data_taggs, matching_taggs_id['dataTags'])
-
-    // Update taggs
-    to_remove
-      .forEach(id => {
+    if (remove_tag_data)
+      to_remove.forEach(id => {
         drawing_area.sankey.removeTagGroupWithId('data_taggs', id)
       })
-    to_add
-      .forEach(id => {
-        const dtagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id]
+    if (add_tag_data)
+      to_add.forEach(id => {
+        const dtagg = other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id]
         drawing_area.sankey.addDataTagGroup(dtagg.id, dtagg.name)
         drawing_area.sankey._data_taggs[id].copyFrom(dtagg)
       })
-    to_update
-      .forEach(id => {
-        drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags'][id] ?? id], matching_tags_id['dataTags'][id])
+    if (update_tag_data)
+      to_update.forEach(id => {
+        drawing_area.sankey._data_taggs[id].copyFrom(other_drawing_area.sankey._data_taggs[matching_taggs_id['dataTags']?.[id] ?? id], matching_tags_id['dataTags']?.[id])
       })
   }
 
   // Nodes  ---------------------------------------------------------------------------
 
   const add_nodes = mode.includes('addNode')
-  const remove_nodes = mode.includes('removeNodes')
+  const remove_nodes = mode.includes('removeNode')
   const sync_nodes_tags = mode.includes('tagNode')
   const sync_nodes_positions = mode.includes('posNode')
   const sync_nodes_attr = mode.includes('attrNode')
@@ -515,23 +539,31 @@ export const updateFrom = (
           if (Object.values(values)[1] === undefined) {
             values_corresp_ids[id_flux][Object.keys(values)[0]] = Object.keys(other_values)[0]
           }
-          // Case 2 : Datatags are present
+          // Case 2 : Datatags are present — match by name to handle differing IDs
           else {
+            // Build a map: source_tag_id → target_tag_id using matching_tags_id
+            // matching_tags_id['dataTags'][tagg_id][source_tag_id] = target_tag_id
+            const src_to_tgt_tag: { [src_tag_id: string]: string } = {}
+            Object.values(matching_tags_id['dataTags'] ?? {}).forEach(tag_map => {
+              Object.entries(tag_map).forEach(([src_id, tgt_id]) => {
+                src_to_tgt_tag[src_id] = tgt_id
+              })
+            })
             Object.entries(values)
               .forEach(([id_value, [, dtags]]) => {
-                if (dtags !== undefined) { // Should never be the case
-                  // Find values match based on datatags ids
-                  const dtags_id = dtags.map(dtag => dtag.id)
+                if (dtags !== undefined) {
+                  // Resolve target dtag IDs to source dtag IDs for comparison
+                  const tgt_ids_as_src = dtags.map(dtag => {
+                    // Find the source ID whose target mapping is this dtag.id
+                    const src_id = Object.entries(src_to_tgt_tag).find(([, v]) => v === dtag.id)?.[0]
+                    return src_id ?? dtag.id
+                  })
                   Object.entries(other_values)
-                    .filter(([, [, other_dtags]]) => {
-                      if (other_dtags !== undefined)
-                        return (
-                          JSON.stringify(dtags_id) ===
-                          JSON.stringify(other_dtags.map(other_dtag => other_dtag.id))
-                        )
-                      else
-                        return false // Should never be the case
-                    })
+                    .filter(([, [, other_dtags]]) =>
+                      other_dtags !== undefined &&
+                      JSON.stringify(tgt_ids_as_src) ===
+                      JSON.stringify(other_dtags.map(d => d.id))
+                    )
                     .forEach(([id_other_value,]) => {
                       values_corresp_ids[id_flux][id_value] = id_other_value
                     })
@@ -606,27 +638,91 @@ export const updateFrom = (
       drawing_area.sankey.icon_catalog[icon[0]] = icon[1]
     })
   }
-  // Update Containers
+  // Update Containers — all comparisons are by name, not by id
   const list_curr_container = drawing_area.sankey.containers_list
   const list_new_container = other_drawing_area.sankey.containers_list
-  if (mode.includes('freeLabels') || all) {
-    // Add new container present in new but not current
-    list_new_container.filter(new_cont => !list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
-      .forEach(cont => {
-        drawing_area.sankey.addNewContainer(cont.id, cont.name)
-        drawing_area.sankey.containers_dict[cont.id].copyFrom(cont)
-      })
+  const curr_names = new Set(list_curr_container.map(c => c.name))
+  const new_names = new Set(list_new_container.map(c => c.name))
+  // Find the current container matching a given name
+  const getCurrContainerByName = (name: string) =>
+    list_curr_container.find(c => c.name === name)
 
-    // Delete container present in current but not new
-    list_curr_container.filter(curr_cont => !list_new_container.map(new_cont => new_cont.id).includes(curr_cont.id))
+  if (mode.includes('addFreeLabel') || all) {
+    // Add containers whose name is not present in current
+    list_new_container
+      .filter(cont => !curr_names.has(cont.name))
+      .forEach(cont => {
+        const zdt = drawing_area.sankey.addNewContainer(cont.id, cont.name)
+        zdt.copyFrom(cont)
+      })
+  }
+
+  if (mode.includes('removeFreeLabel') || all) {
+    // Remove current containers whose name is not present in new
+    list_curr_container
+      .filter(cont => !new_names.has(cont.name))
       .forEach(cont => {
         drawing_area.sankey.deleteContainer(cont)
       })
+  }
 
-    // Update container in current that are also in new
-    list_new_container.filter(new_cont => list_curr_container.map(curr_cont => curr_cont.id).includes(new_cont.id))
+  if (mode.includes('attrFreeLabel') || all) {
+    // Update attributes of current containers matching by name
+    list_new_container
+      .filter(cont => curr_names.has(cont.name))
       .forEach(cont => {
-        drawing_area.sankey.containers_dict[cont.id].copyFrom(cont)
+        getCurrContainerByName(cont.name)?.copyFrom(cont)
+      })
+  }
+
+  if (mode.includes('posFreeLabel') || all) {
+    // Update position/size of current containers matching by name
+    list_new_container
+      .filter(cont => curr_names.has(cont.name))
+      .forEach(cont => {
+        const curr = getCurrContainerByName(cont.name)
+        if (!curr) return
+        curr.position_x = cont.position_x
+        curr.position_y = cont.position_y
+        curr.shape_min_width = cont.shape_min_width
+        curr.shape_min_height = cont.shape_min_height
+        curr.draw()
+      })
+  }
+
+  // Copy style assignments to elements (requires styleDA to have been applied first)
+  const curr_styles = drawing_area.sankey.styles_dict
+  const resolveStyles = (ids: string[]) =>
+    ids.map(id => curr_styles[id]).filter(Boolean)
+
+  if (mode.includes('styleNode') || all) {
+    drawing_area.sankey.nodes_list.forEach(curr_node => {
+      const other_id = matching_nodes_id[curr_node.id] ?? curr_node.id
+      const other_node = other_drawing_area.sankey.nodes_dict[other_id]
+      if (!other_node) return
+      const style_ids = other_node.getCustomStyles().map(s => s.id)
+      curr_node.replaceStyles(resolveStyles(style_ids))
+    })
+  }
+
+  if (mode.includes('styleFlux') || all) {
+    drawing_area.sankey.links_list.forEach(curr_link => {
+      const other_id = matching_links_id[curr_link.id] ?? curr_link.id
+      const other_link = other_drawing_area.sankey.links_dict[other_id]
+      if (!other_link) return
+      const style_ids = other_link.getCustomStyles().map(s => s.id)
+      curr_link.replaceStyles(resolveStyles(style_ids))
+    })
+  }
+
+  if (mode.includes('styleFreeLabel') || all) {
+    list_new_container
+      .filter(cont => curr_names.has(cont.name))
+      .forEach(cont => {
+        const curr = getCurrContainerByName(cont.name)
+        if (!curr) return
+        const style_ids = cont.getCustomStyles().map(s => s.id)
+        curr.replaceStyles(resolveStyles(style_ids))
       })
   }
 }

@@ -123,20 +123,13 @@ def check_process():
     if not state['process_started']:
         if 'logname' not in state:
             return Response(json.dumps({}), status=200, mimetype="application/json")
-        trace.logger.debug(state["logname"])
-        trace.logger.debug("not started")
         return Response(json.dumps({"not_started": True}), status=200, mimetype="application/json")
     try:
-        trace.logger.debug(state['logname'])
-        trace.logger.debug('open')
         logname = state['logname']
         if os.path.isfile(logname):
-            trace.logger.debug('is file')
             f = open(logname, "r")
-            trace.logger.debug('opened')
             results = f.read()
-            f.close()  # ← AJOUT: fermer le fichier
-            trace.logger.debug('read')
+            f.close()
             results_dict = {
                 "log_name": logname,
                 "output": results
@@ -333,113 +326,113 @@ def launch_conversion():
     - input_format : 'excel' ou 'json'
     - output_format : 'excel' ou 'json'
     """
-    # try:
-    tmp_dir = tempfile.mkdtemp()  # diff
-    log_dir = tempfile.mkdtemp()
-    log_filename = log_dir + os.path.sep + "rollover.log"
-    # session["logname"] = log_filename
-    trace.logger_init(log_filename, "w")
+    try:
+        tmp_dir = tempfile.mkdtemp()  # diff
+        log_dir = tempfile.mkdtemp()
+        log_filename = log_dir + os.path.sep + "rollover.log"
+        # session["logname"] = log_filename
+        trace.logger_init(log_filename, "w")
 
-    input_format = request.form.get("input_format", "excel")
-    output_format = request.form.get("output_format", "json")
+        input_format = request.form.get("input_format", "excel")
+        output_format = request.form.get("output_format", "json")
 
-    # input_options = json.loads(request.form.get('input_options', '{}'))
-    # output_options = json.loads(request.form.get('output_options', '{}'))
-    options = {**json.loads(request.form.get('input_options', '{}')), **
-                json.loads(request.form.get('output_options', '{}'))}
-    ext_map = {
-        'excel': '.xlsx',
-        'json': '.json',
-        'blob': '.json'
-    }
-    if input_format != "example_excel" and input_format != "example_json":
-        input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
-    output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
+        # input_options = json.loads(request.form.get('input_options', '{}'))
+        # output_options = json.loads(request.form.get('output_options', '{}'))
+        options = {**json.loads(request.form.get('input_options', '{}')), **
+                    json.loads(request.form.get('output_options', '{}'))}
+        ext_map = {
+            'excel': '.xlsx',
+            'json': '.json',
+            'blob': '.json'
+        }
+        if input_format != "example_excel" and input_format != "example_json":
+            input_file_name = os.path.join(tmp_dir, f"input{ext_map[input_format]}")
+        output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
 
-    if input_format == "example_excel" or input_format == "example_json":
-        data_folder = os.environ.get("MFAData")
-        exemple = request.form["file_name"]
-        input_file_name = os.path.join(data_folder, exemple)
-        extension = os.path.splitext(input_file_name)[1]
-        if extension == '.xlsx':
-            input_format = 'excel'
-        else:
-            # input_format = 'json'
-            output_file_name = input_file_name
-            set_process_state(
-                process_started=True,
-                input_filename=input_file_name,
-                output_file_name=output_file_name,
-                input_format=input_format,
-                output_format=output_format,
-                logname=log_filename
-            )
-            trace.logger.info("{:->{w}}".format(" CHARGEMENT TERMINÉE", w=50))
-            return Response(response="{}", status=200, mimetype="application/json")
-            # return handle_json_or_compressed(data_folder, exemple, input_file_name)
+        if input_format == "example_excel" or input_format == "example_json":
+            data_folder = os.environ.get("MFAData")
+            exemple = request.form["file_name"]
+            input_file_name = os.path.join(data_folder, exemple)
+            extension = os.path.splitext(input_file_name)[1]
+            if extension == '.xlsx':
+                input_format = 'excel'
+            else:
+                # input_format = 'json'
+                output_file_name = input_file_name
+                set_process_state(
+                    process_started=True,
+                    input_filename=input_file_name,
+                    output_file_name=output_file_name,
+                    input_format=input_format,
+                    output_format=output_format,
+                    logname=log_filename
+                )
+                trace.logger.info("{:->{w}}".format(" CHARGEMENT TERMINÉE", w=50))
+                return Response(response="{}", status=200, mimetype="application/json")
+                # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 
-    elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
-        input_file = request.files["file"]
-        input_file.save(input_file_name)
+        elif input_format != 'example_excel' and input_format != 'example_json' and input_format != 'blob':
+            input_file = request.files["file"]
+            input_file.save(input_file_name)
 
-    # Stocker l'état dans le stockage global
-    set_process_state(
-        process_started=True,
-        input_filename=input_file_name,
-        output_file_name=output_file_name,
-        input_format=input_format,
-        output_format=output_format,
-        logname=log_filename
-    )
-    sankey_as_data = None
-    if (input_format == "blob"):
-        data = request.form["data"]
-        sankey_as_data = data
-        sankey_as_json = json.loads(sankey_as_data)
-        io_json = IOJson()
-        ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
-        if not ok:
-            trace.logger.error(f"FAILED load_sankey_from_json failed: {log}")
-            return Response(
-                json.dumps({"error": str(log)}),
-                status=500,
-                mimetype="application/json"
-            )
-        io_json.write_sankey(input_file_name)
-        input_format = "json"
+        # Stocker l'état dans le stockage global
+        set_process_state(
+            process_started=True,
+            input_filename=input_file_name,
+            output_file_name=output_file_name,
+            input_format=input_format,
+            output_format=output_format,
+            logname=log_filename
+        )
+        sankey_as_data = None
+        if (input_format == "blob"):
+            data = request.form["data"]
+            sankey_as_data = data
+            sankey_as_json = json.loads(sankey_as_data)
+            io_json = IOJson()
+            ok, log = io_json.load_sankey_from_json(sankey_as_json, do_coherence_checks=False)
+            if not ok:
+                trace.logger.error(f"FAILED load_sankey_from_json failed: {log}")
+                return Response(
+                    json.dumps({"error": str(log)}),
+                    status=500,
+                    mimetype="application/json"
+                )
+            io_json.write_sankey(input_file_name)
+            input_format = "json"
 
-    # Decide threading based on file size
-    # file_stats = os.stat(input_file_name)
-    # use_thread = file_stats.st_size > 500000  # 500KB threshold
+        # Decide threading based on file size
+        # file_stats = os.stat(input_file_name)
+        # use_thread = file_stats.st_size > 500000  # 500KB threshold
 
-    # if use_thread:
-    # Use threading for large files
-    thread = Thread(
-        target=conversion_thread,
-        args=(
-            input_file_name,
-            output_file_name,
-            input_format,
-            output_format,
-            options,
-            log_filename,
-            sankey_as_data
-        ),
-    )
-    thread.daemon = True
+        # if use_thread:
+        # Use threading for large files
+        thread = Thread(
+            target=conversion_thread,
+            args=(
+                input_file_name,
+                output_file_name,
+                input_format,
+                output_format,
+                options,
+                log_filename,
+                sankey_as_data
+            ),
+        )
+        thread.daemon = True
 
-    thread.start()
-    trace.logger.debug("Conversion thread launched")
+        thread.start()
+        trace.logger.debug("Conversion thread launched")
 
-    return Response(response="{}", status=200, mimetype="application/json")
+        return Response(response="{}", status=200, mimetype="application/json")
 
-    # except Exception as excpt:
-    #     trace.logger.error(f"launch_conversion failed: {str(excpt)}")
-    #     return Response(
-    #         json.dumps({"error": str(excpt)}),
-    #         status=500,
-    #         mimetype="application/json"
-    #     )
+    except Exception as excpt:
+        trace.logger.error(f"launch_conversion failed: {str(excpt)}")
+        return Response(
+            json.dumps({"error": str(excpt)}),
+            status=500,
+            mimetype="application/json"
+        )
 
 
 def conversion_thread(
@@ -521,7 +514,14 @@ def conversion_thread(
         t_read = perf_counter() - t_read_start
 
         if not ok:
-            raise Exception(f"Erreur de chargement: {msg}")
+            t_total = perf_counter() - t_total_start
+            trace.logger.error("=" * 80)
+            trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
+            for line in msg.split("\n"):
+                if line.strip():
+                    trace.logger.error(f"  {line}")
+            trace.logger.error("=" * 80)
+            return
 
         # Taille du fichier d'entrée
         input_size = Path(input_file_name).stat().st_size / (1024 * 1024)

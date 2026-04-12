@@ -511,9 +511,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
         break
       case 'element':
-        app_data.drawing_area.bypass_compute_positions = true
+        //app_data.drawing_area.bypass_compute_positions = true
         app_data.drawing_area.draw()
-        app_data.drawing_area.bypass_compute_positions = false
+        //app_data.drawing_area.bypass_compute_positions = false
         app_data.drawing_area.orderElementOnDA()
         break
       case 'unitary':

@@ -25,15 +25,188 @@
 // ==================================================================================================
 
 import React, { useState, } from 'react'
-import {Box,Button,Input} from '@chakra-ui/react'
+import { Box, Button, Input, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Type_JSON } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { DecompressedJSONData, decompressUploadedFileUniversal, detectCompressionType } from '../../Persistence/UniversalJSONCompression'
+import { DecompressedJSONData, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../../Algorithms/UpdateFrom'
-import { DrawingAreaPersistence } from '../../Persistence/SankeyPersistence'
 
+
+// ===========================================================================
+// Shared grid component — used by ApplyLayoutDialog & ModalTransparentViewAttrOSP
+// ===========================================================================
+
+export type UpdateModeGridProps = {
+  attrs: string[]
+  onToggle: (key: string) => void
+  t: (key: string) => string
+  /** When true: show Ajouts/Suppressions/Values/Tags/tagLevel rows (default true) */
+  show_expert_rows?: boolean
+  /** If provided, keys returning true will have their row greyed out */
+  is_row_disabled?: (key: string) => boolean
+  /** Optional extra tab injected by OSP or other extensions */
+  extra_tab?: {
+    label: string
+    /** If provided and returns true: tab header is greyed and content disabled */
+    disabled?: () => boolean
+    render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
+  }
+}
+
+export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, extra_tab, is_row_disabled }: UpdateModeGridProps) => {
+  const btn = (key: string, label: string) => (
+    <Button
+      variant={attrs.includes(key) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+      onClick={() => onToggle(key)}
+    >{label}</Button>
+  )
+  const btn_disabled = (key: string, label: string, disabled: boolean) => (
+    <Button
+      isDisabled={disabled}
+      variant={attrs.includes(key) ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+      onClick={() => { if (!disabled) onToggle(key) }}
+    >{label}</Button>
+  )
+
+  const nodeLabel  = t('Menu.Transformation.attrNode')
+  const fluxLabel  = t('Menu.Transformation.attrFlux')
+  const zdtLabel   = t('Menu.Transformation.ZdT')
+  const addLabel   = t('Menu.Transformation.Ajouts')
+  const delLabel   = t('Menu.Transformation.Suppressions')
+  const attrLabel  = t('Menu.Transformation.Attribut')
+  const geoLabel   = t('Menu.Transformation.Geometry')
+  const majLabel   = t('Menu.Transformation.updateTags')
+
+  // Column header cell
+  const hdr = (label: string) => (
+    <Box fontSize='xs' textAlign='center' fontWeight='semibold' px='1'>{label}</Box>
+  )
+
+  // Grid cols: 4 (expert) or 2 (simple)
+  const elemGrid = show_expert_rows
+    ? { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '4px' }
+    : { display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '4px' }
+
+  const elemRow = (label: string, addKey: string, removeKey: string, attrKey: string, posKey: string) => (
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1'>
+      <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
+      <Box sx={elemGrid}>
+        {show_expert_rows && btn(addKey, '+')}
+        {show_expert_rows && btn(removeKey, '−')}
+        {btn(attrKey, 'X')}
+        {btn(posKey, 'X')}
+      </Box>
+    </Box>
+  )
+
+  const tagGrid = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '4px' }
+
+  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string) => {
+    const disabled = is_row_disabled?.(updateKey) ?? false
+    return (
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1' opacity={disabled ? 0.45 : 1} pointerEvents={disabled ? 'none' : undefined}>
+        <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
+        <Box sx={tagGrid}>
+          {btn(addKey, '+')}{btn(removeKey, '−')}{btn(updateKey, 'X')}
+        </Box>
+      </Box>
+    )
+  }
+
+  const elemHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    <Box />
+    <Box sx={elemGrid}>
+      {show_expert_rows && hdr(addLabel)}
+      {show_expert_rows && hdr(delLabel)}
+      {hdr(attrLabel)}
+      {hdr(geoLabel)}
+    </Box>
+  </Box>
+
+  const tagHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    <Box />
+    <Box sx={tagGrid}>{hdr(addLabel)}{hdr(delLabel)}{hdr(majLabel)}</Box>
+  </Box>
+
+  const tabSx = {
+    display: 'inline-flex !important', width: 'auto !important', height: 'auto !important',
+    padding: '2px 8px !important', margin: '0 !important', borderRadius: '4px !important',
+    fontSize: '0.75rem', fontWeight: 'semibold', cursor: 'pointer',
+    border: '1px solid', borderColor: 'gray.300', color: 'gray.600',
+    _selected: { bg: 'gray.100', color: 'gray.800', borderColor: 'gray.500' },
+  }
+
+  const tp = (children: React.ReactNode) => (
+    <TabPanel p='1'>{children}</TabPanel>
+  )
+
+  return <Tabs variant='unstyled' isLazy mt='0' key={show_expert_rows ? 'expert' : 'simple'}>
+    <TabList sx={{ display: 'flex !important', flexDirection: 'row !important', flexWrap: 'wrap', gap: '4px', mb: '1', alignItems: 'center', height: 'fit-content !important', minHeight: '0 !important', padding: '0 !important', border: 'none !important' }}>
+      <Tab sx={tabSx}>{t('Menu.Transformation.elementsTitle')}</Tab>
+      {show_expert_rows && <Tab sx={tabSx}>{t('Menu.Transformation.tagGroupsTitle')}</Tab>}
+      {show_expert_rows && <Tab sx={tabSx}>{t('Menu.Transformation.dataTitle')}</Tab>}
+      <Tab sx={tabSx}>{t('Menu.Transformation.attrGeneral')}</Tab>
+      {show_expert_rows && extra_tab && <Tab sx={extra_tab.disabled?.() ? { ...tabSx, opacity: 0.45, cursor: 'default' } : tabSx}>{extra_tab.label}</Tab>}
+    </TabList>
+    <TabPanels border='1px solid' borderColor='gray.200' borderRadius='4px'>
+
+      {tp(<>
+        {elemHeader}
+        {elemRow(nodeLabel, 'addNode',      'removeNode',      'attrNode',      'posNode')}
+        {elemRow(fluxLabel, 'addFlux',      'removeFlux',      'attrFlux',      'posFlux')}
+        {elemRow(zdtLabel,  'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel')}
+      </>)}
+
+      {show_expert_rows && tp(<>
+        {tagHeader}
+        {tagRow(t('Menu.Transformation.tagNode'),  'addTagNode',  'removeTagNode',  'tagNode')}
+        {tagRow(t('Menu.Transformation.tagFlux'),  'addTagFlux',  'removeTagFlux',  'tagFlux')}
+        {tagRow(t('Menu.Transformation.tagLevel'), 'addTagLevel', 'removeTagLevel', 'tagLevel')}
+      </>)}
+
+      {show_expert_rows && tp(<>
+        {tagHeader}
+        {tagRow(t('Menu.Transformation.tagData'), 'addTagData', 'removeTagData', 'tagData')}
+        <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
+            <Box layerStyle='options_4cols'>{btn('Values', 'X')}</Box>
+          </Box>
+        </OSTooltip>
+      </>)}
+
+      {tp(<>
+        <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
+            <Box layerStyle='options_4cols'>
+              {btn('attrDrawingArea', 'X')}
+              {btn('scale', t('Menu.Transformation.scale'))}
+            </Box>
+          </Box>
+        </OSTooltip>
+        <OSTooltip label={t('Menu.Transformation.tooltips.Styles')}>
+          <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Styles')}</Box>
+            <Box layerStyle='options_4cols'>
+              {btn('styleDA', 'X')}
+              {btn_disabled('styleNode', nodeLabel, !attrs.includes('styleDA'))}
+              {btn_disabled('styleFlux', fluxLabel, !attrs.includes('styleDA'))}
+              {btn_disabled('styleFreeLabel', zdtLabel, !attrs.includes('styleDA'))}
+            </Box>
+          </Box>
+        </OSTooltip>
+      </>)}
+
+      {show_expert_rows && extra_tab && tp(extra_tab.render(attrs, onToggle, t))}
+
+    </TabPanels>
+  </Tabs>
+}
+
+// ===========================================================================
 
 /**
  *
@@ -51,7 +224,7 @@ export const ApplyLayoutDialog = ({
   const [, setForceUpdate] = useState(true)
   const [mode_trans, set_mode_trans] = useState('simple')
 
-  ref_to_updater_modal_apply_layout.current = () => setForceUpdate(b => !b)
+  ref_to_updater_modal_apply_layout.current = () => setForceUpdate((b: boolean) => !b)
 
   const simple_element_to_transform = [
     'posNode', 'posFlux',
@@ -59,9 +232,10 @@ export const ApplyLayoutDialog = ({
     'attrDrawingArea'
   ]
   const default_element_to_transform = [
-    'posNode', 'posFlux',
-    'attrNode', 'attrFlux',
-    'attrDrawingArea'
+    'posNode', 'posFlux', 'posFreeLabel',
+    'attrNode', 'attrFlux', 'attrFreeLabel',
+    'attrDrawingArea',
+    'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'
   ]
 
   const content_modal_layout = <Box layerStyle='menuconfigpanel_grid' >
@@ -116,265 +290,36 @@ export const ApplyLayoutDialog = ({
       </Box>
     </OSTooltip>
 
-    {mode_trans != 'simple' ?
-      <OSTooltip label={t('Menu.Transformation.tooltips.Topology')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Topology')}</Box>
-          <Box layerStyle='options_4cols' >
-            <Button
-              variant={data_var_to_update.includes('addNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('addNode')) {
-                  data_var_to_update.push('addNode')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('addNode'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{t('Menu.Transformation.addNode')}</Button>
-            <Button
-              variant={data_var_to_update.includes('removeNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('removeNode')) {
-                  data_var_to_update.push('removeNode')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('removeNode'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{t('Menu.Transformation.removeNode')}</Button>
-            <Button
-              variant={data_var_to_update.includes('addFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('addFlux')) {
-                  data_var_to_update.push('addFlux')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('addFlux'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }>{t('Menu.Transformation.addFlux')}</Button>
-            <Button
-              variant={data_var_to_update.includes('removeFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('removeFlux')) {
-                  data_var_to_update.push('removeFlux')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('removeFlux'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }>{t('Menu.Transformation.removeFlux')}</Button>
-          </Box>
-        </Box></OSTooltip> : <></>}
-
-    {/* Taille et pos des noeud/flux */}
-    <OSTooltip label={t('Menu.Transformation.tooltips.Geometry')}  >
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Geometry')}</Box>
-        <Box layerStyle='options_4cols' >
-          <Button
-            variant={data_var_to_update.includes('posNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => {
-              if (!data_var_to_update.includes('posNode')) {
-                data_var_to_update.push('posNode')
-                menu_configuration.updateComponentApplyLayout()
-              } else {
-                data_var_to_update.splice(data_var_to_update.indexOf('posNode'), 1)
-                menu_configuration.updateComponentApplyLayout()
-              }
-            }
-            }>{t('Menu.Transformation.PosNoeud')}</Button>
-          <Button
-            variant={data_var_to_update.includes('posFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => {
-              if (!data_var_to_update.includes('posFlux')) {
-                data_var_to_update.push('posFlux')
-                menu_configuration.updateComponentApplyLayout()
-              } else {
-                data_var_to_update.splice(data_var_to_update.indexOf('posFlux'), 1)
-                menu_configuration.updateComponentApplyLayout()
-              }
-            }
-            }> {t('Menu.Transformation.posFlux')}</Button>
-        </Box>
-
-      </Box>
-    </OSTooltip>
-
-    {/* Valeur des flux */}
-    {mode_trans != 'simple' ?
-      <OSTooltip label={t('Menu.Transformation.tooltips.Values')}>
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Values')}</Box>
-          <Box layerStyle='options_4cols' >
-            <Button
-              variant={data_var_to_update.includes('Values') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('Values')) {
-                  data_var_to_update.push('Values')
-                  // Also need dataTags because we can't only import values without the structur of dataTags
-                  // (but we can import dataTags without values)
-                  if (!data_var_to_update.includes('tagData')) {
-                    data_var_to_update.push('tagData')
-                  }
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('Values'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{data_var_to_update.includes('Values') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
-          </Box>
-        </Box></OSTooltip> : <></>}
-
-    <OSTooltip label={t('Menu.Transformation.tooltips.Attribut')} >
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'><Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Attribut')}</Box>
-        <Box layerStyle='options_4cols' >
-          <Button
-            variant={data_var_to_update.includes('attrNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => {
-              if (!data_var_to_update.includes('attrNode')) {
-                data_var_to_update.push('attrNode')
-                menu_configuration.updateComponentApplyLayout()
-
-              } else {
-                data_var_to_update.splice(data_var_to_update.indexOf('attrNode'), 1)
-                menu_configuration.updateComponentApplyLayout()
-              }
-            }
-            }
-          >{t('Menu.Transformation.attrNode')}</Button>
-          <Button
-            variant={data_var_to_update.includes('attrFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => {
-              if (!data_var_to_update.includes('attrFlux')) {
-                data_var_to_update.push('attrFlux')
-                menu_configuration.updateComponentApplyLayout()
-              } else {
-                data_var_to_update.splice(data_var_to_update.indexOf('attrFlux'), 1)
-                menu_configuration.updateComponentApplyLayout()
-              }
-            }
-            }
-          >{t('Menu.Transformation.attrFlux')}</Button>
-        </Box>
-      </Box></OSTooltip>
-
-    {/* Etiquette */}
-    {mode_trans == 'expert' ?
-      <OSTooltip label={t('Menu.Transformation.tooltips.Tags')} >
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.Tags')}</Box>
-          <Box layerStyle='options_4cols' >
-            <Button
-              variant={data_var_to_update.includes('tagNode') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('tagNode')) {
-                  data_var_to_update.push('tagNode')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('tagNode'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-
-                }
-              }
-              }
-            >{t('Menu.Transformation.tagNode')}</Button>
-            <Button
-              variant={data_var_to_update.includes('tagFlux') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('tagFlux')) {
-                  data_var_to_update.push('tagFlux')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('tagFlux'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{t('Menu.Transformation.tagFlux')}</Button>
-            <Button
-              variant={data_var_to_update.includes('tagData') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('tagData')) {
-                  data_var_to_update.push('tagData')
-                  menu_configuration.updateComponentApplyLayout()
-                } else if (!data_var_to_update.includes('Values')) {
-                  data_var_to_update.splice(data_var_to_update.indexOf('tagData'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{t('Menu.Transformation.tagData')}</Button>
-          </Box>
-        </Box></OSTooltip> : <></>}
-
-    {/* Aggrégation */}
-    {mode_trans == 'expert' ?
-      <OSTooltip label={t('Menu.Transformation.tooltips.tagLevel')} >
-        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-          <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.tagLevel')}</Box>
-          <Box layerStyle='options_4cols' >
-            <Button
-              variant={data_var_to_update.includes('tagLevel') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-              onClick={() => {
-                if (!data_var_to_update.includes('tagLevel')) {
-                  data_var_to_update.push('tagLevel')
-                  menu_configuration.updateComponentApplyLayout()
-                } else {
-                  data_var_to_update.splice(data_var_to_update.indexOf('tagLevel'), 1)
-                  menu_configuration.updateComponentApplyLayout()
-                }
-              }
-              }
-            >{data_var_to_update.includes('tagLevel') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
-          </Box>
-        </Box></OSTooltip> : <></>}
-
-    <OSTooltip label={t('Menu.Transformation.tooltips.attrDrawingArea')} >
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.attrGeneral')}</Box>
-        <Box layerStyle='options_4cols' >
-          <Button
-            variant={data_var_to_update.includes('attrDrawingArea') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => {
-              if (!data_var_to_update.includes('attrDrawingArea')) {
-                data_var_to_update.push('attrDrawingArea')
-                menu_configuration.updateComponentApplyLayout()
-              } else {
-                data_var_to_update.splice(data_var_to_update.indexOf('attrDrawingArea'), 1)
-                menu_configuration.updateComponentApplyLayout()
-              }
-            }
-            }
-          >{data_var_to_update.includes('attrDrawingArea') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
-        </Box>
-      </Box></OSTooltip>
-    {mode_trans == 'expert' ? <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-      <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.freeLabels')}</Box>
-      <Box layerStyle='options_4cols' >
-        <Button
-          variant={data_var_to_update.includes('freeLabels') ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => {
-            if (!data_var_to_update.includes('freeLabels')) {
-              data_var_to_update.push('freeLabels')
-            } else {
-              data_var_to_update.splice(data_var_to_update.indexOf('freeLabels'), 1)
-            }
-            menu_configuration.updateComponentApplyLayout()
-          }
-          }
-        >{data_var_to_update.includes('freeLabels') ? new_data.icon_library.icon_activated : new_data.icon_library.icon_unactivated}</Button>
-      </Box>
-    </Box> : <></>}
+    <UpdateModeGrid
+      attrs={data_var_to_update}
+      extra_tab={menu_configuration.extra_apply_layout_tab}
+      is_row_disabled={menu_configuration.apply_layout_is_row_disabled}
+      onToggle={key => {
+        const elem_style_keys = ['styleNode', 'styleFlux', 'styleFreeLabel']
+        if (!data_var_to_update.includes(key)) {
+          data_var_to_update.push(key)
+          // Values requires addTagData to create missing value slots in target
+          if (key === 'Values' && !data_var_to_update.includes('addTagData'))
+            data_var_to_update.push('addTagData')
+          // element style buttons require styleDA
+          if (elem_style_keys.includes(key) && !data_var_to_update.includes('styleDA'))
+            data_var_to_update.push('styleDA')
+        } else {
+          // Prevent removing addTagData while Values depends on it
+          if (key === 'addTagData' && data_var_to_update.includes('Values')) return
+          data_var_to_update.splice(data_var_to_update.indexOf(key), 1)
+          // disabling styleDA also disables element styles
+          if (key === 'styleDA')
+            elem_style_keys.forEach(k => {
+              const i = data_var_to_update.indexOf(k)
+              if (i >= 0) data_var_to_update.splice(i, 1)
+            })
+        }
+        menu_configuration.updateComponentApplyLayout()
+      }}
+      t={t}
+      show_expert_rows={mode_trans !== 'simple'}
+    />
   </Box>
 
   const dragLayout = <MenuDraggable
@@ -389,50 +334,46 @@ export const ApplyLayoutDialog = ({
 
 export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const { t, data_var_to_update } = app_data
+  const view_sources = app_data.layout_view_sources
+  const has_views = view_sources.length > 0
+
+  const [source_mode, set_source_mode] = useState<'file' | 'view'>('file')
   const [file_layout, set_file_layout] = useState<FileList | null>(null)
+  const [selected_view_id, set_selected_view_id] = useState<string>(view_sources[0]?.id ?? '')
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleFileLoad = async () => {
-    if (!file_layout || file_layout.length === 0) {
-      console.warn('Aucun fichier sélectionné')
-      return
-    }
+  const applySourceDA = (tmp_DA: ReturnType<typeof app_data.createNewDrawingArea>, source_json?: Type_JSON) => {
+    const expanded_mode = app_data.expandLayoutMode(data_var_to_update)
+    app_data.drawing_area.bypass_redraws = true
+    updateFrom(app_data.drawing_area, tmp_DA, expanded_mode)
+    app_data.drawing_area.draw()
+    app_data.post_apply_layout_callback?.(tmp_DA, source_json ?? null, expanded_mode)
+  }
 
+  const handleFileLoad = async () => {
+    if (!file_layout || file_layout.length === 0) return
     const file = file_layout[0]
     setIsProcessing(true)
-
     try {
-      console.log(`📁 Traitement du fichier: ${file.name}`)
-
-      // Détecter le type de compression
-      const compressionType = detectCompressionType(file.name)
-      console.log(`🔍 Type de compression détecté: ${compressionType}`)
-
-      // Décompresser et parser le fichier
       const json_object: DecompressedJSONData = await decompressUploadedFileUniversal(file)
-
-      console.log('✅ Fichier traité avec succès, application des données...')
-
-      // Appliquer les données comme dans votre code original
       const tmp_DA = app_data.createNewDrawingArea()
       tmp_DA.bypass_redraws = true
-      DrawingAreaPersistence.fromJSON(tmp_DA,json_object as Type_JSON)
+      app_data.loadDrawingAreaFromJSON(tmp_DA, json_object as Type_JSON)
       tmp_DA.afterFromJSON()
-      app_data.drawing_area.bypass_redraws = true
-      updateFrom(app_data.drawing_area,tmp_DA, data_var_to_update)
-      app_data.drawing_area.draw()
-      console.log('✅ Données appliquées avec succès')
-
+      applySourceDA(tmp_DA, json_object as Type_JSON)
     } catch (error) {
       console.error('❌ Erreur lors du traitement du fichier:', error)
-
-      // Optionnel: afficher une notification d'erreur à l'utilisateur
-      // Vous pouvez adapter selon votre système de notifications
       alert(`Erreur lors du chargement du fichier: ${error instanceof Error ? error.message : 'Erreur inconnue'}`)
-
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleViewLoad = () => {
+    if (!selected_view_id) return
+    const tmp_DA = app_data.getDrawingAreaFromViewId(selected_view_id)
+    if (!tmp_DA) return
+    applySourceDA(tmp_DA)
   }
 
   return (
@@ -440,14 +381,27 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
       <Box as='span' layerStyle='menuconfigpanel_part_title_2'>
         {t('Menu.Transformation.fmep')}
       </Box>
-      <Box layerStyle='menuconfigpanel_row_2cols'>
+
+      {has_views && <Box layerStyle='menuconfigpanel_row_2cols' style={{ marginBottom: '6px' }}>
+        <Box layerStyle='menuconfigpanel_option_name'>{t('Menu.Transformation.sourceType')}</Box>
+        <Box layerStyle='options_2cols'>
+          <Button
+            variant={source_mode === 'file' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => set_source_mode('file')}
+          >{t('Menu.Transformation.sourceFile')}</Button>
+          <Button
+            variant={source_mode === 'view' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => set_source_mode('view')}
+          >{t('Menu.Transformation.sourceView')}</Button>
+        </Box>
+      </Box>}
+
+      {source_mode === 'file' ? <Box layerStyle='menuconfigpanel_row_2cols'>
         <Input
           type="file"
           aria-label=''
           accept=".json,.json.gz,.json.zip,.json.br,.json.deflate,.gz,.zip,.br,.deflate"
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) =>
-            set_file_layout(evt.target.files)
-          }
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => set_file_layout(evt.target.files)}
         />
         <Box layerStyle='options_2cols'>
           <Button
@@ -461,14 +415,28 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
           </Button>
           <Button
             variant='menuconfigpanel_option_button'
-            onClick={() => {
-              // set_sankey_data(JSON.parse(JSON.stringify(prev_sankey_data)))
-            }}
+            onClick={() => { /* undo placeholder */ }}
           >
             {t('Menu.Transformation.undo')}
           </Button>
         </Box>
-      </Box>
+      </Box> : <Box layerStyle='menuconfigpanel_row_2cols'>
+        <Select
+          value={selected_view_id}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => set_selected_view_id(evt.target.value)}
+        >
+          {view_sources.map(v => (
+            <option key={v.id} value={v.id}>{v.name}</option>
+          ))}
+        </Select>
+        <Button
+          variant='menuconfigpanel_option_button'
+          onClick={handleViewLoad}
+          disabled={!selected_view_id}
+        >
+          {t('Menu.Transformation.ad')}
+        </Button>
+      </Box>}
     </Box>
   )
 }

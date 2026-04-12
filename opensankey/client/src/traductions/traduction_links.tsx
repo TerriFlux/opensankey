@@ -45,12 +45,14 @@ export const resources_flux = {
           ratio_target_parent: 'Ratio parent flux(right)',
           unit_ratio: 'Coeff. units conversion',
           edit_value: 'Edit value',
+          value_target: 'Dest. value',
           affichage: 'Label',
           tooltips: {
             data_type: 'Data type',
             vpp: 'Data associated to the selected link and, if existing, for the selected tag(s)',
             scientificNotation: 'Activate or not the notation in scientific format, for the display of the link\'s data on the Sankey diagram',
-            affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram'
+            affichage: 'Replacement text for the display of the link\'s data on the Sankey diagram',
+            value_target: 'Destination value for tapered links (leave empty for uniform thickness)'
           }
         },
         apparence: {
@@ -79,9 +81,11 @@ export const resources_flux = {
           tooltips: {
             color_source: {
               def: 'Choose what rule define flow color :',
-              flow: ' Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
-              source: 'Color is defined by node source color',
-              target: 'Color is defined by node target color',
+              flow: 'Color is defined by flow parameter (default color, flow tag\'s color or data tag\'s color)',
+              source: 'Color is defined by source node color',
+              target: 'Color is defined by target node color',
+              gradient: 'Color is a gradient from source node color to target node color',
+              auto: 'Color is determined automatically using this priority:\n1. Common color tag between source and target\n2. Only one side has a color tag → take that side\n3. Both have tags (no common) → prefer the product node\n4. No color tags → prefer the product node\n5. Fallback: source color',
               disabled: 'Rule doesn\'t allow to choose flow color'
             },
             couleur: 'Choose the color for the selected link(s)',
@@ -192,12 +196,14 @@ export const resources_flux = {
           ratio_source_parent: 'Ratio flux parent(à gauche)',
           ratio_target_parent: 'Ratio flux parent(à droite)',
           unit_ratio: 'Coeff. conversion unités',
+          value_target: 'Valeur dest.',
           affichage: 'Label',
           tooltips: {
             data_type: 'Type de données',
             vpp: 'Valeur associée au flux sélectionné et, si existant(s), pour le/les tag(s) de flux selectionné(s)',
             scientificNotation: 'Activer ou non la notation en format scientifique, pour l\'affichage de la valeur du flux sur le diagramme de Sankey',
-            affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey'
+            affichage: 'Texte de remplacement de l\'affichage de la valeur du flux sur le diagramme de Sankey',
+            value_target: 'Valeur à la destination pour les flux en forme de trapèze (laisser vide pour une épaisseur uniforme)'
           }
         },
         apparence: {
@@ -229,11 +235,13 @@ export const resources_flux = {
           tooltips: {
             couleur: 'Choisir la couleur pour le/les flux sélectionné(s)',
             color_source: {
-              def: 'Choisir la règle qui définie la couleur du flux',
-              flow: 'La couleur est définie avec les paramètres liées au flux (couleur, couleur des étiquettes de flux ou données)',
-              source: 'La couleur est définie par la couelur du noeud source',
-              target: 'La couleur est définie par la couelur du noeud cible',
-              disabled: 'La règle ne permet pas modifier la couleur du flux'
+              def: 'Choisir la règle qui définit la couleur du flux',
+              flow: 'La couleur est définie par les paramètres du flux (couleur par défaut, couleur des étiquettes de flux ou des données)',
+              source: 'La couleur est définie par la couleur du nœud source',
+              target: 'La couleur est définie par la couleur du nœud cible',
+              gradient: 'La couleur est un dégradé de la couleur du nœud source vers la couleur du nœud cible',
+              auto: 'La couleur est déterminée automatiquement selon cet ordre de priorité :\n1. Tag couleur commun entre source et cible\n2. Un seul côté a un tag couleur → prendre ce côté\n3. Les deux ont des tags (pas de commun) → préférer le nœud produit\n4. Pas de tags couleur → préférer le nœud produit\n5. Par défaut : couleur source',
+              disabled: 'La règle ne permet pas de modifier la couleur du flux'
             },
             grad: 'Applique un effet de gradient de couleur sur le/les flux sélectionné(s). Le gradient est réalisé entre la couleur du noeud de départ et celle du noeud d\'arrivée',
             shape_is_dashed: 'Applique un effet de hachure sur le/les flux sélectionné(s)',

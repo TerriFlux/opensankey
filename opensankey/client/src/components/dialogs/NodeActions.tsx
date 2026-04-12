@@ -495,11 +495,19 @@ export class NodeActions {
   createTiedZdt = () => {
     const cont = this.drawing_area.sankey.addNewDefaultContainer()
     cont.tied_to_nodes = true
-    this.drawing_area.selected_nodes_list.forEach(node => {
-      node.getListDescendantOfNode().forEach(n => {
+    this.drawing_area.selected_nodes_list.forEach(n => {
+      // node.getListDescendantOfNode().forEach(n => {
+      //   cont.attachNodeToCont(n)
+      // })
+      // cont.attachNodeToCont(node)
+        n.getListDescendantOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
+        n.getListAncestorOfNode().forEach(node => {
+          cont.attachNodeToCont(node)
+        })
         cont.attachNodeToCont(n)
-      })
-      cont.attachNodeToCont(node)
+        cont.computeSizeAndPositionFromAttachedNodes()
     })
     this.drawing_area.draw()
   }
@@ -507,7 +515,7 @@ export class NodeActions {
   moveToFirstPlan = () => {
     this.drawing_area.selected_nodes_list.forEach(node => {
       const idx_to_shift = this.drawing_area.list_g_element.indexOf(node.id)
-      this.drawing_area.moveOrderElementInDA(idx_to_shift, this.drawing_area.list_g_element.length - 1)
+      this.drawing_area.moveOrderElementInDA(idx_to_shift, 0)
     })
     //this.closeContextMenu()
   }
@@ -515,7 +523,7 @@ export class NodeActions {
   moveToLastPlan = () => {
     this.drawing_area.selected_nodes_list.forEach(node => {
       const idx_to_shift = this.drawing_area.list_g_element.indexOf(node.id)
-      this.drawing_area.moveOrderElementInDA(idx_to_shift, 0)
+      this.drawing_area.moveOrderElementInDA(idx_to_shift, this.drawing_area.list_g_element.length - 1)
     })
     //this.closeContextMenu()
   }
@@ -531,6 +539,12 @@ export class NodeActions {
     this.selected_nodes.forEach(n => {
       n.input_links_list.forEach(l => this.drawing_area.addElementToSelection(l))
     })
+    this.refreshAndSave()
+  }
+
+  copyElement = () => {
+    this.drawing_area.copyNodes(this.selected_nodes.map(n => n.id))
+    this.closeContextMenu()
     this.refreshAndSave()
   }
 
@@ -590,6 +604,7 @@ export class NodeActions {
       moveToLastPlan: nodeActions.moveToLastPlan,
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
+      copyElement: nodeActions.copyElement,
 
       // Actions dynamiques générées pour les dimensions
       // ...setChildActions,

@@ -210,8 +210,11 @@ export const SankeyMenu = (
                 layerStyle='menubottom_item_style'
                 justifySelf='end'
                 paddingRight='1.5rem'
+                display='flex'
+                alignItems='center'
+                gap='0.5rem'
               >
-              12 bis rue Séraphin Martin, 38430 Moirans  +33 (0)6 21 83 56 76
+                {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
               </Box>
             </Box> :
             <></>
@@ -346,6 +349,12 @@ const ConfigMenu = ({ app_data, additional_menus }: {
         maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)',
         overflowY: 'auto',
         overflowX: 'hidden'
+      }}
+      onMouseDownCapture={() => {
+        // Auto-exit edition mode as soon as the user interacts with the configuration menu
+        if (app_data.drawing_area.isInEditionMode()) {
+          app_data.drawing_area.switchMode()
+        }
       }}
     >
       <ConfigContent app_data={app_data} additional_menus={additional_menus} />
@@ -495,7 +504,7 @@ const ConfigMenuElementToConfig = ({ app_data, additional_menus }:
 
   const dict_buttons_element_to_config: typeButtonElementConfigurable = {
     'element': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_element'), disabled: false },
-    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object'), disabled: false },
+    'object': { icon: app_data.icon_library.icon_object, text: t('Menu.Config.element_object0'), disabled: false },
     'flow': { icon: app_data.icon_library.icon_flow, text: t('Menu.Config.element_flow'), disabled: false },
     'DA': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_graph'), disabled: false },
     'legend': { icon: app_data.icon_library.icon_graph, text: t('Menu.Config.element_legend'), disabled: false },

@@ -66,6 +66,23 @@ export class NodeDrawShape {
   `
   }
 
+  private getHorizontalCapsulePath(): string {
+    const height = this._node.getShapeHeightToUse()
+    const radius = height / 2
+    const width = this._node.getShapeWidthToUse() + 2 * radius
+    const straightWidth = Math.max(0, width - 2 * radius)
+
+    // Construction du path pour une capsule horizontale
+    return `
+    M ${radius},0
+    h ${straightWidth}
+    a ${radius},${radius} 0 0,1 0,${height}
+    h ${-straightWidth}
+    a ${radius},${radius} 0 0,1 0,${-height}
+    Z
+  `
+  }
+
   /**
    * Draw node shape on d3 svg
    */
@@ -107,13 +124,22 @@ export class NodeDrawShape {
         .classed('node', true)
         .classed('node_shape', true)
         .attr('d', this.getCapsulePath())
+    } else if (this._node.shape_type === 'capsule_h') {
+      this._node.d3_selection_g_shape?.append('path')
+        .classed('node', true)
+        .classed('node_shape', true)
+        .attr('d', this.getHorizontalCapsulePath())
     }
     let margin_top = this._node.shape_margin_top
     if (this._node.shape_type === 'capsule') {
       margin_top = this._node.getShapeWidthToUse()/2
     }
+    let margin_left = this._node.shape_margin_left
+    if (this._node.shape_type === 'capsule_h') {
+      margin_left = this._node.getShapeHeightToUse()/2
+    }
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
-      .attr('transform', 'translate(' + -1* this._node.shape_margin_left + ',' + -1*margin_top+ ')')
+      .attr('transform', 'translate(' + -1* margin_left + ',' + -1*margin_top+ ')')
 
     // Apply common properties
     this._node.d3_selection_g_shape?.selectAll('.node_shape')

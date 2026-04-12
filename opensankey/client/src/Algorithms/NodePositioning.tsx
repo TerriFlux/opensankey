@@ -342,60 +342,83 @@ export class NodePositioning {
   /**
    * Explore all node's branches to compute all their nodes horizontal index
    *
-   * @param {Class_NodeElement} node Node to start exploring from
+   * @param {Class_NodeElement} start_node Node to start exploring from
    * @param {Class_NodeElement[]} nodes_to_process
    * @param {number} starting_index
-   * @param {string[]} visited_nodes_ids List of nodes (by their id) that have been visited. Helps to find recycling flux
+   * @param {string[]} _visited_nodes_ids Unused (kept for API compatibility)
    * @param {string[]} recycling_links_ids Links (by their id) that are detected as recycling link
    * @param {object} horizontal_indexes_per_nodes_ids Current horizontal index for given node id
    */
   public computeHorizontalIndex(
-    node: Class_NodeElement,
+    start_node: Class_NodeElement,
     nodes_to_process: Class_NodeElement[],
     starting_index: number,
-    visited_nodes_ids: string[],
+    _visited_nodes_ids: string[],
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
   ) {
-    // Update node index
-    if (!horizontal_indexes_per_nodes_ids[node.id]) {
-      horizontal_indexes_per_nodes_ids[node.id] = starting_index
-    }
-    else {
-      if (starting_index > horizontal_indexes_per_nodes_ids[node.id]) {
-        horizontal_indexes_per_nodes_ids[node.id] = starting_index
-      }
-    }
+    const nodes_set = new Set(nodes_to_process.map(n => n.id))
+    const recycling_set = new Set(recycling_links_ids)
 
-    // From current node, use output links to recurse on following node
-    node
-      .output_links_list
-      .filter(link =>
-      // Computes only for link to visible nodes
-      // and not for nodes related to recycling flux
-      (nodes_to_process.includes(this.drawingArea.sankey.links_dict[link.id].target as Class_NodeElement) &&
-        !recycling_links_ids.includes(link.id)))
-      .forEach(link => {
-        // Next node to recurse on
-        const next_node = this.drawingArea.sankey.nodes_dict[this.drawingArea.sankey.links_dict[link.id].target.id]
-        // But first we check if next node has not been already visited
-        if (!visited_nodes_ids.includes(next_node.id)) {
-          // Recursive calling
-          this.computeHorizontalIndex(
-            next_node,
-            nodes_to_process,
-            starting_index + 1,
-            [...visited_nodes_ids, node.id],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        }
-        else {
-          // If next node has already been visited then this means
-          // that link between current node and next node is a recycling flux
+    // Phase 1 : DFS itératif — détection de cycles + ordre topologique
+    const color = new Map<string, 'gray' | 'black'>()
+    const topo_order: Class_NodeElement[] = []
+    const dfs_stack: [Class_NodeElement, 'enter' | 'exit'][] = [[start_node, 'enter']]
+
+    while (dfs_stack.length > 0) {
+      const [node, phase] = dfs_stack.pop()!
+
+      if (phase === 'exit') {
+        color.set(node.id, 'black')
+        topo_order.push(node)
+        continue
+      }
+
+      const c = color.get(node.id)
+      if (c === 'black' || c === 'gray') continue
+
+      color.set(node.id, 'gray')
+      dfs_stack.push([node, 'exit'])
+
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (!link_data) return
+        const target_id = link_data.target.id
+        if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
+
+        const c_target = color.get(target_id)
+        if (c_target === 'gray') {
           recycling_links_ids.push(link.id)
+          recycling_set.add(link.id)
+        } else if (c_target !== 'black') {
+          dfs_stack.push([this.drawingArea.sankey.nodes_dict[target_id], 'enter'])
         }
       })
+    }
+
+    // Phase 2 : relaxation en ordre topologique (topo_order[last] = start_node)
+    if (horizontal_indexes_per_nodes_ids[start_node.id] === undefined ||
+        starting_index > horizontal_indexes_per_nodes_ids[start_node.id]) {
+      horizontal_indexes_per_nodes_ids[start_node.id] = starting_index
+    }
+
+    for (let i = topo_order.length - 1; i >= 0; i--) {
+      const node = topo_order[i]
+      const node_idx = horizontal_indexes_per_nodes_ids[node.id]
+      if (node_idx === undefined) continue
+
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (!link_data) return
+        const target_id = link_data.target.id
+        if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
+
+        const proposed = node_idx + 1
+        if (proposed > (horizontal_indexes_per_nodes_ids[target_id] ?? -Infinity)) {
+          horizontal_indexes_per_nodes_ids[target_id] = proposed
+        }
+      })
+    }
   }
 
   /**
@@ -645,50 +668,83 @@ export class NodePositioning {
   }
 
   /**
-   * Version améliorée de computeHorizontalIndex qui évite les problèmes de positionnement
+   * Version améliorée de computeHorizontalIndex qui évite les problèmes de positionnement.
+   * Algorithme : DFS itératif pour tri topologique + détection de cycles,
+   * puis relaxation en une passe (chemin le plus long). O(V+E).
    */
   private computeHorizontalIndexImproved(
-    node: Class_NodeElement,
+    start_node: Class_NodeElement,
     nodes_to_process: Class_NodeElement[],
     starting_index: number,
-    visited_nodes_ids: string[],
+    _initial_visited: string[],
     recycling_links_ids: string[],
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number }
   ) {
-    // Mettre à jour l'index du nœud actuel
-    const current_index = Math.max(starting_index, horizontal_indexes_per_nodes_ids[node.id] || 0)
-    horizontal_indexes_per_nodes_ids[node.id] = current_index
+    const nodes_set = new Set(nodes_to_process.map(n => n.id))
+    const recycling_set = new Set(recycling_links_ids)
 
-    console.log(`📍 Nœud ${node.id}: index ${current_index}`)
+    // Phase 1 : DFS itératif — détection de cycles + ordre topologique
+    // Couleurs : undefined = non visité, 'gray' = en cours, 'black' = terminé
+    const color = new Map<string, 'gray' | 'black'>()
+    const topo_order: Class_NodeElement[] = []
+    const dfs_stack: [Class_NodeElement, 'enter' | 'exit'][] = [[start_node, 'enter']]
 
-    // Parcourir les liens sortants
-    node.output_links_list
-      .filter(link => {
-        const target = this.drawingArea.sankey.links_dict[link.id].target
-        return nodes_to_process.some(n => n.id === target.id) &&
-          !recycling_links_ids.includes(link.id) && link.is_visible
-      })
-      .forEach(link => {
-        const next_node = this.drawingArea.sankey.nodes_dict[
-          this.drawingArea.sankey.links_dict[link.id].target.id
-        ]
+    while (dfs_stack.length > 0) {
+      const [node, phase] = dfs_stack.pop()!
 
-        if (!visited_nodes_ids.includes(next_node.id)) {
-          // Récursion normale
-          this.computeHorizontalIndexImproved(
-            next_node,
-            nodes_to_process,
-            current_index + 1,
-            [...visited_nodes_ids, node.id],
-            recycling_links_ids,
-            horizontal_indexes_per_nodes_ids
-          )
-        } else {
-          // Cycle détecté -> lien de recyclage
-          console.log(`♻️ Lien de recyclage détecté: ${link.id} (${node.id} → ${next_node.id})`)
+      if (phase === 'exit') {
+        color.set(node.id, 'black')
+        topo_order.push(node)  // post-order = topologique inversé
+        continue
+      }
+
+      const c = color.get(node.id)
+      if (c === 'black' || c === 'gray') continue  // déjà traité ou en cours
+
+      color.set(node.id, 'gray')
+      dfs_stack.push([node, 'exit'])
+
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (!link_data || !link.is_visible) return
+        const target_id = link_data.target.id
+        if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
+
+        const c_target = color.get(target_id)
+        if (c_target === 'gray') {
+          // Arête arrière = cycle -> lien de recyclage
           recycling_links_ids.push(link.id)
+          recycling_set.add(link.id)
+        } else if (c_target !== 'black') {
+          dfs_stack.push([this.drawingArea.sankey.nodes_dict[target_id], 'enter'])
         }
       })
+    }
+
+    // Phase 2 : relaxation en ordre topologique (topo_order[last] = start_node)
+    // Initialiser le nœud de départ si pas encore assigné
+    if (horizontal_indexes_per_nodes_ids[start_node.id] < 0) {
+      horizontal_indexes_per_nodes_ids[start_node.id] = starting_index
+    }
+
+    // Parcourir en sens inverse de topo_order = ordre topologique réel
+    for (let i = topo_order.length - 1; i >= 0; i--) {
+      const node = topo_order[i]
+      const node_idx = horizontal_indexes_per_nodes_ids[node.id]
+      if (node_idx < 0) continue  // nœud non initialisé (non atteignable depuis les sources)
+
+      node.output_links_list.forEach(link => {
+        const link_data = this.drawingArea.sankey.links_dict[link.id]
+        if (!link_data || !link.is_visible) return
+        const target_id = link_data.target.id
+        if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
+
+        const proposed = node_idx + 1
+        if (proposed > horizontal_indexes_per_nodes_ids[target_id]) {
+          horizontal_indexes_per_nodes_ids[target_id] = proposed
+        }
+      })
+    }
   }
 
   /**
@@ -1869,10 +1925,17 @@ export class NodePositioning {
    * Reposition visible nodes so that their left/top side is close to a grid line
    */
   protected _arrangeNodesToGrid() {
+    const grid_size = this.drawingArea.grid_size
     this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-      const shift_x = node.position_x - (node.position_x % this.drawingArea.grid_size)// get position so that the node position_x is set to previous horizontal grid line
-      const shift_y = node.position_y - (node.position_y % this.drawingArea.grid_size)// get position so that the node position_y is set to previous vertical grid line
+      const shift_x = node.position_x - (node.position_x % grid_size)
+      const shift_y = node.position_y - (node.position_y % grid_size)
       node.setPosXY(shift_x, shift_y)
+    })
+    Object.values(this.drawingArea.sankey.containers_dict).forEach(container => {
+      if (container.tied_to_nodes) return
+      container.position_x = container.position_x - (container.position_x % grid_size)
+      container.position_y = container.position_y - (container.position_y % grid_size)
+      container.draw()
     })
   }
 
@@ -1965,6 +2028,11 @@ export class NodePositioning {
     const app_data = this.drawingArea.application_data
     const { sankey } = this.drawingArea
     const node_pos = Object.fromEntries(sankey.visible_nodes_list.map(n => [n.id, { x: n.position_x, y: n.position_y }]))
+    const container_pos = Object.fromEntries(
+      Object.entries(sankey.containers_dict)
+        .filter(([, c]) => !c.tied_to_nodes)
+        .map(([id, c]) => [id, { x: c.position_x, y: c.position_y }])
+    )
 
     const _arrangeNodesToGrid = () => {
       this._arrangeNodesToGrid()
@@ -1974,6 +2042,14 @@ export class NodePositioning {
     const inv_arrangeNodesToGrid = () => {
       sankey.visible_nodes_list.forEach(n => {
         n.setPosXY(node_pos[n.id].x, node_pos[n.id].y)
+      })
+      Object.entries(container_pos).forEach(([id, pos]) => {
+        const container = sankey.containers_dict[id]
+        if (container) {
+          container.position_x = pos.x
+          container.position_y = pos.y
+          container.draw()
+        }
       })
     }
 

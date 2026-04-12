@@ -29,7 +29,7 @@ import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRando
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft
+  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -578,6 +578,24 @@ const CapsuleShapeIcon: React.FC<ShapeIconProps> = ({
     height={height}
   >
     <path d="M 4.5,5.5 v 6 a 4,4 0 0,0 8,0 v -6 a 4,4 0 0,0 -8,0 Z" />
+  </svg>
+)
+
+const CapsuleHShapeIcon: React.FC<ShapeIconProps> = ({
+  fill = '#78C2AD',
+  stroke = 'currentColor',
+  width = '1rem',
+  height = '1rem'
+}) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill={fill}
+    stroke={stroke}
+    viewBox='0 0 17 17'
+    width={width}
+    height={height}
+  >
+    <path d="M 4.5,4.5 h 8 a 4,4 0 0,1 0,8 h -8 a 4,4 0 0,1 0,-8 Z" />
   </svg>
 )
 
@@ -1381,10 +1399,24 @@ export const logo_level_tag = <svg
 
 export class Class_IconLibrary {
 
+  protected _icon_verticalize_diagram = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      {/* Horizontal arrow (top) */}
+      <line x1="2" y1="4" x2="11" y2="4" />
+      <polyline points="8.5,1.5 11,4 8.5,6.5" />
+      {/* Vertical arrow (right) */}
+      <line x1="13" y1="6" x2="13" y2="15" />
+      <polyline points="10.5,12.5 13,15 15.5,12.5" />
+      {/* Diagonal dashed line */}
+      <line x1="2" y1="6" x2="11" y2="15" strokeDasharray="2,2" />
+    </svg>
+  )
+
   // Define icon ===================================
   protected _icon_rect_shape = <RectShapeIcon />
   protected _icon_ellipse_shape = <EllipseShapeIcon />
   protected _icon_capsule_shape = <CapsuleShapeIcon />
+  protected _icon_capsule_h_shape = <CapsuleHShapeIcon />
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
@@ -1512,6 +1544,7 @@ export class Class_IconLibrary {
 
   protected _icon_attr_view = <FontAwesomeIcon icon={faListCheck} />
   protected _icon_copy = <FontAwesomeIcon icon={faCopy} />
+  protected _icon_style_paint = <FontAwesomeIcon icon={faBrush} />
 
   protected _icon_delete = <FontAwesomeIcon icon={faDeleteLeft} />
 
@@ -1659,6 +1692,7 @@ private normalizeIcon = (svg: JSX.Element) => (
   public get icon_next() { return this._icon_next }
   public get icon_attr_view() { return this._icon_attr_view }
   public get icon_copy() { return this._icon_copy }
+  public get icon_style_paint() { return this._icon_style_paint }
 
   public get icon_palette_color() { return this._icon_palette_color }
   public get icon_random() { return this._icon_random }
@@ -1704,6 +1738,8 @@ public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_ori
 public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
 public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
 public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+public get icon_capsule_h_shape() { return this.normalizeIcon(this._icon_capsule_h_shape) }
+public get icon_verticalize_diagram() { return this.normalizeIcon(this._icon_verticalize_diagram) }
 public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }
 public get icon_scientific_notation() { return this.normalizeIcon(this._icon_scientific_notation) }
 public get icon_significant_digits() { return this.normalizeIcon(this._icon_significant_digits) }

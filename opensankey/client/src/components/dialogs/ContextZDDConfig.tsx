@@ -4,44 +4,33 @@ import { MenuConfig } from './SankeyMenuContext'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
-    {
-      type: 'button',
-      actionName: 'fromNew'
-    },
+    { type: 'button', actionName: 'clearCurrentView', visibilityConditions: [{ type: 'custom', customCheck: (app_data) => 'has_views' in app_data && (app_data as unknown as { has_views: boolean }).has_views }] },
+    { type: 'button', actionName: 'deleteAllViews' },
     {
       type: 'submenu',
       titleKey: 'Positionnement',
       children: [
-        { type: 'button', actionName: 'toggleParametricMode' },
-        {
-          type: 'button', actionName: 'resetVerticalIntervals',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
+        { type: 'button', actionName: 'transposeDA' },
         { type: 'button', actionName: 'computeAutoPosition' },
         { type: 'button', actionName: 'computeAutoPositionOptim' },
-        {
-          type: 'button', actionName: 'toggleAutoX',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
-        {
-          type: 'button', actionName: 'toggleAutoY',
-          visibilityConditions: [{
-            type: 'custom',
-            customCheck: (app_data) => {
-              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-            }
-          }]
-        },
+        // {
+        //   type: 'button', actionName: 'toggleAutoX',
+        //   visibilityConditions: [{
+        //     type: 'custom',
+        //     customCheck: (app_data) => {
+        //       return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+        //     }
+        //   }]
+        // },
+        // {
+        //   type: 'button', actionName: 'toggleAutoY',
+        //   visibilityConditions: [{
+        //     type: 'custom',
+        //     customCheck: (app_data) => {
+        //       return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+        //     }
+        //   }]
+        // },
         {
           type: 'button', actionName: 'toggleTradeMode',
           visibilityConditions: [{
@@ -111,34 +100,46 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     toggleZDTActivated: {
       type: 'toggle',
       labels: {
-        en: 'ZDT',
-        fr: 'ZDT'
+        en: 'Text Zone',
+        fr: 'Zone de texte'
       },
       tooltips: {
-        en: 'ZDT',
-        fr: 'ZDT'
+        en: 'Text Zone',
+        fr: 'Zone de texte'
       },
       labelsToggle: {
         en: {
-          true: 'Deactivate ZDT ',
-          false: 'Activate ZDT'
+          true: 'Deactivate Text Zone ',
+          false: 'Activate Text Zone'
         },
         fr: {
-          true: 'Désactiver ZDT',
-          false: 'Activer ZDT'
+          true: 'Désactiver zone de texte',
+          false: 'Activer zone de texte'
         }
       },
       getToggleValue: 'toggleZDTActivatedValue'
     },
-    fromNew: {
+    clearCurrentView: {
       type: 'action',
       labels: {
-        en: 'Empty diagram',
+        en: 'Clear view',
+        fr: 'Vider la vue'
+      },
+      tooltips: {
+        en: 'Clear all nodes and links in the current view',
+        fr: 'Supprimer tous les nœuds et flux de la vue courante'
+      }
+    },
+
+    deleteAllViews: {
+      type: 'action',
+      labels: {
+        en: 'New diagram',
         fr: 'Nouveau diagramme'
       },
       tooltips: {
-        en: 'Create a new empty Sankey diagram',
-        fr: 'Créer un nouveau diagramme de Sankey vide'
+        en: 'Delete all views and reset to an empty diagram',
+        fr: 'Supprimer toutes les vues et réinitialiser un diagramme vide'
       }
     },
 
@@ -177,6 +178,18 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: 'Basculer la visibilité de la légende'
       },
       getToggleValue: 'maskLegendValue'
+    },
+
+    transposeDA: {
+      type: 'action',
+      labels: {
+        en: 'Transpose diagram',
+        fr: 'Transposer le diagramme'
+      },
+      tooltips: {
+        en: 'Transpose the diagram: swap horizontal and vertical axes',
+        fr: 'Transposer le diagramme : inverser les axes horizontal et vertical'
+      }
     },
 
     computeAutoPosition: {
@@ -218,25 +231,26 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     toggleParametricMode: {
       type: 'toggle',
       labels: {
-        en: 'Absolute Coordinate',
-        fr: 'Coordonnées absolues'
+        en: 'Absolute coordinate mode',
+        fr: 'Mode position en coordonnées absolues'
       },
       labelsToggle: {
         en: {
-          true: 'Switch to absolute coordinates',
-          false: 'Switch to parametric mode'
+          true: 'Absolute coordinate mode',
+          false: 'Constant vertical offset mode'
         },
         fr: {
-          true: 'Passer en coordonnées absolues',
-          false: 'Passer en mode paramétrique'
+          true: 'Mode position en coordonnées absolues',
+          false: 'Mode position avec écart vertical constant'
         }
       },
       tooltips: {
-        en: 'Toggle between parametric and absolute positioning mode',
-        fr: 'Basculer entre le mode paramétrique et absolu'
+        en: 'Toggle between absolute coordinate mode and constant vertical offset mode',
+        fr: 'Basculer entre le mode coordonnées absolues et le mode écart vertical constant'
       },
       getToggleValue: 'toggleParametricModeValue'
     },
+
     resetVerticalIntervals: {
       type: 'action',
       labels: {
@@ -248,28 +262,28 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: 'Réinitialiser les intervalles verticaux'
       }
     },
-    toggleAutoX: {
-      type: 'toggle',
-      labels: {
-        en: 'Auto X position',
-        fr: 'Position X auto'
-      },
-      labelsToggle: {
-        en: {
-          true: 'Disable auto horizontal positioning',
-          false: 'Enable auto horizontal positioning'
-        },
-        fr: {
-          true: 'Désactiver positionnement horizontal auto',
-          false: 'Activer positionnement horizontal auto'
-        }
-      },
-      tooltips: {
-        en: 'Toggle automatic horizontal positioning of nodes',
-        fr: 'Basculer le positionnement horizontal automatique des nœuds'
-      },
-      getToggleValue: 'toggleAutoXValue'
-    },
+    // toggleAutoX: {
+    //   type: 'toggle',
+    //   labels: {
+    //     en: 'Auto X position',
+    //     fr: 'Position X auto'
+    //   },
+    //   labelsToggle: {
+    //     en: {
+    //       true: 'Disable auto horizontal positioning',
+    //       false: 'Enable auto horizontal positioning'
+    //     },
+    //     fr: {
+    //       true: 'Désactiver positionnement horizontal auto',
+    //       false: 'Activer positionnement horizontal auto'
+    //     }
+    //   },
+    //   tooltips: {
+    //     en: 'Toggle automatic horizontal positioning of nodes',
+    //     fr: 'Basculer le positionnement horizontal automatique des nœuds'
+    //   },
+    //   getToggleValue: 'toggleAutoXValue'
+    // },
 
     toggleTradeMode: {
       type: 'toggle',
@@ -344,8 +358,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     openStyleModal: {
       type: 'action',
       labels: {
-        en: 'Shape styles',
-        fr: 'Styles des formes'
+        en: 'Element styles',
+        fr: 'Styles des éléments'
       },
       tooltips: {
         en: 'Open the node visual style configuration dialog',
@@ -364,7 +378,7 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     //   }
     // }
 
-    
+
   },
 
   sectionTitles: {
@@ -373,8 +387,8 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     //   fr: 'Zone de dessin'
     // },
     Positionnement: {
-      en: 'Automatic Positioning',
-      fr: 'Positionnement Automatique'
+      en: 'Positioning',
+      fr: 'Positionnement'
     },
     GestionCouleurs: {
       en: 'Color Management',
@@ -396,17 +410,19 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
   const saveToCache = () => menu_configuration.ref_to_save_in_cache_indicator.current(false)
   const getNodeStyle = () => sankey.styles_dict['default']
   return {
-    fromNew: () => app_data.reinitialization(),
+    clearCurrentView: () => { app_data.reset({ only_current_view: true }); app_data.drawing_area.draw() },
+    deleteAllViews: () => app_data.reinitialization(),
+    transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
     computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',
     resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
-    toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
-    toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
-    toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
-    toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
+    // toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
+    // toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,
+    // toggleAutoY: () => { },//getNodeStyle().position.auto_y = !getNodeStyle().position.auto_y },
+    // toggleAutoYValue: () => null, //getNodeStyle().position.auto_y,
     toggleTradeMode: () => { sankey.tradeOption() == 'above_below' ? sankey.setTrade(true) : sankey.setTrade(false); saveToCache() },
     toggleTradeValue: () => sankey.tradeOption() == 'above_below',
     applyRandomNodeColors: () => { applyRandomColors(app_data, sankey.nodes_list); saveToCache() },
@@ -414,7 +430,7 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
-    
+
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated
       app_data.drawing_area.draw()

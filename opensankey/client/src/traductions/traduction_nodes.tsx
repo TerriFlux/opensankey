@@ -182,10 +182,14 @@ export const resources_nodes = {
           edes: 'Below',
           lti: 'Identify the links in the table with their colors',
           col: 'Apply',
+          filter_links: 'Links to display',
+          visible_links: 'Visible links',
+          all_links: 'All links',
           tooltips: {
             io: 'Choose either the incoming or outgoing links of the selected node',
             side: 'Choose either the right, left, top or bottom links of the selected node',
-            lti: 'Display the lines of the links table with their respective colors to better identify them'
+            lti: 'Display the lines of the links table with their respective colors to better identify them',
+            filter_links: 'Show only visible links or all links including hidden ones'
           }
         }
       }
@@ -366,10 +370,14 @@ export const resources_nodes = {
           edes: 'En-dessous',
           lti: 'Identifier les flux du tableau avec leurs couleurs',
           col: 'Appliquer',
+          filter_links: 'Flux à afficher',
+          visible_links: 'Flux visibles',
+          all_links: 'Tous les flux',
           tooltips: {
             io: 'Choisir les flux entrants ou sortant du noeud selectionné',
             side: 'Choisir les flux de droite, gauche, bas ou haut du noeud selectionné',
-            lti: 'Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier'
+            lti: 'Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier',
+            filter_links: 'Afficher uniquement les flux visibles ou tous les flux y compris les masqués'
           }
         }
       }

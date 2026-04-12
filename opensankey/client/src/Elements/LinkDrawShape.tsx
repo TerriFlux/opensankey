@@ -88,7 +88,7 @@ export class LinkDrawShape {
       const xf = this._link.position_x_end
       const yf = this._link.position_y_end
       const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = show_as_dash || /*Math.abs(yf - y0) < 50 ||*/ ((dist / thickness) > 2) || this._link.shape_is_recycling
+      const show_as_path = (show_as_dash || /*Math.abs(yf - y0) < 50 ||*/ ((dist / thickness) > 2) || this._link.shape_is_recycling) && !this._link.isTapered
 
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_type !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {
@@ -108,7 +108,7 @@ export class LinkDrawShape {
           .attr('stroke-width', '0')
       }
       else {
-        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.linkIsStructure())
+        const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.linkIsStructure()) || this._link.isTapered
         let path = ''
         if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
         else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
@@ -116,7 +116,8 @@ export class LinkDrawShape {
 
         const da = this._link.sankey.drawing_area
 
-        const is_stroke = !bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.linkIsStructure()))
+        // Tapered links must always use fill (not stroke) since stroke-width is uniform
+        const is_stroke = !this._link.isTapered && (!bezier_outline || (!this._link.shape_is_curved && !(this._link.shape_border_visible && !this._link.linkIsStructure())))
 
         // =================== BORDURE (si visible) ===================
         // ✅ Ajout de la condition pour bezier_outline
@@ -555,42 +556,50 @@ export class LinkDrawShape {
 
       // Pour is_outline, différencier selon l'orientation
       if (this._link.shape_orientation === 'hh' || this._link.shape_orientation === 'vv') {
-        // Ancien calcul pour hh et vv
-        let shift_x = 0
+        // Source and target half-thicknesses (supports tapered/trapezoid links)
+        const halfSrc = this._link.thicknessSource / 2
+        const halfTgt = this._link.thicknessTarget / 2
+
+        // Shift per axis: x2 control point is near source, x4 is near target
+        let sx0 = 0, sx1 = 0, sx2 = 0, sx4 = 0, sx5 = 0, sx6 = 0
+        let sy0 = 0, sy1 = 0, sy2 = 0, sy4 = 0, sy5 = 0, sy6 = 0
         if (this._link.shape_orientation == 'vv') {
-          shift_x = this._link.thickness / 2
+          sx0 = halfSrc; sx1 = halfSrc; sx2 = halfSrc
+          sx4 = halfTgt; sx5 = halfTgt; sx6 = halfTgt
         }
-        let shift_y = 0
         if (this._link.shape_orientation == 'hh') {
-          shift_y = this._link.thickness / 2
+          sy0 = halfSrc; sy1 = halfSrc; sy2 = halfSrc
+          sy4 = halfTgt; sy5 = halfTgt; sy6 = halfTgt
         }
 
-        x0 = x0 - shift_x
-        y0 = y0 - shift_y
-        x6 = x6 - shift_x
-        y6 = y6 - shift_y
+        // Upper edge (shifted by -half, source thickness at source end, target at target end)
+        const x0u = x0 - sx0, y0u = y0 - sy0
+        const x1u = x1 - sx1, y1u = y1 - sy1
+        const x2u = x2 - sx2, y2u = y2 - sy2
+        const x4u = x4 - sx4, y4u = y4 - sy4
+        const x5u = x5 - sx5, y5u = y5 - sy5
+        const x6u = x6 - sx6, y6u = y6 - sy6
+        const x3u = (x2u + x4u) / 2, y3u = (y2u + y4u) / 2
 
-        const x1_shifted = x1 - shift_x
-        const y1_shifted = y1 - shift_y
-        const x2_shifted = x2 - shift_x
-        const y2_shifted = y2 - shift_y
-        const x4_shifted = x4 - shift_x
-        const y4_shifted = y4 - shift_y
-        const x5_shifted = x5 - shift_x
-        const y5_shifted = y5 - shift_y
-        const x3_shifted = (x2_shifted + x4_shifted) / 2
-        const y3_shifted = (y2_shifted + y4_shifted) / 2
+        // Lower edge (shifted by +half, source thickness at source end, target at target end)
+        const x0l = x0 + sx0, y0l = y0 + sy0
+        const x1l = x1 + sx1, y1l = y1 + sy1
+        const x2l = x2 + sx2, y2l = y2 + sy2
+        const x4l = x4 + sx4, y4l = y4 + sy4
+        const x5l = x5 + sx5, y5l = y5 + sy5
+        const x6l = x6 + sx6, y6l = y6 + sy6
+        const x3l = (x2l + x4l) / 2, y3l = (y2l + y4l) / 2
 
-        return 'M ' + x0 + ',' + y0
-          + ' L ' + x1_shifted + ',' + y1_shifted
-          + ' Q ' + x2_shifted + ',' + y2_shifted + ' ' + x3_shifted + ',' + y3_shifted
-          + ' Q ' + x4_shifted + ',' + y4_shifted + ' ' + x5_shifted + ',' + y5_shifted
-          + ' L ' + x6 + ',' + y6
-          + ' L' + (x6 + 2 * shift_x) + ',' + (y6 + 2 * shift_y)
-          + ' L' + (x5_shifted + 2 * shift_x) + ',' + (y5_shifted + 2 * shift_y)
-          + ' Q ' + (x4_shifted + 2 * shift_x) + ',' + (y4_shifted + 2 * shift_y) + ' ' + (x3_shifted + 2 * shift_x) + ',' + (y3_shifted + 2 * shift_y)
-          + ' Q ' + (x2_shifted + 2 * shift_x) + ',' + (y2_shifted + 2 * shift_y) + ' ' + (x1_shifted + 2 * shift_x) + ',' + (y1_shifted + 2 * shift_y)
-          + ' L ' + (x0 + 2 * shift_x) + ',' + (y0 + 2 * shift_y)
+        return 'M ' + x0u + ',' + y0u
+          + ' L ' + x1u + ',' + y1u
+          + ' Q ' + x2u + ',' + y2u + ' ' + x3u + ',' + y3u
+          + ' Q ' + x4u + ',' + y4u + ' ' + x5u + ',' + y5u
+          + ' L ' + x6u + ',' + y6u
+          + ' L ' + x6l + ',' + y6l
+          + ' L ' + x5l + ',' + y5l
+          + ' Q ' + x4l + ',' + y4l + ' ' + x3l + ',' + y3l
+          + ' Q ' + x2l + ',' + y2l + ' ' + x1l + ',' + y1l
+          + ' L ' + x0l + ',' + y0l
           + ' Z'
       } else {
         // Nouveau calcul pour vh et hv

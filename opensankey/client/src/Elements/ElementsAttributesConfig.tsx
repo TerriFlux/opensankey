@@ -34,7 +34,7 @@ import { UnitType } from './LinkValues'
 import { Class_NodeBase } from './NodeBase'
 
 // Types spécifiques
-export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' | 'capsule'
+export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' | 'capsule' | 'capsule_h'
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
@@ -138,6 +138,7 @@ export type BaseActionType =
   | 'drawShape'
   | 'drawNameLabel'
   | 'drawValueLabel'
+  | 'drawStockBox'
   | 'drawFO'
   | 'drawImage'
   | 'drawIcon'
@@ -164,11 +165,13 @@ export type ShapePrefix =
   | 'shape'
   | 'name_label_background'
   | 'value_label_background'
+  | 'stock_label_background'
 
 export type LabelPrefix =
   | 'value_label'
   | 'name_label'
   | 'icon'
+  | 'stock_label'
 /**
  * Fonction générique pour vérifier si une valeur est indéterminée
  * (différente entre plusieurs éléments)
@@ -1239,8 +1242,8 @@ export const BASE_LABEL_CONFIG = {
 } as const
 
 function createLabelConfig(prefix: string, category: string, drawAction: BaseActionType) {
-  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : 'Icône'
-  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : 'Icon'
+  const visibility_string_fr = prefix === 'name_label' ? 'Libellé' : prefix === 'value_label' ? 'Valeur' : prefix === 'stock_label' ? 'Stock' : 'Icône'
+  const visibility_string_en = prefix === 'name_label' ? 'Label' : prefix === 'value_label' ? 'Value' : prefix === 'stock_label' ? 'Stock' : 'Icon'
 
 
   return {
@@ -1263,8 +1266,11 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
           setter: prefix === 'name_label' ? 'customNameLabelHoriz' : 'customValueLabelHoriz',
         },
         vert: {
-          default: (prefix === 'name_label' ? 'bottom' : 'top') as Type_TextVPos,
+          default: (prefix === 'name_label' ? 'bottom' : prefix === 'stock_label' ? 'bottom' : 'top') as Type_TextVPos,
           setter: prefix === 'name_label' ? 'customNameLabelVert' : 'customValueLabelVert',
+        },
+        inside_vert: {
+          default: prefix === 'stock_label' ? true : false,
         }
       }
     ),
@@ -1287,7 +1293,7 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
           }
         },
         color_visible: {
-          default: prefix === 'name_label' ? true : false,
+          default: (prefix === 'name_label' || prefix === 'stock_label') ? true : false,
           labels: {
             en: 'Background',
             fr: 'Fond'
@@ -1317,6 +1323,12 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
         border_radius: {
           default: 4,
         },
+        border_visible: {
+          default: prefix === 'stock_label' ? true : false,
+        },
+        border_dashed: {
+          default: prefix === 'stock_label' ? true : false,
+        },
         margin_left: {
           category: category,
         },
@@ -1330,8 +1342,8 @@ export const NAME_LABEL_CONFIG = {
   ...NAME_LABEL_BASE_CONFIG,
 
   separator: {
-    default: ' - ',
-    type: (() => ' - ') as (() => string),
+    default: '',
+    type: (() => '') as (() => string),
     category: 'name_label' as const,
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
@@ -1362,6 +1374,26 @@ export const NAME_LABEL_CONFIG = {
 
 const VALUE_LABEL_BASE_CONFIG = createLabelConfig('value_label', 'value_label', 'drawValueLabel')
 export const ICON_LABEL_BASE_CONFIG = createLabelConfig('icon', 'icon', 'drawIcon')
+
+const STOCK_LABEL_BASE_CONFIG = createLabelConfig('stock_label', 'stock_label', 'drawStockBox')
+export const STOCK_LABEL_CONFIG = {
+  ...STOCK_LABEL_BASE_CONFIG,
+
+  box_width: {
+    default: 0.6,
+    type: (() => 0.6) as (() => number),
+    category: 'stock_label' as const,
+    actions: ['drawStockBox'] as BaseActionType[],
+    labels: {
+      en: 'Box width (ratio)',
+      fr: 'Largeur boite (ratio)'
+    },
+    tooltips: {
+      en: 'Box width as ratio of node width (0.1 to 1)',
+      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)'
+    }
+  } satisfies AttributeConfig<number>,
+} as const
 
 export const VALUE_LABEL_CONFIG = {
   ...VALUE_LABEL_BASE_CONFIG,
@@ -1405,6 +1437,9 @@ export type ValueLabelAttributeTypes = {
 }
 export type IconLabelAttributeTypes = {
   -readonly [K in keyof typeof ICON_LABEL_BASE_CONFIG]: ReturnType<typeof ICON_LABEL_BASE_CONFIG[K]['type']>
+}
+export type StockLabelAttributeTypes = {
+  -readonly [K in keyof typeof STOCK_LABEL_CONFIG]: ReturnType<typeof STOCK_LABEL_CONFIG[K]['type']>
 }
 export type NodeShapeSpecificValues = {
   -readonly [K in keyof typeof NODE_SHAPE_SPECIFIC_CONFIG]: ExtractConfigValue<typeof NODE_SHAPE_SPECIFIC_CONFIG[K]>
@@ -1527,7 +1562,7 @@ export function getValueLabelValues(
 
 export function getNameLabelValues(
   element: Class_LinkElement | Class_NodeBase | Class_ElementStyle,
-  prefix: 'name_label' | 'value_label'
+  prefix: 'name_label' | 'value_label' | 'stock_label'
 ) {
   const result = {} as NameLabelAttributeTypes
   const config = VALUE_LABEL_CONFIG
@@ -2014,6 +2049,8 @@ export const ALL_ATTRIBUTES_CONFIG = {
   ...createConfigWithPrefix(VALUE_LABEL_CONFIG, 'value_label'),
   ...createLinkLabelSpecificConfig('value_label' as const, 'value_label', 'drawValueLabel'),
 
+  ...createConfigWithPrefix(STOCK_LABEL_CONFIG, 'stock_label'),
+
   ...createConfigWithPrefixAndOverrides(ICON_LABEL_BASE_CONFIG, 'icon',
       'icon',
       ['drawIcon'],
@@ -2143,7 +2180,7 @@ export function getConfigValues<
 
 export const getElementsLabelValues = (
   elements: ElementsType,
-  prefix: 'name_label' | 'value_label' | 'icon',
+  prefix: 'name_label' | 'value_label' | 'icon' | 'stock_label',
   refreshParentComponent: () => void
 ) => getConfigValues(elements, BASE_LABEL_CONFIG, prefix, refreshParentComponent)
 
