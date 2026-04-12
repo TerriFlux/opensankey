@@ -526,7 +526,7 @@ export class NodePositioning {
 
     let is_zero = true
     this.drawingArea.sankey.links_list.forEach(l => is_zero = is_zero && l.is_zero)
-    if (is_zero) { this.drawingArea.type_data = 'structure' }
+    if (is_zero) { this.drawingArea.data_source = 'structure' }
 
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
