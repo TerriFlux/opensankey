@@ -2,6 +2,11 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié] — Avril 2026
+
+### Ajouts
+- **Intervalles, incertitude, min/max sur les flux (AFM)** : nouveau type de donnée `intervals` dans `value_option`, champs `data_min`, `data_max`, `data_uncertainty` (incertitude relative en %) persistés en JSON et synchronisés avec l'export/import Excel (feuille Min Max). Panneau de configuration flux restructuré en deux onglets Basique/AFM avec sélecteur de type de données inline. Affichage `[min - max]` sur le diagramme pour les flux de type intervalle (pointillé).
+
 ## [Non publié] — Mars 2026
 
 ### Ajouts

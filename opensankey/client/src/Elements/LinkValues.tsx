@@ -18,7 +18,7 @@ export type ValueParentElement = Class_LinkElement | Class_NodeElement
 export const value_option_percent_constants_source = ['%IS', '%OS','%PS']
 export const value_option_percent_constants_target = ['%ID', '%OD','%PD']
 export const value_option_percent_constants = [...value_option_percent_constants_source,...value_option_percent_constants_target]
-export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio'] as const
+export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio', 'intervals'] as const
 export type ValueOptionType = typeof value_option_constants[number]
 
 export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
@@ -454,6 +454,7 @@ export class Class_ElementValue {
   protected _data_value: (number | null)[]
   protected _data_min: (number | null)[]
   protected _data_max: (number | null)[]
+  protected _data_uncertainty: (number | null)[]
   protected _result_value: (number | null)[]
   protected _result_min: (number | null)[]
   protected _result_max: (number | null)[]
@@ -474,6 +475,7 @@ export class Class_ElementValue {
     this._data_value = new Array(n).fill(null)
     this._data_min = new Array(n).fill(null)
     this._data_max = new Array(n).fill(null)
+    this._data_uncertainty = new Array(n).fill(null)
     this._result_value = new Array(n).fill(null)
     this._result_min = new Array(n).fill(null)
     this._result_max = new Array(n).fill(null)
@@ -503,6 +505,7 @@ export class Class_ElementValue {
       this._data_value[i] = element._data_value[i]
       this._data_min[i] = element._data_min[i]
       this._data_max[i] = element._data_max[i]
+      this._data_uncertainty[i] = element._data_uncertainty[i]
       this._result_value[i] = element._result_value[i]
       this._result_min[i] = element._result_min[i]
       this._result_max[i] = element._result_max[i]
@@ -739,7 +742,7 @@ export class Class_LinkValue extends Class_ElementValue {
 
   // OVERRIDES ==========================================================================
   public get has_result() {
-    return this._result_value[Class_LinkValue.SRC] !== null || this.value_option != 'value'
+    return this._result_value[Class_LinkValue.SRC] !== null || (this.value_option != 'value' && this.value_option != 'intervals')
   }
 
   public get has_intervals() {
@@ -747,7 +750,7 @@ export class Class_LinkValue extends Class_ElementValue {
   }
 
   public get has_data() {
-    return this._data_value[Class_LinkValue.SRC] !== null || this.value_option != 'value'
+    return this._data_value[Class_LinkValue.SRC] !== null || this._data_min[Class_LinkValue.SRC] !== null || (this.value_option != 'value' && this.value_option != 'intervals')
   }
 
   public set_only_data() {
@@ -797,7 +800,14 @@ export class Class_LinkValue extends Class_ElementValue {
     this._result_value[Class_LinkValue.TGT] = null
   }
 
-  // Min/Max accessors (source = index 0)
+  // Min/Max/Uncertainty accessors (source = index 0)
+  public get data_min() { return this._data_min[Class_LinkValue.SRC] }
+  public set data_min(_: number | null) { this._data_min[Class_LinkValue.SRC] = _ }
+  public get data_max() { return this._data_max[Class_LinkValue.SRC] }
+  public set data_max(_: number | null) { this._data_max[Class_LinkValue.SRC] = _ }
+  public get data_uncertainty() { return this._data_uncertainty[Class_LinkValue.SRC] }
+  public set data_uncertainty(_: number | null) { this._data_uncertainty[Class_LinkValue.SRC] = _ }
+
   public get result_min() { return this._result_min[Class_LinkValue.SRC] }
   public set result_min(_: number | null) { this._result_min[Class_LinkValue.SRC] = _ }
   public get result_max() { return this._result_max[Class_LinkValue.SRC] }
@@ -836,6 +846,7 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this._data_value[Class_LinkValue.SRC] != null) json_object['data_value'] = this._data_value[Class_LinkValue.SRC] as number
     if (this._data_min[Class_LinkValue.SRC] != null) json_object['data_min'] = this._data_min[Class_LinkValue.SRC] as number
     if (this._data_max[Class_LinkValue.SRC] != null) json_object['data_max'] = this._data_max[Class_LinkValue.SRC] as number
+    if (this._data_uncertainty[Class_LinkValue.SRC] != null) json_object['data_uncertainty'] = this._data_uncertainty[Class_LinkValue.SRC] as number
 
     if (this._result_value[Class_LinkValue.SRC] != null) json_object['result_value'] = this._result_value[Class_LinkValue.SRC] as number
     if (this._result_min[Class_LinkValue.SRC] != null) json_object['result_min'] = this._result_min[Class_LinkValue.SRC] as number
@@ -882,6 +893,7 @@ export class Class_LinkValue extends Class_ElementValue {
       this._data_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_value')
       this._data_max[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_max')
       this._data_min[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_min')
+      this._data_uncertainty[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'data_uncertainty')
 
       this._result_value[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'result_value')
       this._result_max[Class_LinkValue.SRC] = getNumberOrNullFromJSON(json_object, 'result_max')
