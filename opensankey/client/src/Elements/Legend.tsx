@@ -170,6 +170,8 @@ export class ClassTemplate_Legend extends Class_NodeBase {
       this._dy = 0
       // Rebounds text wrapper with width of legend when drawed at this moment
       this._wrapper.bounds({ height: 100, width: this._width })
+      // Draw data type label
+      this.drawDataTypeLabel()
       // Draw tag color pallette applied to sankey
       this.drawTagDisplayed()
       // Draw explication for data type
@@ -393,6 +395,40 @@ export class ClassTemplate_Legend extends Class_NodeBase {
    * @private
    * @memberof ClassTemplate_Legend
    */
+  public drawDataTypeLabel() {
+    const { t } = this.drawing_area.application_data
+    const da = this.drawing_area
+    // Data source label
+    const source_labels: Record<string, string> = {
+      'structure': t('Banner.structure'),
+      'data': t('Banner.collected_data'),
+      'data_label': t('Banner.collected_data_label'),
+      'reconciled': t('Banner.reconciled'),
+    }
+    const source_label = source_labels[da.data_source] ?? source_labels['reconciled']
+
+    // Interval display label (only if not 'structure')
+    const interval_labels: Record<string, string> = {
+      'free_interval': t('Banner.free_interval'),
+      'free_value': t('Banner.free_value'),
+    }
+    const interval_label = interval_labels[da.interval_display]
+
+    const label = interval_label ? source_label + ' — ' + interval_label : source_label
+
+    this._dy += this._legend_police
+    const g = this.d3_selection?.append('g')
+      .attr('id', 'gg_legend_data_type')
+      .attr('transform', 'translate(0,' + this._dy + ')')
+      .attr('font-size', this._legend_police + 'px')
+    g?.append('text')
+      .attr('x', '5')
+      .attr('font-weight', 'bold')
+      .text(label)
+      .call(this._wrapper)
+    this._dy += this._legend_police
+  }
+
   public drawInfoDataType() {
     // Write information in the legend depending to the diagram representation:
     // - when diagramme type is : data reconciled + indetermined links (values), we explain the meaning of "*" in the link label
