@@ -1342,27 +1342,24 @@ export const MenuConfigurationAppearance = ({
                         </OverloadedCheckbox>
                         </Box>
                         {/* Value of link local scale to override scale from DA, can be undefined */}
-                        <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                          <>
-                            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                              <Box layerStyle='menuconfigpanel_option_name' >
-                                {t('Flux.apparence.shape_local_link_scale')}
-                              </Box>
-                              <ConfigMenuNumberInput
-                                default_value={linkShapeValues.local_link_scale}
-                                function_on_blur={(_) => {
-                                  linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                                }}
-                                minimum_value={0}
-                                stepper={true}
-                                step={1}
-                                t={t}
-                                isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
-                              />
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                          <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                            <Box layerStyle='menuconfigpanel_option_name' >
+                              {t('Flux.apparence.shape_local_link_scale')}
                             </Box>
-
-                          </>
-                        </OSTooltip>
+                          </OSTooltip>
+                          <ConfigMenuNumberInput
+                            default_value={linkShapeValues.local_link_scale}
+                            function_on_blur={(_) => {
+                              linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                            }}
+                            minimum_value={0}
+                            stepper={true}
+                            step={1}
+                            t={t}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
+                          />
+                        </Box>
                       {/* </Box> */}
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
