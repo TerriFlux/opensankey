@@ -11,6 +11,14 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## Récapitulatif — Avril 2026
+
+### Ajouts
+- **Intervalles, incertitude, min/max sur les flux (AFM)** : nouveau type de donnée `intervals`, champs min/max/incertitude relative (%) persistés en JSON et synchronisés avec l'export/import Excel. Panneau de configuration flux restructuré en onglets Basique/AFM. Affichage `[min - max]` sur le diagramme pour les flux intervalle.
+- **Séparation type de données / affichage des intervalles** : les deux sélecteurs de la barre d'outils sont désormais indépendants (`data_source` + `interval_display`). On peut voir les intervalles données ou résultats selon la source sélectionnée. « Valeurs possibles » réservé aux données calculées. Type d'affichage affiché dans la légende.
+
+---
+
 ## Récapitulatif — Mars 2026
 
 ### Ajouts
