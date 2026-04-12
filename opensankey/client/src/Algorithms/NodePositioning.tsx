@@ -493,7 +493,9 @@ export class NodePositioning {
    */
   public computeAutoSankey(
     launched_from_process: boolean,
-    optimize_crossing: boolean
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
@@ -644,7 +646,9 @@ export class NodePositioning {
       nodes_per_horizontal_indexes,
       horizontal_indexes_per_nodes_ids,
       max_horizontal_index,
-      optimize_crossing
+      optimize_crossing,
+      h_spacing,
+      v_spacing
     )
 
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
@@ -813,7 +817,9 @@ export class NodePositioning {
     nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     max_horizontal_index: number,
-    optimize_crossing: boolean
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number
   ) {
     // Utiliser la logique existante de positionnement vertical
     // mais avec les corrections de la méthode updateNodesPositions précédente
@@ -828,8 +834,9 @@ export class NodePositioning {
         continue
       }
       let col_max_w_col = 0
+      const effective_h = h_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dx ?? 0
       nodes_per_horizontal_indexes[h_index].forEach(node => {
-        node.position_x = prev_col_width + node.shape_position_dx + node.shape_position_dx * h_index
+        node.position_x = prev_col_width + effective_h + effective_h * h_index
         const node_w = node.shape_min_width
         if (node_w > col_max_w_col) col_max_w_col = node_w
       })
@@ -847,6 +854,7 @@ export class NodePositioning {
       const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
       const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
       const nodes_ids_per_vertical_index: string[] = []
+      const effective_v = v_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dy ?? 0
 
       nodes_per_horizontal_indexes[h_index].forEach(node => {
         const node_height = node.getShapeHeightToUse()
@@ -875,7 +883,7 @@ export class NodePositioning {
           }
         }
         max_vertical_index += 1
-        height_cumul_for_index += node_height + node.shape_position_dy
+        height_cumul_for_index += node_height + effective_v
       })
 
 
@@ -895,9 +903,11 @@ export class NodePositioning {
       height_cumul_per_indexes,
       max_height_cumul,
       max_horizontal_index,
-      echangeTag
+      echangeTag,
+      h_spacing,
+      v_spacing
     )
-    this.optimizeCrossingsPositioning(optimize_crossing)
+    this.optimizeCrossingsPositioning(optimize_crossing, h_spacing, v_spacing)
   }
 
   /**
@@ -1163,15 +1173,17 @@ export class NodePositioning {
     height_cumul_per_indexes: number[],
     max_height_cumul: number,
     max_horizontal_index: number,
-    echangeTag?: Class_Tag
+    echangeTag?: Class_Tag,
+    h_spacing?: number,
+    v_spacing?: number
   ) {
     if (node_id_per_hxv_indexes.length === 0) {
       return
     }
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
+    const v_margin = v_spacing ?? this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
 
     let shift = 0
-    const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
+    const horizontal_spacing = h_spacing ?? this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
     console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
 
@@ -1257,7 +1269,7 @@ export class NodePositioning {
    * 
    * @param {boolean} apply_optimization - Active/désactive l'optimisation
    */
-  public optimizeCrossingsPositioning(apply_optimization: boolean = true) {
+  public optimizeCrossingsPositioning(apply_optimization: boolean = true, h_spacing?: number, v_spacing?: number) {
     if (!apply_optimization) {
       console.log('🔧 Optimisation des croisements désactivée')
       return
@@ -1277,7 +1289,7 @@ export class NodePositioning {
 
     // Regrouper les nœuds par position X approximative
     nodes_to_process.forEach(node => {
-      const h_index = Math.round(node.position_x / node.shape_position_dx)
+      const h_index = Math.round(node.position_x / (h_spacing ?? node.shape_position_dx))
       horizontal_positions[node.id] = h_index
 
       if (!nodes_per_horizontal_indexes[h_index]) {
@@ -1316,7 +1328,7 @@ export class NodePositioning {
     }
 
     // Appliquer les ajustements pour chaque colonne
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
+    const v_margin = v_spacing ?? this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
     let total_adjustments = 0
 
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
@@ -1841,7 +1853,7 @@ export class NodePositioning {
   /**
    * Auto-compute sankey with waiting toast
    */
-  public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean) {
+  public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean, h_spacing?: number, v_spacing?: number) {
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
     if (!launched_from_process) {
@@ -1864,7 +1876,7 @@ export class NodePositioning {
     }
 
     // Compute auto pos of nodes
-    this.computeAutoSankey(launched_from_process, optimize_crossing)
+    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing)
     this.computeParametrization(true)
 
     if (launched_from_process) {

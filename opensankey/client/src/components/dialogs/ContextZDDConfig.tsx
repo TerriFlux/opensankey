@@ -11,8 +11,20 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       titleKey: 'Positionnement',
       children: [
         { type: 'button', actionName: 'transposeDA' },
-        { type: 'button', actionName: 'computeAutoPosition' },
-        { type: 'button', actionName: 'computeAutoPositionOptim' },
+        {
+          type: 'submenu',
+          titleKey: 'AutoPosition',
+          children: [
+            { type: 'widget', widgetName: 'MenuContextAutoLayout', widgetProps: { optimize_crossing: false } }
+          ]
+        },
+        {
+          type: 'submenu',
+          titleKey: 'AutoPositionOptim',
+          children: [
+            { type: 'widget', widgetName: 'MenuContextAutoLayoutOptim', widgetProps: { optimize_crossing: true } }
+          ]
+        },
         // {
         //   type: 'button', actionName: 'toggleAutoX',
         //   visibilityConditions: [{
@@ -389,6 +401,14 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     Positionnement: {
       en: 'Positioning',
       fr: 'Positionnement'
+    },
+    AutoPosition: {
+      en: 'Auto position',
+      fr: 'Option centrage des nœuds'
+    },
+    AutoPositionOptim: {
+      en: 'Auto position (optim)',
+      fr: 'Option minimisation des croisements'
     },
     GestionCouleurs: {
       en: 'Color Management',

@@ -362,6 +362,59 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
     <></>
 }
 
+export const MenuContextAutoLayout = ({ app_data, optimize_crossing = false }: { app_data: Class_ApplicationData, optimize_crossing?: boolean }) => {
+  const [h_spacing, setHSpacing] = useState<number | null>(null)
+  const [v_spacing, setVSpacing] = useState<number | null>(null)
+  const { drawing_area, menu_configuration } = app_data
+
+  const launchAutoLayout = () => {
+    drawing_area.nodePositioning.computeAutoSankeyWithToast(
+      false,
+      optimize_crossing,
+      h_spacing ?? undefined,
+      v_spacing ?? undefined
+    )
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  }
+
+  const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
+  const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+
+  return <Box display='flex' flexDirection='column' gap='4px' p='4px'>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='90px'>Ecart horiz.</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={h_spacing ?? default_dx}
+        function_on_blur={(v) => setHSpacing(v !== default_dx ? v : null)}
+        stepper={true}
+        step={10}
+        minimum_value={0}
+        unit_text='px'
+      />
+    </Box>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Text fontSize='xs' whiteSpace='nowrap' minW='90px'>Ecart vert.</Text>
+      <ConfigMenuNumberInput
+        t={app_data.t}
+        default_value={v_spacing ?? default_dy}
+        function_on_blur={(v) => setVSpacing(v !== default_dy ? v : null)}
+        stepper={true}
+        step={10}
+        minimum_value={0}
+        unit_text='px'
+      />
+    </Box>
+    <Button
+      variant='menuconfigpanel_option_button'
+      size='xs'
+      onClick={launchAutoLayout}
+    >
+      {optimize_crossing ? 'Minimiser croisements' : 'Centrer les nœuds'}
+    </Button>
+  </Box>
+}
+
 export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
   const node = drawing_area.node_contextualised
