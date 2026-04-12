@@ -138,6 +138,12 @@ export const LabelDisplayModeSelector = ({
   t: TFunction
 }) => {
   const setModeText = () => {
+    // Initialize fo_content from name_label if empty
+    if (!labelValues.fo_content) {
+      (elements as Class_NodeBase[]).forEach(node => {
+        node.name_label_fo_content = `<p>${node.name_label}</p>`
+      })
+    }
     labelValues.has_fo = true
     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
     //@ts-expect-error xxx
