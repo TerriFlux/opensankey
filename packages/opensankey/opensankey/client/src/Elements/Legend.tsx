@@ -51,6 +51,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   private _legend_show_constraints: boolean = default_legend_show_constraints
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
+  private _legend_show_data_type: boolean = true
 
   private _dx: number = 0
   private _dy: number = 0
@@ -83,6 +84,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     this._legend_show_dataTags = cast_copy._legend_show_dataTags
     this._legend_show_constraints = cast_copy._legend_show_constraints
     this._info_link_value_void = cast_copy._info_link_value_void
+    this._legend_show_data_type = cast_copy._legend_show_data_type
     this._stick_to_drawing = cast_copy._stick_to_drawing
   }
 
@@ -396,25 +398,17 @@ export class ClassTemplate_Legend extends Class_NodeBase {
    * @memberof ClassTemplate_Legend
    */
   public drawDataTypeLabel() {
+    if (!this._legend_show_data_type) return
+    // Only show if there are computed results (otherwise there's nothing to distinguish)
+    let has_results = false
+    this.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
+    if (!has_results) return
+
     const { t } = this.drawing_area.application_data
     const da = this.drawing_area
-    // Data source label
-    const source_labels: Record<string, string> = {
-      'structure': t('Banner.structure'),
-      'data': t('Banner.collected_data'),
-      'data_label': t('Banner.collected_data_label'),
-      'reconciled': t('Banner.reconciled'),
-    }
-    const source_label = source_labels[da.data_source] ?? source_labels['reconciled']
-
-    // Interval display label (only if not 'structure')
-    const interval_labels: Record<string, string> = {
-      'free_interval': t('Banner.free_interval'),
-      'free_value': t('Banner.free_value'),
-    }
-    const interval_label = interval_labels[da.interval_display]
-
-    const label = interval_label ? source_label + ' — ' + interval_label : source_label
+    const label = da.data_source === 'data' ? t('Banner.collected_data')
+      : da.data_source === 'data_label' ? t('Banner.collected_data_label')
+      : t('Banner.reconciled')
 
     this._dy += this._legend_police
     const g = this.d3_selection?.append('g')
@@ -756,6 +750,9 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public get info_link_value_void(): boolean { return this._info_link_value_void }
   public set info_link_value_void(_) { this._info_link_value_void = _; this.draw() }
+
+  public get legend_show_data_type(): boolean { return this._legend_show_data_type }
+  public set legend_show_data_type(_) { this._legend_show_data_type = _; this.draw() }
 
   public get stick_to_drawing(): boolean { return this._stick_to_drawing }
   public set stick_to_drawing(stick) {

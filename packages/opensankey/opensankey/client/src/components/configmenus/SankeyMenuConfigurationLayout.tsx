@@ -450,6 +450,14 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_constraints', evt.target.checked, f)
   }
 
+  const eventLegendDataType = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.legend_show_data_type = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_data_type', evt.target.checked, f)
+  }
+
   const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.info_link_value_void = _
@@ -635,6 +643,15 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
         onChange={eventLegendConstraints}
       >
         {t('MEP.leg_show_constraints')}
+      </Checkbox>
+
+      {/* Afficher le type de données */}
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={app_data.drawing_area.legend.legend_show_data_type}
+        onChange={eventLegendDataType}
+      >
+        {t('MEP.leg_show_data_type')}
       </Checkbox>
 
       {/* Afficher l'info flux null */}
