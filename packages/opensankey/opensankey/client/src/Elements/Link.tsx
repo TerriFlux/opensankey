@@ -1360,7 +1360,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._is_computing = true
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
-    else value_current = this.value?.valueResult ?? (this.value?.value_option == 'value' ? this.value?.valueData : null) ?? null
+    else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
     this._is_computing = false
     return value_current
   }
@@ -1392,7 +1392,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.drawing_area.type_data === 'data') {
       value_target = this.value?.valueDataTarget ?? null
     } else {
-      value_target = this.value?.valueResultTarget ?? (this.value?.value_option == 'value' ? this.value?.valueDataTarget : null) ?? null
+      value_target = this.value?.valueResultTarget ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueDataTarget : null) ?? null
     }
     this._is_computing = false
     return value_target
@@ -1404,6 +1404,45 @@ export class Class_LinkElement extends Class_LinkAttribute {
       value.valueDataTarget = _
       value.valueResultTarget = null
       this.redrawNodesSourceTarget()
+    }
+  }
+
+  // Min / Max / Uncertainty accessors ====================================================
+
+  public get dataMin(): number | null {
+    return this.value?.data_min ?? null
+  }
+
+  public set dataMin(_: number | null) {
+    const value = this.value
+    if (value !== null) {
+      value.data_min = _
+      this.drawValueLabel()
+      this.drawNameLabel()
+    }
+  }
+
+  public get dataMax(): number | null {
+    return this.value?.data_max ?? null
+  }
+
+  public set dataMax(_: number | null) {
+    const value = this.value
+    if (value !== null) {
+      value.data_max = _
+      this.drawValueLabel()
+      this.drawNameLabel()
+    }
+  }
+
+  public get dataUncertainty(): number | null {
+    return this.value?.data_uncertainty ?? null
+  }
+
+  public set dataUncertainty(_: number | null) {
+    const value = this.value
+    if (value !== null) {
+      value.data_uncertainty = _
     }
   }
 
@@ -1513,6 +1552,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public linkIsStructure = () => {
     if (this.sankey.drawing_area.type_data == 'structure') return true
     if (this.sankey.drawing_area.type_data == 'data') {
+      if (this.value?.value_option === 'intervals') return true
       if (this.value?.value_option != 'value' || this.value.valueData == null) return true
     }
     if (this.sankey.drawing_area.type_data == 'free_value' || this.sankey.drawing_area.type_data == 'free_interval') {
@@ -1800,7 +1840,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._tooltip_text = value
   }
 
-  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value'>(
+  public static updateLinks = <K extends 'valueCurrent' | 'valueCurrentTarget' | 'text_value' | 'dataMin' | 'dataMax' | 'dataUncertainty'>(
     data: Class_ApplicationData,
     elements: Class_LinkElement[],
     key: K,
