@@ -1112,6 +1112,8 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
 
   protected onInputChange(value: string): void {
     this.node.name = value
+    // Sync name_label → fo_content
+    this.node.name_label_fo_content = `<p>${value}</p>`
   }
 }
 

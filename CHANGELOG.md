@@ -46,6 +46,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - `feat(ui)` : onglet « Vues » absent en mode basique, grisé sans licence ; correction des attributs par défaut (a6051340).
 - `feat(ui)` : case à cocher `error_on_new_flux` pour validation des feuilles secondaires (476c7adb).
 - `feat(ui/server)` : case à cocher `error_on_new_nodes`, nettoyage du bruit de debug (37ec8a51, 1215e20c).
+- `refactor(ui)` : fusion des boutons « Texte simple » / « Rich Text » en un seul bouton « Éditeur » ; toolbar Quill masquée sans licence OSP (texte brut uniquement) ; contenu riche chargé sans licence : édition désactivée ; synchronisation bidirectionnelle `fo_content` ↔ `name_label` (nœuds) / `text_value` (liens).
 
 ### Corrections
 - `fix(mac)` : compatibilité macOS des raccourcis clavier et interactions souris :
