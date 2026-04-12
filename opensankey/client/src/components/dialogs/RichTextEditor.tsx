@@ -1,9 +1,8 @@
 // ForeignObjectEditor.tsx
 import React, { useRef, MutableRefObject, forwardRef, useImperativeHandle, useState } from 'react'
 import ReactQuill from 'react-quill'
-import { Box, Textarea, Button, Checkbox } from '@chakra-ui/react'
+import { Box, Textarea, Checkbox } from '@chakra-ui/react'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
-import { OSTooltip } from '../configmenus/MenuCommon'
 import { getElementsLabelValues } from '../../Elements/ElementsAttributesConfig'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -58,6 +57,10 @@ const QUILL_MODULES = {
   ],
 }
 
+const QUILL_MODULES_NO_TOOLBAR = {
+  toolbar: false,
+}
+
 const QUILL_FORMATS = [
   'font', 'size', 'bold', 'italic', 'underline', 'strike',
   'color', 'background', 'list', 'bullet', 'align'
@@ -89,6 +92,9 @@ interface ForeignObjectEditorProps {
   // État de désactivation
   isActivated: boolean
 
+  // Afficher la toolbar Quill (default: true)
+  showToolbar?: boolean
+
   // Nombre de lignes pour le mode raw
   rows?: number
 }
@@ -101,6 +107,7 @@ export const ForeignObjectEditor = forwardRef<ForeignObjectEditorHandle, Foreign
       onChange,
       onBlur,
       isActivated,
+      showToolbar = true,
       rows = 5
     },
     ref
@@ -138,7 +145,7 @@ export const ForeignObjectEditor = forwardRef<ForeignObjectEditorHandle, Foreign
             }}
             onBlur={() => onBlur(value)}
             theme="snow"
-            modules={QUILL_MODULES}
+            modules={showToolbar ? QUILL_MODULES : QUILL_MODULES_NO_TOOLBAR}
             formats={QUILL_FORMATS}
             readOnly={!isActivated}
             style={editorStyle}
@@ -165,18 +172,63 @@ export const ForeignObjectEditor = forwardRef<ForeignObjectEditorHandle, Foreign
 
 ForeignObjectEditor.displayName = 'ForeignObjectEditor'
 
+/**
+ * Check if HTML content contains rich formatting beyond simple <p> tags.
+ * Returns true if there are tags other than <p>, </p>, <br>, <br/>.
+ */
+const isRichContent = (html: string): boolean => {
+  if (!html) return false
+  // Remove <p>, </p>, <br>, <br/>, <br /> tags and check if any other tags remain
+  const stripped = html
+    .replace(/<\/?p[^>]*>/gi, '')
+    .replace(/<br\s*\/?>/gi, '')
+  return /<[^>]+>/.test(stripped)
+}
+
+/**
+ * Strip all HTML tags from content to get plain text.
+ */
+export const stripHtmlTags = (html: string): string => {
+  if (!html) return ''
+  return html.replace(/<[^>]+>/g, '').trim()
+}
+
+/**
+ * Wrap plain text in <p> tags for fo_content.
+ */
+export const wrapInParagraph = (text: string): string => {
+  if (!text) return '<p></p>'
+  return `<p>${text}</p>`
+}
+
+/**
+ * Sync fo_content value to name_label (nodes) or text_value (links).
+ * Strips HTML tags to extract plain text.
+ */
+const syncFoContentToLabel = (
+  elements: Class_NodeBase[] | Class_LinkElement[],
+  foContent: string
+) => {
+  const plainText = stripHtmlTags(foContent)
+  elements.forEach(el => {
+    if (el instanceof Class_NodeBase) {
+      el.name = plainText
+    } else if (el instanceof Class_LinkElement) {
+      el.text_value = plainText
+    }
+  })
+}
+
 export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t } = app_data
-  const is_activated = true
+  const has_osp = app_data.has_sankey_plus
 
-  const [s_editor_content_fo_node, sEditorContentFoNode] = useState('')
+  const [, sEditorContentFoNode] = useState('')
   const [, setCount] = useState(0)
   const [elements, setElements] = useState<Class_NodeBase[] | Class_LinkElement[]>([])
   const [prefix, setPrefix] = useState<'name_label' | 'value_label' | 'icon'>('name_label')
   const editorRef = useRef<ForeignObjectEditorHandle>(null)
   const [is_raw, setIsRaw] = useState(false)
-
-  //app_data.menu_configuration.r_editor_content_set_elements.current = setElements
 
   app_data.menu_configuration.r_editor_content_set_elements.current = (
     _elements: Class_NodeBase[] | Class_LinkElement[],
@@ -186,7 +238,6 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
     setPrefix(_prefix)
   }
 
-  let s_tmp_editor_content_fo_node = s_editor_content_fo_node
   app_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
 
   const labelValues = elements.length > 0
@@ -195,88 +246,94 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
       Object.entries(BASE_LABEL_CONFIG).map(([key, value]) => [key, value.default])
     ) as { -readonly [K in keyof typeof BASE_LABEL_CONFIG]: ReturnType<typeof BASE_LABEL_CONFIG[K]['type']> }
 
-  let s_tmp_editor_content_changed = false
-  if (elements.length > 0) {
-    if (labelValues.fo_content !== s_editor_content_fo_node) {
-      s_tmp_editor_content_changed = true
+  const currentFoContent = labelValues.fo_content ?? ''
+  const contentIsRich = isRichContent(currentFoContent)
+
+  // Without OSP license and content is rich: editing is disabled
+  const editing_disabled_rich = !has_osp && contentIsRich
+
+  const handleChange = (newContent: string) => {
+    // Without OSP: enforce plain text only (strip all tags except <p>)
+    let sanitized = newContent
+    if (!has_osp) {
+      const text = stripHtmlTags(newContent)
+      sanitized = wrapInParagraph(text)
     }
+    labelValues.fo_content = sanitized
+    sEditorContentFoNode(sanitized)
+    // Sync to name_label
+    syncFoContentToLabel(elements, sanitized)
+  }
+
+  const handleBlur = (currentContent: string) => {
+    let sanitized = currentContent
+    if (!has_osp) {
+      const text = stripHtmlTags(currentContent)
+      sanitized = wrapInParagraph(text)
+    }
+    labelValues.fo_content = sanitized
+    sEditorContentFoNode(sanitized)
+    // Sync to name_label
+    syncFoContentToLabel(elements, sanitized)
   }
 
   const content = (
     <Box layerStyle='menu_sub_section'>
-
-      <>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isDisabled={!is_activated}
-          isChecked={is_raw}
-          onChange={(evt) => setIsRaw(evt.target.checked)}
+      {editing_disabled_rich && (
+        <Box
+          p={2}
+          mb={2}
+          bg='orange.100'
+          borderRadius='md'
+          fontSize='sm'
+          color='orange.800'
         >
-          {is_activated ? (
-            <>{t('Noeud.foreign_object.raw')}</>
-          ) : (
-            <OSTooltip label={t('Menu.sankeyOSPDisabled')}>
-              {t('Noeud.foreign_object.raw')}
-            </OSTooltip>
+          {t('Menu.sankeyOSPDisabled')} — OpenSankey+ {t('Menu.requiredToEditRichText')}
+        </Box>
+      )}
+
+      {elements.length > 0 ? (
+        <>
+          {/* Quill editor: toolbar only with OSP, disabled if rich content without license */}
+          <ForeignObjectEditor
+            ref={editorRef}
+            isRawMode={false}
+            value={currentFoContent}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            isActivated={!editing_disabled_rich}
+            showToolbar={has_osp}
+            rows={5}
+          />
+
+          {/* Raw HTML editor at bottom (OSP only) */}
+          {has_osp && (
+            <>
+              <Checkbox
+                variant='menuconfigpanel_option_checkbox'
+                isChecked={is_raw}
+                onChange={(evt) => setIsRaw(evt.target.checked)}
+                mt={2}
+              >
+                {t('Noeud.foreign_object.raw')}
+              </Checkbox>
+
+              {is_raw && (
+                <ForeignObjectEditor
+                  isRawMode={true}
+                  value={currentFoContent}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  isActivated={true}
+                  rows={5}
+                />
+              )}
+            </>
           )}
-        </Checkbox>
-
-        {elements.length > 0 ? (
-          <OSTooltip
-            label={
-              is_activated
-                ? ''
-                : t('Menu.sankeyOSPDisabled')
-            }
-          >
-            <ForeignObjectEditor
-              ref={editorRef}
-              isRawMode={is_raw}
-              value={labelValues.fo_content ?? ''}
-              onChange={(newContent) => {
-                labelValues.fo_content = newContent
-                s_tmp_editor_content_fo_node = newContent
-                if (!s_tmp_editor_content_changed) {
-                  sEditorContentFoNode(newContent)
-                }
-              }}
-              onBlur={(currentContent) => {
-                labelValues.fo_content = currentContent
-                sEditorContentFoNode(currentContent)
-              }}
-              isActivated={is_activated}
-              rows={5}
-            />
-          </OSTooltip>
-        ) : (
-          <></>
-        )}
-
-        {/* <Box as='span' layerStyle='options_2cols'>
-          <Button
-            variant='menuconfigpanel_option_button_left'
-            isDisabled={!is_activated || !s_tmp_editor_content_changed}
-            backgroundColor='red.200'
-            onClick={() => {
-              const resetValue = labelValues.fo_content
-              editorRef.current?.resetContent(resetValue)
-              sEditorContentFoNode(resetValue)
-              setCount(a => a + 1)
-            }}
-          >
-            {t('Noeud.FO.cancel')}
-          </Button>
-          <Button
-            variant='menuconfigpanel_option_button_right'
-            isDisabled={!is_activated || !s_tmp_editor_content_changed}
-            onClick={() => {
-              labelValues.fo_content = s_tmp_editor_content_fo_node
-            }}
-          >
-            {t('Noeud.FO.submit')}
-          </Button>
-        </Box> */}
-      </>
+        </>
+      ) : (
+        <></>
+      )}
     </Box>
   )
   return (

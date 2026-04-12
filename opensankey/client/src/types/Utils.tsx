@@ -63,6 +63,10 @@ export type Type_Position = 'absolute' | 'relative' | 'parametric'
  */
 export type Type_Structure = 'structure' | 'data' | 'data_label' | 'reconciled' | 'free_value' | 'free_interval'
 
+// New split types for independent control of data source and interval display
+export type Type_DataSource = 'structure' | 'data' | 'data_label' | 'reconciled'
+export type Type_IntervalDisplay = 'structure' | 'free_value' | 'free_interval'
+
 export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'level_taggs' | 'view_taggs'
 
 /**
@@ -384,14 +388,35 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
       return source_text + '\u2192' + target_text
     }
 
+    const data_source = link.drawing_area.data_source
+
+    // Intervals links: only show [min - max] in free_interval mode
+    if (link.value?.value_option === 'intervals') {
+      if (link.drawing_area.interval_display === 'free_interval') {
+        const use_data = data_source === 'data' || data_source === 'data_label'
+        const min = use_data ? (link.value?.data_min ?? link.value?.result_min) : (link.value?.result_min ?? link.value?.data_min)
+        const max = use_data ? (link.value?.data_max ?? link.value?.result_max) : (link.value?.result_max ?? link.value?.data_max)
+        if (min !== null || max !== null) {
+          return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
+        }
+      }
+      return ''
+    }
+
     if (type_data == 'data' || type_data == 'data_label') {
       if (!link.value?.valueData) return ''
       const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
       return withTarget(src_text as string)
     }
-    if (link.value?.result_min !== null) {
+    // Reconciled links with min/max — choose data or result source
+    const use_data_minmax = data_source === 'data' || data_source === 'data_label'
+    const interval_min = use_data_minmax ? link.value?.data_min : link.value?.result_min
+    const interval_max = use_data_minmax ? link.value?.data_max : link.value?.result_max
+    if (interval_min !== null || interval_max !== null || link.value?.result_min !== null) {
       if (type_data === 'free_interval') {
-        return '[' + format_value(type_data, link.value!.result_min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, link.value!.result_max, link, link.unit_name(prefix),prefix) + ']'
+        const min = interval_min ?? link.value?.result_min
+        const max = interval_max ?? link.value?.result_max
+        return '[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']'
       }
       if (type_data === 'free_value') {
         return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))

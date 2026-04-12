@@ -58,6 +58,7 @@ import { Type_JSON } from '../../types/Utils'
 
 import { clickSavePDF, clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
+import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalTuto } from './SankeyTutorials'
 import {
   loadUniversalJSON,
@@ -216,33 +217,55 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
 
 
 
+  // State for Excel template modal
+  const [show_excel_template, set_show_excel_template] = useState(false)
+
   // Button reset DA & start either from empty sankey or template
-  const button_resetDA = <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.new')}
-    isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
+  const button_resetDA = <ChakraMenu
+    variant='menu_button_subnav_style'
+    placement='bottom-start' id='nouveau'
   >
-    <Button
-      variant='menutop_button'
-      size='sizeMenuTopButton'
-      onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}
+    <OSTooltip
+      placement='bottom'
+      label={t('Menu.tooltips.new')}
+      isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
     >
-      <Box
-        layerStyle='menutop_button_style'
-      >
+      <MenuButton>
         <Box
+          gridColumn='1'
+          gridColumnEnd='span 2'
           gridRow='1'
         >
           {new_data.icon_library.icon_new_da}
         </Box>
         <Box
+          gridColumn='1'
           gridRow='2'
         >
           {t('Menu.new')}
         </Box>
-      </Box>
-    </Button>
-  </OSTooltip>
+        <Box
+          gridColumn='2'
+          gridRow='2'
+          height='1rem'
+          width='1rem'
+        >
+          <ChevronDownIcon
+            style={{ 'height': '1rem', 'width': '1rem' }} />
+        </Box>
+      </MenuButton>
+    </OSTooltip>
+    <MenuList>
+      <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
+        {new_data.icon_library.icon_new_da}
+        {t('Menu.from_model')}
+      </MenuItem>
+      <MenuItem onClick={() => { set_show_excel_template(true) }}>
+        {new_data.icon_library.icon_open_sankey_excel}
+        {t('Menu.new_excel_template')}
+      </MenuItem>
+    </MenuList>
+  </ChakraMenu>
 
   // Button to import sankey from data format (json,excel)
   const button_open_sankey = <ChakraMenu
@@ -592,6 +615,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     <ModalTemplate
       new_data={new_data}
       additionalMenu={additionalMenus}
+    />
+    <ModalExcelTemplate
+      new_data={new_data}
+      show={show_excel_template}
+      setShow={set_show_excel_template}
     />
     <ModalTuto
       new_data={new_data}

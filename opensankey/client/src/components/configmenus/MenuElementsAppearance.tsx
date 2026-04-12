@@ -137,13 +137,13 @@ export const LabelDisplayModeSelector = ({
   refreshAll: () => void
   t: TFunction
 }) => {
-  const setModeSimpleText = () => {
-    labelValues.has_fo = false
-    display_mode_name_label.current = 'simple_text'
-    refreshAll()
-  }
-
-  const setModeRichText = () => {
+  const setModeText = () => {
+    // Initialize fo_content from name_label if empty
+    if (!labelValues.fo_content) {
+      (elements as Class_NodeBase[]).forEach(node => {
+        node.name_label_fo_content = `<p>${node.name_label}</p>`
+      })
+    }
     labelValues.has_fo = true
     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
     //@ts-expect-error xxx
@@ -174,22 +174,12 @@ export const LabelDisplayModeSelector = ({
 
   if (prefix === 'name_label') {
     return (
-      <Box layerStyle='options_3cols'>
-        <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
+      <Box layerStyle='options_2cols'>
+        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
           <Button
-            variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            variant={(display_mode_name_label.current === 'simple_text' || display_mode_name_label.current === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
             sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeSimpleText}
-          >
-            {app_data.icon_library.icon_text_mode_simple}
-          </Button>
-        </OSTooltip>
-        <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')} disabled={!app_data.has_sankey_plus}>
-          <Button
-            isDisabled={!app_data.has_sankey_plus}
-            variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
-            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
-            onClick={setModeRichText}
+            onClick={setModeText}
           >
             {app_data.icon_library.icon_text_mode_rich}
           </Button>
@@ -2105,12 +2095,13 @@ export const missing_menu_translations = {
         display_mode: {
           text: 'Text',
           rich: 'Rich text',
+          editor: 'Editor',
           value: 'Value',
           icon: 'Icon',
           image: 'Image',
           tooltips: {
             simple_text: 'Simple text mode',
-            rich_text: 'Rich text mode with formatting',
+            rich_text: 'Open text editor',
             value: 'Display numeric value',
             icon: 'Display as icon',
             image: 'Display as custom image'
@@ -2161,12 +2152,13 @@ export const missing_menu_translations = {
         display_mode: {
           text: 'Text',
           rich: 'Rich text',
+          editor: 'Éditeur',
           value: 'Value',
           icon: 'Icon',
           image: 'Image',
           tooltips: {
             simple_text: 'Mode texte simple',
-            rich_text: 'Mode texte enrichi avec formatage',
+            rich_text: 'Ouvrir l\'éditeur de texte',
             value: 'Afficher la valeur numérique',
             icon: 'Afficher sous forme d\'icône',
             image: 'Afficher sous forme d\'image personnalisée'

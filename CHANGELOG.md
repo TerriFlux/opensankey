@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié] — Avril 2026
+
+### Ajouts
+- **Intervalles, incertitude, min/max sur les flux (AFM)** : nouveau type de donnée `intervals` dans `value_option`, champs `data_min`, `data_max`, `data_uncertainty` (incertitude relative en %) persistés en JSON et synchronisés avec l'export/import Excel (feuille Min Max). Panneau de configuration flux restructuré en deux onglets Basique/AFM avec sélecteur de type de données inline. Affichage `[min - max]` sur le diagramme pour les flux de type intervalle (pointillé).
+- **Séparation type de données / affichage des intervalles** : `type_data` scindé en deux attributs indépendants `data_source` (structure/collectées/calculées+label/calculées) et `interval_display` (structure/intervalles/valeurs possibles). Les deux sélecteurs de la barre d'outils écrivent chacun dans leur attribut. Le getter `type_data` dérive les deux pour la rétrocompatibilité. « Valeurs possibles » n'est disponible que pour les données calculées. Type d'affichage affiché dans la légende. Libellé du sélecteur 2 renommé « Affichage des intervalles ».
+
 ## [Non publié] — Mars 2026
 
 ### Ajouts
@@ -46,6 +52,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - `feat(ui)` : onglet « Vues » absent en mode basique, grisé sans licence ; correction des attributs par défaut (a6051340).
 - `feat(ui)` : case à cocher `error_on_new_flux` pour validation des feuilles secondaires (476c7adb).
 - `feat(ui/server)` : case à cocher `error_on_new_nodes`, nettoyage du bruit de debug (37ec8a51, 1215e20c).
+- `refactor(ui)` : fusion des boutons « Texte simple » / « Rich Text » en un seul bouton « Éditeur » ; toolbar Quill masquée sans licence OSP (texte brut uniquement) ; contenu riche chargé sans licence : édition désactivée ; synchronisation bidirectionnelle `fo_content` ↔ `name_label` (nœuds) / `text_value` (liens).
 
 ### Corrections
 - `fix(mac)` : compatibilité macOS des raccourcis clavier et interactions souris :

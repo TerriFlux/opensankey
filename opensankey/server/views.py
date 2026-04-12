@@ -597,6 +597,396 @@ def download_examples():
     return Response(exemple_file_path, status=400, mimetype="text")
 
 
+@opensankey.route("/menus/excel_template", methods=["POST"])
+def menus_excel_template():
+    """Generate a blank Excel template with selected sheets, example rows, column notes and a Readme."""
+    data = request.get_json(force=True)
+    sheets = data.get("sheets", [])
+    lang = data.get("lang", "fr")
+
+    tmp = tempfile.NamedTemporaryFile(suffix=".xlsx", delete=False)
+    tmp.close()
+
+    try:
+        _generate_excel_template(tmp.name, sheets, lang)
+        return send_file(tmp.name, as_attachment=True, download_name="template_afm.xlsx",
+                         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    except Exception as e:
+        trace.logger.error(f"Excel template generation failed: {e}")
+        return Response(str(e), status=500)
+    finally:
+        try:
+            os.unlink(tmp.name)
+        except OSError:
+            pass
+
+
+def _generate_excel_template(filepath, sheets, lang="fr"):
+    """Build an openpyxl workbook with one tab per requested sheet."""
+    from openpyxl.comments import Comment
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+    wb = openpyxl.Workbook()
+    # Remove default sheet
+    wb.remove(wb.active)
+
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    thin_border = Border(
+        left=Side(style="thin"), right=Side(style="thin"),
+        top=Side(style="thin"), bottom=Side(style="thin"),
+    )
+    example_font = Font(italic=True, color="888888")
+
+    fr = lang == "fr"
+
+    # ── Sheet definitions ──────────────────────────────────────────────
+    SHEET_DEFS = {
+        "tags": {
+            "name": "Etiquettes" if fr else "Tags",
+            "cols": [
+                ("Nom du groupe d'étiquette" if fr else "Tags group name",
+                 "Nom unique du groupe d'étiquettes." if fr else "Unique name for the tag group."),
+                ("Type d'étiquette" if fr else "Tags type",
+                 "Un parmi : dataTags, unitTags, fluxTags, nodeTags, levelTags" if fr
+                 else "One of: dataTags, unitTags, fluxTags, nodeTags, levelTags"),
+                ("Etiquettes" if fr else "Tags",
+                 "Liste séparée par ':'" if fr else "Colon-separated list"),
+                ("Palette visible" if fr else "Visible colormap",
+                 "1 = affichée, 0 = masquée" if fr else "1 = shown, 0 = hidden"),
+                ("Palette de couleur" if fr else "Colormap",
+                 "Nom de palette (ex. Set1, Paired)" if fr else "Palette name (e.g. Set1, Paired)"),
+                ("Couleurs" if fr else "Colors",
+                 "Couleurs hex séparées par ':'" if fr else "Hex colors separated by ':'"),
+            ],
+            "examples": [
+                ["Filière", "nodeTags", "Amont:Transformation:Aval", "1", "Set1", "#e41a1c:#377eb8:#4daf4a"],
+                ["Source", "fluxTags", "Statistique:Estimation:Hypothèse", "1", "", ""],
+                ["Année", "dataTags", "2023:2024", "", "", ""],
+            ],
+        },
+        "nodes": {
+            "name": "Noeuds" if fr else "Nodes",
+            "cols": [
+                ("Niveau d'agrégation" if fr else "Aggregation level",
+                 "Entier >= 1. Niveau 1 = le plus agrégé." if fr
+                 else "Integer >= 1. Level 1 = most aggregated."),
+                ("Noeuds" if fr else "Nodes",
+                 "Nom unique du noeud." if fr else "Unique node name."),
+                ("Equilibre entrée-sortie" if fr else "Input-output balance",
+                 "1 = bilan matière imposé, 0 = non." if fr
+                 else "1 = mass balance enforced, 0 = no."),
+            ],
+            "examples": [
+                [1, "Agriculture", 1],
+                [2, "Céréales", 1],
+                [2, "Élevage", 1],
+            ],
+        },
+        "products": {
+            "name": "Produits" if fr else "Products",
+            "cols": [
+                ("Niveau d'agrégation" if fr else "Aggregation level",
+                 "Entier >= 1. Niveau 1 = le plus agrégé." if fr
+                 else "Integer >= 1. Level 1 = most aggregated."),
+                ("Produits" if fr else "Products",
+                 "Nom unique du produit." if fr else "Unique product name."),
+                ("Equilibre entrée-sortie" if fr else "Input-output balance",
+                 "1 = bilan matière imposé, 0 = non." if fr
+                 else "1 = mass balance enforced, 0 = no."),
+            ],
+            "examples": [
+                [1, "Blé", 1],
+                [1, "Lait", 1],
+            ],
+        },
+        "sectors": {
+            "name": "Secteurs" if fr else "Sectors",
+            "cols": [
+                ("Niveau d'agrégation" if fr else "Aggregation level",
+                 "Entier >= 1." if fr else "Integer >= 1."),
+                ("Secteurs" if fr else "Sectors",
+                 "Nom unique du secteur." if fr else "Unique sector name."),
+                ("Equilibre entrée-sortie" if fr else "Input-output balance",
+                 "1 = bilan matière imposé, 0 = non." if fr
+                 else "1 = mass balance enforced, 0 = no."),
+            ],
+            "examples": [
+                [1, "Production", 1],
+                [1, "Transformation", 1],
+                [1, "Distribution", 1],
+            ],
+        },
+        "exchanges": {
+            "name": "Echanges" if fr else "Exchanges",
+            "cols": [
+                ("Niveau d'agrégation" if fr else "Aggregation level",
+                 "Entier >= 1." if fr else "Integer >= 1."),
+                ("Echanges" if fr else "Exchanges",
+                 "Nom unique de l'échange." if fr else "Unique exchange name."),
+            ],
+            "examples": [
+                [1, "Import"],
+                [1, "Export"],
+            ],
+        },
+        "ter": {
+            "name": "Table emplois ressources" if fr else "Supply-use table",
+            "cols": [
+                ("" if fr else "",
+                 "Produits en lignes, Secteurs en colonnes.\nTable Ressources (haut) puis Emplois (bas) séparées par une ligne vide.\n1 = flux existant, 0 ou vide = pas de flux."
+                 if fr else "Products in rows, Sectors in columns.\nSupply table (top) then Use table (bottom) separated by blank row.\n1 = flow exists, 0 or empty = no flow."),
+                ("Production", ""),
+                ("Transformation", ""),
+            ],
+            "examples": [
+                ["Blé", 1, ""],
+                ["Lait", 1, ""],
+                ["", "", ""],
+                ["Blé", "", 1],
+                ["Lait", "", 1],
+            ],
+        },
+        "data": {
+            "name": "Valeurs" if fr else "Values",
+            "cols": [
+                ("Origine" if fr else "Origin",
+                 "Noeud d'origine du flux." if fr else "Flow origin node."),
+                ("Destination" if fr else "Target",
+                 "Noeud de destination du flux." if fr else "Flow destination node."),
+                ("Valeur" if fr else "Value",
+                 "Valeur dans l'unité de référence." if fr else "Value in reference unit."),
+                ("Incertitude relative" if fr else "Relative Uncertainty",
+                 "Écart-type relatif (ex. 0.1 = 10%)." if fr
+                 else "Relative standard deviation (e.g. 0.1 = 10%)."),
+                ("Source" if fr else "Source",
+                 "Référence de la source." if fr else "Data source reference."),
+            ],
+            "examples": [
+                ["Production", "Blé", 1500, 0.1, "FAO 2023"],
+                ["Blé", "Transformation", 1200, 0.15, "Estimation"],
+            ],
+        },
+        "min_max": {
+            "name": "Min Max",
+            "cols": [
+                ("Origine" if fr else "Origin",
+                 "Noeud d'origine du flux." if fr else "Flow origin node."),
+                ("Destination" if fr else "Target",
+                 "Noeud de destination du flux." if fr else "Flow destination node."),
+                ("Minimum",
+                 "Borne inférieure (unité de référence)." if fr else "Lower bound (reference unit)."),
+                ("Maximum",
+                 "Borne supérieure (unité de référence)." if fr else "Upper bound (reference unit)."),
+            ],
+            "examples": [
+                ["Production", "Blé", 1000, 2000],
+                ["Blé", "Transformation", 800, ""],
+            ],
+        },
+        "constraints": {
+            "name": "Contraintes" if fr else "Constraints",
+            "cols": [
+                ("ID",
+                 "Identifiant de l'équation. Les lignes de même ID forment une équation." if fr
+                 else "Equation ID. Rows with same ID form one equation."),
+                ("Origine" if fr else "Origin",
+                 "Noeud d'origine du flux." if fr else "Flow origin node."),
+                ("Destination" if fr else "Target",
+                 "Noeud de destination du flux." if fr else "Flow destination node."),
+                ("eq = 0",
+                 "Coefficient d'égalité : Σ(coef × flux) = 0" if fr
+                 else "Equality coefficient: Σ(coef × flux) = 0"),
+                ("eq <= 0",
+                 "Coefficient d'inégalité : Σ(coef × flux) <= 0" if fr
+                 else "Inequality coefficient: Σ(coef × flux) <= 0"),
+                ("eq >= 0",
+                 "Coefficient d'inégalité : Σ(coef × flux) >= 0" if fr
+                 else "Inequality coefficient: Σ(coef × flux) >= 0"),
+                ("Traduction" if fr else "Translation",
+                 "Description lisible de la contrainte." if fr
+                 else "Human-readable constraint description."),
+            ],
+            "examples": [
+                [1, "Production", "Blé", -1, "", "", "Rendement 60%"],
+                [1, "Céréales", "Production", 0.6, "", "", ""],
+            ],
+        },
+        "ratio_flux": {
+            "name": "Ratio Flux",
+            "cols": [
+                ("Origine" if fr else "Origin",
+                 "Noeud d'origine du flux principal." if fr else "Main flow origin node."),
+                ("Destination" if fr else "Destination",
+                 "Noeud de destination du flux principal." if fr else "Main flow destination node."),
+                ("=", "Colonne décorative." if fr else "Decorative column."),
+                ("Coef",
+                 "Coefficient d'égalité : flux = Coef × flux_ref" if fr
+                 else "Equality coefficient: flow = Coef × ref_flow"),
+                ("Min",
+                 "Ratio minimum : flux >= Min × flux_ref" if fr
+                 else "Minimum ratio: flow >= Min × ref_flow"),
+                ("Max",
+                 "Ratio maximum : flux <= Max × flux_ref" if fr
+                 else "Maximum ratio: flow <= Max × ref_flow"),
+                ("x", "Opérateur (décoratif)." if fr else "Operator (decorative)."),
+                ("Origine Ref" if fr else "Origin Ref",
+                 "Noeud d'origine du flux de référence. 'TOUT' = total entrant/sortant." if fr
+                 else "Reference flow origin. 'TOUT'/'ALL' = total in/out."),
+                ("Destination Ref" if fr else "Destination Ref",
+                 "Noeud de destination du flux de référence." if fr
+                 else "Reference flow destination."),
+            ],
+            "examples": [
+                ["Production", "Blé", "=", 0.6, "", "", "x", "Céréales", "Production"],
+                ["Blé", "Export", "=", "", 0.1, 0.3, "x", "Production", "Blé"],
+            ],
+        },
+        "stocks": {
+            "name": "Stocks",
+            "cols": [
+                ("Noeud" if fr else "Node",
+                 "Nom du noeud concerné." if fr else "Node name."),
+                ("Stock initial" if fr else "Initial stock",
+                 "Valeur du stock initial." if fr else "Initial stock value."),
+                ("Variation de stock" if fr else "Stock variation",
+                 "Delta stock (Σentrants - Σsortants - Δstock = 0)." if fr
+                 else "Stock variation (Σin - Σout - Δstock = 0)."),
+                ("Incertitude" if fr else "Uncertainty",
+                 "Incertitude relative." if fr else "Relative uncertainty."),
+                ("Min", "Borne inférieure." if fr else "Lower bound."),
+                ("Max", "Borne supérieure." if fr else "Upper bound."),
+            ],
+            "examples": [
+                ["Transformation", "", 50, 0.2, 0, 100],
+            ],
+        },
+        "results": {
+            "name": "Résultats" if fr else "Results",
+            "cols": [
+                ("Origine" if fr else "Origin", ""),
+                ("Destination" if fr else "Target", ""),
+                ("Valeur réconciliée" if fr else "Reconciled value",
+                 "Valeur calculée par le solveur." if fr else "Value computed by the solver."),
+                ("Borne inférieure" if fr else "Lower boundary",
+                 "Borne inf si variable libre." if fr else "Lower bound if free variable."),
+                ("Borne supérieure" if fr else "Upper boundary",
+                 "Borne sup si variable libre." if fr else "Upper bound if free variable."),
+            ],
+            "examples": [],
+        },
+        "analysis": {
+            "name": "Analyses des résultats" if fr else "Results analysis",
+            "cols": [
+                ("Origine" if fr else "Origin", ""),
+                ("Destination" if fr else "Target", ""),
+                ("Valeur réconciliée" if fr else "Reconciled value", ""),
+                ("Borne inférieure" if fr else "Lower boundary", ""),
+                ("Borne supérieure" if fr else "Upper boundary", ""),
+                ("Valeur non-réconciliée" if fr else "Unreconciled value",
+                 "Valeur d'entrée." if fr else "Input value."),
+                ("Incertitude relative non-réconciliée" if fr else "Unreconciled relative uncertainty",
+                 "Écart-type relatif d'entrée (%)." if fr else "Input relative std dev (%)."),
+                ("Nb sigmas" if fr else "Nb sigmas",
+                 "Écart entrée/réconcilié en σ. <= 2 OK, > 3 à vérifier." if fr
+                 else "Input/reconciled gap in σ. <= 2 OK, > 3 check."),
+                ("Type de variable" if fr else "Variable type",
+                 "mesuré, redondant, déterminable, libre" if fr
+                 else "measured, redundant, determinable, free"),
+            ],
+            "examples": [],
+        },
+        "readme": {
+            "name": "Readme",
+            "cols": [],
+            "examples": [],
+            "is_readme": True,
+        },
+    }
+
+    README_LINES = [
+        "FORMAT EXCEL — ANALYSE DE FLUX DE MATIÈRE (AFM)",
+        "",
+        "Ce fichier est un modèle vierge pour construire une AFM." if fr
+        else "This file is a blank template for building an MFA.",
+        "",
+        "STRUCTURE :",
+        "- Étiquettes : groupes d'étiquettes (filtrage, couleur, agrégation)" if fr
+        else "- Tags: tag groups (filtering, coloring, aggregation)",
+        "- Noeuds / Produits / Secteurs / Échanges : définition des noeuds" if fr
+        else "- Nodes / Products / Sectors / Exchanges: node definitions",
+        "- Table emplois ressources (TER) : topologie matricielle" if fr
+        else "- Supply-use table (TER): matrix topology",
+        "- Valeurs : valeurs de flux, incertitudes" if fr
+        else "- Values: flow values, uncertainties",
+        "- Min Max : bornes des flux" if fr else "- Min Max: flow bounds",
+        "- Contraintes : équations entre flux" if fr else "- Constraints: equations between flows",
+        "- Ratio Flux : contraintes de ratio (format simplifié)" if fr
+        else "- Ratio Flux: ratio constraints (simplified format)",
+        "- Stocks : variations de stock par noeud" if fr
+        else "- Stocks: stock variations per node",
+        "",
+        "CONVENTIONS :",
+        "- ':' sépare les étiquettes dans les listes" if fr
+        else "- ':' separates tags in lists",
+        "- Cellule vide = toutes les étiquettes attribuées" if fr
+        else "- Empty cell = all tags assigned",
+        "- '0' = aucune étiquette (élément masqué)" if fr
+        else "- '0' = no tag (element hidden)",
+        "- Incertitude relative par défaut : 10%" if fr
+        else "- Default relative uncertainty: 10%",
+        "",
+        "Documentation complète : FormatExcel.md" if fr
+        else "Full documentation: FormatExcel.md",
+    ]
+
+    for sheet_key in sheets:
+        defn = SHEET_DEFS.get(sheet_key)
+        if defn is None:
+            continue
+
+        ws = wb.create_sheet(title=defn["name"])
+
+        if defn.get("is_readme"):
+            # Readme sheet: plain text lines
+            ws.column_dimensions["A"].width = 100
+            for i, line in enumerate(README_LINES, 1):
+                cell = ws.cell(row=i, column=1, value=line)
+                if i == 1:
+                    cell.font = Font(bold=True, size=14)
+                elif line.startswith("STRUCTURE") or line.startswith("CONVENTIONS"):
+                    cell.font = Font(bold=True, size=12)
+            continue
+
+        # Header row
+        for col_idx, (col_name, col_note) in enumerate(defn["cols"], 1):
+            cell = ws.cell(row=1, column=col_idx, value=col_name)
+            cell.font = header_font
+            cell.fill = header_fill
+            cell.alignment = header_align
+            cell.border = thin_border
+            if col_note:
+                cell.comment = Comment(col_note, "SankeyExcelParser")
+
+        # Example rows
+        for row_idx, row_data in enumerate(defn.get("examples", []), 2):
+            for col_idx, val in enumerate(row_data, 1):
+                cell = ws.cell(row=row_idx, column=col_idx, value=val if val != "" else None)
+                cell.font = example_font
+                cell.border = thin_border
+
+        # Auto-width columns
+        for col_idx, (col_name, _) in enumerate(defn["cols"], 1):
+            max_len = len(str(col_name))
+            for row_data in defn.get("examples", []):
+                if col_idx - 1 < len(row_data):
+                    max_len = max(max_len, len(str(row_data[col_idx - 1])))
+            ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = min(max_len + 4, 40)
+
+    wb.save(filepath)
+
+
 @opensankey.route("/menus/templates", methods=["POST"])
 def menus_templates():
     """
