@@ -313,6 +313,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   })
 
   const value_option = first_link_value?.value_option ?? default_value_option
+  // Force AFM tab when value_option is not 'value' (basic tab disabled)
+  if (dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
 
   const unit_text = value_option_percent_constants.includes(value_option) ?
     '%' :
@@ -352,20 +354,14 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     return undefined
   }
 
-  const current_afm_value_type = value_option === 'value' ? 'value' : value_option === 'intervals' ? 'intervals' : value_option === 'unit_ratio' ? 'ratio' : 'percent'
-  const [afm_value_type, set_afm_value_type] = useState(current_afm_value_type)
-  if (afm_value_type !== current_afm_value_type) set_afm_value_type(current_afm_value_type)
+  const afm_value_type = value_option === 'value' ? 'value' : value_option === 'intervals' ? 'intervals' : value_option === 'unit_ratio' ? 'ratio' : 'percent'
 
   const afm_type_constants = ['value', 'intervals', 'percent']
   if (unit_data_tagg) afm_type_constants.push('ratio')
 
-  const current_afm_node_ref = value_option === '%PS' || value_option === '%IS' || value_option === '%OS' ? 'source' : 'target'
-  const [afm_node_ref, set_afm_node_ref] = useState(current_afm_node_ref)
-  if (afm_node_ref !== current_afm_node_ref) set_afm_node_ref(current_afm_node_ref)
+  const afm_node_ref = value_option === '%PS' || value_option === '%IS' || value_option === '%OS' ? 'source' : 'target'
 
-  const current_afm_dir = (value_option === '%IS' || value_option === '%ID') ? 'input' : (value_option === '%OS' || value_option === '%OD') ? 'output' : 'parent'
-  const [afm_dir, set_afm_dir] = useState(current_afm_dir)
-  if (afm_dir !== current_afm_dir) set_afm_dir(current_afm_dir)
+  const afm_dir = (value_option === '%IS' || value_option === '%ID') ? 'input' : (value_option === '%OS' || value_option === '%OD') ? 'output' : 'parent'
 
   // ✅ Gestion des data tags
   data_taggs_list.map(data_tagg => {
@@ -379,6 +375,12 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   })
 
   const setModeText = () => {
+    // Initialize fo_content from text_value if empty
+    if (!labelValues.fo_content) {
+      selected_links.forEach(link => {
+        link.name_label_fo_content = wrapInParagraph(link.text_value ?? '')
+      })
+    }
     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
     app_data.menu_configuration.r_editor_content_set_elements.current(selected_links, 'name_label')
     labelValues.has_fo = true
@@ -474,12 +476,15 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       {/* Tab selector: Basique / AFM */}
       {app_data.has_sankey_afm && (
         <Box layerStyle='options_2cols'>
-          <Button
-            variant={dataTab === 'basic' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-            onClick={() => setDataTab('basic')}
-          >
-            {t('Flux.data.tab_basic')}
-          </Button>
+          <OSTooltip label={value_option !== 'value' ? t('Flux.data.tooltips.tab_basic_disabled') : ''}>
+            <Button
+              variant={dataTab === 'basic' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+              isDisabled={value_option !== 'value'}
+              onClick={() => setDataTab('basic')}
+            >
+              {t('Flux.data.tab_basic')}
+            </Button>
+          </OSTooltip>
           <Button
             variant={dataTab === 'afm' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
             onClick={() => setDataTab('afm')}
@@ -570,8 +575,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
                 if (computed === 'unit_ratio') {
                   l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
                 }
+                l.drawElements()
               })
-              set_afm_value_type(evt.target.value)
               refreshThisAndUpdateRelatedComponents()
             }}
           >
@@ -596,7 +601,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
                 onChange={(evt) => {
                   const computed = compute_value_option(afm_value_type, evt.target.value, afm_dir)
                   selected_links.forEach(l => l.value!.value_option = computed as ValueOptionType)
-                  set_afm_node_ref(evt.target.value)
                   refreshThisAndUpdateRelatedComponents()
                 }}
               >
@@ -616,7 +620,6 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
                 value={compute_value_option(afm_value_type, afm_node_ref, afm_dir)}
                 onChange={(evt) => {
                   selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
-                  set_afm_dir(evt.target.value)
                   refreshThisAndUpdateRelatedComponents()
                 }}
               >
@@ -651,8 +654,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           />
         )}
 
-        {/* Value input (when type is "value") */}
-        {value_option === 'value' && (
+        {/* Value input (all types except intervals) */}
+        {value_option !== 'intervals' && (
           <RowSetter2Cols
             attributePath={'Flux.labels'}
             attributeKey={'value'}
@@ -748,8 +751,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
                     }}
                     minimum_value={0}
                     stepper={true}
-                    step={0.1}
-                    unit_text={unit_text}
+                    step={1}
+                    unit_text={'%'}
                   />
                 ) : <Box />}
               </BOX2COLS>
@@ -769,9 +772,11 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
             default_value={first_link_value?.text_value}
             function_on_blur={(_: string | null) => {
               Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
-              // Sync text_value → fo_content
-              const wrapped = wrapInParagraph(_ ?? '')
-              selected_links.forEach(link => { link.name_label_fo_content = wrapped })
+              // Sync text_value → fo_content only when rich text mode is active
+              if (labelValues.has_fo) {
+                const wrapped = wrapInParagraph(_ ?? '')
+                selected_links.forEach(link => { link.name_label_fo_content = wrapped })
+              }
             }}
             multiValue={is_label_indeterminated}
           />
