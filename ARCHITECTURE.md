@@ -131,6 +131,76 @@ Version actuelle : `0.93`. Côté OSP, les vues sont compressées gzip dans le J
 
 Types de licence DB : `terriflux` (free), `OpenSankey+`, `sankeysuite` (AFM). Flags côté app : `has_sankey_plus`, `has_sankey_afm`, `has_sankey_dev`. Le trial OSP est client-side (localStorage, 30 jours, UUID anonyme), endpoints `/api/trial/started` et `/api/trial/converted`.
 
+## Submodules Python
+
+### SankeyExcelParser (v1.1.2)
+
+Parser Excel ↔ graphe Sankey Python, distribué en binaire Cython (wheels `.pyd`/`.so`). Publié sur PyPI.
+
+**API publique** :
+```python
+from SankeyExcelParser.io_base import IOExcel, IOJson
+io = IOExcel()
+ok, msg = io.load_sankey("model.xlsx")
+sankey = io.sankey  # SankeyPandas avec nodes, flux, taggs
+io_out = IOExcel(sankey); io_out.write_sankey("output.xlsx")
+```
+
+**Modèle** : `SankeyBase` → `SankeyPandas` (dict `nodes`/`flux`/`taggs`), éléments `Node`, `Flux`, `Data`, `StockData`, `DataMinMax`, `DataConstraint`, `Tag`, `TagGroup`.
+
+**Feuilles Excel** : ordre de traitement Tags → Nodes → Topologie (TER/IO) → Data (Values/Stocks) → Contraintes. Support FR/EN via regex sur noms de feuilles/colonnes.
+
+**Changements avril 2026** : `StockData` pour stocks réconciliables (feuilles `stocks_results`/`stocks_analysis`), tapered flows (`data_value_target`), encodage hex pour IDs non-alphanumériques, distribution Cython binary-only.
+
+### MFAProblem (v1.1.2)
+
+Solveur de réconciliation de flux de matière. Problème : trouver des valeurs compatibles avec les équations de bilan à partir de mesures incertaines.
+
+**API publique** (appelée depuis `server/views.py`) :
+```python
+from mfa_problem import mfa_problem_main
+ok = mfa_problem_main.optimisation(model_name, sankey, uncertainty_analysis, nb_realisations, downscale)
+```
+
+**Approche** : Quadratic Programming via CVXPY + OSQP. Least-squares pondéré `min Σ (x−z)²/σ²` sous contraintes `A_eq x = 0` (bilan + agrégation) et box `min ≤ x ≤ max`. Tolérance cascade 1e-5 → 1e-4 → 1e-3. Multi-threadé par combinaison de datatags.
+
+**Pipeline** :
+1. Index flux + stocks → `data2index` / `index2data`
+2. Build contraintes (aggregation, bilan nœud avec `+1` in / `−1` out / `−1` stock, autres)
+3. Load `ter_vectors` (DATA, SIGMA, LB, UB)
+4. Solve : RREF via C++/Eigen (`mfa_problem_matrices.pyd` / pybind11) → classification (mesuré / redondant / déterminé / libre) → `Cvx_minimize` → intervalles des variables libres (LP min/max) → optionnel Monte Carlo
+5. Check compliance
+6. Output : `data._result = Data(...)` ou `node.add_stock_result(...)` avec cross-link `alterego`
+
+**Stock reconciliation (avril 2026)** : stocks indexés comme colonnes additionnelles, LB par défaut `-MAX_VALUE` pour drawdown, coefficient `-1.0` sur la ligne de bilan matché par set de datatags. Résultat créé en `StockData` séparé. Limitations : stocks sur nœuds parents (PR/PC) non réconciliés, invisibles aux contraintes de ratio.
+
+**Fichiers clés** : `mfa_problem_main.py` (API, threading), `mfa_problem_solver.py` (RREF, CVXPY, MC), `mfa_problem_format_io.py` (builders contraintes, loader, output), `mfa_problem_check_io.py`, `mfa_problem_matrices/` (C++ Eigen).
+
+### LoginComponent
+
+Auth, licensing et paiement Stripe. Deux parties : `client/` (React/TS) et `server/` (Flask/SQLAlchemy).
+
+**Schéma DB** (SQLAlchemy, `server/models.py`) :
+- `User` : id, email (unique), password (sha256), firstname/name, dir, is_developer, stripe_id (customer), secret_token/expiry (reset)
+- `License` : id, name (`OpenSankey+`, `SankeySuite`, `terriflux`), stripe_id (product)
+- `UserLicences` (join) : user_id, license_id (cascade), creation, expiry (ISO ou `"never"`), activated, stripe_id (subscription)
+- `Metrics` : id = SHA256(IP), nb_visits, last_visit
+
+**Blueprints Flask** :
+- `auth` — `/auth/{signup/create, login, logout, connected, license, forgot_pw, reset_pw/<token>}`
+- `connected_user` — `/user/{infos, infos/modify/*, delete/license/<name>, delete/account}` (tout `@login_required`)
+- `stripe` — `/stripe/{config, create-customer-portal, session-status, webhook}`
+
+**Webhooks Stripe** : `customer.*`, `customer.subscription.*`, `product.*`, `checkout.session.completed` (→ `activated=False` si payé), `invoice.paid` (→ `activated=True`, `expiry="never"`).
+
+**Flow paiement** : `PaiementCheckout` embed `<stripe-pricing-table>` → webhook `checkout.session.completed` → webhook `invoice.paid` active la licence → front `PaiementReturn` poll `/stripe/session-status`. Avril 2026 : `PaiementReturn` POST `/api/trial/converted` avec UUID lu depuis `localStorage.os_plus_trial_uuid` (idempotent via flag `os_plus_trial_converted`).
+
+**Client** : `LoginComponent` singleton attaché à `Class_ApplicationDataSA.login_component`. `checkTokens()` throttlé à 1800ms appelle `GET /auth/connected` puis `POST /auth/license` et met à jour `has_account`, `has_licence_sankeyplus/sankeysuite/dev`. Routes gardées par `PrivateRoute` / `PublicRoute` / `LoginRoute`.
+
+**Sécurité** : Werkzeug sha256, Flask-Login + remember cookies, Flask-CORS `support_credentials=True`, webhook Stripe signature vérifiée, reset password via `itsdangerous.URLSafeTimedSerializer` TTL 15 min, in-app PIN 6 chiffres TTL 10 min.
+
+**Env requis** : `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_OSPLUS{MENSUEL,ANNUEL}`, `STRIPE_ENDPOINT_SECRET`, `STRIPE_PRICING_TABLE_ID`, `CLIENT_ROOT_URL`, `MAIL_SENDING_ADRESS/PWD`, `MAIL_SERVER/PORT`, `MAIL_USE_TLS/SSL`, `MAIL_DBG_MODE`.
+
 ---
 
 # Pistes d'amélioration
@@ -214,3 +284,45 @@ Peu (pas ?) de tests unitaires visibles sur `Class_Sankey`, les valeurs, les tag
 - Persistance : round-trip `toJSON → fromJSON` sur des fichiers golden
 - `updateFrom` : cascade des attrs entre DA (base de l'héritage de vues)
 - `heredited_attr` : migration legacy et cascade multi-source
+
+## 11. MFAProblem — couplage duck-typing fragile entre `Data` et `StockData`
+
+L'ajout des stocks (avril 2026) repose sur la parité d'interface entre `Data` et `StockData` (même attributs `sigma`, `min_val`, `max_val`, `analysis_vector`). Le solveur les traite uniformément via `isinstance` et des helpers comme `_data_label()`. Un refactor d'un côté qui oublie l'autre casse silencieusement la réconciliation.
+
+**Suggestion** : extraire un `Protocol` (PEP 544) ou une classe de base explicite `ReconciliableVariable` documentant l'interface attendue par le solveur, et faire hériter `Data` et `StockData` de cette base. Les limitations actuelles (stocks sur parents non supportés, invisibles aux ratios) gagneraient aussi à être formalisées comme capabilities optionnelles.
+
+## 12. MFAProblem — taille des fichiers et couplage
+
+`mfa_problem_solver.py` (~1000L) et `mfa_problem_format_io.py` (~1400L) mélangent builders de contraintes, loaders, output, et helpers debug. L'ajout des stocks a nécessité des modifs parallèles dans les deux fichiers.
+
+**Suggestion** : extraire un module `constraints_builder.py` (aggregation, nodes, ratios) et un module `results_writer.py` (Data vs StockData output), isolés et testables unitairement.
+
+## 13. SankeyExcelParser — feuilles à reconnaissance regex
+
+Le support bilingue (FR/EN) et la tolérance aux variations de nom de feuille passent par des regex dans `io_excel_constants.py`. Robuste mais silencieux : un nom proche d'un pattern mais non-match est ignoré sans warning.
+
+**Suggestion** : logger systématiquement les feuilles ignorées, avec la distance de Levenshtein aux patterns connus. Aide énormément au debug quand un utilisateur rapporte un parsing partiel.
+
+## 14. SankeyExcelParser — distribution Cython opaque
+
+La compilation Cython retire les sources Python du wheel, ce qui complique le debug en prod (tracebacks pointent vers `.pyd` sans ligne lisible) et empêche le hot-reload en dev.
+
+**Suggestion** : garder un build `pip install -e .` non-Cython pour le dev local, et réserver la compilation à la CI pour les releases. Un flag `SEP_CYTHON=1` dans `setup.py` permettrait de basculer explicitement.
+
+## 15. LoginComponent — hash sha256 vs standard moderne
+
+Les mots de passe sont hashés avec `werkzeug.generate_password_hash(method="sha256")`. sha256 simple (même salé par werkzeug) n'est plus recommandé pour des mots de passe — préférer bcrypt, argon2, ou au minimum `pbkdf2:sha256` avec un nombre d'itérations élevé (werkzeug le supporte nativement).
+
+**Suggestion** : migrer vers `argon2` (via `argon2-cffi`) ou `pbkdf2:sha256:600000`. Migration progressive : au prochain login, rehasher si le hash existant utilise l'ancien schéma. Aucun impact utilisateur.
+
+## 16. LoginComponent — webhooks Stripe idempotence
+
+Les handlers de webhook (`checkout.session.completed`, `invoice.paid`) mutent la DB directement sans déduplication. Stripe peut retenter un webhook plusieurs fois — un double-traitement pourrait activer une licence deux fois ou créer des doublons.
+
+**Suggestion** : table `stripe_events_processed(event_id PRIMARY KEY)` consultée en début de handler ; skip si déjà traité. Stripe garantit l'unicité de `event.id`, c'est le pattern officiel recommandé.
+
+## 17. LoginComponent — pas de séparation dev/test/prod dans les webhooks
+
+Le webhook Stripe écoute `POST /stripe/webhook` sans discriminer l'environnement Stripe (test vs live). Un webhook test qui arrive en prod pollue la DB.
+
+**Suggestion** : vérifier `event.livemode` dans le handler, logger les mismatches, et refuser les events hors environnement attendu.
