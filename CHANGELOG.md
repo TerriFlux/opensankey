@@ -13,6 +13,8 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## Récapitulatif — Avril 2026
 
+Cette section consolide les évolutions livrées en avril 2026, tous modules confondus, et sert de base à la génération des notes de version.
+
 ### Ajouts
 - **Noms de styles par défaut traduisibles (FR/EN)** : les styles créés automatiquement à l'import (style de nœud/flux/container par défaut, étiquettes produit/secteur, import-export collés et dessus/dessous, styles unitaires) suivent désormais la langue de l'interface. Les styles renommés manuellement par l'utilisateur sont préservés.
 - **Document d'architecture** : nouveau fichier [ARCHITECTURE.md](ARCHITECTURE.md) décrivant la stack 3 couches (OpenSankey → OpenSankey+ → SankeyApplication), le data model, le pipeline de rendu D3, le pattern ref-based des menus, le système de vues, la persistance, et les submodules Python (SankeyExcelParser, MFAProblem, LoginComponent). Inclut 17 pistes d'amélioration identifiées lors de la revue de code.
@@ -20,12 +22,44 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 - **Persistance de session des écarts de mise en page** : les valeurs des champs d'écart horizontal/vertical sont conservées entre ouvertures de menu pendant la session (pas sauvées en JSON). Bouton « Réinitialiser au défaut » ajouté aux sous-menus de centrage et minimisation.
 - **Ecarts horizontaux/verticaux configurables pour la mise en page automatique** : les commandes de centrage et minimisation des croisements (menu contextuel) proposent désormais des champs d'écart horizontal/vertical. Idem dans le dialogue d'import Excel (section Mise en page).
 - **Mise en page automatique unifiée et enrichie** : même interface Mise en page dans le menu contextuel clic-droit et le dialogue d'import Excel (section élargie, sélecteur Mode « Centrer les nœuds » / « Minimiser les croisements », bouton unique de lancement). Nouvelles options pour épingler les nœuds sans flux entrant à l'extrémité gauche et les nœuds sans flux sortant à l'extrémité droite. Traductions FR/EN complètes avec tooltips. Écarts, modes d'extrémité et mode de calcul sont partagés en session entre les deux interfaces.
+- **Verrouillage colonne (u) et ligne (v) sur les nœuds** : le menu d'apparence d'un nœud expose deux champs « Colonne » et « Ligne » assortis chacun d'un bouton cadenas. Quand verrouillé, le recalcul automatique conserve la colonne et/ou la position verticale relative du nœud dans sa colonne, en préservant l'ordre entre les nœuds verrouillés. Les nœuds non verrouillés continuent d'être placés librement autour. Permet d'épingler manuellement certains nœuds tout en laissant l'algo optimiser les autres.
 - **Intervalles, incertitude, min/max sur les flux (AFM)** : nouveau type de donnée `intervals`, champs min/max/incertitude relative (%) persistés en JSON et synchronisés avec l'export/import Excel. Panneau de configuration flux restructuré en onglets Basique/AFM. Affichage `[min - max]` sur le diagramme pour les flux intervalle.
 - **Séparation type de données / affichage des intervalles** : les deux sélecteurs de la barre d'outils sont désormais indépendants (`data_source` + `interval_display`). On peut voir les intervalles données ou résultats selon la source sélectionnée. « Valeurs possibles » réservé aux données calculées. Type d'affichage affiché dans la légende.
+- **Stocks et flux de recyclage** : un nœud dont la somme des flux entrants diffère de la somme des sortants affiche désormais un libellé `entrée → sortie` permettant de visualiser explicitement l'écart (stock).
+- **Stocks (Δstock) intégrés au bilan matière MFA**. Une variation de stock déclarée sur un nœud (feuille Excel `stocks`) est désormais traitée par le solveur MFAProblem comme une variable réconciliable supplémentaire dans la contrainte de bilan matière, selon la convention `Σ(entrants) − Σ(sortants) − Δstock = 0`. La feuille `stocks` accepte trois nouvelles colonnes optionnelles `uncert`, `min`, `max` qui pilotent la réconciliation. Deux nouvelles feuilles Excel **`stocks_results`** et **`stocks_analysis`** (parallèles à `results` / `analysis` pour les flux) sont produites en sortie : valeur réconciliée, intervalle libre, valeur d'entrée, sigma, nb_sigmas, classification. Ces feuilles sont à la fois écrites par le pipeline de réconciliation et lues par le pipeline d'import, ce qui permet au front de récupérer les résultats stocks via `node.stock_results`. Cross-link `alterego` entre input et output. Documentation utilisateur complète dans [doc/sources/pages/user_stocks.rst](doc/sources/pages/user_stocks.rst), tests unitaires dans `submodules/MFAProblem/mfa_problem/tests/unit/test_mfa_problem_stocks.py`.
+- **Flux dégradés (tapered)** : prise en charge de valeurs distinctes côté source et côté destination (`data_value` / `data_value_target`), permettant de représenter des pertes ou gains le long du flux.
+- **Réorganisation des E/S de nœud** : nouveau filtre « visibles / tous » dans le `NodeIOReorganizer`.
+- **Zone de dessin** : ajout de barres de défilement SVG lorsque le zoom déborde de la zone visible.
+- **Gestion des tags** : nouveau bouton de bascule du mode de positionnement dans les tables de configuration de tags ; contrôles granulaires ajout / suppression / mise à jour dans `UpdateModeGrid`.
+- **Import Excel** :
+  - nouvelle option `error_on_new_nodes` (case à cocher UI + serveur) pour bloquer l'import en cas de nouveau nœud non attendu ;
+  - nouvelle option `error_on_new_flux` pour les feuilles secondaires ;
+  - acceptation de « Valeur » comme synonyme de la colonne valeur réconciliée dans les feuilles Résultats / Analyse ;
+  - hiérarchie Résultats pour les feuilles primaires / secondaires et comptage matriciel exact des flux.
+- **Licences OSP** :
+  - onglet « Vues » désactivé sans licence OSP (absent en mode basique) ;
+  - lignes grisées dans les grilles pour les fonctionnalités sans licence ;
+  - styles ajoutés au profil par défaut.
+- **Essai gratuit OpenSankey+ — 30 jours opt-in** : nouveau mécanisme de période d'essai entièrement client-side (`localStorage`), sans login, sans empreinte numérique. Au premier chargement, une fenêtre d'accueil propose à l'utilisateur d'activer 30 jours d'OpenSankey+ d'un clic ; une bannière permanente en bas de page reflète l'état (« Démarrer l'essai » / « N jours restants » / « Débloquer »). À l'expiration, les fonctionnalités OS+ se reverrouillent automatiquement et une fenêtre invite à souscrire ou à continuer en gratuit. Mécanisme analytics anonymes côté serveur via deux endpoints `POST /api/trial/started` et `POST /api/trial/converted` (UUID anonyme uniquement, aucune PII), compteur fichier sous `cache/`, CLI de lecture `python scripts/trial_stats.py`. Notification email à `julien.alapetite@terriflux.fr` à chaque démarrage d'essai. Documentation utilisateur complète : 7 scénarios couverts dans [doc/sources/pages/user_trial.rst](doc/sources/pages/user_trial.rst).
+- **Changelogs par module** : adoption du format [Keep a Changelog](https://keepachangelog.com/) avec un fichier `CHANGELOG.md` par module (sankeyapplication, OpenSankey+, OpenSankey, SankeyExcelParser, LoginComponent) et un récapitulatif consolidé en tête du changelog racine, conçu pour générer les release notes.
+
+### Modifications
+- **Mise en page** : amélioration des groupes de layout (`groups` exposés en getter), améliorations diverses de `UpdateModeGrid`.
+- **Légende** : l'offset des libellés de tag est désormais proportionnel à la taille de police.
+- **Libellés** : le séparateur de libellé par défaut est vide (le libellé complet est affiché par défaut).
+- **Import Excel — messages** : affichage des 10 premiers nœuds/flux manquants en aperçu d'erreur ; détails déplacés vers le log debug pour garder le `warn_msg` court.
+- **Submodule OpenSankey+** : mises à jour majeures du positionnement et du rendu des nœuds.
 
 ### Corrections
 - **fix(import Excel)** : les styles import/export ne sont plus créés automatiquement à l'import d'un fichier Excel contenant les onglets Produits/Secteurs mais sans onglet Échange.
 - **fix(légende)** : taille de police incorrecte quand la légende est détachée de la zone de dessin et que le diagramme est zoomé out. La compensation de zoom était appliquée à tort sur la légende détachée, ce qui agrandissait le texte au lieu de respecter la police configurée.
+- **Libellé `in→out`** : affiché uniquement quand la somme des flux entrants diffère de la somme des sortants ([9863ad5](https://gitlab.com/su-model/sankeyapplication/-/commit/9863ad5)).
+- **Plan Z des nœuds** : `moveToFirstPlan` / `moveToLastPlan` étaient inversés.
+- **Tags** : correction des libellés de tag.
+- **Import Excel** : restauration du comportement bloquant pour `error_on_new_nodes` ; libellé et tooltip mis à jour pour refléter ce blocage.
+- **Issue [#130](https://gitlab.com/su-model/sankeyapplication/-/work_items/130)** : correctif intégré côté OpenSankey.
+- **Self-loops (flux d'un nœud sur lui-même)** : un flux dont source et cible sont identiques s'affichait à (0,0) au lieu de boucler sur le nœud — `updateLinksPositions` ne calculait que le point de départ et jamais le point d'arrivée pour ce cas. Les deux extrémités sont maintenant calculées dans la même itération ([opensankey#800](https://gitlab.com/su-model/opensankey/-/issues/800)).
+- **Contraintes ratio_flux avec Min (≥) ou Max (≤)** : les contraintes d'inégalité sans Coef produisaient des résultats faux — `coef_eq` par défaut à 1.0 créait une contrainte d'égalité parasite forçant le flux de référence à zéro, les types `ineq_inf`/`ineq_sup` étaient inversés et les coefficients non normalisés (ratio perdu dans le solveur).
 
 ---
 
@@ -58,47 +92,6 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 - **fix(DrawLabel)** : correction du `max-width` (libellés tronqués) et de la rotation des labels de flux verticaux.
 - **fix(JSON parser)** : correction du flot de contrôle lors du parsing de `value_option` — évite l'écrasement de valeurs existantes.
 - **fix(deploy)** : chemin du venv corrigé dans `update_opensankey.sh`.
-
----
-
-## Récapitulatif — Avril 2026
-
-Cette section consolide les évolutions livrées en avril 2026, tous modules confondus, et sert de base à la génération des notes de version.
-
-### Ajouts
-- **Stocks et flux de recyclage** : un nœud dont la somme des flux entrants diffère de la somme des sortants affiche désormais un libellé `entrée → sortie` permettant de visualiser explicitement l'écart (stock).
-- **Flux dégradés (tapered)** : prise en charge de valeurs distinctes côté source et côté destination (`data_value` / `data_value_target`), permettant de représenter des pertes ou gains le long du flux.
-- **Réorganisation des E/S de nœud** : nouveau filtre « visibles / tous » dans le `NodeIOReorganizer`.
-- **Zone de dessin** : ajout de barres de défilement SVG lorsque le zoom déborde de la zone visible.
-- **Gestion des tags** : nouveau bouton de bascule du mode de positionnement dans les tables de configuration de tags ; contrôles granulaires ajout / suppression / mise à jour dans `UpdateModeGrid`.
-- **Import Excel** :
-  - nouvelle option `error_on_new_nodes` (case à cocher UI + serveur) pour bloquer l'import en cas de nouveau nœud non attendu ;
-  - nouvelle option `error_on_new_flux` pour les feuilles secondaires ;
-  - acceptation de « Valeur » comme synonyme de la colonne valeur réconciliée dans les feuilles Résultats / Analyse ;
-  - hiérarchie Résultats pour les feuilles primaires / secondaires et comptage matriciel exact des flux.
-- **Licences OSP** :
-  - onglet « Vues » désactivé sans licence OSP (absent en mode basique) ;
-  - lignes grisées dans les grilles pour les fonctionnalités sans licence ;
-  - styles ajoutés au profil par défaut.
-- **Essai gratuit OpenSankey+ — 30 jours opt-in** : nouveau mécanisme de période d'essai entièrement client-side (`localStorage`), sans login, sans empreinte numérique. Au premier chargement, une fenêtre d'accueil propose à l'utilisateur d'activer 30 jours d'OpenSankey+ d'un clic ; une bannière permanente en bas de page reflète l'état (« Démarrer l'essai » / « N jours restants » / « Débloquer »). À l'expiration, les fonctionnalités OS+ se reverrouillent automatiquement et une fenêtre invite à souscrire ou à continuer en gratuit. Mécanisme analytics anonymes côté serveur via deux endpoints `POST /api/trial/started` et `POST /api/trial/converted` (UUID anonyme uniquement, aucune PII), compteur fichier sous `cache/`, CLI de lecture `python scripts/trial_stats.py`. Notification email à `julien.alapetite@terriflux.fr` à chaque démarrage d'essai. Documentation utilisateur complète : 7 scénarios couverts dans [doc/sources/pages/user_trial.rst](doc/sources/pages/user_trial.rst).
-- **Stocks (Δstock) intégrés au bilan matière MFA**. Une variation de stock déclarée sur un nœud (feuille Excel `stocks`) est désormais traitée par le solveur MFAProblem comme une variable réconciliable supplémentaire dans la contrainte de bilan matière, selon la convention `Σ(entrants) − Σ(sortants) − Δstock = 0`. La feuille `stocks` accepte trois nouvelles colonnes optionnelles `uncert`, `min`, `max` qui pilotent la réconciliation. Deux nouvelles feuilles Excel **`stocks_results`** et **`stocks_analysis`** (parallèles à `results` / `analysis` pour les flux) sont produites en sortie : valeur réconciliée, intervalle libre, valeur d'entrée, sigma, nb_sigmas, classification. Ces feuilles sont à la fois écrites par le pipeline de réconciliation et lues par le pipeline d'import, ce qui permet au front de récupérer les résultats stocks via `node.stock_results`. Cross-link `alterego` entre input et output. Documentation utilisateur complète dans [doc/sources/pages/user_stocks.rst](doc/sources/pages/user_stocks.rst), tests unitaires dans `submodules/MFAProblem/mfa_problem/tests/unit/test_mfa_problem_stocks.py`.
-- **Changelogs par module** : adoption du format [Keep a Changelog](https://keepachangelog.com/) avec un fichier `CHANGELOG.md` par module (sankeyapplication, OpenSankey+, OpenSankey, SankeyExcelParser, LoginComponent) et un récapitulatif consolidé en tête du changelog racine, conçu pour générer les release notes.
-
-### Modifications
-- **Mise en page** : amélioration des groupes de layout (`groups` exposés en getter), améliorations diverses de `UpdateModeGrid`.
-- **Légende** : l'offset des libellés de tag est désormais proportionnel à la taille de police.
-- **Libellés** : le séparateur de libellé par défaut est vide (le libellé complet est affiché par défaut).
-- **Import Excel — messages** : affichage des 10 premiers nœuds/flux manquants en aperçu d'erreur ; détails déplacés vers le log debug pour garder le `warn_msg` court.
-- **Submodule OpenSankey+** : mises à jour majeures du positionnement et du rendu des nœuds.
-
-### Corrections
-- **Libellé `in→out`** : affiché uniquement quand la somme des flux entrants diffère de la somme des sortants ([9863ad5](https://gitlab.com/su-model/sankeyapplication/-/commit/9863ad5)).
-- **Plan Z des nœuds** : `moveToFirstPlan` / `moveToLastPlan` étaient inversés.
-- **Tags** : correction des libellés de tag.
-- **Import Excel** : restauration du comportement bloquant pour `error_on_new_nodes` ; libellé et tooltip mis à jour pour refléter ce blocage.
-- **Issue [#130](https://gitlab.com/su-model/sankeyapplication/-/work_items/130)** : correctif intégré côté OpenSankey.
-- **Self-loops (flux d'un nœud sur lui-même)** : un flux dont source et cible sont identiques s'affichait à (0,0) au lieu de boucler sur le nœud — `updateLinksPositions` ne calculait que le point de départ et jamais le point d'arrivée pour ce cas. Les deux extrémités sont maintenant calculées dans la même itération ([opensankey#800](https://gitlab.com/su-model/opensankey/-/issues/800)).
-- **Contraintes ratio_flux avec Min (≥) ou Max (≤)** : les contraintes d'inégalité sans Coef produisaient des résultats faux — `coef_eq` par défaut à 1.0 créait une contrainte d'égalité parasite forçant le flux de référence à zéro, les types `ineq_inf`/`ineq_sup` étaient inversés et les coefficients non normalisés (ratio perdu dans le solveur).
 
 ---
 
