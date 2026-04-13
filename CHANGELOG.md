@@ -14,6 +14,7 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 ## Récapitulatif — Avril 2026
 
 ### Ajouts
+- **Noms de styles par défaut traduisibles (FR/EN)** : les styles créés automatiquement à l'import (style de nœud/flux/container par défaut, étiquettes produit/secteur, import-export collés et dessus/dessous, styles unitaires) suivent désormais la langue de l'interface. Les styles renommés manuellement par l'utilisateur sont préservés.
 - **Document d'architecture** : nouveau fichier [ARCHITECTURE.md](ARCHITECTURE.md) décrivant la stack 3 couches (OpenSankey → OpenSankey+ → SankeyApplication), le data model, le pipeline de rendu D3, le pattern ref-based des menus, le système de vues, la persistance, et les submodules Python (SankeyExcelParser, MFAProblem, LoginComponent). Inclut 17 pistes d'amélioration identifiées lors de la revue de code.
 - **Sous-menu « Réinitialiser les intervalles verticaux »** (mode parametric) : champ d'écart vertical, bouton reset au défaut, bouton appliquer. L'écart vertical est partagé en session avec les sous-menus de centrage et minimisation des croisements.
 - **Persistance de session des écarts de mise en page** : les valeurs des champs d'écart horizontal/vertical sont conservées entre ouvertures de menu pendant la session (pas sauvées en JSON). Bouton « Réinitialiser au défaut » ajouté aux sous-menus de centrage et minimisation.
@@ -23,6 +24,7 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 - **Séparation type de données / affichage des intervalles** : les deux sélecteurs de la barre d'outils sont désormais indépendants (`data_source` + `interval_display`). On peut voir les intervalles données ou résultats selon la source sélectionnée. « Valeurs possibles » réservé aux données calculées. Type d'affichage affiché dans la légende.
 
 ### Corrections
+- **fix(import Excel)** : les styles import/export ne sont plus créés automatiquement à l'import d'un fichier Excel contenant les onglets Produits/Secteurs mais sans onglet Échange.
 - **fix(légende)** : taille de police incorrecte quand la légende est détachée de la zone de dessin et que le diagramme est zoomé out. La compensation de zoom était appliquée à tort sur la légende détachée, ce qui agrandissait le texte au lieu de respecter la police configurée.
 
 ---
