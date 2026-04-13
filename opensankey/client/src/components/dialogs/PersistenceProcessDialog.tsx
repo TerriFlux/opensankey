@@ -332,6 +332,7 @@ export const retrieveJSONResults = (
     app_data.drawing_area.sankey.setTrade(true)
   }
   app_data.drawing_area.draw()
+  app_data.menu_configuration.updateComponentRelatedToStyles()
 
 }
 
