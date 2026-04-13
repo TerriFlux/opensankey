@@ -134,6 +134,7 @@ export const resources_app_elements = {
           element_flow: 'Flow',
           element_node_tag: 'Node Label',
           element_flow_tag: 'Flow Label',
+          element_level_tag: 'Hierarchy',
           element_data: 'Data',
           element_data_tag: 'Data Label',
           title_table: 'Flow Table',
