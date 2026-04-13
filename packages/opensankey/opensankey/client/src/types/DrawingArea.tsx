@@ -2398,7 +2398,10 @@ export class Class_DrawingArea {
     default_style.shape_position_type = 'absolute'
   }
 
-  public resetAllVerticalIntervals() {
+  public resetAllVerticalIntervals(v_spacing?: number) {
+    if (v_spacing !== undefined) {
+      this.sankey.styles_dict['default'].shape_position_dy = v_spacing
+    }
     Object.values(this.sankey.nodes_dict)
       .filter(node => node.shape_position_type !== 'relative')
       .forEach(node => {
