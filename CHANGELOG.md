@@ -52,6 +52,7 @@ Cette section consolide les évolutions livrées en avril 2026, tous modules con
 
 ### Corrections
 - **fix(import Excel)** : les styles import/export ne sont plus créés automatiquement à l'import d'un fichier Excel contenant les onglets Produits/Secteurs mais sans onglet Échange.
+- **fix(import Excel)** : les styles produit/secteur créés automatiquement à l'import apparaissaient avec retard dans le dialogue « Édition des styles » (il fallait cliquer sur « + » pour forcer le rafraîchissement). Le dialogue est désormais mis à jour à la fin de l'import.
 - **fix(légende)** : taille de police incorrecte quand la légende est détachée de la zone de dessin et que le diagramme est zoomé out. La compensation de zoom était appliquée à tort sur la légende détachée, ce qui agrandissait le texte au lieu de respecter la police configurée.
 - **Libellé `in→out`** : affiché uniquement quand la somme des flux entrants diffère de la somme des sortants ([9863ad5](https://gitlab.com/su-model/sankeyapplication/-/commit/9863ad5)).
 - **Plan Z des nœuds** : `moveToFirstPlan` / `moveToLastPlan` étaient inversés.
@@ -92,36 +93,3 @@ Cette section consolide les évolutions livrées en avril 2026, tous modules con
 - **fix(DrawLabel)** : correction du `max-width` (libellés tronqués) et de la rotation des labels de flux verticaux.
 - **fix(JSON parser)** : correction du flot de contrôle lors du parsing de `value_option` — évite l'écrasement de valeurs existantes.
 - **fix(deploy)** : chemin du venv corrigé dans `update_opensankey.sh`.
-
----
-
-## [Non publié] — Mars 2026
-
-### Ajouts
-- **Bannière premium `BannerSubscriptionSA`** dans la barre latérale : bouton « Get Premium » injecté dans `additional_bottom_item`, masqué si `has_sankey_plus` ou `is_static`, redirigeant vers `/license/checkout` (7b3691a, c52a033, efea389).
-- **Script de déploiement multi-environnements `update_opensankey.sh`** prenant un argument `dev|test|prod`, activant le venv correspondant, exportant `EIGEN_INCLUDE`, enchaînant `git pull`, `git submodule update --recursive`, `deploy_SankeyApp.sh` puis `restart_site.sh ${ENV}` (3f4115b).
-
-### Corrections
-- **fix(deploy)** : chemin du venv corrigé dans `update_opensankey.sh` (`${ENV_DIR}/${ENV}_opensankey/bin/activate`) (989b8a2).
-
-### Modifications
-- `.gitignore` : ajout de `.claude/settings.local.json` et `dbg_constraints__summary_txt_filename` (7b3691a).
-- `chore` : nombreux bumps de pointeurs des submodules `OpenSankey+`, `MFAProblem`, `LoginComponent` (8656466, 975acc7, 1681f33, 1555686, fcbf51b, 0a53454, 0a70bb4, c077e15, ba31f05, d2e5ab6, 9ffed08, 5bd392a, 24bb60d, 65d8fe1, db82b8b, 88bd05c, 595fe98, 128daae, 0459a8f, 46f2a67, c122ce2, ef16cf5, bdef946, 6bdd795, b563a6c, cb70fe1).
-
----
-
-## [Non publié] — Avril 2026
-
-### Corrections
-- `fix(node)` : affichage du libellé `in→out` quand la somme des flux entrants diffère de la somme des sortants (9863ad5).
-- `fix(link)` : self-loops affichés correctement — les flux dont source et cible sont identiques calculaient uniquement leur point de départ, le point d'arrivée restant à (0,0). `updateLinksPositions` exécute désormais les branches source et cible dans la même itération pour ce cas ([opensankey#800](https://gitlab.com/su-model/opensankey/-/issues/800)).
-
-### Ajouts
-- `feat(ui/server)` : case à cocher `error_on_new_nodes` côté UI et serveur, suppression du bruit de debug (4296a91).
-- **`feat(trial)` : essai gratuit OpenSankey+ de 30 jours, opt-in, sans login.** Le serveur expose deux routes anonymes `POST /api/trial/started` et `POST /api/trial/converted`, avec un compteur fichier (`cache/trial_counter.txt`) et un journal d'événements append-only (`cache/trial_events.jsonl`). Aucune donnée personnelle n'est journalisée, seul un UUID anonyme généré côté client. Une notification email est envoyée à `julien.alapetite@terriflux.fr` à chaque démarrage d'essai (best-effort, en thread daemon). CLI de lecture des compteurs : `python scripts/trial_stats.py [--by-day | --raw]`. La bannière `BannerSubscriptionSA` est retirée de `AppSA.tsx` au profit de `BannerTrialOSP` exposée par OpenSankey+, qui couvre les deux entrées (SA et OS+ standalone). Documentation utilisateur complète dans [doc/sources/pages/user_trial.rst](doc/sources/pages/user_trial.rst).
-- **`docs` : changelogs par module + récapitulatif consolidé** au format [Keep a Changelog](https://keepachangelog.com/), couvrant mars et avril 2026 (847e8af).
-
-### Modifications
-- `chore` : mises à jour répétées du submodule OpenSankey+ pour intégrer les évolutions d'avril (94efb62, a531608, 897eddf, 0c312de, 1a96eb8, 3bb4d1b, 985ee42, 19107b0, 68e8b7a, 32fe1fa).
-- `major` : intégration de la mise à jour majeure d'OpenSankey+ (positionnement et rendu des nœuds) (4157172).
-- Travaux en cours sur les stocks (41fb7d3) et mises à jour générales (d4c75ff, 7183426).
