@@ -67,7 +67,20 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
             }
           }]
         },
-        { type: 'button', actionName: 'arrangeNodesToGrid' }
+        { type: 'button', actionName: 'arrangeNodesToGrid' },
+        {
+          type: 'submenu',
+          titleKey: 'ResetVerticalIntervals',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              return app_data.drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+            }
+          }],
+          children: [
+            { type: 'widget', widgetName: 'MenuContextResetVerticalIntervals', widgetProps: {} }
+          ]
+        }
       ]
     },
     // {
@@ -409,6 +422,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     AutoPositionOptim: {
       en: 'Auto position (optim)',
       fr: 'Option minimisation des croisements'
+    },
+    ResetVerticalIntervals: {
+      en: 'Reset vertical intervals',
+      fr: 'Réinitialiser les intervalles verticaux'
     },
     GestionCouleurs: {
       en: 'Color Management',

@@ -30,7 +30,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
-import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock, MenuContextAutoLayout } from './MenuContextWidgetFactory'
+import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock, MenuContextAutoLayout, MenuContextResetVerticalIntervals } from './MenuContextWidgetFactory'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
 
@@ -751,6 +751,7 @@ widgetRegistry.register('ButtonContainerContextAssignStyle', ButtonContainerCont
 widgetRegistry.register('MenuContextNodeStock', MenuContextNodeStock as WidgetComponent)
 widgetRegistry.register('MenuContextAutoLayout', MenuContextAutoLayout as WidgetComponent)
 widgetRegistry.register('MenuContextAutoLayoutOptim', MenuContextAutoLayout as WidgetComponent)
+widgetRegistry.register('MenuContextResetVerticalIntervals', MenuContextResetVerticalIntervals as WidgetComponent)
 
 interface WidgetRendererProps {
   widgetName: string
