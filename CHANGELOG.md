@@ -12,6 +12,9 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - **Séparation type de données / affichage des intervalles** : `type_data` scindé en deux attributs indépendants `data_source` (structure/collectées/calculées+label/calculées) et `interval_display` (structure/intervalles/valeurs possibles). Les deux sélecteurs de la barre d'outils écrivent chacun dans leur attribut. Le getter `type_data` dérive les deux pour la rétrocompatibilité. « Valeurs possibles » n'est disponible que pour les données calculées. Type d'affichage affiché dans la légende. Libellé du sélecteur 2 renommé « Affichage des intervalles ».
 - **Tooltip « Facteur d'échelle » sur les flux** : ajout du tooltip manquant sur le champ « Facteur d'échelle » dans le menu d'apparence des flux. Traductions FR/EN ajoutées (`Flux.apparence.tooltips.local_scale`). Correction du wrapper (fragment `<>` remplacé par `<Box>`) pour que le tooltip Chakra fonctionne.
 
+### Corrections
+- **fix(légende)** : taille de police incorrecte lorsque la légende est détachée (`stick_to_drawing = false`) et que le diagramme est zoomé. `applyPosition` appliquait inconditionnellement `scale(1/scale_da)`, alors que la légende détachée est placée dans `d3_selection_zoom_area` (non affecté par le zoom) et n'a pas besoin de compensation. Résultat : au zoom out, le texte s'agrandissait (inverse du zoom) et ne respectait plus `legend_police`. Le scale n'est désormais appliqué que lorsque `stick_to_drawing` est vrai, alignant `applyPosition` sur `_initDraw`.
+
 ## [Non publié] — Mars 2026
 
 ### Ajouts

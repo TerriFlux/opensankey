@@ -202,11 +202,18 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   public applyPosition() {
     if (this.d3_selection !== null) {
       const position_y = this.position_y //+ this.drawing_area.getNavBarHeight()
-      const scale_da = this.drawing_area.getZoomScale()
-      this.d3_selection.attr(
-        'transform',
-        'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')'
-      )
+      if (this.stick_to_drawing) {
+        const scale_da = this.drawing_area.getZoomScale()
+        this.d3_selection.attr(
+          'transform',
+          'translate(' + this.position_x + ', ' + position_y + ') scale(' + 1 / scale_da + ')'
+        )
+      } else {
+        this.d3_selection.attr(
+          'transform',
+          'translate(' + this.position_x + ', ' + position_y + ')'
+        )
+      }
     }
     this.drawDragHandlers()
   }
