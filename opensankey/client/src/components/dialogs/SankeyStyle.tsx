@@ -147,7 +147,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
             variant='menuconfigpanel_option_button'
             rightIcon={icon_open_selector}
           >
-            {CutName(selected_style.name, 30)}
+            {CutName(t(selected_style.name), 30)}
           </MenuButton>
           <MenuList>
             {Object.keys(app_data.drawing_area.sankey.styles_dict).map(id => (
@@ -159,7 +159,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
                   setUpdate(!update)
                 }}
               >
-                {app_data.drawing_area.sankey.styles_dict[id].name}
+                {t(app_data.drawing_area.sankey.styles_dict[id].name)}
               </MenuItem>
             ))}
           </MenuList>
@@ -190,7 +190,7 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
             <Input
               variant='menuconfigpanel_option_input'
               disabled={selected_style_id === default_style_id}
-              defaultValue={selected_style.name}
+              defaultValue={t(selected_style.name)}
               key={selected_style_id}
               onChange={(evt) => {
                 selected_style.name = evt.target.value
@@ -246,7 +246,7 @@ export const ConfigMenuStyleElement = ({
   const options_selector: typeElementSelectable = sankey.styles_list.map(style => {
     return {
       value: style.id,
-      label: style.name,
+      label: t(style.name),
       selected: element_ref?.style.includes(style) ?? false,
       disabled: style.id == default_style_id,
     }
@@ -373,7 +373,7 @@ export const MenuOrderStylesOfSelectedElements = ({ app_data }: { app_data: Clas
                         {...provided.dragHandleProps}
                         style={style_TableLineDragging(draggDisabled, provided.draggableProps.style)}
                       >
-                        <Box className='name_element'>{style.name}</Box>
+                        <Box className='name_element'>{t(style.name)}</Box>
                         <Box layerStyle="options_2cols">
                           <Button
                             isDisabled={draggDisabled || element_idx == 0}
