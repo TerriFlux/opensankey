@@ -495,7 +495,9 @@ export class NodePositioning {
     launched_from_process: boolean,
     optimize_crossing: boolean,
     h_spacing?: number,
-    v_spacing?: number
+    v_spacing?: number,
+    sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
@@ -642,12 +644,38 @@ export class NodePositioning {
       }
     })
 
-    // ÉTAPE 4: Repositionnement des nœuds sans entrée (logique existante préservée)
-    this.repositionNodesWithoutInputs(
-      nodes_per_horizontal_indexes,
-      horizontal_indexes_per_nodes_ids,
-      max_horizontal_index
-    )
+    // ÉTAPE 3 bis: Mode 'right_extremity' — forcer les nœuds sans sortie à la dernière colonne.
+    // On fait ça avant le repositionnement des sources pour que max_horizontal_index soit
+    // bien à jour et que les sources en mode 'before_neighbor' tombent juste avant leur voisin.
+    if (sinks_mode === 'right_extremity') {
+      const sink_nodes = nodes_to_process.filter(node =>
+        !node.hasVisibleOutputLinks() && node.hasVisibleInputLinks())
+      if (sink_nodes.length > 0) {
+        sink_nodes.forEach(node => {
+          const old_index = horizontal_indexes_per_nodes_ids[node.id]
+          if (old_index === undefined || old_index < 0) return
+          if (old_index === max_horizontal_index) return
+          if (nodes_per_horizontal_indexes[old_index]) {
+            const i = nodes_per_horizontal_indexes[old_index].indexOf(node)
+            if (i > -1) nodes_per_horizontal_indexes[old_index].splice(i, 1)
+          }
+          horizontal_indexes_per_nodes_ids[node.id] = max_horizontal_index
+          if (!nodes_per_horizontal_indexes[max_horizontal_index]) {
+            nodes_per_horizontal_indexes[max_horizontal_index] = []
+          }
+          nodes_per_horizontal_indexes[max_horizontal_index].push(node)
+        })
+      }
+    }
+
+    // ÉTAPE 4: Repositionnement des nœuds sans entrée (sauf si mode 'left_extremity')
+    if (sources_mode !== 'left_extremity') {
+      this.repositionNodesWithoutInputs(
+        nodes_per_horizontal_indexes,
+        horizontal_indexes_per_nodes_ids,
+        max_horizontal_index
+      )
+    }
     nodes_per_horizontal_indexes = Object.fromEntries(
       Object.entries(nodes_per_horizontal_indexes).filter(([_, value]) => value.length > 0)
     )
@@ -900,6 +928,50 @@ export class NodePositioning {
         height_cumul_for_index += node_height + effective_v
       })
 
+      // Réordonnancement selon les verrous V (shape_position_v_locked).
+      // Les nœuds verrouillés sont placés dans l'ordre croissant de leur position_v
+      // (utilisée comme cible d'index 1-based, clampée aux bornes). En cas de collision
+      // de cible, on préserve l'ordre relatif des nœuds verrouillés. Les nœuds libres
+      // remplissent les créneaux restants dans leur ordre issu du tri par sortcoef.
+      const col_nodes = nodes_per_horizontal_indexes[h_index]
+      const locked_nodes = col_nodes
+        .filter(n => n.shape_position_v_locked === true)
+        .slice()
+        .sort((a, b) => a.position_v - b.position_v)
+      if (locked_nodes.length > 0 && nodes_ids_per_vertical_index.length > 1) {
+        const N = nodes_ids_per_vertical_index.length
+        const locked_set = new Set(locked_nodes.map(n => n.id))
+        const unlocked_in_order = nodes_ids_per_vertical_index.filter(id => !locked_set.has(id))
+        const final_arr: (string | null)[] = new Array(N).fill(null)
+        let last_assigned = -1
+        locked_nodes.forEach(n => {
+          const target = Math.max(0, Math.min(N - 1, Math.round(n.position_v) - 1))
+          let slot = Math.max(target, last_assigned + 1)
+          while (slot < N && final_arr[slot] !== null) slot += 1
+          if (slot >= N) {
+            // Pas de place à droite → recule vers la gauche pour garder le nœud dans la colonne
+            slot = N - 1
+            while (slot >= 0 && final_arr[slot] !== null) slot -= 1
+          }
+          if (slot >= 0 && slot < N) {
+            final_arr[slot] = n.id
+            last_assigned = slot
+          }
+        })
+        let u_i = 0
+        for (let i = 0; i < N; i++) {
+          if (final_arr[i] === null) {
+            final_arr[i] = unlocked_in_order[u_i++] ?? null
+          }
+        }
+        for (let i = 0; i < N; i++) {
+          const id = final_arr[i]
+          if (id !== null) {
+            nodes_ids_per_vertical_index[i] = id
+            vertical_indexes_per_node_id[id] = i
+          }
+        }
+      }
 
       //height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
       if (height_cumul_for_index > max_height_cumul) {
@@ -1352,12 +1424,15 @@ export class NodePositioning {
 
       // Appliquer les ajustements
       Object.keys(column_adjustments).forEach(node_id => {
+        const node_ref = this.drawingArea.sankey.nodes_dict[node_id]
+        // Ne pas déplacer un nœud verrouillé verticalement : son ordre doit être préservé.
+        if (node_ref.shape_position_v_locked === true) return
         const adjustment = column_adjustments[node_id]
         if (Math.abs(adjustment) > 0.1) { // Seuil minimum pour éviter les micro-ajustements
-          const current_y = this.drawingArea.sankey.nodes_dict[node_id].position_y
+          const current_y = node_ref.position_y
           const new_y = Math.max(0, current_y + adjustment) // Éviter les Y négatifs
 
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = new_y
+          node_ref.position_y = new_y
           total_adjustments++
 
           console.log(`📍 Ajustement ${node_id}: ${current_y.toFixed(1)} → ${new_y.toFixed(1)} (${adjustment > 0 ? '+' : ''}${adjustment.toFixed(1)})`)
@@ -1766,7 +1841,9 @@ export class NodePositioning {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
       column.forEach(n => {
-        n.position_v = -1
+        if (n.shape_position_v_locked !== true) {
+          n.position_v = -1
+        }
         current_v = this.applyVDesagregate(n, current_v, tag)
       })
     })
@@ -1783,7 +1860,13 @@ export class NodePositioning {
       Object.values(columns).forEach(column => {
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
-        column.forEach(n => n.position_v = current_v++)
+        column.forEach(n => {
+          if (n.shape_position_v_locked === true) {
+            current_v++
+            return
+          }
+          n.position_v = current_v++
+        })
       })
     }
 
@@ -1864,7 +1947,14 @@ export class NodePositioning {
   /**
    * Auto-compute sankey with waiting toast
    */
-  public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean, h_spacing?: number, v_spacing?: number) {
+  public computeAutoSankeyWithToast(
+    launched_from_process: boolean,
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number,
+    sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+  ) {
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
     if (!launched_from_process) {
@@ -1887,7 +1977,7 @@ export class NodePositioning {
     }
 
     // Compute auto pos of nodes
-    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing)
+    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     this.computeParametrization(true)
 
     if (launched_from_process) {

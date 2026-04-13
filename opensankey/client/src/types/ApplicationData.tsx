@@ -281,6 +281,39 @@ export class Class_ApplicationData {
    */
   private _steps: StepType[] = []
 
+  /**
+   * Session-only horizontal spacing for auto-layout. `null` = use style default.
+   * Shared between the auto-layout context menu widget and the Excel import dialog.
+   */
+  public layout_h_spacing: number | null = null
+
+  /**
+   * Session-only vertical spacing for auto-layout. `null` = use style default.
+   * Shared between the auto-layout context menu widget and the Excel import dialog.
+   */
+  public layout_v_spacing: number | null = null
+
+  /**
+   * Session-only placement mode for nodes without incoming flows (auto-layout).
+   * 'before_neighbor' = one column before the earliest successor (default),
+   * 'left_extremity' = pinned to the leftmost column (index 0).
+   */
+  public layout_sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor'
+
+  /**
+   * Session-only placement mode for nodes without outgoing flows (auto-layout).
+   * 'after_neighbor' = one column after the latest predecessor (default),
+   * 'right_extremity' = pinned to the rightmost column.
+   */
+  public layout_sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+
+  /**
+   * Session-only mode for the auto-layout: whether to minimize link crossings.
+   * `true` = "Minimiser les croisements", `false` = "Centrer les nœuds".
+   * Used by the Excel import dialog; the right-click menu exposes the choice via two buttons instead.
+   */
+  public layout_optimize_crossing: boolean = true
+
 
 
   // CONSTRUCTOR ========================================================================
