@@ -1746,6 +1746,20 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       fr: 'Visibilité des noeuds orphelins'
     }
   } satisfies AttributeConfig<boolean>,
+  position_u_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Lock column',
+      fr: 'Verrouiller la colonne'
+    },
+    tooltips: {
+      en: 'When locked, autosankey compute will keep this node\'s column index (u) instead of recomputing it.',
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
