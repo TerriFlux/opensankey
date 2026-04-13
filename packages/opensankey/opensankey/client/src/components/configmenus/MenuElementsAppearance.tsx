@@ -1152,7 +1152,47 @@ export const MenuConfigurationAppearance = ({
                               { value: 'parametric' as Type_Position, label: t('Noeud.apparence.geometry_parametric'), icon: '' },
                               { value: 'relative' as Type_Position, label: t('Noeud.apparence.geometry_relative'), icon: '' }
                             ]}
-                            onChange={(value) => { nodeShapeValues.position_type = value }}
+                            onChange={(value) => {
+                              // Switching position_type to 'parametric' or 'relative' triggers
+                              // applyPosition() as a side effect of drawShape, which mutates
+                              // _position.x/y. The default proxy setter (updateElements) only
+                              // snapshots shape_position_type itself, so a plain Ctrl+Z would
+                              // restore the type but leave the recomputed position in place,
+                              // making the undo look like a no-op. Bypass the proxy and register
+                              // a single undo that captures position_x/y as well.
+                              const node_targets = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                                .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+
+                              if (node_targets.length === 0) {
+                                // No real nodes (e.g. only ElementStyle): keep the proxy path.
+                                nodeShapeValues.position_type = value
+                                return
+                              }
+
+                              const snapshots = node_targets.map(n => ({
+                                node: n,
+                                position_type: n.shape_position_type,
+                                position_x: n.position_x,
+                                position_y: n.position_y,
+                              }))
+
+                              const apply = () => {
+                                node_targets.forEach(n => { n.shape_position_type = value })
+                                refreshAll()
+                              }
+                              const revert = () => {
+                                snapshots.forEach(s => {
+                                  s.node.shape_position_type = s.position_type
+                                  s.node.position_x = s.position_x
+                                  s.node.position_y = s.position_y
+                                })
+                                refreshAll()
+                              }
+
+                              app_data.history.saveUndo(revert)
+                              app_data.history.saveRedo(apply)
+                              apply()
+                            }}
                             getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
                             t={t}
                           />
