@@ -13,16 +13,9 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         { type: 'button', actionName: 'transposeDA' },
         {
           type: 'submenu',
-          titleKey: 'AutoPosition',
+          titleKey: 'MiseEnPageAuto',
           children: [
-            { type: 'widget', widgetName: 'MenuContextAutoLayout', widgetProps: { optimize_crossing: false } }
-          ]
-        },
-        {
-          type: 'submenu',
-          titleKey: 'AutoPositionOptim',
-          children: [
-            { type: 'widget', widgetName: 'MenuContextAutoLayoutOptim', widgetProps: { optimize_crossing: true } }
+            { type: 'widget', widgetName: 'MenuContextAutoLayout', widgetProps: {} }
           ]
         },
         // {
@@ -217,30 +210,6 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    computeAutoPosition: {
-      type: 'action',
-      labels: {
-        en: 'Auto position',
-        fr: 'Option centrage des nœuds'
-      },
-      tooltips: {
-        en: 'Automatically position all nodes in the diagram',
-        fr: 'Option centrage des nœuds'
-      }
-    },
-
-    computeAutoPositionOptim: {
-      type: 'action',
-      labels: {
-        en: 'Auto position (optim)',
-        fr: 'Option Minimisation des croisements'
-      },
-      tooltips: {
-        en: 'Automatically position all nodes in the diagram minimizing crossings',
-        fr: 'Positionner automatiquement tous les nœuds du diagramme en minimisant les croisements'
-      }
-    },
-
     arrangeNodesToGrid: {
       type: 'action',
       labels: {
@@ -415,13 +384,9 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       en: 'Positioning',
       fr: 'Positionnement'
     },
-    AutoPosition: {
-      en: 'Auto position',
-      fr: 'Option centrage des nœuds'
-    },
-    AutoPositionOptim: {
-      en: 'Auto position (optim)',
-      fr: 'Option minimisation des croisements'
+    MiseEnPageAuto: {
+      en: 'Auto layout',
+      fr: 'Mise en page auto'
     },
     ResetVerticalIntervals: {
       en: 'Reset vertical intervals',
@@ -450,8 +415,6 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     clearCurrentView: () => { app_data.reset({ only_current_view: true }); app_data.drawing_area.draw() },
     deleteAllViews: () => app_data.reinitialization(),
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
-    computeAutoPosition: () => { nodePositioning.computeAutoSankeyWithToast(false, false); saveToCache() },
-    computeAutoPositionOptim: () => { nodePositioning.computeAutoSankeyWithToast(false, true); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
     toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
     toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',

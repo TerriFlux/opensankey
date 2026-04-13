@@ -93,6 +93,7 @@ export const resources_nodes = {
           geometry_parametric: 'Spacing',
           geometry_relative: 'Offset',
           position_u: 'Colonne',
+          column_u: 'Column (u)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
           asn: 'Apply style to nodes',
@@ -110,6 +111,7 @@ export const resources_nodes = {
             geometry: 'Méthode pour calculer la position du noeud. Cette position peut être donnée en coordonnées absolues x,y, en coordonnée relative u,v, ou en coordonnée relative à une autre noeud.',
             position_dx: 'Ecart horizontal entre le bord droit du noeud à gauche et le bord gauche du noeud',
             position_dy: 'Ecart vertical entre le bord inférieur du noeud au dessus et le bord supérieur du noeud',
+            shape_position_u_locked: 'When locked, autosankey compute keeps this node\'s column index (u) instead of recomputing it.',
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
           }
         },
@@ -283,6 +285,7 @@ export const resources_nodes = {
           geometry_relative: 'Décalage',
           geometry_parametric: 'Ecartement',
           position_u: 'Colonne',
+          column_u: 'Colonne (u)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
           asn: 'Appliquer le style aux noeuds',
@@ -301,6 +304,7 @@ export const resources_nodes = {
             geometry: 'Méthode pour calculer la position du noeud. Cette position peut être donnée en coordonnées absolues x,y, en coordonnée relative u,v, ou en coordonnée relative à une autre noeud.',
             position_dx: 'Ecart horizontal entre le bord droit du noeud à gauche et le bord gauche du noeud',
             position_dy: 'Ecart vertical entre le bord inférieur du noeud au dessus et le bord supérieur du noeud',
+            shape_position_u_locked: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.',
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
           }
         },

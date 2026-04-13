@@ -600,6 +600,17 @@ export class NodePositioning {
     console.log('📊 Index horizontaux après calcul:', horizontal_indexes_per_nodes_ids)
     console.log('♻️ Liens de recyclage détectés:', possible_recycling_links_ids)
 
+    // ÉTAPE 2 bis: Forcer l'index horizontal des nœuds dont la colonne est verrouillée.
+    // Le user a fixé position_u via l'UI ; on remplace l'index calculé par cette valeur
+    // (en passant en base 0) avant la construction des structures et le placement final,
+    // pour que le nœud tombe bien dans la colonne demandée même après recalcul automatique.
+    nodes_to_process.forEach(node => {
+      if (node.shape_position_u_locked === true) {
+        const locked_index = Math.max(0, Math.round(node.position_u) - 1)
+        horizontal_indexes_per_nodes_ids[node.id] = locked_index
+      }
+    })
+
     // ÉTAPE 3: Construction des structures de données (logique existante)
     let max_horizontal_index = 0
     let nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
@@ -829,6 +840,9 @@ export class NodePositioning {
     const node_id_per_hxv_indexes: string[][] = []
     let max_height_cumul = 0
     let prev_col_width = 0
+    // Fixed left margin so the first column always starts at the same x, independent
+    // of position_dx / h_spacing (which only control inter-column spacing).
+    const FIRST_COLUMN_X = 200
     for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
       if (!nodes_per_horizontal_indexes[h_index]) {
         continue
@@ -836,7 +850,7 @@ export class NodePositioning {
       let col_max_w_col = 0
       const effective_h = h_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dx ?? 0
       nodes_per_horizontal_indexes[h_index].forEach(node => {
-        node.position_x = prev_col_width + effective_h + effective_h * h_index
+        node.position_x = FIRST_COLUMN_X + prev_col_width + effective_h * h_index
         const node_w = node.shape_min_width
         if (node_w > col_max_w_col) col_max_w_col = node_w
       })
@@ -1182,37 +1196,38 @@ export class NodePositioning {
     }
     const v_margin = v_spacing ?? this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
 
-    let shift = 0
     const horizontal_spacing = h_spacing ?? this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
     console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
 
-    // ÉTAPE 2: Calculer les positions Y avec la logique center_biggest_nodes
+    // ÉTAPE 2: Calculer les positions Y - chaque colonne est centrée verticalement
+    // de façon indépendante via v_margin_for_index. Le premier nœud peut ensuite être
+    // nudgé pour les cas d'import/recycling/chaîne linéaire, mais ce nudge NE se
+    // propage PAS aux colonnes suivantes (ancien comportement `shift` retiré : il
+    // cumulait les décalages et finissait par coller la colonne n+1 en haut de la
+    // zone à cause du clamp Math.max(0, ...)).
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && false
-      //const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift)
+      let upper_node_height_and_margin = Math.max(0, v_margin_for_index)
 
       console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}`)
 
       node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
         this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-        // Logique d'alignement pour les liens spéciaux
+        // Logique d'alignement pour les liens spéciaux (ajustement local au nœud,
+        // pas reporté sur la colonne suivante)
         const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
           echangeTag && l.source.hasGivenTag(echangeTag)
         )
 
         if (import_link.length > 0) {
           this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
-          if (idx == 0) {
-            shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-          }
         } else {
           const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
             l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
@@ -1225,13 +1240,11 @@ export class NodePositioning {
 
             if (recycling_links.length > 0) {
               this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
-              if (idx == 0) {
-                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
             } else if (non_recycling_input_links.filter(l =>
               l.source.output_links_list.filter(ol => ol.is_visible).length == 1
             ).length == 1 && idx == 0) {
-              // Alignement des centres
+              // Alignement des centres : si le premier nœud de la colonne a une
+              // unique source 1-vers-1, on l'aligne verticalement avec cette source.
               const source_node = non_recycling_input_links[0].source
               const current_node = this.drawingArea.sankey.nodes_dict[node_id]
               const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
@@ -1239,18 +1252,12 @@ export class NodePositioning {
               const aligned_position_y = source_center_y - current_node_half_height
 
               this.drawingArea.sankey.nodes_dict[node_id].position_y = aligned_position_y
-
-              if (idx == 0) {
-                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
             }
           }
         }
 
         const node_height = height_per_nodes_ids[node_id]
         upper_node_height_and_margin += node_height + v_margin
-
-        const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
       })
 
     }
@@ -1266,7 +1273,7 @@ export class NodePositioning {
   /**
    * NOUVELLE ÉTAPE : Optimisation des croisements de flux
    * À appeler APRÈS le positionnement initial des nœuds
-   * 
+   *
    * @param {boolean} apply_optimization - Active/désactive l'optimisation
    */
   public optimizeCrossingsPositioning(apply_optimization: boolean = true, h_spacing?: number, v_spacing?: number) {
@@ -1397,7 +1404,7 @@ export class NodePositioning {
     // Analyser chaque flux
     this.drawingArea.sankey.visible_links_list.forEach(link => {
       if (link.shape_is_recycling) {
-        // Ignorer les liens de recyclage 
+        // Ignorer les liens de recyclage
         return
       }
       const source_pos = horizontal_positions[link.source.id]
@@ -1651,17 +1658,21 @@ export class NodePositioning {
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
 
-    // Utiliser l'algorithme amélioré
+    // Utiliser l'algorithme amélioré.
+    // Locked nodes keep their existing position_u so the user can pin a node to a
+    // specific column across recomputes.
     if (use_horizontal_index) {
       const result = this.detectAllCyclesAndOptimize(nodes_to_process)
       const horizontal_indexes_per_nodes_ids = result.horizontal_indexes
 
       nodes_to_process.forEach(node => {
+        if (node.shape_position_u_locked === true) return
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.position_u = node_index + 1
       })
     } else {
       nodes_to_process.forEach(node => {
+        if (node.shape_position_u_locked === true) return
         node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].shape_position_dx!)
       })
     }
@@ -1687,7 +1698,7 @@ export class NodePositioning {
     //     }
     //   })
 
-    //   // Sort output links based on target node position_v  
+    //   // Sort output links based on target node position_v
     //   const sorted_output_links = node.output_links_list.sort((link1, link2) => {
     //     const target1_v = link1.target.position_v
     //     const target2_v = link2.target.position_v
@@ -1722,7 +1733,7 @@ export class NodePositioning {
     //     ...import_links,        // Import links first
     //     ...regular_input_links, // Regular input links
     //     ...other_links,         // Other links (like recycling)
-    //     ...regular_output_links,// Regular output links  
+    //     ...regular_output_links,// Regular output links
     //     ...export_links         // Export links last
     //   ]
 
@@ -1902,12 +1913,14 @@ export class NodePositioning {
       })
     }
 
-    this.drawingArea.draw()
+    //this.drawingArea.draw()
     this.drawingArea.to_recenter = true
     this.drawingArea.recenter()
     this.drawingArea.to_recenter = false
+    // this.drawingArea.draw()
     // Update area
-    //this.drawingArea.areaAutoFit()
+    this.drawingArea.areaAutoFit()
+    this.drawingArea.draw()
     // Toggle saving indicator
     this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -1952,8 +1965,8 @@ export class NodePositioning {
   }
 
   /**
-   * Calcule automatiquement la valeur de shape_middle_recycling pour que le flux 
-   * de recyclage passe sous les nœuds à gauche du nœud source (mais pas ceux qui 
+   * Calcule automatiquement la valeur de shape_middle_recycling pour que le flux
+   * de recyclage passe sous les nœuds à gauche du nœud source (mais pas ceux qui
    * sont dessous et non connectés)
    */
   private computeRecyclingMiddleShape(
