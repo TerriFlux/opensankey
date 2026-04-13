@@ -1607,6 +1607,30 @@ export class Class_LinkElement extends Class_LinkAttribute {
     return this._clampThickness(linkValueInPx)
   }
 
+  // Raw (non-clamped) thicknesses used by nodes to compute proportional
+  // shape height and anchor offsets. The visual draw still uses the clamped
+  // thicknesses (min 2px + drawing_area min/max); using the raw value here
+  // keeps node height and anchor positions proportional to link values,
+  // at the cost of visual overlaps for very thin links.
+  // We still floor at 0 and reject NaN/Infinity so a misconfigured scale
+  // (e.g. d3 extrapolation, missing domain) cannot produce broken anchor math.
+  private _safeRawThickness(raw: number): number {
+    if (!Number.isFinite(raw) || raw < 0) return 0
+    return raw
+  }
+
+  public get thicknessSourceRaw() {
+    const data_value = this.valueCurrent
+    if (data_value === null) return 2
+    return this._safeRawThickness(this.scaleValueToPx(data_value))
+  }
+
+  public get thicknessTargetRaw() {
+    const target_value = this.valueCurrentTarget
+    if (target_value === null) return this.thicknessSourceRaw
+    return this._safeRawThickness(this.scaleValueToPx(target_value))
+  }
+
   /**
    * Whether this link has different source and target thicknesses (tapered/trapezoid shape).
    */
