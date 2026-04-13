@@ -1760,6 +1760,20 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       fr: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.'
     }
   } satisfies AttributeConfig<boolean>,
+  position_v_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Lock row',
+      fr: 'Verrouiller la ligne'
+    },
+    tooltips: {
+      en: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
