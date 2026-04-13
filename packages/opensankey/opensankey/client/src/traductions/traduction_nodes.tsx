@@ -94,6 +94,8 @@ export const resources_nodes = {
           geometry_relative: 'Offset',
           position_u: 'Colonne',
           column_u: 'Column (u)',
+          position_v: 'Row',
+          row_v: 'Row (v)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
           asn: 'Apply style to nodes',
@@ -112,6 +114,7 @@ export const resources_nodes = {
             position_dx: 'Ecart horizontal entre le bord droit du noeud à gauche et le bord gauche du noeud',
             position_dy: 'Ecart vertical entre le bord inférieur du noeud au dessus et le bord supérieur du noeud',
             shape_position_u_locked: 'When locked, autosankey compute keeps this node\'s column index (u) instead of recomputing it.',
+            shape_position_v_locked: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
             override_type_node_shape: 'Override the default forced shape of product and sector type nodes',
           }
         },
@@ -194,6 +197,28 @@ export const resources_nodes = {
             filter_links: 'Show only visible links or all links including hidden ones'
           }
         }
+      },
+      ElementStyle: {
+        NodeStyle: 'Default node style',
+        LinkStyle: 'Default link style',
+        ContainerStyle: 'Default container style',
+        NodeProductStyle: 'Product label style',
+        NodeSectorStyle: 'Sector label style',
+        NodeImportExportCloseStyle: 'Node import-export attached',
+        NodeImportCloseStyle: 'Node import attached',
+        NodeExportCloseStyle: 'Node export attached',
+        NodeImportExportAboveBelowStyle: 'Node import-export above/below',
+        NodeImportAboveStyle: 'Node import above',
+        NodeExportBelowStyle: 'Node export below',
+        LinkImportExportCloseStyle: 'Link import-export attached',
+        LinkImportCloseStyle: 'Link import attached',
+        LinkExportCloseStyle: 'Link export attached',
+        LinkImportExportAboveBelowStyle: 'Link import-export above/below',
+        SankeyUnitaryNodeStyle: 'Unitary node',
+        SankeyUnitaryNodeInputStyle: 'Unitary node input',
+        SankeyUnitaryNodeOutputStyle: 'Unitary node output',
+        LinkInUnitaryStyle: 'Unitary input link',
+        LinkOutUnitaryStyle: 'Unitary output link'
       }
     }
   },
@@ -286,6 +311,8 @@ export const resources_nodes = {
           geometry_parametric: 'Ecartement',
           position_u: 'Colonne',
           column_u: 'Colonne (u)',
+          position_v: 'Ligne',
+          row_v: 'Ligne (v)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
           asn: 'Appliquer le style aux noeuds',
@@ -305,6 +332,7 @@ export const resources_nodes = {
             position_dx: 'Ecart horizontal entre le bord droit du noeud à gauche et le bord gauche du noeud',
             position_dy: 'Ecart vertical entre le bord inférieur du noeud au dessus et le bord supérieur du noeud',
             shape_position_u_locked: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.',
+            shape_position_v_locked: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.',
             override_type_node_shape: 'Permet de changer la forme forcée par défaut sur les noeuds de types produits et secteur',
           }
         },
@@ -384,6 +412,28 @@ export const resources_nodes = {
             filter_links: 'Afficher uniquement les flux visibles ou tous les flux y compris les masqués'
           }
         }
+      },
+      ElementStyle: {
+        NodeStyle: 'Style de noeud par défaut',
+        LinkStyle: 'Style de flux par défaut',
+        ContainerStyle: 'Style de container par défaut',
+        NodeProductStyle: 'Style étiquette produit',
+        NodeSectorStyle: 'Style étiquette secteur',
+        NodeImportExportCloseStyle: 'Noeud import export collé',
+        NodeImportCloseStyle: 'Noeud import collé',
+        NodeExportCloseStyle: 'Noeud export collé',
+        NodeImportExportAboveBelowStyle: 'Noeud import export dessus/dessous',
+        NodeImportAboveStyle: 'Noeud import au dessus',
+        NodeExportBelowStyle: 'Noeud export au dessous',
+        LinkImportExportCloseStyle: 'Flux import export collé',
+        LinkImportCloseStyle: 'Flux import collé',
+        LinkExportCloseStyle: 'Flux export collé',
+        LinkImportExportAboveBelowStyle: 'Flux import export haut/bas',
+        SankeyUnitaryNodeStyle: 'Unitaire noeud',
+        SankeyUnitaryNodeInputStyle: 'Unitaire noeud entrée',
+        SankeyUnitaryNodeOutputStyle: 'Unitaire noeud sortie',
+        LinkInUnitaryStyle: 'Unitaire flux entrée',
+        LinkOutUnitaryStyle: 'Unitaire flux sortie'
       }
     }
   }

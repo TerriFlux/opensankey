@@ -1557,7 +1557,9 @@ export class SankeyPersistence {
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
         product_sector_styles.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
-        node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        if (sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']) {
+          node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        }
       }
     }
     json_entry = 'fluxTags'
