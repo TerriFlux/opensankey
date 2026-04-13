@@ -399,8 +399,9 @@ export const MenuContextAutoLayout = ({ app_data, optimize_crossing = false }: {
         t={app_data.t}
         default_value={h_spacing}
         function_on_blur={(v) => {
-          setHSpacing(v)
-          session_layout_spacing.h = v
+          const nv = v ?? default_dx
+          setHSpacing(nv)
+          session_layout_spacing.h = nv
         }}
         stepper={true}
         step={10}
@@ -414,8 +415,9 @@ export const MenuContextAutoLayout = ({ app_data, optimize_crossing = false }: {
         t={app_data.t}
         default_value={v_spacing}
         function_on_blur={(v) => {
-          setVSpacing(v)
-          session_layout_spacing.v = v
+          const nv = v ?? default_dy
+          setVSpacing(nv)
+          session_layout_spacing.v = nv
         }}
         stepper={true}
         step={10}
@@ -464,8 +466,9 @@ export const MenuContextResetVerticalIntervals = ({ app_data }: { app_data: Clas
         t={app_data.t}
         default_value={v_spacing}
         function_on_blur={(v) => {
-          setVSpacing(v)
-          session_layout_spacing.v = v
+          const nv = v ?? default_dy
+          setVSpacing(nv)
+          session_layout_spacing.v = nv
         }}
         stepper={true}
         step={10}
