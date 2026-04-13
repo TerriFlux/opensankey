@@ -923,8 +923,11 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
 
-        // Thickness of the link influence arrow size (use target thickness since arrows are drawn at target)
-        const link_value = link.thicknessTarget
+        // Thickness of the link influences arrow size and stacking. Use raw (non-clamped)
+        // thickness so the arrow geometry stays consistent with the raw-based anchor
+        // positions on the node — mixing clamped and raw values blows up draw_arrow_part's
+        // internal ratios.
+        const link_value_raw = link.thicknessTargetRaw
 
         let xt: number
         let yt: number
@@ -963,11 +966,14 @@ export class Class_NodeElement extends Class_NodeBase {
         const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        // Draw arrow on link
+        // Draw arrow on link.
+        // All inputs to draw_arrow_part must be in the same "space" (raw, not clamped),
+        // otherwise the internal ratio_cur = linkSize / arrowHalfHeight blows up when
+        // raw is tiny but linkSize is the 2px-clamped value, producing extreme x coords.
         link.shape_arrow_path = draw_arrow_part(
           total_cumul_of_side / 2,
           p5,
-          +link_value,
+          +link_value_raw,
           current_cumul_of_side,
           is_horizontal_at_target,
           is_revert,
@@ -976,18 +982,19 @@ export class Class_NodeElement extends Class_NodeBase {
           arrows_adjustment
         )
 
-        // Increment side cumul of drawn arrow to influence next arrow starting position
+        // Increment side cumul of drawn arrow to influence next arrow starting position.
+        // Use raw thickness to stay in sync with raw-based anchor positions.
         if (link_arrow_side_left) {
-          cum_v_left += link_value
+          cum_v_left += link_value_raw
         }
         else if (link_arrow_side_right) {
-          cum_v_right += link_value
+          cum_v_right += link_value_raw
         }
         else if (link_arrow_side_top) {
-          cum_h_top += link_value
+          cum_h_top += link_value_raw
         }
         else if (link_arrow_side_bottom) {
-          cum_h_bottom += link_value
+          cum_h_bottom += link_value_raw
         }
       })
 
@@ -1008,8 +1015,10 @@ export class Class_NodeElement extends Class_NodeBase {
     this.getLinksOrdered(side)
       .filter(link => link.is_visible)
       .forEach(link => {
-        // Use source thickness if this node is the link's source, target thickness otherwise
-        sum = sum + (link.source === this ? link.thicknessSource : link.thicknessTarget)
+        // Use raw (non-clamped) thickness so node height and anchor offsets
+        // stay proportional to link values. Visual draw still uses the
+        // clamped thickness (min 2px) which can cause overlaps on thin links.
+        sum = sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw)
       })
     return sum
   }
@@ -1084,10 +1093,12 @@ export class Class_NodeElement extends Class_NodeBase {
           }
           return
         }
-        // Get positioning parameters - use source or target thickness depending on which end this node is
+        // Get positioning parameters - use source or target thickness depending on which end this node is.
+        // Raw (non-clamped) thickness is used for anchor offsets so positions stay proportional
+        // to link values; the link is drawn with its clamped thickness centered on this anchor.
         const is_source = link.source === this
         const is_self_loop = link.source === this && link.target === this
-        const thickness = is_source ? link.thicknessSource : link.thicknessTarget
+        const thickness = is_source ? link.thicknessSourceRaw : link.thicknessTargetRaw
         const handle_position_shift = 5
         // Current node is link's source
         if (is_source && !doublon.includes(link)) {
