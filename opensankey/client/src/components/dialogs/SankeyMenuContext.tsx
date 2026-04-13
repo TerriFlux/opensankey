@@ -750,7 +750,6 @@ widgetRegistry.register('ButtonNodeContextAssignTag', ButtonNodeContextAssignTag
 widgetRegistry.register('ButtonContainerContextAssignStyle', ButtonContainerContextAssignStyle as WidgetComponent)
 widgetRegistry.register('MenuContextNodeStock', MenuContextNodeStock as WidgetComponent)
 widgetRegistry.register('MenuContextAutoLayout', MenuContextAutoLayout as WidgetComponent)
-widgetRegistry.register('MenuContextAutoLayoutOptim', MenuContextAutoLayout as WidgetComponent)
 widgetRegistry.register('MenuContextResetVerticalIntervals', MenuContextResetVerticalIntervals as WidgetComponent)
 
 interface WidgetRendererProps {

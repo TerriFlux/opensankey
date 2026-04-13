@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight } from 'react-icons/fa'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen } from 'react-icons/fa'
 import { MdTextRotateVertical, MdTextRotationNone } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -1220,6 +1220,61 @@ export const MenuConfigurationAppearance = ({
                             unit_text='pixels'
                             stepper={true}
                             isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
+                        {selection.hasNodes && !menu_for_style ? (() => {
+                          // Column index (u) input + lock toggle. Position_u lives directly on
+                          // the node (not in the dynamic attribute config), so we manage undo
+                          // manually. The lock controls whether `computeParametrization` will
+                          // overwrite this node's position_u on the next autosankey compute.
+                          const real_nodes = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                            .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+                          if (real_nodes.length === 0) return <></>
+                          const first_u = real_nodes[0].position_u
+                          const u_indeterminate = real_nodes.some(n => n.position_u !== first_u)
+                          const first_locked = real_nodes[0].shape_position_u_locked === true
+                          const all_same_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_locked)
+                          return <>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_u')}</Box>
+                              <Box display='flex' alignItems='center' gap={1}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={first_u}
+                                  menu_for_style={menu_for_style}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  function_on_blur={(value) => {
+                                    const new_u = value ?? 0
+                                    const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
+                                    const apply = () => {
+                                      real_nodes.forEach(n => { n.position_u = new_u })
+                                      refreshAll()
+                                    }
+                                    const revert = () => {
+                                      snapshots.forEach(s => { s.node.position_u = s.u })
+                                      refreshAll()
+                                    }
+                                    app_data.history.saveUndo(revert)
+                                    app_data.history.saveRedo(apply)
+                                    apply()
+                                  }}
+                                  multiValue={u_indeterminate}
+                                />
+                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_u_locked`)}>
+                                  <Button
+                                    variant={first_locked && all_same_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                    onClick={() => {
+                                      const new_locked = !(first_locked && all_same_lock)
+                                      nodeShapeValues.position_u_locked = new_locked
+                                    }}
+                                  >
+                                    {first_locked && all_same_lock ? <FaLock /> : <FaLockOpen />}
+                                  </Button>
+                                </OSTooltip>
+                              </Box>
+                            </Box>
+                          </>
+                        })() : <></>}
                         <Box layerStyle='options_3cols'>
                           <OverloadedCheckbox
                             elements={nodes_elements}

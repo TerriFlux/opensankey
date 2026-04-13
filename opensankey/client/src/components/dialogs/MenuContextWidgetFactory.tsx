@@ -366,14 +366,14 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
 // v_spacing is shared between auto-layout widgets and reset-vertical-intervals widget.
 const session_layout_spacing: { h: number | null, v: number | null } = { h: null, v: null }
 
-export const MenuContextAutoLayout = ({ app_data, optimize_crossing = false }: { app_data: Class_ApplicationData, optimize_crossing?: boolean }) => {
+export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
   const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
   const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
   const [h_spacing, setHSpacing] = useState<number>(session_layout_spacing.h ?? default_dx)
   const [v_spacing, setVSpacing] = useState<number>(session_layout_spacing.v ?? default_dy)
 
-  const launchAutoLayout = () => {
+  const launchAutoLayout = (optimize_crossing: boolean) => {
     session_layout_spacing.h = h_spacing
     session_layout_spacing.v = v_spacing
     drawing_area.nodePositioning.computeAutoSankeyWithToast(
@@ -435,9 +435,16 @@ export const MenuContextAutoLayout = ({ app_data, optimize_crossing = false }: {
     <Button
       variant='menuconfigpanel_option_button'
       size='xs'
-      onClick={launchAutoLayout}
+      onClick={() => launchAutoLayout(false)}
     >
-      {optimize_crossing ? 'Minimiser croisements' : 'Centrer les nœuds'}
+      Centrer les nœuds
+    </Button>
+    <Button
+      variant='menuconfigpanel_option_button'
+      size='xs'
+      onClick={() => launchAutoLayout(true)}
+    >
+      Minimiser les croisements
     </Button>
   </Box>
 }
