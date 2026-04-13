@@ -60,14 +60,14 @@ export type ElementStyleConfigsDict = Record<ElementStyleKey, ElementStyleConfig
 export const elementStyleConfigs = {} as ElementStyleConfigsDict
 
 elementStyleConfigs[NodeStyle] = {
-  name: 'Style de noeud par défaut',
+  name: 'ElementStyle.NodeStyle',
   config: {
     'name_label_is_visible': true,
   }
 }
 
 elementStyleConfigs[LinkStyle] = {
-  name: 'Style de flux par défaut',
+  name: 'ElementStyle.LinkStyle',
   config: {
     'name_label_background_visible': false,
     'name_label_vert': 'top',
@@ -80,7 +80,7 @@ elementStyleConfigs[LinkStyle] = {
 }
 
 elementStyleConfigs[ContainerStyle] = {
-  name: 'Style de container par défaut',
+  name: 'ElementStyle.ContainerStyle',
   config: {
     'name_label_is_visible': true,
     'name_label_inside_vert': true,
@@ -95,17 +95,17 @@ elementStyleConfigs[ContainerStyle] = {
 }
 
 elementStyleConfigs[NodeProductStyle] = {
-  name: 'Noeud produit',
+  name: 'ElementStyle.NodeProductStyle',
   config: { 'shape_type': 'ellipse' }
 }
 
 elementStyleConfigs[NodeSectorStyle] = {
-  name: 'Noeud secteur',
+  name: 'ElementStyle.NodeSectorStyle',
   config: { 'shape_type': 'rect' }
 }
 
 elementStyleConfigs[NodeImportExportCloseStyle] = {
-  name: 'Noeud import export collé',
+  name: 'ElementStyle.NodeImportExportCloseStyle',
   config: {
     'name_label_is_visible': false,
     'shape_visible': false,
@@ -119,7 +119,7 @@ elementStyleConfigs[NodeImportExportCloseStyle] = {
 }
 
 elementStyleConfigs[NodeImportCloseStyle] = {
-  name: 'Noeud import collés',
+  name: 'ElementStyle.NodeImportCloseStyle',
   config: {
     'shape_position_dx': -100,
     'shape_position_dy': -50
@@ -127,7 +127,7 @@ elementStyleConfigs[NodeImportCloseStyle] = {
 }
 
 elementStyleConfigs[NodeExportCloseStyle] = {
-  name: 'Noeud export collé',
+  name: 'ElementStyle.NodeExportCloseStyle',
   config: {
     'name_label_vert': 'bottom',
     'shape_position_dx': 100,
@@ -139,7 +139,7 @@ elementStyleConfigs[NodeExportCloseStyle] = {
 }
 
 elementStyleConfigs[NodeImportExportAboveBelowStyle] = {
-  name: 'Noeud import export dessus dessous',
+  name: 'ElementStyle.NodeImportExportAboveBelowStyle',
   config: {
     'shape_min_width': 40,
     'name_label_is_visible': true,
@@ -154,7 +154,7 @@ elementStyleConfigs[NodeImportExportAboveBelowStyle] = {
 }
 
 elementStyleConfigs[NodeImportAboveStyle] = {
-  name: 'Noeud import au dessus',
+  name: 'ElementStyle.NodeImportAboveStyle',
   config: {
     'name_label_horiz': 'left',
     'value_label_horiz': 'left',
@@ -168,7 +168,7 @@ elementStyleConfigs[NodeImportAboveStyle] = {
 }
 
 elementStyleConfigs[NodeExportBelowStyle] = {
-  name: 'Noeud export au dessous',
+  name: 'ElementStyle.NodeExportBelowStyle',
   config: {
     'name_label_horiz': 'right',
     'value_label_horiz': 'right',
@@ -179,7 +179,7 @@ elementStyleConfigs[NodeExportBelowStyle] = {
 }
 
 elementStyleConfigs[LinkImportExportCloseStyle] = {
-  name: 'Flux import export collé',
+  name: 'ElementStyle.LinkImportExportCloseStyle',
   config: {
     'shape_orientation': 'hv',
     'value_label_is_visible': true,
@@ -188,7 +188,7 @@ elementStyleConfigs[LinkImportExportCloseStyle] = {
 }
 
 elementStyleConfigs[LinkImportCloseStyle] = {
-  name: 'Flux import collé',
+  name: 'ElementStyle.LinkImportCloseStyle',
   config: {
     'shape_orientation': 'vh',
     'value_label_is_visible': true,
@@ -199,7 +199,7 @@ elementStyleConfigs[LinkImportCloseStyle] = {
 }
 
 elementStyleConfigs[LinkExportCloseStyle] = {
-  name: 'Flux export collé',
+  name: 'ElementStyle.LinkExportCloseStyle',
   config: {
     'shape_orientation': 'hv',
     'value_label_is_visible': true,
@@ -210,7 +210,7 @@ elementStyleConfigs[LinkExportCloseStyle] = {
 }
 
 elementStyleConfigs[LinkImportExportAboveBelowStyle] = {
-  name: 'Flux export haut bas',
+  name: 'ElementStyle.LinkImportExportAboveBelowStyle',
   config: {
     'shape_starting_curve': 0.25,
     'shape_starting_tangeant': 0.50,
@@ -222,7 +222,7 @@ elementStyleConfigs[LinkImportExportAboveBelowStyle] = {
 }
 
 elementStyleConfigs[SankeyUnitaryNodeStyle] = {
-  name: 'Unitaire noeud',
+  name: 'ElementStyle.SankeyUnitaryNodeStyle',
   config: {
     name_label_text_align: 'middle',
     name_label_horiz: 'middle',
@@ -245,7 +245,7 @@ elementStyleConfigs[SankeyUnitaryNodeStyle] = {
 }
 
 elementStyleConfigs[SankeyUnitaryNodeInputStyle] = {
-  name: 'Unitaire noeud entrée',
+  name: 'ElementStyle.SankeyUnitaryNodeInputStyle',
   config: {
     name_label_horiz: 'left',
     name_label_vert: 'middle',
@@ -261,7 +261,7 @@ elementStyleConfigs[SankeyUnitaryNodeInputStyle] = {
 }
 
 elementStyleConfigs[SankeyUnitaryNodeOutputStyle] = {
-  name: 'Unitaire noeud sortie',
+  name: 'ElementStyle.SankeyUnitaryNodeOutputStyle',
   config: {
     name_label_horiz: 'right',
     name_label_vert: 'middle',
@@ -276,7 +276,7 @@ elementStyleConfigs[SankeyUnitaryNodeOutputStyle] = {
 } as const
 
 elementStyleConfigs[LinkInUnitaryStyle] = {
-  name: 'Unitaire flux entrée',
+  name: 'ElementStyle.LinkInUnitaryStyle',
   config: {
     shape_orientation: 'hh',
     shape_is_arrow: false,
@@ -300,7 +300,7 @@ elementStyleConfigs[LinkInUnitaryStyle] = {
 } as const
 
 elementStyleConfigs[LinkOutUnitaryStyle] = {
-  name: 'Unitaire flux sortie',
+  name: 'ElementStyle.LinkOutUnitaryStyle',
   config: {
     shape_orientation: 'hh',
     value_label_font_size: 20,
