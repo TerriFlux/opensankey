@@ -54,6 +54,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 ### Corrections
 - `fix(mac)` : compatibilité macOS des raccourcis clavier (via submodule OpenSankey) et mise à jour de la documentation des raccourcis.
 - `fix(node)` : affichage du libellé `in→out` quand la somme des flux entrants diffère de la somme des sortants (456d15b).
+- `fix(draw)` : hauteur des nœuds et points d'ancrage des flux désormais proportionnels à la vraie valeur des flux (épaisseur brute non-clampée), pour que la somme des épaisseurs au niveau du nœud corresponde à la valeur réelle. Les flux très fins continuent d'être dessinés avec un minimum visuel de 2 px et peuvent se chevaucher dans leur slot. Corrige aussi l'explosion des coordonnées de flèches (~-9400 px) sur les nœuds dont le total brut est très petit (mélange clamped/raw dans `draw_arrow_part`) (via submodule OpenSankey).
 
 ### Modifications
 - `chore` : mises à jour multiples du submodule OpenSankey (8f880d0, 88b7f92, 5c01743, a41357d, f14d9eb, ad410c6, 982e278, 7b55875).
