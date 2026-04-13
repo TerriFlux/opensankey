@@ -1221,17 +1221,22 @@ export const MenuConfigurationAppearance = ({
                             stepper={true}
                             isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
                         {selection.hasNodes && !menu_for_style ? (() => {
-                          // Column index (u) input + lock toggle. Position_u lives directly on
-                          // the node (not in the dynamic attribute config), so we manage undo
-                          // manually. The lock controls whether `computeParametrization` will
-                          // overwrite this node's position_u on the next autosankey compute.
+                          // Column index (u) and row index (v) inputs + lock toggles.
+                          // position_u / position_v live directly on the node (not in the
+                          // dynamic attribute config), so we manage undo manually. The locks
+                          // control whether autosankey compute overwrites the node's column
+                          // index / relative row order on the next run.
                           const real_nodes = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
                             .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
                           if (real_nodes.length === 0) return <></>
                           const first_u = real_nodes[0].position_u
                           const u_indeterminate = real_nodes.some(n => n.position_u !== first_u)
-                          const first_locked = real_nodes[0].shape_position_u_locked === true
-                          const all_same_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_locked)
+                          const first_u_locked = real_nodes[0].shape_position_u_locked === true
+                          const all_same_u_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_u_locked)
+                          const first_v = real_nodes[0].position_v
+                          const v_indeterminate = real_nodes.some(n => n.position_v !== first_v)
+                          const first_v_locked = real_nodes[0].shape_position_v_locked === true
+                          const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
                           return <>
                             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                               <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_u')}</Box>
@@ -1262,13 +1267,53 @@ export const MenuConfigurationAppearance = ({
                                 />
                                 <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_u_locked`)}>
                                   <Button
-                                    variant={first_locked && all_same_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                    variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                                     onClick={() => {
-                                      const new_locked = !(first_locked && all_same_lock)
+                                      const new_locked = !(first_u_locked && all_same_u_lock)
                                       nodeShapeValues.position_u_locked = new_locked
                                     }}
                                   >
-                                    {first_locked && all_same_lock ? <FaLock /> : <FaLockOpen />}
+                                    {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
+                                  </Button>
+                                </OSTooltip>
+                              </Box>
+                            </Box>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.row_v')}</Box>
+                              <Box display='flex' alignItems='center' gap={1}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={first_v}
+                                  menu_for_style={menu_for_style}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  function_on_blur={(value) => {
+                                    const new_v = value ?? 0
+                                    const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
+                                    const apply = () => {
+                                      real_nodes.forEach(n => { n.position_v = new_v })
+                                      refreshAll()
+                                    }
+                                    const revert = () => {
+                                      snapshots.forEach(s => { s.node.position_v = s.v })
+                                      refreshAll()
+                                    }
+                                    app_data.history.saveUndo(revert)
+                                    app_data.history.saveRedo(apply)
+                                    apply()
+                                  }}
+                                  multiValue={v_indeterminate}
+                                />
+                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_v_locked`)}>
+                                  <Button
+                                    variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                    onClick={() => {
+                                      const new_locked = !(first_v_locked && all_same_v_lock)
+                                      nodeShapeValues.position_v_locked = new_locked
+                                    }}
+                                  >
+                                    {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
                                   </Button>
                                 </OSTooltip>
                               </Box>
