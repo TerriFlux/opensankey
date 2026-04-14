@@ -201,6 +201,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
             <Tr><Td>{t('Menu.rcc_cs_bold')}</Td><Td>{t('Menu.rcc_cs')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_click_and_drag_bold')}</Td><Td>{t('Menu.rcc_click_and_drag')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_dn_bold')}</Td><Td>{t('Menu.rcc_dn')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_shift_dn_bold')}</Td><Td>{t('Menu.rcc_shift_dn')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_cdn_bold')}</Td><Td>{t('Menu.rcc_cdn')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_handle_bold')}</Td><Td>{t('Menu.rcc_handle')}</Td></Tr>
