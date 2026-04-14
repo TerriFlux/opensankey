@@ -760,6 +760,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
   value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
   value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+  value_label_in_out_display_mode!: ValueLabelAttributeTypes['in_out_display_mode']
 
   // Units
   value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
@@ -1060,6 +1061,7 @@ export class Class_ElementStyle {
   value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
   value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
   value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+  value_label_in_out_display_mode!: ValueLabelAttributeTypes['in_out_display_mode']
 
   // Units
   value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
