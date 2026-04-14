@@ -2,6 +2,11 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié] — Avril 2026
+
+### Ajouts
+- **Bump du submodule OpenSankey** : intégration du nouveau mode d'affichage englobant (container) sur les dimensions d'agrégation. Un nœud parent peut désormais être rendu simultanément avec ses enfants sous forme d'une enveloppe rectangulaire pointillée qui les entoure, avec deux variantes de répartition des flux (entrées sur les enfants / sorties du parent, ou l'inverse). Accessible depuis le sous-menu « Navigation hiérarchie » du clic droit sur un nœud impliqué dans une dimension parent/enfant. Voir le [changelog OpenSankey](submodules/OpenSankey/CHANGELOG.md) pour le détail technique (modèle de données, filtre de visibilité asymétrique des liens, rendu via `applyContainerEnvelopeIfNeeded`, propagation du drag aux ancêtres, style `NodeContainerStyle`, persistance, sync au changement de vue).
+
 ## [Non publié] — Mars 2026
 
 ### Ajouts
