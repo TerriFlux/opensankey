@@ -37,6 +37,13 @@ export class NodeEventsHandler {
   private _node: Class_NodeBase
   private bbox: DOMRect | undefined = undefined
 
+  // Shift+drag axis lock (SankeyMatic-style): while shift is held, once enough
+  // motion has accumulated, the drag is constrained to whichever axis was
+  // dominant. Releasing shift clears the lock.
+  private _shift_lock_axis: 'x' | 'y' | null = null
+  private _shift_acc_dx: number = 0
+  private _shift_acc_dy: number = 0
+
   constructor(node: Class_NodeBase) {
     this._node = node
   }
@@ -195,10 +202,13 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
   /**
    * Define event when mouse drag element starts
    */
-  public handleMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    if (event.sourceEvent.shiftKey) {
-      return
-    }
+  public handleMouseDragStart(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Reset the shift axis-lock tracker at the start of each drag so a new
+    // gesture always starts free; the lock is established later in
+    // handleMouseDrag once motion exceeds the threshold.
+    this._shift_lock_axis = null
+    this._shift_acc_dx = 0
+    this._shift_acc_dy = 0
 
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
@@ -244,6 +254,42 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
    * Define event when mouse drag element
    */
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Shift+drag axis lock (SankeyMatic-style). Releasing shift mid-drag
+    // releases the lock; re-pressing it re-picks the axis from subsequent
+    // motion. The first axis choice waits until ~4 px of cumulative motion so
+    // tiny jitter at the start of a gesture does not pick the wrong direction.
+    if (event.sourceEvent.shiftKey) {
+      this._shift_acc_dx += event.dx
+      this._shift_acc_dy += event.dy
+      if (this._shift_lock_axis === null) {
+        const threshold_sq = 16
+        if (this._shift_acc_dx * this._shift_acc_dx + this._shift_acc_dy * this._shift_acc_dy >= threshold_sq) {
+          this._shift_lock_axis = Math.abs(this._shift_acc_dx) >= Math.abs(this._shift_acc_dy) ? 'x' : 'y'
+        }
+      }
+      // d3 DragEvent defines dx/dy as non-writable (but configurable), so we
+      // must redefine instead of assigning. We keep the property writable
+      // afterwards in case anything downstream tries to mutate it.
+      let new_dx = event.dx
+      let new_dy = event.dy
+      if (this._shift_lock_axis === 'x') {
+        new_dy = 0
+      } else if (this._shift_lock_axis === 'y') {
+        new_dx = 0
+      } else {
+        // Not enough motion yet to decide — suppress movement entirely so the
+        // first few px don't leak as an off-axis slide.
+        new_dx = 0
+        new_dy = 0
+      }
+      Object.defineProperty(event, 'dx', { value: new_dx, enumerable: true, configurable: true, writable: true })
+      Object.defineProperty(event, 'dy', { value: new_dy, enumerable: true, configurable: true, writable: true })
+    } else if (this._shift_lock_axis !== null || this._shift_acc_dx !== 0 || this._shift_acc_dy !== 0) {
+      this._shift_lock_axis = null
+      this._shift_acc_dx = 0
+      this._shift_acc_dy = 0
+    }
+
     // Get related drawing area
     const drawing_area = this._node.drawing_area
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
@@ -288,9 +334,11 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // Reset current tracked node shift
     this._node.resetNodeCurrentDelta()
 
-    if (event.sourceEvent.shiftKey) {
-      return
-    }
+    // Clear the shift axis-lock tracker; if the next drag starts with shift
+    // held, handleMouseDragStart will re-initialize it.
+    this._shift_lock_axis = null
+    this._shift_acc_dx = 0
+    this._shift_acc_dy = 0
 
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
