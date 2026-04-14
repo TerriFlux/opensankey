@@ -461,6 +461,24 @@ const LabelContentComponent = ({
           attributePath={attributePath}
           refreshParentComponent={refreshParentComponent}
         />
+        {prefix === 'value_label' && selection.hasNodes && (
+          <OverloadedButtonGroup
+            elements={elements}
+            config={VALUE_LABEL_CONFIG}
+            attributePath={attributePath}
+            prefix={prefix}
+            attributeKey="in_out_display_mode"
+            currentValue={labelValues.in_out_display_mode as 'both' | 'in' | 'out'}
+            items={[
+              { value: 'in', icon: <Box display="flex" alignItems="center" gap={1}>Σin</Box> },
+              { value: 'both', icon: <Box display="flex" alignItems="center" gap={1}>Σin{'\u2192'}Σout</Box> },
+              { value: 'out', icon: <Box display="flex" alignItems="center" gap={1}>Σout</Box> },
+            ]}
+            onChange={(value) => { labelValues.in_out_display_mode = value }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'in_out_display_mode', prefix)}
+            t={t}
+          />
+        )}
       </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
