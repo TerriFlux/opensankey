@@ -295,21 +295,10 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
 
-    // If we moved 'this' node then we save nodes dragged previous pos in undo & current pos in redo
-    // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
-    if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
-      function undo(_: Class_ProtoElement) {
-        Object.keys(dict_old_pos).forEach(k => {
-          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
-          if (!n) {
-            n = _.drawing_area.sankey.containers_dict[k]
-          }
-          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
-        })
-      }
-      this._node.saveUndo(undo)
-      this.saveRedoAtEventMouseDragEnd()
-    }
+    // Did the drag actually move 'this' node? If yes we'll save one combined undo/redo
+    // step (positions + IO link orders) at the very end of this handler, once positions
+    // are final and the auto-reorganization has been applied.
+    const position_changed = dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)
 
     // End of drag
     this._node.setDragState(false)
@@ -366,6 +355,87 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
           }
         }
       }
+    }
+
+    // Auto-reorganize IO links + save one combined undo/redo step covering both
+    // positions and link orders, so that undo restores the pre-drag layout fully.
+    if (position_changed) {
+      // Collect moved nodes and their connected neighbours (skipping containers,
+      // which do not expose reorganizeIOLinks).
+      const nodes_to_reorganize = new Set<Class_NodeElement>()
+      Object.keys(dict_old_pos).forEach(id => {
+        const n = drawing_area.sankey.nodes_dict[id] as Class_NodeElement | undefined
+        if (!n || typeof n.reorganizeIOLinks !== 'function') return
+        const [old_x, old_y] = dict_old_pos[id]
+        if (n.position_x === old_x && n.position_y === old_y) return
+        nodes_to_reorganize.add(n)
+        n.input_links_list.forEach(l => {
+          const s = l.source as Class_NodeElement
+          if (s && typeof s.reorganizeIOLinks === 'function') nodes_to_reorganize.add(s)
+        })
+        n.output_links_list.forEach(l => {
+          const t = l.target as Class_NodeElement
+          if (t && typeof t.reorganizeIOLinks === 'function') nodes_to_reorganize.add(t)
+        })
+      })
+
+      // Snapshot old link orders BEFORE reorganization — needed by undo.
+      const dict_old_orders: { [nodeId: string]: string[] } = {}
+      nodes_to_reorganize.forEach(n => {
+        dict_old_orders[n.id] = n.links_order.map(l => l.id)
+      })
+
+      // Apply spatial reorganization.
+      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks())
+
+      // Snapshot new link orders AFTER reorganization — needed by redo.
+      const dict_new_orders: { [nodeId: string]: string[] } = {}
+      nodes_to_reorganize.forEach(n => {
+        dict_new_orders[n.id] = n.links_order.map(l => l.id)
+      })
+
+      // Snapshot final positions for redo (captures the true post-drag state,
+      // including any late setPosXY adjustments above).
+      const dict_new_pos: { [x: string]: [number, number] } = {}
+      Object.keys(dict_old_pos).forEach(k => {
+        let n = drawing_area.sankey.nodes_dict[k] as Class_NodeBase | undefined
+        if (!n) n = drawing_area.sankey.containers_dict[k] as Class_NodeBase | undefined
+        if (n) dict_new_pos[k] = [n.position_x, n.position_y]
+      })
+
+      function undo(_: Class_ProtoElement) {
+        Object.keys(dict_old_pos).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1])
+        })
+        Object.keys(dict_old_orders).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
+          if (n && typeof n.reorganizeIOFromListIds === 'function') {
+            n.reorganizeIOFromListIds(dict_old_orders[k])
+            n.draw()
+          }
+        })
+      }
+
+      function redo(_: Class_ProtoElement) {
+        Object.keys(dict_new_pos).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1])
+        })
+        Object.keys(dict_new_orders).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
+          if (n && typeof n.reorganizeIOFromListIds === 'function') {
+            n.reorganizeIOFromListIds(dict_new_orders[k])
+            n.draw()
+          }
+        })
+        _.drawing_area.areaAutoFit()
+      }
+
+      this._node.saveUndo(undo)
+      this._node.saveRedo(redo)
     }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
@@ -513,38 +583,4 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     }
   }
 
-  /**
-   * Function to save redo of nodes dragged into data history
-   */
-  private saveRedoAtEventMouseDragEnd() {
-    // Get related drawing area
-    const drawing_area = this._node.drawing_area
-    const nodes_selected = this._node.selected_elements_list
-
-    if (nodes_selected.includes(this._node)) {
-      const dict_old_pos: { [x: string]: [number, number] } = {}
-      // Memorize for redo
-      nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.position_x, n.position_y]
-      })
-      // Redo function
-      function redo() {
-        nodes_selected.forEach(n => {
-          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
-        })
-        drawing_area.areaAutoFit()
-      }
-      this._node.saveRedo(redo)
-    } else {
-      // Memorize for redo
-      const old_x = this._node.position_x
-      const old_y = this._node.position_y
-      // Redo function
-      function redo(_: Class_ProtoElement) {
-        _.setPosXY(old_x, old_y)
-        drawing_area.areaAutoFit()
-      }
-      this._node.saveRedo(redo)
-    }
-  }
 }
