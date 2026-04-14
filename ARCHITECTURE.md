@@ -131,6 +131,67 @@ Version actuelle : `0.93`. Côté OSP, les vues sont compressées gzip dans le J
 
 Types de licence DB : `terriflux` (free), `OpenSankey+`, `sankeysuite` (AFM). Flags côté app : `has_sankey_plus`, `has_sankey_afm`, `has_sankey_dev`. Le trial OSP est client-side (localStorage, 30 jours, UUID anonyme), endpoints `/api/trial/started` et `/api/trial/converted`.
 
+## Documentation (`doc/`)
+
+La documentation technique et utilisateur vit sous [`doc/`](doc/), séparée du code applicatif et servie par Flask via [`doc/views.py`](doc/views.py).
+
+### Structure Sphinx multi-langue, multi-audience
+
+```
+doc/
+├── sources/
+│   ├── fr/                     projet Sphinx FR
+│   │   ├── conf.py
+│   │   ├── index.rst           racine : toctree user/ + dev/
+│   │   ├── user/
+│   │   │   ├── index.rst
+│   │   │   └── features/       auto-découverte via :glob:
+│   │   │       └── mode_englobant.rst
+│   │   └── dev/
+│   │       ├── index.rst
+│   │       └── features/
+│   │           └── mode_englobant.rst
+│   ├── en/                     miroir EN (même arbo, fichiers nommés en anglais)
+│   │   └── ...
+│   ├── index/, pages/, conf.py legacy 2023 — non référencés par fr/ ou en/, à archiver
+│   └── README.md
+├── templates/                  fiches de départ pour une nouvelle feature
+│   ├── README.md
+│   ├── feature-user.rst
+│   └── feature-dev.rst
+├── build/                      artefacts HTML (gitignore)
+├── __init__.py / views.py      blueprint Flask qui sert la doc buildée
+└── git_cleaner_documentation.md, git_selector.md
+```
+
+**Deux projets Sphinx indépendants** (un par langue) au lieu de `sphinx-intl`/gettext : chaque langue est éditée directement en RST, ce qui simplifie le workflow au prix d'une synchro manuelle. Migration vers gettext envisageable si la maintenance devient lourde.
+
+**Split user/dev par langue** : la section `user/` répond à « que fait la feature, comment l'utiliser, quelles limites » ; la section `dev/` répond à « où vit le code, comment ça marche, pourquoi ces choix ». Les limitations visibles utilisateur apparaissent dans les deux. Chaque page croise l'autre via `:doc:` en bas.
+
+**Auto-découverte des features** : les `index.rst` de `features/` utilisent `:glob: *`, donc ajouter un nouveau fichier `.rst` suffit à l'inclure dans la toctree. Pas de registre à mettre à jour.
+
+### Workflow pour documenter une nouvelle feature
+
+Chaque feature livrée produit **4 fichiers** : `{fr,en}/{user,dev}/features/<nom>.rst`. Le nom de fichier suit la langue (ex. `mode_englobant.rst` en FR, `enclosing_mode.rst` en EN). Partir des templates [`doc/templates/feature-user.rst`](doc/templates/feature-user.rst) et [`doc/templates/feature-dev.rst`](doc/templates/feature-dev.rst) — voir [`doc/templates/README.md`](doc/templates/README.md) pour les conventions (longueur, screenshots dans `_images/`, références de code par classe/méthode plutôt que par ligne, etc.).
+
+Les pages dev peuvent (et doivent) citer précisément les fichiers impactés, mais préfèrent des ancres stables (`Class_Foo.bar`) aux numéros de ligne qui dérivent.
+
+### Build
+
+Depuis la racine du dépôt :
+
+```bash
+sphinx-build -b html doc/sources/fr doc/build/fr/html
+sphinx-build -b html doc/sources/en doc/build/en/html
+```
+
+`conf.py` de chaque projet est minimaliste (`sphinx_rtd_theme`, pas d'extensions).
+
+### Legacy et follow-up
+
+- [`doc/sources/index/`](doc/sources/index/), [`doc/sources/pages/`](doc/sources/pages/) et `doc/sources/conf.py` sont la documentation 2023, **plus référencée** par les projets `fr/` / `en/`. À archiver ou supprimer dans un passage ultérieur une fois les pages migrées.
+- [`doc/views.py`](doc/views.py) n'est **pas encore adapté** au double arbre fr/en — la route Flask sert toujours l'ancien layout. Follow-up : router `/doc/fr/...` et `/doc/en/...` sur `doc/build/{fr,en}/html/`, avec sélection automatique selon la langue active côté app.
+
 ## Submodules Python
 
 ### SankeyExcelParser (v1.1.2)
