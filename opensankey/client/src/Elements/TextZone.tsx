@@ -70,29 +70,9 @@ export class Class_ContainerElement extends Class_NodeBase {
   }
 
   public computeSizeAndPositionFromAttachedNodes() {
-    let min_x = this.drawing_area.width, min_y = this.drawing_area.height, max_x = 0, max_y = 0
-
-    this._attached_node.forEach(node => {
-      if (node.is_visible) {
-        const bbox = node.d3_selection?.node()?.getBBox() ?? { x: 0, y: 0, width: 0, height: 0 }
-        const node_topiest_pos = node.position_y + bbox.y
-        const node_leftiest_pos = node.position_x + bbox.x
-        const node_rightest_pos = node.position_x + bbox.x + bbox.width
-        const node_bottomiest_pos = node.position_y + bbox.y + bbox.height
-
-        min_x = (node_leftiest_pos < min_x) ? node_leftiest_pos : min_x
-        min_y = (node_topiest_pos < min_y) ? node_topiest_pos : min_y
-        max_x = (node_rightest_pos > max_x) ? node_rightest_pos : max_x
-        max_y = (node_bottomiest_pos > max_y) ? node_bottomiest_pos : max_y
-      }
-    })
-
-    // Mode englobant : appliquer les marges sur tous les côtés
-    this.position_x = min_x - this.shape_margin_left
-    this.position_y = min_y - this.shape_margin_top
-    this.shape_min_width = max_x - min_x + this.shape_margin_left + this.shape_margin_right
-    this.shape_min_height = max_y - min_y + this.shape_margin_top + this.shape_margin_bottom
-
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    this._applyEnvelopeBBox(bbox)
   }
 
   public eventSimpleRMBClick(

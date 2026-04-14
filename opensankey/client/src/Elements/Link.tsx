@@ -1160,8 +1160,65 @@ export class Class_LinkElement extends Class_LinkAttribute {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      this.is_not_zero
+      this.is_not_zero &&
+      this.is_allowed_by_container_modes
     )
+  }
+
+  /**
+   * Container display mode link filter.
+   *
+   * When a dimension is in container mode, parent and children are visible
+   * at the same time and the links are split by side:
+   * - 'in_children_out_parent': inputs land on children, outputs leave from parent
+   * - 'in_parent_out_children': inputs land on parent, outputs leave from children
+   *
+   * Links inside a group (child → child of the same dimension) stay visible in
+   * both modes. If any impacted dimension hides this link, the link is hidden.
+   */
+  public get is_allowed_by_container_modes(): boolean {
+    const source = this._source
+    const target = this._target
+    // Scan all dimensions that could impact this link through either endpoint
+    const impacting_dims = [
+      ...source.dimensions_as_parent,
+      ...source.dimensions_as_child,
+      ...target.dimensions_as_parent,
+      ...target.dimensions_as_child
+    ]
+    if (impacting_dims.length === 0) return true
+    const seen = new Set<string>()
+    for (const dim of impacting_dims) {
+      if (!dim.container_mode) continue
+      if (seen.has(dim.id + '@' + dim.parent.id)) continue
+      seen.add(dim.id + '@' + dim.parent.id)
+      const source_is_parent = source === dim.parent
+      const target_is_parent = target === dim.parent
+      const source_is_child = dim.children.includes(source)
+      const target_is_child = dim.children.includes(target)
+      // child ↔ child inside the same group — always visible
+      if (source_is_child && target_is_child) continue
+      // parent ↔ own child (shouldn't normally exist) — hide to avoid clutter
+      if ((source_is_parent && target_is_child) || (source_is_child && target_is_parent)) {
+        return false
+      }
+      // Exactly one endpoint internal to this dimension
+      const mode = dim.container_mode
+      if (source_is_parent) {
+        // Outgoing link from the parent
+        if (mode === 'in_parent_out_children') return false
+      } else if (target_is_parent) {
+        // Incoming link to the parent
+        if (mode === 'in_children_out_parent') return false
+      } else if (source_is_child) {
+        // Outgoing link from a child
+        if (mode === 'in_children_out_parent') return false
+      } else if (target_is_child) {
+        // Incoming link to a child
+        if (mode === 'in_parent_out_children') return false
+      }
+    }
+    return true
   }
 
   /**

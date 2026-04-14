@@ -13,6 +13,7 @@ interface ElementStyleConfigItem {
 export const NodeStyle = 'NodeStyle' as const
 export const LinkStyle = 'LinkStyle' as const
 export const ContainerStyle = 'ContainerStyle' as const
+export const NodeContainerStyle = 'NodeContainerStyle' as const
 export const NodeProductStyle = 'NodeProductStyle' as const
 export const NodeSectorStyle = 'NodeSectorStyle' as const
 export const NodeImportExportCloseStyle = 'NodeImportExportCloseStyle' as const
@@ -37,6 +38,7 @@ export type ElementStyleKey =
   | typeof NodeStyle
   | typeof LinkStyle
   | typeof ContainerStyle
+  | typeof NodeContainerStyle
   | typeof NodeProductStyle
   | typeof NodeSectorStyle
   | typeof NodeImportExportCloseStyle
@@ -91,6 +93,30 @@ elementStyleConfigs[ContainerStyle] = {
     'value_label_is_visible': false,
     'shape_min_height': 100,
     'shape_min_width': 100
+  }
+}
+
+elementStyleConfigs[NodeContainerStyle] = {
+  name: 'ElementStyle.NodeContainerStyle',
+  config: {
+    'shape_type': 'rect',
+    'shape_color_visible': false,
+    'shape_border_visible': true,
+    'shape_border_color': 'black',
+    'shape_border_thickness': 2,
+    'shape_border_dashed': true,
+    'shape_border_radius': 10,
+    'name_label_is_visible': true,
+    'name_label_horiz': 'middle',
+    'name_label_vert': 'top',
+    'name_label_inside_horiz': false,
+    'name_label_inside_vert': false,
+    'name_label_bold': true,
+    'value_label_is_visible': false,
+    'shape_margin_top': 10,
+    'shape_margin_bottom': 10,
+    'shape_margin_left': 5,
+    'shape_margin_right': 5
   }
 }
 
@@ -324,7 +350,7 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 } as const
 
 
-export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle] as const
+export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle] as const
 export const product_sector_styles: readonly ElementStyleKey[] = [NodeProductStyle, NodeSectorStyle] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
   NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle,
