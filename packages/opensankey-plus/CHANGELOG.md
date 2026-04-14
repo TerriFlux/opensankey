@@ -42,6 +42,7 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 - `feat(ui)` : onglet « Vues » désactivé en l'absence de licence OSP (87ca6b2).
 - `feat(ui/server)` : case à cocher `error_on_new_nodes`, nettoyage du bruit de debug (bd28a6b).
 - `feat(node)` : réorganisation automatique des E/S à la fin d'un drag de nœud, undoable en une étape (positions + ordres de liens). Le nœud déplacé et tous ses voisins connectés voient leur ordre de flux entrants/sortants recalculé selon la nouvelle disposition spatiale, et Ctrl+Z restaure les deux (via submodule OpenSankey).
+- `feat(node label)` : mode d'affichage configurable des totaux entrants/sortants dans le libellé de valeur (Σin / Σin→Σout / Σout), avec comparaison des chaînes **après formatage** (chiffres significatifs, décimales, unités) — la flèche ne s'affiche plus quand les deux totaux rendent le même texte (via submodule OpenSankey).
 - **`feat(trial)` : période d'essai OpenSankey+ de 30 jours, opt-in, sans login** :
   - nouveau module utilitaire `client/src/utils/trial.ts` (lecture/écriture `localStorage`, génération d'UUID anonyme v4, envoi des pings analytics en `keepalive`) avec API `markTrialOffered`, `startTrial`, `getTrialState`, `isTrialActive`, `isTrialExpired`, `markTrialConverted` ;
   - nouveau composant `client/src/components/ModalTrialOSP.tsx` qui exporte trois éléments :
