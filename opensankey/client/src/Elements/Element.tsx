@@ -1195,10 +1195,10 @@ export class Class_ElementStyle {
   public isAttributeOverloaded(
     attr: keyof ConfigType
   ) {
-    if (this._default_style) {
-      return this._storage[attr] !== undefined && this._storage[attr] !== this._default_style[attr as keyof Class_ElementStyle]
+    if (!this._default_style ) {
+      return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
     }
-    return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
+    return true
   }
 
   public delete() {
