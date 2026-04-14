@@ -1179,6 +1179,21 @@ export const BASE_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  in_out_display_mode: {
+    default: 'both' as 'both' | 'in' | 'out',
+    type: (() => 'both') as (() => 'both' | 'in' | 'out'),
+    category: 'value_label' as const,
+    actions: ['drawValueLabel'] as BaseActionType[],
+    labels: {
+      en: 'In/Out totals',
+      fr: 'Totaux entrants/sortants'
+    },
+    tooltips: {
+      en: 'When incoming total differs from outgoing: show both (in→out), only incoming, or only outgoing',
+      fr: 'Quand le total entrant diffère du sortant : afficher les deux (entrant→sortant), uniquement l\'entrant, ou uniquement le sortant'
+    }
+  } satisfies AttributeConfig<'both' | 'in' | 'out'>,
+
   // Units
   unit_visible: {
     default: false as boolean,

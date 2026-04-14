@@ -1692,10 +1692,16 @@ export class Class_NodeElement extends Class_NodeBase {
     // Only one direction: show that value
     if (!has_in) return fmt(total_out)
     if (!has_out) return fmt(total_in)
-    // Both directions equal: show single value
-    if (total_in === total_out) return fmt(total_in)
-    // Both directions differ: show "in→out" (entering total → leaving total)
-    return fmt(total_in) + '\u2192' + fmt(total_out)
+    // Both directions: apply display mode chosen by the user
+    const mode = this.value_label_in_out_display_mode
+    if (mode === 'in') return fmt(total_in)
+    if (mode === 'out') return fmt(total_out)
+    // mode === 'both': if both values render identically (e.g. after significant
+    // digits / decimals rounding), collapse to a single value; otherwise show "in→out"
+    const fmt_in = fmt(total_in)
+    const fmt_out = fmt(total_out)
+    if (fmt_in === fmt_out) return fmt_in
+    return fmt_in + '\u2192' + fmt_out
   }
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_nodes_list
