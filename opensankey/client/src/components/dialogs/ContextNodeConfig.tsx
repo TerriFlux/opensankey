@@ -360,6 +360,46 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       closeMenuAfter: true
     },
 
+    // Actions de mode englobant (parent entoure les enfants, flux filtrés par côté)
+    containerInChildrenOutParent: {
+      type: 'action',
+      labels: {
+        en: 'Enclose (inputs → children, outputs ← parent)',
+        fr: 'Englober (entrées → enfants, sorties ← parent)'
+      },
+      tooltips: {
+        en: 'Parent surrounds children; incoming links land on children, outgoing links leave from parent',
+        fr: 'Le parent entoure les enfants ; les flux entrants vont sur les enfants, les flux sortants partent du parent'
+      },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
+    containerInParentOutChildren: {
+      type: 'action',
+      labels: {
+        en: 'Enclose (inputs → parent, outputs ← children)',
+        fr: 'Englober (entrées → parent, sorties ← enfants)'
+      },
+      tooltips: {
+        en: 'Parent surrounds children; incoming links land on parent, outgoing links leave from children',
+        fr: 'Le parent entoure les enfants ; les flux entrants vont sur le parent, les flux sortants partent des enfants'
+      },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
+    unsetContainerMode: {
+      type: 'action',
+      labels: { en: 'Exit enclosing mode', fr: 'Quitter mode englobant' },
+      tooltips: {
+        en: 'Leave the enclosing display mode',
+        fr: 'Quitter le mode d\'affichage englobant'
+      },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
     // Actions d'alignement horizontal - Référence = nœud le plus à gauche
     alignHorizMinLeft: {
       type: 'action',

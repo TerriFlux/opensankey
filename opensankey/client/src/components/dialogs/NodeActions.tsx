@@ -171,6 +171,41 @@ export class NodeActions {
     }
   }
 
+  // Container display mode (parent surrounds children, links filtered per side)
+  private _findDimensionFromOtherId = (other_id: string) => {
+    if (!this.contextualised_node) return undefined
+    const node = this.contextualised_node.master_node ?? this.contextualised_node
+    const dim_as_child = node.dimensions_as_child.find(dim => dim.parent.id === other_id)
+    if (dim_as_child) return dim_as_child
+    return node.dimensions_as_parent.find(dim =>
+      dim.children.some(c => c.id === other_id)
+    )
+  }
+
+  containerInChildrenOutParent = (other_id: string) => {
+    const dim = this._findDimensionFromOtherId(other_id)
+    if (!dim) return
+    dim.setContainerMode('in_children_out_parent')
+    this.drawing_area.draw()
+    this.refreshAndSave()
+  }
+
+  containerInParentOutChildren = (other_id: string) => {
+    const dim = this._findDimensionFromOtherId(other_id)
+    if (!dim) return
+    dim.setContainerMode('in_parent_out_children')
+    this.drawing_area.draw()
+    this.refreshAndSave()
+  }
+
+  unsetContainerMode = (other_id: string) => {
+    const dim = this._findDimensionFromOtherId(other_id)
+    if (!dim) return
+    dim.unsetContainerMode()
+    this.drawing_area.draw()
+    this.refreshAndSave()
+  }
+
   createFluxOnChildren = () => {
     if (!this.contextualised_node || !this.contextualised_node.is_parent) return
 
@@ -570,6 +605,9 @@ export class NodeActions {
       expandRight: nodeActions.expandRight,
       contractLeft: nodeActions.contractLeft,
       contractRight: nodeActions.contractRight,
+      containerInChildrenOutParent: nodeActions.containerInChildrenOutParent,
+      containerInParentOutChildren: nodeActions.containerInParentOutChildren,
+      unsetContainerMode: nodeActions.unsetContainerMode,
       // createFluxOnChildren: nodeActions.createFluxOnChildren,
       // createNewDimension: nodeActions.createNewDimension,
       // createNewDimensionForParent: nodeActions.createNewDimensionForParent,
