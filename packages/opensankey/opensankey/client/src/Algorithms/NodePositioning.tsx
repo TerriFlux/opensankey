@@ -1759,6 +1759,94 @@ export class NodePositioning {
   }
 
   /**
+   * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
+   *
+   * Traite une colonne (ensemble de nœuds visibles partageant un même
+   * `position_u`) comme une pile verticale triée par `position_v` croissant,
+   * ancrée sur le `position_y` courant du nœud de plus petit V, et espacée
+   * par `shape_position_dy` via `stackNodesVertically` (cf. PR 2).
+   *
+   * **Responsabilité stricte : empilement géométrique uniquement.** `position_v`
+   * est supposé déjà à jour à l'entrée — les call sites qui ont besoin de le
+   * recalculer (nouveau diagramme, bascule de mode, data tag change) doivent
+   * appeler `computeParametricV` avant. Cette séparation des responsabilités
+   * était le point 1 de la discussion PR 3 : V est une donnée métier, le
+   * recompute est un calcul géométrique pur.
+   *
+   * **Limitation de l'étape 1 (ce commit)** : les containers ne sont **pas**
+   * traités récursivement. Les nœuds enfants d'un container (i.e. ceux avec
+   * `dimensions_as_child.some(d => d.container_mode)`) sont exclus du
+   * stacking de colonne — l'ancien chemin `Node.applyPosition` les prend en
+   * charge via sa logique `nodeAbove`. L'intégration récursive des
+   * containers comme sous-colonnes est prévue dans un commit ultérieur de
+   * PR 3.
+   *
+   * **Scopes supportés** :
+   * - `{ type: 'all' }` : toutes les colonnes top-level de la drawing area.
+   * - `{ type: 'column', u: number }` : une seule colonne (utile pour fin
+   *   de drag, désagrégation latérale).
+   * - `{ type: 'subtree', node }` : réservé à l'étape containers récursifs
+   *   (commit ultérieur) — non implémenté ici, lève une erreur explicite.
+   *
+   * Les nœuds « échange » (tag `type de noeud` / `echange`) sont exclus du
+   * stacking, comme dans tous les autres chemins paramétriques.
+   *
+   * **Dead code temporaire** : tant que `Node.applyPosition` n'est pas
+   * réduit à un pass-through, appeler `recomputeParametricLayout` n'a aucun
+   * effet visible — le prochain `applyPosition` écrase les positions qu'on
+   * vient de poser. C'est volontaire : ce commit ajoute uniquement la
+   * plomberie, la bascule de `applyPosition` et la migration des call sites
+   * viennent dans un commit séparé pour isoler les régressions éventuelles.
+   */
+  public recomputeParametricLayout(
+    scope: { type: 'all' } | { type: 'column', u: number } | { type: 'subtree', node: Class_NodeElement }
+  ) {
+    if (scope.type === 'subtree') {
+      throw new Error(
+        '[recomputeParametricLayout] scope \'subtree\' not implemented yet ' +
+        '— requires container recursion (upcoming commit of PR 3).'
+      )
+    }
+
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    // Un nœud est « feuille de colonne top-level » si visible, non-échange,
+    // et non-enfant d'un container. Les enfants de container sont laissés
+    // à l'ancien chemin applyPosition tant que la recursion containers
+    // n'est pas en place.
+    const is_top_level_leaf = (n: Class_NodeElement): boolean => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.dimensions_as_child.some(d => d.container_mode)) return false
+      return true
+    }
+
+    const all_candidates = this.drawingArea.sankey.visible_nodes_list.filter(is_top_level_leaf)
+
+    // Groupe par position_u. Filtré ensuite si scope=column.
+    const columns = new Map<number, Class_NodeElement[]>()
+    all_candidates.forEach(n => {
+      if (scope.type === 'column' && n.position_u !== scope.u) return
+      const col = columns.get(n.position_u) ?? []
+      col.push(n)
+      columns.set(n.position_u, col)
+    })
+
+    columns.forEach(column => {
+      if (column.length === 0) return
+      // Tri par position_v croissant, tie-break sur position_y pour que
+      // deux nœuds à V égal (ou V non-assigné -1) restent dans leur ordre
+      // spatial courant et ne dansent pas à chaque recompute.
+      column.sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+      const anchor_y = column[0].position_y
+      NodePositioning.stackNodesVertically(column, anchor_y)
+    })
+  }
+
+  /**
    * Back-calcule `shape_position_dy` de chaque nœud visible depuis sa `position_y`
    * absolue. Pour chaque colonne (groupée par `position_u`), les nœuds sont triés par
    * y et le dy de chacun est déduit du gap avec le nœud précédent. Utilisé à la bascule
