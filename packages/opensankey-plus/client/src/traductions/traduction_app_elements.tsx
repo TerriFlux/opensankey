@@ -73,7 +73,7 @@ export const resources_app_elements = {
 
         Config: {
           presentation: 'Presentation',
-          element_element: 'Elements',
+          element_element: 'Eléments',
           element_object0: 'Areas',
           element_object: 'Text and image areas',
           element_view: 'View',
@@ -559,7 +559,7 @@ export const resources_app_elements = {
         Config: {
           element_object0: 'Zones',
           element_object: 'Zones de texte et images',
-          element_element: 'Elements',
+          element_element: 'Eléments',
           element_view: 'Vues',
         },
         Transformation: {
