@@ -514,7 +514,7 @@ export const format_value = (
     }
   }
   text_value = text_value.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
-  if (!label_values.unit_visible) {
+  if (!label_values.unit_visible || !label_values.is_visible) {
     return text_value
   }
   // Add unit suffix
