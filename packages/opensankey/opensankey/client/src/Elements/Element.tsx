@@ -557,9 +557,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     key: keyof ConfigType,
     value: string | number | boolean | undefined
   ): boolean {
-    return this.getStylesWithAttr(key).length > 1 || value !== undefined && value !== '' && value !== this.getStyleProperty(key)
-    // else if (default_style) return value !== undefined && value !== default_style[key]
-    // else return value !== undefined && value !== this._config[key].default
+    return this.getStylesWithAttr(key).length > 1 || (value !== undefined && value !== this.getStyleProperty(key))
   }
 
   public useDefaultStyle() {
