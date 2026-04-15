@@ -51,6 +51,7 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
     >
       <Button
+        className='toolbar_bottom_help'
         variant='info'
         size='sizeToolbarButton'
         onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
@@ -72,7 +73,7 @@ const ComponentMouseMode = (
     label={t('Banner.tooltipLiason')}
     isAlwaysOpen={menu_configuration.show_splashscreen}
   >
-    <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
+    <ButtonGroup className='toolbar_bottom_mouse_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}> {/* Orientation verticale */}
       <Button
         variant={drawing_area.isInEditionMode() ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
         id='button_selection_edition'
@@ -121,7 +122,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
   const { t, drawing_area } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   const isParametric = drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
-  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
+  return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
     <OSTooltip placement='top' label={t('Banner.posMode_parametric')}>
       <Button
         variant={isParametric ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
@@ -174,7 +175,7 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
     updateParentComponent()
   }
 
-  return <ButtonGroup isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
+  return <ButtonGroup className='toolbar_bottom_stretch' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
     <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipAdjustH')}>
       <Button variant='toolbar_button_6'
         size={size}

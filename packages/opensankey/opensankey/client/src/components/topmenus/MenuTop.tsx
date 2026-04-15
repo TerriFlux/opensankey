@@ -230,7 +230,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       label={t('Menu.tooltips.new')}
       isAlwaysOpen={new_data.menu_configuration.show_splashscreen}
     >
-      <MenuButton>
+      <MenuButton className='menutop_button_new'>
         <Box
           gridColumn='1'
           gridColumnEnd='span 2'
@@ -273,7 +273,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     placement='bottom-start' id='ouvrir'
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
-      <MenuButton>
+      <MenuButton className='menutop_button_open'>
         <Box
           gridColumn='1'
           gridColumnEnd='span 2'
@@ -392,7 +392,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     id='enregistrer'
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
-      <MenuButton>
+      <MenuButton className='menutop_button_save'>
         <Box
           gridColumn='1'
           gridColumnEnd='span 2'
@@ -449,7 +449,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     id='exporter'
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
-      <MenuButton>
+      <MenuButton className='menutop_button_export'>
         <Box
           gridColumn='1'
           gridColumnEnd='span 2'
@@ -506,6 +506,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   >
     <Button
       variant='menutop_button'
+      className='menutop_button_mep'
       size='sizeMenuTopButton'
       onClick={() => ref_setter_show_modal_apply_layout.current!(true)}
     >
