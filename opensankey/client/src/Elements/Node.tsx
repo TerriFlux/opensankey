@@ -35,7 +35,6 @@ import { Class_Handler } from './Handler'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
-import { NodePositioning } from '../Algorithms/NodePositioning'
 import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
@@ -314,50 +313,6 @@ export class Class_NodeElement extends Class_NodeBase {
     if (!bbox) return false
     this._applyEnvelopeBBox(bbox)
     return true
-  }
-
-  /**
-   * Re-stack the direct children of this container-mode node in place,
-   * preserving their current vertical order. Spacing between children
-   * is read from each child's `shape_position_dy` (single source of
-   * truth — PR 2). The anchor is the topmost child's current y, so the
-   * overall top of the group does not move.
-   */
-  public restackContainerChildren() {
-    const container_dims = this.dimensions_as_parent.filter(d => d.container_mode)
-    if (container_dims.length === 0) return
-    const contained = new Set<Class_NodeElement>()
-    container_dims.forEach(dim => {
-      dim.children.forEach(c => contained.add(c as Class_NodeElement))
-    })
-    if (contained.size === 0) return
-    const ordered = [...contained].sort((a, b) => a.position_y - b.position_y)
-    NodePositioning.stackNodesVertically(ordered, ordered[0].position_y)
-  }
-
-  /**
-   * Walk up the container chain from this node, re-stacking the
-   * children of every ancestor container (so siblings of a
-   * just-grown container get pushed down) and refreshing each
-   * ancestor's envelope + shape. Used when the height of a container
-   * changes (e.g. it just entered container mode) so the whole
-   * nested layout re-spaces itself cleanly up to the outermost
-   * container.
-   */
-  public restackAncestorContainers() {
-    const visited = new Set<Class_NodeElement>()
-    let current_parent_dims = this.dimensions_as_child.filter(d => d.container_mode)
-    while (current_parent_dims.length > 0) {
-      const ancestor = current_parent_dims[0].parent as Class_NodeElement
-      if (visited.has(ancestor)) break
-      visited.add(ancestor)
-      ancestor.restackContainerChildren()
-      if (ancestor.applyContainerEnvelopeIfNeeded()) {
-        ancestor.applyPosition()
-        ancestor.drawShape()
-      }
-      current_parent_dims = ancestor.dimensions_as_child.filter(d => d.container_mode)
-    }
   }
 
   /**
