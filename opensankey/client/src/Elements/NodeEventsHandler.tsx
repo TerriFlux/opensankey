@@ -351,15 +351,47 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // End of drag
     this._node.setDragState(false)
 
-    // Move all elements so none of them are outside the DA
+    // Settle the drag in parametric mode (PR 3 step 4).
+    //
+    // The settle is a sequence of operations that, together, reinterpret the
+    // current absolute node positions (the result of the user's drag) back
+    // into parametric metadata (position_u, position_v, shape_position_dy) so
+    // that the next `recomputeParametricLayout` pass reproduces exactly those
+    // positions — plus any container-envelope adjustments implied by the
+    // drag.
+    //
+    // 1. Re-infer position_u from the dragged node's x (u-locked nodes are
+    //    skipped by inferPositionUFromX).
+    // 2. Reset position_v for non-v-locked nodes so computeParametricV can
+    //    reassign V from the new spatial y-order in each column. This is
+    //    where a neighbor-crossing drag triggers an implicit V swap — sort
+    //    by y, assign V top to bottom.
+    // 3. computeParametricV rewrites V across the whole drawing area.
+    // 4. backCalculateShapePositionDyFromY adjusts shape_position_dy per node
+    //    so that the canonical stack invariant
+    //    `y_{i+1} = y_i + h_i + dy_{i+1}` reproduces the current spatial
+    //    positions. Negative raw dy (overlap) is clamped to 0.
+    // 5. Trigger drawElements explicitly so the next
+    //    recomputeParametricLayout pass runs right now, re-stacking through
+    //    phases A/B/C (including container recursion). Without this, the
+    //    re-stack only happens on the next user interaction, which can make
+    //    the drag feel half-applied.
+    //
+    // Known limitation: dragging the lowest-V child of a container snaps it
+    // back to the container's anchor (`container.y + shape_margin_top`) on
+    // re-stack. Dragging any other child works as expected. Fixing the
+    // first-child case requires either deriving Phase C's anchor from the
+    // first child's current y (and propagating to container.y) or moving the
+    // container itself — neither is worth the complexity until a real user
+    // flow needs it.
     if (this._node.sankey.default_style.shape_position_type == 'parametric') {
-      this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      this._node.drawing_area.sankey.nodes_list.forEach(n => {
+        if (n.shape_position_v_locked !== true) n.position_v = -1
+      })
       this._node.drawing_area.nodePositioning.inferPositionUFromX()
       this._node.drawing_area.nodePositioning.computeParametrization(false)
-      // Back-calcul de shape_position_dy depuis position_y courant : sans ça,
-      // applyPosition rappelle le nœud à sa position dérivée du dy stale et le
-      // drag vertical paraît "rebondir".
       this._node.drawing_area.nodePositioning.backCalculateShapePositionDyFromY()
+      this._node.drawing_area.drawElements()
     }
 
     const drawing_area = this._node.drawing_area
