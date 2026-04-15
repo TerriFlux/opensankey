@@ -410,22 +410,20 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration].current = () => setCount(a => a + 1)
   }
 
-  // Récupération des tags selon le mode
+  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
       case 'element':
-        return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+        return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
           .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
-      case 'level': {
-        const level_taggs = sankey.level_taggs_dict
-        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      }
+      case 'level':
+        return sankey.getTagGroupsAsList('level_taggs')
+          .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
       case 'data':
-        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+        return sankey.getTagGroupsAsList('data_taggs')
           .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       case 'unitary':
-        // MODIFIÉ : utiliser view_taggs_dict au lieu de node_taggs_dict
-        return Object.values(sankey.view_taggs_dict)
+        return sankey.getTagGroupsAsList('view_taggs')
           .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
       default:
         return [] as unknown as Class_TagGroup[]
