@@ -1724,8 +1724,99 @@ export class NodePositioning {
   // PARAMETRIZATION METHODS ============================================================
 
   /**
+   * Empile verticalement une liste de nœuds en partant d'une ancre (top du premier
+   * nœud). Invariant canonique du mode paramétrique :
+   *
+   *   n_0.y = anchor_y
+   *   n_{i+1}.y = n_i.y + n_i.height + n_{i+1}.shape_position_dy
+   *
+   * `shape_position_dy` est lu sur chaque nœud (cascade de style respectée) et est
+   * la **seule** source de vérité pour l'espacement. Le dy du premier nœud est
+   * ignoré (il n'a pas de prédécesseur). `applyPosition()` est appelé sur chaque
+   * nœud après la mise à jour.
+   *
+   * L'ordre des nœuds est celui de la liste passée — à trier par le caller selon
+   * son propre critère (position_v, position_y, etc.).
+   */
+  public static stackNodesVertically(nodes: Class_NodeElement[], anchor_y: number) {
+    let cursor_y = anchor_y
+    nodes.forEach((node, i) => {
+      if (i > 0) cursor_y += node.shape_position_dy ?? 0
+      node.position_y = cursor_y
+      node.applyPosition()
+      cursor_y += node.getShapeHeightToUse()
+    })
+  }
+
+  /**
+   * Hauteur totale de la pile produite par `stackNodesVertically` :
+   * somme des hauteurs + somme des `shape_position_dy` des nœuds (sauf le premier).
+   */
+  public static totalStackHeight(nodes: Class_NodeElement[]): number {
+    return nodes.reduce((sum, n, i) => {
+      return sum + n.getShapeHeightToUse() + (i > 0 ? (n.shape_position_dy ?? 0) : 0)
+    }, 0)
+  }
+
+  /**
+   * Back-calcule `shape_position_dy` de chaque nœud visible depuis sa `position_y`
+   * absolue. Pour chaque colonne (groupée par `position_u`), les nœuds sont triés par
+   * y et le dy de chacun est déduit du gap avec le nœud précédent. Utilisé à la bascule
+   * absolu→paramétrique et en fin de drag pour que le déplacement vertical d'un nœud
+   * persiste (sinon `applyPosition` rappelle le nœud à sa position dérivée du dy).
+   * Retourne le nombre de chevauchements clampés (raw_dy < 0 → dy = 0).
+   */
+  public backCalculateShapePositionDyFromY(): number {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const visible_relevant = this.drawingArea.sankey.visible_nodes_list.filter(n =>
+      !echangeTag || !n.hasGivenTag(echangeTag)
+    )
+    const columns: { [u: number]: Class_NodeElement[] } = {}
+    visible_relevant.forEach(n => {
+      if (!(n.position_u in columns)) columns[n.position_u] = []
+      columns[n.position_u].push(n)
+    })
+    let overlap_count = 0
+    Object.values(columns).forEach(column => {
+      column.sort((a, b) => a.position_y - b.position_y)
+      for (let i = 1; i < column.length; i++) {
+        const prev = column[i - 1]
+        const curr = column[i]
+        const raw_dy = curr.position_y - (prev.position_y + prev.getShapeHeightToUse())
+        if (raw_dy < 0) overlap_count++
+        curr.shape_position_dy = Math.max(0, raw_dy)
+      }
+    })
+    return overlap_count
+  }
+
+  /**
+   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non verrouillés.
+   * À appeler explicitement aux endroits où une position absolue vient d'être modifiée
+   * (drop de ghost link, fin de drag, contraction). Ce calcul **ne fait plus partie**
+   * de `computeParametrization` pour éviter le couplage bidirectionnel u ↔ x qui
+   * faisait dériver les colonnes à chaque recalcul (notamment quand l'envelope d'un
+   * container modifie x).
+   */
+  public inferPositionUFromX() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
+    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
+      if (echangeTag && node.hasGivenTag(echangeTag)) return
+      if (node.shape_position_u_locked === true) return
+      node.position_u = Math.round(node.position_x / dx)
+    })
+  }
+
+  /**
   * Computes u,v for nodes in the drawing area
   * Utilise l'algorithme amélioré
+  *
+  * Quand `use_horizontal_index` est true, `position_u` est recalculé via l'analyse
+  * topologique (detectAllCyclesAndOptimize). Sinon, `position_u` est supposé déjà
+  * à jour (ne plus dériver depuis x ici — appeler `inferPositionUFromX` côté caller
+  * si nécessaire).
   */
   public computeParametrization(use_horizontal_index: boolean) {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
@@ -1733,7 +1824,6 @@ export class NodePositioning {
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
 
-    // Utiliser l'algorithme amélioré.
     // Locked nodes keep their existing position_u so the user can pin a node to a
     // specific column across recomputes.
     if (use_horizontal_index) {
@@ -1744,11 +1834,6 @@ export class NodePositioning {
         if (node.shape_position_u_locked === true) return
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.position_u = node_index + 1
-      })
-    } else {
-      nodes_to_process.forEach(node => {
-        if (node.shape_position_u_locked === true) return
-        node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].shape_position_dx!)
       })
     }
     const first_level_tagg = this.drawingArea.sankey.level_taggs_list.filter(

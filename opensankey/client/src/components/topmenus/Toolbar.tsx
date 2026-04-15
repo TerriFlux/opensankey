@@ -546,6 +546,14 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       }
     })
 
+    // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
+    // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
+    // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
+    // hauteurs.
+    if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
+      app_data.drawing_area.nodePositioning.computeParametrization(false)
+    }
+
     app_data.drawing_area.draw()
     app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
     app_data.drawing_area.orderElementOnDA()

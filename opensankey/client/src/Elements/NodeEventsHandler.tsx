@@ -354,7 +354,12 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // Move all elements so none of them are outside the DA
     if (this._node.sankey.default_style.shape_position_type == 'parametric') {
       this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      this._node.drawing_area.nodePositioning.inferPositionUFromX()
       this._node.drawing_area.nodePositioning.computeParametrization(false)
+      // Back-calcul de shape_position_dy depuis position_y courant : sans ça,
+      // applyPosition rappelle le nœud à sa position dérivée du dy stale et le
+      // drag vertical paraît "rebondir".
+      this._node.drawing_area.nodePositioning.backCalculateShapePositionDyFromY()
     }
 
     const drawing_area = this._node.drawing_area
