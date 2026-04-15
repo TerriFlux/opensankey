@@ -486,11 +486,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   /**
-   * Compute the enclosing bounding box of a list of nodes, using their
-   * logical geometry only (position + shape size). Does NOT read the
-   * SVG DOM, so the result is deterministic and always reflects the
-   * current instance state — important after an instance update that
-   * has not yet been flushed to the SVG (e.g. view switch, load).
+   * Compute the enclosing bounding box of a list of nodes. Prefers the
+   * SVG getBBox so the label overhang is naturally included in the
+   * envelope, and falls back to the logical geometry (position + shape
+   * size) when the node has not been rendered yet or the SVG bbox is
+   * empty. The SVG bbox is local to the node's g element, so it stays
+   * valid even if the g's transform has not yet been flushed — we
+   * combine it with the fresh node.position_x/y rather than the SVG's
+   * absolute coordinates.
    * Returns null if no node is visible.
    * Shared utility used by containers (TextZone) and aggregation container mode.
    */
@@ -501,10 +504,19 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     let found = false
     nodes.forEach(node => {
       if (!node.is_visible) return
-      const left = node.position_x
-      const top = node.position_y
-      const right = left + node.getShapeWidthToUse()
-      const bottom = top + node.getShapeHeightToUse()
+      const svg_bbox = node.d3_selection?.node()?.getBBox()
+      let left: number, top: number, right: number, bottom: number
+      if (svg_bbox && (svg_bbox.width > 0 || svg_bbox.height > 0)) {
+        left = node.position_x + svg_bbox.x
+        top = node.position_y + svg_bbox.y
+        right = left + svg_bbox.width
+        bottom = top + svg_bbox.height
+      } else {
+        left = node.position_x
+        top = node.position_y
+        right = left + node.getShapeWidthToUse()
+        bottom = top + node.getShapeHeightToUse()
+      }
       if (left < min_x) min_x = left
       if (top < min_y) min_y = top
       if (right > max_x) max_x = right

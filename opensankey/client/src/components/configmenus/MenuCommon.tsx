@@ -1303,10 +1303,11 @@ export const ConfigMenuNumberInput = ({
   }
 
   const fixed_value = getFixedVal(default_value)
-  const [value, setValue] = useState<string | null | undefined>(default_value ? String(fixed_value) : '')
+  const has_value = default_value !== null && default_value !== undefined
+  const [value, setValue] = useState<string | null | undefined>(has_value ? String(fixed_value) : '')
 
   useEffect(() => {
-    setValue(default_value ? String(fixed_value) : '')
+    setValue(has_value ? String(fixed_value) : '')
   }, [default_value])
 
   const stepperBtn = stepper ? <NumberInputStepper>

@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { ChangeEvent, useState } from 'react'
+import React, { ChangeEvent, useEffect, useState } from 'react'
 import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
@@ -78,6 +78,28 @@ const FORMAT_CONFIG: Record<FileFormat, {
   }
 }
 
+// Keyed by dialog_name so we can re-read the file fresh from disk on each
+// "Ouvrir" click and survive modal close/reopen without losing the selection.
+const stored_file_handles = new Map<string, FileSystemFileHandle>()
+
+const supports_fs_access = typeof window !== 'undefined' && 'showOpenFilePicker' in window
+
+const pickerTypesForFormat = (format: FormatType): Array<{ description: string; accept: Record<string, string[]> }> | undefined => {
+  if (format === 'excel') {
+    return [{
+      description: 'Excel',
+      accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+    }]
+  }
+  if (format === 'json') {
+    return [{
+      description: 'JSON',
+      accept: { 'application/json': ['.json'], 'application/gzip': ['.gz'] }
+    }]
+  }
+  return undefined
+}
+
 interface FileFormatSectionProps {
   // Config
   section_type: 'input' | 'output'
@@ -96,6 +118,11 @@ interface FileFormatSectionProps {
   set_current_format: (format: FormatType) => void
 
   set_file?: (file: Blob | undefined) => void
+
+  // File System Access API: when provided, replaces the plain <input type="file">
+  // with a button that opens showOpenFilePicker and keeps a reusable handle.
+  pick_file_handle?: () => void | Promise<void>
+  current_file_name?: string
 
   // Options
   options_base: Record<string, unknown>
@@ -117,6 +144,8 @@ export const FileFormatSection = ({
   current_format,
   set_current_format,
   set_file,
+  pick_file_handle,
+  current_file_name,
   options_base,
   set_options_base,
   options_excel,
@@ -179,15 +208,26 @@ export const FileFormatSection = ({
 
           {/* Input file - seulement pour section input */}
           {current_format != 'blob' && is_input && (hasOptionsFormat(format_config)) && set_file && (
-            <Input
-              type="file"
-              accept={//@ts-expect-error xxx
-                FORMAT_CONFIG[current_format].accept}
-              onChange={(evt: ChangeEvent<HTMLInputElement>) => {
-                const files = (evt.target as HTMLInputElement).files
-                set_file(files?.[0])
-              }}
-            />
+            pick_file_handle ? (
+              <Box display='grid' gridTemplateColumns='1fr 2fr' gap={2} alignItems='center'>
+                <Button size='sm' onClick={() => { void pick_file_handle() }}>
+                  {current_file_name ? 'Changer...' : 'Parcourir...'}
+                </Button>
+                <Text fontSize='sm' noOfLines={1} title={current_file_name}>
+                  {current_file_name ?? ''}
+                </Text>
+              </Box>
+            ) : (
+              <Input
+                type="file"
+                accept={//@ts-expect-error xxx
+                  FORMAT_CONFIG[current_format].accept}
+                onChange={(evt: ChangeEvent<HTMLInputElement>) => {
+                  const files = (evt.target as HTMLInputElement).files
+                  set_file(files?.[0])
+                }}
+              />
+            )
           )}
         </Box>
 
@@ -377,6 +417,38 @@ export const UniversalFileConverter = ({
 
   const [file_path, setFilePath] = useState('')
   const [failure, setFailure] = useState(false)
+
+  // Restore a previously-picked file handle when the modal is reopened.
+  // The handle survives in the module-level Map even after unmount.
+  useEffect(() => {
+    const stored = stored_file_handles.get(dialog_name)
+    if (!stored) return
+    stored.getFile()
+      .then((file) => set_input_file(file))
+      .catch(() => {
+        // file moved/deleted or permission lost — drop it silently
+        stored_file_handles.delete(dialog_name)
+      })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const pick_input_file_with_handle = async () => {
+    try {
+      // @ts-expect-error showOpenFilePicker is not in all TS lib.dom versions
+      const [handle] = await window.showOpenFilePicker({
+        multiple: false,
+        types: pickerTypesForFormat(input_format)
+      }) as [FileSystemFileHandle]
+      stored_file_handles.set(dialog_name, handle)
+      const file = await handle.getFile()
+      set_input_file(file)
+    } catch (e) {
+      if ((e as Error).name !== 'AbortError') {
+        console.error('showOpenFilePicker failed:', e)
+      }
+    }
+  }
+
   const [processing, setProcessing] = useState(false)
   const [started, setStarted] = useState(false)
   const [result, setResult] = useState('')
@@ -591,8 +663,25 @@ export const UniversalFileConverter = ({
   /**
    * Gère le clic sur le bouton Convertir
    */
-  const generic_process = () => {
-    if (input_format != 'blob' && input_format != 'example_excel' && input_format != 'example_json' && !input_file) {
+  const generic_process = async () => {
+    // If we have a persisted handle, re-read the file from disk now — this is
+    // what makes a second "Ouvrir" work after the user has modified the file.
+    let current_input_file: Blob | undefined = input_file
+    const handle = stored_file_handles.get(dialog_name)
+    if (handle) {
+      try {
+        current_input_file = await handle.getFile()
+        set_input_file(current_input_file)
+      } catch (e) {
+        console.error('Failed to re-read file from handle:', e)
+        alert('Impossible de relire le fichier (supprimé, déplacé ou permission perdue). Veuillez le re-sélectionner.')
+        stored_file_handles.delete(dialog_name)
+        set_input_file(undefined)
+        return
+      }
+    }
+
+    if (input_format != 'blob' && input_format != 'example_excel' && input_format != 'example_json' && !current_input_file) {
       alert(t('ProcessDialog.select_file') || 'Veuillez sélectionner un fichier')
       return
     }
@@ -608,7 +697,7 @@ export const UniversalFileConverter = ({
     } else if (input_format == 'example_excel' || input_format == 'example_json') {
       form_data.append('file_name', file_path)
     } else {
-      form_data.append('file', input_file as Blob)
+      form_data.append('file', current_input_file as Blob)
     }
     form_data.append('input_format', input_format)
     form_data.append('output_format', output_format)
@@ -621,7 +710,7 @@ export const UniversalFileConverter = ({
       app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current!(false)
       return
     } else if (input_format == 'json' && output_format == 'blob') {
-      decompressUploadedFileUniversal(input_file as File).then(JSON_data => {
+      decompressUploadedFileUniversal(current_input_file as File).then(JSON_data => {
         app_data.fromJSON(JSON_data as Type_JSON, input_options as Type_JSON)
       })
       setStarted(false)
@@ -682,6 +771,9 @@ export const UniversalFileConverter = ({
         current_format={input_format}
         set_current_format={set_input_format}
         set_file={set_input_file}
+        pick_file_handle={supports_fs_access ? pick_input_file_with_handle : undefined}
+        //@ts-expect-error Blob has no .name, but File does — and that's what we actually store here
+        current_file_name={input_file?.name}
         options_excel={input_options_excel as Record<string, unknown>}
         set_options_excel={(opts) => set_input_options_excel(opts as typeof input_options_excel)}
         options_json={input_options_json as Record<string, unknown>}
