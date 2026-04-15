@@ -27,10 +27,10 @@
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { default_style_id } from '../types/Utils'
-import { Class_ElementStyle } from '../Elements/Element'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
+import { NodePositioning } from './NodePositioning'
 
 // ============================================================================
 // TYPES ET CONSTANTES
@@ -127,7 +127,6 @@ const finalizeOperation = (
   nodes: Class_NodeElement[]
 ) => {
   new_data.drawing_area.nodePositioning.computeParametrization(true)
-  nodes.forEach(n => n.delete_attribute('position_dy'))
   new_data.drawing_area.draw()
   nodes.forEach(n => {
     n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
@@ -253,6 +252,145 @@ const updateForcedDimensions = (
 // GESTION DES POSITIONNEMENTS
 // ============================================================================
 
+/**
+ * Retourne les descendants visibles directs d'un nœud dans la direction donnée.
+ * descend_right=true : descendants à droite (via output_links → target dans une colonne >)
+ * descend_right=false : descendants à gauche (via input_links → source dans une colonne <)
+ *
+ * On filtre par direction stricte (position_u >/< à celle du nœud) plutôt que par
+ * adjacence exacte (+/- 1) : les expansions successives décalent les colonnes existantes,
+ * donc les descendants d'un nœud peuvent se retrouver à une distance > 1 colonne après
+ * un shift. Le filtre directionnel garantit qu'on retrouve bien toute la sous-arborescence
+ * sans inclure les liens latéraux ou remontants.
+ */
+const getVisibleDirectDescendants = (
+  node: Class_NodeElement,
+  descend_right: boolean
+): Class_NodeElement[] => {
+  const links = descend_right ? node.output_links_list : node.input_links_list
+  const set = new Set<Class_NodeElement>()
+  links.forEach(l => {
+    if (!l.is_visible) return
+    const other = descend_right ? l.target : l.source
+    const is_forward = descend_right
+      ? other.position_u > node.position_u
+      : other.position_u < node.position_u
+    if (is_forward) set.add(other)
+  })
+  return Array.from(set)
+}
+
+/**
+ * Hauteur "effective" d'un nœud = max entre sa hauteur propre et la hauteur totale
+ * de la pile formée par ses descendants (récursivement), en lisant `shape_position_dy`
+ * de chaque descendant (sauf le premier) comme écart vertical. Les descendants étant
+ * centrés sur leur parent, cette hauteur représente l'encombrement vertical réel du
+ * sous-arbre.
+ */
+const computeEffectiveBlockHeight = (
+  node: Class_NodeElement,
+  descend_right: boolean,
+  visited: Set<Class_NodeElement> = new Set()
+): number => {
+  const own_height = node.getShapeHeightToUse()
+  if (visited.has(node)) return own_height
+  visited.add(node)
+
+  const descendants = getVisibleDirectDescendants(node, descend_right)
+  if (descendants.length === 0) return own_height
+
+  const stack_height = descendants.reduce((sum, d, i) => {
+    const block_h = computeEffectiveBlockHeight(d, descend_right, visited)
+    const gap = i > 0 ? (d.shape_position_dy ?? 0) : 0
+    return sum + block_h + gap
+  }, 0)
+  return Math.max(own_height, stack_height)
+}
+
+/**
+ * Translate un nœud ET tous ses descendants visibles (dans la direction `descend_right`)
+ * d'un delta vertical. Utilisé pour déplacer un sous-arbre sans altérer sa structure interne.
+ */
+const translateSubtree = (
+  node: Class_NodeElement,
+  delta: number,
+  descend_right: boolean,
+  visited: Set<Class_NodeElement> = new Set()
+) => {
+  if (delta === 0 || visited.has(node)) return
+  visited.add(node)
+  node.position_y += delta
+  getVisibleDirectDescendants(node, descend_right).forEach(d =>
+    translateSubtree(d, delta, descend_right, visited)
+  )
+}
+
+/**
+ * Après une expansion, rééquilibre **localement** la colonne des frères directs du
+ * nœud expandé autour de leur parent visuel, en utilisant les hauteurs "effectives"
+ * (encombrement réel du sous-arbre de chaque frère).
+ *
+ * L'effet : dans un scénario où on expand A → {B1, B2} puis B1 → {C1, C2, C3}, la pile
+ * des C's (centrée sur B1) ne chevauche plus B2 : B2 est repoussé vers le bas (et B1
+ * peut remonter) pour que {bloc de B1, bloc de B2} soit symétrique autour de A avec
+ * un gap de 10 px. Le parent visuel (A) reste fixe et **rien au-dessus de A ne bouge** :
+ * les effets restent confinés au sous-arbre du parent visuel.
+ */
+const rebalanceAncestorColumns = (
+  expanded_node: Class_NodeElement,
+  expand_left: boolean
+) => {
+  const descend_right = !expand_left
+
+  // Trouver le parent visuel : nœud de la colonne précédente (côté opposé à l'expansion)
+  // relié au nœud expandé par un lien visible.
+  const up_links = expand_left ? expanded_node.output_links_list : expanded_node.input_links_list
+  const parent_link = up_links.find(l =>
+    l.is_visible &&
+    (expand_left
+      ? l.target.position_u > expanded_node.position_u
+      : l.source.position_u < expanded_node.position_u)
+  )
+  if (!parent_link) return
+  const visual_parent = expand_left ? parent_link.target : parent_link.source
+
+  // Frères = enfants visuels du parent visuel situés dans la colonne du nœud expandé.
+  const down_links = expand_left ? visual_parent.input_links_list : visual_parent.output_links_list
+  const sibling_set = new Set<Class_NodeElement>()
+  down_links.forEach(l => {
+    if (!l.is_visible) return
+    const child = expand_left ? l.source : l.target
+    if (child.position_u === expanded_node.position_u) sibling_set.add(child)
+  })
+  const siblings = Array.from(sibling_set).sort((a, b) => a.position_y - b.position_y)
+  if (siblings.length === 0) return
+
+  // Hauteurs effectives de chaque frère (tenant compte récursivement de leurs descendants).
+  const effective_heights = siblings.map(s =>
+    computeEffectiveBlockHeight(s, descend_right)
+  )
+  // Écart entre blocs = shape_position_dy du frère courant (sauf pour le premier).
+  const total_effective = effective_heights.reduce((sum, h, i) => {
+    return sum + h + (i > 0 ? (siblings[i].shape_position_dy ?? 0) : 0)
+  }, 0)
+
+  const parent_center_y = visual_parent.position_y + visual_parent.getShapeHeightToUse() / 2
+  let block_top = parent_center_y - total_effective / 2
+
+  siblings.forEach((s, i) => {
+    if (i > 0) block_top += s.shape_position_dy ?? 0
+    const block_h = effective_heights[i]
+    const s_own_h = s.getShapeHeightToUse()
+    // Le frère est centré dans son bloc (puisque ses descendants sont centrés sur lui).
+    const s_new_top = block_top + (block_h - s_own_h) / 2
+    const delta = s_new_top - s.position_y
+    if (delta !== 0) {
+      translateSubtree(s, delta, descend_right)
+    }
+    block_top += block_h
+  })
+}
+
 const updateNodePositioning = (
   new_data: Class_ApplicationData,
   nodes: Class_NodeElement[],
@@ -265,19 +403,23 @@ const updateNodePositioning = (
     .forEach(n2 => {
       n2.position_u += expand_left ? -1 : 1
     })
-  const vertical_spacing = contextualised_node.shape_position_dy!
-  // Calcul de la position Y
-  const total_height = calculateTotalHeight(nodes, vertical_spacing)
-  const shift_y = total_height / 2
 
-  nodes.forEach((n, i) => {
+  // Positionnement symétrique des enfants autour du centre du parent. L'écart vertical
+  // entre chaque enfant et le précédent est lu depuis `shape_position_dy` (PR 2 — seule
+  // source de vérité pour l'espacement).
+  const total_height = NodePositioning.totalStackHeight(nodes)
+  const parent_center_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2
+  const anchor_y = parent_center_y - total_height / 2
+
+  nodes.forEach((n) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
     n.position_x = contextualised_node.position_x + (expand_left ? -contextualised_node.shape_position_dx : contextualised_node.shape_position_dx)
-    if (new_data.drawing_area.sankey.styles_dict[default_style_id].shape_position_type === 'parametric' && i === 0) {
-      n.position_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2 - shift_y
-
-    }
   })
+  NodePositioning.stackNodesVertically(nodes, anchor_y)
+
+  // Rééquilibrer les colonnes ancêtres pour que le sous-arbre du nœud expandé
+  // n'empiète pas sur ses frères. Propage récursivement vers le parent visuel.
+  rebalanceAncestorColumns(contextualised_node, expand_left)
 }
 
 const updateAggregationExpansionPositioning = (
@@ -920,20 +1062,20 @@ export const disaggregate = (
     //   new_data.drawing_area.sankey.sortNodes()
     // })
 
-    const vertical_spacing = aggregateNode.shape_position_dy!
-    const current_height = aggregateNode.getShapeHeightToUse()
     parent_dim.setForceToShowChildren()
-    const new_nodes = parent_dim.children
-    const total_height = calculateTotalHeight(new_nodes as Class_NodeElement[], vertical_spacing)
-    const shift_y = total_height / 2
+    const new_nodes = parent_dim.children as Class_NodeElement[]
 
-    new_nodes.forEach((n, i) => {
+    // Positionnement symétrique des enfants autour du centre du nœud agrégé.
+    // L'écart vertical entre enfants est lu depuis `shape_position_dy` (PR 2).
+    const total_stack_height = NodePositioning.totalStackHeight(new_nodes)
+    const aggregate_center_y = aggregateNode.position_y + aggregateNode.getShapeHeightToUse() / 2
+    const anchor_y = aggregate_center_y - total_stack_height / 2
+
+    new_nodes.forEach((n) => {
       n.position_u = aggregateNode.position_u
       n.position_x = aggregateNode.position_x
-      if ((new_data.drawing_area.sankey.styles_dict[default_style_id] as Class_ElementStyle).shape_position_type == 'parametric' && i == 0) {
-        n.position_y = aggregateNode.position_y + current_height / 2 - shift_y
-      }
     })
+    NodePositioning.stackNodesVertically(new_nodes, anchor_y)
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
@@ -1054,6 +1196,7 @@ export const contract = (
     contractLegacy(new_data, contextualised_node)
   }*/
 
+  new_data.drawing_area.nodePositioning.inferPositionUFromX()
   new_data.drawing_area.nodePositioning.computeParametrization(false)
   new_data.drawing_area.draw()
 }
