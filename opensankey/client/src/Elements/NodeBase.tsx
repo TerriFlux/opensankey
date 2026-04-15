@@ -485,6 +485,61 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       'translate(' + this.position_x + ', ' + this.position_y + ')')
   }
 
+  /**
+   * Compute the enclosing bounding box of a list of nodes. Prefers the
+   * SVG getBBox so the label overhang is naturally included in the
+   * envelope, and falls back to the logical geometry (position + shape
+   * size) when the node has not been rendered yet or the SVG bbox is
+   * empty. The SVG bbox is local to the node's g element, so it stays
+   * valid even if the g's transform has not yet been flushed — we
+   * combine it with the fresh node.position_x/y rather than the SVG's
+   * absolute coordinates.
+   * Returns null if no node is visible.
+   * Shared utility used by containers (TextZone) and aggregation container mode.
+   */
+  protected _computeEnvelopeBBox(
+    nodes: Class_NodeBase[]
+  ): { min_x: number, min_y: number, max_x: number, max_y: number } | null {
+    let min_x = Infinity, min_y = Infinity, max_x = -Infinity, max_y = -Infinity
+    let found = false
+    nodes.forEach(node => {
+      if (!node.is_visible) return
+      const svg_bbox = node.d3_selection?.node()?.getBBox()
+      let left: number, top: number, right: number, bottom: number
+      if (svg_bbox && (svg_bbox.width > 0 || svg_bbox.height > 0)) {
+        left = node.position_x + svg_bbox.x
+        top = node.position_y + svg_bbox.y
+        right = left + svg_bbox.width
+        bottom = top + svg_bbox.height
+      } else {
+        left = node.position_x
+        top = node.position_y
+        right = left + node.getShapeWidthToUse()
+        bottom = top + node.getShapeHeightToUse()
+      }
+      if (left < min_x) min_x = left
+      if (top < min_y) min_y = top
+      if (right > max_x) max_x = right
+      if (bottom > max_y) max_y = bottom
+      found = true
+    })
+    if (!found) return null
+    return { min_x, min_y, max_x, max_y }
+  }
+
+  /**
+   * Apply the given envelope bbox as this node's position and min size,
+   * padded by the shape_margin_* attributes.
+   */
+  protected _applyEnvelopeBBox(
+    bbox: { min_x: number, min_y: number, max_x: number, max_y: number }
+  ) {
+    this.position_x = bbox.min_x - this.shape_margin_left
+    this.position_y = bbox.min_y - this.shape_margin_top
+    this.shape_min_width = bbox.max_x - bbox.min_x + this.shape_margin_left + this.shape_margin_right
+    this.shape_min_height = bbox.max_y - bbox.min_y + this.shape_margin_top + this.shape_margin_bottom
+  }
+
   public get position_u() { return this._position_u }
   public set position_u(_: number) { this._position_u = _ }
   public get position_v() { return this._position_v }

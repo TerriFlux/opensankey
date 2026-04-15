@@ -264,6 +264,13 @@ export const updateFrom = (
       node.dimensions_as_child.forEach(dim => {
         const src_dim = src_node.dimensions_as_child.find(d => d.id === dim.id)
         if (src_dim?.force_show_children) dim.setForceToShowChildren(true)
+        // Sync container display mode in place (no style touch, no
+        // geometry snapshot, no redraw — the visual style is handled by
+        // the styleNode block below and the caller's full draw will
+        // re-trigger applyContainerEnvelopeIfNeeded with the new flag).
+        if (src_dim) {
+          dim.setContainerModeQuiet(src_dim.container_mode)
+        }
       })
     })
     drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())

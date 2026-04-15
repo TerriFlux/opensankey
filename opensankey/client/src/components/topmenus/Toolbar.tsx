@@ -410,22 +410,20 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration].current = () => setCount(a => a + 1)
   }
 
-  // Récupération des tags selon le mode
+  // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
       case 'element':
-        return [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
+        return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
           .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
-      case 'level': {
-        const level_taggs = sankey.level_taggs_dict
-        return Object.values(level_taggs).filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      }
+      case 'level':
+        return sankey.getTagGroupsAsList('level_taggs')
+          .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
       case 'data':
-        return Object.values(app_data.drawing_area.sankey.data_taggs_dict)
+        return sankey.getTagGroupsAsList('data_taggs')
           .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
       case 'unitary':
-        // MODIFIÉ : utiliser view_taggs_dict au lieu de node_taggs_dict
-        return Object.values(sankey.view_taggs_dict)
+        return sankey.getTagGroupsAsList('view_taggs')
           .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
       default:
         return [] as unknown as Class_TagGroup[]
@@ -488,7 +486,6 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       case 'level':
         app_data.drawing_area.bypass_redraws = true
         if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
-          //app_data.drawing_area.nodePositioning.computeParametrization(true)
           app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
         }
         app_data.drawing_area.sankey.showAccordingToLevelTags()
@@ -545,6 +542,14 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         })
       }
     })
+
+    // Les hauteurs de nœuds dépendent des valeurs des liens (qui viennent de changer
+    // avec le data tag). En mode paramétrique il faut donc rejouer la chaîne de
+    // positionnement pour que l'écart entre nœuds reste cohérent avec les nouvelles
+    // hauteurs.
+    if (app_data.drawing_area.sankey.default_style.shape_position_type === 'parametric') {
+      app_data.drawing_area.nodePositioning.computeParametrization(false)
+    }
 
     app_data.drawing_area.draw()
     app_data.drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())

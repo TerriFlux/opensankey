@@ -112,7 +112,8 @@ export const resources_flux = {
             starting_tangeant: 'Setting the radius of the starting curvature in case the selected link(s) are represented as Bezier curve(s)',
             ending_tangeant: 'Setting the radius of the ending curvature in case the selected link(s) are represented as Bezier curve(s)',
             arrow_size: 'Change the size of the arrow (from the end of the link to the node)',
-            data_off_scale: 'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value '
+            data_off_scale: 'Define a scale for this flow, wich can break the coherence of flow thickness proportionality of value ',
+            local_scale: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.'
           }
         },
         labels: {
@@ -275,7 +276,8 @@ export const resources_flux = {
             fleche: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin.',
             structure: 'Représente le/les flux sélectionné(s) comme si il n\'avait pas de valeur peu importe leur vraie valeur ',
             arrow_size: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud',
-            data_off_scale: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur '
+            data_off_scale: 'Définie une échelle local pour l\'épaisseur du flux, cela peut casser la cohérence du diagramme au niveau de la proportionalité entre la valeur des flux et leur épaisseur ',
+            local_scale: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.'
           }
         },
         labels: {

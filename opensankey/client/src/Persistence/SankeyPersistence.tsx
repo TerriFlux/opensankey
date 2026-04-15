@@ -868,6 +868,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
     if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
+    if (!legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
     return json_object
   }
   public static fromJSON_pre_0_9(
@@ -926,6 +927,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_legend_show_dataTags'] = getBooleanFromJSON(json_legend, 'legend_show_dataTags', legend.legend_show_dataTags)
     legend['_legend_show_constraints'] = getBooleanFromJSON(json_legend, 'legend_show_constraints', legend.legend_show_constraints)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
+    legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
     legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
     // Var only present if json is legacy
     if (!legend.stick_to_drawing) {
@@ -1555,7 +1557,9 @@ export class SankeyPersistence {
       // Create default style for 'Type de noeud' if they don't exist
       if (Object.keys(json_object[json_entry]).includes('type de noeud')) {
         product_sector_styles.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
-        node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        if (sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']) {
+          node_exchanges_style.forEach(style_id => sankey.create_internal_style(style_id, elementStyleConfigs))
+        }
       }
     }
     json_entry = 'fluxTags'

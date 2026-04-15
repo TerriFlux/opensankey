@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight } from 'react-icons/fa'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen } from 'react-icons/fa'
 import { MdTextRotateVertical, MdTextRotationNone } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -461,6 +461,24 @@ const LabelContentComponent = ({
           attributePath={attributePath}
           refreshParentComponent={refreshParentComponent}
         />
+        {prefix === 'value_label' && selection.hasNodes && (
+          <OverloadedButtonGroup
+            elements={elements}
+            config={VALUE_LABEL_CONFIG}
+            attributePath={attributePath}
+            prefix={prefix}
+            attributeKey="in_out_display_mode"
+            currentValue={labelValues.in_out_display_mode as 'both' | 'in' | 'out'}
+            items={[
+              { value: 'in', icon: <Box display="flex" alignItems="center" gap={1}>Σin</Box> },
+              { value: 'both', icon: <Box display="flex" alignItems="center" gap={1}>Σin{'\u2192'}Σout</Box> },
+              { value: 'out', icon: <Box display="flex" alignItems="center" gap={1}>Σout</Box> },
+            ]}
+            onChange={(value) => { labelValues.in_out_display_mode = value }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'in_out_display_mode', prefix)}
+            t={t}
+          />
+        )}
       </>
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
@@ -1152,7 +1170,47 @@ export const MenuConfigurationAppearance = ({
                               { value: 'parametric' as Type_Position, label: t('Noeud.apparence.geometry_parametric'), icon: '' },
                               { value: 'relative' as Type_Position, label: t('Noeud.apparence.geometry_relative'), icon: '' }
                             ]}
-                            onChange={(value) => { nodeShapeValues.position_type = value }}
+                            onChange={(value) => {
+                              // Switching position_type to 'parametric' or 'relative' triggers
+                              // applyPosition() as a side effect of drawShape, which mutates
+                              // _position.x/y. The default proxy setter (updateElements) only
+                              // snapshots shape_position_type itself, so a plain Ctrl+Z would
+                              // restore the type but leave the recomputed position in place,
+                              // making the undo look like a no-op. Bypass the proxy and register
+                              // a single undo that captures position_x/y as well.
+                              const node_targets = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                                .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+
+                              if (node_targets.length === 0) {
+                                // No real nodes (e.g. only ElementStyle): keep the proxy path.
+                                nodeShapeValues.position_type = value
+                                return
+                              }
+
+                              const snapshots = node_targets.map(n => ({
+                                node: n,
+                                position_type: n.shape_position_type,
+                                position_x: n.position_x,
+                                position_y: n.position_y,
+                              }))
+
+                              const apply = () => {
+                                node_targets.forEach(n => { n.shape_position_type = value })
+                                refreshAll()
+                              }
+                              const revert = () => {
+                                snapshots.forEach(s => {
+                                  s.node.shape_position_type = s.position_type
+                                  s.node.position_x = s.position_x
+                                  s.node.position_y = s.position_y
+                                })
+                                refreshAll()
+                              }
+
+                              app_data.history.saveUndo(revert)
+                              app_data.history.saveRedo(apply)
+                              apply()
+                            }}
                             getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
                             t={t}
                           />
@@ -1180,6 +1238,106 @@ export const MenuConfigurationAppearance = ({
                             unit_text='pixels'
                             stepper={true}
                             isOverloaded={isElementAttributeOverloaded(elements, 'shape_position_dy' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)} /></> : <></>}
+                        {selection.hasNodes && !menu_for_style ? (() => {
+                          // Column index (u) and row index (v) inputs + lock toggles.
+                          // position_u / position_v live directly on the node (not in the
+                          // dynamic attribute config), so we manage undo manually. The locks
+                          // control whether autosankey compute overwrites the node's column
+                          // index / relative row order on the next run.
+                          const real_nodes = (nodes_elements as Array<Class_NodeBase | Class_ElementStyle>)
+                            .filter((el): el is Class_NodeElement => el instanceof Class_NodeElement)
+                          if (real_nodes.length === 0) return <></>
+                          const first_u = real_nodes[0].position_u
+                          const u_indeterminate = real_nodes.some(n => n.position_u !== first_u)
+                          const first_u_locked = real_nodes[0].shape_position_u_locked === true
+                          const all_same_u_lock = real_nodes.every(n => (n.shape_position_u_locked === true) === first_u_locked)
+                          const first_v = real_nodes[0].position_v
+                          const v_indeterminate = real_nodes.some(n => n.position_v !== first_v)
+                          const first_v_locked = real_nodes[0].shape_position_v_locked === true
+                          const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
+                          return <>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_u')}</Box>
+                              <Box display='flex' alignItems='center' gap={1}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={first_u}
+                                  menu_for_style={menu_for_style}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  function_on_blur={(value) => {
+                                    const new_u = value ?? 0
+                                    const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
+                                    const apply = () => {
+                                      real_nodes.forEach(n => { n.position_u = new_u })
+                                      refreshAll()
+                                    }
+                                    const revert = () => {
+                                      snapshots.forEach(s => { s.node.position_u = s.u })
+                                      refreshAll()
+                                    }
+                                    app_data.history.saveUndo(revert)
+                                    app_data.history.saveRedo(apply)
+                                    apply()
+                                  }}
+                                  multiValue={u_indeterminate}
+                                />
+                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_u_locked`)}>
+                                  <Button
+                                    variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                    onClick={() => {
+                                      const new_locked = !(first_u_locked && all_same_u_lock)
+                                      nodeShapeValues.position_u_locked = new_locked
+                                    }}
+                                  >
+                                    {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
+                                  </Button>
+                                </OSTooltip>
+                              </Box>
+                            </Box>
+                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.row_v')}</Box>
+                              <Box display='flex' alignItems='center' gap={1}>
+                                <ConfigMenuNumberInput
+                                  t={t}
+                                  default_value={first_v}
+                                  menu_for_style={menu_for_style}
+                                  minimum_value={0}
+                                  step={1}
+                                  stepper={true}
+                                  function_on_blur={(value) => {
+                                    const new_v = value ?? 0
+                                    const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
+                                    const apply = () => {
+                                      real_nodes.forEach(n => { n.position_v = new_v })
+                                      refreshAll()
+                                    }
+                                    const revert = () => {
+                                      snapshots.forEach(s => { s.node.position_v = s.v })
+                                      refreshAll()
+                                    }
+                                    app_data.history.saveUndo(revert)
+                                    app_data.history.saveRedo(apply)
+                                    apply()
+                                  }}
+                                  multiValue={v_indeterminate}
+                                />
+                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_v_locked`)}>
+                                  <Button
+                                    variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                    onClick={() => {
+                                      const new_locked = !(first_v_locked && all_same_v_lock)
+                                      nodeShapeValues.position_v_locked = new_locked
+                                    }}
+                                  >
+                                    {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
+                                  </Button>
+                                </OSTooltip>
+                              </Box>
+                            </Box>
+                          </>
+                        })() : <></>}
                         <Box layerStyle='options_3cols'>
                           <OverloadedCheckbox
                             elements={nodes_elements}
@@ -1342,27 +1500,24 @@ export const MenuConfigurationAppearance = ({
                         </OverloadedCheckbox>
                         </Box>
                         {/* Value of link local scale to override scale from DA, can be undefined */}
-                        <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                          <>
-                            <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                              <Box layerStyle='menuconfigpanel_option_name' >
-                                {t('Flux.apparence.shape_local_link_scale')}
-                              </Box>
-                              <ConfigMenuNumberInput
-                                default_value={linkShapeValues.local_link_scale}
-                                function_on_blur={(_) => {
-                                  linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                                }}
-                                minimum_value={0}
-                                stepper={true}
-                                step={1}
-                                t={t}
-                                isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
-                              />
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                          <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                            <Box layerStyle='menuconfigpanel_option_name' >
+                              {t('Flux.apparence.shape_local_link_scale')}
                             </Box>
-
-                          </>
-                        </OSTooltip>
+                          </OSTooltip>
+                          <ConfigMenuNumberInput
+                            default_value={linkShapeValues.local_link_scale}
+                            function_on_blur={(_) => {
+                              linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                            }}
+                            minimum_value={0}
+                            stepper={true}
+                            step={1}
+                            t={t}
+                            isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
+                          />
+                        </Box>
                       {/* </Box> */}
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>

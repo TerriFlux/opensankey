@@ -30,6 +30,19 @@ import { Class_Tag } from '../types/Tag'
 import { Class_LevelTagGroup } from '../types/TagGroup'
 import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 import { Class_NodeElement } from './Node'
+import { NodeContainerStyle } from './ElementStyle'
+import { NodePositioning } from '../Algorithms/NodePositioning'
+
+/**
+ * Container display mode for a dimension.
+ * When non-null, both parent and children are visible simultaneously; the
+ * parent is rendered as an envelope around the children, and links are
+ * filtered per side (see Link.is_visible).
+ *
+ * - 'in_children_out_parent': incoming links land on children, outgoing links leave from parent
+ * - 'in_parent_out_children': incoming links land on parent, outgoing links leave from children
+ */
+export type Type_ContainerMode = null | 'in_children_out_parent' | 'in_parent_out_children'
 
 export class Class_NodeDimension {
 
@@ -44,6 +57,7 @@ export class Class_NodeDimension {
   // Forcing
   private _force_show_children: boolean = false
   private _force_show_parent: boolean = false
+  private _container_mode: Type_ContainerMode = null
 
   /**
    * True if element is currently on a deletion process
@@ -156,7 +170,7 @@ export class Class_NodeDimension {
    */
   public setForceToShowParent() {
     // Speed-up computation
-    if (this._force_show_parent && !this._force_show_children)
+    if (this._force_show_parent && !this._force_show_children && !this._container_mode)
       return
     // Protection against infinite recursion
     if (this._is_currently_in_unsetting_recursion)
@@ -167,6 +181,7 @@ export class Class_NodeDimension {
     // Set booleans accordingly
     this._force_show_children = false
     this._force_show_parent = true
+    this._container_mode = null
     this._updated()
     // Unset all other children node's dimensions
     const nodes_to_redraw = new Set([
@@ -195,7 +210,7 @@ export class Class_NodeDimension {
    */
   public setForceToShowChildren(fromJSON: boolean = false) {
     // Speed-up computation
-    if (this._force_show_children && !this._force_show_parent)
+    if (this._force_show_children && !this._force_show_parent && !this._container_mode)
       return
     // Protection against infinite recursion
     if (this._is_currently_in_unsetting_recursion)
@@ -206,6 +221,7 @@ export class Class_NodeDimension {
     // Set booleans accordingly
     this._force_show_children = true
     this._force_show_parent = false
+    this._container_mode = null
     this._updated()
     // Unset other dimensions
     const nodes_to_redraw = new Set([
@@ -232,6 +248,120 @@ export class Class_NodeDimension {
     this._is_currently_in_unsetting_recursion = false
   }
 
+  /**
+   * Activate container display mode: parent and children are shown at the
+   * same time, the parent surrounds the children, and links are filtered
+   * per side according to the mode variant.
+   */
+  public setContainerMode(
+    mode: Exclude<Type_ContainerMode, null>,
+    fromJSON: boolean = false
+  ) {
+    if (this._container_mode === mode) return
+    if (this._is_currently_in_unsetting_recursion) return
+    this._is_currently_in_unsetting_recursion = true
+    const entering = !this._container_mode
+    this._force_show_children = false
+    this._force_show_parent = false
+    this._container_mode = mode
+    // Snapshot the parent's geometry before the envelope overrides it, so
+    // that unsetContainerMode can restore it exactly. First-call-wins, so
+    // a second container-mode dimension on the same parent does not
+    // clobber the original values.
+    this._parent.saveGeometryForContainerMode()
+    // Apply the container style to the parent node so it renders as an
+    // enclosing dashed rectangle with its label in the top-left corner.
+    const container_style = this._parent.sankey.styles_dict[NodeContainerStyle]
+    if (container_style && !this._parent.style.includes(container_style)) {
+      this._parent.addStyle(container_style)
+    }
+    // Bump visibility fingerprints and reset the cached
+    // _are_related_dimensions_selected on parent and children BEFORE the
+    // initial stack, so that child.getShapeHeightToUse() — which sums
+    // link thicknesses — sees the freshly visible links instead of
+    // their stale "source/target invisible" cache.
+    this._updated()
+    // Initial vertical stack of children, anchored at the parent's current
+    // position. Only runs on the user-triggered null → mode transition,
+    // NOT on load from JSON (where children positions must be preserved)
+    // and not on a variant switch.
+    if (entering && !fromJSON) {
+      const anchor_x = this._parent.position_x
+      this._children.forEach(child => { child.position_x = anchor_x })
+      NodePositioning.stackNodesVertically(
+        this._children as Class_NodeElement[],
+        this._parent.position_y
+      )
+    }
+    // When loading from JSON we skip the reorganize+draw phase; the caller
+    // triggers a single full draw at the end of load, which handles nested
+    // container dimensions correctly regardless of the order in which they
+    // are processed.
+    if (!fromJSON) {
+      const nodes_to_redraw = new Set([
+        this._parent,
+        ...this._children
+      ])
+      nodes_to_redraw.forEach(node => {
+        node.reorganizeIOLinks()
+        node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
+        node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
+      })
+      // PR 3 step 5: replace the old `per-node draw() + setTimeout(0) for
+      // envelope + restackAncestorContainers` dance with a single full
+      // `drawElements()` pass. The centralized
+      // `recomputeParametricLayout` entry point now sizes every container
+      // bottom-up in phase A (using logical geometry, not SVG getBBox, so
+      // no race with layout flush) and re-stacks every container's
+      // descendants top-down in phase C, including nested containers.
+      // Ancestor envelopes follow automatically — no ancestor walk
+      // needed.
+      this._parent.drawing_area.drawElements()
+    }
+    this._is_currently_in_unsetting_recursion = false
+  }
+
+  /**
+   * Set the container_mode flag in place, without any side effect:
+   * no style application, no geometry snapshot, no redraw, no link
+   * reorganization. Used by view-switch sync (UpdateFrom), where the
+   * visual style is already transferred via replaceStyles and the
+   * caller will trigger a full draw afterwards.
+   */
+  public setContainerModeQuiet(mode: Type_ContainerMode) {
+    this._container_mode = mode
+    if (mode) {
+      this._force_show_children = false
+      this._force_show_parent = false
+    }
+  }
+
+  /**
+   * Exit container display mode and reset to a neutral state (no forcing).
+   */
+  public unsetContainerMode() {
+    if (!this._container_mode) return
+    this._container_mode = null
+    // Remove the container style and restore the pre-container geometry,
+    // but only if no other dimension still wants this node to be an
+    // enclosing container.
+    const still_container = this._parent.dimensions_as_parent
+      .some(dim => dim !== this && dim.container_mode)
+    if (!still_container) {
+      this._parent.removeStyleById(NodeContainerStyle)
+      this._parent.restoreGeometryAfterContainerMode()
+    }
+    this._updated()
+    const nodes_to_redraw = new Set([
+      this._parent,
+      ...this._children
+    ])
+    nodes_to_redraw.forEach(node => {
+      node.reorganizeIOLinks()
+    })
+    nodes_to_redraw.forEach(node => node.draw())
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected _updated() {
@@ -243,6 +373,7 @@ export class Class_NodeDimension {
 
     this._force_show_children = false
     this._force_show_parent = false
+    this._container_mode = null
     this._updated()
   }
 
@@ -285,6 +416,8 @@ export class Class_NodeDimension {
 
 
   public get force_show_children() { return this._force_show_children }
+
+  public get container_mode(): Type_ContainerMode { return this._container_mode }
 
   public normalize() {
     const group = this.parent.sankey.level_taggs_dict[this.id]
@@ -465,6 +598,7 @@ export class NodeDimensionsManager {
             }
             if (dimension.force_show_children) dimensions[dimension.id].force_show_children = true
             if (dimension.force_show_parent) dimensions[dimension.id].force_show_parent = true
+            if (dimension.container_mode) dimensions[dimension.id].container_mode = dimension.container_mode
           } else {
             const cur_children_tags = dimensions[dimension.id].children_tags as string[]
             dimensions[dimension.id].children_tags = [...cur_children_tags, dimension.id]
@@ -556,7 +690,10 @@ export class NodeDimensionsManager {
                 const cur_parent = parent
                 // children_tags_ids.forEach(child_tag => {
                 const childDim = this.getOrCreateLowerDimension(cur_parent, this._node, _)
-                if (dimension_as_json.force_show_children) {
+                if (dimension_as_json.container_mode === 'in_children_out_parent' ||
+                  dimension_as_json.container_mode === 'in_parent_out_children') {
+                  childDim?.setContainerMode(dimension_as_json.container_mode as Exclude<Type_ContainerMode, null>, true)
+                } else if (dimension_as_json.force_show_children) {
                   const nodeDimParent = parent.nodeDimensionAsParent(this._node)!
                   nodeDimParent.setForceToShowChildren(true)
                 } else if (dimension_as_json.force_show_parent) {
@@ -730,6 +867,16 @@ export class NodeDimensionsManager {
       .length > 0)
     if (is_antitagged) {
       return false
+    }
+
+    // Container mode on any related dimension makes this node visible
+    // (both parent and children are displayed simultaneously).
+    const in_container_mode_as_child = Object.values(dimensionsData.dimensions_as_child)
+      .some(dim => dim.container_mode)
+    const in_container_mode_as_parent = this.dimensions_as_parent
+      .some(dim => dim.container_mode)
+    if (in_container_mode_as_child || in_container_mode_as_parent) {
+      return true
     }
 
     let has_forced_dimensions: boolean = false

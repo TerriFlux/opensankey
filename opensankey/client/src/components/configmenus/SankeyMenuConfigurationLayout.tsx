@@ -365,12 +365,12 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     }
   }
 
-  const eventLegendBorder = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventLegendBorder = (checked: boolean) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.legend_bg_border = _
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_bg_border', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_bg_border', checked, f)
   }
 
   const eventLegendFontSize = (evt: number | null | undefined) => {
@@ -384,13 +384,13 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
   }
 
   // ✅ Position
-  const eventLegendStickDrawing = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventLegendStickDrawing = (checked: boolean) => {
     const f = (_: boolean) => {
       const { drawing_area } = app_data
       drawing_area.legend.stick_to_drawing = _
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'stick_to_drawing', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'stick_to_drawing', checked, f)
   }
 
   const eventLegendPosX = (evt: number | undefined | null) => {
@@ -426,36 +426,28 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
   }
 
   // ✅ Contenu
-  const eventLegendScale = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventLegendScale = (checked: boolean) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.display_legend_scale = _
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'display_legend_scale', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'display_legend_scale', checked, f)
   }
 
-  const eventLegendDataTag = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventLegendDataTag = (checked: boolean) => {
     const f = (_: boolean) => {
       app_data.drawing_area.legend.legend_show_dataTags = _
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_dataTags', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_dataTags', checked, f)
   }
 
-  const eventLegendConstraints = (evt: React.ChangeEvent<HTMLInputElement>) => {
+  const eventLegendDataType = (checked: boolean) => {
     const f = (_: boolean) => {
-      app_data.drawing_area.legend.legend_show_constraints = _
+      app_data.drawing_area.legend.legend_show_data_type = _
       refreshThisAndUpdateRelatedComponents()
     }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_constraints', evt.target.checked, f)
-  }
-
-  const eventLegendLinkInfo = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => {
-      app_data.drawing_area.legend.info_link_value_void = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'info_link_value_void', evt.target.checked, f)
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_data_type', checked, f)
   }
 
   return <Box layerStyle='menu_sub_section'>
@@ -478,14 +470,8 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
       layerStyle='menuconfigpanel_grid'
       style={{ display: (app_data.drawing_area.legend.masked ? 'none' : '') }}
     >
-      {/* ✅ SECTION STYLE */}
-      <Box as='span' textStyle='title_sub_section'>{t('Menu.style') || 'Style'}</Box>
-
-      {/* Couleur de fond */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_suboption_name'>
-          {t('Menu.LegBgColor')}
-        </Box>
+      {/* Couleur + Opacité du fond */}
+      <Box as='span' layerStyle='options_2cols'>
         <OSTooltip label={t('Menu.tooltips.LegBgColor')}>
           <Box>
             <MenuColorPicker
@@ -494,42 +480,26 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
             />
           </Box>
         </OSTooltip>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Menu.LegBgOpacity')}
+          </Box>
+          <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.legend.legend_bg_opacity}
+              function_on_blur={eventLegendBgOpacity}
+              minimum_value={0}
+              maximum_value={100}
+              stepper={true}
+              unit_text='%'
+            />
+          </OSTooltip>
+        </Box>
       </Box>
 
-      {/* Opacité du fond */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_suboption_name'>
-          {t('Menu.LegBgOpacity')}
-        </Box>
-        <OSTooltip label={t('Menu.tooltips.LegBgOpacity')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.legend.legend_bg_opacity}
-            function_on_blur={eventLegendBgOpacity}
-            minimum_value={0}
-            maximum_value={100}
-            stepper={true}
-            unit_text='%'
-          />
-        </OSTooltip>
-      </Box>
-
-      {/* Affichage du bord */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.legend_bg_border}
-        onChange={eventLegendBorder}
-      >
-        <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
-          {t('Menu.LegBgBorder')}
-        </OSTooltip>
-      </Checkbox>
-
-      {/* Taille de police */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_suboption_name'>
-          {t('Menu.fontSize')}
-        </Box>
+      {/* Taille de police + Bordure */}
+      <Box as='span' layerStyle='options_2cols'>
         <OSTooltip label={t('Menu.tooltips.fontSize')}>
           <ConfigMenuNumberInput
             t={app_data.t}
@@ -537,114 +507,108 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
             function_on_blur={eventLegendFontSize}
             minimum_value={1}
             stepper={true}
+            unit_text='px'
           />
+        </OSTooltip>
+        <OSTooltip label={t('Menu.tooltips.LegBgBorder')}>
+          <Button
+            variant={app_data.drawing_area.legend.legend_bg_border ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => eventLegendBorder(!app_data.drawing_area.legend.legend_bg_border)}
+          >
+            {t('Menu.LegBgBorder')}
+          </Button>
         </OSTooltip>
       </Box>
 
       {/* ✅ SECTION POSITION */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.position') || 'Position'}</Box>
 
-      {/* Solidaire du diagramme */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.stick_to_drawing}
-        onChange={eventLegendStickDrawing}
-      >
+      {/* Solidaire du diagramme + Largeur */}
+      <Box as='span' layerStyle='options_2cols'>
         <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
-          {t('Menu.LegStickDrawing')}
+          <Button
+            variant={app_data.drawing_area.legend.stick_to_drawing ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+            onClick={() => eventLegendStickDrawing(!app_data.drawing_area.legend.stick_to_drawing)}
+          >
+            {t('Menu.LegStickDrawing')}
+          </Button>
         </OSTooltip>
-      </Checkbox>
-
-      {/* Position X */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.LegX')}
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Menu.LegWidth')}
+          </Box>
+          <OSTooltip label={t('Menu.tooltips.LegWidth')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.legend.width}
+              function_on_blur={eventLegendWidth}
+              minimum_value={0}
+              step={1}
+              stepper={true}
+              unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
+            />
+          </OSTooltip>
         </Box>
-        <OSTooltip label={t('Menu.tooltips.LegX')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.legend.position_x}
-            function_on_blur={eventLegendPosX}
-            step={1}
-            stepper={true}
-            unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_x))}
-          />
-        </OSTooltip>
       </Box>
 
-      {/* Position Y */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.LegY')}
+      {/* Position X + Y */}
+      <Box as='span' layerStyle='options_2cols'>
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Menu.LegX')}
+          </Box>
+          <OSTooltip label={t('Menu.tooltips.LegX')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.legend.position_x}
+              function_on_blur={eventLegendPosX}
+              step={1}
+              stepper={true}
+              unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_x))}
+            />
+          </OSTooltip>
         </Box>
-        <OSTooltip label={t('Menu.tooltips.LegY')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.legend.position_y}
-            function_on_blur={eventLegendPosY}
-            step={1}
-            stepper={true}
-            unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_y))}
-          />
-        </OSTooltip>
-      </Box>
-
-      {/* Largeur */}
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.LegWidth')}
+        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Menu.LegY')}
+          </Box>
+          <OSTooltip label={t('Menu.tooltips.LegY')}>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.legend.position_y}
+              function_on_blur={eventLegendPosY}
+              step={1}
+              stepper={true}
+              unit_text={right_addon_pixel(Math.round(app_data.drawing_area.legend.position_y))}
+            />
+          </OSTooltip>
         </Box>
-        <OSTooltip label={t('Menu.tooltips.LegWidth')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={app_data.drawing_area.legend.width}
-            function_on_blur={eventLegendWidth}
-            minimum_value={0}
-            step={1}
-            stepper={true}
-            unit_text={right_addon_pixel(app_data.drawing_area.legend.width)}
-          />
-        </OSTooltip>
       </Box>
 
       {/* ✅ SECTION CONTENU */}
       <Box as='span' textStyle='title_sub_section'>{t('Menu.content') || 'Contenu'}</Box>
 
-      {/* Afficher l'échelle */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.display_legend_scale}
-        onChange={eventLegendScale}
-      >
-        {t('Menu.display_scale')}
-      </Checkbox>
-
-      {/* Afficher les dataTags */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.legend_show_dataTags}
-        onChange={eventLegendDataTag}
-      >
-        {t('MEP.leg_show_dataTags')}
-      </Checkbox>
-
-      {/* Afficher les contraintes */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.legend_show_constraints}
-        onChange={eventLegendConstraints}
-      >
-        {t('MEP.leg_show_constraints')}
-      </Checkbox>
-
-      {/* Afficher l'info flux null */}
-      <Checkbox
-        variant='menuconfigpanel_option_checkbox'
-        isChecked={app_data.drawing_area.legend.info_link_value_void}
-        onChange={eventLegendLinkInfo}
-      >
-        {t('MEP.leg_show_info_link_void')}
-      </Checkbox>
+      {/* Contenu : échelle + dataTags + type de données */}
+      <Box as='span' layerStyle='options_3cols'>
+        <Button
+          variant={app_data.drawing_area.legend.display_legend_scale ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => eventLegendScale(!app_data.drawing_area.legend.display_legend_scale)}
+        >
+          {t('Menu.display_scale')}
+        </Button>
+        <Button
+          variant={app_data.drawing_area.legend.legend_show_dataTags ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => eventLegendDataTag(!app_data.drawing_area.legend.legend_show_dataTags)}
+        >
+          {t('MEP.leg_show_dataTags')}
+        </Button>
+        <Button
+          variant={app_data.drawing_area.legend.legend_show_data_type ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => eventLegendDataType(!app_data.drawing_area.legend.legend_show_data_type)}
+        >
+          {t('MEP.leg_show_data_type')}
+        </Button>
+      </Box>
 
     </Box>
   </Box>

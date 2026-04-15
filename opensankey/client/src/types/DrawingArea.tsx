@@ -440,6 +440,12 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     if (this.bypass_redraws) return
+    // PR 3 — central entry point for parametric layout. Node.applyPosition
+    // is now a pass-through in parametric mode, so positions must be
+    // refreshed here before any node is drawn. Single source of truth.
+    if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
+      this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    }
     // Draw grid
     this.drawBackground()
     this.drawGrid()
@@ -1675,6 +1681,7 @@ export class Class_DrawingArea {
         if (this.sankey.default_style.shape_position_type == 'parametric') {
           this.application_data.sendWaitingToast(
             () => {
+              this.nodePositioning.inferPositionUFromX()
               this.nodePositioning.computeParametrization(false)
             })
         }
@@ -2386,10 +2393,30 @@ export class Class_DrawingArea {
   public setParametricMode() {
     this.bypass_redraws = true
     const default_style = this.sankey.styles_dict['default']
+
+    // 1. Initialise position_u depuis position_x pour les nœuds non verrouillés.
+    //    Nécessaire car on vient potentiellement du mode absolu où les nœuds
+    //    ont été placés librement.
+    this.nodePositioning.inferPositionUFromX()
+
+    // 2. Back-calcul de shape_position_dy depuis les positions absolues actuelles.
+    //    Si overlap détecté, shape_position_dy est clampé à 0 — la bascule provoquera
+    //    un saut visuel pour ces nœuds.
+    const overlap_count = this.nodePositioning.backCalculateShapePositionDyFromY()
+    if (overlap_count > 0) {
+      console.warn(
+        `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
+        `shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.`
+      )
+    }
+
+    // 3. Bascule du mode et recalcul du V (les Y restent stables car le dy a été
+    //    back-calculé pour reproduire les positions actuelles).
     default_style.shape_position_type = 'parametric'
-    this.sankey.nodes_list.forEach(n => n.position_v = -1)
-    if (default_style.shape_position_type == 'parametric')
-      this.nodePositioning.computeParametrization(false)
+    this.sankey.nodes_list.forEach(n => {
+      if (n.shape_position_v_locked !== true) n.position_v = -1
+    })
+    this.nodePositioning.computeParametrization(false)
     this.bypass_redraws = false
   }
 
@@ -2398,14 +2425,34 @@ export class Class_DrawingArea {
     default_style.shape_position_type = 'absolute'
   }
 
-  public resetAllVerticalIntervals() {
-    Object.values(this.sankey.nodes_dict)
+  public resetAllVerticalIntervals(v_spacing?: number) {
+    // La clé dans le config prefixée est `shape_position_dy` (cf.
+    // createConfigWithPrefix + NODE_SHAPE_SPECIFIC_CONFIG). Utiliser `position_dy`
+    // supprimait une clé inexistante → les overrides persistaient.
+    const affected_nodes = Object.values(this.sankey.nodes_dict)
       .filter(node => node.shape_position_type !== 'relative')
-      .forEach(node => {
-        node.delete_attribute('position_dy')
-        node.applyPosition()
+    const snapshots = affected_nodes.map(node => ({ node, snapshot: node.snapshotStorage() }))
+    const default_style = this.sankey.styles_dict['default']
+    const prev_style_dy = default_style.shape_position_dy
+
+    const apply = () => {
+      if (v_spacing !== undefined) {
+        default_style.shape_position_dy = v_spacing
       }
-      )
+      affected_nodes.forEach(node => node.delete_attribute('shape_position_dy'))
+      this.draw()
+    }
+    const revert = () => {
+      if (v_spacing !== undefined) {
+        default_style.shape_position_dy = prev_style_dy
+      }
+      snapshots.forEach(({ node, snapshot }) => node.restoreStorage(snapshot))
+      this.draw()
+    }
+
+    this.application_data.history.saveUndo(revert)
+    this.application_data.history.saveRedo(apply)
+    apply()
   }
 
   public get id() { return this._sankey.id }

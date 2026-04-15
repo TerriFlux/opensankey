@@ -2,6 +2,8 @@ export const resources_app_elements = {
   en: {
     translation: {
       Menu: {
+        position: 'Position',
+        content: 'Content',
         ElOrder: 'Order overlaps of elements',
         presentation_OS: 'OpenSankey is a web application that makes it easy to create Sankey diagrams.\n\n It\'s available free of charge, and includes simple functions for creating nodes, flows and labeling them to aggregate or filter their display on the diagram.\n\n The 15-node limit for use without an account can be lifted by creating a license-free account.\n\n',
         presentation_OS_limit_node: 'The 15-node limit for use without an account can be lifted by creating a free account.\n\n',
@@ -17,8 +19,8 @@ export const resources_app_elements = {
         EdF: 'Editing links',
         ED: 'Data\'s tags',
         Leg: 'Legends',
-        LegX: 'Horizontal position',
-        LegY: 'Vertical position',
+        LegX: 'Horizontal',
+        LegY: 'Vertical',
         LegWidth: 'Width',
         larg: 'Width',
         haut: 'Height',
@@ -74,7 +76,7 @@ export const resources_app_elements = {
         last_save: 'Last save',
         style: 'Styles',
         close: 'Close',
-        Elements: 'Elements',
+        Elements: 'Eléments',
         Etiquettes: 'Editing tags',
         reinit: 'Reset',
         amp_short: 'Layout',
@@ -132,6 +134,7 @@ export const resources_app_elements = {
           element_flow: 'Flow',
           element_node_tag: 'Node Label',
           element_flow_tag: 'Flow Label',
+          element_level_tag: 'Hierarchy',
           element_data: 'Data',
           element_data_tag: 'Data Label',
           title_table: 'Flow Table',
@@ -139,7 +142,7 @@ export const resources_app_elements = {
           title_legend: 'Legend',
           title_node: 'Nodes',
           title_flow: 'Flows',
-          title_elements: 'Elements',
+          title_elements: 'Eléments',
           title_node_tag: 'Node Label Editing',
           title_flow_tag: 'Flow Label Editing'
         },
@@ -195,7 +198,7 @@ export const resources_app_elements = {
           attrGeneral: 'Drawing area',
           scale: 'Scale',
           updateTags: 'Update',
-          elementsTitle: 'Elements',
+          elementsTitle: 'Eléments',
           tagGroupsTitle: 'Tag groups',
           dataTitle: 'Data',
           title: 'Layout',
@@ -262,6 +265,9 @@ export const resources_app_elements = {
         leg_info: 'Informations',
         leg_show_dataTags: 'DataTags',
         leg_show_constraints: 'Constraints doc',
+        leg_show_data_type: 'Data type',
+        leg_data_calculated: 'Calculated data',
+        leg_data_collected: 'Collected data',
         leg_show_info_link_void: 'Show info concerning null link',
         links_size: 'Links size',
         MaxFlux: 'Max',
@@ -459,6 +465,8 @@ export const resources_app_elements = {
   fr: {
     translation: {
       Menu: {
+        position: 'Position',
+        content: 'Contenu',
         ElOrder: 'Ordre d\'affichage',
         presentation_OS: 'OpenSankey et une application web qui permet de réaliser simplement des diagrammes de Sankey.\n\nCelle-ci est accessible gratuitement, et inclut les fonctionnalités simples de création de nœuds, de flux et leur étiquetage afin d\'agréger ou de filtrer leur affichage sur le diagramme.\n\n',
         presentation_OS_limit_node: 'La création d\'un compte gratuit permet de lever la limitation de 15 nœuds fixée pour un usage sans compte.\n\n',
@@ -474,8 +482,8 @@ export const resources_app_elements = {
         EdF: 'Édition des flux',
         ED: 'Étiquettes des données',
         Leg: 'Légende',
-        LegX: 'Position horizontale',
-        LegY: 'Position verticale',
+        LegX: 'Horizontale',
+        LegY: 'Verticale',
         LegWidth: 'Largeur',
         larg: 'Largeur',
         haut: 'Hauteur',
@@ -617,7 +625,7 @@ export const resources_app_elements = {
           title_legend: 'Légende',
           title_node: 'Noeuds',
           title_flow: 'Flux',
-          title_elements: 'Elements',
+          title_elements: 'Eléments',
           title_node_tag: 'Édition des étiquettes de noeuds',
           title_flow_tag: 'Édition des étiquettes de flux',
 
@@ -743,6 +751,9 @@ export const resources_app_elements = {
         leg_info: 'Informations',
         leg_show_dataTags: 'Etiquettes de données',
         leg_show_constraints: 'Explication contraintes',
+        leg_show_data_type: 'Type de données',
+        leg_data_calculated: 'Données calculées',
+        leg_data_collected: 'Données collectées',
         leg_show_info_link_void: 'Affiche info concernant les flux nuls',
 
         MaxFlux: 'Max',

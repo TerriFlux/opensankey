@@ -493,7 +493,11 @@ export class NodePositioning {
    */
   public computeAutoSankey(
     launched_from_process: boolean,
-    optimize_crossing: boolean
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number,
+    sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
@@ -598,6 +602,17 @@ export class NodePositioning {
     console.log('📊 Index horizontaux après calcul:', horizontal_indexes_per_nodes_ids)
     console.log('♻️ Liens de recyclage détectés:', possible_recycling_links_ids)
 
+    // ÉTAPE 2 bis: Forcer l'index horizontal des nœuds dont la colonne est verrouillée.
+    // Le user a fixé position_u via l'UI ; on remplace l'index calculé par cette valeur
+    // (en passant en base 0) avant la construction des structures et le placement final,
+    // pour que le nœud tombe bien dans la colonne demandée même après recalcul automatique.
+    nodes_to_process.forEach(node => {
+      if (node.shape_position_u_locked === true) {
+        const locked_index = Math.max(0, Math.round(node.position_u) - 1)
+        horizontal_indexes_per_nodes_ids[node.id] = locked_index
+      }
+    })
+
     // ÉTAPE 3: Construction des structures de données (logique existante)
     let max_horizontal_index = 0
     let nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
@@ -629,12 +644,38 @@ export class NodePositioning {
       }
     })
 
-    // ÉTAPE 4: Repositionnement des nœuds sans entrée (logique existante préservée)
-    this.repositionNodesWithoutInputs(
-      nodes_per_horizontal_indexes,
-      horizontal_indexes_per_nodes_ids,
-      max_horizontal_index
-    )
+    // ÉTAPE 3 bis: Mode 'right_extremity' — forcer les nœuds sans sortie à la dernière colonne.
+    // On fait ça avant le repositionnement des sources pour que max_horizontal_index soit
+    // bien à jour et que les sources en mode 'before_neighbor' tombent juste avant leur voisin.
+    if (sinks_mode === 'right_extremity') {
+      const sink_nodes = nodes_to_process.filter(node =>
+        !node.hasVisibleOutputLinks() && node.hasVisibleInputLinks())
+      if (sink_nodes.length > 0) {
+        sink_nodes.forEach(node => {
+          const old_index = horizontal_indexes_per_nodes_ids[node.id]
+          if (old_index === undefined || old_index < 0) return
+          if (old_index === max_horizontal_index) return
+          if (nodes_per_horizontal_indexes[old_index]) {
+            const i = nodes_per_horizontal_indexes[old_index].indexOf(node)
+            if (i > -1) nodes_per_horizontal_indexes[old_index].splice(i, 1)
+          }
+          horizontal_indexes_per_nodes_ids[node.id] = max_horizontal_index
+          if (!nodes_per_horizontal_indexes[max_horizontal_index]) {
+            nodes_per_horizontal_indexes[max_horizontal_index] = []
+          }
+          nodes_per_horizontal_indexes[max_horizontal_index].push(node)
+        })
+      }
+    }
+
+    // ÉTAPE 4: Repositionnement des nœuds sans entrée (sauf si mode 'left_extremity')
+    if (sources_mode !== 'left_extremity') {
+      this.repositionNodesWithoutInputs(
+        nodes_per_horizontal_indexes,
+        horizontal_indexes_per_nodes_ids,
+        max_horizontal_index
+      )
+    }
     nodes_per_horizontal_indexes = Object.fromEntries(
       Object.entries(nodes_per_horizontal_indexes).filter(([_, value]) => value.length > 0)
     )
@@ -644,7 +685,9 @@ export class NodePositioning {
       nodes_per_horizontal_indexes,
       horizontal_indexes_per_nodes_ids,
       max_horizontal_index,
-      optimize_crossing
+      optimize_crossing,
+      h_spacing,
+      v_spacing
     )
 
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
@@ -813,7 +856,9 @@ export class NodePositioning {
     nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] },
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     max_horizontal_index: number,
-    optimize_crossing: boolean
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number
   ) {
     // Utiliser la logique existante de positionnement vertical
     // mais avec les corrections de la méthode updateNodesPositions précédente
@@ -823,13 +868,17 @@ export class NodePositioning {
     const node_id_per_hxv_indexes: string[][] = []
     let max_height_cumul = 0
     let prev_col_width = 0
+    // Fixed left margin so the first column always starts at the same x, independent
+    // of position_dx / h_spacing (which only control inter-column spacing).
+    const FIRST_COLUMN_X = 200
     for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
       if (!nodes_per_horizontal_indexes[h_index]) {
         continue
       }
       let col_max_w_col = 0
+      const effective_h = h_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dx ?? 0
       nodes_per_horizontal_indexes[h_index].forEach(node => {
-        node.position_x = prev_col_width + node.shape_position_dx + node.shape_position_dx * h_index
+        node.position_x = FIRST_COLUMN_X + prev_col_width + effective_h * h_index
         const node_w = node.shape_min_width
         if (node_w > col_max_w_col) col_max_w_col = node_w
       })
@@ -847,6 +896,7 @@ export class NodePositioning {
       const sortcoef_per_nodes_ids: { [node_id: string]: number } = {}
       const vertical_indexes_per_node_id: { [node_id: string]: number } = {}
       const nodes_ids_per_vertical_index: string[] = []
+      const effective_v = v_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dy ?? 0
 
       nodes_per_horizontal_indexes[h_index].forEach(node => {
         const node_height = node.getShapeHeightToUse()
@@ -875,9 +925,53 @@ export class NodePositioning {
           }
         }
         max_vertical_index += 1
-        height_cumul_for_index += node_height + node.shape_position_dy
+        height_cumul_for_index += node_height + effective_v
       })
 
+      // Réordonnancement selon les verrous V (shape_position_v_locked).
+      // Les nœuds verrouillés sont placés dans l'ordre croissant de leur position_v
+      // (utilisée comme cible d'index 1-based, clampée aux bornes). En cas de collision
+      // de cible, on préserve l'ordre relatif des nœuds verrouillés. Les nœuds libres
+      // remplissent les créneaux restants dans leur ordre issu du tri par sortcoef.
+      const col_nodes = nodes_per_horizontal_indexes[h_index]
+      const locked_nodes = col_nodes
+        .filter(n => n.shape_position_v_locked === true)
+        .slice()
+        .sort((a, b) => a.position_v - b.position_v)
+      if (locked_nodes.length > 0 && nodes_ids_per_vertical_index.length > 1) {
+        const N = nodes_ids_per_vertical_index.length
+        const locked_set = new Set(locked_nodes.map(n => n.id))
+        const unlocked_in_order = nodes_ids_per_vertical_index.filter(id => !locked_set.has(id))
+        const final_arr: (string | null)[] = new Array(N).fill(null)
+        let last_assigned = -1
+        locked_nodes.forEach(n => {
+          const target = Math.max(0, Math.min(N - 1, Math.round(n.position_v) - 1))
+          let slot = Math.max(target, last_assigned + 1)
+          while (slot < N && final_arr[slot] !== null) slot += 1
+          if (slot >= N) {
+            // Pas de place à droite → recule vers la gauche pour garder le nœud dans la colonne
+            slot = N - 1
+            while (slot >= 0 && final_arr[slot] !== null) slot -= 1
+          }
+          if (slot >= 0 && slot < N) {
+            final_arr[slot] = n.id
+            last_assigned = slot
+          }
+        })
+        let u_i = 0
+        for (let i = 0; i < N; i++) {
+          if (final_arr[i] === null) {
+            final_arr[i] = unlocked_in_order[u_i++] ?? null
+          }
+        }
+        for (let i = 0; i < N; i++) {
+          const id = final_arr[i]
+          if (id !== null) {
+            nodes_ids_per_vertical_index[i] = id
+            vertical_indexes_per_node_id[id] = i
+          }
+        }
+      }
 
       //height_cumul_for_index += (nodes_per_horizontal_indexes[h_index].length - 1) * this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
       if (height_cumul_for_index > max_height_cumul) {
@@ -895,9 +989,11 @@ export class NodePositioning {
       height_cumul_per_indexes,
       max_height_cumul,
       max_horizontal_index,
-      echangeTag
+      echangeTag,
+      h_spacing,
+      v_spacing
     )
-    this.optimizeCrossingsPositioning(optimize_crossing)
+    this.optimizeCrossingsPositioning(optimize_crossing, h_spacing, v_spacing)
   }
 
   /**
@@ -1163,44 +1259,47 @@ export class NodePositioning {
     height_cumul_per_indexes: number[],
     max_height_cumul: number,
     max_horizontal_index: number,
-    echangeTag?: Class_Tag
+    echangeTag?: Class_Tag,
+    h_spacing?: number,
+    v_spacing?: number
   ) {
     if (node_id_per_hxv_indexes.length === 0) {
       return
     }
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
+    const v_margin = v_spacing ?? this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
 
-    let shift = 0
-    const horizontal_spacing = this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
+    const horizontal_spacing = h_spacing ?? this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
     console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
 
-    // ÉTAPE 2: Calculer les positions Y avec la logique center_biggest_nodes
+    // ÉTAPE 2: Calculer les positions Y - chaque colonne est centrée verticalement
+    // de façon indépendante via v_margin_for_index. Le premier nœud peut ensuite être
+    // nudgé pour les cas d'import/recycling/chaîne linéaire, mais ce nudge NE se
+    // propage PAS aux colonnes suivantes (ancien comportement `shift` retiré : il
+    // cumulait les décalages et finissait par coller la colonne n+1 en haut de la
+    // zone à cause du clamp Math.max(0, ...)).
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
       const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && false
-      //const h_position_for_index = prev_col_width + horizontal_spacing + horizontal_index * horizontal_spacing
       const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = Math.max(0, v_margin_for_index + shift)
+      let upper_node_height_and_margin = Math.max(0, v_margin_for_index)
 
       console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}`)
 
       node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
         this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
 
-        // Logique d'alignement pour les liens spéciaux
+        // Logique d'alignement pour les liens spéciaux (ajustement local au nœud,
+        // pas reporté sur la colonne suivante)
         const import_link = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
           echangeTag && l.source.hasGivenTag(echangeTag)
         )
 
         if (import_link.length > 0) {
           this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
-          if (idx == 0) {
-            shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-          }
         } else {
           const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
             l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
@@ -1213,13 +1312,11 @@ export class NodePositioning {
 
             if (recycling_links.length > 0) {
               this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
-              if (idx == 0) {
-                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
             } else if (non_recycling_input_links.filter(l =>
               l.source.output_links_list.filter(ol => ol.is_visible).length == 1
             ).length == 1 && idx == 0) {
-              // Alignement des centres
+              // Alignement des centres : si le premier nœud de la colonne a une
+              // unique source 1-vers-1, on l'aligne verticalement avec cette source.
               const source_node = non_recycling_input_links[0].source
               const current_node = this.drawingArea.sankey.nodes_dict[node_id]
               const source_center_y = source_node.position_y + source_node.getShapeHeightToUse() / 2
@@ -1227,18 +1324,12 @@ export class NodePositioning {
               const aligned_position_y = source_center_y - current_node_half_height
 
               this.drawingArea.sankey.nodes_dict[node_id].position_y = aligned_position_y
-
-              if (idx == 0) {
-                shift = this.drawingArea.sankey.nodes_dict[node_id].position_y - upper_node_height_and_margin
-              }
             }
           }
         }
 
         const node_height = height_per_nodes_ids[node_id]
         upper_node_height_and_margin += node_height + v_margin
-
-        const node_w = this.drawingArea.sankey.nodes_dict[node_id].shape_min_width
       })
 
     }
@@ -1254,10 +1345,10 @@ export class NodePositioning {
   /**
    * NOUVELLE ÉTAPE : Optimisation des croisements de flux
    * À appeler APRÈS le positionnement initial des nœuds
-   * 
+   *
    * @param {boolean} apply_optimization - Active/désactive l'optimisation
    */
-  public optimizeCrossingsPositioning(apply_optimization: boolean = true) {
+  public optimizeCrossingsPositioning(apply_optimization: boolean = true, h_spacing?: number, v_spacing?: number) {
     if (!apply_optimization) {
       console.log('🔧 Optimisation des croisements désactivée')
       return
@@ -1277,7 +1368,7 @@ export class NodePositioning {
 
     // Regrouper les nœuds par position X approximative
     nodes_to_process.forEach(node => {
-      const h_index = Math.round(node.position_x / node.shape_position_dx)
+      const h_index = Math.round(node.position_x / (h_spacing ?? node.shape_position_dx))
       horizontal_positions[node.id] = h_index
 
       if (!nodes_per_horizontal_indexes[h_index]) {
@@ -1316,7 +1407,7 @@ export class NodePositioning {
     }
 
     // Appliquer les ajustements pour chaque colonne
-    const v_margin = this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
+    const v_margin = v_spacing ?? this.drawingArea.sankey.styles_dict['default'].shape_position_dy!
     let total_adjustments = 0
 
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
@@ -1333,12 +1424,15 @@ export class NodePositioning {
 
       // Appliquer les ajustements
       Object.keys(column_adjustments).forEach(node_id => {
+        const node_ref = this.drawingArea.sankey.nodes_dict[node_id]
+        // Ne pas déplacer un nœud verrouillé verticalement : son ordre doit être préservé.
+        if (node_ref.shape_position_v_locked === true) return
         const adjustment = column_adjustments[node_id]
         if (Math.abs(adjustment) > 0.1) { // Seuil minimum pour éviter les micro-ajustements
-          const current_y = this.drawingArea.sankey.nodes_dict[node_id].position_y
+          const current_y = node_ref.position_y
           const new_y = Math.max(0, current_y + adjustment) // Éviter les Y négatifs
 
-          this.drawingArea.sankey.nodes_dict[node_id].position_y = new_y
+          node_ref.position_y = new_y
           total_adjustments++
 
           console.log(`📍 Ajustement ${node_id}: ${current_y.toFixed(1)} → ${new_y.toFixed(1)} (${adjustment > 0 ? '+' : ''}${adjustment.toFixed(1)})`)
@@ -1385,7 +1479,7 @@ export class NodePositioning {
     // Analyser chaque flux
     this.drawingArea.sankey.visible_links_list.forEach(link => {
       if (link.shape_is_recycling) {
-        // Ignorer les liens de recyclage 
+        // Ignorer les liens de recyclage
         return
       }
       const source_pos = horizontal_positions[link.source.id]
@@ -1630,8 +1724,360 @@ export class NodePositioning {
   // PARAMETRIZATION METHODS ============================================================
 
   /**
+   * Empile verticalement une liste de nœuds en partant d'une ancre (top du premier
+   * nœud). Invariant canonique du mode paramétrique :
+   *
+   *   n_0.y = anchor_y
+   *   n_{i+1}.y = n_i.y + n_i.height + n_{i+1}.shape_position_dy
+   *
+   * `shape_position_dy` est lu sur chaque nœud (cascade de style respectée) et est
+   * la **seule** source de vérité pour l'espacement. Le dy du premier nœud est
+   * ignoré (il n'a pas de prédécesseur). `applyPosition()` est appelé sur chaque
+   * nœud après la mise à jour.
+   *
+   * L'ordre des nœuds est celui de la liste passée — à trier par le caller selon
+   * son propre critère (position_v, position_y, etc.).
+   */
+  public static stackNodesVertically(nodes: Class_NodeElement[], anchor_y: number) {
+    let cursor_y = anchor_y
+    nodes.forEach((node, i) => {
+      if (i > 0) cursor_y += node.shape_position_dy ?? 0
+      node.position_y = cursor_y
+      node.applyPosition()
+      cursor_y += node.getShapeHeightToUse()
+    })
+  }
+
+  /**
+   * Hauteur totale de la pile produite par `stackNodesVertically` :
+   * somme des hauteurs + somme des `shape_position_dy` des nœuds (sauf le premier).
+   */
+  public static totalStackHeight(nodes: Class_NodeElement[]): number {
+    return nodes.reduce((sum, n, i) => {
+      return sum + n.getShapeHeightToUse() + (i > 0 ? (n.shape_position_dy ?? 0) : 0)
+    }, 0)
+  }
+
+  /**
+   * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
+   *
+   * Traite une colonne (ensemble de nœuds visibles partageant un même
+   * `position_u`) comme une pile verticale triée par `position_v` croissant,
+   * ancrée sur le `position_y` courant du nœud de plus petit V, et espacée
+   * par `shape_position_dy` via `stackNodesVertically` (cf. PR 2).
+   *
+   * **Responsabilité stricte : empilement géométrique uniquement.** `position_v`
+   * est supposé déjà à jour à l'entrée — les call sites qui ont besoin de le
+   * recalculer (nouveau diagramme, bascule de mode, data tag change) doivent
+   * appeler `computeParametricV` avant. Cette séparation des responsabilités
+   * était le point 1 de la discussion PR 3 : V est une donnée métier, le
+   * recompute est un calcul géométrique pur.
+   *
+   * **Limitation de l'étape 1 (ce commit)** : les containers ne sont **pas**
+   * traités récursivement. Les nœuds enfants d'un container (i.e. ceux avec
+   * `dimensions_as_child.some(d => d.container_mode)`) sont exclus du
+   * stacking de colonne — l'ancien chemin `Node.applyPosition` les prend en
+   * charge via sa logique `nodeAbove`. L'intégration récursive des
+   * containers comme sous-colonnes est prévue dans un commit ultérieur de
+   * PR 3.
+   *
+   * **Scopes supportés** :
+   * - `{ type: 'all' }` : toutes les colonnes top-level de la drawing area.
+   * - `{ type: 'column', u: number }` : une seule colonne (utile pour fin
+   *   de drag, désagrégation latérale).
+   * - `{ type: 'subtree', node }` : réservé à l'étape containers récursifs
+   *   (commit ultérieur) — non implémenté ici, lève une erreur explicite.
+   *
+   * Les nœuds « échange » (tag `type de noeud` / `echange`) sont exclus du
+   * stacking, comme dans tous les autres chemins paramétriques.
+   *
+   * **Dead code temporaire** : tant que `Node.applyPosition` n'est pas
+   * réduit à un pass-through, appeler `recomputeParametricLayout` n'a aucun
+   * effet visible — le prochain `applyPosition` écrase les positions qu'on
+   * vient de poser. C'est volontaire : ce commit ajoute uniquement la
+   * plomberie, la bascule de `applyPosition` et la migration des call sites
+   * viennent dans un commit séparé pour isoler les régressions éventuelles.
+   */
+  public recomputeParametricLayout(
+    scope: { type: 'all' } | { type: 'column', u: number } | { type: 'subtree', node: Class_NodeElement }
+  ) {
+    if (scope.type === 'subtree') {
+      throw new Error(
+        '[recomputeParametricLayout] scope \'subtree\' not implemented yet ' +
+        '— requires container recursion (future commit of PR 3).'
+      )
+    }
+
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    // --- Helpers ---
+
+    // A container is any node that is a parent of at least one dimension
+    // running in container_mode. Nested containers are handled recursively.
+    const isContainerParent = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_parent.some(d => d.container_mode)
+
+    // A "top-level" node for the column stacking is a visible, non-exchange
+    // node that is NOT itself sitting inside a container. Top-level nodes
+    // include: plain leaves, plain intermediates, AND top-level containers
+    // (containers that are not themselves children of another container).
+    // Container children — at any depth — are excluded; they are positioned
+    // by the recursive container descent pass.
+    const isTopLevel = (n: Class_NodeElement): boolean => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.dimensions_as_child.some(d => d.container_mode)) return false
+      return true
+    }
+
+    // Sort container children by position_v, with a stable tie-break on
+    // the current position_y so equal-V or unassigned-V (-1) nodes don't
+    // dance around between recomputes.
+    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] => {
+      return [...nodes].sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+    }
+
+    // Collect direct container children of a given container parent.
+    // Dedupes across multiple container_mode dimensions and keeps only
+    // visible non-exchange nodes (the rest do not contribute to the
+    // envelope).
+    const collectContainerChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+      const seen = new Set<Class_NodeElement>()
+      const children: Class_NodeElement[] = []
+      container.dimensions_as_parent
+        .filter(d => d.container_mode)
+        .forEach(dim => {
+          dim.children.forEach(child => {
+            const c = child as Class_NodeElement
+            if (seen.has(c)) return
+            seen.add(c)
+            if (!c.is_visible) return
+            if (echangeTag && c.hasGivenTag(echangeTag)) return
+            children.push(c)
+          })
+        })
+      return children
+    }
+
+    // --- Phase A : bottom-up sizing of nested containers ---
+    //
+    // Sets shape_min_height / shape_min_width of every container parent to
+    // the envelope size its (recursively-sized) children would produce,
+    // WITHOUT writing any position. Positions are decided in phase B and C.
+    //
+    // Recursion walks post-order: we need each child's final height before
+    // we can sum them into the enclosing container's envelope. For a leaf
+    // child, getShapeHeightToUse() already returns its intrinsic height.
+    const sized = new Set<Class_NodeElement>()
+    const sizeContainerRecursive = (container: Class_NodeElement) => {
+      if (sized.has(container)) return
+      sized.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      // Recurse first: each container-parent child must have its own
+      // envelope size computed before we read its height.
+      children.forEach(c => {
+        if (isContainerParent(c)) sizeContainerRecursive(c)
+      })
+      // Sum children heights + dy + top/bottom margins.
+      const stack_h = NodePositioning.totalStackHeight(children)
+      const envelope_h = stack_h + container.shape_margin_top + container.shape_margin_bottom
+      // Width: max of child widths + left/right margins. Container children
+      // are supposed to be aligned on the container's x axis in the current
+      // layout, so max(child.width) is a safe upper bound.
+      const max_child_w = children.reduce(
+        (m, c) => Math.max(m, c.getShapeWidthToUse()), 0
+      )
+      const envelope_w = max_child_w + container.shape_margin_left + container.shape_margin_right
+      container.shape_min_height = envelope_h
+      container.shape_min_width = envelope_w
+    }
+
+    // --- Phase B : top-level column stacking ---
+    //
+    // Collect every visible, non-exchange, non-container-child node. Group
+    // by position_u. For each column, sort by position_v (anchor = current
+    // y of the lowest-V node) and stack via stackNodesVertically. Top-level
+    // containers participate as normal nodes in this pass — their height
+    // is accurate after phase A.
+    const top_level_nodes = this.drawingArea.sankey.visible_nodes_list.filter(isTopLevel)
+    // Run phase A on every top-level container before we rely on their
+    // getShapeHeightToUse() in phase B.
+    top_level_nodes
+      .filter(isContainerParent)
+      .forEach(c => sizeContainerRecursive(c))
+
+    const columns = new Map<number, Class_NodeElement[]>()
+    top_level_nodes.forEach(n => {
+      if (scope.type === 'column' && n.position_u !== scope.u) return
+      const col = columns.get(n.position_u) ?? []
+      col.push(n)
+      columns.set(n.position_u, col)
+    })
+    columns.forEach(column => {
+      if (column.length === 0) return
+      const sorted = sortByV(column)
+      const anchor_y = sorted[0].position_y
+      NodePositioning.stackNodesVertically(sorted, anchor_y)
+    })
+
+    // --- Phase C : top-down positioning of container descendants ---
+    //
+    // Containers that participated in phase B may now have a different y
+    // than they had going in. Their children need to be re-stacked at the
+    // new (container.y + margin_top) anchor. Recursive: if a child is
+    // itself a container, we descend into it after positioning it.
+    const positioned = new Set<Class_NodeElement>()
+    const positionContainerChildrenRecursive = (container: Class_NodeElement) => {
+      if (positioned.has(container)) return
+      positioned.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      const anchor_y = container.position_y + container.shape_margin_top
+      NodePositioning.stackNodesVertically(children, anchor_y)
+      children.forEach(c => {
+        if (isContainerParent(c)) positionContainerChildrenRecursive(c)
+      })
+    }
+    // When the scope is 'column', only descend into top-level containers
+    // that live in the target column; the others retain their current
+    // (already-valid) descendant layout.
+    top_level_nodes
+      .filter(isContainerParent)
+      .filter(c => scope.type !== 'column' || c.position_u === scope.u)
+      .forEach(c => positionContainerChildrenRecursive(c))
+  }
+
+  /**
+   * Back-calcule `shape_position_dy` de chaque nœud visible depuis sa `position_y`
+   * absolue. Pour chaque colonne (groupée par `position_u`), les nœuds sont triés par
+   * y et le dy de chacun est déduit du gap avec le nœud précédent. Utilisé à la bascule
+   * absolu→paramétrique et en fin de drag pour que le déplacement vertical d'un nœud
+   * persiste (sinon `applyPosition` rappelle le nœud à sa position dérivée du dy).
+   * Retourne le nombre de chevauchements clampés (raw_dy < 0 → dy = 0).
+   */
+  public backCalculateShapePositionDyFromY(): number {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const visible_relevant = this.drawingArea.sankey.visible_nodes_list.filter(n =>
+      !echangeTag || !n.hasGivenTag(echangeTag)
+    )
+    const columns: { [u: number]: Class_NodeElement[] } = {}
+    visible_relevant.forEach(n => {
+      if (!(n.position_u in columns)) columns[n.position_u] = []
+      columns[n.position_u].push(n)
+    })
+    let overlap_count = 0
+    Object.values(columns).forEach(column => {
+      column.sort((a, b) => a.position_y - b.position_y)
+      for (let i = 1; i < column.length; i++) {
+        const prev = column[i - 1]
+        const curr = column[i]
+        const raw_dy = curr.position_y - (prev.position_y + prev.getShapeHeightToUse())
+        if (raw_dy < 0) overlap_count++
+        curr.shape_position_dy = Math.max(0, raw_dy)
+      }
+    })
+    return overlap_count
+  }
+
+  /**
+   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non
+   * verrouillés. À appeler explicitement aux endroits où une position absolue
+   * vient d'être modifiée (drop de ghost link, fin de drag, contraction). Ce
+   * calcul **ne fait plus partie** de `computeParametrization` pour éviter le
+   * couplage bidirectionnel u ↔ x qui faisait dériver les colonnes à chaque
+   * recalcul (notamment quand l'envelope d'un container modifie x).
+   *
+   * **Clustering plutôt que rounding indépendant (PR 3 step 5)** : l'ancienne
+   * implémentation faisait `u = Math.round(x / dx)` sur chaque nœud
+   * indépendamment. Deux nœuds visuellement alignés (à 1-2 px près) tombaient
+   * parfois de part et d'autre de la frontière de rounding (ex. x=1898.88 →
+   * u=9 et x=1901.47 → u=10 avec dx=200, frontière à 1900), ce qui les
+   * affectait à des colonnes différentes sans intention utilisateur.
+   *
+   * La nouvelle implémentation regroupe d'abord les nœuds en **clusters**
+   * (tri par x croissant, puis fusion glissante : un nœud rejoint le cluster
+   * courant si son x est à moins de `tolerance` du max-x du cluster), puis
+   * calcule un `u` commun par cluster. Conséquences :
+   *
+   * - Deux nœuds quasi alignés tombent dans le même cluster → même `u`,
+   *   toujours, peu importe où ils sont par rapport aux frontières de
+   *   rounding.
+   * - Un cluster contenant un nœud `u`-verrouillé hérite du `u` du verrou
+   *   (le verrou définit la colonne d'autorité).
+   * - Un cluster sans verrou calcule son `u` depuis le x moyen du cluster,
+   *   ce qui reste proche de l'ancien comportement pour les colonnes
+   *   bien-formées.
+   *
+   * `tolerance` est fixée à 5 % de `dx` (plafonnée à 10 px min), valeur bien
+   * au-dessus du bruit pixel et très en dessous d'une demi-colonne.
+   */
+  public inferPositionUFromX() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
+      this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
+    const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
+    const tolerance = Math.max(10, dx * 0.05)
+
+    // Nodes eligible for u assignment: visible and not tagged as "échange".
+    // u-locked nodes are kept in the cluster (they anchor the u value) but
+    // their u is not overwritten below.
+    const eligible = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      return true
+    })
+    if (eligible.length === 0) return
+
+    // Sliding merge clustering: sort by x, then walk forward and start a new
+    // cluster whenever the gap to the current cluster's max-x exceeds
+    // `tolerance`. The max-x (not the starting x) is the right reference: a
+    // chain of nodes each within `tolerance` of the previous one should form
+    // a single cluster even if the head-to-tail distance exceeds `tolerance`.
+    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
+    const clusters: Class_NodeElement[][] = []
+    let current: Class_NodeElement[] = []
+    let current_max_x = -Infinity
+    for (const node of sorted) {
+      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
+        current.push(node)
+        if (node.position_x > current_max_x) current_max_x = node.position_x
+      } else {
+        clusters.push(current)
+        current = [node]
+        current_max_x = node.position_x
+      }
+    }
+    if (current.length > 0) clusters.push(current)
+
+    // For each cluster, decide the u once, then apply to every non-locked
+    // member. A cluster containing a u-locked node inherits its u; otherwise
+    // we compute u from the cluster's mean x.
+    for (const cluster of clusters) {
+      const locked = cluster.find(n => n.shape_position_u_locked === true)
+      let cluster_u: number
+      if (locked) {
+        cluster_u = locked.position_u
+      } else {
+        const mean_x = cluster.reduce((sum, n) => sum + n.position_x, 0) / cluster.length
+        cluster_u = Math.round(mean_x / dx)
+      }
+      cluster.forEach(n => {
+        if (n.shape_position_u_locked !== true) n.position_u = cluster_u
+      })
+    }
+  }
+
+  /**
   * Computes u,v for nodes in the drawing area
   * Utilise l'algorithme amélioré
+  *
+  * Quand `use_horizontal_index` est true, `position_u` est recalculé via l'analyse
+  * topologique (detectAllCyclesAndOptimize). Sinon, `position_u` est supposé déjà
+  * à jour (ne plus dériver depuis x ici — appeler `inferPositionUFromX` côté caller
+  * si nécessaire).
   */
   public computeParametrization(use_horizontal_index: boolean) {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
@@ -1639,18 +2085,16 @@ export class NodePositioning {
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
 
-    // Utiliser l'algorithme amélioré
+    // Locked nodes keep their existing position_u so the user can pin a node to a
+    // specific column across recomputes.
     if (use_horizontal_index) {
       const result = this.detectAllCyclesAndOptimize(nodes_to_process)
       const horizontal_indexes_per_nodes_ids = result.horizontal_indexes
 
       nodes_to_process.forEach(node => {
+        if (node.shape_position_u_locked === true) return
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.position_u = node_index + 1
-      })
-    } else {
-      nodes_to_process.forEach(node => {
-        node.position_u = Math.round(node.position_x / this.drawingArea.sankey.styles_dict['default'].shape_position_dx!)
       })
     }
     const first_level_tagg = this.drawingArea.sankey.level_taggs_list.filter(
@@ -1675,7 +2119,7 @@ export class NodePositioning {
     //     }
     //   })
 
-    //   // Sort output links based on target node position_v  
+    //   // Sort output links based on target node position_v
     //   const sorted_output_links = node.output_links_list.sort((link1, link2) => {
     //     const target1_v = link1.target.position_v
     //     const target2_v = link2.target.position_v
@@ -1710,7 +2154,7 @@ export class NodePositioning {
     //     ...import_links,        // Import links first
     //     ...regular_input_links, // Regular input links
     //     ...other_links,         // Other links (like recycling)
-    //     ...regular_output_links,// Regular output links  
+    //     ...regular_output_links,// Regular output links
     //     ...export_links         // Export links last
     //   ]
 
@@ -1743,7 +2187,9 @@ export class NodePositioning {
       column.sort((n1, n2) => n1.position_y - n2.position_y)
       let current_v = 0
       column.forEach(n => {
-        n.position_v = -1
+        if (n.shape_position_v_locked !== true) {
+          n.position_v = -1
+        }
         current_v = this.applyVDesagregate(n, current_v, tag)
       })
     })
@@ -1760,7 +2206,13 @@ export class NodePositioning {
       Object.values(columns).forEach(column => {
         column.sort((n1, n2) => n1.position_y - n2.position_y)
         let current_v = 0
-        column.forEach(n => n.position_v = current_v++)
+        column.forEach(n => {
+          if (n.shape_position_v_locked === true) {
+            current_v++
+            return
+          }
+          n.position_v = current_v++
+        })
       })
     }
 
@@ -1841,7 +2293,14 @@ export class NodePositioning {
   /**
    * Auto-compute sankey with waiting toast
    */
-  public computeAutoSankeyWithToast(launched_from_process: boolean, optimize_crossing: boolean) {
+  public computeAutoSankeyWithToast(
+    launched_from_process: boolean,
+    optimize_crossing: boolean,
+    h_spacing?: number,
+    v_spacing?: number,
+    sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+  ) {
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
     if (!launched_from_process) {
@@ -1864,7 +2323,7 @@ export class NodePositioning {
     }
 
     // Compute auto pos of nodes
-    this.computeAutoSankey(launched_from_process, optimize_crossing)
+    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     this.computeParametrization(true)
 
     if (launched_from_process) {
@@ -1894,8 +2353,10 @@ export class NodePositioning {
     this.drawingArea.to_recenter = true
     this.drawingArea.recenter()
     this.drawingArea.to_recenter = false
+    // this.drawingArea.draw()
     // Update area
-    //this.drawingArea.areaAutoFit()
+    this.drawingArea.areaAutoFit()
+    this.drawingArea.draw()
     // Toggle saving indicator
     this.drawingArea.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
 
@@ -1940,8 +2401,8 @@ export class NodePositioning {
   }
 
   /**
-   * Calcule automatiquement la valeur de shape_middle_recycling pour que le flux 
-   * de recyclage passe sous les nœuds à gauche du nœud source (mais pas ceux qui 
+   * Calcule automatiquement la valeur de shape_middle_recycling pour que le flux
+   * de recyclage passe sous les nœuds à gauche du nœud source (mais pas ceux qui
    * sont dessous et non connectés)
    */
   private computeRecyclingMiddleShape(

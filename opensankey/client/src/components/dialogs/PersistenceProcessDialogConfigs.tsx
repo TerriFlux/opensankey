@@ -167,6 +167,99 @@ export const translations = {
       fr: 'Onglets excel à ignorer'
     },
 
+    layout_section: {
+      en: 'Layout',
+      fr: 'Mise en page'
+    },
+    layout_from_displayed: {
+      en: 'From displayed sankey',
+      fr: 'A partir du sankey affiché'
+    },
+    layout_from_displayed_tt: {
+      en: 'Keep node positions from the currently displayed sankey instead of computing a new layout',
+      fr: 'Conserver les positions des nœuds du sankey actuellement affiché au lieu de calculer une nouvelle mise en page'
+    },
+    layout_h_spacing: {
+      en: 'Horizontal spacing',
+      fr: 'Ecart horizontal'
+    },
+    layout_h_spacing_tt: {
+      en: 'Horizontal distance (in pixels) between node columns',
+      fr: 'Distance horizontale (en pixels) entre les colonnes de nœuds'
+    },
+    layout_v_spacing: {
+      en: 'Vertical spacing',
+      fr: 'Ecart vertical'
+    },
+    layout_v_spacing_tt: {
+      en: 'Vertical distance (in pixels) between nodes within the same column',
+      fr: 'Distance verticale (en pixels) entre les nœuds d\'une même colonne'
+    },
+    layout_sources: {
+      en: 'Source nodes',
+      fr: 'Nœuds sans entrée'
+    },
+    layout_sources_tt: {
+      en: 'Placement of nodes with no incoming flow: just before their first successor, or pinned to the left extremity of the diagram',
+      fr: 'Placement des nœuds sans flux entrant : juste avant leur premier successeur, ou collés à l\'extrémité gauche du diagramme'
+    },
+    layout_sinks: {
+      en: 'Sink nodes',
+      fr: 'Nœuds sans sortie'
+    },
+    layout_sinks_tt: {
+      en: 'Placement of nodes with no outgoing flow: just after their last predecessor, or pinned to the right extremity of the diagram',
+      fr: 'Placement des nœuds sans flux sortant : juste après leur dernier prédécesseur, ou collés à l\'extrémité droite du diagramme'
+    },
+    layout_before_neighbor: {
+      en: 'Column before neighbor',
+      fr: 'Colonne avant voisin'
+    },
+    layout_left_extremity: {
+      en: 'Left extremity',
+      fr: 'Extrémité gauche'
+    },
+    layout_after_neighbor: {
+      en: 'Column after neighbor',
+      fr: 'Colonne après voisin'
+    },
+    layout_right_extremity: {
+      en: 'Right extremity',
+      fr: 'Extrémité droite'
+    },
+    layout_mode: {
+      en: 'Mode',
+      fr: 'Mode'
+    },
+    layout_mode_tt: {
+      en: 'Center: vertical centering of nodes within each column. Minimize crossings: tries to reduce the number of link crossings (slower)',
+      fr: 'Centrer : centrage vertical des nœuds dans chaque colonne. Minimiser les croisements : tente de réduire le nombre de croisements de flux (plus lent)'
+    },
+    layout_center: {
+      en: 'Center nodes',
+      fr: 'Centrer les nœuds'
+    },
+    layout_minimize: {
+      en: 'Minimize crossings',
+      fr: 'Minimiser les croisements'
+    },
+    layout_reset: {
+      en: 'Reset to default',
+      fr: 'Réinitialiser au défaut'
+    },
+    layout_reset_tt: {
+      en: 'Reset all layout options to their default values',
+      fr: 'Remettre toutes les options de mise en page à leurs valeurs par défaut'
+    },
+    layout_apply: {
+      en: 'Apply layout',
+      fr: 'Mise en page'
+    },
+    layout_apply_tt: {
+      en: 'Run the automatic layout computation with the options above',
+      fr: 'Lancer le calcul de la mise en page automatique avec les options ci-dessus'
+    },
+
     input_options: {
       en: 'Input file options',
       fr: 'Options d\'entrée'

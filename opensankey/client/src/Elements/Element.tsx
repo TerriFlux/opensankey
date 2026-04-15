@@ -557,9 +557,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
     key: keyof ConfigType,
     value: string | number | boolean | undefined
   ): boolean {
-    return this.getStylesWithAttr(key).length > 1 || value !== undefined && value !== '' && value !== this.getStyleProperty(key)
-    // else if (default_style) return value !== undefined && value !== default_style[key]
-    // else return value !== undefined && value !== this._config[key].default
+    return this.getStylesWithAttr(key).length > 1 || (value !== undefined && value !== this.getStyleProperty(key))
   }
 
   public useDefaultStyle() {
@@ -760,6 +758,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
   value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
   value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+  value_label_in_out_display_mode!: ValueLabelAttributeTypes['in_out_display_mode']
 
   // Units
   value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
@@ -809,6 +808,8 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_position_u_locked!: boolean
+  shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
   shape_margin_top!: ShapeAttributeTypes['margin_top']
   shape_margin_left!: ShapeAttributeTypes['margin_left']
@@ -1058,6 +1059,7 @@ export class Class_ElementStyle {
   value_label_nb_significant_digits!: ValueLabelAttributeTypes['nb_significant_digits']
   value_label_custom_digit!: ValueLabelAttributeTypes['custom_digit']
   value_label_nb_digit!: ValueLabelAttributeTypes['nb_digit']
+  value_label_in_out_display_mode!: ValueLabelAttributeTypes['in_out_display_mode']
 
   // Units
   value_label_unit_visible!: ValueLabelAttributeTypes['unit_visible']
@@ -1121,6 +1123,8 @@ export class Class_ElementStyle {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_position_u_locked!: boolean
+  shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
   shape_margin_top!: ShapeAttributeTypes['margin_top']
   shape_margin_left!: ShapeAttributeTypes['margin_left']
@@ -1189,10 +1193,10 @@ export class Class_ElementStyle {
   public isAttributeOverloaded(
     attr: keyof ConfigType
   ) {
-    if (this._default_style) {
-      return this._storage[attr] !== undefined && this._storage[attr] !== this._default_style[attr as keyof Class_ElementStyle]
+    if (!this._default_style ) {
+      return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
     }
-    return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
+    return true
   }
 
   public delete() {

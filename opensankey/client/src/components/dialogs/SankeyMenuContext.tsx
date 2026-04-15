@@ -30,7 +30,7 @@ import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
-import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock } from './MenuContextWidgetFactory'
+import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock, MenuContextAutoLayout, MenuContextResetVerticalIntervals } from './MenuContextWidgetFactory'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
 
@@ -347,6 +347,22 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                     }
                   }]
                 },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInChildrenOutParent_${dim.parent.id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInParentOutChildren_${dim.parent.id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `unsetContainerMode_${dim.parent.id}`,
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: () => !!dim.container_mode
+                  }]
+                },
               ]
             }))
           }
@@ -392,6 +408,22 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                       if (!app_data.has_sankey_dev) return false
                       return true
                     }
+                  }]
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInChildrenOutParent_${dim.children[0].id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInParentOutChildren_${dim.children[0].id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `unsetContainerMode_${dim.children[0].id}`,
+                  visibilityConditions: [{
+                    type: 'custom',
+                    customCheck: () => !!dim.container_mode
                   }]
                 }
               ]
@@ -749,6 +781,8 @@ widgetRegistry.register('ButtonLinkContextAssignTag', ButtonLinkContextAssignTag
 widgetRegistry.register('ButtonNodeContextAssignTag', ButtonNodeContextAssignTag as WidgetComponent)
 widgetRegistry.register('ButtonContainerContextAssignStyle', ButtonContainerContextAssignStyle as WidgetComponent)
 widgetRegistry.register('MenuContextNodeStock', MenuContextNodeStock as WidgetComponent)
+widgetRegistry.register('MenuContextAutoLayout', MenuContextAutoLayout as WidgetComponent)
+widgetRegistry.register('MenuContextResetVerticalIntervals', MenuContextResetVerticalIntervals as WidgetComponent)
 
 interface WidgetRendererProps {
   widgetName: string

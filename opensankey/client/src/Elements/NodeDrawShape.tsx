@@ -25,6 +25,7 @@
 // ==================================================================================================
 
 import { Class_NodeBase } from './NodeBase'
+import type { Class_NodeElement } from './Node'
 
 type draw_arrow_partFType = (
   node_face_size: number,
@@ -141,6 +142,15 @@ export class NodeDrawShape {
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('transform', 'translate(' + -1* margin_left + ',' + -1*margin_top+ ')')
 
+    // Nodes acting as an enclosing container for their aggregation
+    // children must let pointer events fall through their interior so
+    // the children underneath stay clickable. Only the border catches
+    // clicks in that case. dimensions_as_parent only exists on
+    // Class_NodeElement, hence the guard + cast.
+    const node_as_element = this._node as unknown as Class_NodeElement
+    const is_container_parent = Array.isArray(node_as_element.dimensions_as_parent) &&
+      node_as_element.dimensions_as_parent.some(d => d.container_mode)
+
     // Apply common properties
     this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
@@ -150,6 +160,7 @@ export class NodeDrawShape {
       .attr('stroke-width', this._node.shape_border_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
+      .attr('pointer-events', is_container_parent ? 'visibleStroke' : null)
   }
 
   /**

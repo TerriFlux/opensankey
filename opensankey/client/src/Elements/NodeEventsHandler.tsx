@@ -37,6 +37,13 @@ export class NodeEventsHandler {
   private _node: Class_NodeBase
   private bbox: DOMRect | undefined = undefined
 
+  // Shift+drag axis lock (SankeyMatic-style): while shift is held, once enough
+  // motion has accumulated, the drag is constrained to whichever axis was
+  // dominant. Releasing shift clears the lock.
+  private _shift_lock_axis: 'x' | 'y' | null = null
+  private _shift_acc_dx: number = 0
+  private _shift_acc_dy: number = 0
+
   constructor(node: Class_NodeBase) {
     this._node = node
   }
@@ -195,10 +202,13 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
   /**
    * Define event when mouse drag element starts
    */
-  public handleMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    if (event.sourceEvent.shiftKey) {
-      return
-    }
+  public handleMouseDragStart(_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Reset the shift axis-lock tracker at the start of each drag so a new
+    // gesture always starts free; the lock is established later in
+    // handleMouseDrag once motion exceeds the threshold.
+    this._shift_lock_axis = null
+    this._shift_acc_dx = 0
+    this._shift_acc_dy = 0
 
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
@@ -244,6 +254,42 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
    * Define event when mouse drag element
    */
   public handleMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    // Shift+drag axis lock (SankeyMatic-style). Releasing shift mid-drag
+    // releases the lock; re-pressing it re-picks the axis from subsequent
+    // motion. The first axis choice waits until ~4 px of cumulative motion so
+    // tiny jitter at the start of a gesture does not pick the wrong direction.
+    if (event.sourceEvent.shiftKey) {
+      this._shift_acc_dx += event.dx
+      this._shift_acc_dy += event.dy
+      if (this._shift_lock_axis === null) {
+        const threshold_sq = 16
+        if (this._shift_acc_dx * this._shift_acc_dx + this._shift_acc_dy * this._shift_acc_dy >= threshold_sq) {
+          this._shift_lock_axis = Math.abs(this._shift_acc_dx) >= Math.abs(this._shift_acc_dy) ? 'x' : 'y'
+        }
+      }
+      // d3 DragEvent defines dx/dy as non-writable (but configurable), so we
+      // must redefine instead of assigning. We keep the property writable
+      // afterwards in case anything downstream tries to mutate it.
+      let new_dx = event.dx
+      let new_dy = event.dy
+      if (this._shift_lock_axis === 'x') {
+        new_dy = 0
+      } else if (this._shift_lock_axis === 'y') {
+        new_dx = 0
+      } else {
+        // Not enough motion yet to decide — suppress movement entirely so the
+        // first few px don't leak as an off-axis slide.
+        new_dx = 0
+        new_dy = 0
+      }
+      Object.defineProperty(event, 'dx', { value: new_dx, enumerable: true, configurable: true, writable: true })
+      Object.defineProperty(event, 'dy', { value: new_dy, enumerable: true, configurable: true, writable: true })
+    } else if (this._shift_lock_axis !== null || this._shift_acc_dx !== 0 || this._shift_acc_dy !== 0) {
+      this._shift_lock_axis = null
+      this._shift_acc_dx = 0
+      this._shift_acc_dy = 0
+    }
+
     // Get related drawing area
     const drawing_area = this._node.drawing_area
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
@@ -288,36 +334,64 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     // Reset current tracked node shift
     this._node.resetNodeCurrentDelta()
 
-    if (event.sourceEvent.shiftKey) {
-      return
-    }
+    // Clear the shift axis-lock tracker; if the next drag starts with shift
+    // held, handleMouseDragStart will re-initialize it.
+    this._shift_lock_axis = null
+    this._shift_acc_dx = 0
+    this._shift_acc_dy = 0
 
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
 
-    // If we moved 'this' node then we save nodes dragged previous pos in undo & current pos in redo
-    // it is done here because we don't know in eventMouseDragStart & eventMouseDragEnd if we aren't simply selecting the node
-    if (dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)) {
-      function undo(_: Class_ProtoElement) {
-        Object.keys(dict_old_pos).forEach(k => {
-          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
-          if (!n) {
-            n = _.drawing_area.sankey.containers_dict[k]
-          }
-          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
-        })
-      }
-      this._node.saveUndo(undo)
-      this.saveRedoAtEventMouseDragEnd()
-    }
+    // Did the drag actually move 'this' node? If yes we'll save one combined undo/redo
+    // step (positions + IO link orders) at the very end of this handler, once positions
+    // are final and the auto-reorganization has been applied.
+    const position_changed = dict_old_pos[this._node.id][0] !== this._node.position_x && (dict_old_pos[this._node.id][1] !== this._node.position_y)
 
     // End of drag
     this._node.setDragState(false)
 
-    // Move all elements so none of them are outside the DA
+    // Settle the drag in parametric mode (PR 3 step 4).
+    //
+    // The settle is a sequence of operations that, together, reinterpret the
+    // current absolute node positions (the result of the user's drag) back
+    // into parametric metadata (position_u, position_v, shape_position_dy) so
+    // that the next `recomputeParametricLayout` pass reproduces exactly those
+    // positions — plus any container-envelope adjustments implied by the
+    // drag.
+    //
+    // 1. Re-infer position_u from the dragged node's x (u-locked nodes are
+    //    skipped by inferPositionUFromX).
+    // 2. Reset position_v for non-v-locked nodes so computeParametricV can
+    //    reassign V from the new spatial y-order in each column. This is
+    //    where a neighbor-crossing drag triggers an implicit V swap — sort
+    //    by y, assign V top to bottom.
+    // 3. computeParametricV rewrites V across the whole drawing area.
+    // 4. backCalculateShapePositionDyFromY adjusts shape_position_dy per node
+    //    so that the canonical stack invariant
+    //    `y_{i+1} = y_i + h_i + dy_{i+1}` reproduces the current spatial
+    //    positions. Negative raw dy (overlap) is clamped to 0.
+    // 5. Trigger drawElements explicitly so the next
+    //    recomputeParametricLayout pass runs right now, re-stacking through
+    //    phases A/B/C (including container recursion). Without this, the
+    //    re-stack only happens on the next user interaction, which can make
+    //    the drag feel half-applied.
+    //
+    // Known limitation: dragging the lowest-V child of a container snaps it
+    // back to the container's anchor (`container.y + shape_margin_top`) on
+    // re-stack. Dragging any other child works as expected. Fixing the
+    // first-child case requires either deriving Phase C's anchor from the
+    // first child's current y (and propagating to container.y) or moving the
+    // container itself — neither is worth the complexity until a real user
+    // flow needs it.
     if (this._node.sankey.default_style.shape_position_type == 'parametric') {
-      this._node.drawing_area.sankey.nodes_list.forEach(n => n.position_v = -1)
+      this._node.drawing_area.sankey.nodes_list.forEach(n => {
+        if (n.shape_position_v_locked !== true) n.position_v = -1
+      })
+      this._node.drawing_area.nodePositioning.inferPositionUFromX()
       this._node.drawing_area.nodePositioning.computeParametrization(false)
+      this._node.drawing_area.nodePositioning.backCalculateShapePositionDyFromY()
+      this._node.drawing_area.drawElements()
     }
 
     const drawing_area = this._node.drawing_area
@@ -366,6 +440,87 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
           }
         }
       }
+    }
+
+    // Auto-reorganize IO links + save one combined undo/redo step covering both
+    // positions and link orders, so that undo restores the pre-drag layout fully.
+    if (position_changed) {
+      // Collect moved nodes and their connected neighbours (skipping containers,
+      // which do not expose reorganizeIOLinks).
+      const nodes_to_reorganize = new Set<Class_NodeElement>()
+      Object.keys(dict_old_pos).forEach(id => {
+        const n = drawing_area.sankey.nodes_dict[id] as Class_NodeElement | undefined
+        if (!n || typeof n.reorganizeIOLinks !== 'function') return
+        const [old_x, old_y] = dict_old_pos[id]
+        if (n.position_x === old_x && n.position_y === old_y) return
+        nodes_to_reorganize.add(n)
+        n.input_links_list.forEach(l => {
+          const s = l.source as Class_NodeElement
+          if (s && typeof s.reorganizeIOLinks === 'function') nodes_to_reorganize.add(s)
+        })
+        n.output_links_list.forEach(l => {
+          const t = l.target as Class_NodeElement
+          if (t && typeof t.reorganizeIOLinks === 'function') nodes_to_reorganize.add(t)
+        })
+      })
+
+      // Snapshot old link orders BEFORE reorganization — needed by undo.
+      const dict_old_orders: { [nodeId: string]: string[] } = {}
+      nodes_to_reorganize.forEach(n => {
+        dict_old_orders[n.id] = n.links_order.map(l => l.id)
+      })
+
+      // Apply spatial reorganization.
+      nodes_to_reorganize.forEach(n => n.reorganizeIOLinks())
+
+      // Snapshot new link orders AFTER reorganization — needed by redo.
+      const dict_new_orders: { [nodeId: string]: string[] } = {}
+      nodes_to_reorganize.forEach(n => {
+        dict_new_orders[n.id] = n.links_order.map(l => l.id)
+      })
+
+      // Snapshot final positions for redo (captures the true post-drag state,
+      // including any late setPosXY adjustments above).
+      const dict_new_pos: { [x: string]: [number, number] } = {}
+      Object.keys(dict_old_pos).forEach(k => {
+        let n = drawing_area.sankey.nodes_dict[k] as Class_NodeBase | undefined
+        if (!n) n = drawing_area.sankey.containers_dict[k] as Class_NodeBase | undefined
+        if (n) dict_new_pos[k] = [n.position_x, n.position_y]
+      })
+
+      function undo(_: Class_ProtoElement) {
+        Object.keys(dict_old_pos).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1])
+        })
+        Object.keys(dict_old_orders).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
+          if (n && typeof n.reorganizeIOFromListIds === 'function') {
+            n.reorganizeIOFromListIds(dict_old_orders[k])
+            n.draw()
+          }
+        })
+      }
+
+      function redo(_: Class_ProtoElement) {
+        Object.keys(dict_new_pos).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1])
+        })
+        Object.keys(dict_new_orders).forEach(k => {
+          const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
+          if (n && typeof n.reorganizeIOFromListIds === 'function') {
+            n.reorganizeIOFromListIds(dict_new_orders[k])
+            n.draw()
+          }
+        })
+        _.drawing_area.areaAutoFit()
+      }
+
+      this._node.saveUndo(undo)
+      this._node.saveRedo(redo)
     }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
@@ -513,38 +668,4 @@ private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_
     }
   }
 
-  /**
-   * Function to save redo of nodes dragged into data history
-   */
-  private saveRedoAtEventMouseDragEnd() {
-    // Get related drawing area
-    const drawing_area = this._node.drawing_area
-    const nodes_selected = this._node.selected_elements_list
-
-    if (nodes_selected.includes(this._node)) {
-      const dict_old_pos: { [x: string]: [number, number] } = {}
-      // Memorize for redo
-      nodes_selected.forEach(n => {
-        dict_old_pos[n.id] = [n.position_x, n.position_y]
-      })
-      // Redo function
-      function redo() {
-        nodes_selected.forEach(n => {
-          n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1])
-        })
-        drawing_area.areaAutoFit()
-      }
-      this._node.saveRedo(redo)
-    } else {
-      // Memorize for redo
-      const old_x = this._node.position_x
-      const old_y = this._node.position_y
-      // Redo function
-      function redo(_: Class_ProtoElement) {
-        _.setPosXY(old_x, old_y)
-        drawing_area.areaAutoFit()
-      }
-      this._node.saveRedo(redo)
-    }
-  }
 }

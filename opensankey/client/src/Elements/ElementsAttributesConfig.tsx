@@ -1179,6 +1179,21 @@ export const BASE_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  in_out_display_mode: {
+    default: 'both' as 'both' | 'in' | 'out',
+    type: (() => 'both') as (() => 'both' | 'in' | 'out'),
+    category: 'value_label' as const,
+    actions: ['drawValueLabel'] as BaseActionType[],
+    labels: {
+      en: 'In/Out totals',
+      fr: 'Totaux entrants/sortants'
+    },
+    tooltips: {
+      en: 'When incoming total differs from outgoing: show both (in→out), only incoming, or only outgoing',
+      fr: 'Quand le total entrant diffère du sortant : afficher les deux (entrant→sortant), uniquement l\'entrant, ou uniquement le sortant'
+    }
+  } satisfies AttributeConfig<'both' | 'in' | 'out'>,
+
   // Units
   unit_visible: {
     default: false as boolean,
@@ -1744,6 +1759,34 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     tooltips: {
       en: 'Visibility of orphan nodes',
       fr: 'Visibilité des noeuds orphelins'
+    }
+  } satisfies AttributeConfig<boolean>,
+  position_u_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Lock column',
+      fr: 'Verrouiller la colonne'
+    },
+    tooltips: {
+      en: 'When locked, autosankey compute will keep this node\'s column index (u) instead of recomputing it.',
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.'
+    }
+  } satisfies AttributeConfig<boolean>,
+  position_v_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Lock row',
+      fr: 'Verrouiller la ligne'
+    },
+    tooltips: {
+      en: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.'
     }
   } satisfies AttributeConfig<boolean>,
 } as const

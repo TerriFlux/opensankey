@@ -25,11 +25,11 @@
 // ==================================================================================================
 
 import React, { useState } from 'react'
-import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text } from '@chakra-ui/react'
+import { MenuList, MenuButton, MenuItem, Menu, Box, Checkbox, Text, Select } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Button } from '@chakra-ui/react'
 
-import { ConfigMenuNumberInput} from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { default_value_option } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { value_option_percent_constants } from '../../Elements/LinkValues'
@@ -360,6 +360,195 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
         </MenuList>
       </Menu></> :
     <></>
+}
+
+/**
+ * Shared spacing inputs for the auto-layout widgets and the Excel import dialog.
+ * Reads/writes app_data.layout_h_spacing / layout_v_spacing (session-only).
+ * `null` means "use the style default".
+ */
+export const AutoLayoutSpacingInputs = ({
+  app_data,
+  show_horizontal = true,
+  show_extremities = false,
+  show_optimize_mode = false,
+  label_min_width = '100px'
+}: {
+  app_data: Class_ApplicationData,
+  show_horizontal?: boolean,
+  show_extremities?: boolean,
+  show_optimize_mode?: boolean,
+  label_min_width?: string
+}) => {
+  const { drawing_area } = app_data
+  const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
+  const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+  const [, setTick] = useState(0)
+  const redraw = () => setTick((t) => t + 1)
+
+  const h_value = app_data.layout_h_spacing ?? default_dx
+  const v_value = app_data.layout_v_spacing ?? default_dy
+
+  const resetToDefault = () => {
+    app_data.layout_h_spacing = null
+    app_data.layout_v_spacing = null
+    if (show_extremities) {
+      app_data.layout_sources_mode = 'before_neighbor'
+      app_data.layout_sinks_mode = 'after_neighbor'
+    }
+    if (show_optimize_mode) {
+      app_data.layout_optimize_crossing = true
+    }
+    redraw()
+  }
+
+  const t = app_data.t
+  return <Box display='flex' flexDirection='column' gap='4px'>
+    {show_horizontal && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_h_spacing_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_h_spacing')}</Text>
+      </OSTooltip>
+      <ConfigMenuNumberInput
+        t={t}
+        default_value={h_value}
+        function_on_blur={(v) => {
+          app_data.layout_h_spacing = (v !== undefined && v !== default_dx) ? v : null
+          redraw()
+        }}
+        stepper={true}
+        step={10}
+        minimum_value={0}
+        unit_text='px'
+      />
+    </Box>}
+    <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_v_spacing_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_v_spacing')}</Text>
+      </OSTooltip>
+      <ConfigMenuNumberInput
+        t={t}
+        default_value={v_value}
+        function_on_blur={(v) => {
+          app_data.layout_v_spacing = (v !== undefined && v !== default_dy) ? v : null
+          redraw()
+        }}
+        stepper={true}
+        step={10}
+        minimum_value={0}
+        unit_text='px'
+      />
+    </Box>
+    {show_extremities && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_sources_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_sources')}</Text>
+      </OSTooltip>
+      <Select
+        size='xs'
+        value={app_data.layout_sources_mode}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          app_data.layout_sources_mode = e.target.value as 'before_neighbor' | 'left_extremity'
+          redraw()
+        }}
+      >
+        <option value='before_neighbor'>{t('ProcessDialog.layout_before_neighbor')}</option>
+        <option value='left_extremity'>{t('ProcessDialog.layout_left_extremity')}</option>
+      </Select>
+    </Box>}
+    {show_extremities && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_sinks_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_sinks')}</Text>
+      </OSTooltip>
+      <Select
+        size='xs'
+        value={app_data.layout_sinks_mode}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          app_data.layout_sinks_mode = e.target.value as 'after_neighbor' | 'right_extremity'
+          redraw()
+        }}
+      >
+        <option value='after_neighbor'>{t('ProcessDialog.layout_after_neighbor')}</option>
+        <option value='right_extremity'>{t('ProcessDialog.layout_right_extremity')}</option>
+      </Select>
+    </Box>}
+    {show_optimize_mode && <Box display='flex' alignItems='center' gap='4px'>
+      <OSTooltip label={t('ProcessDialog.layout_mode_tt')}>
+        <Text fontSize='xs' whiteSpace='nowrap' minW={label_min_width}>{t('ProcessDialog.layout_mode')}</Text>
+      </OSTooltip>
+      <Select
+        size='xs'
+        value={app_data.layout_optimize_crossing ? 'minimize' : 'center'}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+          app_data.layout_optimize_crossing = e.target.value === 'minimize'
+          redraw()
+        }}
+      >
+        <option value='center'>{t('ProcessDialog.layout_center')}</option>
+        <option value='minimize'>{t('ProcessDialog.layout_minimize')}</option>
+      </Select>
+    </Box>}
+    <OSTooltip label={t('ProcessDialog.layout_reset_tt')}>
+      <Button
+        variant='menuconfigpanel_option_button'
+        size='xs'
+        onClick={resetToDefault}
+      >
+        {t('ProcessDialog.layout_reset')}
+      </Button>
+    </OSTooltip>
+  </Box>
+}
+
+export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area, menu_configuration } = app_data
+
+  const launchAutoLayout = () => {
+    const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
+    const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+    drawing_area.nodePositioning.computeAutoSankeyWithToast(
+      false,
+      app_data.layout_optimize_crossing,
+      app_data.layout_h_spacing ?? default_dx,
+      app_data.layout_v_spacing ?? default_dy,
+      app_data.layout_sources_mode,
+      app_data.layout_sinks_mode
+    )
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  }
+
+  return <Box display='flex' flexDirection='column' gap='4px' p='8px' minW='280px'>
+    <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode />
+    <OSTooltip label={app_data.t('ProcessDialog.layout_apply_tt')}>
+      <Button
+        variant='menuconfigpanel_option_button'
+        size='xs'
+        onClick={launchAutoLayout}
+      >
+        {app_data.t('ProcessDialog.layout_apply')}
+      </Button>
+    </OSTooltip>
+  </Box>
+}
+
+export const MenuContextResetVerticalIntervals = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { drawing_area, menu_configuration } = app_data
+
+  const apply = () => {
+    const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+    drawing_area.resetAllVerticalIntervals(app_data.layout_v_spacing ?? default_dy)
+    drawing_area.draw()
+    menu_configuration.ref_to_save_in_cache_indicator.current(false)
+  }
+
+  return <Box display='flex' flexDirection='column' gap='4px' p='4px'>
+    <AutoLayoutSpacingInputs app_data={app_data} show_horizontal={false} label_min_width='90px' />
+    <Button
+      variant='menuconfigpanel_option_button'
+      size='xs'
+      onClick={apply}
+    >
+      Appliquer
+    </Button>
+  </Box>
 }
 
 export const MenuContextNodeStock = ({ app_data }: { app_data: Class_ApplicationData }) => {

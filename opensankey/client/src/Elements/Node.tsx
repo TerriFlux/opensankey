@@ -75,6 +75,11 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _are_related_dimensions_selected: boolean | undefined = undefined
   protected _tooltip_text: string = ''
 
+  // Geometry snapshot taken before the node enters container display mode,
+  // so that unsetContainerMode can restore the node to its pre-container
+  // state. Undefined when the node is not acting as a container.
+  private _pre_container_geometry: { x: number, y: number, width: number, height: number } | undefined
+
   // Stock values (parallel to link values but for nodes)
   public has_stock: boolean = false
   public has_material_balance: boolean = true
@@ -274,9 +279,122 @@ export class Class_NodeElement extends Class_NodeBase {
    * Draw given node on drawing area
    */
   protected _draw() {
+    this.applyContainerEnvelopeIfNeeded()
     super._draw()
     this._nodeDrawValueLabel.drawGenericLabel()
     this.drawStockBox()
+  }
+
+  /**
+   * If this node is the parent of any dimension in container display mode,
+   * recompute its position and size so that it encloses the children of
+   * those dimensions. Returns true if the envelope was applied.
+   *
+   * Recurses inward first: if a contained child is itself a container for
+   * another dimension, its envelope is recomputed before we use its
+   * geometry, so nested containers converge regardless of draw order
+   * (important on load and for multi-level hierarchies).
+   */
+  public applyContainerEnvelopeIfNeeded(visited: Set<Class_NodeElement> = new Set()): boolean {
+    if (visited.has(this)) return false
+    visited.add(this)
+    const container_dims = this.dimensions_as_parent.filter(d => d.container_mode)
+    if (container_dims.length === 0) return false
+    const contained: Class_NodeElement[] = []
+    container_dims.forEach(dim => {
+      dim.children.forEach(c => {
+        if (!contained.includes(c)) contained.push(c as Class_NodeElement)
+      })
+    })
+    // Update inner containers first so their geometry is fresh when we
+    // compute our own bounding box.
+    contained.forEach(child => child.applyContainerEnvelopeIfNeeded(visited))
+    const bbox = this._computeEnvelopeBBox(contained)
+    if (!bbox) return false
+    this._applyEnvelopeBBox(bbox)
+    return true
+  }
+
+  /**
+   * Walk up the container chain from this node, refreshing every
+   * ancestor container's envelope and redrawing its shape. Used on drag
+   * so a move on a leaf propagates the size/position change all the way
+   * to the outermost enclosing container.
+   */
+  public propagateContainerEnvelopeToAncestors() {
+    const visited = new Set<Class_NodeElement>()
+    let current: Class_NodeElement = this
+    while (!visited.has(current)) {
+      visited.add(current)
+      const parent_dims = current.dimensions_as_child.filter(d => d.container_mode)
+      if (parent_dims.length === 0) break
+      const parent = parent_dims[0].parent as Class_NodeElement
+      if (parent.applyContainerEnvelopeIfNeeded()) {
+        parent.applyPosition()
+        parent.drawShape()
+      }
+      current = parent
+    }
+  }
+
+  /**
+   * Save the current position and size before entering container display
+   * mode. Safe to call multiple times: only the first call wins, so a
+   * second container-mode dimension activating on the same parent does
+   * not overwrite the original snapshot.
+   */
+  public saveGeometryForContainerMode() {
+    if (this._pre_container_geometry) return
+    this._pre_container_geometry = {
+      x: this.position_x,
+      y: this.position_y,
+      width: this.shape_min_width,
+      height: this.shape_min_height
+    }
+  }
+
+  /**
+   * Restore the position and size captured by
+   * saveGeometryForContainerMode, then clear the snapshot. No-op if no
+   * snapshot was taken.
+   */
+  public restoreGeometryAfterContainerMode() {
+    if (!this._pre_container_geometry) return
+    const prev = this._pre_container_geometry
+    this.position_x = prev.x
+    this.position_y = prev.y
+    this.shape_min_width = prev.width
+    this.shape_min_height = prev.height
+    this._pre_container_geometry = undefined
+  }
+
+  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
+    super.eventMouseDrag(event)
+    if (!this.drawing_area.isInSelectionMode()) return
+    // Container display mode — parent drag propagates to contained children.
+    // Children already in the selection are skipped to avoid double movement
+    // (handleMouseDrag already moved them via setPosXY).
+    const dims_parent_container = this.dimensions_as_parent.filter(d => d.container_mode)
+    if (dims_parent_container.length > 0) {
+      const selected = new Set<Class_NodeBase>([
+        ...this.sankey.drawing_area.selected_nodes_list as unknown as Class_NodeBase[],
+        ...this.sankey.drawing_area.selected_containers_list as unknown as Class_NodeBase[]
+      ])
+      const already_moved = new Set<Class_NodeBase>(selected)
+      already_moved.add(this)
+      dims_parent_container.forEach(dim => {
+        dim.children.forEach(child => {
+          if (already_moved.has(child as unknown as Class_NodeBase)) return
+          child.position_x = child.position_x + event.dx
+          child.position_y = child.position_y + event.dy
+          child.applyPosition()
+          already_moved.add(child as unknown as Class_NodeBase)
+        })
+      })
+    }
+    // Container display mode — a drag on this node must refresh every
+    // ancestor container up the chain so nested containers follow too.
+    this.propagateContainerEnvelopeToAncestors()
   }
 
   /**
@@ -797,74 +915,36 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public applyPosition() {
     if (this.d3_selection !== null) {
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
-        this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-      // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
+      // Relative positioning (import/export nodes glued to a source/target
+      // neighbor) is unchanged by PR 3 — this is a separate codepath from
+      // parametric and keeps its self-computing semantics.
       if (
-        (
-          (this.shape_position_type === 'relative') ||
-          (this.shape_position_type === 'parametric')
-        ) &&
-        (!this._drag) && (!this.sankey.drawing_area.ghost_link)
+        this.shape_position_type === 'relative' &&
+        !this._drag && !this.sankey.drawing_area.ghost_link
       ) {
-        // Apply relative position
-        if (this.shape_position_type === 'relative') {
-          if (this.hasInputLinks()) {
-            // Node is export
-            const input_link = this.getFirstInputLink()
-            const source_node = input_link!.source
-            this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
-            this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
-          }
-          else if (this.hasOutputLinks()) {
-            // Node is import
-            const output_link = this.getFirstOutputLink()
-            const target_node = output_link!.target
-            this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
-            this._position.y = target_node.position_y + this.shape_position_dy
-          }
-        }
-        // Apply parametric position
-        else {
-          const process_nodes = this.sankey.visible_nodes_list
-          const same_u_other = process_nodes.filter(n => n.position_u === this.position_u)
-          const current_index = same_u_other.indexOf(this)
-
-          // Chercher le premier noeud au-dessus qui n'a pas de container ou qui partage un container
-          let nodeAbove: Class_NodeElement | undefined = undefined
-          const has_container = this._attached_container.length > 0
-          for (let i = current_index - 1; i >= 0; i--) {
-            const candidate = same_u_other[i]
-            const no_container = candidate._attached_container.length == 0
-            const same_container =
-              candidate._attached_container.some(item =>
-                this._attached_container.includes(item)
-              )
-            if (same_container || (no_container && !has_container) && nodeAbove != this) {
-              nodeAbove = candidate
-              break
-            }
-          }
-          if (nodeAbove) {
-            const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item =>
-              this._attached_container.includes(item)
-            )
-            if (same_container) {
-              this._position.y = nodeAbove.position_y
-                + nodeAbove.getShapeHeightToUse()
-                + this.shape_position_dy
-            }
-          } else if (has_container /*&& echangeTag && this.hasGivenTag(echangeTag)*/) {
-            this.position_y = this._attached_container[0].position_y
-          }
+        if (this.hasInputLinks()) {
+          const input_link = this.getFirstInputLink()
+          const source_node = input_link!.source
+          this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
+          this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
+        } else if (this.hasOutputLinks()) {
+          const output_link = this.getFirstOutputLink()
+          const target_node = output_link!.target
+          this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
+          this._position.y = target_node.position_y + this.shape_position_dy
         }
       }
+      // Parametric positioning (PR 3): this used to walk the column to find
+      // a `nodeAbove` and compute `position_y = nodeAbove.y + nodeAbove.h +
+      // this.shape_position_dy`, with a special "nested container bypass"
+      // early-return. All of that is gone. position_y is now computed by
+      // `Class_NodePositioning.recomputeParametricLayout` at the start of
+      // each `drawElements` pass, so by the time we reach this method the
+      // value is fresh — we only need to emit the SVG transform.
       this.input_links_list.filter(l => l.source.shape_position_type == 'relative').forEach(l => l.source.applyPosition())
       this.output_links_list.filter(l => l.target.shape_position_type == 'relative').forEach(l => l.target.applyPosition())
 
       super.applyPosition()
-
-
     }
     // Redraw links
     this._drawLinks()
@@ -923,8 +1003,11 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
 
-        // Thickness of the link influence arrow size (use target thickness since arrows are drawn at target)
-        const link_value = link.thicknessTarget
+        // Thickness of the link influences arrow size and stacking. Use raw (non-clamped)
+        // thickness so the arrow geometry stays consistent with the raw-based anchor
+        // positions on the node — mixing clamped and raw values blows up draw_arrow_part's
+        // internal ratios.
+        const link_value_raw = link.thicknessTargetRaw
 
         let xt: number
         let yt: number
@@ -963,11 +1046,14 @@ export class Class_NodeElement extends Class_NodeBase {
         const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        // Draw arrow on link
+        // Draw arrow on link.
+        // All inputs to draw_arrow_part must be in the same "space" (raw, not clamped),
+        // otherwise the internal ratio_cur = linkSize / arrowHalfHeight blows up when
+        // raw is tiny but linkSize is the 2px-clamped value, producing extreme x coords.
         link.shape_arrow_path = draw_arrow_part(
           total_cumul_of_side / 2,
           p5,
-          +link_value,
+          +link_value_raw,
           current_cumul_of_side,
           is_horizontal_at_target,
           is_revert,
@@ -976,18 +1062,19 @@ export class Class_NodeElement extends Class_NodeBase {
           arrows_adjustment
         )
 
-        // Increment side cumul of drawn arrow to influence next arrow starting position
+        // Increment side cumul of drawn arrow to influence next arrow starting position.
+        // Use raw thickness to stay in sync with raw-based anchor positions.
         if (link_arrow_side_left) {
-          cum_v_left += link_value
+          cum_v_left += link_value_raw
         }
         else if (link_arrow_side_right) {
-          cum_v_right += link_value
+          cum_v_right += link_value_raw
         }
         else if (link_arrow_side_top) {
-          cum_h_top += link_value
+          cum_h_top += link_value_raw
         }
         else if (link_arrow_side_bottom) {
-          cum_h_bottom += link_value
+          cum_h_bottom += link_value_raw
         }
       })
 
@@ -1008,8 +1095,10 @@ export class Class_NodeElement extends Class_NodeBase {
     this.getLinksOrdered(side)
       .filter(link => link.is_visible)
       .forEach(link => {
-        // Use source thickness if this node is the link's source, target thickness otherwise
-        sum = sum + (link.source === this ? link.thicknessSource : link.thicknessTarget)
+        // Use raw (non-clamped) thickness so node height and anchor offsets
+        // stay proportional to link values. Visual draw still uses the
+        // clamped thickness (min 2px) which can cause overlaps on thin links.
+        sum = sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw)
       })
     return sum
   }
@@ -1084,10 +1173,12 @@ export class Class_NodeElement extends Class_NodeBase {
           }
           return
         }
-        // Get positioning parameters - use source or target thickness depending on which end this node is
+        // Get positioning parameters - use source or target thickness depending on which end this node is.
+        // Raw (non-clamped) thickness is used for anchor offsets so positions stay proportional
+        // to link values; the link is drawn with its clamped thickness centered on this anchor.
         const is_source = link.source === this
         const is_self_loop = link.source === this && link.target === this
-        const thickness = is_source ? link.thicknessSource : link.thicknessTarget
+        const thickness = is_source ? link.thicknessSourceRaw : link.thicknessTargetRaw
         const handle_position_shift = 5
         // Current node is link's source
         if (is_source && !doublon.includes(link)) {
@@ -1681,10 +1772,16 @@ export class Class_NodeElement extends Class_NodeBase {
     // Only one direction: show that value
     if (!has_in) return fmt(total_out)
     if (!has_out) return fmt(total_in)
-    // Both directions equal: show single value
-    if (total_in === total_out) return fmt(total_in)
-    // Both directions differ: show "in→out" (entering total → leaving total)
-    return fmt(total_in) + '\u2192' + fmt(total_out)
+    // Both directions: apply display mode chosen by the user
+    const mode = this.value_label_in_out_display_mode
+    if (mode === 'in') return fmt(total_in)
+    if (mode === 'out') return fmt(total_out)
+    // mode === 'both': if both values render identically (e.g. after significant
+    // digits / decimals rounding), collapse to a single value; otherwise show "in→out"
+    const fmt_in = fmt(total_in)
+    const fmt_out = fmt(total_out)
+    if (fmt_in === fmt_out) return fmt_in
+    return fmt_in + '\u2192' + fmt_out
   }
   public get selected_elements_list() {
     return this.sankey.drawing_area.selected_nodes_list
