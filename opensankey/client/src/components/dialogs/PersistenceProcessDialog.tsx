@@ -60,19 +60,19 @@ const FORMAT_CONFIG: Record<FileFormat, {
 }> = {
   excel: {
     extension: '.xlsx',
-    accept: '.xlsx',
+    accept: '.xlsx,.ods',
     label: 'Fichier Excel',
     icon: '📊'
   },
   json: {
     extension: '.json',
-    accept: '.json,.json.gz,.gz',
+    accept: '.json,.gz',
     label: 'Fichier JSON',
     icon: '📄'
   },
   blob: {
     extension: '.json',
-    accept: '.json,.json.gz,.gz',
+    accept: '.json,.gz',
     label: 'Sankey courant',
     icon: '📄'
   }
@@ -88,7 +88,10 @@ const pickerTypesForFormat = (format: FormatType): Array<{ description: string; 
   if (format === 'excel') {
     return [{
       description: 'Excel',
-      accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+      accept: {
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+        'application/vnd.oasis.opendocument.spreadsheet': ['.ods']
+      }
     }]
   }
   if (format === 'json') {
@@ -432,6 +435,15 @@ export const UniversalFileConverter = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Switching input format must clear any previously picked file so the UI
+  // does not display a stale filename from the other format (e.g. an Excel
+  // file name lingering after switching to JSON).
+  const change_input_format = (format: FormatType) => {
+    set_input_format(format)
+    set_input_file(undefined)
+    stored_file_handles.delete(dialog_name)
+  }
+
   const pick_input_file_with_handle = async () => {
     try {
       // @ts-expect-error showOpenFilePicker is not in all TS lib.dom versions
@@ -474,6 +486,15 @@ export const UniversalFileConverter = ({
   }
 
   const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
+    // The dialog is reused across "Open JSON" / "Open Excel" / etc., so a
+    // previously picked file and the prior run's status (success/failure
+    // banner, terminal output) must not leak into the next opening.
+    set_input_file(undefined)
+    stored_file_handles.delete(dialog_name)
+    setStarted(false)
+    setProcessing(false)
+    setFailure(false)
+    setResult('')
     const input_format = getInitialFormat(config.input.format, 'excel')
     set_input_format(input_format)
     const output_format = getInitialFormat(config.output.format, 'json')
@@ -769,7 +790,7 @@ export const UniversalFileConverter = ({
         format_config={config.input.format}
         required={config.input.required}
         current_format={input_format}
-        set_current_format={set_input_format}
+        set_current_format={change_input_format}
         set_file={set_input_file}
         pick_file_handle={supports_fs_access ? pick_input_file_with_handle : undefined}
         //@ts-expect-error Blob has no .name, but File does — and that's what we actually store here
