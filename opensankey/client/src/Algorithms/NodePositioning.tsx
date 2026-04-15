@@ -1759,6 +1759,199 @@ export class NodePositioning {
   }
 
   /**
+   * Point d'entrée unique pour le recompute du layout paramétrique (PR 3).
+   *
+   * Traite une colonne (ensemble de nœuds visibles partageant un même
+   * `position_u`) comme une pile verticale triée par `position_v` croissant,
+   * ancrée sur le `position_y` courant du nœud de plus petit V, et espacée
+   * par `shape_position_dy` via `stackNodesVertically` (cf. PR 2).
+   *
+   * **Responsabilité stricte : empilement géométrique uniquement.** `position_v`
+   * est supposé déjà à jour à l'entrée — les call sites qui ont besoin de le
+   * recalculer (nouveau diagramme, bascule de mode, data tag change) doivent
+   * appeler `computeParametricV` avant. Cette séparation des responsabilités
+   * était le point 1 de la discussion PR 3 : V est une donnée métier, le
+   * recompute est un calcul géométrique pur.
+   *
+   * **Limitation de l'étape 1 (ce commit)** : les containers ne sont **pas**
+   * traités récursivement. Les nœuds enfants d'un container (i.e. ceux avec
+   * `dimensions_as_child.some(d => d.container_mode)`) sont exclus du
+   * stacking de colonne — l'ancien chemin `Node.applyPosition` les prend en
+   * charge via sa logique `nodeAbove`. L'intégration récursive des
+   * containers comme sous-colonnes est prévue dans un commit ultérieur de
+   * PR 3.
+   *
+   * **Scopes supportés** :
+   * - `{ type: 'all' }` : toutes les colonnes top-level de la drawing area.
+   * - `{ type: 'column', u: number }` : une seule colonne (utile pour fin
+   *   de drag, désagrégation latérale).
+   * - `{ type: 'subtree', node }` : réservé à l'étape containers récursifs
+   *   (commit ultérieur) — non implémenté ici, lève une erreur explicite.
+   *
+   * Les nœuds « échange » (tag `type de noeud` / `echange`) sont exclus du
+   * stacking, comme dans tous les autres chemins paramétriques.
+   *
+   * **Dead code temporaire** : tant que `Node.applyPosition` n'est pas
+   * réduit à un pass-through, appeler `recomputeParametricLayout` n'a aucun
+   * effet visible — le prochain `applyPosition` écrase les positions qu'on
+   * vient de poser. C'est volontaire : ce commit ajoute uniquement la
+   * plomberie, la bascule de `applyPosition` et la migration des call sites
+   * viennent dans un commit séparé pour isoler les régressions éventuelles.
+   */
+  public recomputeParametricLayout(
+    scope: { type: 'all' } | { type: 'column', u: number } | { type: 'subtree', node: Class_NodeElement }
+  ) {
+    if (scope.type === 'subtree') {
+      throw new Error(
+        '[recomputeParametricLayout] scope \'subtree\' not implemented yet ' +
+        '— requires container recursion (future commit of PR 3).'
+      )
+    }
+
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+
+    // --- Helpers ---
+
+    // A container is any node that is a parent of at least one dimension
+    // running in container_mode. Nested containers are handled recursively.
+    const isContainerParent = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_parent.some(d => d.container_mode)
+
+    // A "top-level" node for the column stacking is a visible, non-exchange
+    // node that is NOT itself sitting inside a container. Top-level nodes
+    // include: plain leaves, plain intermediates, AND top-level containers
+    // (containers that are not themselves children of another container).
+    // Container children — at any depth — are excluded; they are positioned
+    // by the recursive container descent pass.
+    const isTopLevel = (n: Class_NodeElement): boolean => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.dimensions_as_child.some(d => d.container_mode)) return false
+      return true
+    }
+
+    // Sort container children by position_v, with a stable tie-break on
+    // the current position_y so equal-V or unassigned-V (-1) nodes don't
+    // dance around between recomputes.
+    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] => {
+      return [...nodes].sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+    }
+
+    // Collect direct container children of a given container parent.
+    // Dedupes across multiple container_mode dimensions and keeps only
+    // visible non-exchange nodes (the rest do not contribute to the
+    // envelope).
+    const collectContainerChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+      const seen = new Set<Class_NodeElement>()
+      const children: Class_NodeElement[] = []
+      container.dimensions_as_parent
+        .filter(d => d.container_mode)
+        .forEach(dim => {
+          dim.children.forEach(child => {
+            const c = child as Class_NodeElement
+            if (seen.has(c)) return
+            seen.add(c)
+            if (!c.is_visible) return
+            if (echangeTag && c.hasGivenTag(echangeTag)) return
+            children.push(c)
+          })
+        })
+      return children
+    }
+
+    // --- Phase A : bottom-up sizing of nested containers ---
+    //
+    // Sets shape_min_height / shape_min_width of every container parent to
+    // the envelope size its (recursively-sized) children would produce,
+    // WITHOUT writing any position. Positions are decided in phase B and C.
+    //
+    // Recursion walks post-order: we need each child's final height before
+    // we can sum them into the enclosing container's envelope. For a leaf
+    // child, getShapeHeightToUse() already returns its intrinsic height.
+    const sized = new Set<Class_NodeElement>()
+    const sizeContainerRecursive = (container: Class_NodeElement) => {
+      if (sized.has(container)) return
+      sized.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      // Recurse first: each container-parent child must have its own
+      // envelope size computed before we read its height.
+      children.forEach(c => {
+        if (isContainerParent(c)) sizeContainerRecursive(c)
+      })
+      // Sum children heights + dy + top/bottom margins.
+      const stack_h = NodePositioning.totalStackHeight(children)
+      const envelope_h = stack_h + container.shape_margin_top + container.shape_margin_bottom
+      // Width: max of child widths + left/right margins. Container children
+      // are supposed to be aligned on the container's x axis in the current
+      // layout, so max(child.width) is a safe upper bound.
+      const max_child_w = children.reduce(
+        (m, c) => Math.max(m, c.getShapeWidthToUse()), 0
+      )
+      const envelope_w = max_child_w + container.shape_margin_left + container.shape_margin_right
+      container.shape_min_height = envelope_h
+      container.shape_min_width = envelope_w
+    }
+
+    // --- Phase B : top-level column stacking ---
+    //
+    // Collect every visible, non-exchange, non-container-child node. Group
+    // by position_u. For each column, sort by position_v (anchor = current
+    // y of the lowest-V node) and stack via stackNodesVertically. Top-level
+    // containers participate as normal nodes in this pass — their height
+    // is accurate after phase A.
+    const top_level_nodes = this.drawingArea.sankey.visible_nodes_list.filter(isTopLevel)
+    // Run phase A on every top-level container before we rely on their
+    // getShapeHeightToUse() in phase B.
+    top_level_nodes
+      .filter(isContainerParent)
+      .forEach(c => sizeContainerRecursive(c))
+
+    const columns = new Map<number, Class_NodeElement[]>()
+    top_level_nodes.forEach(n => {
+      if (scope.type === 'column' && n.position_u !== scope.u) return
+      const col = columns.get(n.position_u) ?? []
+      col.push(n)
+      columns.set(n.position_u, col)
+    })
+    columns.forEach(column => {
+      if (column.length === 0) return
+      const sorted = sortByV(column)
+      const anchor_y = sorted[0].position_y
+      NodePositioning.stackNodesVertically(sorted, anchor_y)
+    })
+
+    // --- Phase C : top-down positioning of container descendants ---
+    //
+    // Containers that participated in phase B may now have a different y
+    // than they had going in. Their children need to be re-stacked at the
+    // new (container.y + margin_top) anchor. Recursive: if a child is
+    // itself a container, we descend into it after positioning it.
+    const positioned = new Set<Class_NodeElement>()
+    const positionContainerChildrenRecursive = (container: Class_NodeElement) => {
+      if (positioned.has(container)) return
+      positioned.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      const anchor_y = container.position_y + container.shape_margin_top
+      NodePositioning.stackNodesVertically(children, anchor_y)
+      children.forEach(c => {
+        if (isContainerParent(c)) positionContainerChildrenRecursive(c)
+      })
+    }
+    // When the scope is 'column', only descend into top-level containers
+    // that live in the target column; the others retain their current
+    // (already-valid) descendant layout.
+    top_level_nodes
+      .filter(isContainerParent)
+      .filter(c => scope.type !== 'column' || c.position_u === scope.u)
+      .forEach(c => positionContainerChildrenRecursive(c))
+  }
+
+  /**
    * Back-calcule `shape_position_dy` de chaque nœud visible depuis sa `position_y`
    * absolue. Pour chaque colonne (groupée par `position_u`), les nœuds sont triés par
    * y et le dy de chacun est déduit du gap avec le nœud précédent. Utilisé à la bascule
@@ -1791,22 +1984,90 @@ export class NodePositioning {
   }
 
   /**
-   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non verrouillés.
-   * À appeler explicitement aux endroits où une position absolue vient d'être modifiée
-   * (drop de ghost link, fin de drag, contraction). Ce calcul **ne fait plus partie**
-   * de `computeParametrization` pour éviter le couplage bidirectionnel u ↔ x qui
-   * faisait dériver les colonnes à chaque recalcul (notamment quand l'envelope d'un
-   * container modifie x).
+   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non
+   * verrouillés. À appeler explicitement aux endroits où une position absolue
+   * vient d'être modifiée (drop de ghost link, fin de drag, contraction). Ce
+   * calcul **ne fait plus partie** de `computeParametrization` pour éviter le
+   * couplage bidirectionnel u ↔ x qui faisait dériver les colonnes à chaque
+   * recalcul (notamment quand l'envelope d'un container modifie x).
+   *
+   * **Clustering plutôt que rounding indépendant (PR 3 step 5)** : l'ancienne
+   * implémentation faisait `u = Math.round(x / dx)` sur chaque nœud
+   * indépendamment. Deux nœuds visuellement alignés (à 1-2 px près) tombaient
+   * parfois de part et d'autre de la frontière de rounding (ex. x=1898.88 →
+   * u=9 et x=1901.47 → u=10 avec dx=200, frontière à 1900), ce qui les
+   * affectait à des colonnes différentes sans intention utilisateur.
+   *
+   * La nouvelle implémentation regroupe d'abord les nœuds en **clusters**
+   * (tri par x croissant, puis fusion glissante : un nœud rejoint le cluster
+   * courant si son x est à moins de `tolerance` du max-x du cluster), puis
+   * calcule un `u` commun par cluster. Conséquences :
+   *
+   * - Deux nœuds quasi alignés tombent dans le même cluster → même `u`,
+   *   toujours, peu importe où ils sont par rapport aux frontières de
+   *   rounding.
+   * - Un cluster contenant un nœud `u`-verrouillé hérite du `u` du verrou
+   *   (le verrou définit la colonne d'autorité).
+   * - Un cluster sans verrou calcule son `u` depuis le x moyen du cluster,
+   *   ce qui reste proche de l'ancien comportement pour les colonnes
+   *   bien-formées.
+   *
+   * `tolerance` est fixée à 5 % de `dx` (plafonnée à 10 px min), valeur bien
+   * au-dessus du bruit pixel et très en dessous d'une demi-colonne.
    */
   public inferPositionUFromX() {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
-    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-      if (echangeTag && node.hasGivenTag(echangeTag)) return
-      if (node.shape_position_u_locked === true) return
-      node.position_u = Math.round(node.position_x / dx)
+    const tolerance = Math.max(10, dx * 0.05)
+
+    // Nodes eligible for u assignment: visible and not tagged as "échange".
+    // u-locked nodes are kept in the cluster (they anchor the u value) but
+    // their u is not overwritten below.
+    const eligible = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      return true
     })
+    if (eligible.length === 0) return
+
+    // Sliding merge clustering: sort by x, then walk forward and start a new
+    // cluster whenever the gap to the current cluster's max-x exceeds
+    // `tolerance`. The max-x (not the starting x) is the right reference: a
+    // chain of nodes each within `tolerance` of the previous one should form
+    // a single cluster even if the head-to-tail distance exceeds `tolerance`.
+    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
+    const clusters: Class_NodeElement[][] = []
+    let current: Class_NodeElement[] = []
+    let current_max_x = -Infinity
+    for (const node of sorted) {
+      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
+        current.push(node)
+        if (node.position_x > current_max_x) current_max_x = node.position_x
+      } else {
+        clusters.push(current)
+        current = [node]
+        current_max_x = node.position_x
+      }
+    }
+    if (current.length > 0) clusters.push(current)
+
+    // For each cluster, decide the u once, then apply to every non-locked
+    // member. A cluster containing a u-locked node inherits its u; otherwise
+    // we compute u from the cluster's mean x.
+    for (const cluster of clusters) {
+      const locked = cluster.find(n => n.shape_position_u_locked === true)
+      let cluster_u: number
+      if (locked) {
+        cluster_u = locked.position_u
+      } else {
+        const mean_x = cluster.reduce((sum, n) => sum + n.position_x, 0) / cluster.length
+        cluster_u = Math.round(mean_x / dx)
+      }
+      cluster.forEach(n => {
+        if (n.shape_position_u_locked !== true) n.position_u = cluster_u
+      })
+    }
   }
 
   /**
