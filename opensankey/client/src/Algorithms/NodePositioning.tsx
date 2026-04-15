@@ -2349,7 +2349,7 @@ export class NodePositioning {
       })
     }
 
-    //this.drawingArea.draw()
+    this.drawingArea.draw()
     this.drawingArea.to_recenter = true
     this.drawingArea.recenter()
     this.drawingArea.to_recenter = false

@@ -51,7 +51,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   private _legend_show_constraints: boolean = default_legend_show_constraints
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
-  private _legend_show_data_type: boolean = true
+  private _legend_show_data_type: boolean = false
 
   private _dx: number = 0
   private _dy: number = 0
@@ -413,9 +413,9 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
     const { t } = this.drawing_area.application_data
     const da = this.drawing_area
-    const label = da.data_source === 'data' ? t('Banner.collected_data')
-      : da.data_source === 'data_label' ? t('Banner.collected_data_label')
-      : t('Banner.reconciled')
+    const label = da.data_source === 'data'
+      ? t('MEP.leg_data_collected')
+      : t('MEP.leg_data_calculated')
 
     this._dy += this._legend_police
     const g = this.d3_selection?.append('g')
