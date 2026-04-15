@@ -10,3 +10,4 @@ le code et ses cas limites.
    :maxdepth: 2
 
    features/index
+   workflow_contribution
