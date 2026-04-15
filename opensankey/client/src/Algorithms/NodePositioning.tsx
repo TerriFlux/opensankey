@@ -1984,22 +1984,90 @@ export class NodePositioning {
   }
 
   /**
-   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non verrouillés.
-   * À appeler explicitement aux endroits où une position absolue vient d'être modifiée
-   * (drop de ghost link, fin de drag, contraction). Ce calcul **ne fait plus partie**
-   * de `computeParametrization` pour éviter le couplage bidirectionnel u ↔ x qui
-   * faisait dériver les colonnes à chaque recalcul (notamment quand l'envelope d'un
-   * container modifie x).
+   * Déduit `position_u` depuis `position_x` pour les nœuds visibles non
+   * verrouillés. À appeler explicitement aux endroits où une position absolue
+   * vient d'être modifiée (drop de ghost link, fin de drag, contraction). Ce
+   * calcul **ne fait plus partie** de `computeParametrization` pour éviter le
+   * couplage bidirectionnel u ↔ x qui faisait dériver les colonnes à chaque
+   * recalcul (notamment quand l'envelope d'un container modifie x).
+   *
+   * **Clustering plutôt que rounding indépendant (PR 3 step 5)** : l'ancienne
+   * implémentation faisait `u = Math.round(x / dx)` sur chaque nœud
+   * indépendamment. Deux nœuds visuellement alignés (à 1-2 px près) tombaient
+   * parfois de part et d'autre de la frontière de rounding (ex. x=1898.88 →
+   * u=9 et x=1901.47 → u=10 avec dx=200, frontière à 1900), ce qui les
+   * affectait à des colonnes différentes sans intention utilisateur.
+   *
+   * La nouvelle implémentation regroupe d'abord les nœuds en **clusters**
+   * (tri par x croissant, puis fusion glissante : un nœud rejoint le cluster
+   * courant si son x est à moins de `tolerance` du max-x du cluster), puis
+   * calcule un `u` commun par cluster. Conséquences :
+   *
+   * - Deux nœuds quasi alignés tombent dans le même cluster → même `u`,
+   *   toujours, peu importe où ils sont par rapport aux frontières de
+   *   rounding.
+   * - Un cluster contenant un nœud `u`-verrouillé hérite du `u` du verrou
+   *   (le verrou définit la colonne d'autorité).
+   * - Un cluster sans verrou calcule son `u` depuis le x moyen du cluster,
+   *   ce qui reste proche de l'ancien comportement pour les colonnes
+   *   bien-formées.
+   *
+   * `tolerance` est fixée à 5 % de `dx` (plafonnée à 10 px min), valeur bien
+   * au-dessus du bruit pixel et très en dessous d'une demi-colonne.
    */
   public inferPositionUFromX() {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'] ?
       this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const dx = this.drawingArea.sankey.styles_dict['default'].shape_position_dx!
-    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-      if (echangeTag && node.hasGivenTag(echangeTag)) return
-      if (node.shape_position_u_locked === true) return
-      node.position_u = Math.round(node.position_x / dx)
+    const tolerance = Math.max(10, dx * 0.05)
+
+    // Nodes eligible for u assignment: visible and not tagged as "échange".
+    // u-locked nodes are kept in the cluster (they anchor the u value) but
+    // their u is not overwritten below.
+    const eligible = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      return true
     })
+    if (eligible.length === 0) return
+
+    // Sliding merge clustering: sort by x, then walk forward and start a new
+    // cluster whenever the gap to the current cluster's max-x exceeds
+    // `tolerance`. The max-x (not the starting x) is the right reference: a
+    // chain of nodes each within `tolerance` of the previous one should form
+    // a single cluster even if the head-to-tail distance exceeds `tolerance`.
+    const sorted = [...eligible].sort((a, b) => a.position_x - b.position_x)
+    const clusters: Class_NodeElement[][] = []
+    let current: Class_NodeElement[] = []
+    let current_max_x = -Infinity
+    for (const node of sorted) {
+      if (current.length === 0 || node.position_x - current_max_x <= tolerance) {
+        current.push(node)
+        if (node.position_x > current_max_x) current_max_x = node.position_x
+      } else {
+        clusters.push(current)
+        current = [node]
+        current_max_x = node.position_x
+      }
+    }
+    if (current.length > 0) clusters.push(current)
+
+    // For each cluster, decide the u once, then apply to every non-locked
+    // member. A cluster containing a u-locked node inherits its u; otherwise
+    // we compute u from the cluster's mean x.
+    for (const cluster of clusters) {
+      const locked = cluster.find(n => n.shape_position_u_locked === true)
+      let cluster_u: number
+      if (locked) {
+        cluster_u = locked.position_u
+      } else {
+        const mean_x = cluster.reduce((sum, n) => sum + n.position_x, 0) / cluster.length
+        cluster_u = Math.round(mean_x / dx)
+      }
+      cluster.forEach(n => {
+        if (n.shape_position_u_locked !== true) n.position_u = cluster_u
+      })
+    }
   }
 
   /**
