@@ -31,6 +31,7 @@ import { Class_LevelTagGroup } from '../types/TagGroup'
 import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 import { Class_NodeElement } from './Node'
 import { NodeContainerStyle } from './ElementStyle'
+import { NodePositioning } from '../Algorithms/NodePositioning'
 
 /**
  * Container display mode for a dimension.
@@ -274,22 +275,24 @@ export class Class_NodeDimension {
     if (container_style && !this._parent.style.includes(container_style)) {
       this._parent.addStyle(container_style)
     }
+    // Bump visibility fingerprints and reset the cached
+    // _are_related_dimensions_selected on parent and children BEFORE the
+    // initial stack, so that child.getShapeHeightToUse() — which sums
+    // link thicknesses — sees the freshly visible links instead of
+    // their stale "source/target invisible" cache.
+    this._updated()
     // Initial vertical stack of children, anchored at the parent's current
     // position. Only runs on the user-triggered null → mode transition,
     // NOT on load from JSON (where children positions must be preserved)
     // and not on a variant switch.
     if (entering && !fromJSON) {
-      const gap = 10
       const anchor_x = this._parent.position_x
-      let cursor_y = this._parent.position_y
-      this._children.forEach(child => {
-        child.position_x = anchor_x
-        child.position_y = cursor_y
-        child.applyPosition()
-        cursor_y += child.getShapeHeightToUse() + gap
-      })
+      this._children.forEach(child => { child.position_x = anchor_x })
+      NodePositioning.stackNodesVertically(
+        this._children as Class_NodeElement[],
+        this._parent.position_y
+      )
     }
-    this._updated()
     // When loading from JSON we skip the per-dimension reorganize+draw;
     // the caller triggers a single full draw at the end of load, which
     // handles nested container dimensions correctly regardless of the
@@ -305,6 +308,23 @@ export class Class_NodeDimension {
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
       })
       nodes_to_redraw.forEach(node => node.draw())
+      // After the first synchronous draw pass the children's SVG (shape
+      // AND labels) is in the DOM, so getBBox returns the real extents.
+      // A setTimeout(0) lets the browser flush that layout before we
+      // recompute the parent envelope a second time — this is what
+      // allows the container to grow to include label overhang.
+      // In a nested hierarchy (container inside container) we then
+      // walk up the chain: the just-grown parent pushes its siblings
+      // down in the ancestor's restack, the ancestor's envelope
+      // re-fits, and so on until the outermost container.
+      const parent = this._parent
+      setTimeout(() => {
+        if (parent.applyContainerEnvelopeIfNeeded()) {
+          parent.applyPosition()
+          parent.drawShape()
+        }
+        parent.restackAncestorContainers()
+      }, 0)
     }
     this._is_currently_in_unsetting_recursion = false
   }
