@@ -35,7 +35,6 @@ import { Class_Handler } from './Handler'
 import { format_value, Type_JSON } from '../types/Utils'
 import { default_element_color } from './ElementsAttributesConfig'
 import { SankeyAnimation } from '../Algorithms/SankeyAnimation'
-import { NodePositioning } from '../Algorithms/NodePositioning'
 import { draw_arrow_part } from './NodeDrawShape'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
@@ -314,50 +313,6 @@ export class Class_NodeElement extends Class_NodeBase {
     if (!bbox) return false
     this._applyEnvelopeBBox(bbox)
     return true
-  }
-
-  /**
-   * Re-stack the direct children of this container-mode node in place,
-   * preserving their current vertical order. Spacing between children
-   * is read from each child's `shape_position_dy` (single source of
-   * truth — PR 2). The anchor is the topmost child's current y, so the
-   * overall top of the group does not move.
-   */
-  public restackContainerChildren() {
-    const container_dims = this.dimensions_as_parent.filter(d => d.container_mode)
-    if (container_dims.length === 0) return
-    const contained = new Set<Class_NodeElement>()
-    container_dims.forEach(dim => {
-      dim.children.forEach(c => contained.add(c as Class_NodeElement))
-    })
-    if (contained.size === 0) return
-    const ordered = [...contained].sort((a, b) => a.position_y - b.position_y)
-    NodePositioning.stackNodesVertically(ordered, ordered[0].position_y)
-  }
-
-  /**
-   * Walk up the container chain from this node, re-stacking the
-   * children of every ancestor container (so siblings of a
-   * just-grown container get pushed down) and refreshing each
-   * ancestor's envelope + shape. Used when the height of a container
-   * changes (e.g. it just entered container mode) so the whole
-   * nested layout re-spaces itself cleanly up to the outermost
-   * container.
-   */
-  public restackAncestorContainers() {
-    const visited = new Set<Class_NodeElement>()
-    let current_parent_dims = this.dimensions_as_child.filter(d => d.container_mode)
-    while (current_parent_dims.length > 0) {
-      const ancestor = current_parent_dims[0].parent as Class_NodeElement
-      if (visited.has(ancestor)) break
-      visited.add(ancestor)
-      ancestor.restackContainerChildren()
-      if (ancestor.applyContainerEnvelopeIfNeeded()) {
-        ancestor.applyPosition()
-        ancestor.drawShape()
-      }
-      current_parent_dims = ancestor.dimensions_as_child.filter(d => d.container_mode)
-    }
   }
 
   /**
@@ -960,84 +915,36 @@ export class Class_NodeElement extends Class_NodeBase {
    */
   public applyPosition() {
     if (this.d3_selection !== null) {
-      const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ?
-        this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
-      // 🔄 APPLY POSITIONING - RÉINTÉGRÉ DIRECTEMENT
+      // Relative positioning (import/export nodes glued to a source/target
+      // neighbor) is unchanged by PR 3 — this is a separate codepath from
+      // parametric and keeps its self-computing semantics.
       if (
-        (
-          (this.shape_position_type === 'relative') ||
-          (this.shape_position_type === 'parametric')
-        ) &&
-        (!this._drag) && (!this.sankey.drawing_area.ghost_link)
+        this.shape_position_type === 'relative' &&
+        !this._drag && !this.sankey.drawing_area.ghost_link
       ) {
-        // Apply relative position
-        if (this.shape_position_type === 'relative') {
-          if (this.hasInputLinks()) {
-            // Node is export
-            const input_link = this.getFirstInputLink()
-            const source_node = input_link!.source
-            this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
-            this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
-          }
-          else if (this.hasOutputLinks()) {
-            // Node is import
-            const output_link = this.getFirstOutputLink()
-            const target_node = output_link!.target
-            this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
-            this._position.y = target_node.position_y + this.shape_position_dy
-          }
-        }
-        // Apply parametric position.
-        // Nested container case: a node that is itself a container
-        // parent (in a container-mode dim) AND is sitting inside
-        // another container-mode dim is positioned by its outer
-        // container via envelope tracking, not by parametric. The
-        // topmost container still gets parametric; leaves inside a
-        // container still get parametric too, so their cascade layout
-        // keeps working and the container envelope wraps them.
-        else if (!(
-          this.dimensions_as_parent.some(d => d.container_mode) &&
-          this.dimensions_as_child.some(d => d.container_mode)
-        )) {
-          const process_nodes = this.sankey.visible_nodes_list
-          const same_u_other = process_nodes.filter(n => n.position_u === this.position_u)
-          const current_index = same_u_other.indexOf(this)
-
-          // Chercher le premier noeud au-dessus qui n'a pas de container ou qui partage un container
-          let nodeAbove: Class_NodeElement | undefined = undefined
-          const has_container = this._attached_container.length > 0
-          for (let i = current_index - 1; i >= 0; i--) {
-            const candidate = same_u_other[i]
-            const no_container = candidate._attached_container.length == 0
-            const same_container =
-              candidate._attached_container.some(item =>
-                this._attached_container.includes(item)
-              )
-            if (same_container || (no_container && !has_container)) {
-              nodeAbove = candidate
-              break
-            }
-          }
-          if (nodeAbove) {
-            const same_container = nodeAbove._attached_container.length == 0 || nodeAbove._attached_container.some(item =>
-              this._attached_container.includes(item)
-            )
-            if (same_container) {
-              this._position.y = nodeAbove.position_y
-                + nodeAbove.getShapeHeightToUse()
-                + this.shape_position_dy
-            }
-          } else if (has_container /*&& echangeTag && this.hasGivenTag(echangeTag)*/) {
-            this.position_y = this._attached_container[0].position_y
-          }
+        if (this.hasInputLinks()) {
+          const input_link = this.getFirstInputLink()
+          const source_node = input_link!.source
+          this._position.x = source_node.position_x + this.shape_position_dx + source_node.getShapeWidthToUse()
+          this._position.y = source_node.position_y + this.shape_position_dy + source_node.getShapeHeightToUse()
+        } else if (this.hasOutputLinks()) {
+          const output_link = this.getFirstOutputLink()
+          const target_node = output_link!.target
+          this._position.x = target_node.position_x + this.shape_position_dx - this.getShapeWidthToUse()
+          this._position.y = target_node.position_y + this.shape_position_dy
         }
       }
+      // Parametric positioning (PR 3): this used to walk the column to find
+      // a `nodeAbove` and compute `position_y = nodeAbove.y + nodeAbove.h +
+      // this.shape_position_dy`, with a special "nested container bypass"
+      // early-return. All of that is gone. position_y is now computed by
+      // `Class_NodePositioning.recomputeParametricLayout` at the start of
+      // each `drawElements` pass, so by the time we reach this method the
+      // value is fresh — we only need to emit the SVG transform.
       this.input_links_list.filter(l => l.source.shape_position_type == 'relative').forEach(l => l.source.applyPosition())
       this.output_links_list.filter(l => l.target.shape_position_type == 'relative').forEach(l => l.target.applyPosition())
 
       super.applyPosition()
-
-
     }
     // Redraw links
     this._drawLinks()
