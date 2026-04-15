@@ -344,6 +344,7 @@ const ConfigMenu = ({ app_data, additional_menus }: {
       <ConfigMenuTypeConfig app_data={app_data} additional_menus={additional_menus} />
     </Box>
     <Box
+      className='config_box'
       layerStyle='config_box'
       style={{
         maxHeight: 'calc(' + maxHConfig + 'px - 0.8rem)',
@@ -384,7 +385,9 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
     background: 'white',
     width: '100%'
   }} >
-    <Button variant={type_menu_configuration_selected == 'data' ? 'button_type_config_activated' : 'button_type_config'}
+    <Button
+      className='button_type_config_data'
+      variant={type_menu_configuration_selected == 'data' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
         app_data.menu_configuration.type_menu_configuration_selected = 'data'
         ref_to_menu_config_updater.current()
@@ -393,7 +396,9 @@ const ConfigMenuTypeConfig = ({ app_data, additional_menus }: {
       {t('Menu.Config.type_data')}
     </Button>
 
-    <Button variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
+    <Button
+      className='button_type_config_style'
+      variant={type_menu_configuration_selected == 'style' ? 'button_type_config_activated' : 'button_type_config'}
       onClick={() => {
         app_data.menu_configuration.type_menu_configuration_selected = 'style'
         ref_to_menu_config_updater.current()

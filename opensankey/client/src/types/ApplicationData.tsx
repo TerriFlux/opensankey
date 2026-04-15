@@ -35,7 +35,7 @@ import FileSaver from 'file-saver'
 import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
-import { Class_MenuConfig } from '../types/MenuConfig'
+import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
 import { default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -821,37 +821,210 @@ export class Class_ApplicationData {
 
   public setSteps() {
     this._steps.splice(0, this._steps.length) // Reset list
+    const openConfigDrawer = () => {
+      if (this.menu_configuration.ref_menu_opened.current?.[0] === false) {
+        this.menu_configuration.ref_menu_opened.current[1](true)
+      }
+    }
+    const closeConfigDrawer = () => {
+      if (this.menu_configuration.ref_menu_opened.current?.[0] === true) {
+        this.menu_configuration.ref_menu_opened.current[1](false)
+      }
+    }
+    const switchConfigTab = (tab: 'data' | 'style') => {
+      this.menu_configuration.type_menu_configuration_selected = tab
+      this.menu_configuration.ref_to_menu_config_updater.current?.()
+    }
+    const ensureElementSelected = (type: keyTypeConfig, element: keyTypeElements) => {
+      const list = this.menu_configuration.elements_configurable_selected[type] as keyTypeElements[]
+      if (!list.includes(element)) {
+        this.menu_configuration.toggleElementInConfigEdition(type, element)
+        this.menu_configuration.ref_to_menu_config_updater.current?.()
+      }
+    }
+    const setFilterDrawer = (open: boolean) => {
+      this.menu_configuration.ref_close_filter_drawer.current?.(open)
+    }
+    const demoRefs: {
+      created: boolean
+      node_ids: string[]
+      node_tagg_id: string | null
+      flux_tagg_id: string | null
+      data_tagg_id: string | null
+    } = {
+      created: false,
+      node_ids: [],
+      node_tagg_id: null,
+      flux_tagg_id: null,
+      data_tagg_id: null,
+    }
+    const ensureDemoContent = () => {
+      // Create two nodes, a flow with a value and one tag group per type (node/flux/data)
+      // so the user sees a concrete diagram and can explore all sub menus during the tour
+      if (demoRefs.created) return
+      if (this.drawing_area.sankey.nodes_list.length !== 0) return
+      const sankey = this.drawing_area.sankey
+      sankey.addNewDefaultLink()
+      const link = sankey.links_list[0]
+      if (link) {
+        link.valueCurrent = 100
+      }
+      const node_tagg = sankey.addNodeTagGroup('tour_demo_node_tagg', this.t('guide.demo_node_tagg_name'))
+      const flux_tagg = sankey.addFluxTagGroup('tour_demo_flux_tagg', this.t('guide.demo_flux_tagg_name'))
+      const data_tagg = sankey.addDataTagGroup('tour_demo_data_tagg', this.t('guide.demo_data_tagg_name'))
+      demoRefs.node_ids = sankey.nodes_list.map(n => n.id)
+      demoRefs.node_tagg_id = node_tagg.id
+      demoRefs.flux_tagg_id = flux_tagg.id
+      demoRefs.data_tagg_id = data_tagg.id
+      demoRefs.created = true
+      sankey.draw()
+      this.drawing_area.areaAutoFit()
+    }
+    const cleanupDemoContent = () => {
+      if (!demoRefs.created) return
+      const sankey = this.drawing_area.sankey
+      demoRefs.node_ids.forEach(id => {
+        const node = sankey.nodes_dict[id]
+        if (node) sankey.deleteNode(node)
+      })
+      if (demoRefs.node_tagg_id) sankey.removeTagGroupWithId('node_taggs', demoRefs.node_tagg_id)
+      if (demoRefs.flux_tagg_id) sankey.removeTagGroupWithId('flux_taggs', demoRefs.flux_tagg_id)
+      if (demoRefs.data_tagg_id) sankey.removeTagGroupWithId('data_taggs', demoRefs.data_tagg_id)
+      demoRefs.created = false
+      demoRefs.node_ids = []
+      demoRefs.node_tagg_id = null
+      demoRefs.flux_tagg_id = null
+      demoRefs.data_tagg_id = null
+      sankey.draw()
+    }
+    const has_filter_toolbar = document.getElementById('buttonOpenFilterDrawer') !== null
     const steps = [
       {
         selector: '#g_drawing',
         content: this.t('guide.drawing_area'),
-      },
-      {
-        selector: '.sideToolBar',
-        content: this.t('guide.toolbar'),
-        actionAfter: () => {
-          // trigger a click event on DOM button instead of using ref_menu_opened because otherwise the popover doesn't track the menu opening
-          (document.getElementsByClassName('sideToolBar')[0] as HTMLButtonElement).click()
+        action: () => {
+          ensureDemoContent()
         }
-      },
-      {
-        selector: '.drawer_menu_config ',
-        content: this.t('guide.menu_config'),
-        actionAfter: () => {
-          this.menu_configuration.ref_menu_opened.current[1](false)
-        }
-      },
-      {
-        selector: '.menutop_button_save_in_cache',
-        content: this.t('guide.save_in_cache'),
       },
       {
         selector: '.TopMenu',
         content: this.t('guide.nav_menu'),
       },
       {
+        selector: '.menutop_button_new',
+        content: this.t('guide.menutop_new'),
+      },
+      {
+        selector: '.menutop_button_open',
+        content: this.t('guide.menutop_open'),
+      },
+      {
+        selector: '.menutop_button_save',
+        content: this.t('guide.menutop_save'),
+      },
+      {
+        selector: '.menutop_button_export',
+        content: this.t('guide.menutop_export'),
+      },
+      {
+        selector: '.menutop_button_mep',
+        content: this.t('guide.menutop_mep'),
+      },
+      {
+        selector: '.menutop_button_save_in_cache',
+        content: this.t('guide.save_in_cache'),
+      },
+      {
         selector: '.tutorials_button',
         content: this.t('guide.tutorials_button'),
+      },
+      ...(has_filter_toolbar ? [
+        {
+          selector: '#buttonOpenFilterDrawer',
+          content: this.t('guide.filter_toolbar_button'),
+          action: () => {
+            setFilterDrawer(true)
+          }
+        },
+        {
+          selector: '#drawer_filter',
+          content: this.t('guide.filter_toolbar_drawer'),
+          action: () => {
+            setFilterDrawer(true)
+          },
+          actionAfter: () => {
+            setFilterDrawer(false)
+          }
+        },
+      ] : []),
+      {
+        selector: '.toolbar_bottom_mouse_mode',
+        content: this.t('guide.toolbar_bottom_mouse_mode'),
+      },
+      {
+        selector: '.toolbar_bottom_position_mode',
+        content: this.t('guide.toolbar_bottom_position_mode'),
+      },
+      {
+        selector: '.toolbar_bottom_stretch',
+        content: this.t('guide.toolbar_bottom_stretch'),
+      },
+      {
+        selector: '.toolbar_bottom_help',
+        content: this.t('guide.toolbar_bottom_help'),
+      },
+      {
+        selector: '.sideToolBar',
+        content: this.t('guide.toolbar'),
+        actionAfter: () => {
+          // Open the configuration drawer so next steps can target its internals
+          openConfigDrawer()
+          switchConfigTab('data')
+          ensureElementSelected('data', 'node')
+          ensureElementSelected('data', 'flow')
+        }
+      },
+      {
+        selector: '.drawer_menu_config',
+        content: this.t('guide.menu_config'),
+      },
+      {
+        selector: '.buttonGroupTypeConfig',
+        content: this.t('guide.config_tabs'),
+      },
+      {
+        selector: '.button_type_config_data',
+        content: this.t('guide.config_tab_data'),
+        actionAfter: () => {
+          switchConfigTab('data')
+        }
+      },
+      {
+        selector: '.config_box',
+        content: this.t('guide.config_content_data'),
+        actionAfter: () => {
+          switchConfigTab('style')
+          ensureElementSelected('style', 'DA')
+          ensureElementSelected('style', 'element')
+        }
+      },
+      {
+        selector: '.button_type_config_style',
+        content: this.t('guide.config_tab_style'),
+      },
+      {
+        selector: '.config_box',
+        content: this.t('guide.config_content_style'),
+        actionAfter: () => {
+          closeConfigDrawer()
+        }
+      },
+      {
+        selector: '#g_drawing',
+        content: this.t('guide.demo_cleanup'),
+        actionAfter: () => {
+          cleanupDemoContent()
+        }
       },
     ]
     steps.forEach(step => this._steps.push(step))
