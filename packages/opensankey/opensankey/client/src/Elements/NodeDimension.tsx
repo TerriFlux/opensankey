@@ -293,10 +293,10 @@ export class Class_NodeDimension {
         this._parent.position_y
       )
     }
-    // When loading from JSON we skip the per-dimension reorganize+draw;
-    // the caller triggers a single full draw at the end of load, which
-    // handles nested container dimensions correctly regardless of the
-    // order in which they are processed.
+    // When loading from JSON we skip the reorganize+draw phase; the caller
+    // triggers a single full draw at the end of load, which handles nested
+    // container dimensions correctly regardless of the order in which they
+    // are processed.
     if (!fromJSON) {
       const nodes_to_redraw = new Set([
         this._parent,
@@ -307,24 +307,16 @@ export class Class_NodeDimension {
         node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
         node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
       })
-      nodes_to_redraw.forEach(node => node.draw())
-      // After the first synchronous draw pass the children's SVG (shape
-      // AND labels) is in the DOM, so getBBox returns the real extents.
-      // A setTimeout(0) lets the browser flush that layout before we
-      // recompute the parent envelope a second time — this is what
-      // allows the container to grow to include label overhang.
-      // In a nested hierarchy (container inside container) we then
-      // walk up the chain: the just-grown parent pushes its siblings
-      // down in the ancestor's restack, the ancestor's envelope
-      // re-fits, and so on until the outermost container.
-      const parent = this._parent
-      setTimeout(() => {
-        if (parent.applyContainerEnvelopeIfNeeded()) {
-          parent.applyPosition()
-          parent.drawShape()
-        }
-        parent.restackAncestorContainers()
-      }, 0)
+      // PR 3 step 5: replace the old `per-node draw() + setTimeout(0) for
+      // envelope + restackAncestorContainers` dance with a single full
+      // `drawElements()` pass. The centralized
+      // `recomputeParametricLayout` entry point now sizes every container
+      // bottom-up in phase A (using logical geometry, not SVG getBBox, so
+      // no race with layout flush) and re-stacks every container's
+      // descendants top-down in phase C, including nested containers.
+      // Ancestor envelopes follow automatically — no ancestor walk
+      // needed.
+      this._parent.drawing_area.drawElements()
     }
     this._is_currently_in_unsetting_recursion = false
   }
