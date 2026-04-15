@@ -1804,46 +1804,151 @@ export class NodePositioning {
     if (scope.type === 'subtree') {
       throw new Error(
         '[recomputeParametricLayout] scope \'subtree\' not implemented yet ' +
-        '— requires container recursion (upcoming commit of PR 3).'
+        '— requires container recursion (future commit of PR 3).'
       )
     }
 
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
 
-    // Un nœud est « feuille de colonne top-level » si visible, non-échange,
-    // et non-enfant d'un container. Les enfants de container sont laissés
-    // à l'ancien chemin applyPosition tant que la recursion containers
-    // n'est pas en place.
-    const is_top_level_leaf = (n: Class_NodeElement): boolean => {
+    // --- Helpers ---
+
+    // A container is any node that is a parent of at least one dimension
+    // running in container_mode. Nested containers are handled recursively.
+    const isContainerParent = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_parent.some(d => d.container_mode)
+
+    // A "top-level" node for the column stacking is a visible, non-exchange
+    // node that is NOT itself sitting inside a container. Top-level nodes
+    // include: plain leaves, plain intermediates, AND top-level containers
+    // (containers that are not themselves children of another container).
+    // Container children — at any depth — are excluded; they are positioned
+    // by the recursive container descent pass.
+    const isTopLevel = (n: Class_NodeElement): boolean => {
       if (!n.is_visible) return false
       if (echangeTag && n.hasGivenTag(echangeTag)) return false
       if (n.dimensions_as_child.some(d => d.container_mode)) return false
       return true
     }
 
-    const all_candidates = this.drawingArea.sankey.visible_nodes_list.filter(is_top_level_leaf)
+    // Sort container children by position_v, with a stable tie-break on
+    // the current position_y so equal-V or unassigned-V (-1) nodes don't
+    // dance around between recomputes.
+    const sortByV = (nodes: Class_NodeElement[]): Class_NodeElement[] => {
+      return [...nodes].sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+    }
 
-    // Groupe par position_u. Filtré ensuite si scope=column.
+    // Collect direct container children of a given container parent.
+    // Dedupes across multiple container_mode dimensions and keeps only
+    // visible non-exchange nodes (the rest do not contribute to the
+    // envelope).
+    const collectContainerChildren = (container: Class_NodeElement): Class_NodeElement[] => {
+      const seen = new Set<Class_NodeElement>()
+      const children: Class_NodeElement[] = []
+      container.dimensions_as_parent
+        .filter(d => d.container_mode)
+        .forEach(dim => {
+          dim.children.forEach(child => {
+            const c = child as Class_NodeElement
+            if (seen.has(c)) return
+            seen.add(c)
+            if (!c.is_visible) return
+            if (echangeTag && c.hasGivenTag(echangeTag)) return
+            children.push(c)
+          })
+        })
+      return children
+    }
+
+    // --- Phase A : bottom-up sizing of nested containers ---
+    //
+    // Sets shape_min_height / shape_min_width of every container parent to
+    // the envelope size its (recursively-sized) children would produce,
+    // WITHOUT writing any position. Positions are decided in phase B and C.
+    //
+    // Recursion walks post-order: we need each child's final height before
+    // we can sum them into the enclosing container's envelope. For a leaf
+    // child, getShapeHeightToUse() already returns its intrinsic height.
+    const sized = new Set<Class_NodeElement>()
+    const sizeContainerRecursive = (container: Class_NodeElement) => {
+      if (sized.has(container)) return
+      sized.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      // Recurse first: each container-parent child must have its own
+      // envelope size computed before we read its height.
+      children.forEach(c => {
+        if (isContainerParent(c)) sizeContainerRecursive(c)
+      })
+      // Sum children heights + dy + top/bottom margins.
+      const stack_h = NodePositioning.totalStackHeight(children)
+      const envelope_h = stack_h + container.shape_margin_top + container.shape_margin_bottom
+      // Width: max of child widths + left/right margins. Container children
+      // are supposed to be aligned on the container's x axis in the current
+      // layout, so max(child.width) is a safe upper bound.
+      const max_child_w = children.reduce(
+        (m, c) => Math.max(m, c.getShapeWidthToUse()), 0
+      )
+      const envelope_w = max_child_w + container.shape_margin_left + container.shape_margin_right
+      container.shape_min_height = envelope_h
+      container.shape_min_width = envelope_w
+    }
+
+    // --- Phase B : top-level column stacking ---
+    //
+    // Collect every visible, non-exchange, non-container-child node. Group
+    // by position_u. For each column, sort by position_v (anchor = current
+    // y of the lowest-V node) and stack via stackNodesVertically. Top-level
+    // containers participate as normal nodes in this pass — their height
+    // is accurate after phase A.
+    const top_level_nodes = this.drawingArea.sankey.visible_nodes_list.filter(isTopLevel)
+    // Run phase A on every top-level container before we rely on their
+    // getShapeHeightToUse() in phase B.
+    top_level_nodes
+      .filter(isContainerParent)
+      .forEach(c => sizeContainerRecursive(c))
+
     const columns = new Map<number, Class_NodeElement[]>()
-    all_candidates.forEach(n => {
+    top_level_nodes.forEach(n => {
       if (scope.type === 'column' && n.position_u !== scope.u) return
       const col = columns.get(n.position_u) ?? []
       col.push(n)
       columns.set(n.position_u, col)
     })
-
     columns.forEach(column => {
       if (column.length === 0) return
-      // Tri par position_v croissant, tie-break sur position_y pour que
-      // deux nœuds à V égal (ou V non-assigné -1) restent dans leur ordre
-      // spatial courant et ne dansent pas à chaque recompute.
-      column.sort((a, b) => {
-        if (a.position_v !== b.position_v) return a.position_v - b.position_v
-        return a.position_y - b.position_y
-      })
-      const anchor_y = column[0].position_y
-      NodePositioning.stackNodesVertically(column, anchor_y)
+      const sorted = sortByV(column)
+      const anchor_y = sorted[0].position_y
+      NodePositioning.stackNodesVertically(sorted, anchor_y)
     })
+
+    // --- Phase C : top-down positioning of container descendants ---
+    //
+    // Containers that participated in phase B may now have a different y
+    // than they had going in. Their children need to be re-stacked at the
+    // new (container.y + margin_top) anchor. Recursive: if a child is
+    // itself a container, we descend into it after positioning it.
+    const positioned = new Set<Class_NodeElement>()
+    const positionContainerChildrenRecursive = (container: Class_NodeElement) => {
+      if (positioned.has(container)) return
+      positioned.add(container)
+      const children = sortByV(collectContainerChildren(container))
+      if (children.length === 0) return
+      const anchor_y = container.position_y + container.shape_margin_top
+      NodePositioning.stackNodesVertically(children, anchor_y)
+      children.forEach(c => {
+        if (isContainerParent(c)) positionContainerChildrenRecursive(c)
+      })
+    }
+    // When the scope is 'column', only descend into top-level containers
+    // that live in the target column; the others retain their current
+    // (already-valid) descendant layout.
+    top_level_nodes
+      .filter(isContainerParent)
+      .filter(c => scope.type !== 'column' || c.position_u === scope.u)
+      .forEach(c => positionContainerChildrenRecursive(c))
   }
 
   /**
