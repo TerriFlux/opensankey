@@ -440,6 +440,12 @@ export class Class_DrawingArea {
    */
   public drawElements() {
     if (this.bypass_redraws) return
+    // PR 3 — central entry point for parametric layout. Node.applyPosition
+    // is now a pass-through in parametric mode, so positions must be
+    // refreshed here before any node is drawn. Single source of truth.
+    if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
+      this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    }
     // Draw grid
     this.drawBackground()
     this.drawGrid()
