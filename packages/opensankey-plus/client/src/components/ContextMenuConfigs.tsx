@@ -34,11 +34,17 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
         type: 'action',
         labels: {
           en: 'Reconciling actual sankey diagram',
-          fr: 'Ajuster et compléter le diagramme'
+          fr: 'Ajuster et compléter le diagramme',
+          es: 'Reconciliar el diagrama Sankey actual',
+          de: 'Aktuelles Sankey-Diagramm abgleichen',
+          it: 'Riconciliare il diagramma Sankey attuale'
         },
         tooltips: {
           en: 'Reconciling actual sankey diagram',
-          fr: 'Ajuster et compléter le diagramme'
+          fr: 'Ajuster et compléter le diagramme',
+          es: 'Reconciliar el diagrama Sankey actual',
+          de: 'Aktuelles Sankey-Diagramm abgleichen',
+          it: 'Riconciliare il diagramma Sankey attuale'
         }
       }
     }
@@ -98,17 +104,23 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
         type: 'action',
         labels: {
           en: 'Creates unitary sankey',
-          fr: 'Créer sankey unitaire'
+          fr: 'Créer sankey unitaire',
+          es: 'Crear Sankey unitario',
+          de: 'Einheitliches Sankey erstellen',
+          it: 'Creare Sankey unitario'
         },
         tooltips: {
           en: 'Creates unitary sankey',
-          fr: 'Créer sankey unitaire'
+          fr: 'Créer sankey unitaire',
+          es: 'Crear Sankey unitario',
+          de: 'Einheitliches Sankey erstellen',
+          it: 'Creare Sankey unitario'
         }
       }
     },
     sectionTitles: {
       ...NODE_MENU_CONFIG.sectionTitles,
-      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey' }
+      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey', es: 'Crear Sankey unitario', de: 'Einheitliches Sankey erstellen', it: 'Creare Sankey unitario' }
     }
   }
 }
@@ -122,17 +134,23 @@ export const createStaticNodeMenuConfigPlus = (): MenuConfig => {
         type: 'action',
         labels: {
           en: 'Creates unitary sankey',
-          fr: 'Créer sankey unitaire'
+          fr: 'Créer sankey unitaire',
+          es: 'Crear Sankey unitario',
+          de: 'Einheitliches Sankey erstellen',
+          it: 'Creare Sankey unitario'
         },
         tooltips: {
           en: 'Creates unitary sankey',
-          fr: 'Créer sankey unitaire'
+          fr: 'Créer sankey unitaire',
+          es: 'Crear Sankey unitario',
+          de: 'Einheitliches Sankey erstellen',
+          it: 'Creare Sankey unitario'
         }
       }
     },
     sectionTitles: {
       ...STATIC_NODE_MENU_CONFIG.sectionTitles,
-      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey' }
+      createUnitarySankey: { fr: 'Créer sankey unitaire', en: 'Creates unitary sankey', es: 'Crear Sankey unitario', de: 'Einheitliches Sankey erstellen', it: 'Creare Sankey unitario' }
     }
   }
 }

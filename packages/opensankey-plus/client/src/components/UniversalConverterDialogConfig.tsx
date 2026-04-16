@@ -12,11 +12,17 @@ OSP_OUTPUT_ATTRIBUTES_CONFIG['base'] = {
     type: (() => false) as (() => boolean),
     labels: {
       en: 'Only current view',
-      fr: 'Seulement la vue courante'
+      fr: 'Seulement la vue courante',
+      es: 'Solo la vista actual',
+      de: 'Nur aktuelle Ansicht',
+      it: 'Solo la vista corrente'
     },
     tooltips: {
       en: 'Load only the current view',
-      fr: 'Charger seulement la vue courante'
+      fr: 'Charger seulement la vue courante',
+      es: 'Cargar solo la vista actual',
+      de: 'Nur die aktuelle Ansicht laden',
+      it: 'Caricare solo la vista corrente'
     },
     visibilityConditions: [
       {
