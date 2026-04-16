@@ -68,7 +68,9 @@ declare const window: Window &
 
 // Link with React
 window.React = React
-i18next.changeLanguage(navigator.language.includes('fr') ? 'fr' : 'en')
+const browserLang = navigator.language.slice(0, 2)
+const supportedLangs = ['fr', 'en', 'es', 'de', 'it']
+i18next.changeLanguage(supportedLangs.includes(browserLang) ? browserLang : 'en')
 
 // Application container
 const container = document.getElementById('react-container') as Element | DocumentFragment

@@ -54,55 +54,55 @@ interface ElementConfig<T extends ElementInstance> {
 export const ELEMENTS_MENU_CONFIG = {
   node: {
     labels: {
-      TS: { en: 'Selected nodes', fr: 'Noeuds sélectionnés' },
-      NS: { en: 'No selection', fr: 'Aucune sélection' },
-      Nom: { en: 'Name', fr: 'Nom' }
+      TS: { en: 'Selected nodes', fr: 'Noeuds sélectionnés', es: 'Nodos seleccionados', de: 'Ausgewählte Knoten', it: 'Nodi selezionati' },
+      NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione' },
+      Nom: { en: 'Name', fr: 'Nom', es: 'Nombre', de: 'Name', it: 'Nome' }
     },
     tooltips: {
-      plus: { en: 'Add a node, which will be automatically selected', fr: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.' },
-      slct: { en: 'Choose nodes to select via dropdown', fr: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante' },
-      rm: { en: 'Delete all currently selected nodes', fr: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)' },
-      dns: { en: 'Display only visible nodes in selector', fr: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles' },
-      Nom: { en: 'Rename the node', fr: 'Renommer le noeud' }
+      plus: { en: 'Add a node, which will be automatically selected', fr: 'Ajouter un noeud. Celui-ci sera automatiquement selectionné.', es: 'Añadir un nodo, que se seleccionará automáticamente', de: 'Einen Knoten hinzufügen, der automatisch ausgewählt wird', it: 'Aggiungere un nodo, che verrà selezionato automaticamente' },
+      slct: { en: 'Choose nodes to select via dropdown', fr: 'Choisir un / des / tous les noeud(s) à sélectionner via une liste déroulante', es: 'Elegir nodos a seleccionar mediante lista desplegable', de: 'Knoten über Dropdown-Liste auswählen', it: 'Scegliere i nodi da selezionare tramite elenco a discesa' },
+      rm: { en: 'Delete all currently selected nodes', fr: 'Permettre de supprimer tous les noeud(s) actuellement sélectionné(s)', es: 'Eliminar todos los nodos actualmente seleccionados', de: 'Alle aktuell ausgewählten Knoten löschen', it: 'Eliminare tutti i nodi attualmente selezionati' },
+      dns: { en: 'Display only visible nodes in selector', fr: 'Afficher dans la liste de selection des noeuds, uniquement ceux actuellement visibles', es: 'Mostrar solo los nodos visibles en el selector', de: 'Nur sichtbare Knoten im Selektor anzeigen', it: 'Visualizzare solo i nodi visibili nel selettore' },
+      Nom: { en: 'Rename the node', fr: 'Renommer le noeud', es: 'Renombrar el nodo', de: 'Den Knoten umbenennen', it: 'Rinominare il nodo' }
     }
   },
 
   link: {
     labels: {
-      TS: { en: 'Selected links', fr: 'Flux sélectionnés' },
-      NS: { en: 'No selection', fr: 'Aucune sélection' }
+      TS: { en: 'Selected links', fr: 'Flux sélectionnés', es: 'Flujos seleccionados', de: 'Ausgewählte Flüsse', it: 'Flussi selezionati' },
+      NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione' }
     },
     tooltips: {
-      plus: { en: 'Add a new link', fr: 'Ajouter un flux' },
-      slct: { en: 'Choose links to select', fr: 'Choisir un / des / tous les flux à sélectionner' },
-      rm: { en: 'Delete selected links', fr: 'Supprimer les flux sélectionnés' },
-      dns: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles' },
-      dls: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles' }
+      plus: { en: 'Add a new link', fr: 'Ajouter un flux', es: 'Añadir un nuevo flujo', de: 'Einen neuen Fluss hinzufügen', it: 'Aggiungere un nuovo flusso' },
+      slct: { en: 'Choose links to select', fr: 'Choisir un / des / tous les flux à sélectionner', es: 'Elegir flujos a seleccionar', de: 'Flüsse zum Auswählen wählen', it: 'Scegliere i flussi da selezionare' },
+      rm: { en: 'Delete selected links', fr: 'Supprimer les flux sélectionnés', es: 'Eliminar los flujos seleccionados', de: 'Ausgewählte Flüsse löschen', it: 'Eliminare i flussi selezionati' },
+      dns: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles', es: 'Mostrar solo los flujos visibles', de: 'Nur sichtbare Flüsse anzeigen', it: 'Visualizzare solo i flussi visibili' },
+      dls: { en: 'Display only visible links', fr: 'Afficher uniquement les flux visibles', es: 'Mostrar solo los flujos visibles', de: 'Nur sichtbare Flüsse anzeigen', it: 'Visualizzare solo i flussi visibili' }
     }
   },
 
   container: {
     labels: {
-      TS: { en: 'Selected containers', fr: 'Containers sélectionnés' },
-      NS: { en: 'No selection', fr: 'Aucune sélection' },
-      Nom: { en: 'Name', fr: 'Nom' }
+      TS: { en: 'Selected containers', fr: 'Containers sélectionnés', es: 'Contenedores seleccionados', de: 'Ausgewählte Container', it: 'Contenitori selezionati' },
+      NS: { en: 'No selection', fr: 'Aucune sélection', es: 'Sin selección', de: 'Keine Auswahl', it: 'Nessuna selezione' },
+      Nom: { en: 'Name', fr: 'Nom', es: 'Nombre', de: 'Name', it: 'Nome' }
     },
     tooltips: {
-      plus: { en: 'Add a container', fr: 'Ajouter un container' },
-      slct: { en: 'Choose containers to select', fr: 'Choisir les containers à sélectionner' },
-      rm: { en: 'Delete selected containers', fr: 'Supprimer les containers sélectionnés' },
-      dns: { en: 'Display only visible containers', fr: 'Afficher uniquement les containers visibles' },
-      Nom: { en: 'Rename the container', fr: 'Renommer le container' }
+      plus: { en: 'Add a container', fr: 'Ajouter un container', es: 'Añadir un contenedor', de: 'Einen Container hinzufügen', it: 'Aggiungere un contenitore' },
+      slct: { en: 'Choose containers to select', fr: 'Choisir les containers à sélectionner', es: 'Elegir contenedores a seleccionar', de: 'Container zum Auswählen wählen', it: 'Scegliere i contenitori da selezionare' },
+      rm: { en: 'Delete selected containers', fr: 'Supprimer les containers sélectionnés', es: 'Eliminar los contenedores seleccionados', de: 'Ausgewählte Container löschen', it: 'Eliminare i contenitori selezionati' },
+      dns: { en: 'Display only visible containers', fr: 'Afficher uniquement les containers visibles', es: 'Mostrar solo los contenedores visibles', de: 'Nur sichtbare Container anzeigen', it: 'Visualizzare solo i contenitori visibili' },
+      Nom: { en: 'Rename the container', fr: 'Renommer le container', es: 'Renombrar el contenedor', de: 'Den Container umbenennen', it: 'Rinominare il contenitore' }
     }
   },
 
   common: {
     labels: {
-      filter_nodes: { en: 'Filter nodes', fr: 'Filtrer les nœuds' },
-      filter_links: { en: 'Filter links', fr: 'Filtrer les flux' },
-      filter_containers: { en: 'Filter containers', fr: 'Filtrer les containers' },
-      select_elements: { en: 'Select elements', fr: 'Sélectionner des éléments' },
-      toggle_visibility: { en: 'Toggle visibility', fr: 'Basculer la visibilité' }
+      filter_nodes: { en: 'Filter nodes', fr: 'Filtrer les nœuds', es: 'Filtrar nodos', de: 'Knoten filtern', it: 'Filtrare i nodi' },
+      filter_links: { en: 'Filter links', fr: 'Filtrer les flux', es: 'Filtrar flujos', de: 'Flüsse filtern', it: 'Filtrare i flussi' },
+      filter_containers: { en: 'Filter containers', fr: 'Filtrer les containers', es: 'Filtrar contenedores', de: 'Container filtern', it: 'Filtrare i contenitori' },
+      select_elements: { en: 'Select elements', fr: 'Sélectionner des éléments', es: 'Seleccionar elementos', de: 'Elemente auswählen', it: 'Selezionare elementi' },
+      toggle_visibility: { en: 'Toggle visibility', fr: 'Basculer la visibilité', es: 'Alternar visibilidad', de: 'Sichtbarkeit umschalten', it: 'Attivare/disattivare visibilità' }
     }
   }
 } as const

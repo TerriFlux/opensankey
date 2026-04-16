@@ -267,7 +267,10 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
           let title = imagePath.split('/').pop()
           title = title!.split('.').splice(0, 1).join('')
 
+          // Use i18n translations if available, fallback to resources.json
           const carouselItem = resources?.carousel_data?.[title]
+          const carouselTitle = t('welcome.carousel.' + title + '.title', carouselItem?.title ?? '')
+          const carouselDescription = t('welcome.carousel.' + title + '.description', carouselItem?.description ?? '')
 
           return (
             <Carousel.Item key={idx} style={{ height: '60vh', overflow: 'hidden' }}>
@@ -286,7 +289,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
                   maxHeight='8%'
                   overflow='hidden'
                 >
-                  {carouselItem?.title}
+                  {carouselTitle}
                 </Text>
 
                 <Box
@@ -320,7 +323,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
                   maxHeight='10%'
                   overflow='hidden'
                 >
-                  {carouselItem?.description}
+                  {carouselDescription}
                 </Text>
               </Box>
             </Carousel.Item>

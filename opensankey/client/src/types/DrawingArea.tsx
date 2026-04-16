@@ -1996,8 +1996,10 @@ export class Class_DrawingArea {
       if (isMac ? event.metaKey : event.ctrlKey) {
         // Avoid CTRL + Scroll (or CMD + Scroll on Mac) default behavior in Browser
         event.preventDefault()
-        // Get Scrolling factor ; either 1.1 or 0.9
-        const scale = 1 - (event.deltaY / Math.abs(event.deltaY)) / 10
+        // Guard: ignore if deltaY is 0 (can happen with touchpad or wheel tilt)
+        if (event.deltaY === 0) return
+        // Smooth zoom factor proportional to deltaY magnitude
+        const scale = Math.pow(2, -event.deltaY / 300)
         // Apply scaling
         this.zoomListener.scaleBy(
           this.d3_selection_zoom_area,

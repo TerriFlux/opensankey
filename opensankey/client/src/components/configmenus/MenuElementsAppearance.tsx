@@ -2348,6 +2348,168 @@ export const missing_menu_translations = {
         }
       }
     }
+  },
+
+  es: {
+    translation: {
+      Menu: {
+        tabs: {
+          shape: 'Forma',
+          name: 'Etiqueta',
+          value: 'Valor',
+          icon: 'Icono'
+        },
+
+        display_mode: {
+          text: 'Texto',
+          rich: 'Texto enriquecido',
+          editor: 'Editor',
+          value: 'Valor',
+          icon: 'Icono',
+          image: 'Imagen',
+          tooltips: {
+            simple_text: 'Modo texto simple',
+            rich_text: 'Abrir editor de texto',
+            value: 'Mostrar valor numérico',
+            icon: 'Mostrar como icono',
+            image: 'Mostrar como imagen personalizada'
+          }
+        },
+
+        sections: {
+          icon_catalog: 'Catálogo de iconos',
+          icon_color: 'Color del icono',
+          image_source: 'Fuente de imagen',
+          position_size_offsets: 'Posición, tamaño y desplazamientos',
+          link_label_position: 'Flujo',
+          node_geometry: 'Forma del nodo',
+          link_geometry: 'Forma del flujo',
+          orientation: 'Orientación',
+          shape: 'Forma',
+          options: 'Opciones',
+          link_background: 'Fondo del flujo'
+        },
+
+        common: {
+          show_background: 'Mostrar fondo',
+          background_visible: 'Fondo visible',
+          show_border: 'Mostrar borde',
+          border_visible: 'Borde visible',
+          multiple_values: 'Valores múltiples',
+          vertical: 'Vertical',
+          interior: 'Interior',
+          exterior: 'Exterior'
+        }
+      }
+    }
+  },
+
+  de: {
+    translation: {
+      Menu: {
+        tabs: {
+          shape: 'Form',
+          name: 'Beschriftung',
+          value: 'Wert',
+          icon: 'Symbol'
+        },
+
+        display_mode: {
+          text: 'Text',
+          rich: 'Rich-Text',
+          editor: 'Editor',
+          value: 'Wert',
+          icon: 'Symbol',
+          image: 'Bild',
+          tooltips: {
+            simple_text: 'Einfacher Textmodus',
+            rich_text: 'Texteditor öffnen',
+            value: 'Numerischen Wert anzeigen',
+            icon: 'Als Symbol anzeigen',
+            image: 'Als benutzerdefiniertes Bild anzeigen'
+          }
+        },
+
+        sections: {
+          icon_catalog: 'Symbolkatalog',
+          icon_color: 'Symbolfarbe',
+          image_source: 'Bildquelle',
+          position_size_offsets: 'Position, Größe und Versätze',
+          link_label_position: 'Fluss',
+          node_geometry: 'Knotenform',
+          link_geometry: 'Flussform',
+          orientation: 'Orientierung',
+          shape: 'Form',
+          options: 'Optionen',
+          link_background: 'Flusshintergrund'
+        },
+
+        common: {
+          show_background: 'Hintergrund anzeigen',
+          background_visible: 'Hintergrund sichtbar',
+          show_border: 'Rand anzeigen',
+          border_visible: 'Rand sichtbar',
+          multiple_values: 'Mehrere Werte',
+          vertical: 'Vertikal',
+          interior: 'Innen',
+          exterior: 'Außen'
+        }
+      }
+    }
+  },
+
+  it: {
+    translation: {
+      Menu: {
+        tabs: {
+          shape: 'Forma',
+          name: 'Etichetta',
+          value: 'Valore',
+          icon: 'Icona'
+        },
+
+        display_mode: {
+          text: 'Testo',
+          rich: 'Testo formattato',
+          editor: 'Editor',
+          value: 'Valore',
+          icon: 'Icona',
+          image: 'Immagine',
+          tooltips: {
+            simple_text: 'Modalità testo semplice',
+            rich_text: 'Aprire l\'editor di testo',
+            value: 'Visualizzare il valore numerico',
+            icon: 'Visualizzare come icona',
+            image: 'Visualizzare come immagine personalizzata'
+          }
+        },
+
+        sections: {
+          icon_catalog: 'Catalogo icone',
+          icon_color: 'Colore icona',
+          image_source: 'Sorgente immagine',
+          position_size_offsets: 'Posizione, dimensione e offset',
+          link_label_position: 'Flusso',
+          node_geometry: 'Forma del nodo',
+          link_geometry: 'Forma del flusso',
+          orientation: 'Orientamento',
+          shape: 'Forma',
+          options: 'Opzioni',
+          link_background: 'Sfondo flusso'
+        },
+
+        common: {
+          show_background: 'Mostrare sfondo',
+          background_visible: 'Sfondo visibile',
+          show_border: 'Mostrare bordo',
+          border_visible: 'Bordo visibile',
+          multiple_values: 'Valori multipli',
+          vertical: 'Verticale',
+          interior: 'Interno',
+          exterior: 'Esterno'
+        }
+      }
+    }
   }
 }
 
@@ -2398,6 +2560,78 @@ export const missing_node_labels_translations = {
             dessous: 'Dessous',
             milieu_v: 'Milieu vertical',
             dessus: 'Dessus'
+          }
+        }
+      }
+    }
+  },
+
+  es: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: 'Valor',
+          icon_is_visible: 'Icono',
+          value_label_unit_visible: 'Unidad',
+
+          tooltips: {
+            left_align: 'Alinear a la izquierda',
+            center_align: 'Centrar',
+            right_align: 'Alinear a la derecha',
+            deb: 'Inicio',
+            milieu_h: 'Centro horizontal',
+            fin: 'Fin',
+            dessous: 'Debajo',
+            milieu_v: 'Centro vertical',
+            dessus: 'Encima'
+          }
+        }
+      }
+    }
+  },
+
+  de: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: 'Wert',
+          icon_is_visible: 'Symbol',
+          value_label_unit_visible: 'Einheit',
+
+          tooltips: {
+            left_align: 'Linksbündig',
+            center_align: 'Zentriert',
+            right_align: 'Rechtsbündig',
+            deb: 'Anfang',
+            milieu_h: 'Horizontale Mitte',
+            fin: 'Ende',
+            dessous: 'Unten',
+            milieu_v: 'Vertikale Mitte',
+            dessus: 'Oben'
+          }
+        }
+      }
+    }
+  },
+
+  it: {
+    translation: {
+      Noeud: {
+        labels: {
+          value_label_is_visible: 'Valore',
+          icon_is_visible: 'Icona',
+          value_label_unit_visible: 'Unità',
+
+          tooltips: {
+            left_align: 'Allineare a sinistra',
+            center_align: 'Centrare',
+            right_align: 'Allineare a destra',
+            deb: 'Inizio',
+            milieu_h: 'Centro orizzontale',
+            fin: 'Fine',
+            dessous: 'Sotto',
+            milieu_v: 'Centro verticale',
+            dessus: 'Sopra'
           }
         }
       }
@@ -2456,6 +2690,78 @@ export const missing_node_apparence_translations = {
         }
       }
     }
+  },
+
+  es: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: 'Forma',
+          shape_min_width: 'Ancho mínimo',
+          shape_min_height: 'Alto mínimo',
+          shape_margin: 'Márgenes separados',
+          shape_margin_left: 'Izquierda',
+          shape_margin_right: 'Derecha',
+          shape_margin_top: 'Superior',
+          shape_margin_bottom: 'Inferior',
+
+          tooltips: {
+            margins_linked: 'Vincular márgenes',
+            shape_margin: 'Margen',
+            shape_margin_left: 'Margen izquierdo',
+            shape_type: 'Tipo de forma del nodo'
+          }
+        }
+      }
+    }
+  },
+
+  de: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: 'Form',
+          shape_min_width: 'Mindestbreite',
+          shape_min_height: 'Mindesthöhe',
+          shape_margin: 'Separate Ränder',
+          shape_margin_left: 'Links',
+          shape_margin_right: 'Rechts',
+          shape_margin_top: 'Oben',
+          shape_margin_bottom: 'Unten',
+
+          tooltips: {
+            margins_linked: 'Ränder verknüpfen',
+            shape_margin: 'Rand',
+            shape_margin_left: 'Linker Rand',
+            shape_type: 'Knotenformtyp'
+          }
+        }
+      }
+    }
+  },
+
+  it: {
+    translation: {
+      Noeud: {
+        apparence: {
+          shape_visible: 'Forma',
+          shape_min_width: 'Larghezza minima',
+          shape_min_height: 'Altezza minima',
+          shape_margin: 'Margini separati',
+          shape_margin_left: 'Sinistra',
+          shape_margin_right: 'Destra',
+          shape_margin_top: 'Superiore',
+          shape_margin_bottom: 'Inferiore',
+
+          tooltips: {
+            margins_linked: 'Collegare i margini',
+            shape_margin: 'Margine',
+            shape_margin_left: 'Margine sinistro',
+            shape_type: 'Tipo di forma del nodo'
+          }
+        }
+      }
+    }
   }
 }
 
@@ -2490,6 +2796,54 @@ export const missing_flux_apparence_translations = {
             of_vh: 'Vertical vers horizontal',
             of_hv: 'Horizontal vers vertical',
             shape_is_recycling: 'Flux de recyclage'
+          }
+        }
+      }
+    }
+  },
+
+  es: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: 'Horizontal a horizontal',
+            of_vv: 'Vertical a vertical',
+            of_vh: 'Vertical a horizontal',
+            of_hv: 'Horizontal a vertical',
+            shape_is_recycling: 'Flujo de reciclaje'
+          }
+        }
+      }
+    }
+  },
+
+  de: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: 'Horizontal zu horizontal',
+            of_vv: 'Vertikal zu vertikal',
+            of_vh: 'Vertikal zu horizontal',
+            of_hv: 'Horizontal zu vertikal',
+            shape_is_recycling: 'Recycling-Fluss'
+          }
+        }
+      }
+    }
+  },
+
+  it: {
+    translation: {
+      Flux: {
+        apparence: {
+          tooltips: {
+            of_hh: 'Orizzontale a orizzontale',
+            of_vv: 'Verticale a verticale',
+            of_vh: 'Verticale a orizzontale',
+            of_hv: 'Orizzontale a verticale',
+            shape_is_recycling: 'Flusso di riciclaggio'
           }
         }
       }

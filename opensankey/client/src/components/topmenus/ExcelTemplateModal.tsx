@@ -20,45 +20,60 @@ const SHEET_GROUPS = [
   {
     label_fr: 'Structure',
     label_en: 'Structure',
+    label_es: 'Estructura',
+    label_de: 'Struktur',
+    label_it: 'Struttura',
     sheets: [
-      { key: 'tags', label_fr: 'Étiquettes', label_en: 'Tags', checked: true },
-      { key: 'nodes', label_fr: 'Nœuds', label_en: 'Nodes', checked: false },
-      { key: 'products', label_fr: 'Produits', label_en: 'Products', checked: true },
-      { key: 'sectors', label_fr: 'Secteurs', label_en: 'Sectors', checked: true },
-      { key: 'exchanges', label_fr: 'Échanges', label_en: 'Exchanges', checked: false },
-      { key: 'ter', label_fr: 'TER', label_en: 'TER', checked: true },
+      { key: 'tags', label_fr: 'Étiquettes', label_en: 'Tags', label_es: 'Etiquetas', label_de: 'Tags', label_it: 'Etichette', checked: true },
+      { key: 'nodes', label_fr: 'Nœuds', label_en: 'Nodes', label_es: 'Nodos', label_de: 'Knoten', label_it: 'Nodi', checked: false },
+      { key: 'products', label_fr: 'Produits', label_en: 'Products', label_es: 'Productos', label_de: 'Produkte', label_it: 'Prodotti', checked: true },
+      { key: 'sectors', label_fr: 'Secteurs', label_en: 'Sectors', label_es: 'Sectores', label_de: 'Sektoren', label_it: 'Settori', checked: true },
+      { key: 'exchanges', label_fr: 'Échanges', label_en: 'Exchanges', label_es: 'Intercambios', label_de: 'Austausche', label_it: 'Scambi', checked: false },
+      { key: 'ter', label_fr: 'TER', label_en: 'TER', label_es: 'TER', label_de: 'TER', label_it: 'TER', checked: true },
     ],
   },
   {
     label_fr: 'Données',
     label_en: 'Data',
+    label_es: 'Datos',
+    label_de: 'Daten',
+    label_it: 'Dati',
     sheets: [
-      { key: 'data', label_fr: 'Valeurs', label_en: 'Values', checked: true },
-      { key: 'min_max', label_fr: 'Min Max', label_en: 'Min Max', checked: false },
-      { key: 'stocks', label_fr: 'Stocks', label_en: 'Stocks', checked: false },
+      { key: 'data', label_fr: 'Valeurs', label_en: 'Values', label_es: 'Valores', label_de: 'Werte', label_it: 'Valori', checked: true },
+      { key: 'min_max', label_fr: 'Min Max', label_en: 'Min Max', label_es: 'Mín Máx', label_de: 'Min Max', label_it: 'Min Max', checked: false },
+      { key: 'stocks', label_fr: 'Stocks', label_en: 'Stocks', label_es: 'Existencias', label_de: 'Bestände', label_it: 'Scorte', checked: false },
     ],
   },
   {
     label_fr: 'Contraintes',
     label_en: 'Constraints',
+    label_es: 'Restricciones',
+    label_de: 'Einschränkungen',
+    label_it: 'Vincoli',
     sheets: [
-      { key: 'constraints', label_fr: 'Contraintes', label_en: 'Constraints', checked: false },
-      { key: 'ratio_flux', label_fr: 'Ratio Flux', label_en: 'Ratio Flux', checked: false },
+      { key: 'constraints', label_fr: 'Contraintes', label_en: 'Constraints', label_es: 'Restricciones', label_de: 'Einschränkungen', label_it: 'Vincoli', checked: false },
+      { key: 'ratio_flux', label_fr: 'Ratio Flux', label_en: 'Ratio Flux', label_es: 'Ratio Flujo', label_de: 'Fluss-Verhältnis', label_it: 'Rapporto Flusso', checked: false },
     ],
   },
   {
     label_fr: 'Résultats',
     label_en: 'Results',
+    label_es: 'Resultados',
+    label_de: 'Ergebnisse',
+    label_it: 'Risultati',
     sheets: [
-      { key: 'results', label_fr: 'Résultats', label_en: 'Results', checked: false },
-      { key: 'analysis', label_fr: 'Analyse', label_en: 'Analysis', checked: false },
+      { key: 'results', label_fr: 'Résultats', label_en: 'Results', label_es: 'Resultados', label_de: 'Ergebnisse', label_it: 'Risultati', checked: false },
+      { key: 'analysis', label_fr: 'Analyse', label_en: 'Analysis', label_es: 'Análisis', label_de: 'Analyse', label_it: 'Analisi', checked: false },
     ],
   },
   {
     label_fr: 'Doc',
     label_en: 'Doc',
+    label_es: 'Doc',
+    label_de: 'Dok',
+    label_it: 'Doc',
     sheets: [
-      { key: 'readme', label_fr: 'Readme', label_en: 'Readme', checked: true },
+      { key: 'readme', label_fr: 'Readme', label_en: 'Readme', label_es: 'Léame', label_de: 'Readme', label_it: 'Leggimi', checked: true },
     ],
   },
 ]
@@ -91,8 +106,9 @@ export const ModalExcelTemplate = ({
   setShow: (v: boolean) => void
 }) => {
   const { i18n } = new_data
-  const lang = i18n.language?.startsWith('fr') ? 'fr' : 'en'
-  const isFr = lang === 'fr'
+  const langCode = i18n.language?.substring(0, 2) ?? 'en'
+  const lang = (['fr', 'es', 'de', 'it'].includes(langCode)) ? langCode : 'en'
+  const labelKey = ('label_' + lang) as 'label_fr' | 'label_en' | 'label_es' | 'label_de' | 'label_it'
 
   const [checked, setChecked] = useState<Record<string, boolean>>(getInitialChecked)
   const [loading, setLoading] = useState(false)
@@ -133,7 +149,7 @@ export const ModalExcelTemplate = ({
       setShow(false)
     } catch (e) {
       toast({
-        title: isFr ? 'Erreur' : 'Error',
+        title: ({ fr: 'Erreur', en: 'Error', es: 'Error', de: 'Fehler', it: 'Errore' } as Record<string, string>)[lang] ?? 'Error',
         description: String(e),
         status: 'error',
         duration: 5000,
@@ -181,7 +197,7 @@ export const ModalExcelTemplate = ({
           _active={{ cursor: 'grabbing' }}
         >
           <Text fontWeight='bold' fontSize='sm'>
-            {isFr ? 'Fichier Excel vierge' : 'Blank Excel file'}
+            {({ fr: 'Fichier Excel vierge', en: 'Blank Excel file', es: 'Archivo Excel en blanco', de: 'Leere Excel-Datei', it: 'File Excel vuoto' } as Record<string, string>)[lang] ?? 'Blank Excel file'}
           </Text>
           <CloseButton size='sm' onClick={() => setShow(false)} />
         </Box>
@@ -196,7 +212,7 @@ export const ModalExcelTemplate = ({
             }}>
               {SHEET_GROUPS.map((group, gi) => {
                 const cnt = countInGroup(gi)
-                const label = isFr ? group.label_fr : group.label_en
+                const label = group[labelKey] ?? group.label_en
                 return (
                   <Tab key={gi} sx={cnt > 0 ? { ...tabSx, _selected: { bg: 'blue.50', color: 'blue.700', borderColor: 'blue.400' } } : tabSx}>
                     {label}{cnt > 0 ? ` (${cnt})` : ''}
@@ -217,16 +233,16 @@ export const ModalExcelTemplate = ({
                           : 'menuconfigpanel_option_button'}
                         onClick={() => toggle(sheet.key)}
                       >
-                        {isFr ? sheet.label_fr : sheet.label_en}
+                        {sheet[labelKey] ?? sheet.label_en}
                       </Button>
                     ))}
                   </Box>
                   <Box mt={2} display='flex' gap={2}>
                     <Button size='xs' variant='link' onClick={() => toggleGroup(gi, true)}>
-                      {isFr ? 'Tout' : 'All'}
+                      {({ fr: 'Tout', en: 'All', es: 'Todo', de: 'Alle', it: 'Tutto' } as Record<string, string>)[lang] ?? 'All'}
                     </Button>
                     <Button size='xs' variant='link' onClick={() => toggleGroup(gi, false)}>
-                      {isFr ? 'Aucun' : 'None'}
+                      {({ fr: 'Aucun', en: 'None', es: 'Ninguno', de: 'Keine', it: 'Nessuno' } as Record<string, string>)[lang] ?? 'None'}
                     </Button>
                   </Box>
                 </TabPanel>
@@ -238,7 +254,7 @@ export const ModalExcelTemplate = ({
         {/* Footer */}
         <Box px={3} py={2} borderTop='1px solid' borderColor='gray.200' display='flex' justifyContent='flex-end' gap={2}>
           <Button size='xs' variant='ghost' onClick={() => setShow(false)}>
-            {isFr ? 'Annuler' : 'Cancel'}
+            {({ fr: 'Annuler', en: 'Cancel', es: 'Cancelar', de: 'Abbrechen', it: 'Annulla' } as Record<string, string>)[lang] ?? 'Cancel'}
           </Button>
           <Button
             size='xs'
@@ -247,7 +263,7 @@ export const ModalExcelTemplate = ({
             isLoading={loading}
             isDisabled={selectedSheets.length === 0}
           >
-            {isFr ? 'Télécharger' : 'Download'} ({selectedSheets.length})
+            {({ fr: 'Télécharger', en: 'Download', es: 'Descargar', de: 'Herunterladen', it: 'Scarica' } as Record<string, string>)[lang] ?? 'Download'} ({selectedSheets.length})
           </Button>
         </Box>
       </Box>
