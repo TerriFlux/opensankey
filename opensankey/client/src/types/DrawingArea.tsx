@@ -204,6 +204,8 @@ export class Class_DrawingArea {
     // only trigger zoom event when we scroll (which == 0) &&
     // and drag mouse middle button (which == 2)
     .filter(evt => (evt.which === 2 || evt.which === 0))
+    // Prevent extreme zoom levels that freeze SVG rendering
+    .scaleExtent([0.05, 20])
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -2039,8 +2041,10 @@ export class Class_DrawingArea {
         })
       }, 500)
 
-      // Update scrollbars
-      this._updateScrollbars()
+      // Defer scrollbar update to avoid costly getBBox() on every zoom tick
+      this.application_data._add_waiting_process('update_scrollbars', () => {
+        this._updateScrollbars()
+      }, 100)
     }
   }
 
