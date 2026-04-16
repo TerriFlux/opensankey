@@ -119,11 +119,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Text Zone',
-        fr: 'Zone de texte'
+        fr: 'Zone de texte',
+        es: 'Zona de texto',
+        de: 'Textbereich',
+        it: 'Zona di testo'
       },
       tooltips: {
         en: 'Text Zone',
-        fr: 'Zone de texte'
+        fr: 'Zone de texte',
+        es: 'Zona de texto',
+        de: 'Textbereich',
+        it: 'Zona di testo'
       },
       labelsToggle: {
         en: {
@@ -133,6 +139,18 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Désactiver zone de texte',
           false: 'Activer zone de texte'
+        },
+        es: {
+          true: 'Desactivar zona de texto',
+          false: 'Activar zona de texto'
+        },
+        de: {
+          true: 'Textbereich deaktivieren',
+          false: 'Textbereich aktivieren'
+        },
+        it: {
+          true: 'Disattiva zona di testo',
+          false: 'Attiva zona di testo'
         }
       },
       getToggleValue: 'toggleZDTActivatedValue'
@@ -141,11 +159,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Clear view',
-        fr: 'Vider la vue'
+        fr: 'Vider la vue',
+        es: 'Vaciar la vista',
+        de: 'Ansicht leeren',
+        it: 'Svuota la vista'
       },
       tooltips: {
         en: 'Clear all nodes and links in the current view',
-        fr: 'Supprimer tous les nœuds et flux de la vue courante'
+        fr: 'Supprimer tous les nœuds et flux de la vue courante',
+        es: 'Eliminar todos los nodos y flujos de la vista actual',
+        de: 'Alle Knoten und Flüsse in der aktuellen Ansicht löschen',
+        it: 'Eliminare tutti i nodi e flussi nella vista corrente'
       }
     },
 
@@ -153,11 +177,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'New diagram',
-        fr: 'Nouveau diagramme'
+        fr: 'Nouveau diagramme',
+        es: 'Nuevo diagrama',
+        de: 'Neues Diagramm',
+        it: 'Nuovo diagramma'
       },
       tooltips: {
         en: 'Delete all views and reset to an empty diagram',
-        fr: 'Supprimer toutes les vues et réinitialiser un diagramme vide'
+        fr: 'Supprimer toutes les vues et réinitialiser un diagramme vide',
+        es: 'Eliminar todas las vistas y restablecer un diagrama vacío',
+        de: 'Alle Ansichten löschen und auf ein leeres Diagramm zurücksetzen',
+        it: 'Eliminare tutte le viste e reimpostare un diagramma vuoto'
       }
     },
 
@@ -165,11 +195,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Grid',
-        fr: 'Quadrillage'
+        fr: 'Quadrillage',
+        es: 'Cuadrícula',
+        de: 'Raster',
+        it: 'Griglia'
       },
       tooltips: {
         en: 'Show or hide the background grid',
-        fr: 'Afficher ou masquer la grille de fond'
+        fr: 'Afficher ou masquer la grille de fond',
+        es: 'Mostrar u ocultar la cuadrícula de fondo',
+        de: 'Hintergrundraster ein- oder ausblenden',
+        it: 'Mostrare o nascondere la griglia di sfondo'
       },
       getToggleValue: 'bgGridValue',
       showCheck: true
@@ -179,7 +215,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Legend',
-        fr: 'Légende'
+        fr: 'Légende',
+        es: 'Leyenda',
+        de: 'Legende',
+        it: 'Legenda'
       },
       labelsToggle: {
         en: {
@@ -189,11 +228,26 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Afficher la légende',
           false: 'Masquer la légende'
+        },
+        es: {
+          true: 'Mostrar la leyenda',
+          false: 'Ocultar la leyenda'
+        },
+        de: {
+          true: 'Legende anzeigen',
+          false: 'Legende ausblenden'
+        },
+        it: {
+          true: 'Mostra la legenda',
+          false: 'Nascondi la legenda'
         }
       },
       tooltips: {
         en: 'Toggle the visibility of the legend',
-        fr: 'Basculer la visibilité de la légende'
+        fr: 'Basculer la visibilité de la légende',
+        es: 'Alternar la visibilidad de la leyenda',
+        de: 'Sichtbarkeit der Legende umschalten',
+        it: 'Attiva/disattiva la visibilità della legenda'
       },
       getToggleValue: 'maskLegendValue'
     },
@@ -202,11 +256,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Transpose diagram',
-        fr: 'Transposer le diagramme'
+        fr: 'Transposer le diagramme',
+        es: 'Transponer diagrama',
+        de: 'Diagramm transponieren',
+        it: 'Trasponi diagramma'
       },
       tooltips: {
         en: 'Transpose the diagram: swap horizontal and vertical axes',
-        fr: 'Transposer le diagramme : inverser les axes horizontal et vertical'
+        fr: 'Transposer le diagramme : inverser les axes horizontal et vertical',
+        es: 'Transponer el diagrama: intercambiar los ejes horizontal y vertical',
+        de: 'Diagramm transponieren: horizontale und vertikale Achsen tauschen',
+        it: 'Trasponi il diagramma: scambia gli assi orizzontale e verticale'
       }
     },
 
@@ -214,11 +274,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Align to grid',
-        fr: 'Aligner sur grille'
+        fr: 'Aligner sur grille',
+        es: 'Alinear a la cuadrícula',
+        de: 'Am Raster ausrichten',
+        it: 'Allinea alla griglia'
       },
       tooltips: {
         en: 'Align all nodes to the background grid',
-        fr: 'Aligner tous les nœuds sur la grille de fond'
+        fr: 'Aligner tous les nœuds sur la grille de fond',
+        es: 'Alinear todos los nodos a la cuadrícula de fondo',
+        de: 'Alle Knoten am Hintergrundraster ausrichten',
+        it: 'Allineare tutti i nodi alla griglia di sfondo'
       }
     },
 
@@ -226,7 +292,10 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Absolute coordinate mode',
-        fr: 'Mode position en coordonnées absolues'
+        fr: 'Mode position en coordonnées absolues',
+        es: 'Modo coordenadas absolutas',
+        de: 'Absolutkoordinaten-Modus',
+        it: 'Modalità coordinate assolute'
       },
       labelsToggle: {
         en: {
@@ -236,11 +305,26 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Mode position en coordonnées absolues',
           false: 'Mode position avec écart vertical constant'
+        },
+        es: {
+          true: 'Modo coordenadas absolutas',
+          false: 'Modo desplazamiento vertical constante'
+        },
+        de: {
+          true: 'Absolutkoordinaten-Modus',
+          false: 'Konstanter vertikaler Versatz-Modus'
+        },
+        it: {
+          true: 'Modalità coordinate assolute',
+          false: 'Modalità offset verticale costante'
         }
       },
       tooltips: {
         en: 'Toggle between absolute coordinate mode and constant vertical offset mode',
-        fr: 'Basculer entre le mode coordonnées absolues et le mode écart vertical constant'
+        fr: 'Basculer entre le mode coordonnées absolues et le mode écart vertical constant',
+        es: 'Alternar entre modo coordenadas absolutas y modo desplazamiento vertical constante',
+        de: 'Zwischen Absolutkoordinaten-Modus und konstantem vertikalen Versatz-Modus umschalten',
+        it: 'Alternare tra modalità coordinate assolute e modalità offset verticale costante'
       },
       getToggleValue: 'toggleParametricModeValue'
     },
@@ -249,11 +333,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Reset vertical intervals',
-        fr: 'Réinitialiser les intervalles verticaux'
+        fr: 'Réinitialiser les intervalles verticaux',
+        es: 'Restablecer intervalos verticales',
+        de: 'Vertikale Abstände zurücksetzen',
+        it: 'Reimposta intervalli verticali'
       },
       tooltips: {
         en: 'Reset vertical intervals',
-        fr: 'Réinitialiser les intervalles verticaux'
+        fr: 'Réinitialiser les intervalles verticaux',
+        es: 'Restablecer intervalos verticales',
+        de: 'Vertikale Abstände zurücksetzen',
+        it: 'Reimposta intervalli verticali'
       }
     },
     // toggleAutoX: {
@@ -283,11 +373,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Import/export close',
-        fr: 'Import/export proche'
+        fr: 'Import/export proche',
+        es: 'Importación/exportación cercana',
+        de: 'Import/Export nah',
+        it: 'Importazione/esportazione vicina'
       },
       tooltips: {
         en: 'Set import/export nodes close to their connected nodes oir at the top and bottom of the diagram',
-        fr: 'Placer les nœuds import/export près de leurs nœuds connectés ou en haut et en bas du diagramme'
+        fr: 'Placer les nœuds import/export près de leurs nœuds connectés ou en haut et en bas du diagramme',
+        es: 'Colocar los nodos de importación/exportación cerca de sus nodos conectados o en la parte superior e inferior del diagrama',
+        de: 'Import-/Export-Knoten nah an ihren verbundenen Knoten oder oben und unten im Diagramm platzieren',
+        it: 'Posizionare i nodi di importazione/esportazione vicino ai nodi collegati o in alto e in basso nel diagramma'
       },
       labelsToggle: {
         en: {
@@ -297,6 +393,18 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Option Import/export proche',
           false: 'Option Import/export haut/bas'
+        },
+        es: {
+          true: 'Opción Importación/exportación cercana',
+          false: 'Opción Importación/exportación arriba/abajo'
+        },
+        de: {
+          true: 'Option Import/Export nah',
+          false: 'Option Import/Export oben/unten'
+        },
+        it: {
+          true: 'Opzione Importazione/esportazione vicina',
+          false: 'Opzione Importazione/esportazione alto/basso'
         }
       },
       getToggleValue: 'toggleTradeValue'
@@ -305,11 +413,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Random node colors',
-        fr: 'Couleurs aléatoires nœuds'
+        fr: 'Couleurs aléatoires nœuds',
+        es: 'Colores aleatorios de nodos',
+        de: 'Zufällige Knotenfarben',
+        it: 'Colori casuali nodi'
       },
       tooltips: {
         en: 'Apply random colors to all nodes',
-        fr: 'Appliquer des couleurs aléatoires à tous les nœuds'
+        fr: 'Appliquer des couleurs aléatoires à tous les nœuds',
+        es: 'Aplicar colores aleatorios a todos los nodos',
+        de: 'Zufällige Farben auf alle Knoten anwenden',
+        it: 'Applicare colori casuali a tutti i nodi'
       }
     },
 
@@ -317,11 +431,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Random link colors',
-        fr: 'Couleurs aléatoires flux'
+        fr: 'Couleurs aléatoires flux',
+        es: 'Colores aleatorios de flujos',
+        de: 'Zufällige Flussfarben',
+        it: 'Colori casuali flussi'
       },
       tooltips: {
         en: 'Apply random colors to all links',
-        fr: 'Appliquer des couleurs aléatoires à tous les flux'
+        fr: 'Appliquer des couleurs aléatoires à tous les flux',
+        es: 'Aplicar colores aleatorios a todos los flujos',
+        de: 'Zufällige Farben auf alle Flüsse anwenden',
+        it: 'Applicare colori casuali a tutti i flussi'
       }
     },
 
@@ -329,11 +449,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Default node colors',
-        fr: 'Couleurs par défaut nœuds'
+        fr: 'Couleurs par défaut nœuds',
+        es: 'Colores predeterminados de nodos',
+        de: 'Standard-Knotenfarben',
+        it: 'Colori predefiniti nodi'
       },
       tooltips: {
         en: 'Reset all nodes to their default colors',
-        fr: 'Remettre tous les nœuds à leurs couleurs par défaut'
+        fr: 'Remettre tous les nœuds à leurs couleurs par défaut',
+        es: 'Restablecer todos los nodos a sus colores predeterminados',
+        de: 'Alle Knoten auf ihre Standardfarben zurücksetzen',
+        it: 'Reimpostare tutti i nodi ai colori predefiniti'
       }
     },
 
@@ -341,11 +467,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Default link colors',
-        fr: 'Couleurs par défaut flux'
+        fr: 'Couleurs par défaut flux',
+        es: 'Colores predeterminados de flujos',
+        de: 'Standard-Flussfarben',
+        it: 'Colori predefiniti flussi'
       },
       tooltips: {
         en: 'Reset all links to their default colors',
-        fr: 'Remettre tous les flux à leurs couleurs par défaut'
+        fr: 'Remettre tous les flux à leurs couleurs par défaut',
+        es: 'Restablecer todos los flujos a sus colores predeterminados',
+        de: 'Alle Flüsse auf ihre Standardfarben zurücksetzen',
+        it: 'Reimpostare tutti i flussi ai colori predefiniti'
       }
     },
 
@@ -353,11 +485,17 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Element styles',
-        fr: 'Styles des éléments'
+        fr: 'Styles des éléments',
+        es: 'Estilos de elementos',
+        de: 'Elementstile',
+        it: 'Stili degli elementi'
       },
       tooltips: {
         en: 'Open the node visual style configuration dialog',
-        fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des nœuds'
+        fr: 'Ouvrir la boîte de dialogue de configuration du style visuel des nœuds',
+        es: 'Abrir el diálogo de configuración del estilo visual de los nodos',
+        de: 'Den Dialog zur Konfiguration des visuellen Knotenstils öffnen',
+        it: 'Aprire la finestra di configurazione dello stile visivo dei nodi'
       }
     },
     // openGraphOrder: {
@@ -382,23 +520,38 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
     // },
     Positionnement: {
       en: 'Positioning',
-      fr: 'Positionnement'
+      fr: 'Positionnement',
+      es: 'Posicionamiento',
+      de: 'Positionierung',
+      it: 'Posizionamento'
     },
     MiseEnPageAuto: {
       en: 'Auto layout',
-      fr: 'Mise en page auto'
+      fr: 'Mise en page auto',
+      es: 'Diseño automático',
+      de: 'Automatisches Layout',
+      it: 'Layout automatico'
     },
     ResetVerticalIntervals: {
       en: 'Reset vertical intervals',
-      fr: 'Réinitialiser les intervalles verticaux'
+      fr: 'Réinitialiser les intervalles verticaux',
+      es: 'Restablecer intervalos verticales',
+      de: 'Vertikale Abstände zurücksetzen',
+      it: 'Reimposta intervalli verticali'
     },
     GestionCouleurs: {
       en: 'Color Management',
-      fr: 'Gestion des couleurs'
+      fr: 'Gestion des couleurs',
+      es: 'Gestión de colores',
+      de: 'Farbverwaltung',
+      it: 'Gestione colori'
     },
     Style: {
       en: 'Styles',
-      fr: 'Style des éléments'
+      fr: 'Style des éléments',
+      es: 'Estilos de elementos',
+      de: 'Elementstile',
+      it: 'Stili degli elementi'
     }
   }
 } as const

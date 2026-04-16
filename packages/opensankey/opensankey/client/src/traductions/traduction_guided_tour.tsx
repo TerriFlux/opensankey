@@ -79,5 +79,125 @@ export const resources_guided_tour = {
         }
       },
     }
+  },
+  //=======================================================
+  //ES
+  //=======================================================
+  es: {
+    translation: {
+      guide: {
+        guide: 'Visita guiada',
+        toolbar: 'La barra de herramientas. Herramientas de edición, selección y filtrado que le permiten interactuar rápidamente con su diagrama Sankey.',
+        drawing_area: 'El área de dibujo. Desde aquí puede dibujar e interactuar directamente con su diagrama Sankey con el ratón.',
+        nav_menu: 'El menú de navegación. Encontrará todas las funcionalidades de su proyecto como carga, descarga, configuración y ayuda.',
+        save_in_cache: 'Este botón le permite guardar su progreso en la caché del navegador para poder salir de la aplicación y volver más tarde a continuar con su diagrama actual.',
+        menu_config: 'El menú de configuración. Configure todo en su diagrama Sankey desde aquí, como valores de datos, nombres y muchas más opciones.',
+        tutorials_button: 'Aquí encontrará tutoriales útiles que le explicarán todo lo que necesita saber para dominar OpenSankey.',
+        settings_button: 'Puede seleccionar menús y opciones más avanzados desde aquí.',
+        menutop_new: 'Comience un nuevo diagrama desde cero o a partir de una plantilla.',
+        menutop_open: 'Importe un diagrama existente desde archivos JSON, Excel o SankeyMATIC.',
+        menutop_save: 'Exporte su diagrama a JSON o Excel para guardarlo localmente.',
+        menutop_export: 'Exporte su diagrama como imagen (PNG, PDF o SVG).',
+        menutop_mep: 'Aplique un diseño a su diagrama: alinee, distribuya y formatee nodos y flujos automáticamente.',
+        config_tabs: 'Cambie entre la pestaña Datos (valores, nombres, estructura) y la pestaña Estilo (colores, formas, tipografía) con estos botones.',
+        config_tab_data: 'La pestaña Datos le permite editar el contenido numérico y estructural de su diagrama.',
+        config_content_data: 'En modo Datos, edite aquí los valores, etiquetas y estructura de sus nodos, flujos y tablas.',
+        config_tab_style: 'La pestaña Estilo le permite personalizar la apariencia visual de su diagrama.',
+        config_content_style: 'En modo Estilo, personalice los colores, formas, tamaños y tipografía del área de dibujo, la leyenda y los elementos.',
+        filter_toolbar_button: 'Abra el panel de filtros a la izquierda para restringir lo que se muestra en el diagrama.',
+        filter_toolbar_drawer: 'El panel de filtros. Filtre por tipo de dato, valor de flujo, tags, niveles y más para centrarse en un subconjunto de su diagrama.',
+        toolbar_bottom_mouse_mode: 'Cambie el modo del ratón: edición (dibujar nodos y flujos), selección (seleccionar y mover) o pincel de estilo (copiar el estilo de un elemento seleccionado a otros).',
+        toolbar_bottom_position_mode: 'Elija cómo se posicionan los nodos: modo paramétrico (automático, basado en valores) o modo absoluto (coordenadas fijas).',
+        toolbar_bottom_stretch: 'Ajuste automático del dibujo a la ventana horizontal o verticalmente, y active el modo de pantalla completa.',
+        toolbar_bottom_help: 'Vuelva a abrir el diálogo de bienvenida con atajos y ayuda básica en cualquier momento.',
+        demo_node_tagg_name: 'Grupo de nodos demo',
+        demo_flux_tagg_name: 'Grupo de flujos demo',
+        demo_data_tagg_name: 'Grupo de datos demo',
+        demo_cleanup: 'Fin de la visita. Los nodos, flujos y grupos de tags creados para esta demostración se eliminarán para que pueda comenzar con un diagrama limpio.',
+        tooltip:{
+          guide:'Iniciar la visita guiada por las diferentes áreas de la aplicación.'
+        }
+      },
+    }
+  },
+  //=======================================================
+  //DE
+  //=======================================================
+  de: {
+    translation: {
+      guide: {
+        guide: 'Geführte Tour',
+        toolbar: 'Die Werkzeugleiste. Bearbeitungs-, Auswahl- und Filterwerkzeuge, mit denen Sie schnell mit Ihrem Sankey-Diagramm interagieren können.',
+        drawing_area: 'Die Zeichenfläche. Von hier aus können Sie Ihr Sankey-Diagramm direkt mit der Maus zeichnen und bearbeiten.',
+        nav_menu: 'Das Navigationsmenü. Hier finden Sie alle Funktionen für Ihr Projekt wie Laden, Herunterladen, Einstellungen und Hilfe.',
+        save_in_cache: 'Diese Schaltfläche ermöglicht es Ihnen, Ihren Fortschritt im Browser-Cache zu speichern, damit Sie die Anwendung verlassen und später zurückkehren können, um Ihr aktuelles Diagramm fortzusetzen.',
+        menu_config: 'Das Konfigurationsmenü. Stellen Sie hier alles an Ihrem Sankey-Diagramm ein, wie Datenwerte, Namen und viele weitere Optionen.',
+        tutorials_button: 'Hier finden Sie nützliche Tutorials, die Ihnen alles erklären, was Sie wissen müssen, um OpenSankey zu beherrschen.',
+        settings_button: 'Von hier aus können Sie erweiterte Menüs und Optionen auswählen.',
+        menutop_new: 'Starten Sie ein neues Diagramm von Grund auf oder aus einer Vorlage.',
+        menutop_open: 'Importieren Sie ein bestehendes Diagramm aus JSON-, Excel- oder SankeyMATIC-Dateien.',
+        menutop_save: 'Exportieren Sie Ihr Diagramm als JSON oder Excel, um es lokal zu speichern.',
+        menutop_export: 'Exportieren Sie Ihr Diagramm als Bild (PNG, PDF oder SVG).',
+        menutop_mep: 'Wenden Sie ein Layout auf Ihr Diagramm an: Richten Sie Knoten und Flüsse automatisch aus, verteilen und formatieren Sie sie.',
+        config_tabs: 'Wechseln Sie zwischen dem Daten-Tab (Werte, Namen, Struktur) und dem Stil-Tab (Farben, Formen, Typografie) mit diesen Schaltflächen.',
+        config_tab_data: 'Der Daten-Tab ermöglicht die Bearbeitung des numerischen und strukturellen Inhalts Ihres Diagramms.',
+        config_content_data: 'Im Datenmodus bearbeiten Sie hier die Werte, Beschriftungen und die Struktur Ihrer Knoten, Flüsse und Tabellen.',
+        config_tab_style: 'Der Stil-Tab ermöglicht die Anpassung der visuellen Darstellung Ihres Diagramms.',
+        config_content_style: 'Im Stilmodus passen Sie Farben, Formen, Größen und Typografie der Zeichenfläche, der Legende und der Elemente an.',
+        filter_toolbar_button: 'Öffnen Sie das Filterpanel links, um die Anzeige im Diagramm einzuschränken.',
+        filter_toolbar_drawer: 'Das Filterpanel. Filtern Sie nach Datentyp, Flusswert, Tags, Ebenen und mehr, um sich auf einen Teilbereich Ihres Diagramms zu konzentrieren.',
+        toolbar_bottom_mouse_mode: 'Wechseln Sie den Mausmodus: Bearbeitung (Knoten und Flüsse zeichnen), Auswahl (auswählen und verschieben) oder Stilpinsel (den Stil eines ausgewählten Elements auf andere kopieren).',
+        toolbar_bottom_position_mode: 'Wählen Sie, wie Knoten positioniert werden: parametrischer Modus (automatisch, wertebasiert) oder absoluter Modus (feste Koordinaten).',
+        toolbar_bottom_stretch: 'Passt die Zeichnung automatisch horizontal oder vertikal an das Fenster an und schaltet den Vollbildmodus um.',
+        toolbar_bottom_help: 'Öffnen Sie jederzeit den Willkommensdialog mit Tastenkombinationen und grundlegender Hilfe erneut.',
+        demo_node_tagg_name: 'Demo-Knotengruppe',
+        demo_flux_tagg_name: 'Demo-Flussgruppe',
+        demo_data_tagg_name: 'Demo-Datengruppe',
+        demo_cleanup: 'Ende der Tour. Die für diese Vorführung erstellten Demo-Knoten, -Flüsse und -Tag-Gruppen werden nun entfernt, damit Sie mit einem sauberen Diagramm beginnen können.',
+        tooltip:{
+          guide:'Starten Sie die geführte Tour durch die verschiedenen Bereiche der Anwendung.'
+        }
+      },
+    }
+  },
+  //=======================================================
+  //IT
+  //=======================================================
+  it: {
+    translation: {
+      guide: {
+        guide: 'Visita guidata',
+        toolbar: 'La barra degli strumenti. Strumenti di modifica, selezione e filtraggio che consentono di interagire rapidamente con il diagramma Sankey.',
+        drawing_area: 'L\'area di disegno. Da qui è possibile disegnare e interagire direttamente con il diagramma Sankey usando il mouse.',
+        nav_menu: 'Il menu di navigazione. Qui troverete tutte le funzionalità del vostro progetto come caricamento, scaricamento, impostazioni e aiuto.',
+        save_in_cache: 'Questo pulsante consente di salvare i progressi nella cache del browser, in modo da poter uscire dall\'applicazione e tornare più tardi per continuare il diagramma corrente.',
+        menu_config: 'Il menu di configurazione. Da qui potete configurare tutto nel vostro diagramma Sankey, come i valori dei dati, i nomi e molte altre opzioni.',
+        tutorials_button: 'Qui troverete tutorial utili che vi spiegheranno tutto ciò che dovete sapere per padroneggiare OpenSankey.',
+        settings_button: 'Da qui potete selezionare menu e opzioni più avanzati.',
+        menutop_new: 'Iniziate un nuovo diagramma da zero o da un modello.',
+        menutop_open: 'Importate un diagramma esistente da file JSON, Excel o SankeyMATIC.',
+        menutop_save: 'Esportate il diagramma in JSON o Excel per salvarlo localmente.',
+        menutop_export: 'Esportate il diagramma come immagine (PNG, PDF o SVG).',
+        menutop_mep: 'Applicate un layout al diagramma: allineate, distribuite e formattate automaticamente nodi e flussi.',
+        config_tabs: 'Passate dalla scheda Dati (valori, nomi, struttura) alla scheda Stile (colori, forme, tipografia) con questi pulsanti.',
+        config_tab_data: 'La scheda Dati consente di modificare il contenuto numerico e strutturale del diagramma.',
+        config_content_data: 'In modalità Dati, modificate qui i valori, le etichette e la struttura dei vostri nodi, flussi e tabelle.',
+        config_tab_style: 'La scheda Stile consente di personalizzare l\'aspetto visivo del diagramma.',
+        config_content_style: 'In modalità Stile, personalizzate i colori, le forme, le dimensioni e la tipografia dell\'area di disegno, della legenda e degli elementi.',
+        filter_toolbar_button: 'Aprite il pannello filtri a sinistra per restringere ciò che viene visualizzato nel diagramma.',
+        filter_toolbar_drawer: 'Il pannello filtri. Filtrate per tipo di dato, valore del flusso, tag, livelli e altro per concentrarvi su un sottoinsieme del diagramma.',
+        toolbar_bottom_mouse_mode: 'Cambiate la modalità del mouse: modifica (disegnare nodi e flussi), selezione (selezionare e spostare) o pennello stile (copiare lo stile di un elemento selezionato su altri).',
+        toolbar_bottom_position_mode: 'Scegliete come posizionare i nodi: modalità parametrica (automatica, basata sui valori) o modalità assoluta (coordinate fisse).',
+        toolbar_bottom_stretch: 'Adatta automaticamente il disegno alla finestra orizzontalmente o verticalmente e attiva la modalità a schermo intero.',
+        toolbar_bottom_help: 'Riaprite in qualsiasi momento la finestra di benvenuto con le scorciatoie e l\'aiuto di base.',
+        demo_node_tagg_name: 'Gruppo di nodi demo',
+        demo_flux_tagg_name: 'Gruppo di flussi demo',
+        demo_data_tagg_name: 'Gruppo di dati demo',
+        demo_cleanup: 'Fine della visita. I nodi, i flussi e i gruppi di tag creati per questa dimostrazione verranno ora rimossi per lasciarvi un diagramma pulito.',
+        tooltip:{
+          guide:'Avviate la visita guidata attraverso le diverse aree dell\'applicazione.'
+        }
+      },
+    }
   }
 }

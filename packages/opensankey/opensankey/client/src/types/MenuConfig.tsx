@@ -723,6 +723,7 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
   }
 
   public updateComponentPref() {
