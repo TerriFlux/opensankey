@@ -550,6 +550,9 @@ def conversion_thread(
                 for i in splitted_layout:
                     layout_sheet["A" + str(cpt)].value = i
                     cpt = cpt + 1
+                # Masquer et protéger l'onglet layout
+                layout_sheet.sheet_state = 'hidden'
+                layout_sheet.protection.sheet = True
                 wb.save(output_file_name)
         t_write = perf_counter() - t_write_start
 
