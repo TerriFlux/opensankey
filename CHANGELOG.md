@@ -11,6 +11,23 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [2026-04-16] — Internationalisation ES/DE/IT
+
+### Ajouts
+- **3 nouvelles langues** : espagnol, allemand et italien sur l'ensemble de l'interface (menus, modales, tooltips, raccourcis, carousel d'accueil, toasts, visite guidée, templates, menus contextuels, configuration des éléments, dialogues d'import/export).
+- **Sélecteur de langue étendu** : 5 drapeaux (FR/GB/ES/DE/IT) dans la barre de navigation.
+- **Détection automatique** de la langue du navigateur pour les 5 langues supportées, avec fallback sur l'anglais.
+- **Carousel d'accueil traduit** via le système i18n (titres et descriptions des slides, auparavant en dur dans `resources.json`).
+
+### Fichiers impactés
+- 13 fichiers de traduction i18n (`traductions/`) dans les 3 couches (OS, OSP, SA)
+- 10 fichiers de configuration inline (`ElementsAttributesConfig`, `MenuElementsSelection`, `MenuElementsAppearance`, `ContextNodeConfig`, `ContextLinkConfig`, `ContextZDDConfig`, `PersistenceProcessDialogConfigs`, `ExcelTemplateModal`, `ContextMenuConfigs`, `UniversalConverterDialogConfig`)
+- 2 `index.tsx` (détection langue navigateur)
+- `MenuTop.tsx` (sélecteur de langue + flag initial dynamique)
+- `ModalWelcome.tsx` (carousel i18n)
+
+---
+
 ## Récapitulatif — Avril 2026
 
 Cette section consolide les évolutions livrées en avril 2026, tous modules confondus, et sert de base à la génération des notes de version.

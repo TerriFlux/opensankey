@@ -920,5 +920,1433 @@ export const resources_app_elements = {
       'elements_sankey+_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de OpenSankey+ et votre compte ne possède pas ce module',
       'elements_mfa_blocked_long': 'Certains éléments du Sankey ne sont pas visible car ils proviennent de MFASankey et votre compte ne possède pas ce module',
     },
+  },
+  //=======================================================
+  //ES
+  //=======================================================
+  es: {
+    translation: {
+      'connect': 'Conexión',
+      MEP: {
+        onValidate: 'No olvide cargar el archivo',
+        load_icon: 'Cargar una biblioteca de iconos (desde icomoon)',
+        'onBlurNoEnter': 'Salga del editor para actualizar los datos',
+        show_image: 'Mostrar imagen',
+      },
+      Menu: {
+        'LL': 'Zona de texto / Zona de imagen',
+        'view': 'Vistas',
+        'unit': 'Sankey Unitario',
+        'afm': 'AFM',
+        'afm_tools': 'Herramientas',
+        'excel': 'Extraer datos',
+        'pub': 'Publicar',
+        'setResolutionPNG': 'Seleccione la resolución deseada para la exportación',
+        'sankeyPlusDisabled': 'Parámetro desactivado porque no tiene OpenSankey+',
+        'featureLocked': 'Licencia',
+        'featureBeta': 'Experimental',
+
+        'home': 'Maestro',
+        'addView': 'Añadir',
+        'updateView': 'Actualizar',
+        'precView': 'Ant.',
+        'nextView': 'Sig.',
+
+        'toBeautify': 'Embellecer archivo JSON',
+        'updateFOZdd': 'Actualizar en el área de dibujo',
+
+        'import_icon': 'Seleccionar icono',
+        'import_icon_from_pack': 'Importar grupo de iconos',
+        'filter_by_name': 'Filtrar por nombre',
+
+        'presentation_OS': 'OpenSankey es una aplicación web que permite crear fácilmente diagramas de Sankey.\n\nEstá disponible de forma gratuita e incluye funciones simples para crear nodos, flujos y etiquetarlos para agregar o filtrar su visualización en el diagrama.\n\n',
+        'presentation_OS_limit_node': 'El límite de 15 nodos para el uso sin cuenta puede eliminarse creando una cuenta gratuita.\n\n',
+        'presentation_OSP': 'OpenSankey+ es una licencia de pago que desbloquea nuevas funcionalidades para crear hermosos diagramas de Sankey para presentaciones.\n\nEsta licencia incluye funciones avanzadas de formato como la adición de imágenes o iconos ilustrativos para nodos, gradientes de color en los flujos y animaciones, etc.\n\nSobre todo, OpenSankey+ permite generar presentaciones explicativas de sus diagramas de Sankey gracias al mecanismo de "Vistas", que registra los estados visuales del mismo (con/sin ciertos filtros activados, por ejemplo) para simplificar la navegación entre ellos.\n\n',
+        'presentation_OSS': 'SankeySuite es una licencia de pago que desbloquea todos los usos avanzados de creación y análisis de diagramas de Sankey.\n\nEsta licencia incluye funcionalidades de reconciliación de datos de flujo para identificar inconsistencias o calcular flujos cuyos valores no son directamente accesibles.\n\nTambién incluye las funcionalidades de OpenSankey+.\n\n',
+        sankeytheque: 'Sankeytheque',
+        afm_reconcil: 'AFM',
+        afm_reconcil_excel: 'Reconciliar un archivo Excel',
+        view_actual_file: 'Vistas',
+        other_file: 'Otro archivo',
+        trade_close: 'Cerca del nodo',
+
+        preference_content: {
+          deletePalette: 'Eliminar paleta',
+          deleteColorPalette_tooltip: 'Eliminar el color seleccionado de la paleta',
+          addColorPalette_tooltip: 'Añadir un color a la paleta',
+          color: 'Color',
+          color_head: 'Crear y editar paleta de colores',
+          color_item_1: '- Haga clic en el botón inferior para crear una paleta',
+          color_item_2: '- Haga clic en el botón de la derecha para añadir un color a la paleta',
+          color_item_3: '- Haga clic en un cuadrado de color para editarlo',
+          color_item_4: '- Haga clic derecho en los colores que desea eliminar y luego haga clic en el botón de eliminación',
+
+          tag: 'Etiquetas',
+          tag_head: 'Crear y editar etiquetas',
+          tag_node: 'Etiquetas de nodos',
+          tag_flow: 'Etiquetas de flujos',
+          tag_data: 'Etiquetas de datos',
+          tag_item_1: '- Crear y editar grupos de etiquetas que puede insertar en cada Sankey que realice',
+          tag_item_2: '- Para insertar un grupo de etiquetas: seleccione un grupo en la 3ª subsección y haga clic en insertar',
+          tag_item_3: '- Si el grupo seleccionado ya está insertado en el Sankey, puede modificarlo haciendo clic de nuevo en el botón de inserción',
+          tag_head_insert: 'Inserción del grupo',
+          tag_insert: 'Insertar',
+          tag_insert_text: 'Seleccione un grupo para insertar:',
+
+          style: 'Estilo',
+          style_head: 'Crear y editar estilo',
+          style_edit_head_node_styles_visual: 'Editar estilo visual de nodos',
+          style_edit_head_node_styles_context: 'Editar estilo de etiquetas de nodos',
+          style_edit_head_flow_styles_visual: 'Editar estilo visual de flujos',
+          style_edit_head_flow_styles_context: 'Editar estilo de etiquetas de flujos',
+          style_edit_head: 'Editar estilo de nodos/flujos',
+          style_insert_head: 'Insertar en el Sankey',
+          style_item_1: '- Crear y editar estilos que puede insertar en cada Sankey que realice',
+          style_item_2: '- Para insertar un estilo: seleccione un estilo en la 3ª subsección y haga clic en insertar',
+          style_item_3: '- Si el estilo seleccionado ya está insertado en el Sankey, puede modificarlo haciendo clic de nuevo en el botón de inserción',
+          style_head_insert: 'Inserción del estilo',
+          style_insert: 'Insertar estilo',
+          style_update: 'Modificar estilo',
+          style_insert_text: 'Seleccione un estilo para insertar:',
+
+          icon: 'Icono',
+          icon_head: 'Importación de iconos',
+          icon_item_1: '- Para importar iconos, haga clic en la tarjeta Importar y seleccione un archivo .svg',
+          icon_item_2: '- Después de importar un icono, puede modificar su título haciendo clic en el texto',
+        },
+        Transformation: {
+          'amp_short': 'Trans.',
+          'amp': 'Modificar el diseño',
+          'amp_import': 'Desde otro diagrama',
+          'amp_manuelle': 'Posicionamiento',
+          'trans_topo': 'Topológico',
+          'fmep': 'Otro diagrama',
+          'ad': 'Aplicar',
+          'undo': 'Deshacer',
+          'Shortcuts': 'Atajos de selección',
+          'unSelectAll': 'Ninguno',
+          'selectAll': 'Todos',
+          'selectDefault': 'Por defecto',
+          'Topology': 'Adiciones y eliminaciones',
+          'Geometry': 'Tamaños y posiciones',
+          'Attribut': 'Atributos',
+          'Tags': 'Etiquetas',
+          'Values': 'Valores de flujos',
+          'Views': 'Vistas',
+          'freeLabels': 'Zonas de texto',
+          'addNode': 'Añadir nodos',
+          'removeNode': 'Eliminar nodos',
+          'addFlux': 'Añadir flujos',
+          'removeFlux': 'Eliminar flujos',
+          'PosNoeud': 'Nodos',
+          'posFlux': 'Flujos',
+          'attrNode': 'Nodos',
+          'attrFlux': 'Flujos',
+          'tagLevel': 'Niveles de detalle',
+          'tagNode': 'Nodos',
+          'tagFlux': 'Flujos',
+          'tagData': 'Datos',
+          'tagNode_assign': 'Asignar una etiqueta',
+          'tagFlux_assign': 'Asignar una etiqueta',
+          'attrGeneral': 'Área de dibujo',
+          'title': 'Transformaciones',
+          'disabled_view': 'No es posible importar vistas en una vista; para hacerlo, vaya a los datos maestros',
+          'list_icon': 'Catálogo de iconos',
+          'list_icon_tooltip': 'Importar la lista de iconos utilizados en el diseño importado a los datos actuales.'
+        },
+        tooltips: {
+          publish: 'Publicar en línea',
+          export: 'Exportar como imagen',
+          reconcil: 'Reconciliar datos',
+          tool_afm: 'Usar herramientas auxiliares para la reconciliación',
+        },
+        xl_check: 'Verif. Excel',
+        ter_gen: 'Gen. tabla oferta-utilización'
+      },
+
+      Noeud: {
+        'plns': 'Parámetros para los nodos seleccionados',
+        'img_visibility': 'Visibilidad de la imagen',
+        'img_src': 'Fuente',
+        'HL': 'Hipervínculo',
+        'open_HL': 'Abrir',
+        'illustration': 'Ilustración',
+        'illustration_type': 'Tipo de ilustración',
+        tabs: {
+          'icon': 'Icono',
+          'fo': 'Ilustración',
+          'hl': 'Hipervínculo'
+        },
+        apparence: {
+          'HideAlone': 'Ocultar si es intermedio',
+          'toScale': 'Nodo fuera de escala',
+          'Orientation': 'Orientación',
+        },
+        icon: {
+          'icon': 'Icono',
+          'Visibilité': 'Visibilidad de iconos',
+          'si': 'Seleccionar icono',
+          'couleur': 'Color',
+          'rIN': 'Relación tamaño icono/nodo',
+          'Aucun': 'Ninguno',
+          'icon_catalog': 'Seleccionar un icono del catálogo'
+        },
+        foreign_object: {
+          'Visibilité': 'Visibilidad',
+          'raw': 'Editor sin formato',
+          'not_activated': 'Active la visibilidad para activar'
+        },
+        FO: {
+          'FO': 'Texto',
+          'content': 'Contenido',
+          'submit': 'Enviar',
+          'cancel': 'Cancelar'
+        },
+      },
+      Flux: {
+        'asf': 'Aplicar estilo a los flujos con este estilo',
+        data: {
+          'scientificNotation': 'Mostrar el valor en notación científica',
+          'fla': 'Mostrar flujos libres',
+          'astr': 'Mostrar estructura',
+        },
+      },
+      UserNav: {
+        'to_con': 'Iniciar sesión',
+        'to_reg': 'Registrarse',
+        'to_buy': 'Registrarse',
+        'to_app': 'Volver a la aplicación',
+        'to_acc': 'Mi cuenta',
+        'to_dbd': 'Panel de control',
+        tooltip: {
+          'to_con': 'Iniciar sesión o crear una cuenta',
+          'to_reg': 'Registrarse',
+          'to_buy': 'Registrarse',
+          'to_app': 'Volver a la aplicación',
+          'to_acc': 'Mi cuenta',
+          'to_dbd': 'Panel de control'
+        }
+      },
+      Register: {
+        presentation: {
+          'title': 'Dé vida a sus diagramas con OpenSankey+',
+          'text': '<table>\
+                    <tr>\
+                      <td>\
+                        <p>\
+                          <b>OpenSankey+ es una herramienta de storytelling diseñada para quienes desean presentar datos de flujo de manera clara y visualmente atractiva.\
+                          <br><br>\
+                          Preciso, impactante y hermoso: un Sankey vale más que mil palabras.</b>\
+                        </p>\
+                        <p>OpenSankey+ ofrece una versión mejorada de OpenSankey básico, enriquecida con un modo de presentación, ideal para presentaciones y storytelling.</p>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                    <tr>\
+                      <td>\
+                        <p>En concreto, OpenSankey+ permite crear diagramas enriquecidos con:</p>\
+                        <ul style="padding-left: 1rem; ">\
+                          <li>Etiquetas flotantes para mejorar la representación gráfica</li>\
+                          <li>Iconos para ilustrar los nodos</li>\
+                          <li>Representaciones de gradientes en los flujos</li>\
+                          <li>Gestión de jerarquías complejas</li>\
+                          <li>Animaciones de Sankey con efectos de aparición progresiva o una sucesión de "vistas" que muestran cambios a lo largo del tiempo</li>\
+                        </ul>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                  </table>',
+          'buy_opensankeyplus_monthly': 'Por 50 euros al año, ¡quiero OpenSankey+!',
+          'buy_opensankeyplus_annual': 'Por 300 euros al año, ¡quiero OpenSankey+!',
+          'choose_plan': 'Elija una licencia OpenSankey+.'
+        },
+        account: {
+          'title': 'Primero cree su cuenta',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'Se necesita un e-mail para crear su cuenta',
+            'error': 'Por favor, introduzca una dirección de e-mail válida.'
+          },
+          pwd: {
+            'label': 'Contraseña',
+            'placeholder': 'Elija una buena contraseña',
+            'error': 'La contraseña debe tener más de ocho caracteres, con al menos una letra, un número y un carácter especial.',
+            'show': 'mostrar',
+            'hide': 'ocultar',
+          },
+          'fn': 'Nombre',
+          'ln': 'Apellido',
+          msg: {
+            'ok': 'Cuenta creada - Recibirá un e-mail de confirmación para validar su cuenta',
+            'err_captcha': 'El captcha no es válido',
+            'err_email_invalid': 'El e-mail no es válido',
+            'err_email_exists': 'Ya existe una cuenta con este e-mail',
+            'nok': 'Se ha producido un error, no se pudo crear la cuenta.'
+          },
+          'btn_terms': 'Lea y acepte los términos y condiciones',
+          'create_account': 'Registrarse'
+        },
+        validation: {
+          'title': 'Validación de la cuenta',
+          msg: {
+            'ok': 'Esta cuenta ha sido validada con éxito.',
+            'nok': 'Error, enlace incorrecto',
+            'account_already_created': 'Esta cuenta ya ha sido validada',
+            'redirect': 'Será redirigido a la página de pago de la licencia.',
+          }
+        }
+      },
+      terms_of_uses: {
+        'title': 'Términos y condiciones de uso',
+        'accept': 'Aceptar los términos y condiciones de uso'
+      },
+      Paiement: {
+        'win_header_buy': 'Cree y comparta diagramas de Sankey como un profesional.',
+        'win_header_success': 'Gracias por su suscripción a OpenSankey+',
+        'win_header_error': 'Ups, algo salió mal',
+        'win_content_success': 'OpenSankey+ está ahora activado para su cuenta.',
+        'win_content_error': 'Algo salió mal durante el proceso de pago',
+        'btn_checkout': '¡Quiero OpenSankey+!'
+      },
+      Login: {
+        'title': 'Conectarse a la aplicación',
+        'con': 'Iniciar sesión',
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'Por favor, introduzca una dirección de e-mail válida.'
+        },
+        pwd: {
+          'label': 'Contraseña',
+          'placeholder': '',
+          'show': 'mostrar',
+          'hide': 'ocultar',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'Se ha producido un error al llamar al servidor',
+          'err_login': 'Error, su e-mail o contraseña es incorrecto, por favor verifique sus datos de conexión e inténtelo de nuevo',
+        },
+        forgot: {
+          'title': 'Restablecer contraseña',
+          'ask': '¿Contraseña olvidada?',
+          'sub': 'Restablecer',
+          msg: {
+            'ok': 'La contraseña se ha restablecido con éxito.',
+            'mail_sent': 'Se le ha enviado un e-mail de restablecimiento de contraseña.',
+            'err_server': 'Se ha producido un error al llamar al servidor',
+            'err_user_already_connected': 'Error, ya está conectado.',
+            'err_user_inexistant': 'Error, la cuenta indicada no existe',
+            'err_token_expire': 'Error, la solicitud ha expirado.'
+          }
+        }
+      },
+      UserPages: {
+        login_modify: {
+          'title': 'Sus datos de conexión',
+          'pwd': 'Cambiar contraseña',
+          'del': 'Eliminar cuenta',
+          email_modal: {
+            'title': 'Confirme la modificación del e-mail con su contraseña',
+            'btn': 'Aplicar modificación'
+          },
+          pwd_modal: {
+            'title': 'Confirme la modificación de la contraseña con el código recibido por e-mail',
+            'input_token': 'Código recibido',
+            'btn': 'Aplicar modificación de contraseña'
+          },
+          del_modal: {
+            'title': '¿Realmente desea eliminar su cuenta?',
+            'desc': 'Atención: Esta acción eliminará su cuenta, sus datos y cancelará su suscripción a OpenSankey+ si la tiene.',
+            'fdback': '¿Por qué desea eliminar su cuenta? (opcional)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'El servicio al cliente no cumplió las expectativas',
+            'fdback_low_quality': 'La calidad no cumplió las expectativas',
+            'fdback_missing_features': 'Faltan algunas funcionalidades',
+            'fdback_switched_service': 'Estoy cambiando a otro servicio',
+            'fdback_too_complex': 'La facilidad de uso no cumplió las expectativas',
+            'fdback_too_expensive': 'Es demasiado caro',
+            'fdback_unused': 'No uso el servicio lo suficiente',
+            'fdback_other': 'Otra razón',
+            'comment': '¿Cómo podemos mejorar? (opcional)',
+            'pwd_confirm': 'Introduzca su contraseña para confirmar',
+            'btn_confirm': 'Eliminar cuenta y todos los datos',
+            'btn_cancel': 'Quiero mantener mi cuenta',
+          },
+          btns: {
+            'set_email': 'Cambiar e-mail',
+            'set_pwd': 'Cambiar contraseña',
+            'del_account': 'Eliminar cuenta'
+          },
+          msgs: {
+            'ok_email': 'El e-mail se ha cambiado con éxito',
+            'prs_email': 'Procesando el cambio de e-mail',
+            'err_email_regex': 'El e-mail no es válido',
+            'err_email_failed': 'No se pudo modificar el e-mail',
+            'ok_pwd': 'La contraseña se ha cambiado con éxito',
+            'prs_pwd': 'Se le ha enviado un e-mail de restablecimiento de contraseña.',
+            'err_pwd_failed': 'Error en la solicitud de cambio de contraseña',
+            'ok_del': 'La cuenta ha sido eliminada. Volviendo a la página principal.',
+            'err_del': 'Error en la solicitud de eliminación de cuenta. Por favor, verifique su contraseña.',
+          },
+        },
+        infos_modify: {
+          'title': 'Su información personal',
+          btns: {
+            'set_fn': 'Aplicar modificación',
+            'set_ln': 'Aplicar modificación',
+          },
+          msgs: {
+            'ok_firstname': 'El nombre se ha modificado con éxito',
+            'err_firstname': 'No se pudo aplicar la modificación del nombre',
+            'ok_lastname': 'El apellido se ha modificado con éxito',
+            'err_lastname': 'No se pudo aplicar la modificación del apellido',
+          },
+        },
+        license: {
+          'title': 'Información de licencia',
+          'exp_until': 'Próxima renovación: ',
+          btns: {
+            'mng_sub': 'Gestionar suscripción',
+            'add_sub': 'Suscribirse a una licencia',
+          },
+        },
+        'OS+_lic': 'Licencia OpenSankey+',
+        'SS_lic': 'Licencia SankeySuite',
+        'update_lic': 'Registrar nuevo número de licencia',
+        'win_acc_infos': 'Detalles de la cuenta',
+        'win_db_template': 'Plantillas disponibles',
+        'db_desc_template': 'Descripción de la plantilla',
+        'usr_no_lic': 'No hay licencia registrada actualmente',
+        'usr_lic_validdate': 'Fecha de validez: ',
+        'usr_lic_expdate': 'Expirada el: ',
+        'usr_lic_valid': 'Licencia válida',
+        'usr_lic_invalid': 'Licencia no válida',
+        'usr_lic_deactivated': 'Licencia desactivada',
+        'usr_lic_err': 'Número de licencia no válido',
+        'err_get_user_infos': 'Error al intentar acceder a la información del usuario',
+        'err_get_OS+_infos': 'Error al intentar acceder al servidor de licencias OpenSankey+',
+        'err_get_SS_infos': 'Error al intentar acceder al servidor de licencias SankeySuite'
+      },
+
+      welcome: {
+        news: 'Novedades de esta versión',
+        view: 'Botones para navegar entre las diferentes vistas del Sankey',
+        breadcrumbs: {
+          intro: 'Resumen',
+          news: 'Novedades',
+        },
+        news_content: {
+          230803: {
+            main_title: '3 de agosto de 2023: Nuevas funcionalidades',
+            main_content: 'Hemos añadido nuevas funcionalidades para facilitar la manipulación de diagramas de Sankey',
+            sub_title_1: 'Clic derecho con muchas opciones',
+            sub_content_1: 'A partir de ahora, muchas acciones sobre nodos, flujos e incluso el área de dibujo son accesibles haciendo clic derecho en los elementos correspondientes.',
+            sub_title_2: 'Marco de selección múltiple',
+            sub_content_2: 'La selección múltiple de nodos ahora se puede hacer con marcos de selección.',
+            sub_title_3: 'Facilitar la expansión de sus diagramas',
+            sub_content_3: 'El área de dibujo se puede ampliar en cualquier dirección arrastrando nodos/flujos/zonas de texto/leyendas en la dirección elegida.',
+            image1: 'clic droit noeud EN.PNG',
+            image2: 'clic droit flux EN.PNG',
+            image3: 'clic droit fond EN.PNG',
+            image4: 'Zone de selection.PNG'
+          },
+          230908: {
+            main_title: '8 de septiembre de 2023',
+            main_content: 'Mejora visual del menú de configuración',
+            sub_title_1: 'Rediseño visual de las entradas en el menú de configuración',
+            sub_content_1: 'Las entradas del menú de configuración se han rediseñado con etiquetas más visibles y logos para los botones para comprender mejor su utilidad.',
+            sub_title_2: 'Punto de control de datos',
+            sub_content_2: 'En cualquier momento, puede hacer una copia de seguridad rápida de su diagrama actual. Una vez hecha la copia, puede continuar desarrollando su diagrama y, si los cambios realizados no le satisfacen, recargar la aplicación para recuperar su diagrama en el momento de la copia de seguridad.',
+            img1: 'menu_config_enhanced_en.PNG',
+            img2: 'menu_config_enhanced_zdd_en.PNG',
+            img3: 'menu_last_save_en.PNG',
+          }
+        },
+        caroussel: {
+          Image0: 'Bienvenido a la suite de herramientas OpenSankey, OpenSankey+ y SankeySuite de TerriFlux',
+          Image1: 'Comprenda sus flujos, represéntelos con diagramas de Sankey',
+          Image2: 'Importe rápidamente sus datos o dibuje directamente sus diagramas',
+          Image3: 'Clarifique la información representada',
+          Image40: 'Dé la profundidad necesaria a la comprensión',
+          Image41: 'Dé la profundidad necesaria a la comprensión',
+          Image5: 'Cree infografías interactivas y didácticas',
+          Image6: 'Cree infografías interactivas y didácticas',
+          descr: {
+            Image0: 'Estas herramientas permiten crear fácilmente diagramas de flujo',
+            Image1: 'En este modo de representación, el grosor de cada flecha es proporcional al valor del flujo que representa.',
+            Image2: 'Cree sus diagramas a partir de hojas de cálculo Excel o mediante el área de dibujo interactiva.',
+            Image3: 'Facilite la lectura de sus diagramas gracias al sistema integrado de etiquetado de nodos, flujos y datos.',
+            Image40: 'Los niveles de agregación permiten representar sus flujos en varios niveles de detalle.',
+            Image41: 'Cada nivel de detalle se puede seleccionar directamente para mostrar solo lo que es útil.',
+            Image5: 'Explique sus logros simplemente con el sistema de leyenda automática y la adición de zonas de texto.',
+            Image6: 'Cree hermosos diagramas integrando directamente imágenes o iconos.'
+          }
+        }
+      },
+      'useSankeyThequeJSON': 'Abrir (json)',
+      'useSankeyThequeEXCEL': 'Abrir (excel)',
+      'dl': 'Descargar Excel',
+      'elements_sankey+_blocked': 'Elementos del diagrama bloqueados (OpenSankey+)',
+      'mfa_blocked': 'Elementos del diagrama bloqueados (MFASankey)',
+      'elements_sankey+_blocked_long': 'Algunos elementos del Sankey no son visibles porque provienen de OpenSankey+ y su cuenta no tiene este módulo',
+      'elements_mfa_blocked_long': 'Algunos elementos del Sankey no son visibles porque provienen de MFASankey y su cuenta no tiene este módulo',
+    },
+  },
+  //=======================================================
+  //DE
+  //=======================================================
+  de: {
+    translation: {
+      'connect': 'Anmelden',
+      MEP: {
+        onValidate: 'Vergessen Sie nicht, die Datei zu laden',
+        load_icon: 'Eine Symbolbibliothek laden (von icomoon)',
+        'onBlurNoEnter': 'Editor verlassen, um die Daten zu aktualisieren',
+        show_image: 'Bild anzeigen',
+      },
+      Menu: {
+        'LL': 'Textbereich / Bildbereich',
+        'view': 'Ansichten',
+        'unit': 'Unitäres Sankey',
+        'afm': 'AFM',
+        'afm_tools': 'Werkzeuge',
+        'excel': 'Daten extrahieren',
+        'pub': 'Veröffentlichen',
+        'setResolutionPNG': 'Wählen Sie die gewünschte Exportauflösung',
+        'sankeyPlusDisabled': 'Parameter deaktiviert, da Sie OpenSankey+ nicht besitzen',
+        'featureLocked': 'Lizenz',
+        'featureBeta': 'Experimentell',
+
+        'home': 'Master',
+        'addView': 'Hinzufügen',
+        'updateView': 'Aktualisieren',
+        'precView': 'Vorh.',
+        'nextView': 'Nächste',
+
+        'toBeautify': 'JSON-Datei verschönern',
+        'updateFOZdd': 'Auf der Zeichenfläche aktualisieren',
+
+        'import_icon': 'Symbol auswählen',
+        'import_icon_from_pack': 'Symbolpaket importieren',
+        'filter_by_name': 'Nach Name filtern',
+
+        'presentation_OS': 'OpenSankey ist eine Webanwendung, mit der Sie einfach Sankey-Diagramme erstellen können.\n\nSie ist kostenlos verfügbar und enthält einfache Funktionen zum Erstellen von Knoten, Flüssen und deren Beschriftung, um ihre Anzeige im Diagramm zu aggregieren oder zu filtern.\n\n',
+        'presentation_OS_limit_node': 'Die Begrenzung auf 15 Knoten für die Nutzung ohne Konto kann durch die Erstellung eines kostenlosen Kontos aufgehoben werden.\n\n',
+        'presentation_OSP': 'OpenSankey+ ist eine kostenpflichtige Lizenz, die neue Funktionen für die Erstellung schöner Sankey-Diagramme für Präsentationen freischaltet.\n\nDiese Lizenz umfasst erweiterte Formatierungsfunktionen wie das Hinzufügen von illustrativen Bildern oder Symbolen für Knoten, Farbverläufe auf Flüssen und Animationen usw.\n\nVor allem ermöglicht OpenSankey+ die Erstellung von erklärenden Präsentationen Ihrer Sankey-Diagramme dank des "Ansichten"-Mechanismus, der die visuellen Zustände aufzeichnet (mit/ohne bestimmte aktivierte Filter, zum Beispiel), um die Navigation zwischen ihnen zu vereinfachen.\n\n',
+        'presentation_OSS': 'SankeySuite ist eine kostenpflichtige Lizenz, die alle fortgeschrittenen Erstellungs- und Analysefunktionen von Sankey-Diagrammen freischaltet.\n\nDiese Lizenz umfasst Funktionen zur Abstimmung von Flussdaten, um Inkonsistenzen zu erkennen oder Flüsse zu berechnen, deren Werte nicht direkt zugänglich sind.\n\nSie enthält auch die Funktionen von OpenSankey+.\n\n',
+        sankeytheque: 'Sankeytheque',
+        afm_reconcil: 'AFM',
+        afm_reconcil_excel: 'Eine Excel-Datei abstimmen',
+        view_actual_file: 'Ansichten',
+        other_file: 'Andere Datei',
+        trade_close: 'Nahe am Knoten',
+
+        preference_content: {
+          deletePalette: 'Palette löschen',
+          deleteColorPalette_tooltip: 'Ausgewählte Farbe aus der Palette löschen',
+          addColorPalette_tooltip: 'Eine Farbe zur Palette hinzufügen',
+          color: 'Farbe',
+          color_head: 'Farbpalette erstellen und bearbeiten',
+          color_item_1: '- Klicken Sie auf die untere Schaltfläche, um eine Palette zu erstellen',
+          color_item_2: '- Klicken Sie auf die rechte Schaltfläche, um eine Farbe zur Palette hinzuzufügen',
+          color_item_3: '- Klicken Sie auf ein farbiges Quadrat, um es zu bearbeiten',
+          color_item_4: '- Klicken Sie mit der rechten Maustaste auf die Farben, die Sie löschen möchten, und klicken Sie dann auf die Schaltfläche Löschen',
+
+          tag: 'Tags',
+          tag_head: 'Tags erstellen und bearbeiten',
+          tag_node: 'Knoten-Tags',
+          tag_flow: 'Fluss-Tags',
+          tag_data: 'Daten-Tags',
+          tag_item_1: '- Tag-Gruppen erstellen und bearbeiten, die Sie in jedes Sankey einfügen können',
+          tag_item_2: '- Um eine Tag-Gruppe einzufügen: wählen Sie eine Gruppe im 3. Unterabschnitt und klicken Sie auf Einfügen',
+          tag_item_3: '- Wenn die ausgewählte Gruppe bereits im Sankey eingefügt ist, können Sie sie durch erneutes Klicken auf die Einfüge-Schaltfläche ändern',
+          tag_head_insert: 'Gruppeneinfügung',
+          tag_insert: 'Einfügen',
+          tag_insert_text: 'Wählen Sie eine Gruppe zum Einfügen:',
+
+          style: 'Stil',
+          style_head: 'Stil erstellen und bearbeiten',
+          style_edit_head_node_styles_visual: 'Visuellen Knotenstil bearbeiten',
+          style_edit_head_node_styles_context: 'Beschriftungsstil der Knoten bearbeiten',
+          style_edit_head_flow_styles_visual: 'Visuellen Flussstil bearbeiten',
+          style_edit_head_flow_styles_context: 'Beschriftungsstil der Flüsse bearbeiten',
+          style_edit_head: 'Knoten-/Flussstil bearbeiten',
+          style_insert_head: 'In Sankey einfügen',
+          style_item_1: '- Stile erstellen und bearbeiten, die Sie in jedes Sankey einfügen können',
+          style_item_2: '- Um einen Stil einzufügen: wählen Sie einen Stil im 3. Unterabschnitt und klicken Sie auf Einfügen',
+          style_item_3: '- Wenn der ausgewählte Stil bereits im Sankey eingefügt ist, können Sie ihn durch erneutes Klicken auf die Einfüge-Schaltfläche ändern',
+          style_head_insert: 'Stileinfügung',
+          style_insert: 'Stil einfügen',
+          style_update: 'Stil ändern',
+          style_insert_text: 'Wählen Sie einen Stil zum Einfügen:',
+
+          icon: 'Symbol',
+          icon_head: 'Symbol-Import',
+          icon_item_1: '- Um Symbole zu importieren, klicken Sie auf die Karte Importieren und wählen Sie eine .svg-Datei',
+          icon_item_2: '- Nach dem Import eines Symbols können Sie seinen Titel durch Klicken auf den Text ändern',
+        },
+        Transformation: {
+          'amp_short': 'Trans.',
+          'amp': 'Layout ändern',
+          'amp_import': 'Von einem anderen Diagramm',
+          'amp_manuelle': 'Positionierung',
+          'trans_topo': 'Topologisch',
+          'fmep': 'Anderes Diagramm',
+          'ad': 'Anwenden',
+          'undo': 'Rückgängig',
+          'Shortcuts': 'Auswahlkürzel',
+          'unSelectAll': 'Keine',
+          'selectAll': 'Alle',
+          'selectDefault': 'Standard',
+          'Topology': 'Hinzufügungen und Löschungen',
+          'Geometry': 'Größen und Positionen',
+          'Attribut': 'Attribute',
+          'Tags': 'Tags',
+          'Values': 'Flusswerte',
+          'Views': 'Ansichten',
+          'freeLabels': 'Textbereiche',
+          'addNode': 'Knoten hinzufügen',
+          'removeNode': 'Knoten entfernen',
+          'addFlux': 'Flüsse hinzufügen',
+          'removeFlux': 'Flüsse entfernen',
+          'PosNoeud': 'Knoten',
+          'posFlux': 'Flüsse',
+          'attrNode': 'Knoten',
+          'attrFlux': 'Flüsse',
+          'tagLevel': 'Detailstufen',
+          'tagNode': 'Knoten',
+          'tagFlux': 'Flüsse',
+          'tagData': 'Daten',
+          'tagNode_assign': 'Ein Tag zuweisen',
+          'tagFlux_assign': 'Ein Tag zuweisen',
+          'attrGeneral': 'Zeichenfläche',
+          'title': 'Transformationen',
+          'disabled_view': 'Es ist nicht möglich, Ansichten in eine Ansicht zu importieren; gehen Sie dazu zu den Masterdaten',
+          'list_icon': 'Symbolkatalog',
+          'list_icon_tooltip': 'Symbolliste aus dem importierten Layout in die aktuellen Daten importieren.'
+        },
+        tooltips: {
+          publish: 'Online veröffentlichen',
+          export: 'Als Bild exportieren',
+          reconcil: 'Daten abstimmen',
+          tool_afm: 'Hilfswerkzeuge für die Abstimmung verwenden',
+        },
+        xl_check: 'Excel-Prüfung',
+        ter_gen: 'Aufkommens-Verwendungs-Tabelle generieren'
+      },
+
+      Noeud: {
+        'plns': 'Parameter für ausgewählte Knoten',
+        'img_visibility': 'Bildsichtbarkeit',
+        'img_src': 'Quelle',
+        'HL': 'Hyperlink',
+        'open_HL': 'Öffnen',
+        'illustration': 'Illustration',
+        'illustration_type': 'Illustrationstyp',
+        tabs: {
+          'icon': 'Symbol',
+          'fo': 'Illustration',
+          'hl': 'Hyperlink'
+        },
+        apparence: {
+          'HideAlone': 'Ausblenden, wenn Zwischenknoten',
+          'toScale': 'Knoten nicht maßstabsgetreu',
+          'Orientation': 'Orientierung',
+        },
+        icon: {
+          'icon': 'Symbol',
+          'Visibilité': 'Sichtbarkeit der Symbole',
+          'si': 'Symbol auswählen',
+          'couleur': 'Farbe',
+          'rIN': 'Größenverhältnis Symbol/Knoten',
+          'Aucun': 'Keines',
+          'icon_catalog': 'Ein Symbol aus dem Katalog auswählen'
+        },
+        foreign_object: {
+          'Visibilité': 'Sichtbarkeit',
+          'raw': 'Roh-Editor',
+          'not_activated': 'Sichtbarkeit aktivieren, um zu aktivieren'
+        },
+        FO: {
+          'FO': 'Text',
+          'content': 'Inhalt',
+          'submit': 'Absenden',
+          'cancel': 'Abbrechen'
+        },
+      },
+      Flux: {
+        'asf': 'Stil auf Flüsse mit diesem Stil anwenden',
+        data: {
+          'scientificNotation': 'Wert in wissenschaftlicher Notation anzeigen',
+          'fla': 'Freie Flüsse anzeigen',
+          'astr': 'Struktur anzeigen',
+        },
+      },
+      UserNav: {
+        'to_con': 'Anmelden',
+        'to_reg': 'Registrieren',
+        'to_buy': 'Registrieren',
+        'to_app': 'Zurück zur Anwendung',
+        'to_acc': 'Mein Konto',
+        'to_dbd': 'Dashboard',
+        tooltip: {
+          'to_con': 'Anmelden oder Konto erstellen',
+          'to_reg': 'Registrieren',
+          'to_buy': 'Registrieren',
+          'to_app': 'Zurück zur Anwendung',
+          'to_acc': 'Mein Konto',
+          'to_dbd': 'Dashboard'
+        }
+      },
+      Register: {
+        presentation: {
+          'title': 'Erwecken Sie Ihre Diagramme mit OpenSankey+ zum Leben',
+          'text': '<table>\
+                    <tr>\
+                      <td>\
+                        <p>\
+                          <b>OpenSankey+ ist ein Storytelling-Werkzeug für alle, die Flussdaten klar und visuell ansprechend präsentieren möchten.\
+                          <br><br>\
+                          Präzise, wirkungsvoll und schön: Ein Sankey-Diagramm sagt mehr als tausend Worte.</b>\
+                        </p>\
+                        <p>OpenSankey+ bietet eine erweiterte Version des grundlegenden OpenSankey, angereichert mit einem Präsentationsmodus, ideal für Präsentationen und Storytelling.</p>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                    <tr>\
+                      <td>\
+                        <p>Konkret ermöglicht OpenSankey+ die Erstellung angereicherter Diagramme mit:</p>\
+                        <ul style="padding-left: 1rem; ">\
+                          <li>Schwebende Beschriftungen zur Verbesserung der grafischen Darstellung</li>\
+                          <li>Symbole zur Illustration der Knoten</li>\
+                          <li>Farbverlaufsdarstellungen auf Flüssen</li>\
+                          <li>Verwaltung komplexer Hierarchien</li>\
+                          <li>Sankey-Animationen mit progressiven Erscheinungseffekten oder einer Abfolge von "Ansichten", die Veränderungen im Zeitverlauf zeigen</li>\
+                        </ul>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                  </table>',
+          'buy_opensankeyplus_monthly': 'Für 50 Euro pro Jahr möchte ich OpenSankey+!',
+          'buy_opensankeyplus_annual': 'Für 300 Euro pro Jahr möchte ich OpenSankey+!',
+          'choose_plan': 'Wählen Sie eine OpenSankey+-Lizenz.'
+        },
+        account: {
+          'title': 'Erstellen Sie zunächst Ihr Konto',
+          id: {
+            'label': 'E-Mail',
+            'placeholder': 'Eine E-Mail-Adresse wird für die Kontoerstellung benötigt',
+            'error': 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
+          },
+          pwd: {
+            'label': 'Passwort',
+            'placeholder': 'Wählen Sie ein sicheres Passwort',
+            'error': 'Das Passwort muss mehr als acht Zeichen enthalten, mit mindestens einem Buchstaben, einer Zahl und einem Sonderzeichen.',
+            'show': 'anzeigen',
+            'hide': 'ausblenden',
+          },
+          'fn': 'Vorname',
+          'ln': 'Nachname',
+          msg: {
+            'ok': 'Konto erstellt - Sie erhalten eine Bestätigungs-E-Mail zur Validierung Ihres Kontos',
+            'err_captcha': 'Captcha ist ungültig',
+            'err_email_invalid': 'E-Mail ist ungültig',
+            'err_email_exists': 'Ein Konto mit dieser E-Mail existiert bereits',
+            'nok': 'Ein Fehler ist aufgetreten, das Konto konnte nicht erstellt werden.'
+          },
+          'btn_terms': 'Bitte lesen und akzeptieren Sie die Allgemeinen Geschäftsbedingungen',
+          'create_account': 'Registrieren'
+        },
+        validation: {
+          'title': 'Kontovalidierung',
+          msg: {
+            'ok': 'Dieses Konto wurde erfolgreich validiert.',
+            'nok': 'Fehler, ungültiger Link',
+            'account_already_created': 'Dieses Konto wurde bereits validiert',
+            'redirect': 'Sie werden zur Lizenz-Zahlungsseite weitergeleitet.',
+          }
+        }
+      },
+      terms_of_uses: {
+        'title': 'Allgemeine Geschäftsbedingungen',
+        'accept': 'Die Allgemeinen Geschäftsbedingungen akzeptieren'
+      },
+      Paiement: {
+        'win_header_buy': 'Erstellen und teilen Sie Sankey-Diagramme wie ein Profi.',
+        'win_header_success': 'Vielen Dank für Ihr Abonnement von OpenSankey+',
+        'win_header_error': 'Ups, etwas ist schiefgelaufen',
+        'win_content_success': 'OpenSankey+ ist jetzt für Ihr Konto aktiviert.',
+        'win_content_error': 'Beim Zahlungsvorgang ist etwas schiefgelaufen',
+        'btn_checkout': 'Ich möchte OpenSankey+!'
+      },
+      Login: {
+        'title': 'Bei der Anwendung anmelden',
+        'con': 'Anmelden',
+        id: {
+          'label': 'E-Mail',
+          'placeholder': '',
+          'error': 'Bitte geben Sie eine gültige E-Mail-Adresse ein.'
+        },
+        pwd: {
+          'label': 'Passwort',
+          'placeholder': '',
+          'show': 'anzeigen',
+          'hide': 'ausblenden',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'Beim Aufruf des Servers ist ein Fehler aufgetreten',
+          'err_login': 'Fehler, Ihre E-Mail oder Ihr Passwort ist falsch, bitte überprüfen Sie Ihre Anmeldedaten und versuchen Sie es erneut',
+        },
+        forgot: {
+          'title': 'Passwort zurücksetzen',
+          'ask': 'Passwort vergessen?',
+          'sub': 'Zurücksetzen',
+          msg: {
+            'ok': 'Das Passwort wurde erfolgreich zurückgesetzt.',
+            'mail_sent': 'Eine E-Mail zum Zurücksetzen des Passworts wurde an Sie gesendet.',
+            'err_server': 'Beim Aufruf des Servers ist ein Fehler aufgetreten',
+            'err_user_already_connected': 'Fehler, Sie sind bereits angemeldet.',
+            'err_user_inexistant': 'Fehler, das angegebene Konto existiert nicht',
+            'err_token_expire': 'Fehler, die Anfrage ist abgelaufen.'
+          }
+        }
+      },
+      UserPages: {
+        login_modify: {
+          'title': 'Ihre Anmeldedaten',
+          'pwd': 'Passwort ändern',
+          'del': 'Konto löschen',
+          email_modal: {
+            'title': 'E-Mail-Änderung mit Ihrem Passwort bestätigen',
+            'btn': 'Änderung anwenden'
+          },
+          pwd_modal: {
+            'title': 'Passwortänderung mit dem per E-Mail erhaltenen Code bestätigen',
+            'input_token': 'Erhaltener Code',
+            'btn': 'Passwortänderung anwenden'
+          },
+          del_modal: {
+            'title': 'Möchten Sie Ihr Konto wirklich löschen?',
+            'desc': 'Warnung: Diese Aktion löscht Ihr Konto, Ihre Daten und beendet Ihr OpenSankey+-Abonnement, falls vorhanden.',
+            'fdback': 'Warum möchten Sie Ihr Konto löschen? (optional)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Der Kundenservice hat die Erwartungen nicht erfüllt',
+            'fdback_low_quality': 'Die Qualität hat die Erwartungen nicht erfüllt',
+            'fdback_missing_features': 'Es fehlen einige Funktionen',
+            'fdback_switched_service': 'Ich wechsle zu einem anderen Dienst',
+            'fdback_too_complex': 'Die Benutzerfreundlichkeit hat die Erwartungen nicht erfüllt',
+            'fdback_too_expensive': 'Es ist zu teuer',
+            'fdback_unused': 'Ich nutze den Dienst nicht genug',
+            'fdback_other': 'Anderer Grund',
+            'comment': 'Wie können wir uns verbessern? (optional)',
+            'pwd_confirm': 'Geben Sie Ihr Passwort zur Bestätigung ein',
+            'btn_confirm': 'Konto und alle Daten löschen',
+            'btn_cancel': 'Ich möchte mein Konto behalten',
+          },
+          btns: {
+            'set_email': 'E-Mail ändern',
+            'set_pwd': 'Passwort ändern',
+            'del_account': 'Konto löschen'
+          },
+          msgs: {
+            'ok_email': 'Die E-Mail wurde erfolgreich geändert',
+            'prs_email': 'E-Mail-Änderung wird verarbeitet',
+            'err_email_regex': 'Die E-Mail ist ungültig',
+            'err_email_failed': 'Die E-Mail konnte nicht geändert werden',
+            'ok_pwd': 'Das Passwort wurde erfolgreich geändert',
+            'prs_pwd': 'Eine E-Mail zum Zurücksetzen des Passworts wurde an Sie gesendet.',
+            'err_pwd_failed': 'Fehler bei der Passwortänderungsanfrage',
+            'ok_del': 'Das Konto wurde gelöscht. Rückkehr zur Hauptseite.',
+            'err_del': 'Fehler bei der Kontolöschungsanfrage. Bitte überprüfen Sie Ihr Passwort.',
+          },
+        },
+        infos_modify: {
+          'title': 'Ihre persönlichen Daten',
+          btns: {
+            'set_fn': 'Änderung anwenden',
+            'set_ln': 'Änderung anwenden',
+          },
+          msgs: {
+            'ok_firstname': 'Der Vorname wurde erfolgreich geändert',
+            'err_firstname': 'Die Vornamenänderung konnte nicht angewendet werden',
+            'ok_lastname': 'Der Nachname wurde erfolgreich geändert',
+            'err_lastname': 'Die Nachnamenänderung konnte nicht angewendet werden',
+          },
+        },
+        license: {
+          'title': 'Lizenzinformationen',
+          'exp_until': 'Nächste Verlängerung: ',
+          btns: {
+            'mng_sub': 'Abonnement verwalten',
+            'add_sub': 'Lizenz abonnieren',
+          },
+        },
+        'OS+_lic': 'OpenSankey+-Lizenz',
+        'SS_lic': 'SankeySuite-Lizenz',
+        'update_lic': 'Neue Lizenznummer registrieren',
+        'win_acc_infos': 'Kontodetails',
+        'win_db_template': 'Verfügbare Vorlagen',
+        'db_desc_template': 'Vorlagenbeschreibung',
+        'usr_no_lic': 'Derzeit keine Lizenz registriert',
+        'usr_lic_validdate': 'Gültigkeitsdatum: ',
+        'usr_lic_expdate': 'Abgelaufen am: ',
+        'usr_lic_valid': 'Gültige Lizenz',
+        'usr_lic_invalid': 'Ungültige Lizenz',
+        'usr_lic_deactivated': 'Lizenz deaktiviert',
+        'usr_lic_err': 'Ungültige Lizenznummer',
+        'err_get_user_infos': 'Fehler beim Zugriff auf die Benutzerinformationen',
+        'err_get_OS+_infos': 'Fehler beim Zugriff auf den OpenSankey+-Lizenzserver',
+        'err_get_SS_infos': 'Fehler beim Zugriff auf den SankeySuite-Lizenzserver'
+      },
+
+      welcome: {
+        news: 'Neuigkeiten in dieser Version',
+        view: 'Schaltflächen zum Navigieren zwischen den verschiedenen Ansichten des Sankey',
+        breadcrumbs: {
+          intro: 'Übersicht',
+          news: 'Neuigkeiten',
+        },
+        news_content: {
+          230803: {
+            main_title: '3. August 2023: Neue Funktionen',
+            main_content: 'Wir haben neue Funktionen hinzugefügt, um die Handhabung von Sankey-Diagrammen zu erleichtern',
+            sub_title_1: 'Rechtsklick mit vielen Optionen',
+            sub_content_1: 'Ab sofort sind viele Aktionen auf Knoten, Flüsse und sogar der Zeichenfläche per Rechtsklick auf die betreffenden Elemente zugänglich.',
+            sub_title_2: 'Mehrfachauswahlrahmen',
+            sub_content_2: 'Mehrfachauswahl von Knoten kann nun mit Auswahlrahmen durchgeführt werden.',
+            sub_title_3: 'Erleichterung der Erweiterung Ihrer Diagramme',
+            sub_content_3: 'Die Zeichenfläche kann in jede Richtung erweitert werden, indem Knoten/Flüsse/Textbereiche/Legenden in die gewünschte Richtung gezogen werden.',
+            image1: 'clic droit noeud EN.PNG',
+            image2: 'clic droit flux EN.PNG',
+            image3: 'clic droit fond EN.PNG',
+            image4: 'Zone de selection.PNG'
+          },
+          230908: {
+            main_title: '8. September 2023',
+            main_content: 'Visuelle Verbesserung des Konfigurationsmenüs',
+            sub_title_1: 'Visuelles Redesign der Eingaben im Konfigurationsmenü',
+            sub_content_1: 'Die Eingaben im Konfigurationsmenü wurden mit besser sichtbaren Beschriftungen und Logos für Schaltflächen umgestaltet, um deren Nutzen besser zu verstehen.',
+            sub_title_2: 'Daten-Kontrollpunkt',
+            sub_content_2: 'Sie können jederzeit eine schnelle Sicherung Ihres aktuellen Diagramms erstellen. Nach der Sicherung können Sie Ihr Diagramm weiterentwickeln, und wenn Ihnen die Änderungen nicht gefallen, die Anwendung neu laden, um Ihr Diagramm zum Zeitpunkt der Sicherung wiederherzustellen.',
+            img1: 'menu_config_enhanced_en.PNG',
+            img2: 'menu_config_enhanced_zdd_en.PNG',
+            img3: 'menu_last_save_en.PNG',
+          }
+        },
+        caroussel: {
+          Image0: 'Willkommen bei der Werkzeugsuite OpenSankey, OpenSankey+ und SankeySuite von TerriFlux',
+          Image1: 'Verstehen Sie Ihre Flüsse, stellen Sie sie mit Sankey-Diagrammen dar',
+          Image2: 'Importieren Sie schnell Ihre Daten oder zeichnen Sie Ihre Diagramme direkt',
+          Image3: 'Klären Sie die dargestellten Informationen',
+          Image40: 'Geben Sie dem Verständnis die nötige Tiefe',
+          Image41: 'Geben Sie dem Verständnis die nötige Tiefe',
+          Image5: 'Erstellen Sie interaktive und didaktische Infografiken',
+          Image6: 'Erstellen Sie interaktive und didaktische Infografiken',
+          descr: {
+            Image0: 'Diese Werkzeuge ermöglichen es, einfach Flussdiagramme zu erstellen',
+            Image1: 'In diesem Darstellungsmodus ist die Dicke jedes Pfeils proportional zum Wert des dargestellten Flusses.',
+            Image2: 'Erstellen Sie Ihre Diagramme aus Excel-Tabellen oder über den interaktiven Zeichenbereich.',
+            Image3: 'Erleichtern Sie die Lesbarkeit Ihrer Diagramme dank des integrierten Beschriftungssystems für Knoten, Flüsse und Daten.',
+            Image40: 'Aggregationsebenen ermöglichen die Darstellung Ihrer Flüsse in mehreren Detailstufen.',
+            Image41: 'Jede Detailstufe kann direkt ausgewählt werden, um nur das Nützliche anzuzeigen.',
+            Image5: 'Erklären Sie Ihre Ergebnisse einfach mit dem automatischen Legendensystem und dem Hinzufügen von Textbereichen.',
+            Image6: 'Erstellen Sie schöne Diagramme durch direkte Integration von Bildern oder Symbolen.'
+          }
+        }
+      },
+      'useSankeyThequeJSON': 'Öffnen (JSON)',
+      'useSankeyThequeEXCEL': 'Öffnen (Excel)',
+      'dl': 'Excel herunterladen',
+      'elements_sankey+_blocked': 'Gesperrte Diagrammelemente (OpenSankey+)',
+      'mfa_blocked': 'Gesperrte Diagrammelemente (MFASankey)',
+      'elements_sankey+_blocked_long': 'Einige Sankey-Elemente sind nicht sichtbar, da sie von OpenSankey+ stammen und Ihr Konto dieses Modul nicht besitzt',
+      'elements_mfa_blocked_long': 'Einige Sankey-Elemente sind nicht sichtbar, da sie von MFASankey stammen und Ihr Konto dieses Modul nicht besitzt',
+    },
+  },
+  //=======================================================
+  //IT
+  //=======================================================
+  it: {
+    translation: {
+      'connect': 'Accesso',
+      MEP: {
+        onValidate: 'Non dimenticare di caricare il file',
+        load_icon: 'Caricare una libreria di icone (da icomoon)',
+        'onBlurNoEnter': 'Uscire dall\'editor per aggiornare i dati',
+        show_image: 'Mostra immagine',
+      },
+      Menu: {
+        'LL': 'Area di testo / Area immagine',
+        'view': 'Viste',
+        'unit': 'Sankey Unitario',
+        'afm': 'AFM',
+        'afm_tools': 'Strumenti',
+        'excel': 'Estrarre dati',
+        'pub': 'Pubblicare',
+        'setResolutionPNG': 'Selezionare la risoluzione desiderata per l\'esportazione',
+        'sankeyPlusDisabled': 'Parametro disattivato perché non possiedi OpenSankey+',
+        'featureLocked': 'Licenza',
+        'featureBeta': 'Sperimentale',
+
+        'home': 'Master',
+        'addView': 'Aggiungi',
+        'updateView': 'Aggiorna',
+        'precView': 'Prec.',
+        'nextView': 'Succ.',
+
+        'toBeautify': 'Abbellire file JSON',
+        'updateFOZdd': 'Aggiornare nell\'area di disegno',
+
+        'import_icon': 'Seleziona icona',
+        'import_icon_from_pack': 'Importa gruppo di icone',
+        'filter_by_name': 'Filtra per nome',
+
+        'presentation_OS': 'OpenSankey è un\'applicazione web che permette di creare facilmente diagrammi di Sankey.\n\nÈ disponibile gratuitamente e include funzioni semplici per creare nodi, flussi e etichettarli per aggregare o filtrare la loro visualizzazione nel diagramma.\n\n',
+        'presentation_OS_limit_node': 'Il limite di 15 nodi per l\'uso senza account può essere rimosso creando un account gratuito.\n\n',
+        'presentation_OSP': 'OpenSankey+ è una licenza a pagamento che sblocca nuove funzionalità per creare bellissimi diagrammi di Sankey per le presentazioni.\n\nQuesta licenza include funzionalità avanzate di formattazione come l\'aggiunta di immagini o icone illustrative per i nodi, gradienti di colore sui flussi e animazioni, ecc.\n\nSoprattutto, OpenSankey+ permette di generare presentazioni esplicative dei vostri diagrammi di Sankey grazie al meccanismo delle "Viste", che registra gli stati visivi dello stesso (con/senza certi filtri attivati, per esempio) per semplificare la navigazione tra di essi.\n\n',
+        'presentation_OSS': 'SankeySuite è una licenza a pagamento che sblocca tutti gli usi avanzati di creazione e analisi di diagrammi di Sankey.\n\nQuesta licenza include funzionalità di riconciliazione dei dati di flusso per identificare incoerenze o calcolare flussi i cui valori non sono direttamente accessibili.\n\nInclude anche le funzionalità di OpenSankey+.\n\n',
+        sankeytheque: 'Sankeytheque',
+        afm_reconcil: 'AFM',
+        afm_reconcil_excel: 'Riconciliare un file Excel',
+        view_actual_file: 'Viste',
+        other_file: 'Altro file',
+        trade_close: 'Vicino al nodo',
+
+        preference_content: {
+          deletePalette: 'Elimina tavolozza',
+          deleteColorPalette_tooltip: 'Elimina il colore selezionato dalla tavolozza',
+          addColorPalette_tooltip: 'Aggiungi un colore alla tavolozza',
+          color: 'Colore',
+          color_head: 'Crea e modifica tavolozza colori',
+          color_item_1: '- Clicca sul pulsante in basso per creare una tavolozza',
+          color_item_2: '- Clicca sul pulsante a destra per aggiungere un colore alla tavolozza',
+          color_item_3: '- Clicca su un quadrato colorato per modificarlo',
+          color_item_4: '- Clicca con il tasto destro sui colori che vuoi eliminare, poi clicca sul pulsante di eliminazione',
+
+          tag: 'Etichette',
+          tag_head: 'Crea e modifica etichette',
+          tag_node: 'Etichette dei nodi',
+          tag_flow: 'Etichette dei flussi',
+          tag_data: 'Etichette dei dati',
+          tag_item_1: '- Crea e modifica gruppi di etichette che puoi inserire in ogni Sankey che realizzi',
+          tag_item_2: '- Per inserire un gruppo di etichette: seleziona un gruppo nella 3ª sottosezione e clicca su inserisci',
+          tag_item_3: '- Se il gruppo selezionato è già inserito nel Sankey, puoi modificarlo cliccando di nuovo sul pulsante di inserimento',
+          tag_head_insert: 'Inserimento del gruppo',
+          tag_insert: 'Inserisci',
+          tag_insert_text: 'Seleziona un gruppo da inserire:',
+
+          style: 'Stile',
+          style_head: 'Crea e modifica stile',
+          style_edit_head_node_styles_visual: 'Modifica stile visivo dei nodi',
+          style_edit_head_node_styles_context: 'Modifica stile delle etichette dei nodi',
+          style_edit_head_flow_styles_visual: 'Modifica stile visivo dei flussi',
+          style_edit_head_flow_styles_context: 'Modifica stile delle etichette dei flussi',
+          style_edit_head: 'Modifica stile nodi/flussi',
+          style_insert_head: 'Inserisci nel Sankey',
+          style_item_1: '- Crea e modifica stili che puoi inserire in ogni Sankey che realizzi',
+          style_item_2: '- Per inserire uno stile: seleziona uno stile nella 3ª sottosezione e clicca su inserisci',
+          style_item_3: '- Se lo stile selezionato è già inserito nel Sankey, puoi modificarlo cliccando di nuovo sul pulsante di inserimento',
+          style_head_insert: 'Inserimento dello stile',
+          style_insert: 'Inserisci stile',
+          style_update: 'Modifica stile',
+          style_insert_text: 'Seleziona uno stile da inserire:',
+
+          icon: 'Icona',
+          icon_head: 'Importazione delle icone',
+          icon_item_1: '- Per importare icone, clicca sulla scheda Importa e seleziona un file .svg',
+          icon_item_2: '- Dopo aver importato un\'icona, puoi modificarne il titolo cliccando sul testo',
+        },
+        Transformation: {
+          'amp_short': 'Trasf.',
+          'amp': 'Modificare il layout',
+          'amp_import': 'Da un altro diagramma',
+          'amp_manuelle': 'Posizionamento',
+          'trans_topo': 'Topologico',
+          'fmep': 'Altro diagramma',
+          'ad': 'Applica',
+          'undo': 'Annulla',
+          'Shortcuts': 'Scorciatoie di selezione',
+          'unSelectAll': 'Nessuno',
+          'selectAll': 'Tutti',
+          'selectDefault': 'Predefinito',
+          'Topology': 'Aggiunte e rimozioni',
+          'Geometry': 'Dimensioni e posizioni',
+          'Attribut': 'Attributi',
+          'Tags': 'Etichette',
+          'Values': 'Valori dei flussi',
+          'Views': 'Viste',
+          'freeLabels': 'Aree di testo',
+          'addNode': 'Aggiungi nodi',
+          'removeNode': 'Rimuovi nodi',
+          'addFlux': 'Aggiungi flussi',
+          'removeFlux': 'Rimuovi flussi',
+          'PosNoeud': 'Nodi',
+          'posFlux': 'Flussi',
+          'attrNode': 'Nodi',
+          'attrFlux': 'Flussi',
+          'tagLevel': 'Livelli di dettaglio',
+          'tagNode': 'Nodi',
+          'tagFlux': 'Flussi',
+          'tagData': 'Dati',
+          'tagNode_assign': 'Assegna un\'etichetta',
+          'tagFlux_assign': 'Assegna un\'etichetta',
+          'attrGeneral': 'Area di disegno',
+          'title': 'Trasformazioni',
+          'disabled_view': 'Non è possibile importare viste in una vista; per farlo, andate ai dati master',
+          'list_icon': 'Catalogo icone',
+          'list_icon_tooltip': 'Importa la lista delle icone utilizzate nel layout importato nei dati attuali.'
+        },
+        tooltips: {
+          publish: 'Pubblicare online',
+          export: 'Esporta come immagine',
+          reconcil: 'Riconciliare i dati',
+          tool_afm: 'Utilizzare strumenti ausiliari per la riconciliazione',
+        },
+        xl_check: 'Verifica Excel',
+        ter_gen: 'Gen. tabella risorse-impieghi'
+      },
+
+      Noeud: {
+        'plns': 'Parametri per i nodi selezionati',
+        'img_visibility': 'Visibilità dell\'immagine',
+        'img_src': 'Fonte',
+        'HL': 'Collegamento ipertestuale',
+        'open_HL': 'Apri',
+        'illustration': 'Illustrazione',
+        'illustration_type': 'Tipo di illustrazione',
+        tabs: {
+          'icon': 'Icona',
+          'fo': 'Illustrazione',
+          'hl': 'Collegamento ipertestuale'
+        },
+        apparence: {
+          'HideAlone': 'Nascondi se intermedio',
+          'toScale': 'Nodo fuori scala',
+          'Orientation': 'Orientamento',
+        },
+        icon: {
+          'icon': 'Icona',
+          'Visibilité': 'Visibilità delle icone',
+          'si': 'Seleziona icona',
+          'couleur': 'Colore',
+          'rIN': 'Rapporto dimensione icona/nodo',
+          'Aucun': 'Nessuno',
+          'icon_catalog': 'Seleziona un\'icona dal catalogo'
+        },
+        foreign_object: {
+          'Visibilité': 'Visibilità',
+          'raw': 'Editor grezzo',
+          'not_activated': 'Attiva la visibilità per attivare'
+        },
+        FO: {
+          'FO': 'Testo',
+          'content': 'Contenuto',
+          'submit': 'Invia',
+          'cancel': 'Annulla'
+        },
+      },
+      Flux: {
+        'asf': 'Applica lo stile ai flussi con questo stile',
+        data: {
+          'scientificNotation': 'Visualizza il valore in notazione scientifica',
+          'fla': 'Visualizza flussi liberi',
+          'astr': 'Visualizza struttura',
+        },
+      },
+      UserNav: {
+        'to_con': 'Accedi',
+        'to_reg': 'Registrati',
+        'to_buy': 'Registrati',
+        'to_app': 'Torna all\'applicazione',
+        'to_acc': 'Il mio account',
+        'to_dbd': 'Pannello di controllo',
+        tooltip: {
+          'to_con': 'Accedi o crea un account',
+          'to_reg': 'Registrati',
+          'to_buy': 'Registrati',
+          'to_app': 'Torna all\'applicazione',
+          'to_acc': 'Il mio account',
+          'to_dbd': 'Pannello di controllo'
+        }
+      },
+      Register: {
+        presentation: {
+          'title': 'Date vita ai vostri diagrammi con OpenSankey+',
+          'text': '<table>\
+                    <tr>\
+                      <td>\
+                        <p>\
+                          <b>OpenSankey+ è uno strumento di storytelling progettato per chi desidera presentare dati di flusso in modo chiaro e visivamente attraente.\
+                          <br><br>\
+                          Preciso, efficace e bello: un Sankey vale più di mille parole.</b>\
+                        </p>\
+                        <p>OpenSankey+ offre una versione migliorata di OpenSankey base, arricchita con una modalità presentazione, ideale per presentazioni e storytelling.</p>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/Tolkien.png" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                    <tr>\
+                      <td>\
+                        <p>In concreto, OpenSankey+ permette di creare diagrammi arricchiti con:</p>\
+                        <ul style="padding-left: 1rem; ">\
+                          <li>Etichette fluttuanti per migliorare la rappresentazione grafica</li>\
+                          <li>Icone per illustrare i nodi</li>\
+                          <li>Rappresentazioni di gradienti sui flussi</li>\
+                          <li>Gestione di gerarchie complesse</li>\
+                          <li>Animazioni Sankey con effetti di apparizione progressiva o una successione di "viste" che mostrano cambiamenti nel tempo</li>\
+                        </ul>\
+                      </td>\
+                      <td>\
+                        <img src="https://terriflux.com/wp-content/uploads/2023/07/FiliereColza-980x359.jpg.webp" style="margin:20px">\
+                      </td>\
+                    </tr>\
+                  </table>',
+          'buy_opensankeyplus_monthly': 'Per 50 euro all\'anno, voglio OpenSankey+!',
+          'buy_opensankeyplus_annual': 'Per 300 euro all\'anno, voglio OpenSankey+!',
+          'choose_plan': 'Scegliete una licenza OpenSankey+.'
+        },
+        account: {
+          'title': 'Prima create il vostro account',
+          id: {
+            'label': 'E-mail',
+            'placeholder': 'È necessaria un\'e-mail per creare il vostro account',
+            'error': 'Inserite un indirizzo e-mail valido.'
+          },
+          pwd: {
+            'label': 'Password',
+            'placeholder': 'Scegliete una buona password',
+            'error': 'La password deve contenere più di otto caratteri, con almeno una lettera, un numero e un carattere speciale.',
+            'show': 'mostra',
+            'hide': 'nascondi',
+          },
+          'fn': 'Nome',
+          'ln': 'Cognome',
+          msg: {
+            'ok': 'Account creato - Riceverete un\'e-mail di conferma per validare il vostro account',
+            'err_captcha': 'Il captcha non è valido',
+            'err_email_invalid': 'L\'e-mail non è valida',
+            'err_email_exists': 'Un account con questa e-mail esiste già',
+            'nok': 'Si è verificato un errore, impossibile creare l\'account.'
+          },
+          'btn_terms': 'Leggete e accettate i termini e le condizioni',
+          'create_account': 'Registrati'
+        },
+        validation: {
+          'title': 'Validazione dell\'account',
+          msg: {
+            'ok': 'Questo account è stato validato con successo.',
+            'nok': 'Errore, link non valido',
+            'account_already_created': 'Questo account è già stato validato',
+            'redirect': 'Sarete reindirizzati alla pagina di pagamento della licenza.',
+          }
+        }
+      },
+      terms_of_uses: {
+        'title': 'Termini e condizioni d\'uso',
+        'accept': 'Accettare i termini e le condizioni d\'uso'
+      },
+      Paiement: {
+        'win_header_buy': 'Create e condividete diagrammi di Sankey come un professionista.',
+        'win_header_success': 'Grazie per il vostro abbonamento a OpenSankey+',
+        'win_header_error': 'Ops, qualcosa è andato storto',
+        'win_content_success': 'OpenSankey+ è ora attivato per il vostro account.',
+        'win_content_error': 'Qualcosa è andato storto durante il processo di pagamento',
+        'btn_checkout': 'Voglio OpenSankey+!'
+      },
+      Login: {
+        'title': 'Connettersi all\'applicazione',
+        'con': 'Accedi',
+        id: {
+          'label': 'E-mail',
+          'placeholder': '',
+          'error': 'Inserite un indirizzo e-mail valido.'
+        },
+        pwd: {
+          'label': 'Password',
+          'placeholder': '',
+          'show': 'mostra',
+          'hide': 'nascondi',
+        },
+        msg: {
+          'ok': '',
+          'err_server': 'Si è verificato un errore durante la chiamata al server',
+          'err_login': 'Errore, la vostra e-mail o password è errata, verificate i vostri dati di accesso e riprovate',
+        },
+        forgot: {
+          'title': 'Reimpostare la password',
+          'ask': 'Password dimenticata?',
+          'sub': 'Reimposta',
+          msg: {
+            'ok': 'La password è stata reimpostata con successo.',
+            'mail_sent': 'Vi è stata inviata un\'e-mail per la reimpostazione della password.',
+            'err_server': 'Si è verificato un errore durante la chiamata al server',
+            'err_user_already_connected': 'Errore, siete già connessi.',
+            'err_user_inexistant': 'Errore, l\'account indicato non esiste',
+            'err_token_expire': 'Errore, la richiesta è scaduta.'
+          }
+        }
+      },
+      UserPages: {
+        login_modify: {
+          'title': 'I vostri dati di accesso',
+          'pwd': 'Cambiare password',
+          'del': 'Eliminare account',
+          email_modal: {
+            'title': 'Confermate la modifica dell\'e-mail con la vostra password',
+            'btn': 'Applicare la modifica'
+          },
+          pwd_modal: {
+            'title': 'Confermate la modifica della password con il codice ricevuto via e-mail',
+            'input_token': 'Codice ricevuto',
+            'btn': 'Applicare la modifica della password'
+          },
+          del_modal: {
+            'title': 'Volete davvero eliminare il vostro account?',
+            'desc': 'Attenzione: questa azione eliminerà il vostro account, i vostri dati e interromperà il vostro abbonamento a OpenSankey+ se presente.',
+            'fdback': 'Perché volete eliminare il vostro account? (opzionale)',
+            'fdback_default': '-',
+            'fdback_customer_service': 'Il servizio clienti non ha soddisfatto le aspettative',
+            'fdback_low_quality': 'La qualità non ha soddisfatto le aspettative',
+            'fdback_missing_features': 'Mancano alcune funzionalità',
+            'fdback_switched_service': 'Sto passando a un altro servizio',
+            'fdback_too_complex': 'La facilità d\'uso non ha soddisfatto le aspettative',
+            'fdback_too_expensive': 'È troppo caro',
+            'fdback_unused': 'Non uso il servizio abbastanza',
+            'fdback_other': 'Altro motivo',
+            'comment': 'Come possiamo migliorare? (opzionale)',
+            'pwd_confirm': 'Inserite la vostra password per confermare',
+            'btn_confirm': 'Eliminare account e tutti i dati',
+            'btn_cancel': 'Voglio mantenere il mio account',
+          },
+          btns: {
+            'set_email': 'Cambiare e-mail',
+            'set_pwd': 'Cambiare password',
+            'del_account': 'Eliminare account'
+          },
+          msgs: {
+            'ok_email': 'L\'e-mail è stata cambiata con successo',
+            'prs_email': 'Elaborazione del cambio di e-mail',
+            'err_email_regex': 'L\'e-mail non è valida',
+            'err_email_failed': 'Non è stato possibile modificare l\'e-mail',
+            'ok_pwd': 'La password è stata cambiata con successo',
+            'prs_pwd': 'Vi è stata inviata un\'e-mail per la reimpostazione della password.',
+            'err_pwd_failed': 'Errore nella richiesta di cambio password',
+            'ok_del': 'L\'account è stato eliminato. Ritorno alla pagina principale.',
+            'err_del': 'Errore nella richiesta di eliminazione dell\'account. Verificate la vostra password.',
+          },
+        },
+        infos_modify: {
+          'title': 'Le vostre informazioni personali',
+          btns: {
+            'set_fn': 'Applicare la modifica',
+            'set_ln': 'Applicare la modifica',
+          },
+          msgs: {
+            'ok_firstname': 'Il nome è stato modificato con successo',
+            'err_firstname': 'Non è stato possibile applicare la modifica del nome',
+            'ok_lastname': 'Il cognome è stato modificato con successo',
+            'err_lastname': 'Non è stato possibile applicare la modifica del cognome',
+          },
+        },
+        license: {
+          'title': 'Informazioni sulla licenza',
+          'exp_until': 'Prossimo rinnovo: ',
+          btns: {
+            'mng_sub': 'Gestire abbonamento',
+            'add_sub': 'Sottoscrivere una licenza',
+          },
+        },
+        'OS+_lic': 'Licenza OpenSankey+',
+        'SS_lic': 'Licenza SankeySuite',
+        'update_lic': 'Registrare nuovo numero di licenza',
+        'win_acc_infos': 'Dettagli dell\'account',
+        'win_db_template': 'Modelli disponibili',
+        'db_desc_template': 'Descrizione del modello',
+        'usr_no_lic': 'Nessuna licenza attualmente registrata',
+        'usr_lic_validdate': 'Data di validità: ',
+        'usr_lic_expdate': 'Scaduta il: ',
+        'usr_lic_valid': 'Licenza valida',
+        'usr_lic_invalid': 'Licenza non valida',
+        'usr_lic_deactivated': 'Licenza disattivata',
+        'usr_lic_err': 'Numero di licenza non valido',
+        'err_get_user_infos': 'Errore durante l\'accesso alle informazioni dell\'utente',
+        'err_get_OS+_infos': 'Errore durante l\'accesso al server di licenze OpenSankey+',
+        'err_get_SS_infos': 'Errore durante l\'accesso al server di licenze SankeySuite'
+      },
+
+      welcome: {
+        news: 'Novità di questa versione',
+        view: 'Pulsanti per navigare tra le diverse viste del Sankey',
+        breadcrumbs: {
+          intro: 'Panoramica',
+          news: 'Novità',
+        },
+        news_content: {
+          230803: {
+            main_title: '3 agosto 2023: Nuove funzionalità',
+            main_content: 'Abbiamo aggiunto nuove funzionalità per facilitare la manipolazione dei diagrammi di Sankey',
+            sub_title_1: 'Clic destro con molte opzioni',
+            sub_content_1: 'D\'ora in poi, molte azioni su nodi, flussi e persino l\'area di disegno sono accessibili facendo clic destro sugli elementi interessati.',
+            sub_title_2: 'Riquadro di selezione multipla',
+            sub_content_2: 'La selezione multipla dei nodi può ora essere effettuata con riquadri di selezione.',
+            sub_title_3: 'Facilitare l\'espansione dei diagrammi',
+            sub_content_3: 'L\'area di disegno può essere espansa in qualsiasi direzione trascinando nodi/flussi/aree di testo/legende nella direzione scelta.',
+            image1: 'clic droit noeud EN.PNG',
+            image2: 'clic droit flux EN.PNG',
+            image3: 'clic droit fond EN.PNG',
+            image4: 'Zone de selection.PNG'
+          },
+          230908: {
+            main_title: '8 settembre 2023',
+            main_content: 'Miglioramento visivo del menu di configurazione',
+            sub_title_1: 'Ridisegno visivo degli input nel menu di configurazione',
+            sub_content_1: 'Gli input del menu di configurazione sono stati ridisegnati con etichette più visibili e loghi per i pulsanti per comprenderne meglio l\'utilità.',
+            sub_title_2: 'Punto di controllo dei dati',
+            sub_content_2: 'In qualsiasi momento, potete fare un salvataggio rapido del vostro diagramma attuale. Una volta effettuato il salvataggio, potete continuare a sviluppare il vostro diagramma e, se le modifiche apportate non vi soddisfano, ricaricare l\'applicazione per ritrovare il diagramma al momento del salvataggio.',
+            img1: 'menu_config_enhanced_en.PNG',
+            img2: 'menu_config_enhanced_zdd_en.PNG',
+            img3: 'menu_last_save_en.PNG',
+          }
+        },
+        caroussel: {
+          Image0: 'Benvenuti nella suite di strumenti OpenSankey, OpenSankey+ e SankeySuite di TerriFlux',
+          Image1: 'Comprendete i vostri flussi, rappresentateli con diagrammi di Sankey',
+          Image2: 'Importate rapidamente i vostri dati o disegnate direttamente i vostri diagrammi',
+          Image3: 'Chiarite l\'informazione rappresentata',
+          Image40: 'Date la profondità necessaria alla comprensione',
+          Image41: 'Date la profondità necessaria alla comprensione',
+          Image5: 'Create infografiche interattive e didattiche',
+          Image6: 'Create infografiche interattive e didattiche',
+          descr: {
+            Image0: 'Questi strumenti permettono di creare facilmente diagrammi di flusso',
+            Image1: 'In questa modalità di rappresentazione, lo spessore di ogni freccia è proporzionale al valore del flusso che rappresenta.',
+            Image2: 'Create i vostri diagrammi da fogli di calcolo Excel o tramite l\'area di disegno interattiva.',
+            Image3: 'Facilitate la lettura dei vostri diagrammi grazie al sistema integrato di etichettatura di nodi, flussi e dati.',
+            Image40: 'I livelli di aggregazione permettono di rappresentare i vostri flussi in diversi livelli di dettaglio.',
+            Image41: 'Ogni livello di dettaglio può essere selezionato direttamente per visualizzare solo ciò che è utile.',
+            Image5: 'Spiegate semplicemente i vostri risultati con il sistema di legenda automatica e l\'aggiunta di aree di testo.',
+            Image6: 'Create bellissimi diagrammi integrando direttamente immagini o icone.'
+          }
+        }
+      },
+      'useSankeyThequeJSON': 'Apri (JSON)',
+      'useSankeyThequeEXCEL': 'Apri (Excel)',
+      'dl': 'Scarica Excel',
+      'elements_sankey+_blocked': 'Elementi del diagramma bloccati (OpenSankey+)',
+      'mfa_blocked': 'Elementi del diagramma bloccati (MFASankey)',
+      'elements_sankey+_blocked_long': 'Alcuni elementi del Sankey non sono visibili perché provengono da OpenSankey+ e il vostro account non possiede questo modulo',
+      'elements_mfa_blocked_long': 'Alcuni elementi del Sankey non sono visibili perché provengono da MFASankey e il vostro account non possiede questo modulo',
+    },
   }
 }
