@@ -151,8 +151,8 @@ export interface AttributeConfig<T> {
   default: T
   type: () => T
   category: string
-  labels: { en: string; fr: string }
-  tooltips: { en: string; fr: string }
+  labels: { en: string; fr: string; es: string; de: string; it: string }
+  tooltips: { en: string; fr: string; es: string; de: string; it: string }
   callback?: string
   setter?: string
   actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
@@ -330,11 +330,17 @@ export function createConfigWithPrefix<
       ...config,
       labels: {
         en: config.labels.en,
-        fr: config.labels.fr
+        fr: config.labels.fr,
+        es: config.labels.es,
+        de: config.labels.de,
+        it: config.labels.it
       },
       tooltips: {
         en: config.tooltips.en,
-        fr: config.tooltips.fr
+        fr: config.tooltips.fr,
+        es: config.tooltips.es,
+        de: config.tooltips.de,
+        it: config.tooltips.it
       }
     }
   }
@@ -359,8 +365,8 @@ export type ConfigOverrides<T extends Record<string, AttributeConfig<unknown>>> 
   [K in keyof T]: {
     default?: ExtractConfigValue<T[K]>
     category?: string
-    labels?: { en: string; fr: string }
-    tooltips?: { en: string; fr: string }
+    labels?: { en: string; fr: string; es: string; de: string; it: string }
+    tooltips?: { en: string; fr: string; es: string; de: string; it: string }
     callback?: string
     setter?: string
     actions?: (BaseActionType | NodeBaseActionType | LinkBaseActionType)[]
@@ -392,11 +398,17 @@ export function createConfigWithPrefixAndOverrides<T extends Record<string, Attr
       actions: actions,
       labels: override.labels || {
         en: config.labels.en,
-        fr: config.labels.fr
+        fr: config.labels.fr,
+        es: config.labels.es,
+        de: config.labels.de,
+        it: config.labels.it
       },
       tooltips: override.tooltips || {
         en: config.tooltips.en,
-        fr: config.tooltips.fr
+        fr: config.tooltips.fr,
+        es: config.tooltips.es,
+        de: config.tooltips.de,
+        it: config.tooltips.it
       }
     }
   }
@@ -412,11 +424,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Shape and background',
-      fr: 'Forme et Fond'
+      fr: 'Forme et Fond',
+      es: 'Forma y fondo',
+      de: 'Form und Hintergrund',
+      it: 'Forma e sfondo'
     },
     tooltips: {
       en: 'Show or hide the shape',
-      fr: 'Afficher ou masquer la forme'
+      fr: 'Afficher ou masquer la forme',
+      es: 'Mostrar u ocultar la forma',
+      de: 'Form anzeigen oder ausblenden',
+      it: 'Mostra o nascondi la forma'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -427,11 +445,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Shape type',
-      fr: 'Type de forme'
+      fr: 'Type de forme',
+      es: 'Tipo de forma',
+      de: 'Formtyp',
+      it: 'Tipo di forma'
     },
     tooltips: {
       en: 'Choose a shape (rectangle, ellipse, capsule)',
-      fr: 'Choisir une forme (rectangle, ellipse, capsule)'
+      fr: 'Choisir une forme (rectangle, ellipse, capsule)',
+      es: 'Elegir una forma (rectángulo, elipse, cápsula)',
+      de: 'Eine Form wählen (Rechteck, Ellipse, Kapsel)',
+      it: 'Scegliere una forma (rettangolo, ellisse, capsula)'
     }
   } satisfies AttributeConfig<Type_Shape>,
 
@@ -442,11 +466,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Minimum width',
-      fr: 'Largeur minimale'
+      fr: 'Largeur minimale',
+      es: 'Ancho mínimo',
+      de: 'Minimale Breite',
+      it: 'Larghezza minima'
     },
     tooltips: {
       en: 'Minimum width in pixels',
-      fr: 'Largeur minimale en pixels'
+      fr: 'Largeur minimale en pixels',
+      es: 'Ancho mínimo en píxeles',
+      de: 'Minimale Breite in Pixeln',
+      it: 'Larghezza minima in pixel'
     }
   } satisfies AttributeConfig<number>,
 
@@ -457,11 +487,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Minimum height',
-      fr: 'Hauteur minimale'
+      fr: 'Hauteur minimale',
+      es: 'Altura mínima',
+      de: 'Minimale Höhe',
+      it: 'Altezza minima'
     },
     tooltips: {
       en: 'Minimum height in pixels',
-      fr: 'Hauteur minimale en pixels'
+      fr: 'Hauteur minimale en pixels',
+      es: 'Altura mínima en píxeles',
+      de: 'Minimale Höhe in Pixeln',
+      it: 'Altezza minima in pixel'
     }
   } satisfies AttributeConfig<number>,
 
@@ -472,11 +508,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Background',
-      fr: 'Fond'
+      fr: 'Fond',
+      es: 'Fondo',
+      de: 'Hintergrund',
+      it: 'Sfondo'
     },
     tooltips: {
       en: 'Show or hide the background color',
-      fr: 'Afficher ou masquer la couleur de fond'
+      fr: 'Afficher ou masquer la couleur de fond',
+      es: 'Mostrar u ocultar el color de fondo',
+      de: 'Hintergrundfarbe anzeigen oder ausblenden',
+      it: 'Mostra o nascondi il colore di sfondo'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -487,11 +529,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Color',
-      fr: 'Couleur'
+      fr: 'Couleur',
+      es: 'Color',
+      de: 'Farbe',
+      it: 'Colore'
     },
     tooltips: {
       en: 'Background color',
-      fr: 'Couleur de fond'
+      fr: 'Couleur de fond',
+      es: 'Color de fondo',
+      de: 'Hintergrundfarbe',
+      it: 'Colore di sfondo'
     }
   } satisfies AttributeConfig<string>,
 
@@ -502,11 +550,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Opacity',
-      fr: 'Opacité'
+      fr: 'Opacité',
+      es: 'Opacidad',
+      de: 'Deckkraft',
+      it: 'Opacità'
     },
     tooltips: {
       en: 'Opacity of the shape',
-      fr: 'Opacité de la forme'
+      fr: 'Opacité de la forme',
+      es: 'Opacidad de la forma',
+      de: 'Deckkraft der Form',
+      it: 'Opacità della forma'
     }
   } satisfies AttributeConfig<number>,
 
@@ -517,11 +571,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Static color',
-      fr: 'Couleur fixe'
+      fr: 'Couleur fixe',
+      es: 'Color fijo',
+      de: 'Feste Farbe',
+      it: 'Colore fisso'
     },
     tooltips: {
       en: 'Keep the color fixed regardless of filters',
-      fr: 'Garder la couleur fixe indépendamment des filtres'
+      fr: 'Garder la couleur fixe indépendamment des filtres',
+      es: 'Mantener el color fijo independientemente de los filtros',
+      de: 'Farbe unabhängig von Filtern beibehalten',
+      it: 'Mantenere il colore fisso indipendentemente dai filtri'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -532,11 +592,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Border',
-      fr: 'Bordure'
+      fr: 'Bordure',
+      es: 'Borde',
+      de: 'Rahmen',
+      it: 'Bordo'
     },
     tooltips: {
       en: 'Make the border transparent',
-      fr: 'Rendre la bordure transparente'
+      fr: 'Rendre la bordure transparente',
+      es: 'Hacer el borde transparente',
+      de: 'Rahmen transparent machen',
+      it: 'Rendere il bordo trasparente'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -547,11 +613,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Color',
-      fr: 'Couleur'
+      fr: 'Couleur',
+      es: 'Color',
+      de: 'Farbe',
+      it: 'Colore'
     },
     tooltips: {
       en: 'Color of the border',
-      fr: 'Couleur de la bordure'
+      fr: 'Couleur de la bordure',
+      es: 'Color del borde',
+      de: 'Farbe des Rahmens',
+      it: 'Colore del bordo'
     }
   } satisfies AttributeConfig<string>,
   border_color_sustainable: {
@@ -561,11 +633,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Static color',
-      fr: 'Couleur fixe'
+      fr: 'Couleur fixe',
+      es: 'Color fijo',
+      de: 'Feste Farbe',
+      it: 'Colore fisso'
     },
     tooltips: {
       en: 'Keep the color fixed regardless of filters',
-      fr: 'Garder la couleur fixe indépendamment des filtres'
+      fr: 'Garder la couleur fixe indépendamment des filtres',
+      es: 'Mantener el color fijo independientemente de los filtros',
+      de: 'Farbe unabhängig von Filtern beibehalten',
+      it: 'Mantenere il colore fisso indipendentemente dai filtri'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -576,11 +654,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Thickness',
-      fr: 'Épaisseur'
+      fr: 'Épaisseur',
+      es: 'Grosor',
+      de: 'Stärke',
+      it: 'Spessore'
     },
     tooltips: {
       en: 'Thickness of the border in pixels',
-      fr: 'Épaisseur de la bordure en pixels'
+      fr: 'Épaisseur de la bordure en pixels',
+      es: 'Grosor del borde en píxeles',
+      de: 'Stärke des Rahmens in Pixeln',
+      it: 'Spessore del bordo in pixel'
     }
   } satisfies AttributeConfig<number>,
 
@@ -591,11 +675,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Dashed',
-      fr: 'Tiretés'
+      fr: 'Tiretés',
+      es: 'Discontinuo',
+      de: 'Gestrichelt',
+      it: 'Tratteggiato'
     },
     tooltips: {
       en: 'Use a dashed border style',
-      fr: 'Utiliser un style de bordure en pointillés'
+      fr: 'Utiliser un style de bordure en pointillés',
+      es: 'Usar un estilo de borde discontinuo',
+      de: 'Gestrichelten Rahmenstil verwenden',
+      it: 'Usare uno stile di bordo tratteggiato'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -606,11 +696,17 @@ export const BASE_SHAPE_CONFIG = {
     actions: ['drawShape'] as BaseActionType[],
     labels: {
       en: 'Radius',
-      fr: 'Rayon'
+      fr: 'Rayon',
+      es: 'Radio',
+      de: 'Radius',
+      it: 'Raggio'
     },
     tooltips: {
       en: 'Border radius in pixels',
-      fr: 'Rayon de bordure en pixels'
+      fr: 'Rayon de bordure en pixels',
+      es: 'Radio del borde en píxeles',
+      de: 'Rahmenradius in Pixeln',
+      it: 'Raggio del bordo in pixel'
     }
   } satisfies AttributeConfig<number>,
   margin_left: {
@@ -621,11 +717,17 @@ export const BASE_SHAPE_CONFIG = {
 
     labels: {
       en: 'Left',
-      fr: 'Gauche'
+      fr: 'Gauche',
+      es: 'Izquierda',
+      de: 'Links',
+      it: 'Sinistra'
     },
     tooltips: {
       en: 'Left margin',
-      fr: 'Marge gauche '
+      fr: 'Marge gauche',
+      es: 'Margen izquierdo',
+      de: 'Linker Rand',
+      it: 'Margine sinistro'
     }
   } satisfies AttributeConfig<number>,
 
@@ -637,11 +739,17 @@ export const BASE_SHAPE_CONFIG = {
 
     labels: {
       en: 'Right',
-      fr: 'Droite'
+      fr: 'Droite',
+      es: 'Derecha',
+      de: 'Rechts',
+      it: 'Destra'
     },
     tooltips: {
       en: 'Right margin',
-      fr: 'Marge droite'
+      fr: 'Marge droite',
+      es: 'Margen derecho',
+      de: 'Rechter Rand',
+      it: 'Margine destro'
     }
   } satisfies AttributeConfig<number>,
 
@@ -653,11 +761,17 @@ export const BASE_SHAPE_CONFIG = {
 
     labels: {
       en: 'Top',
-      fr: 'Haute'
+      fr: 'Haute',
+      es: 'Superior',
+      de: 'Oben',
+      it: 'Superiore'
     },
     tooltips: {
       en: 'Top margin',
-      fr: 'Marge haute'
+      fr: 'Marge haute',
+      es: 'Margen superior',
+      de: 'Oberer Rand',
+      it: 'Margine superiore'
     }
   } satisfies AttributeConfig<number>,
 
@@ -669,11 +783,17 @@ export const BASE_SHAPE_CONFIG = {
 
     labels: {
       en: 'Bottom',
-      fr: 'Basse'
+      fr: 'Basse',
+      es: 'Inferior',
+      de: 'Unten',
+      it: 'Inferiore'
     },
     tooltips: {
       en: 'Bottom margin',
-      fr: 'Marge basse'
+      fr: 'Marge basse',
+      es: 'Margen inferior',
+      de: 'Unterer Rand',
+      it: 'Margine inferiore'
     }
   } satisfies AttributeConfig<number>,
 } as const
@@ -686,11 +806,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Label',
-      fr: 'Label'
+      fr: 'Label',
+      es: 'Etiqueta',
+      de: 'Beschriftung',
+      it: 'Etichetta'
     },
     tooltips: {
       en: 'Display or hide the label',
-      fr: 'Afficher ou masquer le label'
+      fr: 'Afficher ou masquer le label',
+      es: 'Mostrar u ocultar la etiqueta',
+      de: 'Beschriftung anzeigen oder ausblenden',
+      it: 'Mostra o nascondi l\'etichetta'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -702,11 +828,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Font family',
-      fr: 'Police de caractères'
+      fr: 'Police de caractères',
+      es: 'Familia de fuente',
+      de: 'Schriftfamilie',
+      it: 'Famiglia di caratteri'
     },
     tooltips: {
       en: 'Font family for the label',
-      fr: 'Police de caractères pour le label'
+      fr: 'Police de caractères pour le label',
+      es: 'Familia de fuente para la etiqueta',
+      de: 'Schriftfamilie für die Beschriftung',
+      it: 'Famiglia di caratteri per l\'etichetta'
     }
   } satisfies AttributeConfig<string>,
 
@@ -717,11 +849,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Font size',
-      fr: 'Taille de police'
+      fr: 'Taille de police',
+      es: 'Tamaño de fuente',
+      de: 'Schriftgröße',
+      it: 'Dimensione del carattere'
     },
     tooltips: {
       en: 'Font size for the label',
-      fr: 'Taille de police pour le label'
+      fr: 'Taille de police pour le label',
+      es: 'Tamaño de fuente para la etiqueta',
+      de: 'Schriftgröße für die Beschriftung',
+      it: 'Dimensione del carattere per l\'etichetta'
     }
   } satisfies AttributeConfig<number>,
 
@@ -732,11 +870,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Uppercase',
-      fr: 'Majuscules'
+      fr: 'Majuscules',
+      es: 'Mayúsculas',
+      de: 'Großbuchstaben',
+      it: 'Maiuscolo'
     },
     tooltips: {
       en: 'Display text in uppercase',
-      fr: 'Afficher le texte en majuscules'
+      fr: 'Afficher le texte en majuscules',
+      es: 'Mostrar el texto en mayúsculas',
+      de: 'Text in Großbuchstaben anzeigen',
+      it: 'Visualizzare il testo in maiuscolo'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -747,11 +891,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Bold',
-      fr: 'Gras'
+      fr: 'Gras',
+      es: 'Negrita',
+      de: 'Fett',
+      it: 'Grassetto'
     },
     tooltips: {
       en: 'Display text in bold',
-      fr: 'Afficher le texte en gras'
+      fr: 'Afficher le texte en gras',
+      es: 'Mostrar el texto en negrita',
+      de: 'Text fett anzeigen',
+      it: 'Visualizzare il testo in grassetto'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -762,11 +912,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Italic',
-      fr: 'Italique'
+      fr: 'Italique',
+      es: 'Cursiva',
+      de: 'Kursiv',
+      it: 'Corsivo'
     },
     tooltips: {
       en: 'Display text in italic',
-      fr: 'Afficher le texte en italique'
+      fr: 'Afficher le texte en italique',
+      es: 'Mostrar el texto en cursiva',
+      de: 'Text kursiv anzeigen',
+      it: 'Visualizzare il testo in corsivo'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -777,11 +933,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Text color',
-      fr: 'Couleur du texte'
+      fr: 'Couleur du texte',
+      es: 'Color del texto',
+      de: 'Textfarbe',
+      it: 'Colore del testo'
     },
     tooltips: {
       en: 'Color of the text',
-      fr: 'Couleur du texte'
+      fr: 'Couleur du texte',
+      es: 'Color del texto',
+      de: 'Farbe des Textes',
+      it: 'Colore del testo'
     }
   } satisfies AttributeConfig<string>,
 
@@ -793,11 +955,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Horizontal position',
-      fr: 'Position horizontale'
+      fr: 'Position horizontale',
+      es: 'Posición horizontal',
+      de: 'Horizontale Position',
+      it: 'Posizione orizzontale'
     },
     tooltips: {
       en: 'Horizontal position relative to the node',
-      fr: 'Position horizontale par rapport au noeud'
+      fr: 'Position horizontale par rapport au noeud',
+      es: 'Posición horizontal respecto al nodo',
+      de: 'Horizontale Position relativ zum Knoten',
+      it: 'Posizione orizzontale rispetto al nodo'
     }
   } satisfies AttributeConfig<Type_TextHPos>,
 
@@ -809,11 +977,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Vertical position',
-      fr: 'Position verticale'
+      fr: 'Position verticale',
+      es: 'Posición vertical',
+      de: 'Vertikale Position',
+      it: 'Posizione verticale'
     },
     tooltips: {
       en: 'Vertical position relative to the node',
-      fr: 'Position verticale par rapport au noeud'
+      fr: 'Position verticale par rapport au noeud',
+      es: 'Posición vertical respecto al nodo',
+      de: 'Vertikale Position relativ zum Knoten',
+      it: 'Posizione verticale rispetto al nodo'
     }
   } satisfies AttributeConfig<Type_TextVPos>,
 
@@ -824,11 +998,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Horizontal',
-      fr: 'Horizontal'
+      fr: 'Horizontal',
+      es: 'Horizontal',
+      de: 'Horizontal',
+      it: 'Orizzontale'
     },
     tooltips: {
       en: 'Horizontal shift from anchor point',
-      fr: 'Décalage horizontal depuis le point d\'ancrage'
+      fr: 'Décalage horizontal depuis le point d\'ancrage',
+      es: 'Desplazamiento horizontal desde el punto de anclaje',
+      de: 'Horizontale Verschiebung vom Ankerpunkt',
+      it: 'Spostamento orizzontale dal punto di ancoraggio'
     }
   } satisfies AttributeConfig<number>,
 
@@ -839,11 +1019,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Vertical',
-      fr: 'Vertical'
+      fr: 'Vertical',
+      es: 'Vertical',
+      de: 'Vertikal',
+      it: 'Verticale'
     },
     tooltips: {
       en: 'Vertical shift from anchor point',
-      fr: 'Décalage vertical depuis le point d\'ancrage'
+      fr: 'Décalage vertical depuis le point d\'ancrage',
+      es: 'Desplazamiento vertical desde el punto de anclaje',
+      de: 'Vertikale Verschiebung vom Ankerpunkt',
+      it: 'Spostamento verticale dal punto di ancoraggio'
     }
   } satisfies AttributeConfig<number>,
   text_align: {
@@ -854,10 +1040,16 @@ export const BASE_LABEL_CONFIG = {
     labels: {
       en: 'Text alignment',
       fr: 'Text alignment',
+      es: 'Alineación del texto',
+      de: 'Textausrichtung',
+      it: 'Allineamento del testo'
     },
     tooltips: {
       en: 'Text alignment',
-      fr: 'Text alignment'
+      fr: 'Text alignment',
+      es: 'Alineación del texto',
+      de: 'Textausrichtung',
+      it: 'Allineamento del testo'
     }
   } satisfies AttributeConfig<string>,
   box_width: {
@@ -867,11 +1059,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Width',
-      fr: 'Largeur'
+      fr: 'Largeur',
+      es: 'Ancho',
+      de: 'Breite',
+      it: 'Larghezza'
     },
     tooltips: {
       en: 'Width of the text area in pixels',
-      fr: 'Largeur de la zone de texte en pixels'
+      fr: 'Largeur de la zone de texte en pixels',
+      es: 'Ancho del área de texto en píxeles',
+      de: 'Breite des Textbereichs in Pixeln',
+      it: 'Larghezza dell\'area di testo in pixel'
     }
   } satisfies AttributeConfig<number>,
 
@@ -882,11 +1080,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Vertical text',
-      fr: 'Texte vertical'
+      fr: 'Texte vertical',
+      es: 'Texto vertical',
+      de: 'Vertikaler Text',
+      it: 'Testo verticale'
     },
     tooltips: {
       en: 'Orient text vertically',
-      fr: 'Orienter le texte verticalement'
+      fr: 'Orienter le texte verticalement',
+      es: 'Orientar el texto verticalmente',
+      de: 'Text vertikal ausrichten',
+      it: 'Orientare il testo verticalmente'
     }
   } satisfies AttributeConfig<boolean>,
   position_absolute: {
@@ -896,11 +1100,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'position_absolute',
-      fr: 'position_absolute'
+      fr: 'position_absolute',
+      es: 'position_absolute',
+      de: 'position_absolute',
+      it: 'position_absolute'
     },
     tooltips: {
       en: 'position_absolute',
-      fr: 'position_absolute'
+      fr: 'position_absolute',
+      es: 'position_absolute',
+      de: 'position_absolute',
+      it: 'position_absolute'
     }
   } satisfies AttributeConfig<boolean>,
   position_x: {
@@ -910,11 +1120,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'position_x',
-      fr: 'position_x'
+      fr: 'position_x',
+      es: 'position_x',
+      de: 'position_x',
+      it: 'position_x'
     },
     tooltips: {
       en: 'position_x',
-      fr: 'position_x'
+      fr: 'position_x',
+      es: 'position_x',
+      de: 'position_x',
+      it: 'position_x'
     }
   } satisfies AttributeConfig<number>,
   position_y: {
@@ -924,11 +1140,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'position_y',
-      fr: 'position_y'
+      fr: 'position_y',
+      es: 'position_y',
+      de: 'position_y',
+      it: 'position_y'
     },
     tooltips: {
       en: 'position_y',
-      fr: 'position_y'
+      fr: 'position_y',
+      es: 'position_y',
+      de: 'position_y',
+      it: 'position_y'
     }
   } satisfies AttributeConfig<number>,
   position_offset: {
@@ -938,11 +1160,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'position_offset',
-      fr: 'position_offset'
+      fr: 'position_offset',
+      es: 'position_offset',
+      de: 'position_offset',
+      it: 'position_offset'
     },
     tooltips: {
       en: 'position_offset',
-      fr: 'position_offset'
+      fr: 'position_offset',
+      es: 'position_offset',
+      de: 'position_offset',
+      it: 'position_offset'
     }
   } satisfies AttributeConfig<number>,
   inside_horiz: {
@@ -952,11 +1180,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Inside horizontal',
-      fr: 'Intérieur horizontal'
+      fr: 'Intérieur horizontal',
+      es: 'Interior horizontal',
+      de: 'Innen horizontal',
+      it: 'Interno orizzontale'
     },
     tooltips: {
       en: 'Position label inside shape horizontally',
-      fr: 'Positionner le label à l\'intérieur horizontal de la forme'
+      fr: 'Positionner le label à l\'intérieur horizontal de la forme',
+      es: 'Posicionar la etiqueta dentro de la forma horizontalmente',
+      de: 'Beschriftung horizontal innerhalb der Form positionieren',
+      it: 'Posizionare l\'etichetta all\'interno della forma orizzontalmente'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -967,11 +1201,17 @@ export const BASE_LABEL_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Inside vertical',
-      fr: 'Intérieur vertical'
+      fr: 'Intérieur vertical',
+      es: 'Interior vertical',
+      de: 'Innen vertikal',
+      it: 'Interno verticale'
     },
     tooltips: {
       en: 'Position label inside shape vertically',
-      fr: 'Positionner le label à l\'intérieur vertical de la forme'
+      fr: 'Positionner le label à l\'intérieur vertical de la forme',
+      es: 'Posicionar la etiqueta dentro de la forma verticalmente',
+      de: 'Beschriftung vertikal innerhalb der Form positionieren',
+      it: 'Posizionare l\'etichetta all\'interno della forma verticalmente'
     }
   } satisfies AttributeConfig<boolean>,
   icon_name: {
@@ -981,11 +1221,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawIcon'] as BaseActionType[],
     labels: {
       en: 'Icon name',
-      fr: 'Nom de l\'icône'
+      fr: 'Nom de l\'icône',
+      es: 'Nombre del icono',
+      de: 'Symbolname',
+      it: 'Nome dell\'icona'
     },
     tooltips: {
       en: 'Name of the icon',
-      fr: 'Nom de l\'icône'
+      fr: 'Nom de l\'icône',
+      es: 'Nombre del icono',
+      de: 'Name des Symbols',
+      it: 'Nome dell\'icona'
     }
   } satisfies AttributeConfig<string>,
   view_box: {
@@ -995,11 +1241,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawIcon'] as BaseActionType[],
     labels: {
       en: 'Icon viewBox',
-      fr: 'ViewBox de l\'icône'
+      fr: 'ViewBox de l\'icône',
+      es: 'ViewBox del icono',
+      de: 'Symbol-ViewBox',
+      it: 'ViewBox dell\'icona'
     },
     tooltips: {
       en: 'SVG viewBox attribute',
-      fr: 'Attribut viewBox SVG'
+      fr: 'Attribut viewBox SVG',
+      es: 'Atributo viewBox SVG',
+      de: 'SVG-viewBox-Attribut',
+      it: 'Attributo viewBox SVG'
     }
   } satisfies AttributeConfig<string | undefined>,
 
@@ -1010,11 +1262,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawIcon'] as BaseActionType[],
     labels: {
       en: 'Static icon color',
-      fr: 'Couleur d\'icône fixe'
+      fr: 'Couleur d\'icône fixe',
+      es: 'Color de icono fijo',
+      de: 'Feste Symbolfarbe',
+      it: 'Colore icona fisso'
     },
     tooltips: {
       en: 'Keep icon color fixed',
-      fr: 'Garder la couleur d\'icône fixe'
+      fr: 'Garder la couleur d\'icône fixe',
+      es: 'Mantener el color del icono fijo',
+      de: 'Symbolfarbe fest beibehalten',
+      it: 'Mantenere il colore dell\'icona fisso'
     }
   } satisfies AttributeConfig<boolean>,
   has_fo: {
@@ -1024,11 +1282,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawFO'] as BaseActionType[],
     labels: {
       en: 'Has rich text',
-      fr: 'Rich Text'
+      fr: 'Rich Text',
+      es: 'Texto enriquecido',
+      de: 'Rich Text',
+      it: 'Testo formattato'
     },
     tooltips: {
       en: 'Has rich text',
-      fr: 'Rich Text'
+      fr: 'Rich Text',
+      es: 'Tiene texto enriquecido',
+      de: 'Hat Rich Text',
+      it: 'Ha testo formattato'
     }
   } satisfies AttributeConfig<boolean>,
   fo_content: {
@@ -1038,11 +1302,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawFO'] as BaseActionType[],
     labels: {
       en: 'Foreign object content',
-      fr: 'Contenu de l\'objet étranger'
+      fr: 'Contenu de l\'objet étranger',
+      es: 'Contenido del objeto externo',
+      de: 'Fremdobjekt-Inhalt',
+      it: 'Contenuto dell\'oggetto esterno'
     },
     tooltips: {
       en: 'HTML content',
-      fr: 'Contenu HTML'
+      fr: 'Contenu HTML',
+      es: 'Contenido HTML',
+      de: 'HTML-Inhalt',
+      it: 'Contenuto HTML'
     }
   } satisfies AttributeConfig<string>,
   // Image
@@ -1053,11 +1323,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawIcon'] as BaseActionType[],
     labels: {
       en: 'Is icon',
-      fr: 'Est un icon'
+      fr: 'Est un icon',
+      es: 'Es un icono',
+      de: 'Ist ein Symbol',
+      it: 'È un\'icona'
     },
     tooltips: {
       en: 'Display as icon',
-      fr: 'Afficher comme icon'
+      fr: 'Afficher comme icon',
+      es: 'Mostrar como icono',
+      de: 'Als Symbol anzeigen',
+      it: 'Visualizzare come icona'
     }
   } satisfies AttributeConfig<boolean>,
   // Image
@@ -1068,11 +1344,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawImage'] as BaseActionType[],
     labels: {
       en: 'Is image',
-      fr: 'Est une image'
+      fr: 'Est une image',
+      es: 'Es una imagen',
+      de: 'Ist ein Bild',
+      it: 'È un\'immagine'
     },
     tooltips: {
       en: 'Display as image',
-      fr: 'Afficher comme image'
+      fr: 'Afficher comme image',
+      es: 'Mostrar como imagen',
+      de: 'Als Bild anzeigen',
+      it: 'Visualizzare come immagine'
     }
   } satisfies AttributeConfig<boolean>,
   is_value: {
@@ -1082,11 +1364,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawImage'] as BaseActionType[],
     labels: {
       en: 'Is Value',
-      fr: 'Est une Valeur'
+      fr: 'Est une Valeur',
+      es: 'Es un valor',
+      de: 'Ist ein Wert',
+      it: 'È un valore'
     },
     tooltips: {
       en: 'Display as value',
-      fr: 'Afficher comme Valeur'
+      fr: 'Afficher comme Valeur',
+      es: 'Mostrar como valor',
+      de: 'Als Wert anzeigen',
+      it: 'Visualizzare come valore'
     }
   } satisfies AttributeConfig<boolean>,
   image_src: {
@@ -1096,11 +1384,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawImage'] as BaseActionType[],
     labels: {
       en: 'Image source',
-      fr: 'Source de l\'image'
+      fr: 'Source de l\'image',
+      es: 'Fuente de la imagen',
+      de: 'Bildquelle',
+      it: 'Sorgente dell\'immagine'
     },
     tooltips: {
       en: 'URL or path to image',
-      fr: 'URL ou chemin vers l\'image'
+      fr: 'URL ou chemin vers l\'image',
+      es: 'URL o ruta a la imagen',
+      de: 'URL oder Pfad zum Bild',
+      it: 'URL o percorso dell\'immagine'
     }
   } satisfies AttributeConfig<string | undefined>,
   // Formatting
@@ -1111,11 +1405,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Scientific notation',
-      fr: 'Notation scientifique'
+      fr: 'Notation scientifique',
+      es: 'Notación científica',
+      de: 'Wissenschaftliche Notation',
+      it: 'Notazione scientifica'
     },
     tooltips: {
       en: 'Use scientific notation',
-      fr: 'Utiliser la notation scientifique'
+      fr: 'Utiliser la notation scientifique',
+      es: 'Usar notación científica',
+      de: 'Wissenschaftliche Notation verwenden',
+      it: 'Usare la notazione scientifica'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1126,11 +1426,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Significant digits',
-      fr: 'Chiffres significatifs'
+      fr: 'Chiffres significatifs',
+      es: 'Cifras significativas',
+      de: 'Signifikante Stellen',
+      it: 'Cifre significative'
     },
     tooltips: {
       en: 'Use significant digits',
-      fr: 'Utiliser les chiffres significatifs'
+      fr: 'Utiliser les chiffres significatifs',
+      es: 'Usar cifras significativas',
+      de: 'Signifikante Stellen verwenden',
+      it: 'Usare le cifre significative'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1141,11 +1447,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Number of significant digits',
-      fr: 'Nombre de chiffres significatifs'
+      fr: 'Nombre de chiffres significatifs',
+      es: 'Número de cifras significativas',
+      de: 'Anzahl signifikanter Stellen',
+      it: 'Numero di cifre significative'
     },
     tooltips: {
       en: 'Number of significant digits',
-      fr: 'Nombre de chiffres significatifs'
+      fr: 'Nombre de chiffres significatifs',
+      es: 'Número de cifras significativas',
+      de: 'Anzahl signifikanter Stellen',
+      it: 'Numero di cifre significative'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1156,11 +1468,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Nb digits',
-      fr: 'Décimales'
+      fr: 'Décimales',
+      es: 'Decimales',
+      de: 'Dezimalstellen',
+      it: 'Decimali'
     },
     tooltips: {
       en: 'Use custom number of decimals',
-      fr: 'Utiliser un nombre personnalisé de décimales'
+      fr: 'Utiliser un nombre personnalisé de décimales',
+      es: 'Usar un número personalizado de decimales',
+      de: 'Benutzerdefinierte Anzahl von Dezimalstellen verwenden',
+      it: 'Usare un numero personalizzato di decimali'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1171,11 +1489,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Number of digits',
-      fr: 'Nombre de décimales'
+      fr: 'Nombre de décimales',
+      es: 'Número de decimales',
+      de: 'Anzahl der Dezimalstellen',
+      it: 'Numero di decimali'
     },
     tooltips: {
       en: 'Number of decimal places',
-      fr: 'Nombre de décimales'
+      fr: 'Nombre de décimales',
+      es: 'Número de decimales',
+      de: 'Anzahl der Dezimalstellen',
+      it: 'Numero di decimali'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1186,11 +1510,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'In/Out totals',
-      fr: 'Totaux entrants/sortants'
+      fr: 'Totaux entrants/sortants',
+      es: 'Totales entrantes/salientes',
+      de: 'Eingangs-/Ausgangssummen',
+      it: 'Totali in entrata/uscita'
     },
     tooltips: {
       en: 'When incoming total differs from outgoing: show both (in→out), only incoming, or only outgoing',
-      fr: 'Quand le total entrant diffère du sortant : afficher les deux (entrant→sortant), uniquement l\'entrant, ou uniquement le sortant'
+      fr: 'Quand le total entrant diffère du sortant : afficher les deux (entrant→sortant), uniquement l\'entrant, ou uniquement le sortant',
+      es: 'Cuando el total entrante difiere del saliente: mostrar ambos (entrada→salida), solo entrante, o solo saliente',
+      de: 'Wenn die Eingangssumme von der Ausgangssumme abweicht: beide anzeigen (Eingang→Ausgang), nur Eingang oder nur Ausgang',
+      it: 'Quando il totale in entrata differisce da quello in uscita: mostrare entrambi (entrata→uscita), solo entrata o solo uscita'
     }
   } satisfies AttributeConfig<'both' | 'in' | 'out'>,
 
@@ -1202,11 +1532,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Unit',
-      fr: 'Unité'
+      fr: 'Unité',
+      es: 'Unidad',
+      de: 'Einheit',
+      it: 'Unità'
     },
     tooltips: {
       en: 'Display the unit',
-      fr: 'Afficher l\'unité'
+      fr: 'Afficher l\'unité',
+      es: 'Mostrar la unidad',
+      de: 'Einheit anzeigen',
+      it: 'Visualizzare l\'unità'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1217,11 +1553,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Unit type',
-      fr: 'Type d\'unité'
+      fr: 'Type d\'unité',
+      es: 'Tipo de unidad',
+      de: 'Einheitentyp',
+      it: 'Tipo di unità'
     },
     tooltips: {
       en: 'Type of unit to display',
-      fr: 'Type d\'unité à afficher'
+      fr: 'Type d\'unité à afficher',
+      es: 'Tipo de unidad a mostrar',
+      de: 'Anzuzeigender Einheitentyp',
+      it: 'Tipo di unità da visualizzare'
     }
   } satisfies AttributeConfig<UnitType>,
 
@@ -1232,11 +1574,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Unit name',
-      fr: 'Nom de l\'unité'
+      fr: 'Nom de l\'unité',
+      es: 'Nombre de la unidad',
+      de: 'Einheitenname',
+      it: 'Nome dell\'unità'
     },
     tooltips: {
       en: 'Name of the unit',
-      fr: 'Nom de l\'unité'
+      fr: 'Nom de l\'unité',
+      es: 'Nombre de la unidad',
+      de: 'Name der Einheit',
+      it: 'Nome dell\'unità'
     }
   } satisfies AttributeConfig<string>,
 
@@ -1247,11 +1595,17 @@ export const BASE_LABEL_CONFIG = {
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
       en: 'Factor',
-      fr: 'Facteur'
+      fr: 'Facteur',
+      es: 'Factor',
+      de: 'Faktor',
+      it: 'Fattore'
     },
     tooltips: {
       en: 'Conversion factor for the unit',
-      fr: 'Facteur de conversion pour l\'unité'
+      fr: 'Facteur de conversion pour l\'unité',
+      es: 'Factor de conversión para la unidad',
+      de: 'Umrechnungsfaktor für die Einheit',
+      it: 'Fattore di conversione per l\'unità'
     }
   } satisfies AttributeConfig<number>
 } as const
@@ -1274,7 +1628,10 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
           default: prefix === 'name_label' ? true : false,
           labels: {
             en: visibility_string_en,
-            fr: visibility_string_fr
+            fr: visibility_string_fr,
+            es: prefix === 'name_label' ? 'Etiqueta' : prefix === 'value_label' ? 'Valor' : prefix === 'stock_label' ? 'Stock' : 'Icono',
+            de: prefix === 'name_label' ? 'Beschriftung' : prefix === 'value_label' ? 'Wert' : prefix === 'stock_label' ? 'Stock' : 'Symbol',
+            it: prefix === 'name_label' ? 'Etichetta' : prefix === 'value_label' ? 'Valore' : prefix === 'stock_label' ? 'Stock' : 'Icona'
           }
         },
         horiz: {
@@ -1300,33 +1657,51 @@ function createLabelConfig(prefix: string, category: string, drawAction: BaseAct
         visible: {
           labels: {
             en: 'Background',
-            fr: 'Fond'
+            fr: 'Fond',
+            es: 'Fondo',
+            de: 'Hintergrund',
+            it: 'Sfondo'
           },
           tooltips: {
             en: 'Show background for better visibility',
-            fr: 'Afficher le fond pour une meilleure visibilité'
+            fr: 'Afficher le fond pour une meilleure visibilité',
+            es: 'Mostrar el fondo para mejor visibilidad',
+            de: 'Hintergrund für bessere Sichtbarkeit anzeigen',
+            it: 'Mostrare lo sfondo per una migliore visibilità'
           }
         },
         color_visible: {
           default: (prefix === 'name_label' || prefix === 'stock_label') ? true : false,
           labels: {
             en: 'Background',
-            fr: 'Fond'
+            fr: 'Fond',
+            es: 'Fondo',
+            de: 'Hintergrund',
+            it: 'Sfondo'
           },
           tooltips: {
             en: 'Background color',
-            fr: 'Couleur de fond'
+            fr: 'Couleur de fond',
+            es: 'Color de fondo',
+            de: 'Hintergrundfarbe',
+            it: 'Colore di sfondo'
           }
         },
         color: {
           default: '#ffffff',
           labels: {
             en: 'Background',
-            fr: 'Fond'
+            fr: 'Fond',
+            es: 'Fondo',
+            de: 'Hintergrund',
+            it: 'Sfondo'
           },
           tooltips: {
             en: 'Background color',
-            fr: 'Couleur de fond'
+            fr: 'Couleur de fond',
+            es: 'Color de fondo',
+            de: 'Hintergrundfarbe',
+            it: 'Colore di sfondo'
           }
         },
         color_sustainable: {
@@ -1363,11 +1738,17 @@ export const NAME_LABEL_CONFIG = {
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
       en: 'Separator',
-      fr: 'Séparateur'
+      fr: 'Séparateur',
+      es: 'Separador',
+      de: 'Trennzeichen',
+      it: 'Separatore'
     },
     tooltips: {
       en: 'Separator character',
-      fr: 'Caractère séparateur'
+      fr: 'Caractère séparateur',
+      es: 'Carácter separador',
+      de: 'Trennzeichen',
+      it: 'Carattere separatore'
     }
   } satisfies AttributeConfig<string>,
 
@@ -1378,11 +1759,17 @@ export const NAME_LABEL_CONFIG = {
     actions: ['drawNameLabel'] as BaseActionType[],
     labels: {
       en: 'Separator position',
-      fr: 'Position du séparateur'
+      fr: 'Position du séparateur',
+      es: 'Posición del separador',
+      de: 'Position des Trennzeichens',
+      it: 'Posizione del separatore'
     },
     tooltips: {
       en: 'Position of the separator',
-      fr: 'Position du séparateur'
+      fr: 'Position du séparateur',
+      es: 'Posición del separador',
+      de: 'Position des Trennzeichens',
+      it: 'Posizione del separatore'
     }
   } satisfies AttributeConfig<'before' | 'after'>,
 } as const
@@ -1401,11 +1788,17 @@ export const STOCK_LABEL_CONFIG = {
     actions: ['drawStockBox'] as BaseActionType[],
     labels: {
       en: 'Box width (ratio)',
-      fr: 'Largeur boite (ratio)'
+      fr: 'Largeur boite (ratio)',
+      es: 'Ancho de caja (ratio)',
+      de: 'Kastenbreite (Verhältnis)',
+      it: 'Larghezza riquadro (rapporto)'
     },
     tooltips: {
       en: 'Box width as ratio of node width (0.1 to 1)',
-      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)'
+      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)',
+      es: 'Ancho de la caja como ratio del ancho del nodo (0.1 a 1)',
+      de: 'Kastenbreite als Verhältnis zur Knotenbreite (0.1 bis 1)',
+      it: 'Larghezza del riquadro come rapporto della larghezza del nodo (0.1 a 1)'
     }
   } satisfies AttributeConfig<number>,
 } as const
@@ -1423,11 +1816,17 @@ export const HYPER_LINK_CONFIG = {
     actions: undefined,
     labels: {
       en: 'Hyperlink',
-      fr: 'Lien hypertexte'
+      fr: 'Lien hypertexte',
+      es: 'Hipervínculo',
+      de: 'Hyperlink',
+      it: 'Collegamento ipertestuale'
     },
     tooltips: {
       en: 'URL for hyperlink',
-      fr: 'URL pour lien hypertexte'
+      fr: 'URL pour lien hypertexte',
+      es: 'URL para hipervínculo',
+      de: 'URL für Hyperlink',
+      it: 'URL per collegamento ipertestuale'
     }
   } satisfies AttributeConfig<string | undefined>
 } as const
@@ -1709,11 +2108,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
 
     labels: {
       en: 'x',
-      fr: 'x'
+      fr: 'x',
+      es: 'x',
+      de: 'x',
+      it: 'x'
     },
     tooltips: {
       en: 'x',
-      fr: 'x'
+      fr: 'x',
+      es: 'x',
+      de: 'x',
+      it: 'x'
     }
   } satisfies AttributeConfig<Type_Position>,
   position_dx: {
@@ -1724,11 +2129,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
 
     labels: {
       en: 'Horizontal',
-      fr: 'Horizontal'
+      fr: 'Horizontal',
+      es: 'Horizontal',
+      de: 'Horizontal',
+      it: 'Orizzontale'
     },
     tooltips: {
       en: 'x',
-      fr: 'x'
+      fr: 'x',
+      es: 'x',
+      de: 'x',
+      it: 'x'
     }
   } satisfies AttributeConfig<number>,
   position_dy: {
@@ -1739,11 +2150,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
 
     labels: {
       en: 'Vertical',
-      fr: 'Vertical'
+      fr: 'Vertical',
+      es: 'Vertical',
+      de: 'Vertikal',
+      it: 'Verticale'
     },
     tooltips: {
       en: 'x',
-      fr: 'x'
+      fr: 'x',
+      es: 'x',
+      de: 'x',
+      it: 'x'
     }
   } satisfies AttributeConfig<number>,
   // =================== AUTRES ATTRIBUTS ===================
@@ -1754,11 +2171,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Orphans',
-      fr: 'Orphelins'
+      fr: 'Orphelins',
+      es: 'Huérfanos',
+      de: 'Verwaiste',
+      it: 'Orfani'
     },
     tooltips: {
       en: 'Visibility of orphan nodes',
-      fr: 'Visibilité des noeuds orphelins'
+      fr: 'Visibilité des noeuds orphelins',
+      es: 'Visibilidad de los nodos huérfanos',
+      de: 'Sichtbarkeit verwaister Knoten',
+      it: 'Visibilità dei nodi orfani'
     }
   } satisfies AttributeConfig<boolean>,
   position_u_locked: {
@@ -1768,11 +2191,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Lock column',
-      fr: 'Verrouiller la colonne'
+      fr: 'Verrouiller la colonne',
+      es: 'Bloquear columna',
+      de: 'Spalte sperren',
+      it: 'Blocca colonna'
     },
     tooltips: {
       en: 'When locked, autosankey compute will keep this node\'s column index (u) instead of recomputing it.',
-      fr: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.'
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'index de colonne (u) de ce nœud au lieu de le recalculer.',
+      es: 'Si está bloqueado, el cálculo autosankey conservará el índice de columna (u) de este nodo en lugar de recalcularlo.',
+      de: 'Wenn gesperrt, behält die Autosankey-Berechnung den Spaltenindex (u) dieses Knotens bei, anstatt ihn neu zu berechnen.',
+      it: 'Se bloccato, il calcolo autosankey manterrà l\'indice di colonna (u) di questo nodo invece di ricalcolarlo.'
     }
   } satisfies AttributeConfig<boolean>,
   position_v_locked: {
@@ -1782,11 +2211,17 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Lock row',
-      fr: 'Verrouiller la ligne'
+      fr: 'Verrouiller la ligne',
+      es: 'Bloquear fila',
+      de: 'Zeile sperren',
+      it: 'Blocca riga'
     },
     tooltips: {
       en: 'When locked, autosankey compute preserves the relative vertical order (v) of this node within its column instead of recomputing it.',
-      fr: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.'
+      fr: 'Si verrouillé, le calcul autosankey conserve l\'ordre vertical relatif (v) de ce nœud dans sa colonne au lieu de le recalculer.',
+      es: 'Si está bloqueado, el cálculo autosankey conserva el orden vertical relativo (v) de este nodo dentro de su columna en lugar de recalcularlo.',
+      de: 'Wenn gesperrt, behält die Autosankey-Berechnung die relative vertikale Reihenfolge (v) dieses Knotens innerhalb seiner Spalte bei, anstatt sie neu zu berechnen.',
+      it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.'
     }
   } satisfies AttributeConfig<boolean>,
 } as const
@@ -1802,11 +2237,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawWithNodes'] as LinkBaseActionType[],
     labels: {
       en: 'Scale Multiplier',
-      fr: 'Facteur d\'échelle'
+      fr: 'Facteur d\'échelle',
+      es: 'Factor de escala',
+      de: 'Skalierungsfaktor',
+      it: 'Fattore di scala'
     },
     tooltips: {
       en: 'Define a local scaling factor that will be multiplied by the multiplier specified for this flow.',
-      fr: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.'
+      fr: 'Définissez un facteur d\'échelle local qui sera multiplié par le multiplicateur spécifié pour ce flux.',
+      es: 'Definir un factor de escala local que se multiplicará por el multiplicador especificado para este flujo.',
+      de: 'Definieren Sie einen lokalen Skalierungsfaktor, der mit dem für diesen Fluss angegebenen Multiplikator multipliziert wird.',
+      it: 'Definire un fattore di scala locale che verrà moltiplicato per il moltiplicatore specificato per questo flusso.'
     }
   } satisfies AttributeConfig<number | undefined>,
 
@@ -1817,11 +2258,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'Curved',
-      fr: 'Courbe'
+      fr: 'Courbe',
+      es: 'Curvo',
+      de: 'Gebogen',
+      it: 'Curvo'
     },
     tooltips: {
       en: 'Represents the selected link(s) as Bezier curve(s)',
-      fr: 'Représente le/les flux sélectionné(s) sous forme de courbe(s) de Bezier'
+      fr: 'Représente le/les flux sélectionné(s) sous forme de courbe(s) de Bezier',
+      es: 'Representa el/los flujo(s) seleccionado(s) como curva(s) de Bezier',
+      de: 'Stellt den/die ausgewählten Fluss/Flüsse als Bezier-Kurve(n) dar',
+      it: 'Rappresenta il/i flusso/i selezionato/i come curva/e di Bezier'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1832,11 +2279,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Curvature',
-      fr: 'Courbure'
+      fr: 'Courbure',
+      es: 'Curvatura',
+      de: 'Krümmung',
+      it: 'Curvatura'
     },
     tooltips: {
       en: 'Adjust the curvature of the link',
-      fr: 'Ajuster la courbure du flux'
+      fr: 'Ajuster la courbure du flux',
+      es: 'Ajustar la curvatura del flujo',
+      de: 'Krümmung des Flusses anpassen',
+      it: 'Regolare la curvatura del flusso'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1848,11 +2301,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawWithNodes', 'drawControlPoint'] as LinkBaseActionType[],
     labels: {
       en: 'Recycling',
-      fr: 'Recyclage'
+      fr: 'Recyclage',
+      es: 'Reciclaje',
+      de: 'Recycling',
+      it: 'Riciclaggio'
     },
     tooltips: {
       en: 'Represents the selected link(s) as recycling with a backward turn',
-      fr: 'Représente le/les flux sélectionné(s) sous forme de recyclage avec un retour vers l\'arrière'
+      fr: 'Représente le/les flux sélectionné(s) sous forme de recyclage avec un retour vers l\'arrière',
+      es: 'Representa el/los flujo(s) seleccionado(s) como reciclaje con un retorno hacia atrás',
+      de: 'Stellt den/die ausgewählten Fluss/Flüsse als Recycling mit einer Rückwärtskurve dar',
+      it: 'Rappresenta il/i flusso/i selezionato/i come riciclaggio con un ritorno all\'indietro'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1863,11 +2322,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawWithNodes', 'drawControlPoint'] as LinkBaseActionType[],
     labels: {
       en: 'Structure',
-      fr: 'Structure'
+      fr: 'Structure',
+      es: 'Estructura',
+      de: 'Struktur',
+      it: 'Struttura'
     },
     tooltips: {
       en: 'Represents the selected link(s) as if they didn\'t have values',
-      fr: 'Représente le/les flux sélectionné(s) comme si ils n\'avaient pas de valeur'
+      fr: 'Représente le/les flux sélectionné(s) comme si ils n\'avaient pas de valeur',
+      es: 'Representa el/los flujo(s) seleccionado(s) como si no tuvieran valores',
+      de: 'Stellt den/die ausgewählten Fluss/Flüsse dar, als ob sie keine Werte hätten',
+      it: 'Rappresenta il/i flusso/i selezionato/i come se non avessero valori'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1880,11 +2345,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawWithNodes'] as LinkBaseActionType[],
     labels: {
       en: 'Orientation',
-      fr: 'Orientation'
+      fr: 'Orientation',
+      es: 'Orientación',
+      de: 'Orientierung',
+      it: 'Orientamento'
     },
     tooltips: {
       en: 'Choose the orientation of the link start and end points',
-      fr: 'Choisir l\'orientation des points de départ et d\'arrivée du flux'
+      fr: 'Choisir l\'orientation des points de départ et d\'arrivée du flux',
+      es: 'Elegir la orientación de los puntos de inicio y fin del flujo',
+      de: 'Orientierung der Start- und Endpunkte des Flusses wählen',
+      it: 'Scegliere l\'orientamento dei punti di partenza e di arrivo del flusso'
     }
   } satisfies AttributeConfig<Type_Orientation>,
 
@@ -1896,11 +2367,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'Start',
-      fr: 'Départ'
+      fr: 'Départ',
+      es: 'Inicio',
+      de: 'Start',
+      it: 'Inizio'
     },
     tooltips: {
       en: 'Position of the starting point of curvature as ratio of link length',
       fr: 'Permet d\'affiner la position du départ des courbures du/des flux sélectionné(s). Cette valeur est un ratio (%) relatif à la longueur du flux à partir du point de départ.',
+      es: 'Posición del punto de inicio de la curvatura como ratio de la longitud del flujo',
+      de: 'Position des Startpunkts der Krümmung als Verhältnis der Flusslänge',
+      it: 'Posizione del punto di inizio della curvatura come rapporto della lunghezza del flusso',
     }
   } satisfies AttributeConfig<number>,
 
@@ -1912,11 +2389,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'End',
-      fr: 'Arrivée'
+      fr: 'Arrivée',
+      es: 'Fin',
+      de: 'Ende',
+      it: 'Fine'
     },
     tooltips: {
       en: 'Position of the ending point of curvature as ratio of link length',
       fr: 'Permet d\'affiner la position de fin des courbures du/des flux sélectionné(s). Cette valeur est un ratio (%) relatif à la longueur du flux à partir du point de départ.',
+      es: 'Posición del punto final de la curvatura como ratio de la longitud del flujo',
+      de: 'Position des Endpunkts der Krümmung als Verhältnis der Flusslänge',
+      it: 'Posizione del punto finale della curvatura come rapporto della lunghezza del flusso',
     }
   } satisfies AttributeConfig<number>,
 
@@ -1928,11 +2411,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'Start',
-      fr: 'Départ'
+      fr: 'Départ',
+      es: 'Inicio',
+      de: 'Start',
+      it: 'Inizio'
     },
     tooltips: {
       en: 'Setting the radius of the starting curvature for Bezier curves',
       fr: 'Paramétrage de la courbure de départ dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
+      es: 'Configurar el radio de la curvatura de inicio para curvas de Bezier',
+      de: 'Einstellung des Radius der Startkrümmung für Bezier-Kurven',
+      it: 'Impostazione del raggio della curvatura iniziale per le curve di Bezier',
     }
   } satisfies AttributeConfig<number>,
 
@@ -1944,11 +2433,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'End',
-      fr: 'Arrivée'
+      fr: 'Arrivée',
+      es: 'Fin',
+      de: 'Ende',
+      it: 'Fine'
     },
     tooltips: {
       en: 'Setting the radius of the ending curvature for Bezier curves',
       fr: 'Paramétrage de la courbure de fin dans le cas ou le/les flux sélectionné(s) sont sous forme de courbe(s) de Bezier',
+      es: 'Configurar el radio de la curvatura final para curvas de Bezier',
+      de: 'Einstellung des Radius der Endkrümmung für Bezier-Kurven',
+      it: 'Impostazione del raggio della curvatura finale per le curve di Bezier',
     }
   } satisfies AttributeConfig<number>,
 
@@ -1959,11 +2454,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements', 'drawControlPoint'] as BaseActionType[],
     labels: {
       en: 'Recycling position',
-      fr: 'Position point de recyclage'
+      fr: 'Position point de recyclage',
+      es: 'Posición del punto de reciclaje',
+      de: 'Recycling-Position',
+      it: 'Posizione del punto di riciclaggio'
     },
     tooltips: {
       en: 'Position of the recycling point',
-      fr: 'Position du point de recyclage'
+      fr: 'Position du point de recyclage',
+      es: 'Posición del punto de reciclaje',
+      de: 'Position des Recycling-Punkts',
+      it: 'Posizione del punto di riciclaggio'
     }
   } satisfies AttributeConfig<number>,
 
@@ -1974,11 +2475,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Arrow',
-      fr: 'Flèche'
+      fr: 'Flèche',
+      es: 'Flecha',
+      de: 'Pfeil',
+      it: 'Freccia'
     },
     tooltips: {
       en: 'Represents the selected link(s) with an arrow tip at the end',
-      fr: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin'
+      fr: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin',
+      es: 'Representa el/los flujo(s) seleccionado(s) con una punta de flecha al final',
+      de: 'Stellt den/die ausgewählten Fluss/Flüsse mit einer Pfeilspitze am Ende dar',
+      it: 'Rappresenta il/i flusso/i selezionato/i con una punta di freccia alla fine'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -1989,11 +2496,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Size',
-      fr: 'Taille'
+      fr: 'Taille',
+      es: 'Tamaño',
+      de: 'Größe',
+      it: 'Dimensione'
     },
     tooltips: {
       en: 'Change the size of the arrow (from the end of the link to the node)',
-      fr: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud)'
+      fr: 'Modifie la taille de la flèche (largeur entre la fin du flux et le noeud)',
+      es: 'Cambiar el tamaño de la flecha (desde el final del flujo al nodo)',
+      de: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
+      it: 'Cambiare la dimensione della freccia (dalla fine del flusso al nodo)'
     }
   } satisfies AttributeConfig<number>,
 
@@ -2004,11 +2517,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Dashed',
-      fr: 'Hachuré'
+      fr: 'Hachuré',
+      es: 'Discontinuo',
+      de: 'Gestrichelt',
+      it: 'Tratteggiato'
     },
     tooltips: {
       en: 'Applies a hatch effect on the selected link(s)',
-      fr: 'Applique un effet de hachure sur le/les flux sélectionné(s)'
+      fr: 'Applique un effet de hachure sur le/les flux sélectionné(s)',
+      es: 'Aplica un efecto de rayado en el/los flujo(s) seleccionado(s)',
+      de: 'Wendet einen Schraffureffekt auf den/die ausgewählten Fluss/Flüsse an',
+      it: 'Applica un effetto tratteggiato sul/sui flusso/i selezionato/i'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -2019,11 +2538,17 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Color',
-      fr: 'Couleur'
+      fr: 'Couleur',
+      es: 'Color',
+      de: 'Farbe',
+      it: 'Colore'
     },
     tooltips: {
       en: 'Choose what rule defines flow color',
-      fr: 'Choisir la règle qui définie la couleur du flux'
+      fr: 'Choisir la règle qui définie la couleur du flux',
+      es: 'Elegir qué regla define el color del flujo',
+      de: 'Wählen, welche Regel die Flussfarbe bestimmt',
+      it: 'Scegliere quale regola definisce il colore del flusso'
     }
   } satisfies AttributeConfig<'flow' | 'source' | 'target' | 'gradient' | 'auto'>,
 } as const
@@ -2036,11 +2561,17 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Follow path',
-      fr: 'Orienter suivant l\'axe du flux'
+      fr: 'Orienter suivant l\'axe du flux',
+      es: 'Seguir el trazado',
+      de: 'Pfad folgen',
+      it: 'Seguire il percorso'
     },
     tooltips: {
       en: 'Orient the label following the shape of the link',
-      fr: 'Orienter le texte en suivant la forme du flux'
+      fr: 'Orienter le texte en suivant la forme du flux',
+      es: 'Orientar la etiqueta siguiendo la forma del flujo',
+      de: 'Beschriftung entlang der Form des Flusses ausrichten',
+      it: 'Orientare l\'etichetta seguendo la forma del flusso'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -2051,11 +2582,17 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
     actions: [] as BaseActionType[],
     labels: {
       en: 'Auto position',
-      fr: 'Position verticale ajustée'
+      fr: 'Position verticale ajustée',
+      es: 'Posición automática',
+      de: 'Automatische Position',
+      it: 'Posizione automatica'
     },
     tooltips: {
       en: 'Automatically adjust the vertical position',
-      fr: 'Ajuster automatiquement la position verticale'
+      fr: 'Ajuster automatiquement la position verticale',
+      es: 'Ajustar automáticamente la posición vertical',
+      de: 'Vertikale Position automatisch anpassen',
+      it: 'Regolare automaticamente la posizione verticale'
     }
   } satisfies AttributeConfig<boolean>,
 } as const

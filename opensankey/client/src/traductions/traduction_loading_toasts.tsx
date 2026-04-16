@@ -210,5 +210,323 @@ export const resources_loading_toasts = {
         },
       },
     }
+  },
+  //=======================================================
+  //ES
+  //=======================================================
+  es: {
+    translation: {
+      toast: {
+        default: {
+          success: {
+            title: 'Completado',
+            desc: 'Gracias por su paciencia'
+          },
+          loading: {
+            title: 'Procesando',
+            desc: 'Por favor espere'
+          },
+          error: {
+            title: 'Error en el procesamiento',
+            desc: 'Por favor inténtelo de nuevo o contacte con contact@terriflux.fr si el problema persiste'
+          }
+        },
+        reset: {
+          success: {
+            title: 'Área de dibujo limpia',
+            desc: ''
+          },
+          loading: {
+            title: 'Eliminando el área de dibujo',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: 'Listo para dibujar',
+            desc: ''
+          },
+          loading: {
+            title: 'Inicialización del área de dibujo',
+            desc: ''
+          },
+        },
+        save_in_cache: {
+          success: {
+            title: 'Terminado',
+          },
+          loading: {
+            title: 'Guardando en caché',
+          },
+          error: {
+            title: 'Error al intentar guardar',
+          }
+        },
+        save_as_json: {
+          success: {
+            title: 'La descarga comenzará en breve',
+          },
+          loading: {
+            title: 'Preparando archivo JSON',
+          },
+          error: {
+            title: 'Error al preparar el archivo',
+          }
+        },
+        save_as_excel: {
+          success: {
+            title: 'La descarga comenzará en breve',
+          },
+          loading: {
+            title: 'Preparando archivo Excel',
+          },
+          error: {
+            title: 'Error al preparar el archivo',
+          }
+        },
+        save_as_png: {
+          success: {
+            title: 'La descarga comenzará en breve',
+          },
+          loading: {
+            title: 'Preparando archivo PNG',
+          },
+          error: {
+            title: 'Error al preparar el archivo',
+          }
+        },
+        set_view: {
+          success: {
+            title: 'Listo',
+          },
+          loading: {
+            title: 'Cambiando de vista',
+          },
+          error: {
+            title: 'Error al cargar la vista solicitada',
+          }
+        },
+        compute_auto_sankey: {
+          success: {
+            title: 'Posiciones de los nodos calculadas',
+          },
+          loading: {
+            title: 'Calculando posiciones de los nodos',
+          },
+        },
+      },
+    }
+  },
+  //=======================================================
+  //DE
+  //=======================================================
+  de: {
+    translation: {
+      toast: {
+        default: {
+          success: {
+            title: 'Abgeschlossen',
+            desc: 'Vielen Dank für Ihre Geduld'
+          },
+          loading: {
+            title: 'Verarbeitung',
+            desc: 'Bitte warten'
+          },
+          error: {
+            title: 'Verarbeitung fehlgeschlagen',
+            desc: 'Bitte versuchen Sie es erneut oder kontaktieren Sie contact@terriflux.fr, wenn das Problem weiterhin besteht'
+          }
+        },
+        reset: {
+          success: {
+            title: 'Zeichenfläche bereinigt',
+            desc: ''
+          },
+          loading: {
+            title: 'Zeichenfläche wird gelöscht',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: 'Bereit zum Zeichnen',
+            desc: ''
+          },
+          loading: {
+            title: 'Initialisierung der Zeichenfläche',
+            desc: ''
+          },
+        },
+        save_in_cache: {
+          success: {
+            title: 'Abgeschlossen',
+          },
+          loading: {
+            title: 'Im Cache speichern',
+          },
+          error: {
+            title: 'Fehler beim Speichern',
+          }
+        },
+        save_as_json: {
+          success: {
+            title: 'Der Download beginnt in Kürze',
+          },
+          loading: {
+            title: 'JSON-Datei wird vorbereitet',
+          },
+          error: {
+            title: 'Fehler bei der Dateivorbereitung',
+          }
+        },
+        save_as_excel: {
+          success: {
+            title: 'Der Download beginnt in Kürze',
+          },
+          loading: {
+            title: 'Excel-Datei wird vorbereitet',
+          },
+          error: {
+            title: 'Fehler bei der Dateivorbereitung',
+          }
+        },
+        save_as_png: {
+          success: {
+            title: 'Der Download beginnt in Kürze',
+          },
+          loading: {
+            title: 'PNG-Datei wird vorbereitet',
+          },
+          error: {
+            title: 'Fehler bei der Dateivorbereitung',
+          }
+        },
+        set_view: {
+          success: {
+            title: 'Bereit',
+          },
+          loading: {
+            title: 'Ansicht wird gewechselt',
+          },
+          error: {
+            title: 'Fehler beim Laden der angeforderten Ansicht',
+          }
+        },
+        compute_auto_sankey: {
+          success: {
+            title: 'Knotenpositionen berechnet',
+          },
+          loading: {
+            title: 'Knotenpositionen werden berechnet',
+          },
+        },
+      },
+    }
+  },
+  //=======================================================
+  //IT
+  //=======================================================
+  it: {
+    translation: {
+      toast: {
+        default: {
+          success: {
+            title: 'Completato',
+            desc: 'Grazie per la pazienza'
+          },
+          loading: {
+            title: 'Elaborazione in corso',
+            desc: 'Attendere prego'
+          },
+          error: {
+            title: 'Elaborazione fallita',
+            desc: 'Riprovare o contattare contact@terriflux.fr se il problema persiste'
+          }
+        },
+        reset: {
+          success: {
+            title: 'Area di disegno pulita',
+            desc: ''
+          },
+          loading: {
+            title: 'Cancellazione dell\'area di disegno',
+            desc: ''
+          },
+        },
+        draw: {
+          success: {
+            title: 'Pronto per disegnare',
+            desc: ''
+          },
+          loading: {
+            title: 'Inizializzazione dell\'area di disegno',
+            desc: ''
+          },
+        },
+        save_in_cache: {
+          success: {
+            title: 'Completato',
+          },
+          loading: {
+            title: 'Salvataggio nella cache',
+          },
+          error: {
+            title: 'Errore durante il salvataggio',
+          }
+        },
+        save_as_json: {
+          success: {
+            title: 'Il download inizierà a breve',
+          },
+          loading: {
+            title: 'Preparazione file JSON',
+          },
+          error: {
+            title: 'Errore durante la preparazione del file',
+          }
+        },
+        save_as_excel: {
+          success: {
+            title: 'Il download inizierà a breve',
+          },
+          loading: {
+            title: 'Preparazione file Excel',
+          },
+          error: {
+            title: 'Errore durante la preparazione del file',
+          }
+        },
+        save_as_png: {
+          success: {
+            title: 'Il download inizierà a breve',
+          },
+          loading: {
+            title: 'Preparazione file PNG',
+          },
+          error: {
+            title: 'Errore durante la preparazione del file',
+          }
+        },
+        set_view: {
+          success: {
+            title: 'Pronto',
+          },
+          loading: {
+            title: 'Cambio di vista',
+          },
+          error: {
+            title: 'Errore durante il caricamento della vista richiesta',
+          }
+        },
+        compute_auto_sankey: {
+          success: {
+            title: 'Posizioni dei nodi calcolate',
+          },
+          loading: {
+            title: 'Calcolo delle posizioni dei nodi',
+          },
+        },
+      },
+    }
   }
 }

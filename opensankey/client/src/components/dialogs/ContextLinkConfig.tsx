@@ -39,11 +39,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Inverse source/target',
-        fr: 'Inverser source/cible'
+        fr: 'Inverser source/cible',
+        es: 'Invertir origen/destino',
+        de: 'Quelle/Ziel umkehren',
+        it: 'Inverti origine/destinazione'
       },
       tooltips: {
         en: 'Inverse the source and target of the selected link(s)',
-        fr: 'Inverser la source et la cible du/des flux sélectionné(s)'
+        fr: 'Inverser la source et la cible du/des flux sélectionné(s)',
+        es: 'Invertir el origen y el destino del/de los flujo(s) seleccionado(s)',
+        de: 'Quelle und Ziel des/der ausgewählten Flusses/Flüsse umkehren',
+        it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i'
       }
     },
 
@@ -51,11 +57,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Copy link(s)',
-        fr: 'Copier le(s) flux'
+        fr: 'Copier le(s) flux',
+        es: 'Copiar flujo(s)',
+        de: 'Fluss/Flüsse kopieren',
+        it: 'Copia flusso/i'
       },
       tooltips: {
         en: 'Duplicate the selected link(s) between the same source and target',
-        fr: 'Dupliquer le(s) flux sélectionné(s) entre la même source et la même cible'
+        fr: 'Dupliquer le(s) flux sélectionné(s) entre la même source et la même cible',
+        es: 'Duplicar el/los flujo(s) seleccionado(s) entre el mismo origen y destino',
+        de: 'Ausgewählte(n) Fluss/Flüsse zwischen gleicher Quelle und gleichem Ziel duplizieren',
+        it: 'Duplica il/i flusso/i selezionato/i tra la stessa origine e destinazione'
       },
       closeMenuAfter: true
     },
@@ -64,11 +76,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Reset attributes',
-        fr: 'Réinit. valeurs styles'
+        fr: 'Réinit. valeurs styles',
+        es: 'Restablecer atributos',
+        de: 'Attribute zurücksetzen',
+        it: 'Reimposta attributi'
       },
       tooltips: {
         en: 'Reset all local attributes to default values',
-        fr: 'Remettre tous les attributs locaux aux valeurs par défaut'
+        fr: 'Remettre tous les attributs locaux aux valeurs par défaut',
+        es: 'Restablecer todos los atributos locales a los valores predeterminados',
+        de: 'Alle lokalen Attribute auf Standardwerte zurücksetzen',
+        it: 'Reimpostare tutti gli attributi locali ai valori predefiniti'
       },
       undoable: true
     },
@@ -86,11 +104,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Bring to front',
-        fr: 'Mettre au premier plan'
+        fr: 'Mettre au premier plan',
+        es: 'Traer al frente',
+        de: 'In den Vordergrund',
+        it: 'Porta in primo piano'
       },
       tooltips: {
         en: 'Draw selected link(s) on top of all other elements',
-        fr: 'Afficher le(s) flux sélectionné(s) au-dessus de tous les autres éléments'
+        fr: 'Afficher le(s) flux sélectionné(s) au-dessus de tous les autres éléments',
+        es: 'Dibujar el/los flujo(s) seleccionado(s) encima de todos los demás elementos',
+        de: 'Ausgewählte(n) Fluss/Flüsse über allen anderen Elementen zeichnen',
+        it: 'Disegna il/i flusso/i selezionato/i sopra tutti gli altri elementi'
       }
     },
 
@@ -98,11 +122,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: {
         en: 'Send to back',
-        fr: 'Mettre à l\'arrière-plan'
+        fr: 'Mettre à l\'arrière-plan',
+        es: 'Enviar al fondo',
+        de: 'In den Hintergrund',
+        it: 'Manda in secondo piano'
       },
       tooltips: {
         en: 'Draw selected link(s) behind all other elements',
-        fr: 'Afficher le(s) flux sélectionné(s) derrière tous les autres éléments'
+        fr: 'Afficher le(s) flux sélectionné(s) derrière tous les autres éléments',
+        es: 'Dibujar el/los flujo(s) seleccionado(s) detrás de todos los demás elementos',
+        de: 'Ausgewählte(n) Fluss/Flüsse hinter allen anderen Elementen zeichnen',
+        it: 'Disegna il/i flusso/i selezionato/i dietro tutti gli altri elementi'
       }
     },
 
@@ -110,7 +140,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Name label',
-        fr: 'Libellé nom'
+        fr: 'Libellé nom',
+        es: 'Etiqueta de nombre',
+        de: 'Namensbezeichnung',
+        it: 'Etichetta nome'
       },
       labelsToggle: {
         en: {
@@ -120,11 +153,26 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Masquer libellé',
           false: 'Afficher libellé'
+        },
+        es: {
+          true: 'Ocultar etiqueta de nombre',
+          false: 'Mostrar etiqueta de nombre'
+        },
+        de: {
+          true: 'Namensbezeichnung ausblenden',
+          false: 'Namensbezeichnung einblenden'
+        },
+        it: {
+          true: 'Nascondi etichetta nome',
+          false: 'Mostra etichetta nome'
         }
       },
       tooltips: {
         en: 'Toggle the visibility of the name label',
-        fr: 'Basculer la visibilité du libellé nom'
+        fr: 'Basculer la visibilité du libellé nom',
+        es: 'Alternar la visibilidad de la etiqueta de nombre',
+        de: 'Sichtbarkeit der Namensbezeichnung umschalten',
+        it: 'Attiva/disattiva la visibilità dell\'etichetta nome'
       },
       getToggleValue: 'toggleNameVisibilityValue',
       undoable: true
@@ -134,7 +182,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       type: 'toggle',
       labels: {
         en: 'Value label',
-        fr: 'Libellé valeur'
+        fr: 'Libellé valeur',
+        es: 'Etiqueta de valor',
+        de: 'Wertbezeichnung',
+        it: 'Etichetta valore'
       },
       labelsToggle: {
         en: {
@@ -144,11 +195,26 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         fr: {
           true: 'Masquer libellé',
           false: 'Afficher libellé'
+        },
+        es: {
+          true: 'Ocultar valor',
+          false: 'Mostrar valor'
+        },
+        de: {
+          true: 'Wert ausblenden',
+          false: 'Wert einblenden'
+        },
+        it: {
+          true: 'Nascondi valore',
+          false: 'Mostra valore'
         }
       },
       tooltips: {
         en: 'Toggle the visibility of the value label',
-        fr: 'Basculer la visibilité du libellé valeur'
+        fr: 'Basculer la visibilité du libellé valeur',
+        es: 'Alternar la visibilidad de la etiqueta de valor',
+        de: 'Sichtbarkeit der Wertbezeichnung umschalten',
+        it: 'Attiva/disattiva la visibilità dell\'etichetta valore'
       },
       getToggleValue: 'toggleValueVisibilityValue',
       undoable: true
@@ -158,19 +224,31 @@ export const LINK_MENU_CONFIG: MenuConfig = {
   sectionTitles: {
     EditStyle: {
       en: 'Edition',
-      fr: 'Édition'
+      fr: 'Édition',
+      es: 'Edición',
+      de: 'Bearbeitung',
+      it: 'Modifica'
     },
     ChangePlan: {
       en: 'Change Layer',
-      fr: 'Changer Plan'
+      fr: 'Changer Plan',
+      es: 'Cambiar capa',
+      de: 'Ebene ändern',
+      it: 'Cambia livello'
     },
     MaskAttr: {
       en: 'Mask Attributes',
-      fr: 'Affichage des éléments'
+      fr: 'Affichage des éléments',
+      es: 'Visualización de elementos',
+      de: 'Elementanzeige',
+      it: 'Visualizzazione elementi'
     },
     EditValue: {
       en: 'Edit Value',
-      fr: 'Éditer Valeur'
+      fr: 'Éditer Valeur',
+      es: 'Editar valor',
+      de: 'Wert bearbeiten',
+      it: 'Modifica valore'
     }
   }
 } as const

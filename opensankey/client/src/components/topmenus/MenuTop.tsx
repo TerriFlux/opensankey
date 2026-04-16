@@ -815,7 +815,8 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { logo } = new_data
-  const [flag, setFlag] = useState('fr')
+  const langToFlag: Record<string, string> = { fr: 'fr', en: 'gb', es: 'es', de: 'de', it: 'it' }
+  const [flag, setFlag] = useState(langToFlag[new_data.i18n.language] ?? 'gb')
   const menutop_grid_template = new_data.is_static ? '100px 30fr auto' : 'minmax(7vw, 100px) auto auto'
 
   // Format variable so if it's an list of Element, wrap these element in <React.Fragment/> with key to ensure no warning in console
@@ -915,6 +916,9 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             <MenuList>
               <MenuItem onClick={() => { setFlag('fr'); changeLang('fr') }}><ReactCountryFlag countryCode={'fr'} svg />Français</MenuItem>
               <MenuItem onClick={() => { setFlag('gb'); changeLang('en') }}><ReactCountryFlag countryCode={'gb'} svg />English</MenuItem>
+              <MenuItem onClick={() => { setFlag('es'); changeLang('es') }}><ReactCountryFlag countryCode={'es'} svg />Español</MenuItem>
+              <MenuItem onClick={() => { setFlag('de'); changeLang('de') }}><ReactCountryFlag countryCode={'de'} svg />Deutsch</MenuItem>
+              <MenuItem onClick={() => { setFlag('it'); changeLang('it') }}><ReactCountryFlag countryCode={'it'} svg />Italiano</MenuItem>
             </MenuList>
           </Portal>
         </Menu> : <></>}
