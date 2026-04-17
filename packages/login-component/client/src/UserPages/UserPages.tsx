@@ -8,10 +8,11 @@ import {
 import { LoginOutButton } from '../Login/Login'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { LoginComponent } from '../LoginComponent'
 
 export const UserPagesButtons = (
-  { t, show_splashscreen,logo,icon_user,login_component,setLicenses, returnToApp }: {
+  { t: _t, show_splashscreen,logo,icon_user,login_component,setLicenses, returnToApp }: {
     t: TFunction,
     show_splashscreen: boolean,
     logo:string,
@@ -21,7 +22,8 @@ export const UserPagesButtons = (
     returnToApp: (navigate: NavigateFunction) => void,
   }
 ) => {
-  // Traduction
+  // useTranslation ensures re-render on language change
+  const { t } = useTranslation()
 
 
   // If window.sankey.publish is at true : we don't use the function useNavigate because we can't it use this function outside BrowserRouter
