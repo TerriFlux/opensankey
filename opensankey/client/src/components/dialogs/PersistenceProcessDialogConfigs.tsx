@@ -579,6 +579,25 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'Kindflüsse erstellen, wenn sie nur auf Elternknoten existieren',
         it: 'Creare flussi figli quando esistono solo sui nodi genitore'
       }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    do_not_propagate_flux_to_parent: {
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Do not propagate fluxes to parents',
+        fr: 'Ne pas propager les flux aux parents',
+        es: 'No propagar flujos a los padres',
+        de: 'Flüsse nicht an Eltern weitergeben',
+        it: 'Non propagare i flussi ai genitori'
+      },
+      tooltips: {
+        en: 'Skip creating parent fluxes when they exist only on child nodes',
+        fr: 'Ne pas créer les flux parents lorsqu\'ils n\'existent que sur les n\u0153uds enfants',
+        es: 'No crear flujos padres cuando existen solo en los nodos hijos',
+        de: 'Elternflüsse nicht erstellen, wenn sie nur auf Kindknoten existieren',
+        it: 'Non creare flussi genitori quando esistono solo sui nodi figli'
+      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
