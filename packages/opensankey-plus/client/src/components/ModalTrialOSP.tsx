@@ -13,6 +13,7 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Box,
   Button,
@@ -58,7 +59,7 @@ const goToCheckout = () => {
 // ==================================================================================================
 
 export const ModalTrialWelcomeOSP: FC<TrialComponentProps> = ({ app_data }) => {
-  const { t } = app_data
+  const { t } = useTranslation()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -121,7 +122,7 @@ export const ModalTrialWelcomeOSP: FC<TrialComponentProps> = ({ app_data }) => {
 // ==================================================================================================
 
 export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
-  const { t } = app_data
+  const { t } = useTranslation()
   const [show, setShow] = useState(false)
 
   useEffect(() => {
@@ -189,7 +190,7 @@ const bumpBanner = () => {
 }
 
 export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
-  const { t } = app_data
+  const { t } = useTranslation()
   const [, setRev] = useState(0)
 
   useEffect(() => {
