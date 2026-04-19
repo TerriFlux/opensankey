@@ -8,6 +8,7 @@ import { createZDDModifier, ZDD_MENU_CONFIG } from '../deps/OpenSankey/component
 import { createNodeModifier } from '../deps/OpenSankey/components/dialogs/NodeActions'
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 import { MenuConfig } from '../deps/OpenSankey/components/dialogs/SankeyMenuContext'
+import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { createUnitaryNewView } from './UnitaryBoard'
 
@@ -83,6 +84,14 @@ new_structure[0].children!.push({
     }
   }]
 })
+new_structure[0].children!.push({
+  type: 'button',
+  actionName: 'generateLabelFromChildren',
+  visibilityConditions: [
+    { type: 'nodeCount', operator: '==', value: 1 },
+    { type: 'nodeProperty', property: 'is_parent', operator: '==', value: true }
+  ]
+})
 new_structure[5].children!.push({
   type: 'button',
   actionName: 'createUnitarySankey'
@@ -115,6 +124,23 @@ export const createNodeMenuConfigPlus = (): MenuConfig => {
           es: 'Crear Sankey unitario',
           de: 'Einheitliches Sankey erstellen',
           it: 'Creare Sankey unitario'
+        }
+      },
+      generateLabelFromChildren: {
+        type: 'action',
+        labels: {
+          en: 'Set label from children',
+          fr: 'Générer le label depuis les enfants',
+          es: 'Generar etiqueta desde los hijos',
+          de: 'Label aus Kindern generieren',
+          it: 'Genera etichetta dai figli'
+        },
+        tooltips: {
+          en: 'Replace the node label with the comma-separated list of its children',
+          fr: 'Remplace le label du nœud par la liste de ses enfants, séparés par des virgules',
+          es: 'Reemplaza la etiqueta del nodo por la lista de sus hijos, separados por comas',
+          de: 'Ersetzt das Node-Label durch die kommagetrennte Liste der Kinder',
+          it: 'Sostituisce l\'etichetta del nodo con l\'elenco dei figli separati da virgole'
         }
       }
     },
@@ -188,6 +214,41 @@ export const createNodeModifierPlus = (app_data: Class_ApplicationDataOSP) => {
         app_data.setCurrentView(d.id)
         app_data.menu_configuration_osp.updateComponentRelatedToViews()
       }
+    },
+    generateLabelFromChildren: () => {
+      const node = app_data.drawing_area.node_contextualised
+      if (!node || !node.is_parent) return
+
+      const seen = new Set<string>()
+      const ordered_children: Class_NodeElement[] = []
+      node.dimensions_as_parent.forEach(dim => {
+        dim.children.forEach(c => {
+          if (!seen.has(c.id)) {
+            seen.add(c.id)
+            ordered_children.push(c)
+          }
+        })
+      })
+      if (ordered_children.length === 0) return
+
+      const new_label = ordered_children.map(c => c.name).join(', ')
+      const old_name = node.name
+
+      const refresh = () => {
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+        app_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+      }
+      const doAction = () => {
+        node.name = new_label
+        refresh()
+      }
+      const undoAction = () => {
+        node.name = old_name
+        refresh()
+      }
+      app_data.history.saveUndo(undoAction)
+      app_data.history.saveRedo(doAction)
+      doAction()
     }
   }
 }
