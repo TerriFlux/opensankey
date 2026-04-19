@@ -132,6 +132,35 @@ export const default_grid_visible = true
 export const default_scale = 50
 export const default_DA_marging = 50
 
+// Paper format types and constants
+export type Type_PaperFormat = 'free' | 'A3' | 'A4' | 'A5'
+export type Type_PaperOrientation = 'landscape' | 'portrait'
+export type Type_ExportDPI = 150 | 300
+
+// Paper dimensions in mm (portrait orientation: width < height)
+export const PAPER_DIMENSIONS_MM: Record<Exclude<Type_PaperFormat, 'free'>, { width: number; height: number }> = {
+  A3: { width: 297, height: 420 },
+  A4: { width: 210, height: 297 },
+  A5: { width: 148, height: 210 },
+}
+
+export const default_paper_format: Type_PaperFormat = 'free'
+export const default_paper_orientation: Type_PaperOrientation = 'landscape'
+export const default_export_dpi: Type_ExportDPI = 150
+export const default_margin_mm = 10
+
+// Target font sizes per paper format (in CSS px)
+export const PAPER_TARGET_FONT_SIZES: Record<Exclude<Type_PaperFormat, 'free'>, {
+  node_name: number
+  node_value: number
+  link_name: number
+  link_value: number
+}> = {
+  A3: { node_name: 24, node_value: 20, link_name: 18, link_value: 18 },
+  A4: { node_name: 18, node_value: 16, link_name: 14, link_value: 14 },
+  A5: { node_name: 14, node_value: 12, link_name: 11, link_value: 11 },
+}
+
 // Types d'actions disponibles
 export type BaseActionType =
   | 'drawElements'

@@ -37,6 +37,7 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle,
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
+import { Type_PaperFormat, Type_PaperOrientation, Type_ExportDPI } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
 
@@ -73,6 +74,47 @@ export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationDa
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setCount(a => a + 1)
     app_data.menu_configuration.updateComponentRelatedToLayoutApparence()
+  }
+
+  // Paper format event handlers
+  const eventPaperFormat = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = evt.target.value as Type_PaperFormat
+    const f = (_: Type_PaperFormat) => {
+      app_data.drawing_area.paper_format = _
+      app_data.drawing_area.areaAutoFit()
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'paper_format', val, f)
+  }
+
+  const eventPaperOrientation = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = evt.target.value as Type_PaperOrientation
+    const f = (_: Type_PaperOrientation) => {
+      app_data.drawing_area.paper_orientation = _
+      app_data.drawing_area.areaAutoFit()
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'paper_orientation', val, f)
+  }
+
+  const eventExportDpi = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = Number(evt.target.value) as Type_ExportDPI
+    const f = (_: Type_ExportDPI) => {
+      app_data.drawing_area.export_dpi = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'export_dpi', val, f)
+  }
+
+  const eventMargin = (side: 'top' | 'right' | 'bottom' | 'left') => (evt: number | null | undefined) => {
+    if (evt == null) return
+    const key = `margin_${side}_mm` as 'margin_top_mm' | 'margin_right_mm' | 'margin_bottom_mm' | 'margin_left_mm'
+    const f = (_: number) => {
+      app_data.drawing_area[key] = _
+      app_data.drawing_area.areaAutoFit()
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, key, evt, f)
   }
 
   const eventBgColor = (evt: string) => {
@@ -155,6 +197,102 @@ export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationDa
   }
 
   return <>
+    {/* Paper format */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.PaperFormat')}
+      </Box>
+      <Select
+        variant='menuconfigpanel_option_select'
+        value={app_data.drawing_area.paper_format}
+        onChange={eventPaperFormat}
+      >
+        <option value='free'>{t('MEP.PaperFree')}</option>
+        <option value='A3'>A3</option>
+        <option value='A4'>A4</option>
+        <option value='A5'>A5</option>
+      </Select>
+    </Box>
+
+    {app_data.drawing_area.is_paper_mode && <>
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.PaperOrientation')}
+        </Box>
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={app_data.drawing_area.paper_orientation}
+          onChange={eventPaperOrientation}
+        >
+          <option value='landscape'>{t('MEP.Landscape')}</option>
+          <option value='portrait'>{t('MEP.Portrait')}</option>
+        </Select>
+      </Box>
+
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.ExportDPI')}
+        </Box>
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={app_data.drawing_area.export_dpi}
+          onChange={eventExportDpi}
+        >
+          <option value={150}>150 DPI</option>
+          <option value={300}>300 DPI</option>
+        </Select>
+      </Box>
+
+      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+        <Box layerStyle='menuconfigpanel_option_name'>
+          {t('MEP.Margins')}
+        </Box>
+        <Box display='grid' gridTemplateColumns='1fr 1fr' gap='4px'>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.margin_top_mm}
+            function_on_blur={eventMargin('top')}
+            minimum_value={0}
+            maximum_value={50}
+            stepper={true}
+            unit_text='mm'
+          />
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.margin_right_mm}
+            function_on_blur={eventMargin('right')}
+            minimum_value={0}
+            maximum_value={50}
+            stepper={true}
+            unit_text='mm'
+          />
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.margin_bottom_mm}
+            function_on_blur={eventMargin('bottom')}
+            minimum_value={0}
+            maximum_value={50}
+            stepper={true}
+            unit_text='mm'
+          />
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={app_data.drawing_area.margin_left_mm}
+            function_on_blur={eventMargin('left')}
+            minimum_value={0}
+            maximum_value={50}
+            stepper={true}
+            unit_text='mm'
+          />
+        </Box>
+      </Box>
+
+      <Box layerStyle='menuconfigpanel_option_name' fontSize='xs' opacity={0.7}>
+        {Math.round(app_data.drawing_area.width)} x {Math.round(app_data.drawing_area.height)} px
+      </Box>
+
+    </>}
+
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.BgC')}
