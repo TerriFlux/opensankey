@@ -309,7 +309,10 @@ export const retrieveJSONResults = (
   v_spacing?: number,
   optimize_crossing: boolean = true,
   sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
-  sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+  sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor',
+  paper_format?: Type_PaperFormat,
+  paper_orientation?: Type_PaperOrientation,
+  margin_mm?: number
 ) => {
   // // Failsafe
   // if (text === '{}')
@@ -318,6 +321,22 @@ export const retrieveJSONResults = (
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
   app_data.fromJSON(JSON_data as Type_JSON, {} /*output_options_json*/, false)
+
+  // Paper/margins from the dialog must be applied after fromJSON (which
+  // overwrites them from the incoming JSON) and before computeAutoSankey
+  // (which sizes the layout against drawing_area dimensions).
+  if (paper_format !== undefined && paper_format !== 'free') {
+    app_data.drawing_area.paper_format = paper_format
+    if (paper_orientation !== undefined) {
+      app_data.drawing_area.paper_orientation = paper_orientation
+    }
+    if (margin_mm !== undefined) {
+      app_data.drawing_area.margin_top_mm = margin_mm
+      app_data.drawing_area.margin_right_mm = margin_mm
+      app_data.drawing_area.margin_bottom_mm = margin_mm
+      app_data.drawing_area.margin_left_mm = margin_mm
+    }
+  }
 
   app_data.drawing_area.bypass_redraws = true
   app_data.drawing_area.sankey.nodes_list.forEach(n => {
@@ -598,15 +617,6 @@ export const UniversalFileConverter = ({
         if (input_format == 'example_json') {
           app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
         } else {
-          // Apply paper format before layout computation
-          if (paperFormat !== 'free') {
-            app_data.drawing_area.paper_format = paperFormat
-            app_data.drawing_area.paper_orientation = paperOrientation
-            app_data.drawing_area.margin_top_mm = marginMm
-            app_data.drawing_area.margin_right_mm = marginMm
-            app_data.drawing_area.margin_bottom_mm = marginMm
-            app_data.drawing_area.margin_left_mm = marginMm
-          }
           retrieveJSONResults(
             app_data,
             jsonData,
@@ -616,7 +626,10 @@ export const UniversalFileConverter = ({
             app_data.layout_v_spacing ?? undefined,
             app_data.layout_optimize_crossing,
             app_data.layout_sources_mode,
-            app_data.layout_sinks_mode
+            app_data.layout_sinks_mode,
+            paperFormat,
+            paperOrientation,
+            marginMm
           )
         }
         //setAutoLoad(false)
