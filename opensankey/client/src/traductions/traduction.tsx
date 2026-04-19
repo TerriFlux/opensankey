@@ -80,25 +80,29 @@ interface TranslationConfig {
  * Convertit le format { key: { en: '...', fr: '...' } }
  * en format i18next { en: { translation: { key: '...' } }, fr: { translation: { key: '...' } } }
  */
+const SUPPORTED_LANGS = ['en', 'fr', 'es', 'de', 'it'] as const
+type SupportedLang = typeof SUPPORTED_LANGS[number]
+
 const convertToI18nFormat = (
   config: TranslationConfig,
   path: string[] = []
-): { en: Record<string, unknown>; fr: Record<string, unknown> } => {
-  const result = {
-    en: {} as Record<string, unknown>,
-    fr: {} as Record<string, unknown>
-  }
+): Record<SupportedLang, Record<string, unknown>> => {
+  const result = Object.fromEntries(
+    SUPPORTED_LANGS.map(lang => [lang, {} as Record<string, unknown>])
+  ) as Record<SupportedLang, Record<string, unknown>>
 
   Object.entries(config).forEach(([key, value]) => {
     if (value && typeof value === 'object' && 'en' in value && 'fr' in value) {
       // C'est une feuille avec traductions
-      result.en[key] = value.en
-      result.fr[key] = value.fr
+      for (const lang of SUPPORTED_LANGS) {
+        result[lang][key] = (value as Record<string, unknown>)[lang] ?? (value as Record<string, unknown>).en
+      }
     } else if (value && typeof value === 'object') {
       // C'est un objet imbriqué, récursion
       const nested = convertToI18nFormat(value as TranslationConfig, [...path, key])
-      result.en[key] = nested.en
-      result.fr[key] = nested.fr
+      for (const lang of SUPPORTED_LANGS) {
+        result[lang][key] = nested[lang]
+      }
     }
   })
 
@@ -107,14 +111,9 @@ const convertToI18nFormat = (
 
 // Convertir les traductions
 const converted = convertToI18nFormat(translations as unknown as TranslationConfig)
-export const resources_process_dialog = {
-  en: {
-    translation: converted.en
-  },
-  fr: {
-    translation: converted.fr
-  }
-}
+export const resources_process_dialog = Object.fromEntries(
+  SUPPORTED_LANGS.map(lang => [lang, { translation: converted[lang] }])
+)
 interface TranslationSection {
   tooltips?: Record<string, string | Record<string, string>>  // ✅ Permet imbrication
   [key: string]: string | TranslationSection | Record<string, string | Record<string, string>> | undefined
