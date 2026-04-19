@@ -419,6 +419,7 @@ export const AutoLayoutSpacingInputs = ({
         step={10}
         minimum_value={0}
         unit_text='px'
+
       />
     </Box>}
     <Box display='flex' alignItems='center' gap='4px'>
@@ -436,6 +437,7 @@ export const AutoLayoutSpacingInputs = ({
         step={10}
         minimum_value={0}
         unit_text='px'
+
       />
     </Box>
     {show_extremities && <Box display='flex' alignItems='center' gap='4px'>
@@ -500,6 +502,9 @@ export const AutoLayoutSpacingInputs = ({
 
 export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { drawing_area, menu_configuration } = app_data
+  const [skipHorizontal, setSkipHorizontal] = useState(false)
+  const [skipVertical, setSkipVertical] = useState(false)
+  const [applyFonts, setApplyFonts] = useState(true)
 
   const launchAutoLayout = () => {
     const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
@@ -510,13 +515,43 @@ export const MenuContextAutoLayout = ({ app_data }: { app_data: Class_Applicatio
       app_data.layout_h_spacing ?? default_dx,
       app_data.layout_v_spacing ?? default_dy,
       app_data.layout_sources_mode,
-      app_data.layout_sinks_mode
+      app_data.layout_sinks_mode,
+      skipHorizontal,
+      skipVertical,
+      applyFonts
     )
     menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 
   return <Box display='flex' flexDirection='column' gap='4px' p='8px' minW='280px'>
     <AutoLayoutSpacingInputs app_data={app_data} show_extremities show_optimize_mode />
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Checkbox
+        size='sm'
+        isChecked={skipHorizontal}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSkipHorizontal(e.target.checked)}
+      >
+        <Text fontSize='xs'>{app_data.t('MEP.SkipHorizontal')}</Text>
+      </Checkbox>
+    </Box>
+    <Box display='flex' alignItems='center' gap='4px'>
+      <Checkbox
+        size='sm'
+        isChecked={skipVertical}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSkipVertical(e.target.checked)}
+      >
+        <Text fontSize='xs'>{app_data.t('MEP.SkipVertical')}</Text>
+      </Checkbox>
+    </Box>
+    {drawing_area.is_paper_mode && <Box display='flex' alignItems='center' gap='4px'>
+      <Checkbox
+        size='sm'
+        isChecked={applyFonts}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setApplyFonts(e.target.checked)}
+      >
+        <Text fontSize='xs'>{app_data.t('MEP.ApplyTargetFonts')}</Text>
+      </Checkbox>
+    </Box>}
     <OSTooltip label={app_data.t('ProcessDialog.layout_apply_tt')}>
       <Button
         variant='menuconfigpanel_option_button'

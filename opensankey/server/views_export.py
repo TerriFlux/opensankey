@@ -49,6 +49,12 @@ def _html_to_image(
     output_format,
     output_height_px=None,
     output_width_px=None,
+    paper_format=None,
+    paper_orientation=None,
+    margin_top=None,
+    margin_right=None,
+    margin_bottom=None,
+    margin_left=None,
 ):
     # Get html page as str
     html_as_str = '<meta charset="utf-8">' + html_file.read().decode("UTF-8")
@@ -87,18 +93,30 @@ def _html_to_image(
         imgkit.from_string(html_as_str, output_filename, css=css, options=options)
     else:
         # Options for pdf / svg conversions
-        options.update(
-            {
-                "margin-top": "1cm",
-                "margin-right": "1cm",
-                "margin-bottom": "1cm",
-                "margin-left": "1cm",
-            }
-        )
-        if output_height_px is not None:
-            options["page-height"] = output_height_px + "px"
-        if output_width_px is not None:
-            options["page-width"] = output_width_px + "px"
+        if paper_format:
+            # Paper mode: use native page size, margins = 0
+            # (margins are already handled in the drawing area content positioning)
+            options["page-size"] = paper_format
+            if paper_orientation == "landscape":
+                options["orientation"] = "Landscape"
+            options["margin-top"] = "0"
+            options["margin-right"] = "0"
+            options["margin-bottom"] = "0"
+            options["margin-left"] = "0"
+        else:
+            # Free mode: custom dimensions with margins
+            options.update(
+                {
+                    "margin-top": margin_top or "1cm",
+                    "margin-right": margin_right or "1cm",
+                    "margin-bottom": margin_bottom or "1cm",
+                    "margin-left": margin_left or "1cm",
+                }
+            )
+            if output_height_px is not None:
+                options["page-height"] = output_height_px + "px"
+            if output_width_px is not None:
+                options["page-width"] = output_width_px + "px"
         if output_format == "pdf":
             pdfkit.from_string(html_as_str, output_filename, css=css, options=options)
         else:  # svg case
@@ -157,6 +175,12 @@ def save_svg():
             "svg",
             output_height_px=request.form.get("height"),
             output_width_px=request.form.get("width"),
+            paper_format=request.form.get("paper_format"),
+            paper_orientation=request.form.get("paper_orientation"),
+            margin_top=request.form.get("margin_top"),
+            margin_right=request.form.get("margin_right"),
+            margin_bottom=request.form.get("margin_bottom"),
+            margin_left=request.form.get("margin_left"),
         )
     except Exception as e:
         current_app.logger.error("SAVE_SVG | {0}".format(e))
@@ -210,8 +234,14 @@ def save_pdf():
             request.files["html"],
             filename,
             "pdf",
-            output_height_px=request.form["height"],
-            output_width_px=request.form["width"],
+            output_height_px=request.form.get("height"),
+            output_width_px=request.form.get("width"),
+            paper_format=request.form.get("paper_format"),
+            paper_orientation=request.form.get("paper_orientation"),
+            margin_top=request.form.get("margin_top"),
+            margin_right=request.form.get("margin_right"),
+            margin_bottom=request.form.get("margin_bottom"),
+            margin_left=request.form.get("margin_left"),
         )
     except Exception as e:
         current_app.logger.error("SAVE_PDF | {0}".format(e))

@@ -34,6 +34,7 @@ import {
 import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
+import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
 import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
 
@@ -497,7 +498,10 @@ export class NodePositioning {
     h_spacing?: number,
     v_spacing?: number,
     sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
-    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor',
+    skip_horizontal: boolean = false,
+    skip_vertical: boolean = false,
+    apply_target_fonts: boolean = true
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
@@ -537,145 +541,166 @@ export class NodePositioning {
     const nodes_to_process = this.drawingArea.sankey.visible_nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
 
-    // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
     const horizontal_indexes_per_nodes_ids: { [node_id: string]: number } = {}
-    const possible_recycling_links_ids: string[] = []
-
-    // Initialiser tous les nœuds à index -1
-    nodes_to_process.forEach(node => {
-      horizontal_indexes_per_nodes_ids[node.id] = -1
-    })
-
-    // Identifier et traiter les nœuds sources en priorité
-    const source_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && node.hasVisibleOutputLinks())
-    const lone_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && !node.hasVisibleOutputLinks())
-
-    console.log('🌱 Nœuds sources:', source_nodes.map(n => n.id))
-    console.log('🏝️ Nœuds isolés:', lone_nodes.map(n => n.id))
-
-    // Traiter les nœuds sources
-    source_nodes.forEach(node => {
-      if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
-        console.log(`🚀 Traitement depuis le nœud source: ${node.id}`)
-        this.computeHorizontalIndexImproved(
-          node,
-          nodes_to_process,
-          0, // Commencer à 0 pour les sources
-          [],
-          possible_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        )
-      }
-    })
-
-    // Traiter les nœuds isolés
-    lone_nodes.forEach(node => {
-      horizontal_indexes_per_nodes_ids[node.id] = 0
-    })
-
-    // Traiter les nœuds restants (composantes isolées avec cycles)
-    nodes_to_process.forEach(node => {
-      if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
-        console.log(`🔄 Traitement composante isolée depuis: ${node.id}`)
-        this.computeHorizontalIndexImproved(
-          node,
-          nodes_to_process,
-          0,
-          [],
-          possible_recycling_links_ids,
-          horizontal_indexes_per_nodes_ids
-        )
-      }
-    })
-
-    // ÉTAPE 2: Double vérification des liens de recyclage (logique existante)
-    const checked_recycling_links_ids: string[] = []
-    possible_recycling_links_ids.forEach(link_id => {
-      this.computeRecyclingHorizontalIndex(
-        nodes_to_process,
-        this.drawingArea.sankey.links_dict[link_id],
-        checked_recycling_links_ids,
-        horizontal_indexes_per_nodes_ids
-      )
-    })
-
-    console.log('📊 Index horizontaux après calcul:', horizontal_indexes_per_nodes_ids)
-    console.log('♻️ Liens de recyclage détectés:', possible_recycling_links_ids)
-
-    // ÉTAPE 2 bis: Forcer l'index horizontal des nœuds dont la colonne est verrouillée.
-    // Le user a fixé position_u via l'UI ; on remplace l'index calculé par cette valeur
-    // (en passant en base 0) avant la construction des structures et le placement final,
-    // pour que le nœud tombe bien dans la colonne demandée même après recalcul automatique.
-    nodes_to_process.forEach(node => {
-      if (node.shape_position_u_locked === true) {
-        const locked_index = Math.max(0, Math.round(node.position_u) - 1)
-        horizontal_indexes_per_nodes_ids[node.id] = locked_index
-      }
-    })
-
-    // ÉTAPE 3: Construction des structures de données (logique existante)
     let max_horizontal_index = 0
     let nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
 
-    this.drawingArea.sankey.visible_nodes_list.forEach(node => {
-      const node_index = horizontal_indexes_per_nodes_ids[node.id]
-
-      if (node_index !== undefined && node_index >= 0) {
-        if (!nodes_per_horizontal_indexes[node_index]) {
-          nodes_per_horizontal_indexes[node_index] = []
-        }
-        nodes_per_horizontal_indexes[node_index].push(this.drawingArea.sankey.nodes_dict[node.id])
-
-        if (node_index > max_horizontal_index) {
-          max_horizontal_index = node_index
-        }
-
-        // Marquer les liens de recyclage
+    if (skip_horizontal) {
+      // Skip horizontal recalculation — use existing position_u values
+      const has_valid_u = nodes_to_process.some(n => n.position_u > 0)
+      if (!has_valid_u) {
+        this.inferPositionUFromX()
+        this.computeParametrization(false)
+      }
+      // Build structures from existing U (position_u is 1-based, h_index is 0-based)
+      nodes_to_process.forEach(node => {
+        const u = Math.max(0, node.position_u - 1)
+        horizontal_indexes_per_nodes_ids[node.id] = u
+        if (!nodes_per_horizontal_indexes[u]) nodes_per_horizontal_indexes[u] = []
+        nodes_per_horizontal_indexes[u].push(node)
+        if (u > max_horizontal_index) max_horizontal_index = u
+      })
+      // Mark recycling links
+      nodes_to_process.forEach(node => {
+        const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.output_links_list.forEach(link => {
           const target_node_id = this.drawingArea.sankey.links_dict[link.id].target.id
           const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
-
           if (target_index !== undefined && node_index >= target_index) {
             this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = true
           } else {
             this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
           }
         })
-      }
-    })
+      })
+    } else {
+      // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
+      const possible_recycling_links_ids: string[] = []
 
-    // ÉTAPE 3 bis: Mode 'right_extremity' — forcer les nœuds sans sortie à la dernière colonne.
-    // On fait ça avant le repositionnement des sources pour que max_horizontal_index soit
-    // bien à jour et que les sources en mode 'before_neighbor' tombent juste avant leur voisin.
-    if (sinks_mode === 'right_extremity') {
-      const sink_nodes = nodes_to_process.filter(node =>
-        !node.hasVisibleOutputLinks() && node.hasVisibleInputLinks())
-      if (sink_nodes.length > 0) {
-        sink_nodes.forEach(node => {
-          const old_index = horizontal_indexes_per_nodes_ids[node.id]
-          if (old_index === undefined || old_index < 0) return
-          if (old_index === max_horizontal_index) return
-          if (nodes_per_horizontal_indexes[old_index]) {
-            const i = nodes_per_horizontal_indexes[old_index].indexOf(node)
-            if (i > -1) nodes_per_horizontal_indexes[old_index].splice(i, 1)
+      // Initialiser tous les nœuds à index -1
+      nodes_to_process.forEach(node => {
+        horizontal_indexes_per_nodes_ids[node.id] = -1
+      })
+
+      // Identifier et traiter les nœuds sources en priorité
+      const source_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && node.hasVisibleOutputLinks())
+      const lone_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && !node.hasVisibleOutputLinks())
+
+      console.log('source nodes:', source_nodes.map(n => n.id))
+      console.log('lone nodes:', lone_nodes.map(n => n.id))
+
+      // Traiter les nœuds sources
+      source_nodes.forEach(node => {
+        if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
+          this.computeHorizontalIndexImproved(
+            node,
+            nodes_to_process,
+            0, // Commencer à 0 pour les sources
+            [],
+            possible_recycling_links_ids,
+            horizontal_indexes_per_nodes_ids
+          )
+        }
+      })
+
+      // Traiter les nœuds isolés
+      lone_nodes.forEach(node => {
+        horizontal_indexes_per_nodes_ids[node.id] = 0
+      })
+
+      // Traiter les nœuds restants (composantes isolées avec cycles)
+      nodes_to_process.forEach(node => {
+        if (horizontal_indexes_per_nodes_ids[node.id] === -1) {
+          this.computeHorizontalIndexImproved(
+            node,
+            nodes_to_process,
+            0,
+            [],
+            possible_recycling_links_ids,
+            horizontal_indexes_per_nodes_ids
+          )
+        }
+      })
+
+      // ÉTAPE 2: Double vérification des liens de recyclage (logique existante)
+      const checked_recycling_links_ids: string[] = []
+      possible_recycling_links_ids.forEach(link_id => {
+        this.computeRecyclingHorizontalIndex(
+          nodes_to_process,
+          this.drawingArea.sankey.links_dict[link_id],
+          checked_recycling_links_ids,
+          horizontal_indexes_per_nodes_ids
+        )
+      })
+
+      // ÉTAPE 2 bis: Forcer l'index horizontal des nœuds dont la colonne est verrouillée.
+      nodes_to_process.forEach(node => {
+        if (node.shape_position_u_locked === true) {
+          const locked_index = Math.max(0, Math.round(node.position_u) - 1)
+          horizontal_indexes_per_nodes_ids[node.id] = locked_index
+        }
+      })
+
+      // ÉTAPE 3: Construction des structures de données (logique existante)
+      this.drawingArea.sankey.visible_nodes_list.forEach(node => {
+        const node_index = horizontal_indexes_per_nodes_ids[node.id]
+
+        if (node_index !== undefined && node_index >= 0) {
+          if (!nodes_per_horizontal_indexes[node_index]) {
+            nodes_per_horizontal_indexes[node_index] = []
           }
-          horizontal_indexes_per_nodes_ids[node.id] = max_horizontal_index
-          if (!nodes_per_horizontal_indexes[max_horizontal_index]) {
-            nodes_per_horizontal_indexes[max_horizontal_index] = []
+          nodes_per_horizontal_indexes[node_index].push(this.drawingArea.sankey.nodes_dict[node.id])
+
+          if (node_index > max_horizontal_index) {
+            max_horizontal_index = node_index
           }
-          nodes_per_horizontal_indexes[max_horizontal_index].push(node)
-        })
+
+          // Marquer les liens de recyclage
+          node.output_links_list.forEach(link => {
+            const target_node_id = this.drawingArea.sankey.links_dict[link.id].target.id
+            const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
+
+            if (target_index !== undefined && node_index >= target_index) {
+              this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = true
+            } else {
+              this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
+            }
+          })
+        }
+      })
+
+      // ÉTAPE 3 bis: Mode 'right_extremity'
+      if (sinks_mode === 'right_extremity') {
+        const sink_nodes = nodes_to_process.filter(node =>
+          !node.hasVisibleOutputLinks() && node.hasVisibleInputLinks())
+        if (sink_nodes.length > 0) {
+          sink_nodes.forEach(node => {
+            const old_index = horizontal_indexes_per_nodes_ids[node.id]
+            if (old_index === undefined || old_index < 0) return
+            if (old_index === max_horizontal_index) return
+            if (nodes_per_horizontal_indexes[old_index]) {
+              const i = nodes_per_horizontal_indexes[old_index].indexOf(node)
+              if (i > -1) nodes_per_horizontal_indexes[old_index].splice(i, 1)
+            }
+            horizontal_indexes_per_nodes_ids[node.id] = max_horizontal_index
+            if (!nodes_per_horizontal_indexes[max_horizontal_index]) {
+              nodes_per_horizontal_indexes[max_horizontal_index] = []
+            }
+            nodes_per_horizontal_indexes[max_horizontal_index].push(node)
+          })
+        }
+      }
+
+      // ÉTAPE 4: Repositionnement des nœuds sans entrée (sauf si mode 'left_extremity')
+      if (sources_mode !== 'left_extremity') {
+        this.repositionNodesWithoutInputs(
+          nodes_per_horizontal_indexes,
+          horizontal_indexes_per_nodes_ids,
+          max_horizontal_index
+        )
       }
     }
 
-    // ÉTAPE 4: Repositionnement des nœuds sans entrée (sauf si mode 'left_extremity')
-    if (sources_mode !== 'left_extremity') {
-      this.repositionNodesWithoutInputs(
-        nodes_per_horizontal_indexes,
-        horizontal_indexes_per_nodes_ids,
-        max_horizontal_index
-      )
-    }
     nodes_per_horizontal_indexes = Object.fromEntries(
       Object.entries(nodes_per_horizontal_indexes).filter(([_, value]) => value.length > 0)
     )
@@ -687,12 +712,57 @@ export class NodePositioning {
       max_horizontal_index,
       optimize_crossing,
       h_spacing,
-      v_spacing
+      v_spacing,
+      skip_vertical,
+      apply_target_fonts
     )
 
     const tmp = this.drawingArea.sankey.nodes_list.filter(n =>
       !echangeTag || !n.hasGivenTag(echangeTag))
     tmp.forEach(n => this.setNodeLabelPositioning(n))
+
+    // Paper mode: two-pass — render first, measure real bbox, then scale to fill paper
+    if (this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free') {
+      this.drawingArea.bypass_redraws = false
+      this.drawingArea.drawElements()
+
+      const bbox = this.drawingArea.d3_selection_elements_group?.node()?.getBBox()
+      if (bbox && bbox.width > 0 && bbox.height > 0) {
+        const pad_left = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
+        const pad_right = Class_DrawingArea.mmToPx(this.drawingArea.margin_right_mm)
+        const pad_top = Class_DrawingArea.mmToPx(this.drawingArea.margin_top_mm)
+        const pad_bottom = Class_DrawingArea.mmToPx(this.drawingArea.margin_bottom_mm)
+        const paper_w = this.drawingArea.width
+        const paper_h = this.drawingArea.height
+
+        // Target area: paper minus margins
+        const target_left = pad_left
+        const target_right = paper_w - pad_right
+        const target_top = pad_top
+        const target_bottom = paper_h - pad_bottom
+        const target_w = target_right - target_left
+        const target_h = target_bottom - target_top
+
+        // Current content extent
+        const content_left = bbox.x
+        const content_w = bbox.width
+        const content_top = bbox.y
+        const content_h = bbox.height
+
+        // Scale X: stretch/compress so content fills target width
+        const scale_x = content_w > 0 ? target_w / content_w : 1
+        // Scale Y: stretch/compress so content fills target height
+        const scale_y = content_h > 0 ? target_h / content_h : 1
+
+        // Apply: remap each node position from [content_left..content_right] to [target_left..target_right]
+        nodes_to_process.forEach(n => {
+          n.position_x = (n.position_x - content_left) * scale_x + target_left
+          n.position_y = (n.position_y - content_top) * scale_y + target_top
+        })
+
+        this.drawingArea.drawElements()
+      }
+    }
   }
 
   public computeScale() {
@@ -858,7 +928,9 @@ export class NodePositioning {
     max_horizontal_index: number,
     optimize_crossing: boolean,
     h_spacing?: number,
-    v_spacing?: number
+    v_spacing?: number,
+    skip_vertical: boolean = false,
+    apply_target_fonts: boolean = true
   ) {
     // Utiliser la logique existante de positionnement vertical
     // mais avec les corrections de la méthode updateNodesPositions précédente
@@ -868,21 +940,62 @@ export class NodePositioning {
     const node_id_per_hxv_indexes: string[][] = []
     let max_height_cumul = 0
     let prev_col_width = 0
-    // Fixed left margin so the first column always starts at the same x, independent
-    // of position_dx / h_spacing (which only control inter-column spacing).
-    const FIRST_COLUMN_X = 200
-    for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
-      if (!nodes_per_horizontal_indexes[h_index]) {
-        continue
+
+    // Paper mode: compute spacing from paper dimensions and apply target fonts
+    const paper_mode = this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free'
+    let first_col_x: number
+
+    if (paper_mode) {
+      first_col_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
+
+      // Apply target font sizes (optional)
+      if (apply_target_fonts) {
+        const fmt = this.drawingArea.paper_format as Exclude<typeof this.drawingArea.paper_format, 'free'>
+        const targetFonts = PAPER_TARGET_FONT_SIZES[fmt]
+        this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+          n.name_label_font_size = targetFonts.node_name
+          n.value_label_font_size = targetFonts.node_value
+        })
+        this.drawingArea.sankey.links_list.forEach(l => {
+          l.name_label_font_size = targetFonts.link_name
+          l.value_label_font_size = targetFonts.link_value
+        })
+        // Don't change legend_police — the legend has its own scale transform
       }
-      let col_max_w_col = 0
-      const effective_h = h_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dx ?? 0
-      nodes_per_horizontal_indexes[h_index].forEach(node => {
-        node.position_x = FIRST_COLUMN_X + prev_col_width + effective_h * h_index
-        const node_w = node.shape_min_width
-        if (node_w > col_max_w_col) col_max_w_col = node_w
-      })
-      if (col_max_w_col > 50) prev_col_width = col_max_w_col
+    } else {
+      // Fixed left margin so the first column always starts at the same x
+      first_col_x = 200
+    }
+
+    if (paper_mode) {
+      // Paper mode: simple even distribution — each column gets a slot of width dx
+      const pad_left_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_left_mm)
+      const pad_right_x = Class_DrawingArea.mmToPx(this.drawingArea.margin_right_mm)
+      const available_w = this.drawingArea.width - pad_left_x - pad_right_x
+      const num_cols = max_horizontal_index + 1
+      const new_dx = available_w / Math.max(num_cols, 1)
+
+      for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
+        if (!nodes_per_horizontal_indexes[h_index]) continue
+        nodes_per_horizontal_indexes[h_index].forEach(node => {
+          node.position_x = h_index * new_dx + pad_left_x
+          node.shape_position_dx = new_dx
+        })
+      }
+    } else {
+      for (let h_index = 0; h_index <= max_horizontal_index; h_index++) {
+        if (!nodes_per_horizontal_indexes[h_index]) {
+          continue
+        }
+        let col_max_w_col = 0
+        const effective_h = h_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dx ?? 0
+        nodes_per_horizontal_indexes[h_index].forEach(node => {
+          node.position_x = first_col_x + prev_col_width + effective_h * h_index
+          const node_w = node.shape_min_width
+          if (node_w > col_max_w_col) col_max_w_col = node_w
+        })
+        if (col_max_w_col > 50) prev_col_width = col_max_w_col
+      }
     }
 
     // Calcul des hauteurs et tri vertical (logique existante)
@@ -898,35 +1011,49 @@ export class NodePositioning {
       const nodes_ids_per_vertical_index: string[] = []
       const effective_v = v_spacing ?? nodes_per_horizontal_indexes[h_index][0]?.shape_position_dy ?? 0
 
-      nodes_per_horizontal_indexes[h_index].forEach(node => {
-        const node_height = node.getShapeHeightToUse()
-        const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
+      if (skip_vertical) {
+        // Keep existing vertical order — sort by current position_y
+        const sorted_by_y = [...nodes_per_horizontal_indexes[h_index]]
+          .sort((a, b) => a.position_y - b.position_y)
+        sorted_by_y.forEach((node, idx) => {
+          const node_height = node.getShapeHeightToUse()
+          height_per_nodes_ids[node.id] = node_height
+          vertical_indexes_per_node_id[node.id] = idx
+          nodes_ids_per_vertical_index.push(node.id)
+          height_cumul_for_index += node_height + effective_v
+        })
+        max_vertical_index = sorted_by_y.length
+      } else {
+        nodes_per_horizontal_indexes[h_index].forEach(node => {
+          const node_height = node.getShapeHeightToUse()
+          const node_sortcoef = node_height * (0.8 + 0.2 / (node.output_links_list.length + node.input_links_list.length))
 
-        height_per_nodes_ids[node.id] = node_height
-        sortcoef_per_nodes_ids[node.id] = node_sortcoef
-        vertical_indexes_per_node_id[node.id] = max_vertical_index
-        nodes_ids_per_vertical_index.push(node.id)
+          height_per_nodes_ids[node.id] = node_height
+          sortcoef_per_nodes_ids[node.id] = node_sortcoef
+          vertical_indexes_per_node_id[node.id] = max_vertical_index
+          nodes_ids_per_vertical_index.push(node.id)
 
-        // Tri à bulles (logique existante)
-        if (max_vertical_index > 0) {
-          for (let v_index = max_vertical_index; v_index > 0; v_index--) {
-            const prev_v_index = v_index - 1
-            const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
-            const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
+          // Tri à bulles (logique existante)
+          if (max_vertical_index > 0) {
+            for (let v_index = max_vertical_index; v_index > 0; v_index--) {
+              const prev_v_index = v_index - 1
+              const prev_node_id = nodes_ids_per_vertical_index[prev_v_index]
+              const prev_node_sortcoef = sortcoef_per_nodes_ids[prev_node_id]
 
-            if (prev_node_sortcoef < node_sortcoef) {
-              vertical_indexes_per_node_id[node.id] = prev_v_index
-              nodes_ids_per_vertical_index[prev_v_index] = node.id
-              vertical_indexes_per_node_id[prev_node_id] = v_index
-              nodes_ids_per_vertical_index[v_index] = prev_node_id
-            } else {
-              break
+              if (prev_node_sortcoef < node_sortcoef) {
+                vertical_indexes_per_node_id[node.id] = prev_v_index
+                nodes_ids_per_vertical_index[prev_v_index] = node.id
+                vertical_indexes_per_node_id[prev_node_id] = v_index
+                nodes_ids_per_vertical_index[v_index] = prev_node_id
+              } else {
+                break
+              }
             }
           }
-        }
-        max_vertical_index += 1
-        height_cumul_for_index += node_height + effective_v
-      })
+          max_vertical_index += 1
+          height_cumul_for_index += node_height + effective_v
+        })
+      }
 
       // Réordonnancement selon les verrous V (shape_position_v_locked).
       // Les nœuds verrouillés sont placés dans l'ordre croissant de leur position_v
@@ -1270,24 +1397,75 @@ export class NodePositioning {
 
     const horizontal_spacing = h_spacing ?? this.drawingArea.sankey.nodes_dict[node_id_per_hxv_indexes[0][0]].shape_position_dx
 
-    console.log('🔧 Positionnement des nœuds (sans optimisation croisements)...')
+    // Paper mode: compute per-column v_spacing to fit within paper height
+    const paper_mode = this.drawingArea.is_paper_mode && this.drawingArea.paper_format !== 'free'
+    let paper_pad_top = 0
+    let paper_available_h = 0
+    if (paper_mode) {
+      paper_pad_top = Class_DrawingArea.mmToPx(this.drawingArea.margin_top_mm)
+      const paper_pad_bottom = Class_DrawingArea.mmToPx(this.drawingArea.margin_bottom_mm)
+      paper_available_h = this.drawingArea.height - paper_pad_top - paper_pad_bottom
+    }
 
-    // ÉTAPE 2: Calculer les positions Y - chaque colonne est centrée verticalement
-    // de façon indépendante via v_margin_for_index. Le premier nœud peut ensuite être
-    // nudgé pour les cas d'import/recycling/chaîne linéaire, mais ce nudge NE se
-    // propage PAS aux colonnes suivantes (ancien comportement `shift` retiré : il
-    // cumulait les décalages et finissait par coller la colonne n+1 en haut de la
-    // zone à cause du clamp Math.max(0, ...)).
+    // Paper mode: precompute spacing to fill available height
+    let paper_v_margin_computed = false
+    let paper_effective_v = 0
+    let tallest_total = 0
+
     for (let horizontal_index = 0; horizontal_index <= max_horizontal_index; horizontal_index++) {
       if (!node_id_per_hxv_indexes[horizontal_index]) {
         continue
       }
 
-      const center_biggest_nodes = (node_id_per_hxv_indexes[horizontal_index].length > 2) && false
-      const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
-      let upper_node_height_and_margin = Math.max(0, v_margin_for_index)
+      let upper_node_height_and_margin: number
+      let effective_v_margin: number
 
-      console.log(`🏛️ Colonne ${horizontal_index}: center_biggest_nodes=${center_biggest_nodes}`)
+      if (paper_mode) {
+        // Paper mode: compute spacing so the tallest column fills the available height.
+        // Shorter columns are centered relative to the tallest.
+        const col_node_ids = node_id_per_hxv_indexes[horizontal_index]
+        const col_pure_height = col_node_ids.reduce((sum, nid) => sum + height_per_nodes_ids[nid], 0)
+
+        // For the tallest column, compute the spacing that fills paper_available_h
+        // We need max_pure_height (without spacing) to compute the right spacing
+        // max_height_cumul includes old spacing, so recompute from pure heights
+        if (horizontal_index === 0 || !paper_v_margin_computed) {
+          // Compute pure heights for all columns to find the tallest
+          let tallest_pure = 0
+          let tallest_count = 0
+          for (let ci = 0; ci <= max_horizontal_index; ci++) {
+            if (!node_id_per_hxv_indexes[ci]) continue
+            const pure = node_id_per_hxv_indexes[ci].reduce((s, nid) => s + height_per_nodes_ids[nid], 0)
+            const cnt = node_id_per_hxv_indexes[ci].length
+            const total = pure + v_margin * (cnt - 1)
+            if (total > tallest_total) {
+              tallest_total = total
+              tallest_pure = pure
+              tallest_count = cnt
+            }
+          }
+          // Spacing so tallest column fills available height
+          if (tallest_count > 1) {
+            paper_effective_v = Math.max(5, (paper_available_h - tallest_pure) / (tallest_count - 1))
+          } else {
+            paper_effective_v = 0
+          }
+          // Recompute tallest_total with paper spacing
+          tallest_total = tallest_pure + paper_effective_v * (tallest_count - 1)
+          paper_v_margin_computed = true
+        }
+
+        effective_v_margin = paper_effective_v
+        // Center this column relative to the tallest
+        const col_total_with_spacing = col_pure_height + paper_effective_v * (col_node_ids.length - 1)
+        const center_offset = Math.max(0, (tallest_total - col_total_with_spacing) / 2)
+        upper_node_height_and_margin = paper_pad_top + center_offset
+      } else {
+        // Free mode: center columns vertically
+        const v_margin_for_index = v_margin + (max_height_cumul - height_cumul_per_indexes[horizontal_index]) / 2
+        upper_node_height_and_margin = Math.max(0, v_margin_for_index)
+        effective_v_margin = v_margin
+      }
 
       node_id_per_hxv_indexes[horizontal_index].forEach((node_id, idx) => {
         this.drawingArea.sankey.nodes_dict[node_id].position_y = upper_node_height_and_margin
@@ -1329,7 +1507,7 @@ export class NodePositioning {
         }
 
         const node_height = height_per_nodes_ids[node_id]
-        upper_node_height_and_margin += node_height + v_margin
+        upper_node_height_and_margin += node_height + effective_v_margin
       })
 
     }
@@ -1366,9 +1544,13 @@ export class NodePositioning {
     const nodes_per_horizontal_indexes: { [index: number]: string[] } = {}
     let max_horizontal_index = 0
 
-    // Regrouper les nœuds par position X approximative
+    // Regrouper les nœuds par colonne
+    // En mode papier, utiliser position_u (les X sont espaces differemment)
+    const paper_mode = this.drawingArea.is_paper_mode
     nodes_to_process.forEach(node => {
-      const h_index = Math.round(node.position_x / (h_spacing ?? node.shape_position_dx))
+      const h_index = paper_mode
+        ? Math.max(0, node.position_u - 1)
+        : Math.round(node.position_x / (h_spacing ?? node.shape_position_dx))
       horizontal_positions[node.id] = h_index
 
       if (!nodes_per_horizontal_indexes[h_index]) {
@@ -2299,7 +2481,10 @@ export class NodePositioning {
     h_spacing?: number,
     v_spacing?: number,
     sources_mode: 'before_neighbor' | 'left_extremity' = 'before_neighbor',
-    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor'
+    sinks_mode: 'after_neighbor' | 'right_extremity' = 'after_neighbor',
+    skip_horizontal: boolean = false,
+    skip_vertical: boolean = false,
+    apply_target_fonts: boolean = true
   ) {
 
     // If it's not launched_from_process then we assume it's user input so we save it undoing
@@ -2323,7 +2508,7 @@ export class NodePositioning {
     }
 
     // Compute auto pos of nodes
-    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
+    this.computeAutoSankey(launched_from_process, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode, skip_horizontal, skip_vertical, apply_target_fonts)
     this.computeParametrization(true)
 
     if (launched_from_process) {

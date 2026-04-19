@@ -36,7 +36,8 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Button
+  Button,
+  Select
 } from '@chakra-ui/react'
 import FileSaver from 'file-saver'
 
@@ -44,6 +45,8 @@ import FileSaver from 'file-saver'
 import * as d3 from 'd3'
 import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_DrawingArea } from '../../types/DrawingArea'
+import { PAPER_DIMENSIONS_MM, Type_PaperFormat } from '../../Elements/ElementsAttributesConfig'
 
 type FType_ModalResolutionPNG = (
   app_data: Class_ApplicationData
@@ -58,16 +61,83 @@ export declare const window: Window & typeof globalThis
  * @param {*} app_data
  * @return {*}
  */
+/** Compute PNG pixel dimensions for a paper format at a given DPI */
+const paperFormatToPixels = (
+  format: Exclude<Type_PaperFormat, 'free'>,
+  orientation: 'landscape' | 'portrait',
+  dpi: number
+): { w: number; h: number } => {
+  const base = PAPER_DIMENSIONS_MM[format]
+  const w_mm = orientation === 'landscape' ? Math.max(base.width, base.height) : Math.min(base.width, base.height)
+  const h_mm = orientation === 'landscape' ? Math.min(base.width, base.height) : Math.max(base.width, base.height)
+  return {
+    w: Math.round(w_mm / 25.4 * dpi),
+    h: Math.round(h_mm / 25.4 * dpi)
+  }
+}
+
 export const modalResolutionPNG: FType_ModalResolutionPNG = (
   app_data
 ) => {
   const { t } = app_data
-  const [h, set_h] = useState<number>()
-  const [v, set_v] = useState<number>()
+
+  // Pre-select format if drawing area is in paper mode
+  const initial_preset = app_data.drawing_area.is_paper_mode ? app_data.drawing_area.paper_format : 'custom'
+  const [preset, set_preset] = useState<string>(initial_preset)
+
+  // Compute initial h/v from paper mode if active
+  const initial_dims = app_data.drawing_area.is_paper_mode
+    ? paperFormatToPixels(
+      app_data.drawing_area.paper_format as Exclude<Type_PaperFormat, 'free'>,
+      app_data.drawing_area.paper_orientation,
+      app_data.drawing_area.export_dpi
+    )
+    : undefined
+
+  const [h, set_h] = useState<number | undefined>(initial_dims?.w)
+  const [v, set_v] = useState<number | undefined>(initial_dims?.h)
+
   const valid_input = (h === undefined && v === undefined) || (v !== undefined && h !== undefined && !isNaN(+v) && !isNaN(+h))
   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
+
+  const onPresetChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = evt.target.value
+    set_preset(val)
+    if (val !== 'custom') {
+      const orientation = app_data.drawing_area.is_paper_mode
+        ? app_data.drawing_area.paper_orientation
+        : 'landscape'
+      const dpi = app_data.drawing_area.is_paper_mode
+        ? app_data.drawing_area.export_dpi
+        : 150
+      const dims = paperFormatToPixels(val as Exclude<Type_PaperFormat, 'free'>, orientation, dpi)
+      set_h(dims.w)
+      set_v(dims.h)
+    } else {
+      set_h(undefined)
+      set_v(undefined)
+    }
+  }
+
   const content = <>
+    {/* Paper format preset selector */}
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.PaperFormat')}
+      </Box>
+      <Select
+        variant='menuconfigpanel_option_select'
+        value={preset}
+        onChange={onPresetChange}
+      >
+        <option value='custom'>{t('MEP.PaperFree')}</option>
+        <option value='A3'>A3</option>
+        <option value='A4'>A4</option>
+        <option value='A5'>A5</option>
+      </Select>
+    </Box>
+
     <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
       <Box layerStyle='menuconfigpanel_option_name'>
         {t('Menu.larg')}
@@ -84,6 +154,7 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
           onChange={(_, val) => {
             if (!isNaN(val)) {
               set_h(val)
+              set_preset('custom')
             }
           }}
         >
@@ -112,6 +183,7 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
           onChange={(_, val) => {
             if (!isNaN(val)) {
               set_v(val)
+              set_preset('custom')
             }
           }}
         >
@@ -186,7 +258,14 @@ const clickSavePNG = (
   let size_to_send = ''
   const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
 
-  if (h !== undefined && v !== undefined) {
+  if (app_data.drawing_area.is_paper_mode) {
+    // Paper mode: compute raster size from paper dimensions and DPI
+    const dims = app_data.drawing_area.getPaperDimensionsMm()
+    const dpi = app_data.drawing_area.export_dpi
+    const w_px = Math.round(dims.width / 25.4 * dpi)
+    const h_px = Math.round(dims.height / 25.4 * dpi)
+    size_to_send = w_px + ' ' + h_px
+  } else if (h !== undefined && v !== undefined) {
     size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
   }
 
@@ -230,8 +309,22 @@ export const clickSavePDF = (app_data: Class_ApplicationData) => {
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
-  form_data.append('width', app_data.drawing_area.width.toString())
-  form_data.append('height', app_data.drawing_area.height.toString())
+
+  if (app_data.drawing_area.is_paper_mode) {
+    const dims = app_data.drawing_area.getPaperDimensionsMm()
+    form_data.append('paper_format', app_data.drawing_area.paper_format)
+    form_data.append('paper_orientation', app_data.drawing_area.paper_orientation)
+    form_data.append('margin_top', app_data.drawing_area.margin_top_mm + 'mm')
+    form_data.append('margin_right', app_data.drawing_area.margin_right_mm + 'mm')
+    form_data.append('margin_bottom', app_data.drawing_area.margin_bottom_mm + 'mm')
+    form_data.append('margin_left', app_data.drawing_area.margin_left_mm + 'mm')
+    // Fallback width/height
+    form_data.append('width', Class_DrawingArea.mmToPx(dims.width).toString())
+    form_data.append('height', Class_DrawingArea.mmToPx(dims.height).toString())
+  } else {
+    form_data.append('width', app_data.drawing_area.width.toString())
+    form_data.append('height', app_data.drawing_area.height.toString())
+  }
 
   post_process_export_svg()
 

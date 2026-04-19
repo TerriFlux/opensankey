@@ -35,8 +35,16 @@ import {
   default_grid_size,
   default_grid_visible,
   default_scale,
+  default_paper_format,
+  default_paper_orientation,
+  default_export_dpi,
+  default_margin_mm,
   initial_show_structure,
+  PAPER_DIMENSIONS_MM,
   Type_Orientation,
+  Type_PaperFormat,
+  Type_PaperOrientation,
+  Type_ExportDPI,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -121,6 +129,15 @@ export class Class_DrawingArea {
   protected _grid_size: number = default_grid_size
 
   protected _magnetic_nodes: boolean = false
+
+  // Paper format properties
+  protected _paper_format: Type_PaperFormat = default_paper_format
+  protected _paper_orientation: Type_PaperOrientation = default_paper_orientation
+  protected _export_dpi: Type_ExportDPI = default_export_dpi
+  protected _margin_top_mm: number = default_margin_mm
+  protected _margin_right_mm: number = default_margin_mm
+  protected _margin_bottom_mm: number = default_margin_mm
+  protected _margin_left_mm: number = default_margin_mm
 
   protected _sankey: Class_Sankey
   protected _legend: ClassTemplate_Legend
@@ -300,6 +317,15 @@ export class Class_DrawingArea {
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
+
+    // Paper format
+    this._paper_format = drawing_area_to_copy._paper_format
+    this._paper_orientation = drawing_area_to_copy._paper_orientation
+    this._export_dpi = drawing_area_to_copy._export_dpi
+    this._margin_top_mm = drawing_area_to_copy._margin_top_mm
+    this._margin_right_mm = drawing_area_to_copy._margin_right_mm
+    this._margin_bottom_mm = drawing_area_to_copy._margin_bottom_mm
+    this._margin_left_mm = drawing_area_to_copy._margin_left_mm
   }
 
   /**
@@ -767,6 +793,30 @@ export class Class_DrawingArea {
 
   public areaAutoFit(horiz?: boolean) {
 
+    // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
+    if (this.is_paper_mode) {
+      if (this.d3_selection_zoom_area) {
+        const fitting_width = this.window_fitting_width
+        const fitting_height = this.window_fitting_height
+        const k_w = fitting_width / this._width
+        const k_h = fitting_height / this._height
+        const new_k = Math.min(k_w, k_h)
+        this._k_horiz = k_w
+        this._k_vert = k_h
+        this._zoom_width = this._width
+        this._zoom_height = this._height
+        this._background_d3_groups_shift_x = 0
+        this._background_d3_groups_shift_y = 0
+        this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
+        this.zoomListener.translateTo(
+          this.d3_selection_zoom_area, 0, 0,
+          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+        this.drawBackground()
+        this.drawGrid()
+      }
+      return
+    }
+
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
     if (bbox == undefined)
@@ -861,9 +911,15 @@ export class Class_DrawingArea {
       const sankey = this.sankey
 
       // Swap drawing area dimensions
-      const tmp_w = this._width
-      this._width = this._height
-      this._height = tmp_w
+      if (this.is_paper_mode) {
+        // In paper mode, toggle orientation instead of swapping directly
+        this._paper_orientation = this._paper_orientation === 'landscape' ? 'portrait' : 'landscape'
+        this.applyPaperDimensions()
+      } else {
+        const tmp_w = this._width
+        this._width = this._height
+        this._height = tmp_w
+      }
       this.drawBackground()
       this.drawGrid()
 
@@ -1192,6 +1248,8 @@ export class Class_DrawingArea {
 
   public recenter() {
     if (!this.to_recenter) return
+    // In paper mode, positions are already computed for the format — don't shift
+    if (this.is_paper_mode) return
     let bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
@@ -2198,11 +2256,83 @@ export class Class_DrawingArea {
   }
 
   public get width() { return this._width }
-  public set width(_: number) { this._width = _; this.drawBackground(); this.drawGrid() }
+  public set width(_: number) {
+    if (this.is_paper_mode) return
+    this._width = _; this.drawBackground(); this.drawGrid()
+  }
   public get height() { return this._height }
-  public set height(_: number) { this._height = _; this.drawBackground(); this.drawGrid() }
+  public set height(_: number) {
+    if (this.is_paper_mode) return
+    this._height = _; this.drawBackground(); this.drawGrid()
+  }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
   public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
+
+  // Paper format getters/setters
+
+  public get is_paper_mode(): boolean { return this._paper_format !== 'free' }
+
+  public get paper_format(): Type_PaperFormat { return this._paper_format }
+  public set paper_format(fmt: Type_PaperFormat) {
+    this._paper_format = fmt
+    if (fmt !== 'free') {
+      this.applyPaperDimensions()
+    }
+    this.drawBackground()
+    this.drawGrid()
+  }
+
+  public get paper_orientation(): Type_PaperOrientation { return this._paper_orientation }
+  public set paper_orientation(o: Type_PaperOrientation) {
+    this._paper_orientation = o
+    if (this.is_paper_mode) {
+      this.applyPaperDimensions()
+    }
+    this.drawBackground()
+    this.drawGrid()
+  }
+
+  public get export_dpi(): Type_ExportDPI { return this._export_dpi }
+  public set export_dpi(d: Type_ExportDPI) { this._export_dpi = d }
+
+  public get margin_top_mm(): number { return this._margin_top_mm }
+  public set margin_top_mm(v: number) { this._margin_top_mm = v; if (this.is_paper_mode) { this.applyPaperDimensions(); this.drawBackground(); this.drawGrid() } }
+
+  public get margin_right_mm(): number { return this._margin_right_mm }
+  public set margin_right_mm(v: number) { this._margin_right_mm = v; if (this.is_paper_mode) { this.applyPaperDimensions(); this.drawBackground(); this.drawGrid() } }
+
+  public get margin_bottom_mm(): number { return this._margin_bottom_mm }
+  public set margin_bottom_mm(v: number) { this._margin_bottom_mm = v; if (this.is_paper_mode) { this.applyPaperDimensions(); this.drawBackground(); this.drawGrid() } }
+
+  public get margin_left_mm(): number { return this._margin_left_mm }
+  public set margin_left_mm(v: number) { this._margin_left_mm = v; if (this.is_paper_mode) { this.applyPaperDimensions(); this.drawBackground(); this.drawGrid() } }
+
+  /** Convert mm to CSS px (96 DPI standard) */
+  public static mmToPx(mm: number): number { return mm * (96 / 25.4) }
+
+  /** Convert CSS px to mm */
+  public static pxToMm(px: number): number { return px * (25.4 / 96) }
+
+  /** Get paper dimensions in mm respecting orientation */
+  public getPaperDimensionsMm(): { width: number; height: number } {
+    if (this._paper_format === 'free') {
+      return { width: Class_DrawingArea.pxToMm(this._width), height: Class_DrawingArea.pxToMm(this._height) }
+    }
+    const base = PAPER_DIMENSIONS_MM[this._paper_format]
+    if (this._paper_orientation === 'landscape') {
+      return { width: Math.max(base.width, base.height), height: Math.min(base.width, base.height) }
+    }
+    return { width: Math.min(base.width, base.height), height: Math.max(base.width, base.height) }
+  }
+
+  /** Apply paper dimensions to _width/_height (full paper, margins are only used by fitToFormat) */
+  protected applyPaperDimensions() {
+    const dims = this.getPaperDimensionsMm()
+    this._width = Class_DrawingArea.mmToPx(dims.width)
+    this._height = Class_DrawingArea.mmToPx(dims.height)
+  }
+
+
 
   /**
    * Return height of the top nav bar
