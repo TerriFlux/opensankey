@@ -807,11 +807,29 @@ export class Class_ApplicationData {
       })
     }
 
-    const scale_da = this.drawing_area.getZoomScale()
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
+
+    let export_width: number, export_height: number
+    if (this.drawing_area.is_paper_mode) {
+      // Paper mode: use paper dimensions, but expand if content (labels) extends beyond
+      // Measure bbox on the ORIGINAL rendered SVG (not the clone) for accurate layout
+      const dims = this.drawing_area.getPaperDimensionsMm()
+      const paper_w = Class_DrawingArea.mmToPx(dims.width)
+      const paper_h = Class_DrawingArea.mmToPx(dims.height)
+      const bbox = this.drawing_area.d3_selection_elements_group?.node()?.getBBox()
+      const content_right = bbox ? bbox.x + bbox.width : 0
+      const content_bottom = bbox ? bbox.y + bbox.height : 0
+      export_width = Math.max(paper_w, content_right + 5)
+      export_height = Math.max(paper_h, content_bottom + 5)
+    } else {
+      const scale_da = this.drawing_area.getZoomScale()
+      export_width = (this.drawing_area.width * scale_da) + legend_w + 5
+      export_height = this.drawing_area.height * scale_da + 5
+    }
+
     const svg_with_header = '<svg version="1.1" ' +
-      ' height=\'' + (this.drawing_area.height * scale_da + 5).toString() + '\'' +
-      ' width=\'' + ((this.drawing_area.width * scale_da) + legend_w + 5).toString() + '\'' +
+      ' height=\'' + export_height.toString() + '\'' +
+      ' width=\'' + export_width.toString() + '\'' +
       ' xmlns="http://www.w3.org/2000/svg">' +
       (d3_select?.node()?.innerHTML ?? '') +
       '</svg>'
@@ -1357,13 +1375,15 @@ export class Class_ApplicationData {
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
-    const scale_da = this.drawing_area.getZoomScale()
+
+    // In paper mode, export at scale 1:1 (drawing area px = paper px)
+    // In free mode, use the current zoom scale
+    const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
 
     // Legend width (if present)
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
-    svg_clone?.select('#g_drawing').attr('transform', 'translate(' + legend_w + ',0' + ') scale(' + scale_da + ')')
-    svg_clone?.select('#grp_legend .gg_legend').attr('transform', 'translate(0,0)')
+    svg_clone?.select('#g_drawing').attr('transform', 'translate(0,0) scale(' + scale_da + ')')
     svg_clone?.selectAll('input').remove()
 
     // For some reason when attr 'dominant-baseline' is 'text-after-edge',
