@@ -820,7 +820,17 @@ const LabelContentComponent = ({
           unit_text='px'
           isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
         />
-        <></>
+        <OverloadedButton
+          elements={elements}
+          config={BASE_LABEL_CONFIG}
+          attributePath={attributePath}
+          prefix={prefix}
+          attributeKey="wrap_long_words"
+          variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'wrap_long_words', prefix), labelValues.wrap_long_words)}
+          onClick={() => { labelValues.wrap_long_words = !labelValues.wrap_long_words }}
+        >
+          <span style={{ fontSize: '0.85em', fontWeight: 600 }}>ab-</span>
+        </OverloadedButton>
       </Box>
       {(displayMode === 'simple_text' && selection.hasNodes && prefix !== 'value_label' || menu_for_style && prefix == 'name_label') ? <Box as='span' layerStyle='options_2cols'>
         <ElementAttrSetterTextInput2Cols
