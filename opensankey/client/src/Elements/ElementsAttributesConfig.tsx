@@ -1101,6 +1101,26 @@ export const BASE_LABEL_CONFIG = {
       it: 'Larghezza dell\'area di testo in pixel'
     }
   } satisfies AttributeConfig<number>,
+  wrap_long_words: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Break long words',
+      fr: 'Couper les mots longs',
+      es: 'Cortar palabras largas',
+      de: 'Lange Wörter umbrechen',
+      it: 'Spezza parole lunghe'
+    },
+    tooltips: {
+      en: 'Insert a hyphen to break words that exceed the label width',
+      fr: 'Insérer un tiret pour couper les mots qui dépassent la largeur du label',
+      es: 'Inserta un guion para cortar las palabras que exceden el ancho de la etiqueta',
+      de: 'Bindestrich einfügen, um Wörter zu trennen, die die Beschriftungsbreite überschreiten',
+      it: 'Inserisce un trattino per spezzare le parole che superano la larghezza dell\'etichetta'
+    }
+  } satisfies AttributeConfig<boolean>,
 
   vertical_text: {
     default: false as boolean,
