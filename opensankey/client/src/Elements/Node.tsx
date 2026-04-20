@@ -256,6 +256,24 @@ export class Class_NodeElement extends Class_NodeBase {
     // after copying node_to_copy._link_orders add the remaining links
     const to_keep = prev_links_order.filter(l => !this._links_order.includes(l))
     to_keep.forEach(l => this._links_order.push(l))
+
+    // Rebuild _input_links / _output_links in the same order as _links_order
+    // (input_links_list / output_links_list rely on the dict insertion order).
+    const new_input_links: { [id: string]: Class_LinkElement } = {}
+    const new_output_links: { [id: string]: Class_LinkElement } = {}
+    this._links_order.forEach(link => {
+      if (link.id in this._input_links) new_input_links[link.id] = link
+      if (link.id in this._output_links) new_output_links[link.id] = link
+    })
+    // Safety: preserve any link that was in the original dicts but not in _links_order
+    Object.entries(this._input_links).forEach(([id, link]) => {
+      if (!(id in new_input_links)) new_input_links[id] = link
+    })
+    Object.entries(this._output_links).forEach(([id, link]) => {
+      if (!(id in new_output_links)) new_output_links[id] = link
+    })
+    this._input_links = new_input_links
+    this._output_links = new_output_links
   }
   public dimensionsFromJSON(
     json_node_object: Type_JSON,
