@@ -1091,9 +1091,14 @@ export class StylePersistence {
       this.fromJSON_0_91(style, json_object, kwargs)
     }
 
+    // Reset storage first: toJSON only writes overloaded keys, so a key
+    // absent from json_object means "back to default". Without the delete,
+    // a later fromJSON (e.g. Ctrl+Z) could not undo a previous overload.
     Object.keys(style['_config']).forEach(key => {
       if (json_object[key] !== undefined) {
         style['_storage'][key] = json_object[key]
+      } else {
+        delete style['_storage'][key]
       }
     })
   }
