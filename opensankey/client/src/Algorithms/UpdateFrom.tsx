@@ -475,21 +475,6 @@ export const updateFrom = (
         })
     }
 
-    if (pos_flux || all) {
-      to_update
-        .forEach(id => {
-          const link = drawing_area.sankey.links_dict[id]
-          // Source node
-          const source = drawing_area.sankey.nodes_dict[link.source.id]
-          const other_source = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].source.id]
-          source.keepLinkOrderingFrom(other_source, revert_matching_links_id)
-          // Target node
-          const target = drawing_area.sankey.nodes_dict[link.target.id]
-          const other_target = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].target.id]
-          target.keepLinkOrderingFrom(other_target, revert_matching_links_id)
-        })
-    }
-
     // With attrFlux we transfer link attr
     if (sync_flux_attr || all) {
       to_update
@@ -506,20 +491,21 @@ export const updateFrom = (
         })
     }
 
-    if (add_flux || remove_flux || all) {
+    // posFlux owns input/output link ordering on nodes for every currently
+    // present link (existing + freshly added when addFlux is also enabled).
+    if (pos_flux || all) {
       const list_link_post_update = drawing_area.sankey.links_list.map(l => l.id)
-      // Update links ordering
-      const to_update_reorder = Object.assign([] as string[], to_update)
-      if (add_flux || all) to_update_reorder.concat(to_add)
-      to_update_reorder
-        .filter(id => list_link_post_update.includes(id)) // only keep link really added
+      const to_reorder = [...to_update, ...((add_flux || all) ? to_add : [])]
+        .filter(id => list_link_post_update.includes(id))
+      to_reorder
         .forEach(id => {
+          const link = drawing_area.sankey.links_dict[id]
           // Source node
-          const source = drawing_area.sankey.nodes_dict[drawing_area.sankey.links_dict[id].source.id]
+          const source = drawing_area.sankey.nodes_dict[link.source.id]
           const other_source = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].source.id]
           source.keepLinkOrderingFrom(other_source, revert_matching_links_id)
           // Target node
-          const target = drawing_area.sankey.nodes_dict[drawing_area.sankey.links_dict[id].target.id]
+          const target = drawing_area.sankey.nodes_dict[link.target.id]
           const other_target = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].target.id]
           target.keepLinkOrderingFrom(other_target, revert_matching_links_id)
         })
