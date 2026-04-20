@@ -25,12 +25,15 @@
 // ==================================================================================================
 
 import React, { useState, } from 'react'
+import pako from 'pako'
 import { Box, Button, Input, Select, Tab, TabList, TabPanel, TabPanels, Tabs } from '@chakra-ui/react'
 import { Type_JSON } from '../../types/Utils'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Class_DrawingArea } from '../../types/DrawingArea'
 import { DecompressedJSONData, decompressUploadedFileUniversal } from '../../Persistence/UniversalJSONCompression'
+import { DrawingAreaPersistence } from '../../Persistence/SankeyPersistence'
 import { updateFrom } from '../../Algorithms/UpdateFrom'
 
 
@@ -342,12 +345,27 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const [selected_view_id, set_selected_view_id] = useState<string>(view_sources[0]?.id ?? '')
   const [isProcessing, setIsProcessing] = useState(false)
 
+  const snapshotDA = (drawing_area: Class_DrawingArea): Uint8Array =>
+    pako.gzip(JSON.stringify(DrawingAreaPersistence.toJSON(drawing_area)))
+
+  const restoreDA = (drawing_area: Class_DrawingArea, snapshot: Uint8Array) => {
+    const json = JSON.parse(pako.ungzip(snapshot, { to: 'string' })) as Type_JSON
+    drawing_area.bypass_redraws = true
+    DrawingAreaPersistence.fromJSON(drawing_area, json)
+    drawing_area.afterFromJSON()
+    drawing_area.draw()
+  }
+
   const applySourceDA = (tmp_DA: ReturnType<typeof app_data.createNewDrawingArea>, source_json?: Type_JSON) => {
     const expanded_mode = app_data.expandLayoutMode(data_var_to_update)
+    const before = snapshotDA(app_data.drawing_area)
     app_data.drawing_area.bypass_redraws = true
     updateFrom(app_data.drawing_area, tmp_DA, expanded_mode)
     app_data.drawing_area.draw()
     app_data.post_apply_layout_callback?.(tmp_DA, source_json ?? null, expanded_mode)
+    const after = snapshotDA(app_data.drawing_area)
+    app_data.history.saveUndo(() => restoreDA(app_data.drawing_area, before))
+    app_data.history.saveRedo(() => restoreDA(app_data.drawing_area, after))
   }
 
   const handleFileLoad = async () => {
@@ -415,7 +433,7 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
           </Button>
           <Button
             variant='menuconfigpanel_option_button'
-            onClick={() => { /* undo placeholder */ }}
+            onClick={() => app_data.history.applyUndo()}
           >
             {t('Menu.Transformation.undo')}
           </Button>
