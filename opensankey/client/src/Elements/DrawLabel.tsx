@@ -26,6 +26,49 @@ type LabelPrefix = 'name_label' | 'value_label' | 'icon'
 
 type d3_selection_type = d3.Selection<SVGGElement, unknown, SVGGElement, unknown>
 
+let _measureCanvasCtx: CanvasRenderingContext2D | null = null
+function getMeasureContext(): CanvasRenderingContext2D | null {
+  if (_measureCanvasCtx) return _measureCanvasCtx
+  if (typeof document === 'undefined') return null
+  _measureCanvasCtx = document.createElement('canvas').getContext('2d')
+  return _measureCanvasCtx
+}
+
+function getCanvasFontString(textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): string {
+  const node = textElement.node()
+  if (!node || typeof window === 'undefined') return '12px sans-serif'
+  const computed = window.getComputedStyle(node)
+  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${computed.fontSize || '12px'} ${computed.fontFamily || 'sans-serif'}`
+}
+
+// Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
+// break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
+function breakLongWords(text: string, maxWidth: number, font: string): string {
+  if (!text || maxWidth <= 0) return text
+  const ctx = getMeasureContext()
+  if (!ctx) return text
+  ctx.font = font
+  const hyphenWidth = ctx.measureText('-').width
+  const usableWidth = Math.max(maxWidth - hyphenWidth, hyphenWidth * 2)
+  return text.split(/(\s+)/).map(token => {
+    if (token === '' || /^\s+$/.test(token)) return token
+    if (ctx.measureText(token).width <= maxWidth) return token
+    const parts: string[] = []
+    let current = ''
+    for (const ch of Array.from(token)) {
+      const next = current + ch
+      if (ctx.measureText(next).width > usableWidth && current.length > 0) {
+        parts.push(current + '-')
+        current = ch
+      } else {
+        current = next
+      }
+    }
+    if (current) parts.push(current)
+    return parts.join(' ')
+  }).join('')
+}
+
 /**
  * Classe de base abstraite pour tous les labels (nodes et links)
  */
@@ -625,7 +668,11 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
-      const hasSpaces = labelText.includes(' ')
+      let processedText = labelText
+      if (this._label_values.wrap_long_words) {
+        processedText = breakLongWords(labelText, this._label_values.box_width, getCanvasFontString(textElement))
+      }
+      const hasSpaces = processedText.includes(' ')
 
       if (hasSpaces) {
         const wrapper = textwrap()
@@ -633,7 +680,7 @@ export abstract class DrawLabelBase {
           .method('tspans')
 
         textElement
-          .text(labelText)
+          .text(processedText)
           .call(wrapper)
 
         // ✅ Nettoyer les tspans vides
@@ -651,7 +698,7 @@ export abstract class DrawLabelBase {
         }
       } else {
         // Mot unique : pas de wrapping nécessaire
-        textElement.text(labelText)
+        textElement.text(processedText)
       }
 
       const tspans = textElement.selectAll('tspan').nodes() as SVGTSpanElement[]
