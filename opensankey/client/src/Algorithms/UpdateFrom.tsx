@@ -398,11 +398,13 @@ export const updateFrom = (
     }
 
     // Update nodes ref to node_taggs
+    // (copyDimensionsFrom is intentionally NOT called here: tagNode owns only
+    //  tag references, not dimensions — pulling dimensions would propagate
+    //  force_show_children and other dim state that should stay local.)
     if ((sync_nodes_tags) || all) {
       to_update
         .forEach(id => {
           drawing_area.sankey.nodes_dict[id].copyTagsReferencingFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
-          drawing_area.sankey.nodes_dict[id].copyDimensionsFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id])
         })
 
 
@@ -411,7 +413,6 @@ export const updateFrom = (
         to_add
           .forEach(id => {
             drawing_area.sankey.nodes_dict[id].copyTagsReferencingFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id], matching_taggs_id['nodeTags'], matching_tags_id['nodeTags'])
-            drawing_area.sankey.nodes_dict[id].copyDimensionsFrom(other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id])
           })
       }
 
