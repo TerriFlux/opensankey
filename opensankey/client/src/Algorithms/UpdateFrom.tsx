@@ -718,4 +718,12 @@ export const updateFrom = (
         curr.replaceStyles(resolveStyles(style_ids))
       })
   }
+
+  // Parametric mode must not propagate via layout import — always stay absolute.
+  Object.values(drawing_area.sankey.styles_dict).forEach(style => {
+    if (style.shape_position_type === 'parametric') style.shape_position_type = 'absolute'
+  })
+  drawing_area.sankey.nodes_list.forEach(node => {
+    if (node.shape_position_type === 'parametric') node.shape_position_type = 'absolute'
+  })
 }
