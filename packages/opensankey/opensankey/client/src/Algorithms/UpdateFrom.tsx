@@ -441,6 +441,7 @@ export const updateFrom = (
   if (
     add_flux ||
     remove_flux ||
+    pos_flux ||
     sync_flux_tags ||
     sync_flux_values ||
     sync_flux_attr ||
