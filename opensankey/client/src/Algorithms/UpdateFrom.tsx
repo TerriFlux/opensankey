@@ -441,7 +441,6 @@ export const updateFrom = (
   if (
     add_flux ||
     remove_flux ||
-    pos_flux ||
     sync_flux_tags ||
     sync_flux_values ||
     sync_flux_attr ||
@@ -492,25 +491,8 @@ export const updateFrom = (
         })
     }
 
-    // posFlux owns input/output link ordering on nodes for every currently
-    // present link (existing + freshly added when addFlux is also enabled).
-    if (pos_flux || all) {
-      const list_link_post_update = drawing_area.sankey.links_list.map(l => l.id)
-      const to_reorder = [...to_update, ...((add_flux || all) ? to_add : [])]
-        .filter(id => list_link_post_update.includes(id))
-      to_reorder
-        .forEach(id => {
-          const link = drawing_area.sankey.links_dict[id]
-          // Source node
-          const source = drawing_area.sankey.nodes_dict[link.source.id]
-          const other_source = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].source.id]
-          source.keepLinkOrderingFrom(other_source, revert_matching_links_id)
-          // Target node
-          const target = drawing_area.sankey.nodes_dict[link.target.id]
-          const other_target = other_drawing_area.sankey.nodes_dict[other_drawing_area.sankey.links_dict[matching_links_id[id] ?? id].target.id]
-          target.keepLinkOrderingFrom(other_target, revert_matching_links_id)
-        })
-    }
+    // (posFlux link ordering handled in its own node-oriented block below —
+    //  one pass per node instead of per link.)
 
     // Values  ------------------------------------------------------------------------
 
@@ -625,6 +607,16 @@ export const updateFrom = (
   //}
   //}
 
+  // Nodes input/output link ordering — owned by posFlux.
+  // One pass per node (not per link) so each node is reordered at most once.
+  if (pos_flux || all) {
+    drawing_area.sankey.nodes_list.forEach(node => {
+      const other_node_id = matching_nodes_id[node.id] ?? node.id
+      const other_node = other_drawing_area.sankey.nodes_dict[other_node_id]
+      if (!other_node) return
+      node.keepLinkOrderingFrom(other_node, revert_matching_links_id)
+    })
+  }
 
   // Update icon catalog
   if (mode.includes('icon_catalog') || all) {
