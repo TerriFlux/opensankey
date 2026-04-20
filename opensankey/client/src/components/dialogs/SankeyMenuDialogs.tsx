@@ -348,12 +348,17 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
   const snapshotDA = (drawing_area: Class_DrawingArea): Uint8Array =>
     pako.gzip(JSON.stringify(DrawingAreaPersistence.toJSON(drawing_area)))
 
-  const restoreDA = (drawing_area: Class_DrawingArea, snapshot: Uint8Array) => {
+  // Restore via a freshly-built DA rather than fromJSON on the existing one:
+  // *Persistence.fromJSON calls don't reset _storage before populating, so
+  // a plain in-place restore would leak state from the post-snapshot DA.
+  const restoreDA = (snapshot: Uint8Array) => {
     const json = JSON.parse(pako.ungzip(snapshot, { to: 'string' })) as Type_JSON
-    drawing_area.bypass_redraws = true
-    DrawingAreaPersistence.fromJSON(drawing_area, json)
-    drawing_area.afterFromJSON()
-    drawing_area.draw()
+    const newDA = app_data.createNewDrawingArea(app_data.drawing_area.id)
+    newDA.bypass_redraws = true
+    app_data.loadDrawingAreaFromJSON(newDA, json)
+    newDA.afterFromJSON()
+    app_data.replaceDrawingArea(newDA)
+    newDA.draw()
   }
 
   const applySourceDA = (tmp_DA: ReturnType<typeof app_data.createNewDrawingArea>, source_json?: Type_JSON) => {
@@ -364,8 +369,8 @@ export const OpenSankeyDiagramSelector = (app_data: Class_ApplicationData) => {
     app_data.drawing_area.draw()
     app_data.post_apply_layout_callback?.(tmp_DA, source_json ?? null, expanded_mode)
     const after = snapshotDA(app_data.drawing_area)
-    app_data.history.saveUndo(() => restoreDA(app_data.drawing_area, before))
-    app_data.history.saveRedo(() => restoreDA(app_data.drawing_area, after))
+    app_data.history.saveUndo(() => restoreDA(before))
+    app_data.history.saveRedo(() => restoreDA(after))
   }
 
   const handleFileLoad = async () => {

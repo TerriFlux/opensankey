@@ -118,6 +118,17 @@ export class Class_ApplicationData {
     DrawingAreaPersistence.fromJSON(drawing_area, json_object)
   }
 
+  /** Replace the current drawing_area with a freshly-built one.
+   * Unmounts the previous DA's DOM (if attached) and swaps the internal
+   * reference. Callers keep using `app_data.drawing_area` (getter) so no
+   * downstream binding needs updating. */
+  public replaceDrawingArea(new_drawing_area: Class_DrawingArea): void {
+    if (this._drawing_area?.d3_selection_zoom_area != null) {
+      this._drawing_area.unDraw()
+    }
+    this._drawing_area = new_drawing_area
+  }
+
   public createNewIconLibrary(): Class_IconLibrary {
     return new Class_IconLibrary()
   }
