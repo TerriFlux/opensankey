@@ -55,6 +55,7 @@ def _html_to_image(
     margin_right=None,
     margin_bottom=None,
     margin_left=None,
+    dpi=None,
 ):
     # Get html page as str
     html_as_str = '<meta charset="utf-8">' + html_file.read().decode("UTF-8")
@@ -88,6 +89,8 @@ def _html_to_image(
         options["page-height"] = output_height_px + "px"
     if output_width_px is not None:
         options["page-width"] = output_width_px + "px"
+    if dpi is not None:
+        options["dpi"] = str(dpi)
     # Convert as png
     if output_format == "png":
         imgkit.from_string(html_as_str, output_filename, css=css, options=options)
@@ -242,6 +245,7 @@ def save_pdf():
             margin_right=request.form.get("margin_right"),
             margin_bottom=request.form.get("margin_bottom"),
             margin_left=request.form.get("margin_left"),
+            dpi=request.form.get("dpi"),
         )
     except Exception as e:
         current_app.logger.error("SAVE_PDF | {0}".format(e))
