@@ -46,9 +46,13 @@ import * as d3 from 'd3'
 import { MenuDraggable } from './SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DrawingArea } from '../../types/DrawingArea'
-import { PAPER_DIMENSIONS_MM, Type_PaperFormat } from '../../Elements/ElementsAttributesConfig'
+import { PAPER_DIMENSIONS_MM, Type_PaperFormat, Type_ExportDPI, default_export_dpi } from '../../Elements/ElementsAttributesConfig'
 
 type FType_ModalResolutionPNG = (
+  app_data: Class_ApplicationData
+) => JSX.Element
+
+type FType_ModalResolutionPDF = (
   app_data: Class_ApplicationData
 ) => JSX.Element
 
@@ -84,13 +88,14 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
   // Pre-select format if drawing area is in paper mode
   const initial_preset = app_data.drawing_area.is_paper_mode ? app_data.drawing_area.paper_format : 'custom'
   const [preset, set_preset] = useState<string>(initial_preset)
+  const [dpi, set_dpi] = useState<Type_ExportDPI>(default_export_dpi)
 
   // Compute initial h/v from paper mode if active
   const initial_dims = app_data.drawing_area.is_paper_mode
     ? paperFormatToPixels(
       app_data.drawing_area.paper_format as Exclude<Type_PaperFormat, 'free'>,
       app_data.drawing_area.paper_orientation,
-      app_data.drawing_area.export_dpi
+      default_export_dpi
     )
     : undefined
 
@@ -101,23 +106,32 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_h.current = set_h
   app_data.menu_configuration.dict_setter_show_dialog.ref_setter_png_saver_res_v.current = set_v
 
+  const recomputeDims = (next_preset: string, next_dpi: Type_ExportDPI) => {
+    if (next_preset !== 'custom') {
+      const orientation = app_data.drawing_area.is_paper_mode
+        ? app_data.drawing_area.paper_orientation
+        : 'landscape'
+      const dims = paperFormatToPixels(next_preset as Exclude<Type_PaperFormat, 'free'>, orientation, next_dpi)
+      set_h(dims.w)
+      set_v(dims.h)
+    }
+  }
+
   const onPresetChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     const val = evt.target.value
     set_preset(val)
     if (val !== 'custom') {
-      const orientation = app_data.drawing_area.is_paper_mode
-        ? app_data.drawing_area.paper_orientation
-        : 'landscape'
-      const dpi = app_data.drawing_area.is_paper_mode
-        ? app_data.drawing_area.export_dpi
-        : 150
-      const dims = paperFormatToPixels(val as Exclude<Type_PaperFormat, 'free'>, orientation, dpi)
-      set_h(dims.w)
-      set_v(dims.h)
+      recomputeDims(val, dpi)
     } else {
       set_h(undefined)
       set_v(undefined)
     }
+  }
+
+  const onDpiChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = Number(evt.target.value) as Type_ExportDPI
+    set_dpi(val)
+    recomputeDims(preset, val)
   }
 
   const content = <>
@@ -135,6 +149,20 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
         <option value='A3'>A3</option>
         <option value='A4'>A4</option>
         <option value='A5'>A5</option>
+      </Select>
+    </Box>
+
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.ExportDPI')}
+      </Box>
+      <Select
+        variant='menuconfigpanel_option_select'
+        value={dpi}
+        onChange={onDpiChange}
+      >
+        <option value={150}>150 DPI</option>
+        <option value={300}>300 DPI</option>
       </Select>
     </Box>
 
@@ -201,7 +229,7 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
       onClick={() => {
         app_data.sendWaitingToast(
           () => {
-            clickSavePNG(h, v, app_data)
+            clickSavePNG(h, v, dpi, app_data)
           },
           {
             success: {
@@ -227,6 +255,61 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
     title={t('Menu.setResolutionPNG')} />
 }
 
+export const modalResolutionPDF: FType_ModalResolutionPDF = (
+  app_data
+) => {
+  const { t } = app_data
+  const [dpi, set_dpi] = useState<Type_ExportDPI>(default_export_dpi)
+
+  const onDpiChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
+    set_dpi(Number(evt.target.value) as Type_ExportDPI)
+  }
+
+  const content = <>
+    <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('MEP.ExportDPI')}
+      </Box>
+      <Select
+        variant='menuconfigpanel_option_select'
+        value={dpi}
+        onChange={onDpiChange}
+      >
+        <option value={150}>150 DPI</option>
+        <option value={300}>300 DPI</option>
+      </Select>
+    </Box>
+
+    <Button
+      onClick={() => {
+        app_data.sendWaitingToast(
+          () => {
+            clickSavePDF(app_data, dpi)
+          },
+          {
+            success: {
+              title: app_data.t('toast.save_as_pdf.success.title')
+            },
+            loading: {
+              title: app_data.t('toast.save_as_pdf.loading.title')
+            },
+            error: {
+              title: app_data.t('toast.save_as_pdf.error.title')
+            }
+          })
+      }}
+    >
+      Save
+    </Button>
+  </>
+
+  return <MenuDraggable
+    dict_hook_ref_setter_show_dialog_components={app_data.menu_configuration.dict_setter_show_dialog}
+    dialog_name={'ref_setter_show_modal_pdf_saver'}
+    content={content}
+    title={t('Menu.setResolutionPDF')} />
+}
+
 export const clickSaveSVG = (
   app_data: Class_ApplicationData
 ) => {
@@ -249,6 +332,7 @@ export const clickSaveSVG = (
 const clickSavePNG = (
   h: number | undefined,
   v: number | undefined,
+  dpi: Type_ExportDPI,
   app_data: Class_ApplicationData
 ) => {
   const svg = app_data.pre_process_export_svg()
@@ -261,7 +345,6 @@ const clickSavePNG = (
   if (app_data.drawing_area.is_paper_mode) {
     // Paper mode: compute raster size from paper dimensions and DPI
     const dims = app_data.drawing_area.getPaperDimensionsMm()
-    const dpi = app_data.drawing_area.export_dpi
     const w_px = Math.round(dims.width / 25.4 * dpi)
     const h_px = Math.round(dims.height / 25.4 * dpi)
     size_to_send = w_px + ' ' + h_px
@@ -304,11 +387,12 @@ const clickSavePNG = (
  *
  * @param {Class_ApplicationData} app_data
  */
-export const clickSavePDF = (app_data: Class_ApplicationData) => {
+export const clickSavePDF = (app_data: Class_ApplicationData, dpi: Type_ExportDPI = default_export_dpi) => {
   const svg = app_data.pre_process_export_svg()
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
+  form_data.append('dpi', String(dpi))
 
   if (app_data.drawing_area.is_paper_mode) {
     const dims = app_data.drawing_area.getPaperDimensionsMm()

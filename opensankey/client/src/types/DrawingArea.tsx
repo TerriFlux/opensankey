@@ -37,14 +37,12 @@ import {
   default_scale,
   default_paper_format,
   default_paper_orientation,
-  default_export_dpi,
   default_margin_mm,
   initial_show_structure,
   PAPER_DIMENSIONS_MM,
   Type_Orientation,
   Type_PaperFormat,
   Type_PaperOrientation,
-  Type_ExportDPI,
   Type_TextHPos,
   Type_TextVPos
 } from '../Elements/ElementsAttributesConfig'
@@ -133,7 +131,6 @@ export class Class_DrawingArea {
   // Paper format properties
   protected _paper_format: Type_PaperFormat = default_paper_format
   protected _paper_orientation: Type_PaperOrientation = default_paper_orientation
-  protected _export_dpi: Type_ExportDPI = default_export_dpi
   protected _margin_top_mm: number = default_margin_mm
   protected _margin_right_mm: number = default_margin_mm
   protected _margin_bottom_mm: number = default_margin_mm
@@ -321,7 +318,6 @@ export class Class_DrawingArea {
     // Paper format
     this._paper_format = drawing_area_to_copy._paper_format
     this._paper_orientation = drawing_area_to_copy._paper_orientation
-    this._export_dpi = drawing_area_to_copy._export_dpi
     this._margin_top_mm = drawing_area_to_copy._margin_top_mm
     this._margin_right_mm = drawing_area_to_copy._margin_right_mm
     this._margin_bottom_mm = drawing_area_to_copy._margin_bottom_mm
@@ -2291,9 +2287,6 @@ export class Class_DrawingArea {
     this.drawBackground()
     this.drawGrid()
   }
-
-  public get export_dpi(): Type_ExportDPI { return this._export_dpi }
-  public set export_dpi(d: Type_ExportDPI) { this._export_dpi = d }
 
   public get margin_top_mm(): number { return this._margin_top_mm }
   public set margin_top_mm(v: number) { this._margin_top_mm = v; if (this.is_paper_mode) { this.applyPaperDimensions(); this.drawBackground(); this.drawGrid() } }

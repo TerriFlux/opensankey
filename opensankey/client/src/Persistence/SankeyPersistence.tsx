@@ -31,8 +31,8 @@ import {
 import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
   default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure,
-  default_paper_format, default_paper_orientation, default_export_dpi, default_margin_mm,
-  Type_PaperFormat, Type_PaperOrientation, Type_ExportDPI
+  default_paper_format, default_paper_orientation, default_margin_mm,
+  Type_PaperFormat, Type_PaperOrientation
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
@@ -1684,7 +1684,6 @@ export class DrawingAreaPersistence {
     // Paper format
     if (drawing_area.paper_format !== default_paper_format) json_object['paper_format'] = drawing_area.paper_format
     if (drawing_area.paper_orientation !== default_paper_orientation) json_object['paper_orientation'] = drawing_area.paper_orientation
-    if (drawing_area.export_dpi !== default_export_dpi) json_object['export_dpi'] = drawing_area.export_dpi
     if (drawing_area.margin_top_mm !== default_margin_mm) json_object['margin_top_mm'] = drawing_area.margin_top_mm
     if (drawing_area.margin_right_mm !== default_margin_mm) json_object['margin_right_mm'] = drawing_area.margin_right_mm
     if (drawing_area.margin_bottom_mm !== default_margin_mm) json_object['margin_bottom_mm'] = drawing_area.margin_bottom_mm
@@ -1791,7 +1790,6 @@ export class DrawingAreaPersistence {
     // Paper format
     drawing_area['_paper_format'] = getStringFromJSON(json_object, 'paper_format', default_paper_format) as Type_PaperFormat
     drawing_area['_paper_orientation'] = getStringFromJSON(json_object, 'paper_orientation', default_paper_orientation) as Type_PaperOrientation
-    drawing_area['_export_dpi'] = getNumberFromJSON(json_object, 'export_dpi', default_export_dpi) as Type_ExportDPI
     drawing_area['_margin_top_mm'] = getNumberFromJSON(json_object, 'margin_top_mm', default_margin_mm)
     drawing_area['_margin_right_mm'] = getNumberFromJSON(json_object, 'margin_right_mm', default_margin_mm)
     drawing_area['_margin_bottom_mm'] = getNumberFromJSON(json_object, 'margin_bottom_mm', default_margin_mm)

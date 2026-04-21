@@ -206,6 +206,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     ref_setter_show_modal_templates_lib,
     ref_setter_show_modal_file_converter,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
+    ref_setter_show_modal_pdf_saver,
     ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
@@ -484,7 +485,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         PNG
       </MenuItem>
       <MenuItem
-        onClick={() => clickSavePDF(new_data)}
+        onClick={() => ref_setter_show_modal_pdf_saver.current!(true)}
       >
         {new_data.icon_library.icon_export_sankey_pdf}
         PDF

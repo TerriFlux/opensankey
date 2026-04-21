@@ -45,7 +45,7 @@ import {
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
-import { modalResolutionPNG } from './SankeyExports'
+import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
 import { DrawingAreaConfig, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
@@ -116,6 +116,7 @@ export const SankeyMenu = (
   // JSX.Elements for the component ----------------------------------------------------------------
 
   const modal_resolution_png = modalResolutionPNG(app_data)
+  const modal_resolution_pdf = modalResolutionPDF(app_data)
 
   const content_support = <>
     <Text
@@ -319,6 +320,7 @@ export const SankeyMenu = (
 
       {modal_support}
       {modal_resolution_png}
+      {modal_resolution_pdf}
     </>
   )
 }

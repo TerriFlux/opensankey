@@ -37,7 +37,7 @@ import { DragDropContext, Draggable, DraggingStyle, Droppable, NotDraggingStyle,
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { CustomFaEyeCheckIcon, OSTooltip } from './MenuCommon'
-import { Type_PaperFormat, Type_PaperOrientation, Type_ExportDPI } from '../../Elements/ElementsAttributesConfig'
+import { Type_PaperFormat, Type_PaperOrientation } from '../../Elements/ElementsAttributesConfig'
 
 // Utils functions -------------------------------------------------------------------
 
@@ -95,15 +95,6 @@ export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationDa
       refreshThisAndUpdateRelatedComponents()
     }
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'paper_orientation', val, f)
-  }
-
-  const eventExportDpi = (evt: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = Number(evt.target.value) as Type_ExportDPI
-    const f = (_: Type_ExportDPI) => {
-      app_data.drawing_area.export_dpi = _
-      refreshThisAndUpdateRelatedComponents()
-    }
-    app_data.setValueAndSaveHistory(app_data.drawing_area, 'export_dpi', val, f)
   }
 
   const eventMargin = (side: 'top' | 'right' | 'bottom' | 'left') => (evt: number | null | undefined) => {
@@ -226,20 +217,6 @@ export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationDa
         >
           <option value='landscape'>{t('MEP.Landscape')}</option>
           <option value='portrait'>{t('MEP.Portrait')}</option>
-        </Select>
-      </Box>
-
-      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('MEP.ExportDPI')}
-        </Box>
-        <Select
-          variant='menuconfigpanel_option_select'
-          value={app_data.drawing_area.export_dpi}
-          onChange={eventExportDpi}
-        >
-          <option value={150}>150 DPI</option>
-          <option value={300}>300 DPI</option>
         </Select>
       </Box>
 

@@ -136,6 +136,7 @@ export const default_DA_marging = 50
 export type Type_PaperFormat = 'free' | 'A3' | 'A4' | 'A5'
 export type Type_PaperOrientation = 'landscape' | 'portrait'
 export type Type_ExportDPI = 150 | 300
+export const default_export_dpi: Type_ExportDPI = 150
 
 // Paper dimensions in mm (portrait orientation: width < height)
 export const PAPER_DIMENSIONS_MM: Record<Exclude<Type_PaperFormat, 'free'>, { width: number; height: number }> = {
@@ -146,7 +147,6 @@ export const PAPER_DIMENSIONS_MM: Record<Exclude<Type_PaperFormat, 'free'>, { wi
 
 export const default_paper_format: Type_PaperFormat = 'free'
 export const default_paper_orientation: Type_PaperOrientation = 'landscape'
-export const default_export_dpi: Type_ExportDPI = 150
 export const default_margin_mm = 10
 
 // Target font sizes per paper format (in CSS px)

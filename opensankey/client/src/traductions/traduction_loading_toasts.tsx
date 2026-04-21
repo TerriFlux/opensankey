@@ -83,6 +83,17 @@ export const resources_loading_toasts = {
             title: 'Error while trying prepare file',
           }
         },
+        save_as_pdf: {
+          success: {
+            title: 'Download will start shortly',
+          },
+          loading: {
+            title: 'Preparing PDF file',
+          },
+          error: {
+            title: 'Error while trying prepare file',
+          }
+        },
         set_view: {
           success: {
             title: 'Ready',
@@ -184,6 +195,17 @@ export const resources_loading_toasts = {
           },
           loading: {
             title: 'Conversion en PNG',
+          },
+          error: {
+            title: 'Erreur lors de la conversion',
+          }
+        },
+        save_as_pdf: {
+          success: {
+            title: 'Le téléchargement va démarrer...',
+          },
+          loading: {
+            title: 'Conversion en PDF',
           },
           error: {
             title: 'Erreur lors de la conversion',
@@ -295,6 +317,17 @@ export const resources_loading_toasts = {
             title: 'Error al preparar el archivo',
           }
         },
+        save_as_pdf: {
+          success: {
+            title: 'La descarga comenzará en breve',
+          },
+          loading: {
+            title: 'Preparando archivo PDF',
+          },
+          error: {
+            title: 'Error al preparar el archivo',
+          }
+        },
         set_view: {
           success: {
             title: 'Listo',
@@ -401,6 +434,17 @@ export const resources_loading_toasts = {
             title: 'Fehler bei der Dateivorbereitung',
           }
         },
+        save_as_pdf: {
+          success: {
+            title: 'Der Download beginnt in Kürze',
+          },
+          loading: {
+            title: 'PDF-Datei wird vorbereitet',
+          },
+          error: {
+            title: 'Fehler bei der Dateivorbereitung',
+          }
+        },
         set_view: {
           success: {
             title: 'Bereit',
@@ -502,6 +546,17 @@ export const resources_loading_toasts = {
           },
           loading: {
             title: 'Preparazione file PNG',
+          },
+          error: {
+            title: 'Errore durante la preparazione del file',
+          }
+        },
+        save_as_pdf: {
+          success: {
+            title: 'Il download inizierà a breve',
+          },
+          loading: {
+            title: 'Preparazione file PDF',
           },
           error: {
             title: 'Errore durante la preparazione del file',

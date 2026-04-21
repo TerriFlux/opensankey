@@ -79,6 +79,8 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   ref_setter_png_saver_res_h: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
   ref_setter_png_saver_res_v: MutableRefObject<Dispatch<SetStateAction<number | undefined>>>
 
+  ref_setter_show_modal_pdf_saver: MutableRefObject<Dispatch<SetStateAction<boolean>>>
+
   // Modal - Style & Layout
   ref_setter_show_modal_styles: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_apply_layout: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -404,6 +406,8 @@ export class Class_MenuConfig {
       ref_setter_show_modal_png_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_png_saver_res_h: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
       ref_setter_png_saver_res_v: useRef<Dispatch<SetStateAction<number | undefined>>>(() => null),
+
+      ref_setter_show_modal_pdf_saver: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       // Modal - Style & Layout
       ref_setter_show_modal_styles: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
@@ -462,6 +466,7 @@ export class Class_MenuConfig {
     this._dict_setter_show_dialog.ref_setter_show_shape_attribute_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_value_type_editor.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_png_saver.current(false)
+    this._dict_setter_show_dialog.ref_setter_show_modal_pdf_saver.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_apply_layout.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_styles_containers.current(false)
