@@ -519,11 +519,6 @@ export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean
 export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== BASE (communes à tous les formats) ===================
   base: {
-    // À compléter plus tard selon tes besoins
-  },
-
-  // =================== EXCEL ===================
-  excel: {
     error_on_new_nodes: {
       default: true,
       type: (() => true) as (() => boolean),
@@ -597,6 +592,66 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'No crear flujos padres cuando existen solo en los nodos hijos',
         de: 'Elternflüsse nicht erstellen, wenn sie nur auf Kindknoten existieren',
         it: 'Non creare flussi genitori quando esistono solo sui nodi figli'
+      }
+    } satisfies FormatAttributeConfig<boolean>
+  },
+
+  // =================== EXCEL ===================
+  excel: {
+    with_nodes_sheets: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheets nodes',
+        fr: 'Onglets nœuds',
+        es: 'Hojas de nodos',
+        de: 'Knotenblätter',
+        it: 'Fogli nodi'
+      },
+      tooltips: {
+        en: 'Load nodes-related sheets from the Excel file. Uncheck to skip loading them.',
+        fr: 'Charger les onglets liés aux nœuds depuis le fichier Excel. Décocher pour ne pas les charger.',
+        es: 'Cargar las hojas relacionadas con los nodos desde el archivo Excel. Desmarcar para no cargarlas.',
+        de: 'Knotenbezogene Blätter aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
+        it: 'Caricare i fogli relativi ai nodi dal file Excel. Deselezionare per non caricarli.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    activate_data_table: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet data',
+        fr: 'Onglet données',
+        es: 'Hoja de datos',
+        de: 'Datenblatt',
+        it: 'Foglio dati'
+      },
+      tooltips: {
+        en: 'Load DATA_SHEET table from the Excel file. Uncheck to skip loading it.',
+        fr: 'Charger le tableau DATA_SHEET depuis le fichier Excel. Décocher pour ne pas le charger.',
+        es: 'Cargar la tabla DATA_SHEET desde el archivo Excel. Desmarcar para no cargarla.',
+        de: 'DATA_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
+        it: 'Caricare la tabella DATA_SHEET dal file Excel. Deselezionare per non caricarla.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    activate_flux_matrix: {
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet SUT or IOT',
+        fr: 'Onglet TER ou TES',
+        es: 'Hoja SUT o IOT',
+        de: 'Blatt SUT oder IOT',
+        it: 'Foglio SUT o IOT'
+      },
+      tooltips: {
+        en: 'Load IO_SHEET / TER_SHEET table from the Excel file. Uncheck to skip loading it.',
+        fr: 'Charger le tableau IO_SHEET / TER_SHEET depuis le fichier Excel. Décocher pour ne pas le charger.',
+        es: 'Cargar la tabla IO_SHEET / TER_SHEET desde el archivo Excel. Desmarcar para no cargarla.',
+        de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
+        it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
       }
     } satisfies FormatAttributeConfig<boolean>
   },
@@ -698,22 +753,41 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     ...BASE_OUTPUT_CONFIG,
   },
   excel: {
-    mode_write: {
+    keep_other_sheets: {
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Keep other sheets from input',
+        fr: 'Conserver les autres onglets du fichier d\'entrée',
+        es: 'Conservar las otras hojas del archivo de entrada',
+        de: 'Andere Blätter aus der Eingabedatei beibehalten',
+        it: 'Mantenere gli altri fogli del file di input'
+      },
+      tooltips: {
+        en: 'Copy sheets from the input Excel file that are not part of the SankeyExcelParser format into the output file. Only relevant when input is Excel.',
+        fr: 'Copier les onglets du fichier Excel d\'entrée qui ne font pas partie du format SankeyExcelParser dans le fichier de sortie. Uniquement pertinent si l\'entrée est Excel.',
+        es: 'Copiar las hojas del archivo Excel de entrada que no forman parte del formato SankeyExcelParser en el archivo de salida. Solo relevante si la entrada es Excel.',
+        de: 'Blätter aus der Excel-Eingabedatei, die nicht zum SankeyExcelParser-Format gehören, in die Ausgabedatei kopieren. Nur relevant, wenn die Eingabe Excel ist.',
+        it: 'Copiare i fogli del file Excel di input che non fanno parte del formato SankeyExcelParser nel file di output. Rilevante solo se l\'input è Excel.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    rewrite_format_sheets: {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
-        en: 'Add results sheets',
-        fr: 'Réécriture des feuilles',
-        es: 'Agregar hojas de resultados',
-        de: 'Ergebnisblätter hinzufügen',
-        it: 'Aggiungi fogli risultati'
+        en: 'Rewrite SankeyExcelParser sheets',
+        fr: 'Réécrire les onglets SankeyExcelParser',
+        es: 'Reescribir las hojas SankeyExcelParser',
+        de: 'SankeyExcelParser-Blätter neu schreiben',
+        it: 'Riscrivere i fogli SankeyExcelParser'
       },
       tooltips: {
-        en: 'Add results sheets',
-        fr: 'Ajout onglets résultats',
-        es: 'Agregar hojas de resultados',
-        de: 'Ergebnisblätter hinzufügen',
-        it: 'Aggiungi fogli risultati'
+        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave them untouched (only meaningful when keeping other sheets from the input).',
+        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour les laisser intacts (utile uniquement si on conserve les autres onglets de l\'entrée).',
+        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejarlas intactas (útil solo si se conservan las otras hojas de la entrada).',
+        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um sie unverändert zu lassen (nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden).',
+        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciarli intatti (utile solo se si mantengono gli altri fogli dell\'input).'
       }
     } satisfies FormatAttributeConfig<boolean>,
     with_sheet_formating: {
@@ -801,6 +875,33 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       ]
     } satisfies FormatAttributeConfig<boolean>,
 
+    data_table_only_leaf_flux: {
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Leaf flux',
+        fr: 'Flux feuilles',
+        es: 'Flujos hoja',
+        de: 'Blattflüsse',
+        it: 'Flussi foglia'
+      },
+      tooltips: {
+        en: 'Restrict DATA_SHEET rows to flux whose origin and destination are both leaf nodes (no children in the hierarchy).',
+        fr: 'Restreindre les lignes du tableau DATA_SHEET aux flux dont l\'origine et la destination sont toutes deux des nœuds feuilles (sans enfants dans la hiérarchie).',
+        es: 'Restringir las filas de DATA_SHEET a flujos cuyo origen y destino son ambos nodos hoja (sin hijos en la jerarquía).',
+        de: 'DATA_SHEET-Zeilen auf Flüsse beschränken, deren Ursprung und Ziel beide Blattknoten sind (ohne Kinder in der Hierarchie).',
+        it: 'Limitare le righe di DATA_SHEET ai flussi la cui origine e destinazione sono entrambi nodi foglia (senza figli nella gerarchia).'
+      },
+      visibilityConditions: [
+        {
+          type: 'optionProperty',
+          property: 'activate_data_table',
+          operator: '==',
+          value: true
+        }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     activate_flux_matrix: {
       default: false,
       type: (() => false) as (() => boolean),
@@ -836,6 +937,33 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Activar la escritura de datos en la tabla IO_SHEET / TER_SHEET',
         de: 'Schreiben von Daten in der IO_SHEET / TER_SHEET-Tabelle aktivieren',
         it: 'Attivare la scrittura dei dati nella tabella IO_SHEET / TER_SHEET'
+      },
+      visibilityConditions: [
+        {
+          type: 'optionProperty',
+          property: 'activate_flux_matrix',
+          operator: '==',
+          value: true
+        }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    flux_matrix_only_leaf_flux: {
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Leaf flux',
+        fr: 'Flux feuilles',
+        es: 'Flujos hoja',
+        de: 'Blattflüsse',
+        it: 'Flussi foglia'
+      },
+      tooltips: {
+        en: 'Restrict the IO/TER matrix to leaf nodes (nodes without children) on both axes.',
+        fr: 'Restreindre la matrice IO/TER aux nœuds feuilles (sans enfants) sur les deux axes.',
+        es: 'Restringir la matriz IO/TER a los nodos hoja (sin hijos) en ambos ejes.',
+        de: 'IO/TER-Matrix auf Blattknoten (ohne Kinder) auf beiden Achsen beschränken.',
+        it: 'Limitare la matrice IO/TER ai nodi foglia (senza figli) su entrambi gli assi.'
       },
       visibilityConditions: [
         {
