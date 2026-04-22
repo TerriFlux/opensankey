@@ -33,6 +33,7 @@ from pathlib import Path
 import tempfile
 import os
 import json
+import shutil
 from time import perf_counter
 
 import pandas as pd
@@ -336,10 +337,10 @@ def launch_conversion():
         input_format = request.form.get("input_format", "excel")
         output_format = request.form.get("output_format", "json")
 
-        # input_options = json.loads(request.form.get('input_options', '{}'))
-        # output_options = json.loads(request.form.get('output_options', '{}'))
-        options = {**json.loads(request.form.get('input_options', '{}')), **
-                    json.loads(request.form.get('output_options', '{}'))}
+        # Keep input/output options separate: they share key names (e.g.
+        # `activate_data_table`) but mean opposite things on each side.
+        input_options = json.loads(request.form.get('input_options', '{}'))
+        output_options = json.loads(request.form.get('output_options', '{}'))
         ext_map = {
             'excel': '.xlsx',
             'json': '.json',
@@ -414,7 +415,8 @@ def launch_conversion():
                 output_file_name,
                 input_format,
                 output_format,
-                options,
+                input_options,
+                output_options,
                 log_filename,
                 sankey_as_data
             ),
@@ -440,7 +442,8 @@ def conversion_thread(
     output_file_name,
     input_format,
     output_format,
-    options,
+    input_options,
+    output_options,
     log_filename,
     sankey_as_data
 ):
@@ -472,7 +475,8 @@ def conversion_thread(
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
     trace.logger.info(f"Output: {Path(output_file_name).name}")
-    trace.logger.info(f"options: {options}")
+    trace.logger.info(f"input_options: {input_options}")
+    trace.logger.info(f"output_options: {output_options}")
     trace.logger.info("=" * 80)
 
     t_total_start = perf_counter()
@@ -489,7 +493,7 @@ def conversion_thread(
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
-        ok, msg = io_input.load_sankey(input_file_name, **options)
+        ok, msg = io_input.load_sankey(input_file_name, **input_options)
         max_line_length = 50
         if input_format == 'excel':
             try:
@@ -504,7 +508,7 @@ def conversion_thread(
 
                         # Ajouter le layout aux options de sortie pour JSON
                         if output_format == 'json':
-                            options['layout'] = layout_json
+                            output_options['layout'] = layout_json
                             trace.logger.info("✓ Layout extracted and will be included in JSON")
                     else:
                         trace.logger.debug("No layout sheet found in Excel file")
@@ -535,12 +539,26 @@ def conversion_thread(
         else:
             raise ValueError(f"Format de sortie '{output_format}' non supporté")
 
+        # keep_other_sheets : converter-only flag — copie l'input Excel vers
+        # l'output avant d'écrire pour préserver les onglets non-format.
+        # Seul le `rewrite_format_sheets` est compris par write_sankey ; il
+        # détermine ensuite si les onglets format présents sont remplacés ou
+        # laissés intacts.
+        keep_other_sheets = output_options.pop('keep_other_sheets', False)
+
+        if output_format == 'excel' and keep_other_sheets:
+            if input_format == 'excel':
+                shutil.copyfile(input_file_name, output_file_name)
+                trace.logger.info("✓ Input Excel copied to output to preserve other sheets")
+            else:
+                trace.logger.warning("keep_other_sheets ignored: input is not Excel")
+
         # Écrire avec les options de sortie
         trace.logger.info("📝 Écriture du fichier de sortie...")
         t_write_start = perf_counter()
-        io_output.write_sankey(output_file_name, **options)
+        io_output.write_sankey(output_file_name, **output_options)
         if input_format != 'excel':
-            if "layout" in options and options["layout"]:
+            if "layout" in output_options and output_options["layout"]:
                 # Ajoute le fichier json dans un onglet layout
                 wb = openpyxl.load_workbook(output_file_name)
                 layout_sheet = wb.create_sheet()
