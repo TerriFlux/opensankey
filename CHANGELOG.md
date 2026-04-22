@@ -11,6 +11,29 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [Non publié] — Avril 2026 — Refonte du dialogue de persistance / convertisseur de fichiers
+
+### Ajouts
+- **Refonte UI du dialogue Ouvrir/Enregistrer/Convertisseur de fichiers** : sélecteurs Entrée/Sortie côte-à-côte en haut, bloc collapsible « Options » (fermé par défaut) contenant 3 onglets — *Options d'entrée*, *Options d'enregistrement*, *Mise en page*. L'onglet « Mise en page » est masqué dans le mode Convertisseur de fichiers (où il n'a pas de sens).
+- **Options de lecture Excel** — 3 nouvelles cases (toutes défaut `true`) pour skipper des catégories d'onglets : `Onglets nœuds`, `Onglet données`, `Onglet TER ou TES`. Symétriques des cases existantes côté écriture.
+- **Options d'écriture Excel** — préservation des onglets utilisateur :
+  - `Conserver les autres onglets du fichier d'entrée` (`keep_other_sheets`, def. false) — copie l'input Excel vers l'output avant écriture, préservant les onglets non-format SankeyExcelParser.
+  - `Réécrire les onglets SankeyExcelParser` (`rewrite_format_sheets`, def. true) — remplace l'ancien `mode_write` qui n'était pas opérationnel dans le contexte du convertisseur. Pilote `if_sheet_exists` côté pandas (`replace` vs `new`).
+- **Options d'écriture Excel** — restriction aux nœuds feuilles : 2 sous-options `data_table_only_leaf_flux` et `flux_matrix_only_leaf_flux`. Si cochées, restreignent l'export du DATA_SHEET et de la matrice IO/TER aux flux dont les deux extrémités sont des nœuds sans enfants dans la hiérarchie d'agrégation.
+- **Documentation technique** : nouvelle fiche [doc/sources/fr/dev/features/persistence_process_dialog.rst](doc/sources/fr/dev/features/persistence_process_dialog.rst) couvrant les modes (`CONVERTER_CONFIGS`), le layout, le pipeline frontend → backend, et l'inventaire complet des options.
+
+### Corrections
+- **Bug critique du convertisseur** : `views.py` mergait silencieusement `output_options` par-dessus `input_options` (`{**input, **output}`). Les clés partagées (ex. `activate_data_table`) avaient toujours la valeur défaut output (`true`) — décocher « Onglet données » côté entrée n'avait aucun effet et le parser tentait quand même de lire la feuille (souvent en échouant à cause des nœuds référencés). Les deux dicts sont désormais gardés séparés et passés à `load_sankey` / `write_sankey` respectivement.
+- **Onglets de tabs empilés verticalement** : utilisation du variant Chakra maison `tabs_variant_preference_tags` (qui force `tablist: { display: 'flex' }`) au lieu de `enclosed` qui héritait de `display: 'inherit'` du baseStyle Tabs OpenSankey.
+
+### Fichiers impactés
+- Frontend : `submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/components/dialogs/PersistenceProcessDialog.tsx`, `PersistenceProcessDialogConfigs.tsx`, `PersistenceProcessDialogOptions.tsx`.
+- Backend Flask : `submodules/OpenSankey+/submodules/OpenSankey/opensankey/server/views.py`.
+- Parser Excel : `submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/SankeyExcelParser/classes/sankey_pandas.py`, `io_base.py`.
+- Doc : `doc/sources/fr/dev/features/persistence_process_dialog.rst`.
+
+---
+
 ## [2026-04-16] — Internationalisation ES/DE/IT
 
 ### Ajouts
