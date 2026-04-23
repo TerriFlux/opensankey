@@ -30,6 +30,8 @@ export const resources_app_elements = {
         load_icon: 'Load an icon library (from icomoon)',
         'onBlurNoEnter': 'Quit editor to update the data',
         show_image: 'Show image',
+        constrain_bg_ratio: 'Match drawing area to image ratio',
+        constrain_bg_ratio_disabled_paper: 'Disabled in paper format mode',
       },
       Menu: {
         'LL': 'Text Area / Image Area',
@@ -517,6 +519,8 @@ export const resources_app_elements = {
         onValidate: 'Pensez à ouvrir le fichier',
         'onBlurNoEnter': 'quitter la zone d\'édition pour mettre à jour sur la zone de dessin',
         show_image: 'Image',
+        constrain_bg_ratio: 'Forcer la zone au ratio de l\'image',
+        constrain_bg_ratio_disabled_paper: 'Désactivé en mode format papier',
       },
       Menu: {
         'diagramme': 'Diagrammes',
@@ -982,6 +986,8 @@ export const resources_app_elements = {
         load_icon: 'Cargar una biblioteca de iconos (desde icomoon)',
         'onBlurNoEnter': 'Salga del editor para actualizar los datos',
         show_image: 'Mostrar imagen',
+        constrain_bg_ratio: 'Forzar la zona al ratio de la imagen',
+        constrain_bg_ratio_disabled_paper: 'Desactivado en modo formato papel',
       },
       Menu: {
         'LL': 'Zona de texto / Zona de imagen',
@@ -1461,6 +1467,8 @@ export const resources_app_elements = {
         load_icon: 'Symbolbibliothek laden (von icomoon)',
         'onBlurNoEnter': 'Verlassen Sie den Editor, um die Daten zu aktualisieren',
         show_image: 'Bild anzeigen',
+        constrain_bg_ratio: 'Zeichenbereich an Bildverhältnis anpassen',
+        constrain_bg_ratio_disabled_paper: 'Im Papierformatmodus deaktiviert',
       },
       Menu: {
         'LL': 'Textbereich / Bildbereich',
@@ -1940,6 +1948,8 @@ export const resources_app_elements = {
         load_icon: 'Carica una libreria di icone (da icomoon)',
         'onBlurNoEnter': 'Esci dall\'editor per aggiornare i dati',
         show_image: 'Mostra immagine',
+        constrain_bg_ratio: 'Vincola area al rapporto dell\'immagine',
+        constrain_bg_ratio_disabled_paper: 'Disabilitato in modalità formato carta',
       },
       Menu: {
         'LL': 'Area di testo / Area immagine',
