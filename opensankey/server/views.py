@@ -298,9 +298,10 @@ def retrieve_json():
                 output_file_name,
                 input_format,
                 'json',
-                {},
+                {},  # input_options
+                {},  # output_options
                 logname,
-                {}
+                {}   # sankey_as_data
             ),
         )
         thread.daemon = True
