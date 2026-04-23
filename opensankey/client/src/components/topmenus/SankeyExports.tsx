@@ -313,7 +313,7 @@ export const modalResolutionPDF: FType_ModalResolutionPDF = (
 export const clickSaveSVG = (
   app_data: Class_ApplicationData
 ) => {
-  const svg = app_data.pre_process_export_svg()
+  const svg = app_data.pre_process_export_svg(false)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
 
   // Sauvegarder directement côté client
@@ -335,7 +335,7 @@ const clickSavePNG = (
   dpi: Type_ExportDPI,
   app_data: Class_ApplicationData
 ) => {
-  const svg = app_data.pre_process_export_svg()
+  const svg = app_data.pre_process_export_svg(true)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -388,7 +388,7 @@ const clickSavePNG = (
  * @param {Class_ApplicationData} app_data
  */
 export const clickSavePDF = (app_data: Class_ApplicationData, dpi: Type_ExportDPI = default_export_dpi) => {
-  const svg = app_data.pre_process_export_svg()
+  const svg = app_data.pre_process_export_svg(true)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
