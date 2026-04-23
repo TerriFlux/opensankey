@@ -495,6 +495,16 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         SVG
       </MenuItem>
+      {(new_data.menu_configuration.extra_export_menu_items ?? []).map((item) => (
+        <MenuItem
+          key={item.key}
+          isDisabled={item.disabled ? item.disabled() : false}
+          onClick={item.onClick}
+        >
+          {item.icon}
+          {item.label}
+        </MenuItem>
+      ))}
     </MenuList>
   </ChakraMenu>
 
