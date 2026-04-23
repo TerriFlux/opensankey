@@ -49,7 +49,13 @@ const right_addon_pixel = (val: number) => {
 }
 
 
-export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationData }) => {
+export const DrawingAreaConfig = ({
+  app_data,
+  extra_background_element,
+}: {
+  app_data: Class_ApplicationData,
+  extra_background_element?: JSX.Element,
+}) => {
   const { t } = app_data
   const [, setCount] = useState(0)
 
@@ -426,6 +432,8 @@ export const DrawingAreaConfig = ({ app_data, }: { app_data: Class_ApplicationDa
     <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data}>
       <GraphElementsOrdoner app_data={app_data} />
     </WrapperBoxSubSectionMenu>
+
+    {extra_background_element}
   </>
 }
 
