@@ -1288,6 +1288,8 @@ export const menuStyles = {
     item: {
       gridTemplateColumns: '1.5rem auto',
       fontSize: '0.8rem',
+      whiteSpace: 'nowrap',
+      minWidth: '100%',
     }
   }),
 
@@ -2251,6 +2253,8 @@ export const tabsStyles = {
     item: {
       gridTemplateColumns: '1.5rem auto',
       fontSize: '0.8rem',
+      whiteSpace: 'nowrap',
+      minWidth: '100%',
     }
   }),
 
