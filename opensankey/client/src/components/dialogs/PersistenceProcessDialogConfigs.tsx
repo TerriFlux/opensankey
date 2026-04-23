@@ -504,12 +504,71 @@ export const translations = {
   }
 }
 
+export type OptionGroup =
+  | 'validation'
+  | 'completion'
+  | 'sheets'
+  | 'content'
+  | 'merge'
+  | 'presentation'
+  | 'packaging'
+
+// Ordre d'affichage imposé des groupes dans la boîte de dialogue.
+export const OPTION_GROUP_ORDER: OptionGroup[] = [
+  'validation',
+  'completion',
+  'sheets',
+  'content',
+  'merge',
+  'presentation',
+  'packaging',
+]
+
+export type OptionDirection = 'input' | 'output'
+
+type LocalizedLabel = { en: string; fr: string; es: string; de: string; it: string }
+type DirectedLabel = Record<OptionDirection, LocalizedLabel>
+
+// Libellés directionnels : chaque groupe a une variante « lecture » et « écriture »
+// pour distinguer l'usage même quand il n'apparaît que d'un seul côté.
+export const OPTION_GROUP_LABELS: Record<OptionGroup, DirectedLabel> = {
+  validation: {
+    input: { en: 'Validation (read)', fr: 'Validation (lecture)', es: 'Validación (lectura)', de: 'Validierung (Lesen)', it: 'Convalida (lettura)' },
+    output: { en: 'Validation (write)', fr: 'Validation (écriture)', es: 'Validación (escritura)', de: 'Validierung (Schreiben)', it: 'Convalida (scrittura)' },
+  },
+  completion: {
+    input: { en: 'Graph completion (read)', fr: 'Complétion du graphe (lecture)', es: 'Completado del grafo (lectura)', de: 'Graphvervollständigung (Lesen)', it: 'Completamento del grafo (lettura)' },
+    output: { en: 'Graph completion (write)', fr: 'Complétion du graphe (écriture)', es: 'Completado del grafo (escritura)', de: 'Graphvervollständigung (Schreiben)', it: 'Completamento del grafo (scrittura)' },
+  },
+  sheets: {
+    input: { en: 'Read sheets', fr: 'Onglets lus', es: 'Hojas leídas', de: 'Gelesene Blätter', it: 'Fogli letti' },
+    output: { en: 'Written sheets', fr: 'Onglets écrits', es: 'Hojas escritas', de: 'Geschriebene Blätter', it: 'Fogli scritti' },
+  },
+  content: {
+    input: { en: 'Read content', fr: 'Contenu lu', es: 'Contenido leído', de: 'Gelesener Inhalt', it: 'Contenuto letto' },
+    output: { en: 'Written content', fr: 'Contenu écrit', es: 'Contenido escrito', de: 'Geschriebener Inhalt', it: 'Contenuto scritto' },
+  },
+  merge: {
+    input: { en: 'Merge (read)', fr: 'Fusion (lecture)', es: 'Fusión (lectura)', de: 'Zusammenführen (Lesen)', it: 'Unione (lettura)' },
+    output: { en: 'Merge with existing file', fr: 'Fusion avec fichier existant', es: 'Fusionar con archivo existente', de: 'Mit vorhandener Datei zusammenführen', it: 'Unione con file esistente' },
+  },
+  presentation: {
+    input: { en: 'Presentation (read)', fr: 'Présentation (lecture)', es: 'Presentación (lectura)', de: 'Präsentation (Lesen)', it: 'Presentazione (lettura)' },
+    output: { en: 'Presentation (write)', fr: 'Présentation (écriture)', es: 'Presentación (escritura)', de: 'Präsentation (Schreiben)', it: 'Presentazione (scrittura)' },
+  },
+  packaging: {
+    input: { en: 'Packaging (read)', fr: 'Conditionnement (lecture)', es: 'Empaquetado (lectura)', de: 'Verpackung (Lesen)', it: 'Confezionamento (lettura)' },
+    output: { en: 'Packaging (write)', fr: 'Conditionnement (écriture)', es: 'Empaquetado (escritura)', de: 'Verpackung (Schreiben)', it: 'Confezionamento (scrittura)' },
+  },
+}
+
 export interface FormatAttributeConfig<T> {
   default: T
   type: () => T
   labels: { en: string; fr: string; es?: string; de?: string; it?: string }
   tooltips: { en: string; fr: string; es?: string; de?: string; it?: string }
   visibilityConditions?: MenuCondition[]
+  group?: OptionGroup
 }
 export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object>
 // ==================================================================================================
@@ -520,6 +579,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== BASE (communes à tous les formats) ===================
   base: {
     error_on_new_nodes: {
+      group: 'validation',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -539,6 +599,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     error_on_new_flux: {
+      group: 'validation',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -558,6 +619,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     propagate_flux_to_children: {
+      group: 'completion',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -576,22 +638,23 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    do_not_propagate_flux_to_parent: {
+    propagate_flux_to_parent: {
+      group: 'completion',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
-        en: 'Do not propagate fluxes to parents',
-        fr: 'Ne pas propager les flux aux parents',
-        es: 'No propagar flujos a los padres',
-        de: 'Flüsse nicht an Eltern weitergeben',
-        it: 'Non propagare i flussi ai genitori'
+        en: 'Propagate fluxes to parents',
+        fr: 'Propager les flux aux parents',
+        es: 'Propagar flujos a los padres',
+        de: 'Flüsse an Eltern weitergeben',
+        it: 'Propagare i flussi ai genitori'
       },
       tooltips: {
-        en: 'Skip creating parent fluxes when they exist only on child nodes',
-        fr: 'Ne pas créer les flux parents lorsqu\'ils n\'existent que sur les n\u0153uds enfants',
-        es: 'No crear flujos padres cuando existen solo en los nodos hijos',
-        de: 'Elternflüsse nicht erstellen, wenn sie nur auf Kindknoten existieren',
-        it: 'Non creare flussi genitori quando esistono solo sui nodi figli'
+        en: 'Create parent fluxes when they exist only on child nodes',
+        fr: 'Créer les flux parents lorsqu\'ils n\'existent que sur les n\u0153uds enfants',
+        es: 'Crear flujos padres cuando existen solo en los nodos hijos',
+        de: 'Elternflüsse erstellen, wenn sie nur auf Kindknoten existieren',
+        it: 'Creare flussi genitori quando esistono solo sui nodi figli'
       }
     } satisfies FormatAttributeConfig<boolean>
   },
@@ -599,6 +662,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== EXCEL ===================
   excel: {
     with_nodes_sheets: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -618,6 +682,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_data_table: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -637,6 +702,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_flux_matrix: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -659,6 +725,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== JSON ===================
   json: {
     only_current_view: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -689,6 +756,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
 
   with_values: {
+    group: 'content',
     default: true,
     type: (() => true) as (() => boolean),
     labels: {
@@ -708,6 +776,7 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
   } satisfies FormatAttributeConfig<boolean>,
 
   save_only_visible_elements: {
+    group: 'content',
     default: false,
     type: (() => false) as (() => boolean),
     labels: {
@@ -726,24 +795,6 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
     }
   } satisfies FormatAttributeConfig<boolean>,
 
-  save_only_elements_with_tags: {
-    default: false,
-    type: (() => false) as (() => boolean),
-    labels: {
-      en: 'Only save elements with selected tags',
-      fr: 'Enregistrer que les éléments avec étiquettes sélectionnées',
-      es: 'Guardar solo los elementos con etiquetas seleccionadas',
-      de: 'Nur Elemente mit ausgewählten Tags speichern',
-      it: 'Salva solo gli elementi con etichette selezionate'
-    },
-    tooltips: {
-      en: 'Export only elements with selected tags',
-      fr: 'Exporter uniquement les éléments avec les étiquettes sélectionnées',
-      es: 'Exportar solo los elementos con etiquetas seleccionadas',
-      de: 'Nur Elemente mit ausgewählten Tags exportieren',
-      it: 'Esportare solo gli elementi con etichette selezionate'
-    }
-  } satisfies FormatAttributeConfig<boolean>,
   example_excel: {},
   example_json: {}
 } as const
@@ -754,6 +805,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   },
   excel: {
     keep_other_sheets: {
+      group: 'merge',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -773,6 +825,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     rewrite_format_sheets: {
+      group: 'merge',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -791,6 +844,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
     with_sheet_formating: {
+      group: 'presentation',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -810,6 +864,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     with_nodes_sheets: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -829,6 +884,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_data_table: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -848,6 +904,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_with_all_flux: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -876,6 +933,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_only_leaf_flux: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -903,6 +961,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     activate_flux_matrix: {
+      group: 'sheets',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -922,6 +981,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     flux_matrix_with_data: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -949,6 +1009,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     flux_matrix_only_leaf_flux: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -976,6 +1037,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     layout: {
+      group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
@@ -996,6 +1058,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   },
   json: {
     keep_siblings: {
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -1015,6 +1078,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     mode_compressed: {
+      group: 'packaging',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
