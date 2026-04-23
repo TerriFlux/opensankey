@@ -92,6 +92,19 @@ export const ImportImageAsSvgBg = ({
       >
         {t('MEP.show_image')}
       </Checkbox>
+      <Checkbox
+        variant='menuconfigpanel_option_checkbox'
+        isChecked={drawing_area.constrain_to_bg_image_ratio}
+        isDisabled={!has_sankey_plus || !drawing_area.show_background_image || drawing_area.is_paper_mode}
+        onChange={(evt) => {
+          drawing_area.constrain_to_bg_image_ratio = evt.target.checked
+          setCount(a => a + 1)
+        }}
+      >
+        <OSTooltip label={drawing_area.is_paper_mode ? t('MEP.constrain_bg_ratio_disabled_paper') : ''}>
+          <Box as='span'>{t('MEP.constrain_bg_ratio')}</Box>
+        </OSTooltip>
+      </Checkbox>
       <OSTooltip label={!has_sankey_plus ? t('Menu.sankeyOSPDisabled') : ''} >
         <Box>
           <Button
