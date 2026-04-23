@@ -47,6 +47,7 @@ import {
 import {
   ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
+import { registerExtraExportMenuItems } from './components/SankeyExportsOSP'
 import { BannerTrialOSP, ModalTrialExpiredOSP, ModalTrialWelcomeOSP } from './components/ModalTrialOSP'
 import {SankeyMenuConfigurationNodesTags} from './components/SankeyPlusMenuConfigurationNodesTags'
 import {MenuConfigurationLinksTags} from './components/SankeyPlusMenuConfigurationLinksTags'
@@ -247,6 +248,9 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
     disabled: () => !app_data.has_sankey_plus,
     render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => renderApplyLayoutExtraTabOSP(app_data, attrs, onToggle, t)
   }
+
+  // Inject OSP "export all views" items into the top export dropdown (PNG zip + merged PDF)
+  registerExtraExportMenuItems(app_data)
 
   // Copy views from source file when 'copyViews' is selected
   app_data.post_apply_layout_callback = (_tmp_DA, json, mode) => {
