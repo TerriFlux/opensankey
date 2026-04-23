@@ -475,7 +475,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
         </Box>
       </MenuButton>
     </OSTooltip>
-    <MenuList>
+    <MenuList minW='9rem'>
       <MenuItem onClick={() => {
         ref_setter_png_saver_res_h.current(parseInt(String(new_data.drawing_area.width)))
         ref_setter_png_saver_res_v.current(parseInt(String(new_data.drawing_area.height)))
