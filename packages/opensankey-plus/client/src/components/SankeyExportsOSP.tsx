@@ -192,7 +192,7 @@ export const exportAllViewsAsPDFMerged = async (
     pages.forEach((p) => merged.addPage(p))
   }
   const merged_bytes = await merged.save()
-  const merged_blob = new Blob([merged_bytes], { type: 'application/pdf' })
+  const merged_blob = new Blob([new Uint8Array(merged_bytes)], { type: 'application/pdf' })
   FileSaver.saveAs(merged_blob, sanitizeFileName(app_data.file_name) + '_all_views.pdf')
 }
 
