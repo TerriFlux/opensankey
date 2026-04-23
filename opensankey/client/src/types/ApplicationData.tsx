@@ -979,11 +979,29 @@ export class Class_ApplicationData {
       export_height = this.drawing_area.height * scale_da + 5
     }
 
+    // Watermark "réalisé avec OpenSankey.fr" for raster/PDF exports without
+    // an active OpenSankey+ license. Gated on convert_fo so raw SVG export
+    // stays watermark-free. has_sankey_plus is overridden in OS+ to include
+    // the free trial, so trial users don't get the mark either.
+    let watermark = ''
+    if (convert_fo && !this.has_sankey_plus) {
+      const font_size = Math.max(12, Math.min(export_width, export_height) * 0.018)
+      const margin = font_size * 0.8
+      watermark =
+        `<text x='${export_width - margin}' y='${export_height - margin}'` +
+        ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
+        ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
+        ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
+        'réalisé avec OpenSankey.fr' +
+        '</text>'
+    }
+
     const svg_with_header = '<svg version="1.1" ' +
       ' height=\'' + export_height.toString() + '\'' +
       ' width=\'' + export_width.toString() + '\'' +
       ' xmlns="http://www.w3.org/2000/svg">' +
       (d3_select?.node()?.innerHTML ?? '') +
+      watermark +
       '</svg>'
     d3_select?.remove()
     return svg_with_header
