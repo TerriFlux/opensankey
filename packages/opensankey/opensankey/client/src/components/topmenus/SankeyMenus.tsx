@@ -464,7 +464,10 @@ const ConfigContent = ({ app_data, additional_menus }:
     style: {
       DA: <WrapperContentConfig title={t('Menu.Config.title_graph')}>
         <>
-          <DrawingAreaConfig app_data={app_data} />
+          <DrawingAreaConfig
+            app_data={app_data}
+            extra_background_element={additional_menus.current.extra_background_element}
+          />
         </>
       </WrapperContentConfig>,
       legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
