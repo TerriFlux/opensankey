@@ -268,6 +268,14 @@ export class Class_MenuConfig {
     disabled?: () => boolean
     render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
   } = undefined
+  /** Optional extra menu items appended to the top export dropdown (PNG/PDF/SVG list). Injected by OSP or other extensions. */
+  public extra_export_menu_items?: Array<{
+    key: string
+    label: string
+    icon?: React.ReactNode
+    onClick: () => void
+    disabled?: () => boolean
+  }> = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
 
