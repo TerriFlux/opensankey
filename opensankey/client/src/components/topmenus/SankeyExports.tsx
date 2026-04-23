@@ -323,6 +323,33 @@ export const clickSaveSVG = (
 }
 
 /**
+ * Inject a "réalisé avec OpenSankey.fr" watermark in the bottom-right of the
+ * SVG string produced by pre_process_export_svg. No-op when the user has an
+ * active OpenSankey+ license (or trial).
+ */
+const addWatermarkIfNoLicense = (svg: string, app_data: Class_ApplicationData): string => {
+  if (app_data.has_sankey_plus) return svg
+
+  const width_match = svg.match(/<svg[^>]*\swidth=['"]([\d.]+)['"]/)
+  const height_match = svg.match(/<svg[^>]*\sheight=['"]([\d.]+)['"]/)
+  if (!width_match || !height_match) return svg
+  const width = parseFloat(width_match[1])
+  const height = parseFloat(height_match[1])
+
+  const font_size = Math.max(12, Math.min(width, height) * 0.018)
+  const margin = font_size * 0.8
+  const watermark =
+    `<text x='${width - margin}' y='${height - margin}'` +
+    ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
+    ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
+    ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
+    'réalisé avec OpenSankey.fr' +
+    '</text>'
+
+  return svg.replace(/<\/svg>\s*$/, watermark + '</svg>')
+}
+
+/**
  * Save sankey as PNG
  *
  * @param {(number | undefined)} h
@@ -335,7 +362,7 @@ const clickSavePNG = (
   dpi: Type_ExportDPI,
   app_data: Class_ApplicationData
 ) => {
-  const svg = app_data.pre_process_export_svg(true)
+  const svg = addWatermarkIfNoLicense(app_data.pre_process_export_svg(true), app_data)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
@@ -388,7 +415,7 @@ const clickSavePNG = (
  * @param {Class_ApplicationData} app_data
  */
 export const clickSavePDF = (app_data: Class_ApplicationData, dpi: Type_ExportDPI = default_export_dpi) => {
-  const svg = app_data.pre_process_export_svg(true)
+  const svg = addWatermarkIfNoLicense(app_data.pre_process_export_svg(true), app_data)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const form_data = new FormData()
   form_data.append('html', blob)
