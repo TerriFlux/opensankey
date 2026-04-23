@@ -314,6 +314,7 @@ export class Class_DrawingArea {
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
+    this._constrain_to_bg_image_ratio = drawing_area_to_copy._constrain_to_bg_image_ratio
 
     // Paper format
     this._paper_format = drawing_area_to_copy._paper_format
@@ -2263,11 +2264,14 @@ export class Class_DrawingArea {
   public get width() { return this._width }
   public set width(_: number) {
     if (this.is_paper_mode) return
-    this._width = _; this.drawBackground(); this.drawGrid()
+    this._width = _
+    if (this.is_bg_image_ratio_mode) this.applyBgImageRatio()
+    this.drawBackground(); this.drawGrid(); this.drawBgImage()
   }
   public get height() { return this._height }
   public set height(_: number) {
     if (this.is_paper_mode) return
+    if (this.is_bg_image_ratio_mode) return
     this._height = _; this.drawBackground(); this.drawGrid()
   }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
@@ -2282,9 +2286,12 @@ export class Class_DrawingArea {
     this._paper_format = fmt
     if (fmt !== 'free') {
       this.applyPaperDimensions()
+    } else if (this.is_bg_image_ratio_mode) {
+      this.applyBgImageRatio()
     }
     this.drawBackground()
     this.drawGrid()
+    this.drawBgImage()
   }
 
   public get paper_orientation(): Type_PaperOrientation { return this._paper_orientation }
@@ -2475,6 +2482,8 @@ export class Class_DrawingArea {
 
   private _show_background_image: boolean = false
   private _background_image: string = ''
+  private _constrain_to_bg_image_ratio: boolean = false
+  private _bg_image_natural_ratio: number = 0
   public drawBgImage() {
     this.d3_selection_bg?.select('#bg_image').remove()
 
@@ -2488,6 +2497,40 @@ export class Class_DrawingArea {
         .style('background-size', 'contain')
         .style('background-repeat', 'no-repeat')
     }
+  }
+
+  /** True when the drawing area is constrained to the background image's aspect ratio. */
+  public get is_bg_image_ratio_mode(): boolean {
+    return this._constrain_to_bg_image_ratio
+      && this._show_background_image
+      && !this.is_paper_mode
+      && this._bg_image_natural_ratio > 0
+  }
+
+  /** Adjust height so width/height matches the background image's natural ratio. */
+  public applyBgImageRatio() {
+    if (this.is_paper_mode) return
+    if (!this._constrain_to_bg_image_ratio) return
+    if (!this._show_background_image) return
+    if (this._bg_image_natural_ratio <= 0) return
+    this._height = this._width / this._bg_image_natural_ratio
+  }
+
+  /** Load natural dimensions of the bg image (async) and re-apply ratio constraint. */
+  private _loadBgImageNaturalRatio(then_apply: boolean) {
+    this._bg_image_natural_ratio = 0
+    if (!this._background_image) return
+    const img = new Image()
+    img.onload = () => {
+      if (img.naturalHeight > 0 && img.naturalWidth > 0) {
+        this._bg_image_natural_ratio = img.naturalWidth / img.naturalHeight
+        if (then_apply && this.is_bg_image_ratio_mode) {
+          this.applyBgImageRatio()
+          this.drawBackground(); this.drawGrid(); this.drawBgImage()
+        }
+      }
+    }
+    img.src = this._background_image
   }
 
   public bgGrid = () => {
@@ -2598,8 +2641,32 @@ export class Class_DrawingArea {
   public set name(name: string) { this._sankey.name = name }
 
   public get show_background_image(): boolean { return this._show_background_image }
-  public set show_background_image(value: boolean) { this._show_background_image = value }
+  public set show_background_image(value: boolean) {
+    this._show_background_image = value
+    if (value && this._constrain_to_bg_image_ratio && !this.is_paper_mode) {
+      if (this._bg_image_natural_ratio > 0) this.applyBgImageRatio()
+      else this._loadBgImageNaturalRatio(true)
+    }
+  }
 
   public get background_image(): string { return this._background_image }
-  public set background_image(value: string) { this._background_image = value }
+  public set background_image(value: string) {
+    this._background_image = value
+    this._bg_image_natural_ratio = 0
+    if (this._show_background_image && this._constrain_to_bg_image_ratio && !this.is_paper_mode) {
+      this._loadBgImageNaturalRatio(true)
+    }
+  }
+
+  public get constrain_to_bg_image_ratio(): boolean { return this._constrain_to_bg_image_ratio }
+  public set constrain_to_bg_image_ratio(value: boolean) {
+    this._constrain_to_bg_image_ratio = value
+    if (!value || this.is_paper_mode || !this._show_background_image) return
+    if (this._bg_image_natural_ratio > 0) {
+      this.applyBgImageRatio()
+      this.drawBackground(); this.drawGrid(); this.drawBgImage()
+    } else {
+      this._loadBgImageNaturalRatio(true)
+    }
+  }
 }
