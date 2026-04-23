@@ -1,0 +1,238 @@
+// ==================================================================================================
+// The MIT License (MIT)
+// ==================================================================================================
+// Copyright (c) 2025 TerriFlux
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+// ==================================================================================================
+
+import FileSaver from 'file-saver'
+import JSZip from 'jszip'
+import { PDFDocument } from 'pdf-lib'
+
+import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { default_main_sankey_id } from '../deps/OpenSankey/types/Utils'
+import { default_export_dpi, Type_ExportDPI } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
+
+// ===========================================================================
+// Helpers
+// ===========================================================================
+
+const waitForNextFrame = () => new Promise<void>((resolve) => {
+  requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+})
+
+const sanitizeFileName = (name: string): string =>
+  (name || 'view').replace(/[\\/:*?"<>|]+/g, '_').slice(0, 120)
+
+const getViewLabel = (app_data: Class_ApplicationDataOSP, view_id: string): string => {
+  if (view_id === default_main_sankey_id) return 'master'
+  return app_data.views_dict[view_id]?.name ?? view_id
+}
+
+// Build the form body used by /opensankey/save/png — same contract as clickSavePNG in OS
+const buildPNGFormData = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): FormData => {
+  const svg = app_data.pre_process_export_svg(true)
+  const form_data = new FormData()
+  form_data.append('html', new Blob([svg], { type: 'image/svg+xml' }))
+  const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
+  let size_to_send = ''
+  if (app_data.drawing_area.is_paper_mode) {
+    const dims = app_data.drawing_area.getPaperDimensionsMm()
+    const w_px = Math.round(dims.width / 25.4 * dpi)
+    const h_px = Math.round(dims.height / 25.4 * dpi)
+    size_to_send = w_px + ' ' + h_px
+  } else {
+    const w = Math.round(app_data.drawing_area.width) + legend_w
+    const h = Math.round(app_data.drawing_area.height)
+    size_to_send = w + ' ' + h
+  }
+  form_data.append('size', size_to_send)
+  return form_data
+}
+
+// Build the form body used by /opensankey/save/pdf — same contract as clickSavePDF in OS
+const buildPDFFormData = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): FormData => {
+  const svg = app_data.pre_process_export_svg(true)
+  const form_data = new FormData()
+  form_data.append('html', new Blob([svg], { type: 'image/svg+xml' }))
+  form_data.append('dpi', String(dpi))
+  if (app_data.drawing_area.is_paper_mode) {
+    const dims = app_data.drawing_area.getPaperDimensionsMm()
+    form_data.append('paper_format', app_data.drawing_area.paper_format)
+    form_data.append('paper_orientation', app_data.drawing_area.paper_orientation)
+    form_data.append('margin_top', app_data.drawing_area.margin_top_mm + 'mm')
+    form_data.append('margin_right', app_data.drawing_area.margin_right_mm + 'mm')
+    form_data.append('margin_bottom', app_data.drawing_area.margin_bottom_mm + 'mm')
+    form_data.append('margin_left', app_data.drawing_area.margin_left_mm + 'mm')
+    form_data.append('width', Class_DrawingArea.mmToPx(dims.width).toString())
+    form_data.append('height', Class_DrawingArea.mmToPx(dims.height).toString())
+  } else {
+    form_data.append('width', app_data.drawing_area.width.toString())
+    form_data.append('height', app_data.drawing_area.height.toString())
+  }
+  return form_data
+}
+
+// ===========================================================================
+// Iterate all views, switch to each, capture, run callback. Restores original view.
+// ===========================================================================
+
+/**
+ * Iterate over master + all views. For each view, switch the active drawing area,
+ * wait a frame for D3 to commit the redraw, then call captureFn(view_id, label).
+ * The indicator `ref_to_save_in_cache_indicator_value` is forced true during the
+ * loop so switching doesn't trigger the "unsaved view" modal.
+ */
+const iterateAllViews = async <T,>(
+  app_data: Class_ApplicationDataOSP,
+  captureFn: (view_id: string, label: string) => Promise<T>
+): Promise<Array<{ view_id: string; label: string; payload: T }>> => {
+  const original_view_id = app_data.drawing_area.sankey.id
+  const indicator_ref = app_data.menu_configuration.ref_to_save_in_cache_indicator_value
+  const original_indicator = indicator_ref.current
+  indicator_ref.current = true
+
+  const view_ids = [default_main_sankey_id, ...app_data.views_order]
+  const results: Array<{ view_id: string; label: string; payload: T }> = []
+  try {
+    for (const view_id of view_ids) {
+      app_data.setCurrentView(view_id)
+      await waitForNextFrame()
+      const label = getViewLabel(app_data, view_id)
+      const payload = await captureFn(view_id, label)
+      results.push({ view_id, label, payload })
+    }
+  } finally {
+    app_data.setCurrentView(original_view_id)
+    indicator_ref.current = original_indicator
+  }
+  return results
+}
+
+// ===========================================================================
+// Public entry points
+// ===========================================================================
+
+/**
+ * Export every view (master included) as a PNG and package them into a single .zip.
+ * Uses the existing /opensankey/save/png endpoint once per view.
+ */
+export const exportAllViewsAsPNGZip = async (
+  app_data: Class_ApplicationDataOSP,
+  dpi: Type_ExportDPI = default_export_dpi
+): Promise<void> => {
+  const endpoint = window.location.origin + '/opensankey/save/png'
+  const zip = new JSZip()
+  const used_names = new Set<string>()
+
+  const results = await iterateAllViews(app_data, async (_view_id, label) => {
+    const form_data = buildPNGFormData(app_data, dpi)
+    const response = await fetch(endpoint, { method: 'POST', body: form_data })
+    const blob = await response.blob()
+    // Best-effort backend cleanup, same as clickSavePNG
+    fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
+    return blob
+  })
+
+  results.forEach(({ label, payload }) => {
+    let file_name = sanitizeFileName(label) + '.png'
+    let dedup = 2
+    while (used_names.has(file_name)) {
+      file_name = sanitizeFileName(label) + '_' + dedup + '.png'
+      dedup += 1
+    }
+    used_names.add(file_name)
+    zip.file(file_name, payload)
+  })
+
+  const zip_blob = await zip.generateAsync({ type: 'blob' })
+  FileSaver.saveAs(zip_blob, sanitizeFileName(app_data.file_name) + '_all_views.zip')
+}
+
+/**
+ * Export every view (master included) as PDF pages concatenated into a single PDF.
+ * Calls /opensankey/save/pdf once per view, then merges client-side with pdf-lib.
+ */
+export const exportAllViewsAsPDFMerged = async (
+  app_data: Class_ApplicationDataOSP,
+  dpi: Type_ExportDPI = default_export_dpi
+): Promise<void> => {
+  const endpoint = window.location.origin + '/opensankey/save/pdf'
+
+  const results = await iterateAllViews(app_data, async () => {
+    const form_data = buildPDFFormData(app_data, dpi)
+    const response = await fetch(endpoint, { method: 'POST', body: form_data })
+    const buf = await response.arrayBuffer()
+    fetch(window.location.origin + '/opensankey/save/pdf/post_clean', { method: 'POST' }).catch(() => undefined)
+    return buf
+  })
+
+  const merged = await PDFDocument.create()
+  for (const { payload } of results) {
+    const src = await PDFDocument.load(payload)
+    const pages = await merged.copyPages(src, src.getPageIndices())
+    pages.forEach((p) => merged.addPage(p))
+  }
+  const merged_bytes = await merged.save()
+  const merged_blob = new Blob([merged_bytes], { type: 'application/pdf' })
+  FileSaver.saveAs(merged_blob, sanitizeFileName(app_data.file_name) + '_all_views.pdf')
+}
+
+// ===========================================================================
+// Register extra menu items on the OS export dropdown
+// ===========================================================================
+
+export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP): void => {
+  const mc = app_data.menu_configuration
+  const disabled_guard = () => !app_data.has_views || app_data.views_order.length === 0
+  mc.extra_export_menu_items = [
+    {
+      key: 'all_views_png',
+      label: app_data.t('Menu.export_all_views_png'),
+      disabled: disabled_guard,
+      onClick: () => {
+        app_data.sendWaitingToast(
+          () => exportAllViewsAsPNGZip(app_data),
+          {
+            success: { title: app_data.t('toast.save_all_views_png.success.title') },
+            loading: { title: app_data.t('toast.save_all_views_png.loading.title') },
+            error: { title: app_data.t('toast.save_all_views_png.error.title') }
+          }
+        )
+      }
+    },
+    {
+      key: 'all_views_pdf',
+      label: app_data.t('Menu.export_all_views_pdf'),
+      disabled: disabled_guard,
+      onClick: () => {
+        app_data.sendWaitingToast(
+          () => exportAllViewsAsPDFMerged(app_data),
+          {
+            success: { title: app_data.t('toast.save_all_views_pdf.success.title') },
+            loading: { title: app_data.t('toast.save_all_views_pdf.loading.title') },
+            error: { title: app_data.t('toast.save_all_views_pdf.error.title') }
+          }
+        )
+      }
+    }
+  ]
+}
