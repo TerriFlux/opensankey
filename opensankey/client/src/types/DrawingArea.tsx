@@ -363,6 +363,9 @@ export class Class_DrawingArea {
     //this.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
 
     this.orderElementOnDA()
+
+    // Init zoom pan constraint (translateExtent) so the first user scroll is already bounded
+    this._updateScrollbars()
   }
 
   /**
@@ -1989,6 +1992,12 @@ export class Class_DrawingArea {
     const screenBottom = transform.y + (bbox.y + bbox.height) * transform.k
     const screenW = screenRight - screenLeft
     const screenH = screenBottom - screenTop
+
+    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
+    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
+    this.zoomListener
+      .extent([[0, navH], [viewW, navH + viewH]])
+      .translateExtent([[bbox.x, bbox.y], [bbox.x + bbox.width, bbox.y + bbox.height]])
 
     // Horizontal scrollbar: content wider than viewport
     // interrupt() cancels any pending d3 transition that could override opacity
