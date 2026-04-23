@@ -1691,6 +1691,7 @@ export class DrawingAreaPersistence {
 
     if (drawing_area.show_background_image) json_object['show_background_image'] = drawing_area.show_background_image
     if (drawing_area.show_background_image) json_object['background_image'] = drawing_area.background_image
+    if (drawing_area.constrain_to_bg_image_ratio) json_object['constrain_to_bg_image_ratio'] = drawing_area.constrain_to_bg_image_ratio
 
     const out = {
       ...json_object,
@@ -1801,6 +1802,7 @@ export class DrawingAreaPersistence {
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+    drawing_area['_constrain_to_bg_image_ratio'] = getBooleanFromJSON(json_object, 'constrain_to_bg_image_ratio', drawing_area.constrain_to_bg_image_ratio)
 
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
@@ -1819,6 +1821,12 @@ export class DrawingAreaPersistence {
 
     drawing_area['_show_background_image'] = getBooleanFromJSON(json_object, 'show_background_image', drawing_area.show_background_image)
     drawing_area['_background_image'] = getStringFromJSON(json_object, 'background_image', drawing_area.background_image)
+    drawing_area['_constrain_to_bg_image_ratio'] = getBooleanFromJSON(json_object, 'constrain_to_bg_image_ratio', drawing_area.constrain_to_bg_image_ratio)
+    // If the constraint is active at load time, recompute the natural ratio from the image asynchronously
+    // so future width changes keep the ratio. The currently stored width/height already match.
+    if (drawing_area.constrain_to_bg_image_ratio && drawing_area.show_background_image && !drawing_area.is_paper_mode) {
+      drawing_area['_loadBgImageNaturalRatio'](false)
+    }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
   }
