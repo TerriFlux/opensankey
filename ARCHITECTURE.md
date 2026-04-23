@@ -387,3 +387,67 @@ Les handlers de webhook (`checkout.session.completed`, `invoice.paid`) mutent la
 Le webhook Stripe écoute `POST /stripe/webhook` sans discriminer l'environnement Stripe (test vs live). Un webhook test qui arrive en prod pollue la DB.
 
 **Suggestion** : vérifier `event.livemode` dans le handler, logger les mismatches, et refuser les events hors environnement attendu.
+
+---
+
+# Robustesse du code — dette technique identifiée
+
+Liste de tâches ciblées pour fiabiliser le code face aux cas limites déjà rencontrés ou probables. Chaque entrée mentionne le symptôme concret, pas une amélioration hypothétique.
+
+## R1. Encodage `action_arg` dans le menu contextuel
+
+**Symptôme** : dans [`SankeyMenuContext.tsx`](submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/components/dialogs/SankeyMenuContext.tsx) les `actionName` dynamiques encodent un argument via un `_` (`aggregate_${dim.parent.id}`, `disaggregate_${id}`, `expandLeft_${id}`, `containerInChildrenOutParent_${id}`, `setChild_${id}`…). Or les IDs produits par `makeId(name)` contiennent eux-mêmes des `_` (`<std_name>_<randomId>`). Un `actionName.split('_')` naïf tronque l'argument. Fix minimal appliqué (slice sur `indexOf('_')`) — mais le format reste fragile.
+
+**Suggestion** : remplacer l'encodage string par une structure `{ action: string, arg?: string }` dans les items de menu, ou au minimum un séparateur non-collisionnable (`:` ou `|`) + un helper `parseActionName` centralisé avec tests. Tous les sites d'émission et de consommation doivent basculer ensemble.
+
+## R2. Parsing silencieux dans SankeyExcelParser
+
+Déjà listé en #13 côté perf/debug, mais aussi un enjeu robustesse : une feuille renommée par erreur est simplement ignorée, le parse réussit avec un graphe incomplet et l'utilisateur ne voit le problème qu'en comparant visuellement.
+
+**Suggestion** : mode strict optionnel côté API (`IOExcel.load_sankey(strict=True)`) qui lève sur toute feuille candidate non-matchée. Activer en CI / tests.
+
+## R3. `bypass_redraws` sans garde
+
+Doublon de #5, listé ici pour rappeler qu'il s'agit de robustesse exécutionnelle, pas juste de style : une exception dans un import, un clavier-shortcut en plein batch, un `await` oublié → DA figée, nécessite F5. Prioritaire si l'on veut des Error Boundaries utiles.
+
+## R4. Persistance JSON sans validation de schéma
+
+`fromJSON` suppose la forme du JSON et plante en runtime sur une propriété manquante. Sur les fichiers utilisateurs anciens ou édités à la main, on obtient un stack-trace opaque.
+
+**Suggestion** : valider le JSON racine contre un schéma (Zod côté TS, marshmallow/pydantic côté Python) avant dispatch aux `fromJSON`, avec un message d'erreur listant les champs problématiques. Option : quarantaine automatique du fichier corrompu avec copie `.corrupted.json`.
+
+## R5. Gestion d'erreur côté MFAProblem → client
+
+Les erreurs du solveur (infaisabilité, matrice singulière, timeout OSQP) remontent via exceptions Python que `server/views.py` transforme en 500. Le client affiche un toast générique. L'utilisateur n'a pas de piste.
+
+**Suggestion** : classe d'erreur `MFAProblemError` avec codes (`INFEASIBLE`, `SINGULAR`, `TIMEOUT`, `BAD_CONSTRAINT`), sérialisée en JSON structuré côté Flask, mappée en message i18n côté front.
+
+## R6. IDs non-uniques possibles sur import multi-fichiers
+
+`makeId` concatène `randomId()` court — collision peu probable unitaire, mais les vues OSP et l'import Excel peuvent fusionner des graphes de sources différentes sans re-namespacer les IDs.
+
+**Suggestion** : au moment d'un merge/import, vérifier l'unicité globale et préfixer ou régénérer les IDs collisionnants. Utilitaire `Class_Sankey.assertUniqueIds()` à appeler en DEV.
+
+## R7. Listeners D3 non nettoyés sur `unDraw`
+
+Le lifecycle `_process_or_bypass → unDraw → _draw` recrée les `<g>` et les listeners à chaque redraw. Si un redraw est interrompu (exception dans `_draw` d'un subclass), on peut laisser des listeners orphelins sur des nœuds D3 retirés du DOM.
+
+**Suggestion** : audit `.on('.namespace', null)` systématique dans `unDraw`, et wrap `_draw` dans try/catch qui loggue + marque l'élément comme `error_state` plutôt que de planter la DA complète.
+
+## R8. `heredited_attr` — pas de validation de cycle
+
+Rien n'empêche `view_A.updateFrom(view_B)` + `view_B.updateFrom(view_A)` sur le même attribut. Résultat : cascade infinie ou état indéterministe selon l'ordre de `_views_order`.
+
+**Suggestion** : détecter les cycles à l'ajout d'une source dans `heredited_attr`, refuser avec message clair. Tests dédiés (voir #10).
+
+## R9. Tests golden sur fichiers utilisateurs réels
+
+Beaucoup de bugs historiques viennent de fichiers clients édités à la main. Pas de suite de régression sur ces fichiers.
+
+**Suggestion** : dossier `tests/fixtures/user_files/` avec quelques `.xlsx` et `.json` anonymisés, test qui les charge + sauvegarde + recharge et vérifie l'équivalence sémantique. Ajouter chaque fois qu'un bug client est corrigé.
+
+## R10. Couverture i18n partielle
+
+Plusieurs `t('${path}.${action}')` renvoient la clé brute quand la traduction manque (surtout côté EN). Pas de CI qui vérifie la parité FR/EN des catalogues.
+
+**Suggestion** : script `pnpm check-i18n` qui diff les clés FR vs EN et fail la CI si divergence. i18next expose les clés manquantes via `missingKeyHandler` — les collecter pendant les tests.
