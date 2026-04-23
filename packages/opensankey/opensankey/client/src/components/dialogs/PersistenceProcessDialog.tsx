@@ -815,8 +815,13 @@ export const UniversalFileConverter = ({
     Object.keys(output_config['base'] ?? {}).length > 0 ||
     Object.keys((output_config[output_format] as object | undefined) ?? {}).length > 0
   )
-  // Layout tab: same condition as before, minus the file-converter case.
-  const show_layout_tab = !(config.input.required && config.output.required) &&
+  // Layout tab: shown whenever a sankey is loaded into the current view
+  // (input excel / example_excel) or when output goes back into the app
+  // (output blob). Hidden only for the universal "Convertisseur de
+  // fichiers" mode where both sides are real files and no sankey is
+  // displayed afterwards.
+  const is_universal_file_converter = config.title === 'ProcessDialog.file_converter'
+  const show_layout_tab = !is_universal_file_converter &&
     ((config.output.required && output_format == 'blob') || (input_format == 'excel' || input_format == 'example_excel'))
 
   const has_any_tab = input_options_have_content || output_options_have_content || show_layout_tab
