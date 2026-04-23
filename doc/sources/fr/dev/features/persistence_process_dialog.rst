@@ -113,8 +113,8 @@ Entrée — ``base`` (communes à tous les formats d'entrée)
   des onglets secondaires.
 - ``propagate_flux_to_children`` — créer les flux enfants quand ils
   n'existent que sur les nœuds parents.
-- ``do_not_propagate_flux_to_parent`` — ne pas créer les flux
-  parents quand ils n'existent que sur les nœuds enfants.
+- ``propagate_flux_to_parent`` — créer les flux parents quand ils
+  n'existent que sur les nœuds enfants (défaut : ``false``).
 
 Entrée — ``excel`` (skipping de catégories d'onglets)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -139,8 +139,6 @@ Sortie — ``base``
 - ``with_values`` — inclure les valeurs des flux dans l'export.
 - ``save_only_visible_elements`` — exporter uniquement les éléments
   visibles dans le diagramme.
-- ``save_only_elements_with_tags`` — restriction par tags
-  sélectionnés.
 
 Sortie — ``excel``
 ~~~~~~~~~~~~~~~~~~
