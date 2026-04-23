@@ -297,9 +297,11 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
         value={app_data.drawing_area.data_source}
         onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
           app_data.drawing_area.data_source = evt.target.value as 'data' | 'data_label' | 'structure' | 'reconciled'
-          // Reset free_value if not available for the new data source
-          if (evt.target.value !== 'reconciled' && app_data.drawing_area.interval_display === 'free_value') {
-            app_data.drawing_area.interval_display = 'free_interval'
+          // interval_display n'a de sens qu'avec data_source='reconciled' : sans ce reset, le getter
+          // type_data renverrait 'free_interval'/'free_value' pour data/data_label/structure et afficherait
+          // valueMin/Max réconciliés au lieu de valueData (option "Collectées").
+          if (evt.target.value !== 'reconciled') {
+            app_data.drawing_area.interval_display = 'structure'
           }
           setCount(a => a + 1)
           redrawNodeLinkLegend()
