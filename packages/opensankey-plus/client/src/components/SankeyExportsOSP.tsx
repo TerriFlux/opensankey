@@ -212,9 +212,9 @@ export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP)
         app_data.sendWaitingToast(
           () => exportAllViewsAsPNGZip(app_data),
           {
-            success: { title: app_data.t('toast.save_all_views_png.success.title') },
-            loading: { title: app_data.t('toast.save_all_views_png.loading.title') },
-            error: { title: app_data.t('toast.save_all_views_png.error.title') }
+            success: { title: app_data.t('toast.save_as_png.success.title') },
+            loading: { title: app_data.t('toast.save_as_png.loading.title') },
+            error: { title: app_data.t('toast.save_as_png.error.title') }
           }
         )
       }
@@ -227,9 +227,9 @@ export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP)
         app_data.sendWaitingToast(
           () => exportAllViewsAsPDFMerged(app_data),
           {
-            success: { title: app_data.t('toast.save_all_views_pdf.success.title') },
-            loading: { title: app_data.t('toast.save_all_views_pdf.loading.title') },
-            error: { title: app_data.t('toast.save_all_views_pdf.error.title') }
+            success: { title: app_data.t('toast.save_as_pdf.success.title') },
+            loading: { title: app_data.t('toast.save_as_pdf.loading.title') },
+            error: { title: app_data.t('toast.save_as_pdf.error.title') }
           }
         )
       }
