@@ -444,8 +444,10 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
   const ActionButton = ({ actionName, titleName }: { actionName: string, titleName: string }) => {
     let actionNameParsed = actionName
     let arg: string | undefined
-    if (actionName.includes('_')) {
-      [actionNameParsed, arg] = actionName.split('_')
+    const sepIdx = actionName.indexOf('_')
+    if (sepIdx !== -1) {
+      actionNameParsed = actionName.slice(0, sepIdx)
+      arg = actionName.slice(sepIdx + 1)
     }
     const actionConfig = config.actions[actionNameParsed]
     if (!actionConfig) {
