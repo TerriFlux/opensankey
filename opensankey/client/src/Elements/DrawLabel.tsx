@@ -589,13 +589,89 @@ export abstract class DrawLabelBase {
   /**
    * ✅ Input d'édition générique
    */
-  public setInputLabelVisible() {
+  public setInputLabelVisible(initialValue?: string) {
+    const foSel = this.d3_selection?.select(`.${this.prefix}_fo_input`)
+    foSel?.style('display', null)
+    this.d3_selection?.select(`.${this.prefix}_text`).style('display', 'none')
     const inputId = `${this.prefix}_input_${this.getElementId()}`
-    document.getElementById(inputId)?.focus()
+    const input = document.getElementById(inputId) as HTMLInputElement | null
+    if (!input) return
+    // Same focus sequence as double-click (which works): pre-fill value first,
+    // then select() to focus + select content, then move caret to end.
+    if (initialValue !== undefined) {
+      input.value = initialValue
+    }
+    input.select()
+    if (initialValue !== undefined) {
+      const len = input.value.length
+      input.setSelectionRange(len, len)
+      input.dispatchEvent(new Event('input', { bubbles: true }))
+    }
   }
 
   public setInputLabelInvisible() {
     this.drawGenericLabel()
+  }
+
+  /**
+   * ✅ Crée le foreignObject + input d'édition inline.
+   * Reste masqué par défaut ; révélé par setInputLabelVisible.
+   */
+  protected drawLabelInput(
+    d3_selection: d3_selection_type | null,
+    box_pos_x: number,
+    box_pos_y: number,
+    box_width: number,
+    box_height: number = 30
+  ) {
+    if (this._element.drawing_area.static) return
+
+    d3_selection?.append('foreignObject')
+      .classed(this.prefix, true)
+      .classed(`${this.prefix}_fo_input`, true)
+      .attr('x', box_pos_x)
+      .attr('y', box_pos_y)
+      .attr('width', box_width)
+      .attr('height', box_height)
+      .style('display', 'none')
+      .append('xhtml:div')
+      .append('input')
+      .classed(this.prefix, true)
+      .classed(`${this.prefix}_input`, true)
+      .attr('id', `${this.prefix}_input_${this._element.id}`)
+      .attr('type', 'text')
+      .attr('value', this.getInputInitialValue())
+      .attr('font-size', String(this._label_values.font_size) + 'px')
+      .on('input', (evt) => {
+        this._element.sankey.drawing_area.bypass_redraws = true
+        this.onInputChange?.(evt.target.value)
+        this._element.sankey.drawing_area.bypass_redraws = false
+      })
+      .on('keydown', (evt: KeyboardEvent) => {
+        if (evt.key === 'Enter' || evt.key === 'Escape') {
+          (evt.target as HTMLInputElement).blur()
+        }
+      })
+      .on('blur', () => this.setInputLabelInvisible())
+  }
+
+  protected getInputInitialValue(): string {
+    return String(this.getLabelText() ?? '')
+  }
+
+  /**
+   * ✅ Attache un double-click sur le texte du label pour ouvrir l'input d'édition.
+   */
+  protected attachDoubleClickEdit(
+    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
+  ): void {
+    if (this._element.drawing_area.static) return
+    textElement.style('cursor', 'text')
+      .on('dblclick', (evt: MouseEvent) => {
+        evt.stopPropagation()
+        evt.preventDefault()
+        this.setInputLabelVisible()
+      })
   }
 
   // =================== MÉTHODES ABSTRAITES (réduites au minimum) ===================
@@ -1074,53 +1150,8 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
         box_pos_x = box_pos_x - box_width / 2
       }
 
-      this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width, textElement)
-    }
-  }
-
-  private drawLabelInput(
-    d3_selection: d3_selection_type | null,
-    box_pos_x: number,
-    box_pos_y: number,
-    box_width: number,
-    _label_text: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
-  ) {
-    if (!this._element.drawing_area.static) {
-      d3_selection?.append('foreignObject')
-        .classed(this.prefix, true)
-        .classed(`${this.prefix}_fo_input`, true)
-        .attr('x', box_pos_x)
-        .attr('y', box_pos_y)
-        .attr('width', box_width)
-        .attr('height', 30)
-        .style('display', 'none')
-        .append('xhtml:div')
-        .append('input')
-        .classed(this.prefix, true)
-        .classed(`${this.prefix}_input`, true)
-        .attr('id', `${this.prefix}_input_${this._element.id}`)
-        .attr('type', 'text')
-        .attr('value', this.getLabelText())
-        .attr('font-size', String(this._label_values.font_size) + 'px')
-        .on('input', (evt) => {
-          this._element.sankey.drawing_area.bypass_redraws = true
-          this.onInputChange?.(evt.target.value)
-          this._element.sankey.drawing_area.bypass_redraws = false
-        })
-        .on('blur', () => this.setInputLabelInvisible())
-
-      // label_text?.call(d3.drag<SVGTextElement, unknown>()
-      //   .filter(evt => (evt.which == 1) && this._element.drawing_area.isInSelectionMode())
-      //   .on('start', ev => this.dragGenericStart(ev))
-      //   .on('drag', ev => this.dragGenericMove(ev))
-      //   .on('end', ev => this.dragGenericEnd(ev))
-      // )
-
-      d3_selection?.on(
-        'mouseover',
-        (event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) =>
-          this.node.eventMouseOver(event)
-      )
+      this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width)
+      this.attachDoubleClickEdit(textElement)
     }
   }
 
@@ -1660,12 +1691,71 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
 export class LinkDrawValueLabel extends LinkDrawLabelBase {
   constructor(link: Class_LinkElement, link_control_points: LinkControlPoints) {
     super(link, link_control_points, 'value_label')
+    this.enableEditing = true
   }
 
   protected getLabelText() {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
     return this.link.data_label(this.prefix as 'value_label')
+  }
+
+  protected override getInputInitialValue(): string {
+    const v = this.link.valueCurrent
+    return v === null || v === undefined ? '' : String(v)
+  }
+
+  protected override onInputChange(value: string): void {
+    const trimmed = value.trim()
+    if (trimmed === '') {
+      this.link.valueCurrent = null
+      return
+    }
+    const parsed = Number(trimmed.replace(',', '.'))
+    if (!Number.isNaN(parsed)) {
+      this.link.valueCurrent = parsed
+    }
+  }
+
+  public override setInputLabelInvisible() {
+    super.setInputLabelInvisible()
+    // Typing was wrapped in bypass_redraws, so source/target thickness and
+    // positions weren't updated. Redraw them now that editing is done.
+    this.link.drawWithNodes()
+  }
+
+  protected override finalizeLabelCreation(
+    textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
+  ): void {
+    super.finalizeLabelCreation(textElement)
+    if (!this.enableEditing || this._label_values.has_fo) return
+
+    const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
+    const initial = this.getInputInitialValue()
+    const minBoxWidth = this._label_values.font_size * 4
+    const box_width = Math.max(
+      Math.min((initial.length + 2) * this._label_values.font_size * 0.6, this._label_values.box_width || 120),
+      minBoxWidth
+    )
+
+    let box_pos_x = label_pos_x
+    if (label_anchor === 'end') box_pos_x -= box_width
+    else if (label_anchor === 'middle') box_pos_x -= box_width / 2
+
+    const box_pos_y = label_pos_y - this._label_values.font_size / 2
+
+    this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width)
+    this.attachDoubleClickEdit(textElement)
+    // Also handle double-click on the textPath child (when value label follows the flow curve)
+    const textPath = textElement.select<SVGTextPathElement>('textPath')
+    if (!textPath.empty()) {
+      textPath.style('cursor', 'text')
+        .on('dblclick', (evt: MouseEvent) => {
+          evt.stopPropagation()
+          evt.preventDefault()
+          this.setInputLabelVisible()
+        })
+    }
   }
 
   protected shouldDrawLabel(): boolean {

@@ -188,7 +188,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   //public getShapeColorToUse() { return this.shape_color }
 
-  public setInputLabelVisible() { this._nodeDrawNameLabel.setInputLabelVisible() }
+  public setInputLabelVisible(initialValue?: string) { this._nodeDrawNameLabel.setInputLabelVisible(initialValue) }
   public setInputLabelInvisible() { this._nodeDrawNameLabel.setInputLabelInvisible() }
 
   public shiftVertically(shift: number) { this._position.y += shift }
