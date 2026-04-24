@@ -2546,15 +2546,22 @@ export class Class_DrawingArea {
   private _background_image: string = ''
   private _constrain_to_bg_image_ratio: boolean = false
   private _bg_image_natural_ratio: number = 0
+  private _bg_image_horizontal_align: 'left' | 'center' | 'right' = 'left'
   public drawBgImage() {
     this.d3_selection_bg?.select('#bg_image').remove()
 
     if (this._show_background_image) {
+      const x_align = this._bg_image_horizontal_align === 'right'
+        ? 'xMax'
+        : this._bg_image_horizontal_align === 'center'
+          ? 'xMid'
+          : 'xMin'
       this.d3_selection_bg
         ?.append('image')
         .attr('id', 'bg_image')
         .attr('width', this._zoom_width)
         .attr('height', this._zoom_height)
+        .attr('preserveAspectRatio', x_align + 'YMin meet')
         .attr(
           'transform',
           'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
@@ -2733,5 +2740,11 @@ export class Class_DrawingArea {
     } else {
       this._loadBgImageNaturalRatio(true)
     }
+  }
+
+  public get bg_image_horizontal_align(): 'left' | 'center' | 'right' { return this._bg_image_horizontal_align }
+  public set bg_image_horizontal_align(value: 'left' | 'center' | 'right') {
+    this._bg_image_horizontal_align = value
+    if (this._show_background_image) this.drawBgImage()
   }
 }
