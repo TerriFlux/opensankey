@@ -483,34 +483,34 @@ const LabelContentComponent = ({
       )}
       <Box as='span' layerStyle='options_2_1_2cols'>
         {/* Section TEXT */}
-        {(displayMode === 'simple_text' || displayMode === 'value') && (<>
-          <InputIndicatorWrapper
-            isOverloaded={isElementAttributeOverloaded(
-              elements,
-              `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
-              BASE_LABEL_CONFIG
-            )}
-            isMultiValue={isConfigValueIndeterminate(
-              elements,
-              BASE_LABEL_CONFIG,
-              'font_family',
-              prefix
-            )}
-            t={t}
-          >
-            <Select
-              variant='menuconfigpanel_option_select'
-              value={labelValues.font_family}
-              onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-                labelValues.font_family = evt.target.value
-              }}
-            >
-              {font_families.map((d: string) => (
-                <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
-              ))}
-            </Select>
-          </InputIndicatorWrapper>
 
+        <InputIndicatorWrapper
+          isOverloaded={isElementAttributeOverloaded(
+            elements,
+            `${prefix}_font_family` as keyof typeof BASE_LABEL_CONFIG,
+            BASE_LABEL_CONFIG
+          )}
+          isMultiValue={isConfigValueIndeterminate(
+            elements,
+            BASE_LABEL_CONFIG,
+            'font_family',
+            prefix
+          )}
+          t={t}
+        >
+          <Select
+            variant='menuconfigpanel_option_select'
+            value={labelValues.font_family}
+            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+              labelValues.font_family = evt.target.value
+            }}
+          >
+            {font_families.map((d: string) => (
+              <option style={{ fontFamily: d }} key={'ff-' + d} value={d}>{d}</option>
+            ))}
+          </Select>
+        </InputIndicatorWrapper>
+        {(displayMode === 'simple_text' || displayMode === 'value') && (<>
           <ConfigMenuNumberInput
             t={app_data.t}
             default_value={labelValues.font_size}
@@ -1508,26 +1508,26 @@ export const MenuConfigurationAppearance = ({
                         >
                           {t('Flux.apparence.shape_is_structure')}
                         </OverloadedCheckbox>
-                        </Box>
-                        {/* Value of link local scale to override scale from DA, can be undefined */}
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
-                          <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
-                            <Box layerStyle='menuconfigpanel_option_name' >
-                              {t('Flux.apparence.shape_local_link_scale')}
-                            </Box>
-                          </OSTooltip>
-                          <ConfigMenuNumberInput
-                            default_value={linkShapeValues.local_link_scale}
-                            function_on_blur={(_) => {
-                              linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
-                            }}
-                            minimum_value={0}
-                            stepper={true}
-                            step={1}
-                            t={t}
-                            isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
-                          />
-                        </Box>
+                      </Box>
+                      {/* Value of link local scale to override scale from DA, can be undefined */}
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
+                        <OSTooltip label={t('Flux.apparence.tooltips.local_scale')}>
+                          <Box layerStyle='menuconfigpanel_option_name' >
+                            {t('Flux.apparence.shape_local_link_scale')}
+                          </Box>
+                        </OSTooltip>
+                        <ConfigMenuNumberInput
+                          default_value={linkShapeValues.local_link_scale}
+                          function_on_blur={(_) => {
+                            linkShapeValues.local_link_scale = _ ?? linkShapeValues.local_link_scale
+                          }}
+                          minimum_value={0}
+                          stepper={true}
+                          step={1}
+                          t={t}
+                          isOverloaded={isElementAttributeOverloaded(links_elements, 'local_link_scale', LINK_SHAPE_SPECIFIC_CONFIG)}
+                        />
+                      </Box>
                       {/* </Box> */}
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
@@ -1760,124 +1760,124 @@ const StockTabContent = ({
   return (
     <Box layerStyle='menuconfigpanel_grid'>
       {/* ===== Position (same pattern as LabelContentComponent) ===== */}
-        <Box layerStyle='options_3cols'>
-          <Box layerStyle='options_4cols'>
-            <OverloadedButtonGroup
-              elements={elements}
-              config={STOCK_LABEL_CONFIG}
-              attributePath={attributePath}
-              prefix={prefix}
-              attributeKey="horiz"
-              currentValue={labelValues.horiz}
-              items={[
-                { value: 'left', icon: app_data.icon_library.icon_text_align_left },
-                { value: 'middle', icon: app_data.icon_library.icon_text_align_center },
-                { value: 'right', icon: app_data.icon_library.icon_text_align_right }
-              ]}
-              onChange={(value) => { labelValues.horiz = value }}
-              getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'horiz', prefix)}
-              t={t}
-            />
-            <OverloadedButton
-              elements={elements}
-              config={STOCK_LABEL_CONFIG}
-              prefix={prefix}
-              attributePath={attributePath}
-              attributeKey="inside_horiz"
-              variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
-              onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
-            >
-              {app_data.icon_library.icon_label_inside_horiz}
-            </OverloadedButton>
-          </Box>
-
-          <Box layerStyle='options_4cols'>
-            <OverloadedButtonGroup
-              elements={elements}
-              config={STOCK_LABEL_CONFIG}
-              attributePath={attributePath}
-              prefix={prefix}
-              attributeKey="vert"
-              currentValue={labelValues.vert}
-              items={[
-                { value: 'bottom', icon: app_data.icon_library.icon_text_vert_pos_bottom },
-                { value: 'middle', icon: app_data.icon_library.icon_text_vert_pos_center },
-                { value: 'top', icon: app_data.icon_library.icon_text_vert_pos_top }
-              ]}
-              onChange={(value) => { labelValues.vert = value }}
-              getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'vert', prefix)}
-              t={t}
-            />
-            <OverloadedButton
-              elements={elements}
-              config={STOCK_LABEL_CONFIG}
-              prefix={prefix}
-              attributePath={attributePath}
-              attributeKey="inside_vert"
-              variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
-              onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
-            >
-              {app_data.icon_library.icon_label_inside_vert}
-            </OverloadedButton>
-          </Box>
-        </Box>
-
-        {/* ===== Font size ===== */}
-        <Box layerStyle='options_2cols'>
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
+      <Box layerStyle='options_3cols'>
+        <Box layerStyle='options_4cols'>
+          <OverloadedButtonGroup
             elements={elements}
+            config={STOCK_LABEL_CONFIG}
             attributePath={attributePath}
-            attributeKey={'font_size'}
+            prefix={prefix}
+            attributeKey="horiz"
+            currentValue={labelValues.horiz}
+            items={[
+              { value: 'left', icon: app_data.icon_library.icon_text_align_left },
+              { value: 'middle', icon: app_data.icon_library.icon_text_align_center },
+              { value: 'right', icon: app_data.icon_library.icon_text_align_right }
+            ]}
+            onChange={(value) => { labelValues.horiz = value }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'horiz', prefix)}
+            t={t}
+          />
+          <OverloadedButton
+            elements={elements}
             config={STOCK_LABEL_CONFIG}
             prefix={prefix}
-            refreshParentComponent={refresh}
-            unit_text='px'
-            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_font_size` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
-          />
-          <ElementAttrSetterNumberInput2Cols
-            app_data={app_data}
-            elements={elements}
             attributePath={attributePath}
-            attributeKey={'box_width'}
-            config={STOCK_LABEL_CONFIG}
-            prefix={prefix}
-            refreshParentComponent={refresh}
-            isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_box_width` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
-          />
+            attributeKey="inside_horiz"
+            variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
+            onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
+          >
+            {app_data.icon_library.icon_label_inside_horiz}
+          </OverloadedButton>
         </Box>
 
-        {/* ===== Unit & number formatting (factorized) ===== */}
-        <Divider />
-        <NumberFormatComponent
+        <Box layerStyle='options_4cols'>
+          <OverloadedButtonGroup
+            elements={elements}
+            config={STOCK_LABEL_CONFIG}
+            attributePath={attributePath}
+            prefix={prefix}
+            attributeKey="vert"
+            currentValue={labelValues.vert}
+            items={[
+              { value: 'bottom', icon: app_data.icon_library.icon_text_vert_pos_bottom },
+              { value: 'middle', icon: app_data.icon_library.icon_text_vert_pos_center },
+              { value: 'top', icon: app_data.icon_library.icon_text_vert_pos_top }
+            ]}
+            onChange={(value) => { labelValues.vert = value }}
+            getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'vert', prefix)}
+            t={t}
+          />
+          <OverloadedButton
+            elements={elements}
+            config={STOCK_LABEL_CONFIG}
+            prefix={prefix}
+            attributePath={attributePath}
+            attributeKey="inside_vert"
+            variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
+            onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
+          >
+            {app_data.icon_library.icon_label_inside_vert}
+          </OverloadedButton>
+        </Box>
+      </Box>
+
+      {/* ===== Font size ===== */}
+      <Box layerStyle='options_2cols'>
+        <ElementAttrSetterNumberInput2Cols
           app_data={app_data}
           elements={elements}
-          prefix={prefix}
-          config={STOCK_LABEL_CONFIG}
           attributePath={attributePath}
+          attributeKey={'font_size'}
+          config={STOCK_LABEL_CONFIG}
+          prefix={prefix}
           refreshParentComponent={refresh}
+          unit_text='px'
+          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_font_size` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
         />
-
-        {/* ===== Background (fond + bordure, same as label background) ===== */}
-        <Divider />
-        <MenuSectionCheckbox
+        <ElementAttrSetterNumberInput2Cols
+          app_data={app_data}
           elements={elements}
           attributePath={attributePath}
-          attributeKey={'visible'}
-          config={BASE_SHAPE_CONFIG}
-          prefix={bgPrefix}
+          attributeKey={'box_width'}
+          config={STOCK_LABEL_CONFIG}
+          prefix={prefix}
           refreshParentComponent={refresh}
-        >
-          {getShapeValues(elements, bgPrefix, refresh).visible && (
-            <MenuShapeAttributes
-              app_data={app_data}
-              elements={elements}
-              attributePath={attributePath}
-              prefix={bgPrefix}
-              refreshUI={refresh}
-            />
-          )}
-        </MenuSectionCheckbox>
+          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_box_width` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
+        />
+      </Box>
+
+      {/* ===== Unit & number formatting (factorized) ===== */}
+      <Divider />
+      <NumberFormatComponent
+        app_data={app_data}
+        elements={elements}
+        prefix={prefix}
+        config={STOCK_LABEL_CONFIG}
+        attributePath={attributePath}
+        refreshParentComponent={refresh}
+      />
+
+      {/* ===== Background (fond + bordure, same as label background) ===== */}
+      <Divider />
+      <MenuSectionCheckbox
+        elements={elements}
+        attributePath={attributePath}
+        attributeKey={'visible'}
+        config={BASE_SHAPE_CONFIG}
+        prefix={bgPrefix}
+        refreshParentComponent={refresh}
+      >
+        {getShapeValues(elements, bgPrefix, refresh).visible && (
+          <MenuShapeAttributes
+            app_data={app_data}
+            elements={elements}
+            attributePath={attributePath}
+            prefix={bgPrefix}
+            refreshUI={refresh}
+          />
+        )}
+      </MenuSectionCheckbox>
     </Box>
   )
 }

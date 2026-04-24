@@ -47,7 +47,6 @@ export const listOptionSizeQuill = [
 // Configuration Quill
 const QUILL_MODULES = {
   toolbar: [
-    [{ 'font': [] }],
     ['bold', 'italic', 'underline', 'strike'],
     [{ 'size': listOptionSizeQuill }],
     [{ 'color': [] }, { 'background': [] }],
@@ -62,7 +61,7 @@ const QUILL_MODULES_NO_TOOLBAR = {
 }
 
 const QUILL_FORMATS = [
-  'font', 'size', 'bold', 'italic', 'underline', 'strike',
+  'size', 'bold', 'italic', 'underline', 'strike',
   'color', 'background', 'list', 'bullet', 'align'
 ]
 
