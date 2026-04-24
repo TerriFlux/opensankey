@@ -2553,8 +2553,11 @@ export class Class_DrawingArea {
       this.d3_selection_bg
         ?.append('image')
         .attr('id', 'bg_image')
-        .attr('width', this.width)
-        .attr('height', this.height)
+        .attr('width', this._zoom_width)
+        .attr('height', this._zoom_height)
+        .attr(
+          'transform',
+          'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
         .attr('href', this._background_image)
         .style('background-size', 'contain')
         .style('background-repeat', 'no-repeat')
