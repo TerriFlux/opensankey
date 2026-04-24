@@ -419,6 +419,7 @@ export const resources_app_elements = {
 
       welcome: {
         news: 'What\'s new in this version',
+        news_unavailable: 'Release notes are not available.',
         view: 'Buttons to navigate through the different views of the Sankey',
         breadcrumbs: {
           intro: 'Overview',
@@ -862,6 +863,7 @@ export const resources_app_elements = {
       },
       welcome: {
         news: 'Nouveautés et Améliorations récentes',
+        news_unavailable: 'Les notes de version ne sont pas disponibles.',
         view: 'Boutons permettant de naviguer entre les différentes vues du diagramme',
         breadcrumbs: {
           news: 'Nouveautés',
@@ -1338,6 +1340,7 @@ export const resources_app_elements = {
 
       welcome: {
         news: 'Novedades de esta versión',
+        news_unavailable: 'Las notas de la versión no están disponibles.',
         view: 'Botones para navegar entre las diferentes vistas del Sankey',
         breadcrumbs: {
           intro: 'Resumen',
@@ -1815,6 +1818,7 @@ export const resources_app_elements = {
 
       welcome: {
         news: 'Neuigkeiten in dieser Version',
+        news_unavailable: 'Die Versionshinweise sind nicht verfügbar.',
         view: 'Schaltflächen zum Navigieren zwischen den verschiedenen Ansichten des Sankey',
         breadcrumbs: {
           intro: 'Übersicht',
@@ -2292,6 +2296,7 @@ export const resources_app_elements = {
 
       welcome: {
         news: 'Novità di questa versione',
+        news_unavailable: 'Le note di rilascio non sono disponibili.',
         view: 'Pulsanti per navigare tra le diverse viste del Sankey',
         breadcrumbs: {
           intro: 'Panoramica',

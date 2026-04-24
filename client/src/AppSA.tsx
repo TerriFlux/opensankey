@@ -34,7 +34,7 @@ import {
   initializeAdditionalMenusOSP,
   moduleDialogsOSP,
 } from './deps/OpenSankey+/ModulesOSP'
-import { ModalWelcomeBuilderOSP } from './deps/OpenSankey+/components/ModalWelcomeOSP'
+import { ModalWelcomeBuilderSA } from './components/ModalWelcomeSA'
 import {
   createZDDModifierPlus, createNodeModifierPlus,
   createZDDMenuConfigPlus, createLinkMenuConfigPlus, createNodeMenuConfigPlus,
@@ -236,7 +236,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
         )
       }}
       moduleDialogs={moduleDialogsSA}
-      ModalWelcome={ModalWelcomeBuilderOSP}
+      ModalWelcome={ModalWelcomeBuilderSA}
       createZDDModifier={(app_data) => createZDDModifierPlus(app_data as Class_ApplicationDataSA)}
       ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
