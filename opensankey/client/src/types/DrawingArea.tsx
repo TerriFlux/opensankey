@@ -220,6 +220,19 @@ export class Class_DrawingArea {
     .filter(evt => (evt.which === 2 || evt.which === 0))
     // Prevent extreme zoom levels that freeze SVG rendering
     .scaleExtent([0.05, 20])
+    // Custom constrain: anchor top-left when content is smaller than the viewport
+    // (d3-zoom default centers in that case, which pushed the A3/A4/A5 paper off
+    // the top-left corner). Larger-than-viewport behaviour is unchanged.
+    .constrain((transform, extent, translateExtent) => {
+      const dx0 = transform.invertX(extent[0][0]) - translateExtent[0][0]
+      const dx1 = transform.invertX(extent[1][0]) - translateExtent[1][0]
+      const dy0 = transform.invertY(extent[0][1]) - translateExtent[0][1]
+      const dy1 = transform.invertY(extent[1][1]) - translateExtent[1][1]
+      return transform.translate(
+        dx1 > dx0 ? dx0 : Math.min(0, dx0) || Math.max(0, dx1),
+        dy1 > dy0 ? dy0 : Math.min(0, dy0) || Math.max(0, dy1)
+      )
+    })
     // Change cursor in teh beginning to 'move' to show we can shift drawing area
     .on('start', () => this.d3_selection_zoom_area?.attr('cursor', 'move'))
     .on('zoom', (event) => this.eventZoom(event))
@@ -807,6 +820,9 @@ export class Class_DrawingArea {
         this._zoom_height = this._height
         this._background_d3_groups_shift_x = 0
         this._background_d3_groups_shift_y = 0
+        // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
+        // uses the paper bounds (not the stale elements bbox from the previous format).
+        this._updateScrollbars()
         this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
         this.zoomListener.translateTo(
           this.d3_selection_zoom_area, 0, 0,
@@ -840,13 +856,28 @@ export class Class_DrawingArea {
       }
     }
 
-    // Bounding box with no element -> default dims
+    // Bounding box with no element -> reset to fresh-diagram state (full fitting window,
+    // scale 1, origin at top-left). Needed e.g. when switching A3/A4/A5 -> free on an
+    // empty view: otherwise _zoom_width/_zoom_height, shifts and the zoom transform
+    // keep the stale paper dimensions.
     if ((bbox.width == 0) && (bbox.height == 0)) {
-      // Set to fitting windows
-      this.width = this.window_fitting_width
-      this.height = this.window_fitting_height
-      // And redraw
+      this._width = this.window_fitting_width
+      this._height = this.window_fitting_height
+      this._zoom_width = this._width
+      this._zoom_height = this._height
+      this._background_d3_groups_shift_x = 0
+      this._background_d3_groups_shift_y = 0
+      this._k_horiz = 1
+      this._k_vert = 1
+      if (this.d3_selection_zoom_area) {
+        this._updateScrollbars()
+        this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
+        this.zoomListener.translateTo(
+          this.d3_selection_zoom_area, 0, 0,
+          [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
+      }
       this.drawBackground()
+      this.drawGrid()
       return
     }
 
@@ -881,6 +912,10 @@ export class Class_DrawingArea {
       const new_k = is_horiz ? new_k_horiz : new_k_height
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
+      // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
+      // uses the current content bbox (e.g. when switching back from paper to free,
+      // we don't want the stale paper bounds to clamp the transform).
+      this._updateScrollbars()
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
@@ -1996,9 +2031,32 @@ export class Class_DrawingArea {
 
     // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
     // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
+    // The translateExtent must include the "canvas" rectangle (paper in paper mode,
+    // background rect in free mode) so the custom constrain (anchor top-left) aligns
+    // that canvas to the viewport's top-left — not the elements bbox, which could be
+    // a small sub-region and would leave the canvas off-anchored.
+    let canvasX0: number
+    let canvasY0: number
+    let canvasX1: number
+    let canvasY1: number
+    if (this.is_paper_mode) {
+      canvasX0 = 0
+      canvasY0 = 0
+      canvasX1 = this._width
+      canvasY1 = this._height
+    } else {
+      canvasX0 = this._background_d3_groups_shift_x
+      canvasY0 = this._background_d3_groups_shift_y
+      canvasX1 = canvasX0 + this._zoom_width
+      canvasY1 = canvasY0 + this._zoom_height
+    }
+    const panX0 = Math.min(bbox.x, canvasX0)
+    const panY0 = Math.min(bbox.y, canvasY0)
+    const panX1 = Math.max(bbox.x + bbox.width, canvasX1)
+    const panY1 = Math.max(bbox.y + bbox.height, canvasY1)
     this.zoomListener
       .extent([[0, navH], [viewW, navH + viewH]])
-      .translateExtent([[bbox.x, bbox.y], [bbox.x + bbox.width, bbox.y + bbox.height]])
+      .translateExtent([[panX0, panY0], [panX1, panY1]])
 
     // Horizontal scrollbar: content wider than viewport
     // interrupt() cancels any pending d3 transition that could override opacity
