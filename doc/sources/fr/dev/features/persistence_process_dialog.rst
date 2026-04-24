@@ -115,6 +115,16 @@ Entrée — ``base`` (communes à tous les formats d'entrée)
   n'existent que sur les nœuds parents.
 - ``propagate_flux_to_parent`` — créer les flux parents quand ils
   n'existent que sur les nœuds enfants (défaut : ``false``).
+- ``autogenerate_leveltags`` (défaut : ``false``) — générer les
+  groupes de levelTags auto (``Dimension 1``, ``Dimension 2``, ...) à
+  partir de la hiérarchie des nœuds. Désactivé par défaut car les
+  dimensions auto sont fréquemment non-antagonistes et trompeuses.
+  Même quand l'option est ``true``, le parser impose un seuil : une
+  dimension auto seule n'est jamais matérialisée en levelTag (voir
+  ``read_sankey_from_data_frame_list`` : appel gated par
+  ``autogenerate_leveltags and len(self.dimensions) >= 2``). La
+  hiérarchie parent-enfant (``self.dimensions``) reste inchangée dans
+  tous les cas.
 
 Entrée — ``excel`` (skipping de catégories d'onglets)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
