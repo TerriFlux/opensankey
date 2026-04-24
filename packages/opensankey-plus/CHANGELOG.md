@@ -4,6 +4,9 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Non publié] — Avril 2026
 
+### Corrections
+- **Bump du submodule OpenSankey — facteur d'unité appliqué même sans unité visible/nommée** : dans `format_value` ([Utils.tsx](submodules/OpenSankey/opensankey/client/src/types/Utils.tsx)), la division par `unit_factor` était conditionnée à `unit_visible && unit != ''`. Conséquence : définir un facteur d'échelle (ex. 1000 g → kg) sans cocher « Unité » ou sans nommer l'unité laissait la valeur à l'échelle d'origine. Le facteur agit désormais comme une échelle de display pure, indépendamment de l'affichage du texte d'unité. Voir le [changelog OpenSankey](submodules/OpenSankey/CHANGELOG.md).
+
 ### Ajouts
 - **Bump du submodule OpenSankey — refonte du dialogue de persistance** : le composant `PersistenceProcessDialog` (utilisé par toutes les variantes Ouvrir/Enregistrer/Convertisseur de fichiers) a été refondu — sélecteurs Entrée/Sortie côte-à-côte en haut, bloc collapsible « Options » contenant 3 onglets (Options d'entrée / d'enregistrement / Mise en page). De nouvelles options sont disponibles : skip de catégories d'onglets à la lecture (`with_nodes_sheets`/`activate_data_table`/`activate_flux_matrix`), préservation des onglets utilisateur à l'écriture (`keep_other_sheets`), réécriture optionnelle des onglets format SankeyExcelParser (`rewrite_format_sheets` qui remplace l'ancien `mode_write` non opérationnel), et restriction aux flux entre nœuds feuilles (`data_table_only_leaf_flux`/`flux_matrix_only_leaf_flux`). Bug critique fixé : `views.py` mergait silencieusement output_options par-dessus input_options, écrasant les options d'entrée partageant un nom avec la sortie. Voir le [changelog OpenSankey](submodules/OpenSankey/CHANGELOG.md) et le [changelog SankeyExcelParser](submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md) pour le détail.
 
