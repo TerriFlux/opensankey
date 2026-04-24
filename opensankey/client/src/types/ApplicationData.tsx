@@ -1331,6 +1331,26 @@ export class Class_ApplicationData {
     const evtCtrlY = evtCtrl && evtKeyY
     const evtCtrlShiftZ = evtCtrlShift && evtKeyZ
 
+    // Ultra-shortcuts: typing on selected element opens inline edit ------------------
+    // (issue su-model/opensankey#688)
+    const evtIsPrintable = evt.key.length === 1 && !evtModifier && !evt.altKey
+    const selectedNodes = app_ref.drawing_area.selected_nodes_list
+    const selectedLinks = app_ref.drawing_area.selected_links_list
+    if (
+      evtIsPrintable &&
+      evtOnDrawingArea &&
+      selectedNodes.length === 1 &&
+      selectedLinks.length === 0
+    ) {
+      evt.preventDefault()
+      const node = selectedNodes[0]
+      if (!node.name_label_is_visible) {
+        node.name_label_is_visible = true
+        node.drawNameLabel()
+      }
+      node.setInputLabelVisible(evt.key)
+      return
+    }
     // Event to move all selected nodes with keyboard arrows --------------------------
     if (
       ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(evt.key) &&

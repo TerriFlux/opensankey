@@ -206,6 +206,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
             <Tr><Td>{t('Menu.rcc_ad_bold')}</Td><Td>{t('Menu.rcc_ad')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_handle_bold')}</Td><Td>{t('Menu.rcc_handle')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_shift_hover_bold')}</Td><Td>{t('Menu.rcc_shift_hover')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_dblclick_label_bold')}</Td><Td>{t('Menu.rcc_dblclick_label')}</Td></Tr>
           </Tbody>
         </Table>
         <Table
@@ -230,6 +231,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
           <Tbody>
             <Tr><Td>{t('Menu.rcc_a_s_bold')}</Td><Td>{t('Menu.rcc_a_s')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_a_fc_bold')}</Td><Td>{t('Menu.rcc_a_fc')}</Td></Tr>
+            <Tr><Td>{t('Menu.rcc_type_on_node_bold')}</Td><Td>{t('Menu.rcc_type_on_node')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_a_dbm_bold')}</Td><Td>{t('Menu.rcc_a_dbm')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_a_ech_bold')}</Td><Td>{t('Menu.rcc_a_ech')}</Td></Tr>
             <Tr><Td>{t('Menu.rcc_ctrl_a_bold')}</Td><Td>{t('Menu.rcc_ctrl_a')}</Td></Tr>
