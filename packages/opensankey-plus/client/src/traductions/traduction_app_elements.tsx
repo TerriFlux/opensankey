@@ -32,6 +32,9 @@ export const resources_app_elements = {
         show_image: 'Show image',
         constrain_bg_ratio: 'Match drawing area to image ratio',
         constrain_bg_ratio_disabled_paper: 'Disabled in paper format mode',
+        bg_image_align_left: 'Align left',
+        bg_image_align_center: 'Align center',
+        bg_image_align_right: 'Align right',
       },
       Menu: {
         'LL': 'Text Area / Image Area',
@@ -521,6 +524,9 @@ export const resources_app_elements = {
         show_image: 'Image',
         constrain_bg_ratio: 'Forcer la zone au ratio de l\'image',
         constrain_bg_ratio_disabled_paper: 'Désactivé en mode format papier',
+        bg_image_align_left: 'Aligner à gauche',
+        bg_image_align_center: 'Centrer',
+        bg_image_align_right: 'Aligner à droite',
       },
       Menu: {
         'diagramme': 'Diagrammes',
@@ -988,6 +994,9 @@ export const resources_app_elements = {
         show_image: 'Mostrar imagen',
         constrain_bg_ratio: 'Forzar la zona al ratio de la imagen',
         constrain_bg_ratio_disabled_paper: 'Desactivado en modo formato papel',
+        bg_image_align_left: 'Alinear a la izquierda',
+        bg_image_align_center: 'Centrar',
+        bg_image_align_right: 'Alinear a la derecha',
       },
       Menu: {
         'LL': 'Zona de texto / Zona de imagen',
@@ -1469,6 +1478,9 @@ export const resources_app_elements = {
         show_image: 'Bild anzeigen',
         constrain_bg_ratio: 'Zeichenbereich an Bildverhältnis anpassen',
         constrain_bg_ratio_disabled_paper: 'Im Papierformatmodus deaktiviert',
+        bg_image_align_left: 'Linksbündig',
+        bg_image_align_center: 'Zentriert',
+        bg_image_align_right: 'Rechtsbündig',
       },
       Menu: {
         'LL': 'Textbereich / Bildbereich',
@@ -1950,6 +1962,9 @@ export const resources_app_elements = {
         show_image: 'Mostra immagine',
         constrain_bg_ratio: 'Vincola area al rapporto dell\'immagine',
         constrain_bg_ratio_disabled_paper: 'Disabilitato in modalità formato carta',
+        bg_image_align_left: 'Allinea a sinistra',
+        bg_image_align_center: 'Centra',
+        bg_image_align_right: 'Allinea a destra',
       },
       Menu: {
         'LL': 'Area di testo / Area immagine',

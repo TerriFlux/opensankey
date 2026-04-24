@@ -9,7 +9,8 @@ import {
   Box,
   Checkbox,
   Button,
-  Input
+  Input,
+  Select
 } from '@chakra-ui/react'
 
 import {
@@ -142,6 +143,22 @@ export const ImportImageAsSvgBg = ({
           />
         </Box>
       </OSTooltip>
+      <Select
+        variant='menuconfigpanel_option_select'
+        isDisabled={!has_sankey_plus || !drawing_area.show_background_image}
+        value={drawing_area.bg_image_horizontal_align}
+        onChange={(evt) => {
+          const v = evt.target.value
+          if (v === 'left' || v === 'center' || v === 'right') {
+            drawing_area.bg_image_horizontal_align = v
+            setCount(a => a + 1)
+          }
+        }}
+      >
+        <option value='left'>{t('MEP.bg_image_align_left')}</option>
+        <option value='center'>{t('MEP.bg_image_align_center')}</option>
+        <option value='right'>{t('MEP.bg_image_align_right')}</option>
+      </Select>
     </Box>
   </>
   return content_image
