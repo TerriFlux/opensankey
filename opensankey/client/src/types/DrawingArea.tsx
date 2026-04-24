@@ -1965,6 +1965,9 @@ export class Class_DrawingArea {
             const trackW = ext.viewW - 2 * sb
             const ratio = ext.screenW / trackW
             this.zoomListener.translateBy(this.d3_selection_zoom_area, -event.dx * ratio / ext.k, 0)
+            // Sync thumb position to mouse immediately: the zoom event defers _updateScrollbars
+            // by 100ms, which makes the thumb visibly lag behind the cursor during a drag.
+            this._updateScrollbars()
           })
       )
     }
@@ -1981,6 +1984,7 @@ export class Class_DrawingArea {
             const trackH = ext.viewH - 2 * sb
             const ratio = ext.screenH / trackH
             this.zoomListener.translateBy(this.d3_selection_zoom_area, 0, -event.dy * ratio / ext.k)
+            this._updateScrollbars()
           })
       )
     }
