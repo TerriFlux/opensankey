@@ -1001,11 +1001,14 @@ export class Class_NodeElement extends Class_NodeBase {
     const node_height = this.getShapeHeightToUse()
     const node_width = this.getShapeWidthToUse()
 
-    // Vars to keep track of sum of stacking links
-    const sumLinkLeft = this.getSumOfLinksThickness('left')
-    const sumLinkRight = this.getSumOfLinksThickness('right')
-    const sumLinkTop = this.getSumOfLinksThickness('top')
-    const sumLinkBottom = this.getSumOfLinksThickness('bottom')
+    // Vars to keep track of sum of stacking links.
+    // Clamped space: arrow geometry must live in the same space as the visible
+    // trait so the base of the arrow matches the stroke thickness (>= minimum_flux),
+    // and draw_arrow_part's internal ratios stay bounded.
+    const sumLinkLeft = this.getSumOfLinksThickness('left', true)
+    const sumLinkRight = this.getSumOfLinksThickness('right', true)
+    const sumLinkTop = this.getSumOfLinksThickness('top', true)
+    const sumLinkBottom = this.getSumOfLinksThickness('bottom', true)
 
     // Loop on all visible input links
     list_link_to_add_arrow
@@ -1021,11 +1024,11 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_arrow_side_top = link.target_side == 'top'
         const link_arrow_side_bottom = link.target_side == 'bottom'
 
-        // Thickness of the link influences arrow size and stacking. Use raw (non-clamped)
-        // thickness so the arrow geometry stays consistent with the raw-based anchor
-        // positions on the node — mixing clamped and raw values blows up draw_arrow_part's
-        // internal ratios.
-        const link_value_raw = link.thicknessTargetRaw
+        // Thickness of the link influences arrow size and stacking. Use the clamped
+        // thickness (>= minimum_flux, >= 2px) so the arrow base matches the visible
+        // trait and ratios in draw_arrow_part stay bounded. Sums on each side are
+        // computed in the same clamped space above.
+        const link_value = link.thicknessTarget
 
         let xt: number
         let yt: number
@@ -1065,13 +1068,12 @@ export class Class_NodeElement extends Class_NodeBase {
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
         // Draw arrow on link.
-        // All inputs to draw_arrow_part must be in the same "space" (raw, not clamped),
-        // otherwise the internal ratio_cur = linkSize / arrowHalfHeight blows up when
-        // raw is tiny but linkSize is the 2px-clamped value, producing extreme x coords.
+        // All inputs to draw_arrow_part live in the clamped space so the arrow base
+        // matches the visible trait (>= minimum_flux) and ratio_cur/ratio_cum stay <= 1.
         link.shape_arrow_path = draw_arrow_part(
           total_cumul_of_side / 2,
           p5,
-          +link_value_raw,
+          +link_value,
           current_cumul_of_side,
           is_horizontal_at_target,
           is_revert,
@@ -1081,18 +1083,18 @@ export class Class_NodeElement extends Class_NodeBase {
         )
 
         // Increment side cumul of drawn arrow to influence next arrow starting position.
-        // Use raw thickness to stay in sync with raw-based anchor positions.
+        // Clamped space, consistent with sumLinkXxx above.
         if (link_arrow_side_left) {
-          cum_v_left += link_value_raw
+          cum_v_left += link_value
         }
         else if (link_arrow_side_right) {
-          cum_v_right += link_value_raw
+          cum_v_right += link_value
         }
         else if (link_arrow_side_top) {
-          cum_h_top += link_value_raw
+          cum_h_top += link_value
         }
         else if (link_arrow_side_bottom) {
-          cum_h_bottom += link_value_raw
+          cum_h_bottom += link_value
         }
       })
 
@@ -1108,15 +1110,21 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 PRIVATE HELPER METHODS - RÉINTÉGRÉS DIRECTEMENT ============================
 
-  private getSumOfLinksThickness(side: Type_Side) {
+  private getSumOfLinksThickness(side: Type_Side, clamped = false) {
     let sum = 0
     this.getLinksOrdered(side)
       .filter(link => link.is_visible)
       .forEach(link => {
-        // Use raw (non-clamped) thickness so node height and anchor offsets
-        // stay proportional to link values. Visual draw still uses the
-        // clamped thickness (min 2px) which can cause overlaps on thin links.
-        sum = sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw)
+        // Default (clamped=false): raw thickness so node height and anchor offsets
+        // stay proportional to link values. Visual draw still uses the clamped
+        // thickness (min 2px) which can cause overlaps on thin links.
+        // clamped=true: used by arrow geometry so linkSize and cumul live in the
+        // same space as the visible trait (>= minimum_flux).
+        if (clamped) {
+          sum = sum + (link.source === this ? link.thicknessSource : link.thicknessTarget)
+        } else {
+          sum = sum + (link.source === this ? link.thicknessSourceRaw : link.thicknessTargetRaw)
+        }
       })
     return sum
   }
