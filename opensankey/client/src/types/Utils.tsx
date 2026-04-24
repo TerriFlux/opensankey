@@ -483,8 +483,9 @@ export const format_value = (
   let text_value = ''
   // Create data label
   if (data_value !== null && data_value !== undefined && label_values.is_visible) {
-    // If value has a unit & it's factor is superior to 1 then divide data_value label by unit factor
-    if (label_values.unit_visible && label_values.unit != ''&& !is_percent && label_values.unit_factor > 1) {
+    // Apply unit factor regardless of whether the unit is visible/named,
+    // so the displayed value reflects the chosen scale even when the unit itself is hidden.
+    if (!is_percent && label_values.unit_factor > 1) {
       data_value /= label_values.unit_factor
     }
 
