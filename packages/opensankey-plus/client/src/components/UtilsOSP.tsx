@@ -9,8 +9,7 @@ import {
   Box,
   Checkbox,
   Button,
-  Input,
-  Select
+  Input
 } from '@chakra-ui/react'
 
 import {
@@ -25,7 +24,7 @@ import { default_container_content } from '../deps/OpenSankey/Elements/TextZone'
 import { OSPData, ViewType } from '../types/LegacyTypes'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
-import { CustomFaEyeCheckIcon, OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { CustomFaEyeCheckIcon, OSTooltip, getButtonVariant } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { DiffType } from '../types/LegacyTypes'
 import { applyChange } from 'deep-diff'
 
@@ -143,22 +142,27 @@ export const ImportImageAsSvgBg = ({
           />
         </Box>
       </OSTooltip>
-      <Select
-        variant='menuconfigpanel_option_select'
-        isDisabled={!has_sankey_plus || !drawing_area.show_background_image}
-        value={drawing_area.bg_image_horizontal_align}
-        onChange={(evt) => {
-          const v = evt.target.value
-          if (v === 'left' || v === 'center' || v === 'right') {
-            drawing_area.bg_image_horizontal_align = v
-            setCount(a => a + 1)
-          }
-        }}
-      >
-        <option value='left'>{t('MEP.bg_image_align_left')}</option>
-        <option value='center'>{t('MEP.bg_image_align_center')}</option>
-        <option value='right'>{t('MEP.bg_image_align_right')}</option>
-      </Select>
+      <Box layerStyle='options_3cols'>
+        {([
+          { value: 'left', position: 'left', icon: icon_library.icon_text_align_left, tip: t('MEP.bg_image_align_left') },
+          { value: 'center', position: 'center', icon: icon_library.icon_text_align_center, tip: t('MEP.bg_image_align_center') },
+          { value: 'right', position: 'right', icon: icon_library.icon_text_align_right, tip: t('MEP.bg_image_align_right') }
+        ] as const).map(item => (
+          <OSTooltip key={item.value} label={item.tip}>
+            <Button
+              variant={getButtonVariant(item.position, false, drawing_area.bg_image_horizontal_align === item.value)}
+              isDisabled={!has_sankey_plus || !drawing_area.show_background_image}
+              onClick={() => {
+                drawing_area.bg_image_horizontal_align = item.value
+                setCount(a => a + 1)
+              }}
+              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '16px', height: '16px' } }}
+            >
+              {item.icon}
+            </Button>
+          </OSTooltip>
+        ))}
+      </Box>
     </Box>
   </>
   return content_image
