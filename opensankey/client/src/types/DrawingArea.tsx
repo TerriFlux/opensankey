@@ -2586,6 +2586,8 @@ export class Class_DrawingArea {
     if (!this._show_background_image) return
     if (this._bg_image_natural_ratio <= 0) return
     this._height = this._width / this._bg_image_natural_ratio
+    this._zoom_width = this._width
+    this._zoom_height = this._height
   }
 
   /** Load natural dimensions of the bg image (async) and re-apply ratio constraint. */
@@ -2733,7 +2735,9 @@ export class Class_DrawingArea {
   public get constrain_to_bg_image_ratio(): boolean { return this._constrain_to_bg_image_ratio }
   public set constrain_to_bg_image_ratio(value: boolean) {
     this._constrain_to_bg_image_ratio = value
-    if (!value || this.is_paper_mode || !this._show_background_image) return
+    if (this.is_paper_mode) return
+    if (!value) return
+    if (!this._show_background_image) return
     if (this._bg_image_natural_ratio > 0) {
       this.applyBgImageRatio()
       this.drawBackground(); this.drawGrid(); this.drawBgImage()

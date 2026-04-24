@@ -429,11 +429,11 @@ export const DrawingAreaConfig = ({
       </Box>
 
     </Box>
-    <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data}>
+    {extra_background_element}
+
+    <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data} is_open={false}>
       <GraphElementsOrdoner app_data={app_data} />
     </WrapperBoxSubSectionMenu>
-
-    {extra_background_element}
   </>
 }
 
