@@ -344,6 +344,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       return
     }
     this.extractViewFromJSON(this._views[active_view_id].json, active_view_id)
+    this._drawing_area.draw()
   }
 
   /**
