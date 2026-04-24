@@ -91,7 +91,8 @@ def goto(path):
 def solve_optimisation_problem_unified(
     input_source: dict,  # ← Dict avec toutes les infos nécessaires
     output_filename: str,
-    options,
+    input_options: dict,
+    output_options: dict,
     logname: str,
     t_start: float
 ):
@@ -138,8 +139,8 @@ def solve_optimisation_problem_unified(
                 trace.logger.error(f"-- Unknown input format: {input_format}")
                 trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
                 return
-            options['do_coherence_checks'] = True
-            ok, msg = io_input.load_sankey(input_filename, **options)
+            input_options['do_coherence_checks'] = True
+            ok, msg = io_input.load_sankey(input_filename, **input_options)
             if not ok:
                 trace.logger.error("ERROR in input file.")
                 for line in msg.split("\n"):
@@ -192,11 +193,11 @@ def solve_optimisation_problem_unified(
     try:
         if output_filename.split('.')[1] == 'xlsx':
             io_excel = IOExcel(io_input.sankey)
-            options["mode"] = "a"
-            io_excel.write_sankey(file_name=output_filename, **options)
+            output_options["mode"] = "a"
+            io_excel.write_sankey(file_name=output_filename, **output_options)
         else:
             io_json = IOJson(io_input.sankey)
-            io_json.write_sankey(file_name=output_filename, **options)
+            io_json.write_sankey(file_name=output_filename, **output_options)
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in output file writing.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
@@ -325,10 +326,8 @@ def launch_optim():
                 'data': sankey_json_str
             }
 
-        # input_options = json.loads(request.form.get('input_options', '{}'))
-        # output_options = json.loads(request.form.get('output_options', '{}'))
-        options = {**json.loads(request.form.get('input_options', '{}')), **
-                   json.loads(request.form.get('output_options', '{}'))}
+        input_options = json.loads(request.form.get('input_options', '{}'))
+        output_options = json.loads(request.form.get('output_options', '{}'))
         # Stocker l'état
         set_process_state(
             process_started=True,
@@ -358,7 +357,8 @@ def launch_optim():
         args=(
             input_source,
             output_file_name,
-            options,
+            input_options,
+            output_options,
             log_filename,
             t_start,
         ),
