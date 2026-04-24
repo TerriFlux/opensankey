@@ -1178,6 +1178,14 @@ export class Class_NodeElement extends Class_NodeBase {
     let dy_left = this.getLinksStartingPositionOffSet('left')
     let dx_top = this.getLinksStartingPositionOffSet('top')
     let dx_bottom = this.getLinksStartingPositionOffSet('bottom')
+    // Overflow detection : when the sum of clamped (visible) thicknesses on a
+    // side exceeds the node's side size, the raw-based anchor offsets only
+    // introduce sub-pixel noise (all strokes overlap anyway). Collapse every
+    // anchor on that side to its center so links are fully superposed.
+    const overflow_left = this.getSumOfLinksThickness('left', true) > height
+    const overflow_right = this.getSumOfLinksThickness('right', true) > height
+    const overflow_top = this.getSumOfLinksThickness('top', true) > width
+    const overflow_bottom = this.getSumOfLinksThickness('bottom', true) > width
     // List of links to redraw
     const link_to_redraw: Class_LinkElement[] = [] // avoid recomputation
 
@@ -1211,24 +1219,28 @@ export class Class_NodeElement extends Class_NodeBase {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.source_side === 'right') {
-            link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            const anchor_y = overflow_right ? (y0 + height / 2) : (y0 + dy_right + thickness / 2)
+            link_starting_point = { x: (x0 + width), y: anchor_y }
             link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
-            dy_right = dy_right + thickness
+            if (!overflow_right) dy_right = dy_right + thickness
           }
           else if (link.source_side === 'left') {
-            link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            const anchor_y = overflow_left ? (y0 + height / 2) : (y0 + dy_left + thickness / 2)
+            link_starting_point = { x: x0, y: anchor_y }
             link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
-            dy_left = dy_left + thickness
+            if (!overflow_left) dy_left = dy_left + thickness
           }
           else if (link.source_side === 'top') {
-            link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            const anchor_x = overflow_top ? (x0 + width / 2) : (x0 + dx_top + thickness / 2)
+            link_starting_point = { x: anchor_x, y: y0 }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
-            dx_top = dx_top + thickness
+            if (!overflow_top) dx_top = dx_top + thickness
           }
           else {  // link.source_side === 'bottom'
-            link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            const anchor_x = overflow_bottom ? (x0 + width / 2) : (x0 + dx_bottom + thickness / 2)
+            link_starting_point = { x: anchor_x, y: (y0 + height) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
-            dx_bottom = dx_bottom + thickness
+            if (!overflow_bottom) dx_bottom = dx_bottom + thickness
           }
           // Draw link if position has not been set before
           let need_to_draw = (
@@ -1268,24 +1280,28 @@ export class Class_NodeElement extends Class_NodeBase {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
           if (link.target_side === 'right') {
-            link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
+            const anchor_y = overflow_right ? (y0 + height / 2) : (y0 + dy_right + thickness / 2)
+            link_ending_point = { x: (x0 + width), y: anchor_y }
             link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
-            dy_right = dy_right + thickness
+            if (!overflow_right) dy_right = dy_right + thickness
           }
           else if (link.target_side === 'left') {
-            link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
+            const anchor_y = overflow_left ? (y0 + height / 2) : (y0 + dy_left + thickness / 2)
+            link_ending_point = { x: x0, y: anchor_y }
             link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
-            dy_left = dy_left + thickness
+            if (!overflow_left) dy_left = dy_left + thickness
           }
           else if (link.target_side === 'top') {
-            link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
+            const anchor_x = overflow_top ? (x0 + width / 2) : (x0 + dx_top + thickness / 2)
+            link_ending_point = { x: anchor_x, y: y0 }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
-            dx_top = dx_top + thickness
+            if (!overflow_top) dx_top = dx_top + thickness
           }
           else {  // link.target_side === 'bottom'
-            link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
+            const anchor_x = overflow_bottom ? (x0 + width / 2) : (x0 + dx_bottom + thickness / 2)
+            link_ending_point = { x: anchor_x, y: (y0 + height) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
-            dx_bottom = dx_bottom + thickness
+            if (!overflow_bottom) dx_bottom = dx_bottom + thickness
           }
           // Draw link if position has not been set before
           let need_to_draw = (
