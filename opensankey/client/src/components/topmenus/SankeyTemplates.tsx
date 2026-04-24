@@ -40,7 +40,6 @@ import {
   Divider,
   CardBody,
   Image,
-  CardFooter,
   Modal,
   ModalOverlay,
   ModalContent,
@@ -240,11 +239,10 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                           key={idx}
                           variant='cards_template'
                           onClick={() => {
-                            // Draw template by downloading data from server
-                            // Reset navigator data without redrawing sankey (UploadExemple will do it after downloading data from server)
-                            new_data.reinitialization(false)
-                            
-                            //UploadExemple(templates[id].file_path, new_data)
+                            new_data.menu_configuration.ref_universal_converter_set_config.current(
+                              CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
+                            )
+                            new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
                             set_show_template(false)
                           }}
                         >
@@ -288,29 +286,6 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                             >
                             </Image>
                           </CardBody>
-
-                          <CardFooter>
-                            <ButtonGroup
-                              //ButtonGroup don't have variants theming so we modify directly the style
-                              style={{
-                                margin: 'auto'
-                              }}>
-                              <Button variant='menuconfigpanel_option_button'
-                                onClick={() => {
-                                  // Draw template by downloading data from server
-                                  //UploadExemple(templates[id].file_path, new_data)
-                                  new_data.menu_configuration.ref_universal_converter_set_config.current(
-                                    CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
-                                  )
-                                  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
-                                  //new_data.menu_configuration.ref_menu_opened.current[1](true)
-                                  set_show_template(false)
-                                }}>
-                                {new_data.t('useTemplate')}
-                              </Button>
-
-                            </ButtonGroup>
-                          </CardFooter>
                         </Card>
                       })
                     :
