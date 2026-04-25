@@ -279,7 +279,11 @@ const encodeAnimatedGIF = async (
     })
   }
   gif.finish()
-  return new Blob([gif.bytes()], { type: 'image/gif' })
+  // Re-wrap in a fresh Uint8Array so the buffer type is ArrayBuffer (not the
+  // generic ArrayBufferLike, which includes SharedArrayBuffer and is rejected
+  // by the strict BlobPart signature in production tsc). Same pattern as the
+  // PDF merge above.
+  return new Blob([new Uint8Array(gif.bytes())], { type: 'image/gif' })
 }
 
 const encodeAnimatedWebM = async (
