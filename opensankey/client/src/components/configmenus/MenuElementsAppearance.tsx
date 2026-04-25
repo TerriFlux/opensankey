@@ -41,6 +41,7 @@ import {
 
 // Imports des configs
 import {
+  AttributeConfig,
   ElementsType,
   Type_Orientation,
   Type_Shape,
@@ -237,23 +238,21 @@ export const LabelDisplayModeSelector = ({
 // Reusable component: Unit + number formatting (decimals, scientific, significant digits)
 // Works with any label config that has the unit_* / nb_digit / significant_digits attrs
 // ===================================================================================
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const NumberFormatComponent = ({ app_data, elements, prefix, config, attributePath, refreshParentComponent }: {
   app_data: Class_ApplicationData
   elements: ElementsType
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prefix: any
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  config: any
+  prefix: 'name_label' | 'value_label' | 'icon' | 'stock_label'
+  config: Record<string, AttributeConfig<unknown>>
   attributePath: string
   refreshParentComponent: () => void
 }) => {
   const { t } = app_data
-  const labelValues = elements.length > 0
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ? getElementsLabelValues(elements as any, prefix, refreshParentComponent) as any
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    : Object.fromEntries(Object.entries(config).map(([k, v]: [string, any]) => [k, v.default])) as any
+  type LabelValues = ReturnType<typeof getElementsLabelValues>
+  const labelValues: LabelValues = elements.length > 0
+    ? getElementsLabelValues(elements, prefix, refreshParentComponent)
+    : Object.fromEntries(
+      Object.entries(config).map(([k, v]) => [k, (v as AttributeConfig<unknown>).default])
+    ) as unknown as LabelValues
   const unit_tagg = app_data.drawing_area.sankey.data_taggs_list.find(tagg => tagg.is_unit)
   const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
 
