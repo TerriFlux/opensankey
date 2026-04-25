@@ -269,13 +269,32 @@ export class Class_MenuConfig {
     render: (attrs: string[], onToggle: (key: string) => void, t: (key: string) => string) => React.ReactNode
   } = undefined
   /** Optional extra menu items appended to the top export dropdown (PNG/PDF/SVG list). Injected by OSP or other extensions. */
-  public extra_export_menu_items?: Array<{
-    key: string
-    label: string
-    icon?: React.ReactNode
-    onClick: () => void
-    disabled?: () => boolean
-  }> = undefined
+  public extra_export_menu_items?: Array<
+    | {
+        // Optional discriminator. Absent or 'item' => flat menu entry; 'group' => titled section with children.
+        type?: 'item'
+        key: string
+        label: string
+        icon?: React.ReactNode
+        onClick: () => void
+        disabled?: () => boolean
+        // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+        tooltip?: () => string
+      }
+    | {
+        type: 'group'
+        key: string
+        label: string
+        children: Array<{
+          key: string
+          label: string
+          icon?: React.ReactNode
+          onClick: () => void
+          disabled?: () => boolean
+          tooltip?: () => string
+        }>
+      }
+  > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
 
