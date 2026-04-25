@@ -657,6 +657,20 @@ export class NodePositioning {
         }
       })
 
+      // Set des liens reconnus comme recyclage par la détection de cycles.
+      // possible_recycling_links_ids contient les back-edges trouvées par DFS
+      // (computeHorizontalIndexImproved) ET les liens pré-amorcés par
+      // verrouillage utilisateur (cf. ÉTAPE 1). On utilise cette source de
+      // vérité pour le marquage final, plutôt qu'une comparaison
+      // node_index >= target_index : quand l'utilisateur verrouille UN flux
+      // d'un cycle comme recyclage, le DFS coupe à cet endroit et n'identifie
+      // PAS d'autres back-edges dans ce cycle ; mais la comparaison d'index
+      // re-flaguait quand même les autres arêtes du cycle (qui se retrouvent
+      // backward après relaxation topologique des index). Le set unique
+      // garantit la sémantique « candidate » : un seul flux locked-true
+      // suffit à forcer les autres du même cycle à non-recyclage.
+      const auto_recycling_set = new Set(possible_recycling_links_ids)
+
       // ÉTAPE 3: Construction des structures de données (logique existante)
       this.drawingArea.sankey.visible_nodes_list.forEach(node => {
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
@@ -675,14 +689,7 @@ export class NodePositioning {
           node.output_links_list.forEach(link => {
             const link_data = this.drawingArea.sankey.links_dict[link.id]
             if (link_data.shape_is_recycling_locked === true) return
-            const target_node_id = link_data.target.id
-            const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
-
-            if (target_index !== undefined && node_index >= target_index) {
-              link_data.shape_is_recycling = true
-            } else {
-              link_data.shape_is_recycling = false
-            }
+            link_data.shape_is_recycling = auto_recycling_set.has(link.id)
           })
         }
       })
