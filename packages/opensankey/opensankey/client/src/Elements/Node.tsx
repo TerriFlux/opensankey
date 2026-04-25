@@ -340,18 +340,19 @@ export class Class_NodeElement extends Class_NodeBase {
    * to the outermost enclosing container.
    */
   public propagateContainerEnvelopeToAncestors() {
-    const visited = new Set<Class_NodeElement>()
-    let current: Class_NodeElement = this
+    const visited = new Set<Class_NodeElement>([this])
+    const start_parent_dims = this.dimensions_as_child.filter(d => d.container_mode)
+    if (start_parent_dims.length === 0) return
+    let current: Class_NodeElement = start_parent_dims[0].parent as Class_NodeElement
     while (!visited.has(current)) {
       visited.add(current)
+      if (current.applyContainerEnvelopeIfNeeded()) {
+        current.applyPosition()
+        current.drawShape()
+      }
       const parent_dims = current.dimensions_as_child.filter(d => d.container_mode)
       if (parent_dims.length === 0) break
-      const parent = parent_dims[0].parent as Class_NodeElement
-      if (parent.applyContainerEnvelopeIfNeeded()) {
-        parent.applyPosition()
-        parent.drawShape()
-      }
-      current = parent
+      current = parent_dims[0].parent as Class_NodeElement
     }
   }
 
@@ -1418,17 +1419,17 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get is_unitary_tag() {
-      const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
-      if (unitary_tagg) {
-        const node_type = this.sankey.node_taggs_dict['type de noeud']
-        const productTag = node_type?.tags_dict['produit']
-        const sectorTag = node_type?.tags_dict['secteur']
-        const is_product = this.hasGivenTag(productTag)
-        const is_sector = this.hasGivenTag(sectorTag)
-        const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
-        return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
-      }
-      return false    
+    const unitary_tagg = this.sankey.view_taggs_dict['unitary']?.id || this.sankey.view_taggs_dict['product_unitary']?.id || this.sankey.view_taggs_dict['sector_unitary']?.id
+    if (unitary_tagg) {
+      const node_type = this.sankey.node_taggs_dict['type de noeud']
+      const productTag = node_type?.tags_dict['produit']
+      const sectorTag = node_type?.tags_dict['secteur']
+      const is_product = this.hasGivenTag(productTag)
+      const is_sector = this.hasGivenTag(sectorTag)
+      const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
+      return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
+    }
+    return false    
   }
 
   public get are_related_node_tags_selected(): boolean {
@@ -1915,33 +1916,33 @@ export class Class_NodeElement extends Class_NodeBase {
   /**
    * Crée une partie découpée du cap d'ellipse (comme draw_arrow_part)
    */
-private _createEllipseCapPart(
-  side: Type_Side,
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  startOffset: number,
-  totalThickness: number,
-  currentCumul: number,
-  linkThickness: number
-): string {
-  const capLength = 0
+  private _createEllipseCapPart(
+    side: Type_Side,
+    cx: number,
+    cy: number,
+    rx: number,
+    ry: number,
+    startOffset: number,
+    totalThickness: number,
+    currentCumul: number,
+    linkThickness: number
+  ): string {
+    const capLength = 0
   
-  if (side === 'right') {
-    const y1 = startOffset + currentCumul
-    const y2 = startOffset + currentCumul + linkThickness
+    if (side === 'right') {
+      const y1 = startOffset + currentCumul
+      const y2 = startOffset + currentCumul + linkThickness
     
-    const term1 = Math.pow((y1 - cy) / ry, 2)
-    const term2 = Math.pow((y2 - cy) / ry, 2)
+      const term1 = Math.pow((y1 - cy) / ry, 2)
+      const term2 = Math.pow((y2 - cy) / ry, 2)
     
-    const x1 = cx + rx * Math.sqrt(Math.max(0, 1 - term1))
-    const x2 = cx + rx * Math.sqrt(Math.max(0, 1 - term2))
+      const x1 = cx + rx * Math.sqrt(Math.max(0, 1 - term1))
+      const x2 = cx + rx * Math.sqrt(Math.max(0, 1 - term2))
     
-    const xRect = cx + rx  // Bord droit du rectangle
-    const xOut = xRect + capLength
+      const xRect = cx + rx  // Bord droit du rectangle
+      const xOut = xRect + capLength
     
-    return `M ${x1},${y1}
+      return `M ${x1},${y1}
             L ${xRect},${y1}
             L ${xOut},${y1}
             L ${xOut},${y2}
@@ -1949,20 +1950,20 @@ private _createEllipseCapPart(
             L ${x2},${y2}
             A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
     
-  } else if (side === 'left') {
-    const y1 = startOffset + currentCumul
-    const y2 = startOffset + currentCumul + linkThickness
+    } else if (side === 'left') {
+      const y1 = startOffset + currentCumul
+      const y2 = startOffset + currentCumul + linkThickness
     
-    const term1 = Math.pow((y1 - cy) / ry, 2)
-    const term2 = Math.pow((y2 - cy) / ry, 2)
+      const term1 = Math.pow((y1 - cy) / ry, 2)
+      const term2 = Math.pow((y2 - cy) / ry, 2)
     
-    const x1 = cx - rx * Math.sqrt(Math.max(0, 1 - term1))
-    const x2 = cx - rx * Math.sqrt(Math.max(0, 1 - term2))
+      const x1 = cx - rx * Math.sqrt(Math.max(0, 1 - term1))
+      const x2 = cx - rx * Math.sqrt(Math.max(0, 1 - term2))
     
-    const xRect = cx - rx  // Bord gauche du rectangle
-    const xOut = xRect - capLength
+      const xRect = cx - rx  // Bord gauche du rectangle
+      const xOut = xRect - capLength
     
-    return `M ${x1},${y1}
+      return `M ${x1},${y1}
             L ${xRect},${y1}
             L ${xOut},${y1}
             L ${xOut},${y2}
@@ -1970,20 +1971,20 @@ private _createEllipseCapPart(
             L ${x2},${y2}
             A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
     
-  } else if (side === 'bottom') {
-    const x1 = startOffset + currentCumul
-    const x2 = startOffset + currentCumul + linkThickness
+    } else if (side === 'bottom') {
+      const x1 = startOffset + currentCumul
+      const x2 = startOffset + currentCumul + linkThickness
     
-    const term1 = Math.pow((x1 - cx) / rx, 2)
-    const term2 = Math.pow((x2 - cx) / rx, 2)
+      const term1 = Math.pow((x1 - cx) / rx, 2)
+      const term2 = Math.pow((x2 - cx) / rx, 2)
     
-    const y1 = cy + ry * Math.sqrt(Math.max(0, 1 - term1))
-    const y2 = cy + ry * Math.sqrt(Math.max(0, 1 - term2))
+      const y1 = cy + ry * Math.sqrt(Math.max(0, 1 - term1))
+      const y2 = cy + ry * Math.sqrt(Math.max(0, 1 - term2))
     
-    const yRect = cy + ry  // Bord bas du rectangle
-    const yOut = yRect + capLength
+      const yRect = cy + ry  // Bord bas du rectangle
+      const yOut = yRect + capLength
     
-    return `M ${x1},${y1}
+      return `M ${x1},${y1}
             L ${x1},${yRect}
             L ${x1},${yOut}
             L ${x2},${yOut}
@@ -1991,26 +1992,26 @@ private _createEllipseCapPart(
             L ${x2},${y2}
             A ${rx} ${ry} 0 0 1 ${x1},${y1} Z`
     
-  } else { // top
-    const x1 = startOffset + currentCumul
-    const x2 = startOffset + currentCumul + linkThickness
+    } else { // top
+      const x1 = startOffset + currentCumul
+      const x2 = startOffset + currentCumul + linkThickness
     
-    const term1 = Math.pow((x1 - cx) / rx, 2)
-    const term2 = Math.pow((x2 - cx) / rx, 2)
+      const term1 = Math.pow((x1 - cx) / rx, 2)
+      const term2 = Math.pow((x2 - cx) / rx, 2)
     
-    const y1 = cy - ry * Math.sqrt(Math.max(0, 1 - term1))
-    const y2 = cy - ry * Math.sqrt(Math.max(0, 1 - term2))
+      const y1 = cy - ry * Math.sqrt(Math.max(0, 1 - term1))
+      const y2 = cy - ry * Math.sqrt(Math.max(0, 1 - term2))
     
-    const yRect = cy - ry  // Bord haut du rectangle
-    const yOut = yRect - capLength
+      const yRect = cy - ry  // Bord haut du rectangle
+      const yOut = yRect - capLength
     
-    return `M ${x1},${y1}
+      return `M ${x1},${y1}
             L ${x1},${yRect}
             L ${x1},${yOut}
             L ${x2},${yOut}
             L ${x2},${yRect}
             L ${x2},${y2}
             A ${rx} ${ry} 0 0 0 ${x1},${y1} Z`
+    }
   }
-}
 }

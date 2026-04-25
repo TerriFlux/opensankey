@@ -233,39 +233,39 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
     (contextualised_node !== undefined) &&
     (has_node_style)
   ) ? <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {'Assigner styles'}
-        </MenuButton>
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {'Assigner styles'}
+      </MenuButton>
 
-        <MenuList>
-          {
-            drawing_area.sankey.styles_list
-              .map((_) => {
-                const has_style = contextualised_node.style.includes(_)
-                return <MenuItem
-                  display='flex'
-                  closeOnSelect={false}
-                  onClick={() => {
-                    if (!has_style) {
-                      contextualised_node.addStyle(_)
-                    } else {
-                      contextualised_node.removeStyle(_)
-                    }
-                    setUpdate(a => a + 1)
-                  }}
-                >
-                  {_.name}
-                  {checked(has_style)}
-                </MenuItem>
-              })
-          }
-        </MenuList>
-      </Menu> :
+      <MenuList>
+        {
+          drawing_area.sankey.styles_list
+            .map((_) => {
+              const has_style = contextualised_node.style.includes(_)
+              return <MenuItem
+                display='flex'
+                closeOnSelect={false}
+                onClick={() => {
+                  if (!has_style) {
+                    contextualised_node.addStyle(_)
+                  } else {
+                    contextualised_node.removeStyle(_)
+                  }
+                  setUpdate(a => a + 1)
+                }}
+              >
+                {_.name}
+                {checked(has_style)}
+              </MenuItem>
+            })
+        }
+      </MenuList>
+    </Menu> :
     <></>
 }
 
@@ -279,40 +279,40 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
     (contextualised_container !== undefined) &&
     (has_styles)
   ) ? <Menu placement='end'>
-        <MenuButton
-          variant='contextmenu_button'
-          as={Button}
-          rightIcon={<ChevronRightIcon />}
-          className="dropdown-basic"
-        >
-          {'Assigner styles'}
-        </MenuButton>
-        <MenuList>
-          {
-            drawing_area.sankey.styles_list
-              .map((_) => {
-                const has_style = contextualised_container.style.includes(_)
-                return <MenuItem
-                  display='flex'
-                  closeOnSelect={false}
-                  onClick={() => {
-                    selected_containers.forEach(container => {
-                      if (!has_style) {
-                        container.addStyle(_)
-                      } else {
-                        container.removeStyle(_)
-                      }
-                    })
-                    setUpdate(a => a + 1)
-                  }}
-                >
-                  {_.name}
-                  {checked(has_style)}
-                </MenuItem>
-              })
-          }
-        </MenuList>
-      </Menu> :
+      <MenuButton
+        variant='contextmenu_button'
+        as={Button}
+        rightIcon={<ChevronRightIcon />}
+        className="dropdown-basic"
+      >
+        {'Assigner styles'}
+      </MenuButton>
+      <MenuList>
+        {
+          drawing_area.sankey.styles_list
+            .map((_) => {
+              const has_style = contextualised_container.style.includes(_)
+              return <MenuItem
+                display='flex'
+                closeOnSelect={false}
+                onClick={() => {
+                  selected_containers.forEach(container => {
+                    if (!has_style) {
+                      container.addStyle(_)
+                    } else {
+                      container.removeStyle(_)
+                    }
+                  })
+                  setUpdate(a => a + 1)
+                }}
+              >
+                {_.name}
+                {checked(has_style)}
+              </MenuItem>
+            })
+        }
+      </MenuList>
+    </Menu> :
     <></>
 }
 

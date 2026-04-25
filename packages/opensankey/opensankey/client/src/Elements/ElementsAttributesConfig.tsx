@@ -226,11 +226,11 @@ export const isConfigValueIndeterminate = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-  elements: ElementsType,
-  config: CONFIG,
-  configKey: K,
-  prefix: string
-): boolean => {
+    elements: ElementsType,
+    config: CONFIG,
+    configKey: K,
+    prefix: string
+  ): boolean => {
   if (elements.length === 0) return false
 
   const fullKey = prefix ? `${prefix}_${String(configKey)}` : String(configKey)
@@ -2702,16 +2702,16 @@ export const ALL_ATTRIBUTES_CONFIG = {
   ...createConfigWithPrefix(STOCK_LABEL_CONFIG, 'stock_label'),
 
   ...createConfigWithPrefixAndOverrides(ICON_LABEL_BASE_CONFIG, 'icon',
-      'icon',
-      ['drawIcon'],
-      {
-        is_icon: {
-          default: true,
-        },
-        box_width: {
-          default: 50,
-        }
-}),
+    'icon',
+    ['drawIcon'],
+    {
+      is_icon: {
+        default: true,
+      },
+      box_width: {
+        default: 50,
+      }
+    }),
   ...HYPER_LINK_CONFIG,
 } as const
 
