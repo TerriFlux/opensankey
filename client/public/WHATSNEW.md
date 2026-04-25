@@ -9,6 +9,11 @@
 
 ## Avril 2026
 
+### Export et communication
+
+- **Export animé des vues** (OpenSankey+) : nouvelle entrée *Animation...* dans le menu **Exporter → Toutes les vues**. Modale déplaçable qui permet de choisir les vues à inclure et leur ordre, la durée par vue, le DPI et un mode de boucle (une fois / infinie / aller-retour). Trois formats au choix : **GIF animé** (compatibilité universelle), **WebM** (vidéo, meilleure qualité que le GIF) et **séquence PNG zippée** (frames numérotées). Le master n'est jamais inclus dans l'animation. Les exports PNG / PDF simples (vue courante) restent libres avec watermark *« réalisé avec OpenSankey.fr »* ; l'animation, comme les exports multi-vues PNG zip et PDF fusionné, nécessite la licence OpenSankey+.
+- **Sous-menu Toutes les vues** : les exports multi-vues (PNG zip, PDF fusionné, Animation) sont désormais regroupés sous une section nommée dans le menu Exporter, séparée des exports vue courante (PNG, PDF, SVG).
+
 ### Lecture et écriture de fichiers Excel
 
 - **Refonte du dialogue d'ouverture / enregistrement / conversion de fichiers** : sélecteurs d'entrée et de sortie côte-à-côte, options regroupées dans un bloc repliable avec trois onglets *Options d'entrée*, *Options d'enregistrement* et *Mise en page*.
@@ -50,6 +55,11 @@
 <!-- LANG:en -->
 
 ## April 2026
+
+### Export and sharing
+
+- **Animated export of views** (OpenSankey+): new *Animation...* entry in **Export → All views** menu. Draggable modal lets you pick which views to include and their order, the per-view duration, the DPI and a loop mode (once / infinite / ping-pong). Three output formats: **animated GIF** (universal compatibility), **WebM** (video, better quality than GIF) and **zipped PNG sequence** (numbered frames). The master is never included in the animation. Simple PNG / PDF exports of the current view remain free with a *"made with OpenSankey.fr"* watermark; animation, like multi-view PNG zip and merged PDF, requires an OpenSankey+ licence.
+- **All views submenu**: multi-view exports (PNG zip, merged PDF, Animation) are now grouped under a named section in the Export menu, separate from current-view exports (PNG, PDF, SVG).
 
 ### Excel file read and write
 
