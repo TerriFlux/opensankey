@@ -535,14 +535,14 @@ export class NodeActions {
       //   cont.attachNodeToCont(n)
       // })
       // cont.attachNodeToCont(node)
-        n.getListDescendantOfNode().forEach(node => {
-          cont.attachNodeToCont(node)
-        })
-        n.getListAncestorOfNode().forEach(node => {
-          cont.attachNodeToCont(node)
-        })
-        cont.attachNodeToCont(n)
-        cont.computeSizeAndPositionFromAttachedNodes()
+      n.getListDescendantOfNode().forEach(node => {
+        cont.attachNodeToCont(node)
+      })
+      n.getListAncestorOfNode().forEach(node => {
+        cont.attachNodeToCont(node)
+      })
+      cont.attachNodeToCont(n)
+      cont.computeSizeAndPositionFromAttachedNodes()
     })
     this.drawing_area.draw()
   }

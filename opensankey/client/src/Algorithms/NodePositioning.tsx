@@ -2473,7 +2473,7 @@ export class NodePositioning {
       node.position_v = current_v
     }
     let new_current_v = current_v
-    let desagregated_nodes = ([...new Set(node.dimensions_as_parent.flatMap(d => d.children))] as Class_NodeElement[]).filter(n => n.hasGivenTag(tag))
+    const desagregated_nodes = ([...new Set(node.dimensions_as_parent.flatMap(d => d.children))] as Class_NodeElement[]).filter(n => n.hasGivenTag(tag))
     desagregated_nodes.forEach(nn => {
 
 

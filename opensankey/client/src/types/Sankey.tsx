@@ -120,7 +120,7 @@ export class Class_Sankey {
     this.flux_taggs_list.forEach(grp => grp.delete())
     this.data_taggs_list.forEach(grp => grp.delete())
     this.level_taggs_list.forEach(grp => grp.delete())
-      this.view_taggs_list.forEach(grp => grp.delete())  // NOUVEAU
+    this.view_taggs_list.forEach(grp => grp.delete())  // NOUVEAU
     this._node_taggs = {}
     this._flux_taggs = {}
     this._data_taggs = {}

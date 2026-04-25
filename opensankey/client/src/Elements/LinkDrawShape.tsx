@@ -530,10 +530,10 @@ export class LinkDrawShape {
     this._link_control_points.computeControlPoints()
 
     if (!this._link.shape_is_recycling) {
-      let x0 = this._link.position_x_start
-      let y0 = this._link.position_y_start
-      let x6 = this._link.position_x_end
-      let y6 = this._link.position_y_end
+      const x0 = this._link.position_x_start
+      const y0 = this._link.position_y_start
+      const x6 = this._link.position_x_end
+      const y6 = this._link.position_y_end
 
       const x1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_x
       let y1 = this._link_control_points_internal.controlPoints.starting_curve_point.position_y

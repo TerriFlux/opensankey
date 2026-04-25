@@ -415,20 +415,20 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Récupération des tags selon le mode — passe par getTagGroupsAsList pour respecter _taggs_order
   const getTagsForMode = (): Class_TagGroup[] => {
     switch (mode) {
-      case 'element':
-        return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
-          .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
-      case 'level':
-        return sankey.getTagGroupsAsList('level_taggs')
-          .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      case 'data':
-        return sankey.getTagGroupsAsList('data_taggs')
-          .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
-      case 'unitary':
-        return sankey.getTagGroupsAsList('view_taggs')
-          .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
-      default:
-        return [] as unknown as Class_TagGroup[]
+    case 'element':
+      return [...sankey.getTagGroupsAsList('node_taggs'), ...sankey.getTagGroupsAsList('flux_taggs')]
+        .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary')) as unknown as Class_TagGroup[]
+    case 'level':
+      return sankey.getTagGroupsAsList('level_taggs')
+        .filter(tagg => tagg.has_tags && tagg.banner !== 'none') as unknown as Class_TagGroup[]
+    case 'data':
+      return sankey.getTagGroupsAsList('data_taggs')
+        .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi') as unknown as Class_TagGroup[]
+    case 'unitary':
+      return sankey.getTagGroupsAsList('view_taggs')
+        .filter(tagg => tagg.banner !== 'none') as unknown as Class_TagGroup[]
+    default:
+      return [] as unknown as Class_TagGroup[]
     }
   }
 
@@ -485,36 +485,36 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-      case 'level':
-        app_data.drawing_area.bypass_redraws = true
-        if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
-          app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
-        }
-        app_data.drawing_area.sankey.showAccordingToLevelTags()
-        app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
-        updateUnitaryStyles(app_data.drawing_area)
-        app_data.drawing_area.draw()
-        app_data.drawing_area.to_recenter = true
-        app_data.drawing_area.recenter()
-        app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
-        app_data.drawing_area.orderElementOnDA()
+    case 'level':
+      app_data.drawing_area.bypass_redraws = true
+      if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
+        app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
+      }
+      app_data.drawing_area.sankey.showAccordingToLevelTags()
+      app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+      updateUnitaryStyles(app_data.drawing_area)
+      app_data.drawing_area.draw()
+      app_data.drawing_area.to_recenter = true
+      app_data.drawing_area.recenter()
+      app_data.drawing_area.sankey.nodes_list.forEach(node => node.reorganizeIOLinks())
+      app_data.drawing_area.orderElementOnDA()
 
-        break
-      case 'data':
-        handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
-        break
-      case 'element':
-        //app_data.drawing_area.bypass_compute_positions = true
-        app_data.drawing_area.draw()
-        //app_data.drawing_area.bypass_compute_positions = false
-        app_data.drawing_area.orderElementOnDA()
-        break
-      case 'unitary':
-        updateUnitaryStyles(app_data.drawing_area)
-        app_data.drawing_area.draw()
-        app_data.drawing_area.to_recenter = true
-        app_data.drawing_area.recenter()
-        break
+      break
+    case 'data':
+      handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
+      break
+    case 'element':
+      //app_data.drawing_area.bypass_compute_positions = true
+      app_data.drawing_area.draw()
+      //app_data.drawing_area.bypass_compute_positions = false
+      app_data.drawing_area.orderElementOnDA()
+      break
+    case 'unitary':
+      updateUnitaryStyles(app_data.drawing_area)
+      app_data.drawing_area.draw()
+      app_data.drawing_area.to_recenter = true
+      app_data.drawing_area.recenter()
+      break
     }
     updateComponents()
   }

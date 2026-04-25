@@ -1285,7 +1285,7 @@ export class Class_DrawingArea {
     if (!this.to_recenter) return
     // In paper mode, positions are already computed for the format — don't shift
     if (this.is_paper_mode) return
-    let bbox = this.d3_selection_elements_group?.node()?.getBBox()
+    const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
       return
@@ -1532,8 +1532,6 @@ export class Class_DrawingArea {
       if (this._ghost_link == null) {// Start creating  a node & a ghost_link + ghost node
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Create default source node
         const source = this.sankey.addNewDefaultNode()
         source.draw()
@@ -1621,8 +1619,6 @@ export class Class_DrawingArea {
 
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Display the selection zone & set it starting position
         this._selection_zone.setVisible()
         this.starting_x_point = mouse_position[0]
@@ -1845,8 +1841,6 @@ export class Class_DrawingArea {
       if (this._ghost_link !== null) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Move ghost target
         const target = this._ghost_link.target
         target.setPosXY(
@@ -1859,8 +1853,6 @@ export class Class_DrawingArea {
       if (this._selection_zone.is_visible) {
         // Get relative mouse position
         const mouse_position = d3.pointer(event)
-        mouse_position[0] = mouse_position[0] //- this._elements_d3_groups_shift_x
-        mouse_position[1] = mouse_position[1] //- this._elements_d3_groups_shift_y
         // Variable that can be modifier if we move the selection zone above or at the left of it starting point
         let new_x = this.starting_x_point,
           new_y = this.starting_y_point
@@ -2661,7 +2653,7 @@ export class Class_DrawingArea {
     if (overlap_count > 0) {
       console.warn(
         `[setParametricMode] ${overlap_count} nœud(s) en chevauchement détecté(s) en absolu — ` +
-        `shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.`
+        'shape_position_dy clampé à 0, certaines positions vont changer lors de la bascule.'
       )
     }
 

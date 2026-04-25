@@ -22,18 +22,20 @@ import { missing_flux_apparence_translations, missing_menu_translations, missing
 // 5. FONCTION D'INTÉGRATION DANS LE SYSTÈME i18n
 // ==================================================================================================
 
+type TranslationTree = { [key: string]: unknown }
+
 /**
  * Fonction utilitaire pour merger profondément les traductions
  * @param source - Objet source à fusionner
  * @param target - Objet cible qui recevra les nouvelles traductions
  */
-export const deep_merge_translations = (source: any, target: any): void => {
+export const deep_merge_translations = (source: TranslationTree, target: TranslationTree): void => {
   Object.entries(source).forEach(([key, value]) => {
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       if (!target[key]) {
         target[key] = {}
       }
-      deep_merge_translations(value, target[key])
+      deep_merge_translations(value as TranslationTree, target[key] as TranslationTree)
     } else {
       target[key] = value
     }
@@ -45,9 +47,9 @@ export const deep_merge_translations = (source: any, target: any): void => {
  * À appeler dans ton fichier i18n principal
  */
 export const integrate_missing_translations = (
-  resources_app_elements: any,
-  resources_nodes: any,
-  resources_flux: any
+  resources_app_elements: I18nResources,
+  resources_nodes: I18nResources,
+  resources_flux: I18nResources
 ): void => {
   // Intégrer les traductions du menu général
   deep_merge_translations(missing_menu_translations.en.translation, resources_app_elements.en.translation)

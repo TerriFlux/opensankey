@@ -347,84 +347,84 @@ export function checkForUrlToJSON() {
   return url_var
 
 }
-  export const formatValueWithOption = (element:Class_BaseShape,value: number | string, option: ValueOptionType,prefix:'name_label'|'value_label'|'stock_label') =>{
+export const formatValueWithOption = (element:Class_BaseShape,value: number | string, option: ValueOptionType,prefix:'name_label'|'value_label'|'stock_label') =>{
   //@ts-expect-error xxx
-   const label_values = getNameLabelValues(element, prefix)
-    if (
-      element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) || 
+  const label_values = getNameLabelValues(element, prefix)
+  if (
+    element.style.includes(element.sankey.styles_dict['LinkInUnitaryStyle']) || 
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeOutputStyle']) ||
       element.style.includes(element.sankey.styles_dict['SankeyUnitaryNodeInputStyle']) ||
       element.style.includes(element.sankey.styles_dict['LinkOutUnitaryStyle'])
-    ) {
-      if (value == 100) return ''
-      return value + '%'
-    }
-    if (option == '%IS' && value) {
-      return value + '%'
-    } else if (option == '%OS' && value) {
-      return value + '%'
-    } else if (option == '%ID' && value) {
-      return value + '%'
-    } else if (option == '%OD' && value) {
-      return value + '%'
-    } else if (option == 'unit_ratio' && value) {
-      return value + ' ' + label_values.unit + '/' + 't'//this.value?.ratio_unit_tag!.name
-    } else if (option == '%PS' && value) {
-      return value + '%'
-    } else if (option == '%PD' && value) {
-      return value + '%'
-    }
-    return value as string
+  ) {
+    if (value == 100) return ''
+    return value + '%'
   }
+  if (option == '%IS' && value) {
+    return value + '%'
+  } else if (option == '%OS' && value) {
+    return value + '%'
+  } else if (option == '%ID' && value) {
+    return value + '%'
+  } else if (option == '%OD' && value) {
+    return value + '%'
+  } else if (option == 'unit_ratio' && value) {
+    return value + ' ' + label_values.unit + '/' + 't'//this.value?.ratio_unit_tag!.name
+  } else if (option == '%PS' && value) {
+    return value + '%'
+  } else if (option == '%PD' && value) {
+    return value + '%'
+  }
+  return value as string
+}
 
 export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement,prefix:'name_label'|'value_label') => {
-    // Helper: append target value as "source→target" when target is set and differs from source
-    const withTarget = (source_text: string) => {
-      const tgt = link.valueCurrentTarget
-      if (tgt === null || tgt === undefined) return source_text
-      const src = link.valueCurrent
-      if (src === tgt) return source_text
-      const target_text = format_value(type_data, tgt, link, link.unit_name(prefix), prefix)
-      return source_text + '\u2192' + target_text
-    }
+  // Helper: append target value as "source→target" when target is set and differs from source
+  const withTarget = (source_text: string) => {
+    const tgt = link.valueCurrentTarget
+    if (tgt === null || tgt === undefined) return source_text
+    const src = link.valueCurrent
+    if (src === tgt) return source_text
+    const target_text = format_value(type_data, tgt, link, link.unit_name(prefix), prefix)
+    return source_text + '\u2192' + target_text
+  }
 
-    const data_source = link.drawing_area.data_source
+  const data_source = link.drawing_area.data_source
 
-    // Intervals links: only show [min - max] in free_interval mode
-    if (link.value?.value_option === 'intervals') {
-      if (link.drawing_area.interval_display === 'free_interval') {
-        const use_data = data_source === 'data' || data_source === 'data_label'
-        const min = use_data ? (link.value?.data_min ?? link.value?.result_min) : (link.value?.result_min ?? link.value?.data_min)
-        const max = use_data ? (link.value?.data_max ?? link.value?.result_max) : (link.value?.result_max ?? link.value?.data_max)
-        if (min !== null || max !== null) {
-          return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
-        }
+  // Intervals links: only show [min - max] in free_interval mode
+  if (link.value?.value_option === 'intervals') {
+    if (link.drawing_area.interval_display === 'free_interval') {
+      const use_data = data_source === 'data' || data_source === 'data_label'
+      const min = use_data ? (link.value?.data_min ?? link.value?.result_min) : (link.value?.result_min ?? link.value?.data_min)
+      const max = use_data ? (link.value?.data_max ?? link.value?.result_max) : (link.value?.result_max ?? link.value?.data_max)
+      if (min !== null || max !== null) {
+        return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
       }
-      return ''
     }
+    return ''
+  }
 
-    if (type_data == 'data' || type_data == 'data_label') {
-      if (!link.value?.valueData) return ''
-      const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
-      return withTarget(src_text as string)
+  if (type_data == 'data' || type_data == 'data_label') {
+    if (!link.value?.valueData) return ''
+    const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
+    return withTarget(src_text as string)
+  }
+  // Reconciled links with min/max — choose data or result source
+  const use_data_minmax = data_source === 'data' || data_source === 'data_label'
+  const interval_min = use_data_minmax ? link.value?.data_min : link.value?.result_min
+  const interval_max = use_data_minmax ? link.value?.data_max : link.value?.result_max
+  if (interval_min !== null || interval_max !== null || link.value?.result_min !== null) {
+    if (type_data === 'free_interval') {
+      const min = interval_min ?? link.value?.result_min
+      const max = interval_max ?? link.value?.result_max
+      return '[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']'
     }
-    // Reconciled links with min/max — choose data or result source
-    const use_data_minmax = data_source === 'data' || data_source === 'data_label'
-    const interval_min = use_data_minmax ? link.value?.data_min : link.value?.result_min
-    const interval_max = use_data_minmax ? link.value?.data_max : link.value?.result_max
-    if (interval_min !== null || interval_max !== null || link.value?.result_min !== null) {
-      if (type_data === 'free_interval') {
-        const min = interval_min ?? link.value?.result_min
-        const max = interval_max ?? link.value?.result_max
-        return '[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']'
-      }
-      if (type_data === 'free_value') {
-        return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
-      }
-      return ''
+    if (type_data === 'free_value') {
+      return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
     }
+    return ''
+  }
 
-    return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
+  return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
 }
 
 export const format_value = (
@@ -463,17 +463,17 @@ export const format_value = (
     let total_target = 0
     target.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value && total_target ? data_value / total_target * 100 : null
-        is_percent = true
+    is_percent = true
   } else if (label_values.unit_type == '%OS') {
     let total_target = 0
     source.output_links_list.filter(l => l.is_visible).forEach(l => total_target += l.valueCurrent ?? 0)
     data_value = data_value && total_target ? data_value / total_target * 100 : null
-        is_percent = true
+    is_percent = true
   } else if (label_values.unit_type == '%ID') {
     let total_source = 0
     target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
-        is_percent = true
+    is_percent = true
   } else if (label_values.unit_type == 'normalized') {
     data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
   }

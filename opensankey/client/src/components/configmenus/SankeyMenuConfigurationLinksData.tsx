@@ -54,10 +54,10 @@ export const LinkValueTypeSelector = ({
     selected_links: Class_LinkElement[],
     unit_data_tagg?: Class_DataTagGroup,
     refreshThis: () => void
-  }>({
-    selected_links: [],
-    refreshThis: () => null
-  })
+      }>({
+        selected_links: [],
+        refreshThis: () => null
+      })
 
   app_data.menu_configuration.r_value_type_set_elements.current = (
     _selected_links: Class_LinkElement[],
@@ -473,30 +473,189 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
       </BOX2COLSTITLEH4>
     })}
 
-      {/* Tab selector: Basique / AFM */}
-      {app_data.has_sankey_afm && (
-        <Box layerStyle='options_2cols'>
-          <OSTooltip label={value_option !== 'value' ? t('Flux.data.tooltips.tab_basic_disabled') : ''}>
-            <Button
-              variant={dataTab === 'basic' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-              isDisabled={value_option !== 'value'}
-              onClick={() => setDataTab('basic')}
-            >
-              {t('Flux.data.tab_basic')}
-            </Button>
-          </OSTooltip>
+    {/* Tab selector: Basique / AFM */}
+    {app_data.has_sankey_afm && (
+      <Box layerStyle='options_2cols'>
+        <OSTooltip label={value_option !== 'value' ? t('Flux.data.tooltips.tab_basic_disabled') : ''}>
           <Button
-            variant={dataTab === 'afm' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
-            onClick={() => setDataTab('afm')}
+            variant={dataTab === 'basic' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            isDisabled={value_option !== 'value'}
+            onClick={() => setDataTab('basic')}
           >
-            {t('Flux.data.tab_afm')}
+            {t('Flux.data.tab_basic')}
           </Button>
-        </Box>
+        </OSTooltip>
+        <Button
+          variant={dataTab === 'afm' ? 'menuconfigpanel_option_button_activated_right' : 'menuconfigpanel_option_button_right'}
+          onClick={() => setDataTab('afm')}
+        >
+          {t('Flux.data.tab_afm')}
+        </Button>
+      </Box>
+    )}
+
+    {/* ===== Panel "Basique" ===== */}
+    {dataTab === 'basic' && (<>
+      {/* Value */}
+      <RowSetter2Cols
+        attributePath={'Flux.labels'}
+        attributeKey={'value'}
+      >
+        <ConfigMenuNumberInput
+          t={t}
+          default_value={default_value}
+          function_on_blur={(_: number | null) => {
+            Class_LinkElement.updateLinks(
+              app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
+            )
+            drawing_area.updateScaleAtLinkValueSetting()
+          }}
+          minimum_value={0}
+          stepper={true}
+          step={1}
+          unit_text={unit_text}
+        />
+      </RowSetter2Cols>
+
+      {/* Value target toggle */}
+      <OSTooltip label={t('Flux.data.tooltips.value_target')} disabled={!app_data.has_sankey_plus}>
+        <span>
+          <BOX2COLS>
+            <Button
+              variant={default_value_target !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              isDisabled={!app_data.has_sankey_plus}
+              onClick={() => {
+                if (default_value_target !== null) {
+                  Class_LinkElement.updateLinks(
+                    app_data, selected_links, 'valueCurrentTarget', null as unknown as number, refreshThisAndUpdateRelatedComponents
+                  )
+                } else {
+                  Class_LinkElement.updateLinks(
+                    app_data, selected_links, 'valueCurrentTarget', first_link?.valueCurrent ?? 0, refreshThisAndUpdateRelatedComponents
+                  )
+                }
+              }}
+            >
+              {t('Flux.data.value_target')}
+            </Button>
+            {default_value_target !== null && app_data.has_sankey_plus ? (
+              <ConfigMenuNumberInput
+                t={t}
+                default_value={default_value_target}
+                function_on_blur={(_: number | null) => {
+                  Class_LinkElement.updateLinks(
+                    app_data, selected_links, 'valueCurrentTarget', _!, refreshThisAndUpdateRelatedComponents
+                  )
+                }}
+                minimum_value={0}
+                stepper={true}
+                step={1}
+                unit_text={unit_text}
+              />
+            ) : <Box />}
+          </BOX2COLS>
+        </span>
+      </OSTooltip>
+    </>)}
+
+    {/* ===== Panel "AFM" ===== */}
+    {dataTab === 'afm' && app_data.has_sankey_afm && (<>
+      {/* Data type selector */}
+      <RowSetter2Cols
+        attributePath={'Flux.data'}
+        attributeKey={'value_type'}
+      >
+        <Select
+          variant='menuconfigpanel_option_select'
+          value={afm_value_type}
+          onChange={(evt) => {
+            const computed = compute_value_option(evt.target.value, afm_node_ref, afm_dir)
+            selected_links.forEach(l => {
+                l.value!.value_option = computed as ValueOptionType
+                if (computed === 'unit_ratio') {
+                  l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
+                }
+                l.drawElements()
+            })
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        >
+          {afm_type_constants.map(el => (
+            <option key={'value_' + el} value={el}>
+              {t('Flux.labels.' + el)}
+            </option>
+          ))}
+        </Select>
+      </RowSetter2Cols>
+
+      {/* Percent sub-selectors */}
+      {afm_value_type === 'percent' && (
+        <>
+          <RowSetter2Cols
+            attributePath={'Flux.data'}
+            attributeKey={'node_ref'}
+          >
+            <Select
+              variant='menuconfigpanel_option_select'
+              value={afm_node_ref}
+              onChange={(evt) => {
+                const computed = compute_value_option(afm_value_type, evt.target.value, afm_dir)
+                selected_links.forEach(l => l.value!.value_option = computed as ValueOptionType)
+                refreshThisAndUpdateRelatedComponents()
+              }}
+            >
+              {['source', 'target'].map(el => (
+                <option key={'value_' + el} value={el}>
+                  {t('Flux.labels.' + el)}
+                </option>
+              ))}
+            </Select>
+          </RowSetter2Cols>
+          <RowSetter2Cols
+            attributePath={'Flux.data'}
+            attributeKey={'dir'}
+          >
+            <Select
+              variant='menuconfigpanel_option_select'
+              value={compute_value_option(afm_value_type, afm_node_ref, afm_dir)}
+              onChange={(evt) => {
+                selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
+                refreshThisAndUpdateRelatedComponents()
+              }}
+            >
+              {afm_node_ref === 'source'
+                ? value_option_percent_constants_source.map(el => (
+                  <option key={'value_' + el} value={el}>
+                    {t('Flux.labels.' + el)}
+                  </option>
+                ))
+                : value_option_percent_constants_target.map(el => (
+                  <option key={'value_' + el} value={el}>
+                    {t('Flux.labels.' + el)}
+                  </option>
+                ))
+              }
+            </Select>
+          </RowSetter2Cols>
+        </>
       )}
 
-      {/* ===== Panel "Basique" ===== */}
-      {dataTab === 'basic' && (<>
-        {/* Value */}
+      {/* Unit ratio selector */}
+      {value_option === 'unit_ratio' && unit_data_tagg && (
+        <DataTagSelector
+          data_tagg={unit_data_tagg}
+          value={first_link_value?.ratio_unit_tag?.id as string}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            if (first_link_value) {
+              first_link_value.ratio_unit_tag = unit_data_tagg.tags_dict[evt.target.value]
+              refreshThisAndUpdateRelatedComponents()
+            }
+          }}
+        />
+      )}
+
+      {/* Value input (all types except intervals) */}
+      {value_option !== 'intervals' && (
         <RowSetter2Cols
           attributePath={'Flux.labels'}
           attributeKey={'value'}
@@ -516,277 +675,118 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
             unit_text={unit_text}
           />
         </RowSetter2Cols>
+      )}
 
-        {/* Value target toggle */}
-        <OSTooltip label={t('Flux.data.tooltips.value_target')} disabled={!app_data.has_sankey_plus}>
-          <span>
-            <BOX2COLS>
-              <Button
-                variant={default_value_target !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                isDisabled={!app_data.has_sankey_plus}
-                onClick={() => {
-                  if (default_value_target !== null) {
-                    Class_LinkElement.updateLinks(
-                      app_data, selected_links, 'valueCurrentTarget', null as unknown as number, refreshThisAndUpdateRelatedComponents
-                    )
-                  } else {
-                    Class_LinkElement.updateLinks(
-                      app_data, selected_links, 'valueCurrentTarget', first_link?.valueCurrent ?? 0, refreshThisAndUpdateRelatedComponents
-                    )
-                  }
-                }}
-              >
-                {t('Flux.data.value_target')}
-              </Button>
-              {default_value_target !== null && app_data.has_sankey_plus ? (
-                <ConfigMenuNumberInput
-                  t={t}
-                  default_value={default_value_target}
-                  function_on_blur={(_: number | null) => {
-                    Class_LinkElement.updateLinks(
-                      app_data, selected_links, 'valueCurrentTarget', _!, refreshThisAndUpdateRelatedComponents
-                    )
-                  }}
-                  minimum_value={0}
-                  stepper={true}
-                  step={1}
-                  unit_text={unit_text}
-                />
-              ) : <Box />}
-            </BOX2COLS>
-          </span>
-        </OSTooltip>
-      </>)}
-
-      {/* ===== Panel "AFM" ===== */}
-      {dataTab === 'afm' && app_data.has_sankey_afm && (<>
-        {/* Data type selector */}
-        <RowSetter2Cols
-          attributePath={'Flux.data'}
-          attributeKey={'value_type'}
-        >
-          <Select
-            variant='menuconfigpanel_option_select'
-            value={afm_value_type}
-            onChange={(evt) => {
-              const computed = compute_value_option(evt.target.value, afm_node_ref, afm_dir)
-              selected_links.forEach(l => {
-                l.value!.value_option = computed as ValueOptionType
-                if (computed === 'unit_ratio') {
-                  l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
-                }
-                l.drawElements()
-              })
-              refreshThisAndUpdateRelatedComponents()
-            }}
-          >
-            {afm_type_constants.map(el => (
-              <option key={'value_' + el} value={el}>
-                {t('Flux.labels.' + el)}
-              </option>
-            ))}
-          </Select>
-        </RowSetter2Cols>
-
-        {/* Percent sub-selectors */}
-        {afm_value_type === 'percent' && (
-          <>
-            <RowSetter2Cols
-              attributePath={'Flux.data'}
-              attributeKey={'node_ref'}
-            >
-              <Select
-                variant='menuconfigpanel_option_select'
-                value={afm_node_ref}
-                onChange={(evt) => {
-                  const computed = compute_value_option(afm_value_type, evt.target.value, afm_dir)
-                  selected_links.forEach(l => l.value!.value_option = computed as ValueOptionType)
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-              >
-                {['source', 'target'].map(el => (
-                  <option key={'value_' + el} value={el}>
-                    {t('Flux.labels.' + el)}
-                  </option>
-                ))}
-              </Select>
-            </RowSetter2Cols>
-            <RowSetter2Cols
-              attributePath={'Flux.data'}
-              attributeKey={'dir'}
-            >
-              <Select
-                variant='menuconfigpanel_option_select'
-                value={compute_value_option(afm_value_type, afm_node_ref, afm_dir)}
-                onChange={(evt) => {
-                  selected_links.forEach(l => l.value!.value_option = evt.target.value as ValueOptionType)
-                  refreshThisAndUpdateRelatedComponents()
-                }}
-              >
-                {afm_node_ref === 'source'
-                  ? value_option_percent_constants_source.map(el => (
-                    <option key={'value_' + el} value={el}>
-                      {t('Flux.labels.' + el)}
-                    </option>
-                  ))
-                  : value_option_percent_constants_target.map(el => (
-                    <option key={'value_' + el} value={el}>
-                      {t('Flux.labels.' + el)}
-                    </option>
-                  ))
-                }
-              </Select>
-            </RowSetter2Cols>
-          </>
-        )}
-
-        {/* Unit ratio selector */}
-        {value_option === 'unit_ratio' && unit_data_tagg && (
-          <DataTagSelector
-            data_tagg={unit_data_tagg}
-            value={first_link_value?.ratio_unit_tag?.id as string}
-            onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
-              if (first_link_value) {
-                first_link_value.ratio_unit_tag = unit_data_tagg.tags_dict[evt.target.value]
-                refreshThisAndUpdateRelatedComponents()
-              }
-            }}
-          />
-        )}
-
-        {/* Value input (all types except intervals) */}
-        {value_option !== 'intervals' && (
+      {/* Min / Max (when type is "intervals") */}
+      {value_option === 'intervals' && (<>
+        <OSTooltip label={t('Flux.data.tooltips.data_min')}>
           <RowSetter2Cols
-            attributePath={'Flux.labels'}
-            attributeKey={'value'}
+            attributePath={'Flux.data'}
+            attributeKey={'data_min'}
           >
             <ConfigMenuNumberInput
               t={t}
-              default_value={default_value}
+              default_value={first_link?.dataMin}
               function_on_blur={(_: number | null) => {
                 Class_LinkElement.updateLinks(
-                  app_data, selected_links, 'valueCurrent', _!, refreshThisAndUpdateRelatedComponents
+                  app_data, selected_links, 'dataMin', _!, refreshThisAndUpdateRelatedComponents
                 )
-                drawing_area.updateScaleAtLinkValueSetting()
               }}
-              minimum_value={0}
               stepper={true}
               step={1}
               unit_text={unit_text}
             />
           </RowSetter2Cols>
-        )}
-
-        {/* Min / Max (when type is "intervals") */}
-        {value_option === 'intervals' && (<>
-          <OSTooltip label={t('Flux.data.tooltips.data_min')}>
-            <RowSetter2Cols
-              attributePath={'Flux.data'}
-              attributeKey={'data_min'}
-            >
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={first_link?.dataMin}
-                function_on_blur={(_: number | null) => {
-                  Class_LinkElement.updateLinks(
-                    app_data, selected_links, 'dataMin', _!, refreshThisAndUpdateRelatedComponents
-                  )
-                }}
-                stepper={true}
-                step={1}
-                unit_text={unit_text}
-              />
-            </RowSetter2Cols>
-          </OSTooltip>
-          <OSTooltip label={t('Flux.data.tooltips.data_max')}>
-            <RowSetter2Cols
-              attributePath={'Flux.data'}
-              attributeKey={'data_max'}
-            >
-              <ConfigMenuNumberInput
-                t={t}
-                default_value={first_link?.dataMax}
-                function_on_blur={(_: number | null) => {
-                  Class_LinkElement.updateLinks(
-                    app_data, selected_links, 'dataMax', _!, refreshThisAndUpdateRelatedComponents
-                  )
-                }}
-                stepper={true}
-                step={1}
-                unit_text={unit_text}
-              />
-            </RowSetter2Cols>
-          </OSTooltip>
-        </>)}
-
-        {/* Uncertainty toggle (value type only) */}
-        {value_option === 'value' && (
-          <OSTooltip label={t('Flux.data.tooltips.uncertainty')}>
-            <span>
-              <BOX2COLS>
-                <Button
-                  variant={first_link?.dataUncertainty !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                  onClick={() => {
-                    if (first_link?.dataUncertainty !== null) {
-                      Class_LinkElement.updateLinks(
-                        app_data, selected_links, 'dataUncertainty', null as unknown as number, refreshThisAndUpdateRelatedComponents
-                      )
-                    } else {
-                      Class_LinkElement.updateLinks(
-                        app_data, selected_links, 'dataUncertainty', 0, refreshThisAndUpdateRelatedComponents
-                      )
-                    }
-                  }}
-                >
-                  {t('Flux.data.uncertainty')}
-                </Button>
-                {first_link?.dataUncertainty !== null ? (
-                  <ConfigMenuNumberInput
-                    t={t}
-                    default_value={first_link?.dataUncertainty}
-                    function_on_blur={(_: number | null) => {
-                      Class_LinkElement.updateLinks(
-                        app_data, selected_links, 'dataUncertainty', _!, refreshThisAndUpdateRelatedComponents
-                      )
-                    }}
-                    minimum_value={0}
-                    stepper={true}
-                    step={1}
-                    unit_text={'%'}
-                  />
-                ) : <Box />}
-              </BOX2COLS>
-            </span>
-          </OSTooltip>
-        )}
+        </OSTooltip>
+        <OSTooltip label={t('Flux.data.tooltips.data_max')}>
+          <RowSetter2Cols
+            attributePath={'Flux.data'}
+            attributeKey={'data_max'}
+          >
+            <ConfigMenuNumberInput
+              t={t}
+              default_value={first_link?.dataMax}
+              function_on_blur={(_: number | null) => {
+                Class_LinkElement.updateLinks(
+                  app_data, selected_links, 'dataMax', _!, refreshThisAndUpdateRelatedComponents
+                )
+              }}
+              stepper={true}
+              step={1}
+              unit_text={unit_text}
+            />
+          </RowSetter2Cols>
+        </OSTooltip>
       </>)}
 
-      {/* Text display and mode selector */}
-      <Box layerStyle='options_2cols'>
-        <RowSetter2Cols
-          attributePath={'Flux.data'}
-          attributeKey={'affichage'}
-        >
-          <ConfigMenuTextInput
-            t={t}
-            default_value={first_link_value?.text_value}
-            function_on_blur={(_: string | null) => {
-              Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
-              // Sync text_value → fo_content only when rich text mode is active
-              if (labelValues.has_fo) {
-                const wrapped = wrapInParagraph(_ ?? '')
-                selected_links.forEach(link => { link.name_label_fo_content = wrapped })
-              }
-            }}
-            multiValue={is_label_indeterminated}
-          />
-        </RowSetter2Cols>
-        <Button
-          variant={(displayMode === 'simple_text' || displayMode === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
-          onClick={setModeText}
-        >
-          {t('Menu.display_mode.editor')}
-        </Button>
-      </Box>
+      {/* Uncertainty toggle (value type only) */}
+      {value_option === 'value' && (
+        <OSTooltip label={t('Flux.data.tooltips.uncertainty')}>
+          <span>
+            <BOX2COLS>
+              <Button
+                variant={first_link?.dataUncertainty !== null ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                onClick={() => {
+                  if (first_link?.dataUncertainty !== null) {
+                    Class_LinkElement.updateLinks(
+                      app_data, selected_links, 'dataUncertainty', null as unknown as number, refreshThisAndUpdateRelatedComponents
+                    )
+                  } else {
+                    Class_LinkElement.updateLinks(
+                      app_data, selected_links, 'dataUncertainty', 0, refreshThisAndUpdateRelatedComponents
+                    )
+                  }
+                }}
+              >
+                {t('Flux.data.uncertainty')}
+              </Button>
+              {first_link?.dataUncertainty !== null ? (
+                <ConfigMenuNumberInput
+                  t={t}
+                  default_value={first_link?.dataUncertainty}
+                  function_on_blur={(_: number | null) => {
+                    Class_LinkElement.updateLinks(
+                      app_data, selected_links, 'dataUncertainty', _!, refreshThisAndUpdateRelatedComponents
+                    )
+                  }}
+                  minimum_value={0}
+                  stepper={true}
+                  step={1}
+                  unit_text={'%'}
+                />
+              ) : <Box />}
+            </BOX2COLS>
+          </span>
+        </OSTooltip>
+      )}
+    </>)}
+
+    {/* Text display and mode selector */}
+    <Box layerStyle='options_2cols'>
+      <RowSetter2Cols
+        attributePath={'Flux.data'}
+        attributeKey={'affichage'}
+      >
+        <ConfigMenuTextInput
+          t={t}
+          default_value={first_link_value?.text_value}
+          function_on_blur={(_: string | null) => {
+            Class_LinkElement.updateLinks(app_data, selected_links, 'text_value', _ ?? '', refreshThisAndUpdateRelatedComponents)
+            // Sync text_value → fo_content only when rich text mode is active
+            if (labelValues.has_fo) {
+              const wrapped = wrapInParagraph(_ ?? '')
+              selected_links.forEach(link => { link.name_label_fo_content = wrapped })
+            }
+          }}
+          multiValue={is_label_indeterminated}
+        />
+      </RowSetter2Cols>
+      <Button
+        variant={(displayMode === 'simple_text' || displayMode === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+        onClick={setModeText}
+      >
+        {t('Menu.display_mode.editor')}
+      </Button>
+    </Box>
   </Box>
 }

@@ -832,7 +832,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
             }}
           >
             <OSTooltip label={'Si actif, le bilan mati\u00e8re de ce noeud sera respect\u00e9 lors de la r\u00e9conciliation'}>
-              <Box as='span' fontSize='xs'>{`Bilan mati\u00e8re`}</Box>
+              <Box as='span' fontSize='xs'>{'Bilan mati\u00e8re'}</Box>
             </OSTooltip>
           </Checkbox>
         }

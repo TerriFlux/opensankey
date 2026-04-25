@@ -553,7 +553,7 @@ export class LinkElementPersistence extends ProtoElementPersistence {
           const key = attrKey as keyof ConfigType
           //const currentValue = link.getStyleProperty(key)
           //if (json_local[jsonKey] !== currentValue) {
-            link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
+          link.attributes[key] = json_local[jsonKey] as ExtractAttributeValue<ConfigType[typeof key]>
           //}
         }
       })
@@ -1112,21 +1112,21 @@ export class SankeyPersistence {
     kwargs?: Type_JSON
   ) {
     const json_container_object = getJSONFromJSON(json_object, 'labels', {})
-    if (json_object.version == 0.8 && (json_object.file_name as String)?.includes('Agricole Référentiel Flux')) {
+    if (json_object.version == 0.8 && (json_object.file_name as string)?.includes('Agricole Référentiel Flux')) {
       Object.entries(json_container_object).reverse()
         .forEach(([_, container_json]) => {
           const name = (container_json as Type_JSON)['name'] as string
           const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
           fromJSON(container, container_json as Type_JSON, kwargs)
         })
-      } else {
+    } else {
       Object.entries(json_container_object)
         .forEach(([_, container_json]) => {
           const name = (container_json as Type_JSON)['name'] as string
           const container = sankey.containers_dict[_] ?? sankey.addNewContainer(_, name)
           fromJSON(container, container_json as Type_JSON, kwargs)
         })        
-      }
+    }
   }
 
   private static load_nodes(

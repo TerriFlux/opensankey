@@ -47,157 +47,157 @@ export class NodeEventsHandler {
   constructor(node: Class_NodeBase) {
     this._node = node
   }
-/**
+  /**
  * ✅ Détermine quel type d'élément a été cliqué
  */
-private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
-  let current: Element | null = element
+  private getClickedLabelType(element: Element): 'shape' | 'name_label' | 'value_label' | 'icon' | null {
+    let current: Element | null = element
 
-  while (current) {
-    const id = current.id
-    const classList = current.classList
+    while (current) {
+      const id = current.id
+      const classList = current.classList
 
-    // Check par ID (plus fiable car unique)
-    if (id.startsWith('value_label_text_') || id.startsWith('g_value_label')) {
-      return 'value_label'
-    }
-    if (id.startsWith('name_label_text_') || id.startsWith('g_name_label')) {
-      return 'name_label'
-    }
-    if (id.startsWith('g_icon_') || id.startsWith('icon_svg_')) {
-      return 'icon'
-    }
-    if (id.startsWith('node_shape_')) {
-      return 'shape'
+      // Check par ID (plus fiable car unique)
+      if (id.startsWith('value_label_text_') || id.startsWith('g_value_label')) {
+        return 'value_label'
+      }
+      if (id.startsWith('name_label_text_') || id.startsWith('g_name_label')) {
+        return 'name_label'
+      }
+      if (id.startsWith('g_icon_') || id.startsWith('icon_svg_')) {
+        return 'icon'
+      }
+      if (id.startsWith('node_shape_')) {
+        return 'shape'
+      }
+
+      // Fallback sur les classes
+      if (classList.contains('value_label_text') || classList.contains('value_label')) {
+        return 'value_label'
+      }
+      if (classList.contains('name_label_text') || classList.contains('name_label')) {
+        return 'name_label'
+      }
+      if (classList.contains('illustration_icon') || classList.contains('illustration')) {
+        return 'icon'
+      }
+      if (classList.contains('node_shape')) {
+        return 'shape'
+      }
+
+      // Remonter au parent (sécurité pour éviter boucle infinie)
+      if (current.parentElement && current !== current.parentElement) {
+        current = current.parentElement
+      } else {
+        break
+      }
     }
 
-    // Fallback sur les classes
-    if (classList.contains('value_label_text') || classList.contains('value_label')) {
-      return 'value_label'
-    }
-    if (classList.contains('name_label_text') || classList.contains('name_label')) {
-      return 'name_label'
-    }
-    if (classList.contains('illustration_icon') || classList.contains('illustration')) {
-      return 'icon'
-    }
-    if (classList.contains('node_shape')) {
-      return 'shape'
-    }
-
-    // Remonter au parent (sécurité pour éviter boucle infinie)
-    if (current.parentElement && current !== current.parentElement) {
-      current = current.parentElement
-    } else {
-      break
-    }
+    return 'shape' // Default
   }
 
-  return 'shape' // Default
-}
-
-/**
+  /**
  * ✅ Logique commune pour sélectionner l'élément et ouvrir le bon onglet
  */
-private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label' | 'icon', ctrlKey: boolean) {
-  const drawing_area = this._node.drawing_area
-  const menu_config = drawing_area.application_data.menu_configuration
-  const elements_configurable_selected = menu_config.elements_configurable_selected
+  private selectElementAndOpenTab(labelType: 'shape' | 'name_label' | 'value_label' | 'icon', ctrlKey: boolean) {
+    const drawing_area = this._node.drawing_area
+    const menu_config = drawing_area.application_data.menu_configuration
+    const elements_configurable_selected = menu_config.elements_configurable_selected
 
-  // ✅ Ajouter/Retirer de la sélection
-  if (ctrlKey) {
-    this.addOrRemoveNodeFromSelection(labelType)
-  } else {
-    drawing_area.purgeSelection()
-    drawing_area.addElementToSelection(this._node)
-  }
+    // ✅ Ajouter/Retirer de la sélection
+    if (ctrlKey) {
+      this.addOrRemoveNodeFromSelection(labelType)
+    } else {
+      drawing_area.purgeSelection()
+      drawing_area.addElementToSelection(this._node)
+    }
 
-  // ✅ Mettre à jour elements_configurable_selected.data
-  if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
-    elements_configurable_selected.data.push('node')
-  }
-  if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
-    elements_configurable_selected.data.push('object')
-  }
+    // ✅ Mettre à jour elements_configurable_selected.data
+    if (drawing_area.selected_nodes_list.length > 0 && !elements_configurable_selected.data.includes('node')) {
+      elements_configurable_selected.data.push('node')
+    }
+    if (drawing_area.selected_containers_list.length > 0 && !elements_configurable_selected.data.includes('object')) {
+      elements_configurable_selected.data.push('object')
+    }
 
-  // ✅ Configurer le style et l'onglet
-  elements_configurable_selected.style = ['element']
+    // ✅ Configurer le style et l'onglet
+    elements_configurable_selected.style = ['element']
   
-  // // ✅ Mapper le type de label vers l'onglet correspondant
-  // const tabMap: Record<string, 'background' | 'shape' | 'name' | 'value' | 'icon'> = {
-  //   'shape': 'shape',
-  //   'name_label': 'name',
-  //   'value_label': 'value',
-  //   'icon': 'icon'
-  // }
+    // // ✅ Mapper le type de label vers l'onglet correspondant
+    // const tabMap: Record<string, 'background' | 'shape' | 'name' | 'value' | 'icon'> = {
+    //   'shape': 'shape',
+    //   'name_label': 'name',
+    //   'value_label': 'value',
+    //   'icon': 'icon'
+    // }
   
-  menu_config.tab_selected = labelType
+    menu_config.tab_selected = labelType
 
-  // ✅ Mettre à jour les composants
-  menu_config.ref_to_menu_config_updater.current()
-  menu_config.updateAllComponentsRelatedToNodes()
-}
+    // ✅ Mettre à jour les composants
+    menu_config.ref_to_menu_config_updater.current()
+    menu_config.updateAllComponentsRelatedToNodes()
+  }
 
-/**
+  /**
  * ✅ Simple clic : sélectionne l'élément + ouvre l'onglet approprié
  */
-public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
-  const drawing_area = this._node.drawing_area
+  public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
+    const drawing_area = this._node.drawing_area
   
-  if (drawing_area.application_data.is_static) {
-    drawing_area.purgeSelection()
-    return
+    if (drawing_area.application_data.is_static) {
+      drawing_area.purgeSelection()
+      return
+    }
+
+    // EDITION MODE ===========================================================
+    if (drawing_area.isInEditionMode()) {
+      drawing_area.purgeSelection()
+      drawing_area.closeAllMenus()
+      return
+    }
+
+    // SELECTION MODE =========================================================
+    if (drawing_area.isInSelectionMode() && event.button === 0) {
+      const clickedElement = event.target as Element
+      const labelType = this.getClickedLabelType(clickedElement)
+
+      if (!labelType) return
+
+      // ✅ Sélectionner l'élément et ouvrir l'onglet
+      this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
+    }
   }
 
-  // EDITION MODE ===========================================================
-  if (drawing_area.isInEditionMode()) {
-    drawing_area.purgeSelection()
-    drawing_area.closeAllMenus()
-    return
-  }
-
-  // SELECTION MODE =========================================================
-  if (drawing_area.isInSelectionMode() && event.button === 0) {
-    const clickedElement = event.target as Element
-    const labelType = this.getClickedLabelType(clickedElement)
-
-    if (!labelType) return
-
-    // ✅ Sélectionner l'élément et ouvrir l'onglet
-    this.selectElementAndOpenTab(labelType, event.ctrlKey || event.metaKey)
-  }
-}
-
-/**
+  /**
  * ✅ Add or remove node from selection (version améliorée)
  */
-private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_label' | 'icon') {
-  const drawing_area = this._node.drawing_area
-  const menu_config = drawing_area.application_data.menu_configuration
-  const currentTab = menu_config.tab_selected
+  private addOrRemoveNodeFromSelection(labelType: 'shape' | 'name_label' | 'value_label' | 'icon') {
+    const drawing_area = this._node.drawing_area
+    const menu_config = drawing_area.application_data.menu_configuration
+    const currentTab = menu_config.tab_selected
 
-  // ✅ Mapper vers le format attendu
-  const tabMap: Record<string, string> = {
-    'shape': 'shape',
-    'name_label': 'name',
-    'value_label': 'value',
-    'icon': 'icon',
-    'background': 'shape' // Fallback
-  }
-
-  const clickedTab = tabMap[labelType] || 'shape'
-
-  if (this._node.selected_elements_list.includes(this._node)) {
-    // ✅ Retirer seulement si on clique sur le même onglet déjà ouvert
-    if (clickedTab === currentTab) {
-      drawing_area.removeElementFromSelection(this._node)
+    // ✅ Mapper vers le format attendu
+    const tabMap: Record<string, string> = {
+      'shape': 'shape',
+      'name_label': 'name',
+      'value_label': 'value',
+      'icon': 'icon',
+      'background': 'shape' // Fallback
     }
+
+    const clickedTab = tabMap[labelType] || 'shape'
+
+    if (this._node.selected_elements_list.includes(this._node)) {
+    // ✅ Retirer seulement si on clique sur le même onglet déjà ouvert
+      if (clickedTab === currentTab) {
+        drawing_area.removeElementFromSelection(this._node)
+      }
     // Sinon, on garde la sélection et on change juste l'onglet
-  } else {
+    } else {
     // Ajouter à la sélection
-    drawing_area.addElementToSelection(this._node)
+      drawing_area.addElementToSelection(this._node)
+    }
   }
-}
 
   /**
    * Define event when mouse drag element starts
