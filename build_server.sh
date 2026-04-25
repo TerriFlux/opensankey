@@ -24,3 +24,10 @@ cd server
 flake8  || exit_if_error $?
 cd ..
 
+# Build Sphinx documentation (fr + en) served by Flask blueprint at /doc/<lang>/
+printf "Sphinx documentation ----------------------------------------------\n"
+for lang in fr en; do
+  printf ">>> Build doc lang=%s\n" "$lang"
+  sphinx-build -b html "doc/sources/$lang" "doc/build/html/$lang" || exit_if_error $?
+done
+

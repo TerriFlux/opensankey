@@ -1,1 +1,0 @@
-/home/vledoze/sankeysuitemanager/SankeySuite/doc/sources/pages/user_tools_menu_config_sankeysuite.rst

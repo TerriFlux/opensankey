@@ -1,1 +1,0 @@
-/home/vledoze/sankeysuitemanager/OpenSankey/opensankey/doc/sources/pages/user_introduction.rst

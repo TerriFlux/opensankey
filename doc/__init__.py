@@ -2,10 +2,14 @@ import os
 from flask import Blueprint
 
 
-template_folder = os.path.join(os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'build'), 'html')
-static_folder = os.path.join(os.path.join(os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'build'), 'html'), '_static')
-doc = Blueprint('doc', __name__, static_folder=static_folder, template_folder=template_folder)
+build_root = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), 'build', 'html'
+)
+
+doc = Blueprint(
+    'doc', __name__,
+    static_folder=build_root,
+    static_url_path='',
+)
 
 from . import views  # noqa
