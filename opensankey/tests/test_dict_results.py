@@ -220,7 +220,12 @@ class DictResultTest(unittest.TestCase):
             return
         # Read sankey struct
         io_excel = IOExcel()
-        io_excel.load_sankey(os.path.join(TESTS_DIR, file_name))
+        io_excel.load_sankey(
+            os.path.join(TESTS_DIR, file_name),
+            error_on_new_nodes=False,
+            error_on_new_flux=False,
+            propagate_flux_to_parent=True,
+        )
         # Convert in json format
         io_json = IOJson(io_excel.sankey)
         sankey_json = io_json.get_dict()
