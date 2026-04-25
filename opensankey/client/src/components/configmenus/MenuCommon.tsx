@@ -141,16 +141,16 @@ export const WrapperCheckBoxSubSectionMenu = ({ title, open = true, onClick, chi
     </Checkbox>
 
   </Box>
-    <Collapse in={isOpen} animateOpacity>
-      <Box
-        layerStyle='menuconfigpanel_grid'
-        marginLeft='1rem'
-        borderLeft='lightgray 1px solid'
-        paddingLeft='0.2rem'
-      >
-        {children}
-      </Box>
-    </Collapse>
+  <Collapse in={isOpen} animateOpacity>
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      marginLeft='1rem'
+      borderLeft='lightgray 1px solid'
+      paddingLeft='0.2rem'
+    >
+      {children}
+    </Box>
+  </Collapse>
   </>
 }
 // Version refactorisée de MenuSectionCheckbox
@@ -158,9 +158,9 @@ export const MenuSectionCheckbox = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent, children, rightComponent
-}: React.PropsWithChildren<{
+    elements, attributePath, attributeKey, config,
+    prefix = '', refreshParentComponent, children, rightComponent
+  }: React.PropsWithChildren<{
   elements: ElementsType
   attributePath: string,
   attributeKey: K
@@ -416,9 +416,9 @@ export const ElementAttrSetter2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  attributePath, attributeKey,
-  prefix = '', t, children
-}: React.PropsWithChildren<{
+    attributePath, attributeKey,
+    prefix = '', t, children
+  }: React.PropsWithChildren<{
   attributePath: string,
   attributeKey: K
   config: CONFIG
@@ -451,15 +451,15 @@ export const ElementAttrSetterSelect2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data,
-  elements,
-  attributePath,
-  attributeKey,
-  config,
-  prefix = '',
-  refreshParentComponent,
-  options
-}: {
+    app_data,
+    elements,
+    attributePath,
+    attributeKey,
+    config,
+    prefix = '',
+    refreshParentComponent,
+    options
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -517,9 +517,9 @@ export const ElementAttrSetterTextInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix = '', refreshParentComponent, isOverloaded
-}: {
+    app_data, elements, attributePath, attributeKey, config,
+    prefix = '', refreshParentComponent, isOverloaded
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string
@@ -561,10 +561,10 @@ export const ElementAttrSetterNumberInput2Cols = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, attributePath, attributeKey, config,
-  prefix, refreshParentComponent = () => null,
-  minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text, isOverloaded
-}: {
+    app_data, elements, attributePath, attributeKey, config,
+    prefix, refreshParentComponent = () => null,
+    minimum_value = 0, maximum_value, step = 1, stepper = true, percent = false, unit_text, isOverloaded
+  }: {
   app_data: Class_ApplicationData
   elements: ElementsType
   attributePath: string,
@@ -698,10 +698,10 @@ export const isElementAttributeOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >(
-  elements: ElementsType,
-  attr: K,
-  _config: CONFIG
-) => {
+    elements: ElementsType,
+    attr: K,
+    _config: CONFIG
+  ) => {
   return elements.some(element => {
     //if (element instanceof Class_LinkElement) {
     //@ts-expect-error xxx
@@ -719,8 +719,8 @@ export const TooltipElementOverloaded = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  attributeKey, config, prefix, elements, t
-}: {
+    attributeKey, config, prefix, elements, t
+  }: {
   attributeKey: K,
   config: CONFIG,
   prefix: string,
@@ -745,7 +745,7 @@ export const TooltipElementOverloaded = <
  */
 interface OverloadedButtonProps {
   elements: ElementsType
-  config: any
+  config: Record<string, AttributeConfig<unknown>>
   attributePath: string,
   prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
@@ -770,7 +770,7 @@ export const OverloadedButton = ({
   return (
     <InputIndicatorWrapper
       isOverloaded={isElementAttributeOverloaded(elements, fullAttributeKey, config)}
-      isMultiValue={isConfigValueIndeterminate(elements, config, attributeKey as any, prefix)}
+      isMultiValue={isConfigValueIndeterminate(elements, config, attributeKey as keyof typeof config, prefix)}
       t={t}
     >
       <OSTooltip label={tooltipLabel}>
@@ -797,7 +797,7 @@ interface ButtonGroupItem<T = string> {
 
 interface OverloadedButtonGroupProps<T = string> {
   elements: ElementsType
-  config: any
+  config: Record<string, AttributeConfig<unknown>>
   attributePath: string,
   prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
@@ -844,7 +844,7 @@ export const OverloadedButtonGroup = <T extends string>({
               <Button
                 key={String(item.value)}
                 variant={getButtonVariant(
-                  position as any,
+                  position as 'left' | 'center' | 'right' | '',
                   getIsIndeterminate(),
                   currentValue === item.value
                 )}
@@ -875,7 +875,7 @@ export const OverloadedButtonGroup = <T extends string>({
  */
 interface OverloadedCheckboxProps {
   elements: ElementsType
-  config: any
+  config: Record<string, AttributeConfig<unknown>>
   prefix: ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'
   attributeKey: string
   isChecked: boolean
@@ -961,9 +961,9 @@ export const ConditionalCheckboxWithInput = <
   CONFIG extends Record<string, AttributeConfig<unknown>>,
   K extends keyof CONFIG
 >({
-  app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
-  minimum_value = 0, stepper = true, children
-}: {
+    app_data, elements, checkboxAttributeKey, inputAttributeKey, config, prefix, refreshParentComponent,
+    minimum_value = 0, stepper = true, children
+  }: {
   app_data: Class_ApplicationData,
   elements: ElementsType,
   checkboxAttributeKey: K,
@@ -987,7 +987,7 @@ export const ConditionalCheckboxWithInput = <
       <OverloadedCheckbox
         elements={elements}
         config={config}
-        prefix={prefix as any}
+        prefix={prefix as ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'}
         attributeKey={String(checkboxAttributeKey)}
         isChecked={attribute_values[checkboxAttributeKey] as boolean}
         onChange={(checked) => {
@@ -1631,7 +1631,7 @@ export const MenuColorPicker = ({
 
 // À ajouter dans MenuCommon.tsx
 
-interface ColorPickerWithSustainableProps<T extends Record<string, any>> {
+interface ColorPickerWithSustainableProps<T extends Record<string, AttributeConfig<unknown>>> {
   app_data: Class_ApplicationData
   elements: ElementsType
   config: T
@@ -1642,7 +1642,7 @@ interface ColorPickerWithSustainableProps<T extends Record<string, any>> {
   refreshParentComponent: () => void
 }
 
-export const ColorPickerWithSustainable = <T extends Record<string, any>>({
+export const ColorPickerWithSustainable = <T extends Record<string, AttributeConfig<unknown>>>({
   app_data,
   elements,
   config,
@@ -1672,8 +1672,8 @@ export const ColorPickerWithSustainable = <T extends Record<string, any>>({
   const isSustainableOverloaded = isElementAttributeOverloaded(elements, fullSustainableAttributeKey, config)
 
   // Calcul des multi-values
-  const isColorMultiValue = isConfigValueIndeterminate(elements, config, colorAttributeKey as any, prefix)
-  const isSustainableMultiValue = isConfigValueIndeterminate(elements, config, sustainableAttributeKey as any, prefix)
+  const isColorMultiValue = isConfigValueIndeterminate(elements, config, colorAttributeKey as keyof typeof config, prefix)
+  const isSustainableMultiValue = isConfigValueIndeterminate(elements, config, sustainableAttributeKey as keyof typeof config, prefix)
 
   return (
     <Box layerStyle='option_with_activation'>

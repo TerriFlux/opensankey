@@ -1531,18 +1531,17 @@ export class Class_ApplicationData {
     if (this._toast_processes[0] !== funct_id) {
       setTimeout(() => this._sendWaitingToast(funct, funct_id, intake), default_toast_waiting_delay)
     } else {
+      const task_promise = (async () => {
+        try {
+          await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
+          await funct()  // Attendre la fin de la fonction (sync ou async)
+          return 200
+        } finally {
+          this._toast_processes.splice(0, 1)
+        }
+      })()
       this._toast!.promise(
-        new Promise(async (resolve, reject) => {
-          try {
-            await new Promise(r => setTimeout(r, 500)) // Attendre 500ms pour le spinner
-            await funct()  // Attendre la fin de la fonction (sync ou async)
-            this._toast_processes.splice(0, 1)
-            resolve(200)
-          } catch (error) {
-            this._toast_processes.splice(0, 1)
-            reject(error)
-          }
-        }),
+        task_promise,
         {
           success: {
             title: intake?.success?.title ?? this.t('toast.default.success.title'),

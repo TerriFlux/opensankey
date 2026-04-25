@@ -598,7 +598,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             if (!n.local) n.local = {}
             n.local.label_horiz = 'right'
             if (data_to_convert.style_node['NodeExportStyle']) {
-              const values = ["label_vert_valeur", "label_vert_valeur_shift", "label_horiz_valeur", "bold", "label_visible", "show_value", "value_font_size", ""]
+              const values = ['label_vert_valeur', 'label_vert_valeur_shift', 'label_horiz_valeur', 'bold', 'label_visible', 'show_value', 'value_font_size', '']
               values.forEach(v => {
                 //@ts-expect-error xxx
                 if (n.local[v] == undefined)
@@ -630,7 +630,7 @@ export const convert_data_legacy: ConvertDataLegacyFuncType = (
             if (!n.local) n.local = {}
             n.local.label_horiz = 'left'
             if (data_to_convert.style_node['NodeImportStyle']) {
-              const values = ["label_vert_valeur", "label_vert_valeur_shift", "label_horiz_valeur", "bold", "label_visible", "show_value", "value_font_size", ""]
+              const values = ['label_vert_valeur', 'label_vert_valeur_shift', 'label_horiz_valeur', 'bold', 'label_visible', 'show_value', 'value_font_size', '']
               values.forEach(v => {
                 //@ts-expect-error xxx
                 if (n.local[v] == undefined)

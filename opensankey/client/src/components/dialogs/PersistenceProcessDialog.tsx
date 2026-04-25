@@ -443,7 +443,6 @@ export const UniversalFileConverter = ({
         // file moved/deleted or permission lost — drop it silently
         stored_file_handles.delete(dialog_name)
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Switching input format must clear any previously picked file so the UI
@@ -478,21 +477,21 @@ export const UniversalFileConverter = ({
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
-      case 'excel': return { ...output_options_base, ...output_options_excel }
-      case 'json': return { ...output_options_base, ...output_options_json }
-      case 'blob': return { ...output_options_base }
-      case 'example_excel': return { ...output_options_base }
-      case 'example_json': return { ...output_options_base }
+    case 'excel': return { ...output_options_base, ...output_options_excel }
+    case 'json': return { ...output_options_base, ...output_options_json }
+    case 'blob': return { ...output_options_base }
+    case 'example_excel': return { ...output_options_base }
+    case 'example_json': return { ...output_options_base }
     }
   }
 
   const getCurrentInputOptions = () => {
     switch (input_format) {
-      case 'excel': return { ...input_options_base, ...input_options_excel }
-      case 'json': return { ...input_options_base, ...input_options_json }
-      case 'blob': return { ...input_options_base }
-      case 'example_excel': return { ...input_options_base }
-      case 'example_json': return { ...input_options_base }
+    case 'excel': return { ...input_options_base, ...input_options_excel }
+    case 'json': return { ...input_options_base, ...input_options_json }
+    case 'blob': return { ...input_options_base }
+    case 'example_excel': return { ...input_options_base }
+    case 'example_json': return { ...input_options_base }
     }
   }
 
@@ -672,7 +671,7 @@ export const UniversalFileConverter = ({
         }
         //@ts-expect-error xxx
         let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
-        if (config.title == "ProcessDialog.reconciliation") {
+        if (config.title == 'ProcessDialog.reconciliation') {
           //@ts-expect-error xxx
           root_filename = input_file.name.split('.')[0] + 'reconciled'
         }

@@ -1581,29 +1581,29 @@ export class Class_IconLibrary {
   protected _icon_text_mode_simple = logo_text_simple
   protected _icon_text_mode_rich = logo_text_rich
   protected _icon_text_mode_value = logo_text_value
-// Dans la section "Define icon"
-protected _icon_decimals = logo_decimals
-protected _icon_scientific_notation = logo_scientific_notation
-protected _icon_significant_digits = logo_significant_digits
-protected _icon_unit = logo_unit
+  // Dans la section "Define icon"
+  protected _icon_decimals = logo_decimals
+  protected _icon_scientific_notation = logo_scientific_notation
+  protected _icon_significant_digits = logo_significant_digits
+  protected _icon_unit = logo_unit
 
 
   // Constructor ===================================
   constructor() {
   }
   // Helper pour normaliser la taille des icônes
-private normalizeIcon = (svg: JSX.Element) => (
-  <span style={{ 
-    display: 'inline-flex', 
-    width: '1rem', 
-    height: '1rem', 
-    alignItems: 'center', 
-    justifyContent: 'center',
-    flexShrink: 0
-  }}>
-    {svg}
-  </span>
-)
+  private normalizeIcon = (svg: JSX.Element) => (
+    <span style={{ 
+      display: 'inline-flex', 
+      width: '1rem', 
+      height: '1rem', 
+      alignItems: 'center', 
+      justifyContent: 'center',
+      flexShrink: 0
+    }}>
+      {svg}
+    </span>
+  )
 
   public get icon_new_da() { return this._icon_new_da }
   public get icon_open_sankey() { return this._icon_open_sankey }
@@ -1709,41 +1709,41 @@ private normalizeIcon = (svg: JSX.Element) => (
   public get icon_filter_level() { return this._icon_filter_level }
   public get icon_unit_view() { return this._icon_unit_view }
 
-// Getters normalisés UNIQUEMENT pour les icônes utilisées dans MenuConfigurationAppearance
-public get icon_text_mode_simple() { return this.normalizeIcon(this._icon_text_mode_simple) }
-public get icon_text_mode_rich() { return this.normalizeIcon(this._icon_text_mode_rich) }
-public get icon_text_mode_value() { return this.normalizeIcon(this._icon_text_mode_value) }
-public get icon_text_bold() { return this.normalizeIcon(this._icon_text_bold) }
-public get icon_text_italic() { return this.normalizeIcon(this._icon_text_italic) }
-public get icon_text_align_left() { return this.normalizeIcon(this._icon_text_align_left) }
-public get icon_text_align_center() { return this.normalizeIcon(this._icon_text_align_center) }
-public get icon_text_align_right() { return this.normalizeIcon(this._icon_text_align_right) }
-public get icon_text_vert_pos_top() { return this.normalizeIcon(this._icon_text_vert_pos_top) }
-public get icon_text_vert_pos_center() { return this.normalizeIcon(this._icon_text_vert_pos_center) }
-public get icon_text_vert_pos_bottom() { return this.normalizeIcon(this._icon_text_vert_pos_bottom) }
-public get icon_label_inside_horiz() { return this.normalizeIcon(this._icon_label_inside_horiz) }
-public get icon_label_inside_vert() { return this.normalizeIcon(this._icon_label_inside_vert) }
-public get icon_label_on_path() { return this.normalizeIcon(this._icon_label_on_path) }
-public get icon_label_auto_position() { return this.normalizeIcon(this._icon_label_auto_position) }
-public get icon_open_modal_icon() { return this.normalizeIcon(this._icon_open_modal_icon) }
-public get icon_import_file_image() { return this.normalizeIcon(this._icon_import_file_image) }
-public get icon_delete() { return this.normalizeIcon(this._icon_delete) }
-public get icon_locked() { return this._icon_locked }
-public get icon_unlocked() { return this._icon_unlocked }
-public get icon_orientation_hh() { return this.normalizeIcon(this._icon_orientation_hh) }
-public get icon_orientation_vv() { return this.normalizeIcon(this._icon_orientation_vv) }
-public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }
-public get icon_orientation_vh() { return this.normalizeIcon(this._icon_orientation_vh) }
-public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
-public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
-public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
-public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
-public get icon_capsule_h_shape() { return this.normalizeIcon(this._icon_capsule_h_shape) }
-public get icon_verticalize_diagram() { return this.normalizeIcon(this._icon_verticalize_diagram) }
-public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }
-public get icon_scientific_notation() { return this.normalizeIcon(this._icon_scientific_notation) }
-public get icon_significant_digits() { return this.normalizeIcon(this._icon_significant_digits) }
-public get icon_unit() { return this.normalizeIcon(this._icon_unit) }
+  // Getters normalisés UNIQUEMENT pour les icônes utilisées dans MenuConfigurationAppearance
+  public get icon_text_mode_simple() { return this.normalizeIcon(this._icon_text_mode_simple) }
+  public get icon_text_mode_rich() { return this.normalizeIcon(this._icon_text_mode_rich) }
+  public get icon_text_mode_value() { return this.normalizeIcon(this._icon_text_mode_value) }
+  public get icon_text_bold() { return this.normalizeIcon(this._icon_text_bold) }
+  public get icon_text_italic() { return this.normalizeIcon(this._icon_text_italic) }
+  public get icon_text_align_left() { return this.normalizeIcon(this._icon_text_align_left) }
+  public get icon_text_align_center() { return this.normalizeIcon(this._icon_text_align_center) }
+  public get icon_text_align_right() { return this.normalizeIcon(this._icon_text_align_right) }
+  public get icon_text_vert_pos_top() { return this.normalizeIcon(this._icon_text_vert_pos_top) }
+  public get icon_text_vert_pos_center() { return this.normalizeIcon(this._icon_text_vert_pos_center) }
+  public get icon_text_vert_pos_bottom() { return this.normalizeIcon(this._icon_text_vert_pos_bottom) }
+  public get icon_label_inside_horiz() { return this.normalizeIcon(this._icon_label_inside_horiz) }
+  public get icon_label_inside_vert() { return this.normalizeIcon(this._icon_label_inside_vert) }
+  public get icon_label_on_path() { return this.normalizeIcon(this._icon_label_on_path) }
+  public get icon_label_auto_position() { return this.normalizeIcon(this._icon_label_auto_position) }
+  public get icon_open_modal_icon() { return this.normalizeIcon(this._icon_open_modal_icon) }
+  public get icon_import_file_image() { return this.normalizeIcon(this._icon_import_file_image) }
+  public get icon_delete() { return this.normalizeIcon(this._icon_delete) }
+  public get icon_locked() { return this._icon_locked }
+  public get icon_unlocked() { return this._icon_unlocked }
+  public get icon_orientation_hh() { return this.normalizeIcon(this._icon_orientation_hh) }
+  public get icon_orientation_vv() { return this.normalizeIcon(this._icon_orientation_vv) }
+  public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }
+  public get icon_orientation_vh() { return this.normalizeIcon(this._icon_orientation_vh) }
+  public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
+  public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
+  public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
+  public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+  public get icon_capsule_h_shape() { return this.normalizeIcon(this._icon_capsule_h_shape) }
+  public get icon_verticalize_diagram() { return this.normalizeIcon(this._icon_verticalize_diagram) }
+  public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }
+  public get icon_scientific_notation() { return this.normalizeIcon(this._icon_scientific_notation) }
+  public get icon_significant_digits() { return this.normalizeIcon(this._icon_significant_digits) }
+  public get icon_unit() { return this.normalizeIcon(this._icon_unit) }
 
 }
 

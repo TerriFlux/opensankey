@@ -1730,7 +1730,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
 
     const target_side = this.target_side
-    let base_x = this._position_ending.x - shifting_end_point_x
+    const base_x = this._position_ending.x - shifting_end_point_x
 
     if (target_side === 'right') {
       return base_x + this.target.shape_margin_right
@@ -1753,7 +1753,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
     }
 
     const target_side = this.target_side
-    let base_y = this._position_ending.y - shifting_end_point_y
+    const base_y = this._position_ending.y - shifting_end_point_y
 
     if (target_side === 'top') {
       return base_y - this.target.shape_margin_top

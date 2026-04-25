@@ -1309,7 +1309,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
   protected getLabelPos(): [number, number, string, string] {
     let label_pos_y = this.link.position_y_start
-    let label_pos_y_end = this.link.position_y_end
+    const label_pos_y_end = this.link.position_y_end
     const going_up = label_pos_y_end - label_pos_y < 0
     let label_pos_x = this.link.position_x_start
     let label_anchor = 'start'
@@ -1487,7 +1487,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
   protected updateTextPathOffset() {
     const [label_position, label_anchor, label_ortho_position, label_dominant_baseline] = this.getTextPathOffset()
-    let ortho_position = label_ortho_position
+    const ortho_position = label_ortho_position
 
     const textPathSelector = this.getTextPathSelector()
     const textSelector = this.getTextSelector()

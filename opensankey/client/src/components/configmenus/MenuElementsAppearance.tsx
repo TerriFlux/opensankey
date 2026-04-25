@@ -129,7 +129,7 @@ export const LabelDisplayModeSelector = ({
   t
 }: {
   prefix: string
-  labelValues: any
+  labelValues: Record<string, unknown>
   app_data: Class_ApplicationData
   elements: ElementsType,
   menu_style?: boolean
@@ -1293,7 +1293,7 @@ export const MenuConfigurationAppearance = ({
                                   }}
                                   multiValue={u_indeterminate}
                                 />
-                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_u_locked`)}>
+                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
                                   <Button
                                     variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                                     onClick={() => {
@@ -1333,7 +1333,7 @@ export const MenuConfigurationAppearance = ({
                                   }}
                                   multiValue={v_indeterminate}
                                 />
-                                <OSTooltip label={t(`Noeud.apparence.tooltips.shape_position_v_locked`)}>
+                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
                                   <Button
                                     variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
                                     onClick={() => {
@@ -2135,7 +2135,7 @@ export const MarginEditor = ({
         <OverloadedCheckbox
           elements={elements}
           config={BASE_SHAPE_CONFIG}
-          prefix={prefix as any}
+          prefix={prefix as ShapePrefix | 'name_label' | 'value_label' | 'icon' | 'stock_label'}
           attributeKey="margin_left"  // On utilise margin_left comme représentant
           isChecked={!editMarginsUnified}
           onChange={(checked) => setEditMarginsUnified(!checked)}
