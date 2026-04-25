@@ -10,5 +10,7 @@ imgkit
 webcolors
 uwsgi
 black
-autopep8
+autopep8>=2.3.0
 ruff
+flake8>=7.1.0
+pycodestyle>=2.12.0
