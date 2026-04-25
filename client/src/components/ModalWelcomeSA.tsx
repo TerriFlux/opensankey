@@ -10,6 +10,7 @@ import {
   buildShortcutsContent
 } from '../deps/OpenSankey+/deps/OpenSankey/components/welcome/ModalWelcome'
 import { Class_ApplicationData } from '../deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
+import { FeaturesMatrixSA } from './FeaturesMatrixSA'
 
 // WHATSNEW.md is a single file with sections separated by <!-- LANG:xx --> markers.
 // We slice out the section that matches the active UI language, falling back to English
@@ -86,6 +87,9 @@ export const ModalWelcomeBuilderSA = ({ app_data }: { app_data: Class_Applicatio
       </Tbody>
     </>
   })
+
+  page_links['features'] = <>{t('welcome.breadcrumbs.features')}</>
+  page_content['features'] = <FeaturesMatrixSA app_data={app_data} />
 
   page_links['news'] = <>{t('welcome.breadcrumbs.news')}</>
   page_content['news'] = <WhatsNewContent app_data={app_data} />

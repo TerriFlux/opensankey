@@ -421,8 +421,15 @@ export const resources_app_elements = {
         news: 'What\'s new in this version',
         news_unavailable: 'Release notes are not available.',
         view: 'Buttons to navigate through the different views of the Sankey',
+        features: 'Feature recap by licence',
+        features_intro: 'This table summarises the features unlocked by each licence — OpenSankey+, SankeySuite (MFA) and developer access.',
+        features_col_feature: 'Feature',
+        features_col_plus: 'OpenSankey+',
+        features_col_afm: 'SankeySuite',
+        features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Overview',
+          features: 'Licence recap',
           news: 'Updates',
         },
         news_content: {
@@ -865,7 +872,14 @@ export const resources_app_elements = {
         news: 'Nouveautés et Améliorations récentes',
         news_unavailable: 'Les notes de version ne sont pas disponibles.',
         view: 'Boutons permettant de naviguer entre les différentes vues du diagramme',
+        features: 'Récapitulatif des fonctionnalités par licence',
+        features_intro: 'Ce tableau récapitule les fonctionnalités débloquées par chacune des licences — OpenSankey+, SankeySuite (AFM) et accès développeur.',
+        features_col_feature: 'Fonctionnalité',
+        features_col_plus: 'OpenSankey+',
+        features_col_afm: 'SankeySuite',
+        features_col_dev: 'Dev',
         breadcrumbs: {
+          features: 'Récap licences',
           news: 'Nouveautés',
         },
         news_content: {
@@ -1342,8 +1356,15 @@ export const resources_app_elements = {
         news: 'Novedades de esta versión',
         news_unavailable: 'Las notas de la versión no están disponibles.',
         view: 'Botones para navegar entre las diferentes vistas del Sankey',
+        features: 'Resumen de funcionalidades por licencia',
+        features_intro: 'Esta tabla resume las funcionalidades habilitadas por cada licencia — OpenSankey+, SankeySuite (MFA) y acceso desarrollador.',
+        features_col_feature: 'Funcionalidad',
+        features_col_plus: 'OpenSankey+',
+        features_col_afm: 'SankeySuite',
+        features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Resumen',
+          features: 'Resumen licencias',
           news: 'Novedades',
         },
         news_content: {
@@ -1820,8 +1841,15 @@ export const resources_app_elements = {
         news: 'Neuigkeiten in dieser Version',
         news_unavailable: 'Die Versionshinweise sind nicht verfügbar.',
         view: 'Schaltflächen zum Navigieren zwischen den verschiedenen Ansichten des Sankey',
+        features: 'Funktionsübersicht nach Lizenz',
+        features_intro: 'Diese Tabelle fasst die Funktionen zusammen, die durch die jeweilige Lizenz freigeschaltet werden — OpenSankey+, SankeySuite (MFA) und Entwicklerzugang.',
+        features_col_feature: 'Funktion',
+        features_col_plus: 'OpenSankey+',
+        features_col_afm: 'SankeySuite',
+        features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Übersicht',
+          features: 'Lizenzübersicht',
           news: 'Neuigkeiten',
         },
         news_content: {
@@ -2298,8 +2326,15 @@ export const resources_app_elements = {
         news: 'Novità di questa versione',
         news_unavailable: 'Le note di rilascio non sono disponibili.',
         view: 'Pulsanti per navigare tra le diverse viste del Sankey',
+        features: 'Riepilogo delle funzionalità per licenza',
+        features_intro: 'Questa tabella riepiloga le funzionalità sbloccate da ciascuna licenza — OpenSankey+, SankeySuite (MFA) e accesso sviluppatore.',
+        features_col_feature: 'Funzionalità',
+        features_col_plus: 'OpenSankey+',
+        features_col_afm: 'SankeySuite',
+        features_col_dev: 'Dev',
         breadcrumbs: {
           intro: 'Panoramica',
+          features: 'Riepilogo licenze',
           news: 'Novità',
         },
         news_content: {
