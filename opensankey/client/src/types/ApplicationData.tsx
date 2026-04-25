@@ -1346,19 +1346,23 @@ export class Class_ApplicationData {
     const evtIsPrintable = evt.key.length === 1 && !evtModifier && !evt.altKey
     const selectedNodes = app_ref.drawing_area.selected_nodes_list
     const selectedLinks = app_ref.drawing_area.selected_links_list
+    const selectedContainers = app_ref.drawing_area.selected_containers_list
     if (
       evtIsPrintable &&
       evtOnDrawingArea &&
-      selectedNodes.length === 1 &&
-      selectedLinks.length === 0
+      selectedLinks.length === 0 &&
+      (
+        (selectedNodes.length === 1 && selectedContainers.length === 0) ||
+        (selectedContainers.length === 1 && selectedNodes.length === 0)
+      )
     ) {
       evt.preventDefault()
-      const node = selectedNodes[0]
-      if (!node.name_label_is_visible) {
-        node.name_label_is_visible = true
-        node.drawNameLabel()
+      const target = selectedNodes.length === 1 ? selectedNodes[0] : selectedContainers[0]
+      if (!target.name_label_is_visible) {
+        target.name_label_is_visible = true
+        target.drawNameLabel()
       }
-      node.setInputLabelVisible(evt.key)
+      target.setInputLabelVisible(evt.key)
       return
     }
     // Event to move all selected nodes with keyboard arrows --------------------------
