@@ -35,6 +35,8 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  MenuGroup,
+  MenuDivider,
   Input,
   ButtonGroup,
   FormControl,
@@ -495,16 +497,44 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         SVG
       </MenuItem>
-      {(new_data.menu_configuration.extra_export_menu_items ?? []).map((item) => (
-        <MenuItem
-          key={item.key}
-          isDisabled={item.disabled ? item.disabled() : false}
-          onClick={item.onClick}
-        >
-          {item.icon}
-          {item.label}
-        </MenuItem>
-      ))}
+      {(new_data.menu_configuration.extra_export_menu_items ?? []).map((item) => {
+        const renderItem = (entry: {
+          key: string
+          label: string
+          icon?: React.ReactNode
+          onClick: () => void
+          disabled?: () => boolean
+          tooltip?: () => string
+        }) => {
+          const tooltip_text = entry.tooltip ? entry.tooltip() : ''
+          const menu_item = (
+            <MenuItem
+              isDisabled={entry.disabled ? entry.disabled() : false}
+              onClick={entry.onClick}
+            >
+              {entry.icon}
+              {entry.label}
+            </MenuItem>
+          )
+          // OSTooltip needs a non-disabled child to capture hover; wrap in <Box> so the tooltip
+          // still appears even when the MenuItem is greyed out (the Box stays interactive).
+          return tooltip_text
+            ? <OSTooltip key={entry.key} placement='right' label={tooltip_text}><Box>{menu_item}</Box></OSTooltip>
+            : <Fragment key={entry.key}>{menu_item}</Fragment>
+        }
+
+        if (item.type === 'group') {
+          return (
+            <Fragment key={item.key}>
+              <MenuDivider />
+              <MenuGroup title={item.label}>
+                {item.children.map(renderItem)}
+              </MenuGroup>
+            </Fragment>
+          )
+        }
+        return renderItem(item)
+      })}
     </MenuList>
   </ChakraMenu>
 
