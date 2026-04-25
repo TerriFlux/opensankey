@@ -8,6 +8,7 @@ stages:
 # only cache local items.
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_FORCE_HTTPS: "true"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GITLAB_RUNNER_ENV: /home/gitlab-runner/gitlab_test
   TAG_TEST: test
