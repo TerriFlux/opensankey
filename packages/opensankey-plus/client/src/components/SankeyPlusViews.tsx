@@ -633,6 +633,7 @@ export const SelecteurView = (
 
   const selecteur = <Select
     variant='view_select'
+    style={is_view_master ? { fontStyle: 'italic', backgroundColor: '#e2e8f0' } : undefined}
     onDoubleClick={() => {
       if (
         has_sankey_plus &&
@@ -659,9 +660,11 @@ export const SelecteurView = (
     {
       app_data.views_order
         .map((view, i) => {
+          const is_master_option = view === default_main_sankey_id
           return <option
             key={i}
             value={view}
+            style={is_master_option ? { fontStyle: 'italic', backgroundColor: '#e2e8f0' } : undefined}
           >
             {app_data.views_dict[view].name}
           </option>
