@@ -802,6 +802,24 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    *
    * @memberof Class_ApplicationDataOSP
    */
+  /**
+   * Refresh the compressed per-view cache for the current drawing area. Called
+   * after in-place mutations done on the active view's DA (e.g. reconciliation
+   * applied via DrawingAreaPersistence.fromJSON) so that the cache used by
+   * view-switching and saving reflects the latest state.
+   *
+   * @memberof Class_ApplicationDataOSP
+   */
+  public override saveCurrentViewToCache(): void {
+    if (!this.has_views) return
+    if (this.is_view_master) return
+    const view_id = this._drawing_area.id
+    if (!this._views[view_id]) return
+    this._views[view_id].json = compressJSONToGzip(
+      DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP)
+    )
+  }
+
   public saveBeforeChangingView() {
     // const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
     // if (ev.onkeydown) {
