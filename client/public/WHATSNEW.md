@@ -39,6 +39,7 @@
 - **Intervalles, incertitude, min/max sur les flux** : nouveau type de donnée *intervalles*, champs min/max/incertitude relative persistés en JSON et synchronisés avec Excel. Panneau flux restructuré en onglets *Basique* / *AFM*.
 - **Séparation type de données / affichage des intervalles** : les deux sélecteurs de la barre d'outils sont désormais indépendants. Le type d'affichage est rappelé dans la légende.
 - **Stocks intégrés au bilan matière** : une variation de stock déclarée sur un nœud est traitée comme une variable réconciliable supplémentaire par le solveur, selon `Σ(entrants) − Σ(sortants) − Δstock = 0`. Deux nouvelles feuilles Excel de résultats (`stocks_results`, `stocks_analysis`) sont produites.
+- **« Ajuster et compléter le diagramme » respecte la vue active** : lancée depuis une vue, la réconciliation ne reconstruit plus tout le diagramme — elle met à jour uniquement la vue courante, en préservant le diagramme maître et les autres vues.
 
 ### Internationalisation
 
@@ -80,6 +81,7 @@
 - **Intervals, uncertainty, min/max on flows**: new *intervals* data type, min/max/relative-uncertainty fields persisted in JSON and synced with Excel. Flow panel split into *Basic* / *AFM* tabs.
 - **Separation of data type and interval display**: the two toolbar selectors are now independent. The display type is recalled in the legend.
 - **Stocks integrated into mass balance**: a stock change declared on a node is treated as an extra reconciliation variable by the solver, following `Σ(inputs) − Σ(outputs) − Δstock = 0`. Two new Excel result sheets (`stocks_results`, `stocks_analysis`) are produced.
+- **"Adjust and complete the diagram" respects the active view**: when launched from a view, reconciliation no longer rebuilds the whole diagram — it now updates the current view only, preserving the master diagram and other views.
 
 ### Internationalization
 
