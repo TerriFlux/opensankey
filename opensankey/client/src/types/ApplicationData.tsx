@@ -886,6 +886,16 @@ export class Class_ApplicationData {
   }
 
   /**
+   * Persist the state of the current drawing area into a per-view compressed
+   * cache. No-op for plain OS; ApplicationDataOSP overrides it to refresh
+   * `_views[current_view_id].json` so a subsequent view switch or save reflects
+   * the latest changes done on the current view's drawing area.
+   */
+  public saveCurrentViewToCache(): void {
+    // No-op: plain ApplicationData has no per-view cache.
+  }
+
+  /**
    * Update current drawing area data from a json_object
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
