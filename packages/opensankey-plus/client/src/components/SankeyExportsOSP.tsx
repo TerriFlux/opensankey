@@ -23,6 +23,7 @@
 // ==================================================================================================
 
 import FileSaver from 'file-saver'
+import { GIFEncoder, quantize, applyPalette } from 'gifenc'
 import JSZip from 'jszip'
 import { PDFDocument } from 'pdf-lib'
 
@@ -96,24 +97,28 @@ const buildPDFFormData = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDP
 // ===========================================================================
 
 /**
- * Iterate over master + all views. For each view, switch the active drawing area,
+ * Iterate over a list of views. For each view, switch the active drawing area,
  * wait a frame for D3 to commit the redraw, then call captureFn(view_id, label).
  * The indicator `ref_to_save_in_cache_indicator_value` is forced true during the
  * loop so switching doesn't trigger the "unsaved view" modal.
+ *
+ * Defaults to `[master, ...views_order]` (used by PNG zip / PDF merge). Pass an
+ * explicit `view_ids` to filter or reorder (animated GIF excludes master).
  */
 const iterateAllViews = async <T,>(
   app_data: Class_ApplicationDataOSP,
-  captureFn: (view_id: string, label: string) => Promise<T>
+  captureFn: (view_id: string, label: string) => Promise<T>,
+  view_ids?: string[]
 ): Promise<Array<{ view_id: string; label: string; payload: T }>> => {
   const original_view_id = app_data.drawing_area.sankey.id
   const indicator_ref = app_data.menu_configuration.ref_to_save_in_cache_indicator_value
   const original_indicator = indicator_ref.current
   indicator_ref.current = true
 
-  const view_ids = [default_main_sankey_id, ...app_data.views_order]
+  const ids_to_iterate = view_ids ?? [default_main_sankey_id, ...app_data.views_order]
   const results: Array<{ view_id: string; label: string; payload: T }> = []
   try {
-    for (const view_id of view_ids) {
+    for (const view_id of ids_to_iterate) {
       app_data.setCurrentView(view_id)
       await waitForNextFrame()
       const label = getViewLabel(app_data, view_id)
@@ -197,42 +202,253 @@ export const exportAllViewsAsPDFMerged = async (
 }
 
 // ===========================================================================
+// Animated sequence export (GIF / WebM / PNG zip with reordering)
+// ===========================================================================
+
+export type AnimExportFormat = 'gif' | 'webm' | 'png_zip'
+export type AnimExportLoopMode = 'once' | 'loop' | 'pingpong'
+
+export interface AnimExportOpts {
+  format: AnimExportFormat
+  view_ids: string[]      // ordered & filtered list of views to include
+  delay_ms: number        // per-frame duration (1500 = 1.5s/view)
+  dpi: Type_ExportDPI
+  loop_mode: AnimExportLoopMode
+}
+
+// Expand the user-ordered list according to loop mode. Pingpong appends the
+// reverse of interior frames so the animation bounces back (V1,V2,V3 -> V1,V2,V3,V2).
+const buildSequence = (view_ids: string[], loop_mode: AnimExportLoopMode): string[] => {
+  if (loop_mode === 'pingpong' && view_ids.length > 2) {
+    return [...view_ids, ...view_ids.slice(1, -1).reverse()]
+  }
+  return view_ids
+}
+
+// Capture each unique view once via the server PNG endpoint. Returns blobs keyed
+// by view_id so a sequence with repeats (pingpong) doesn't re-render needlessly.
+const captureSelectedViewsAsPNG = async (
+  app_data: Class_ApplicationDataOSP,
+  unique_view_ids: string[],
+  dpi: Type_ExportDPI
+): Promise<Map<string, { label: string; blob: Blob }>> => {
+  const endpoint = window.location.origin + '/opensankey/save/png'
+  const results = await iterateAllViews(app_data, async () => {
+    const form_data = buildPNGFormData(app_data, dpi)
+    const response = await fetch(endpoint, { method: 'POST', body: form_data })
+    const blob = await response.blob()
+    fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
+    return blob
+  }, unique_view_ids)
+  const map = new Map<string, { label: string; blob: Blob }>()
+  results.forEach(({ view_id, label, payload }) => map.set(view_id, { label, blob: payload }))
+  return map
+}
+
+// Decode a PNG blob to ImageData via canvas, flattening transparency on white.
+const decodePNGToImageData = async (blob: Blob): Promise<ImageData> => {
+  const bitmap = await createImageBitmap(blob)
+  const c = document.createElement('canvas')
+  c.width = bitmap.width
+  c.height = bitmap.height
+  const ctx = c.getContext('2d')
+  if (!ctx) throw new Error('No 2D context for frame decode')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, bitmap.width, bitmap.height)
+  ctx.drawImage(bitmap, 0, 0)
+  const image_data = ctx.getImageData(0, 0, bitmap.width, bitmap.height)
+  bitmap.close?.()
+  return image_data
+}
+
+const encodeAnimatedGIF = async (
+  ordered_blobs: Blob[],
+  opts: AnimExportOpts
+): Promise<Blob> => {
+  const gif = GIFEncoder()
+  // gifenc: repeat=0 => infinite loop, repeat=-1 => play once. Set on first frame only.
+  const repeat = opts.loop_mode === 'once' ? -1 : 0
+  for (let i = 0; i < ordered_blobs.length; i++) {
+    const image_data = await decodePNGToImageData(ordered_blobs[i])
+    const palette = quantize(image_data.data, 256)
+    const indexed = applyPalette(image_data.data, palette)
+    gif.writeFrame(indexed, image_data.width, image_data.height, {
+      palette,
+      delay: opts.delay_ms,
+      ...(i === 0 ? { repeat } : {})
+    })
+  }
+  gif.finish()
+  return new Blob([gif.bytes()], { type: 'image/gif' })
+}
+
+const encodeAnimatedWebM = async (
+  ordered_blobs: Blob[],
+  opts: AnimExportOpts
+): Promise<Blob> => {
+  if (ordered_blobs.length === 0) throw new Error('No frames to encode')
+  // Decode first frame to size the canvas.
+  const first = await createImageBitmap(ordered_blobs[0])
+  const canvas = document.createElement('canvas')
+  canvas.width = first.width
+  canvas.height = first.height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('No 2D context for WebM canvas')
+  ctx.fillStyle = '#ffffff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.drawImage(first, 0, 0)
+  first.close?.()
+
+  // Real-time recording: capture the canvas at a sampling rate well above the frame rate.
+  const fps = Math.max(1, Math.round(1000 / opts.delay_ms) * 4)
+  const stream = (canvas as HTMLCanvasElement).captureStream(fps)
+  const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm'
+  const recorder = new MediaRecorder(stream, { mimeType: mime })
+  const chunks: Blob[] = []
+  recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
+  const stopped = new Promise<void>((resolve) => { recorder.onstop = () => resolve() })
+  recorder.start()
+
+  // First frame already drawn; hold it for delay_ms before drawing the next.
+  await new Promise((r) => setTimeout(r, opts.delay_ms))
+  for (let i = 1; i < ordered_blobs.length; i++) {
+    const bitmap = await createImageBitmap(ordered_blobs[i])
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.drawImage(bitmap, 0, 0)
+    bitmap.close?.()
+    await new Promise((r) => setTimeout(r, opts.delay_ms))
+  }
+  recorder.stop()
+  await stopped
+  return new Blob(chunks, { type: mime })
+}
+
+const packageSelectedViewsAsZip = async (
+  ordered_entries: Array<{ view_id: string; label: string; blob: Blob }>
+): Promise<Blob> => {
+  const zip = new JSZip()
+  const used_names = new Set<string>()
+  ordered_entries.forEach(({ label, blob }, idx) => {
+    // Prefix with frame index to preserve order in the zip listing.
+    const prefix = String(idx + 1).padStart(3, '0')
+    let file_name = prefix + '_' + sanitizeFileName(label) + '.png'
+    let dedup = 2
+    while (used_names.has(file_name)) {
+      file_name = prefix + '_' + sanitizeFileName(label) + '_' + dedup + '.png'
+      dedup += 1
+    }
+    used_names.add(file_name)
+    zip.file(file_name, blob)
+  })
+  return zip.generateAsync({ type: 'blob' })
+}
+
+/**
+ * Unified entry point for the animated/sequence export modal. Captures each
+ * selected view once via the server PNG endpoint, then expands and encodes
+ * according to format & loop mode.
+ *
+ * Assumes all selected views share the same export dimensions. gifenc &
+ * MediaRecorder both require constant frame size.
+ */
+export const exportAnimatedSequence = async (
+  app_data: Class_ApplicationDataOSP,
+  opts: AnimExportOpts
+): Promise<void> => {
+  if (opts.view_ids.length === 0) throw new Error('No views selected')
+
+  const captures_by_id = await captureSelectedViewsAsPNG(app_data, opts.view_ids, opts.dpi)
+  const sequence = buildSequence(opts.view_ids, opts.loop_mode)
+  const ordered_entries = sequence.map((view_id) => {
+    const entry = captures_by_id.get(view_id)
+    if (!entry) throw new Error('Missing capture for view ' + view_id)
+    return { view_id, label: entry.label, blob: entry.blob }
+  })
+  const ordered_blobs = ordered_entries.map((e) => e.blob)
+
+  const file_base = sanitizeFileName(app_data.file_name) + '_animation'
+  let blob: Blob
+  let extension: string
+  switch (opts.format) {
+    case 'gif':
+      blob = await encodeAnimatedGIF(ordered_blobs, opts)
+      extension = '.gif'
+      break
+    case 'webm':
+      blob = await encodeAnimatedWebM(ordered_blobs, opts)
+      extension = '.webm'
+      break
+    case 'png_zip':
+      blob = await packageSelectedViewsAsZip(ordered_entries)
+      extension = '.zip'
+      break
+  }
+  FileSaver.saveAs(blob, file_base + extension)
+}
+
+// ===========================================================================
 // Register extra menu items on the OS export dropdown
 // ===========================================================================
 
 export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP): void => {
   const mc = app_data.menu_configuration
-  const disabled_guard = () => !app_data.has_views || app_data.views_order.length === 0
+  // All multi-view exports (PNG/PDF/GIF) are OpenSankey+ features. SVG stays free in MenuTop.
+  const disabled_guard = () => !app_data.has_sankey_plus || !app_data.has_views || app_data.views_order.length === 0
+  // Empty string => no tooltip wrapper (entry is enabled and self-explanatory).
+  const tooltip_guard = () => {
+    if (!app_data.has_sankey_plus) return app_data.t('Menu.sankeyOSPDisabled')
+    if (!app_data.has_views || app_data.views_order.length === 0) return 'Aucune vue à exporter'
+    return ''
+  }
   mc.extra_export_menu_items = [
     {
-      key: 'all_views_png',
-      label: app_data.t('Menu.export_all_views_png'),
-      disabled: disabled_guard,
-      onClick: () => {
-        app_data.sendWaitingToast(
-          () => exportAllViewsAsPNGZip(app_data),
-          {
-            success: { title: app_data.t('toast.save_as_png.success.title') },
-            loading: { title: app_data.t('toast.save_as_png.loading.title') },
-            error: { title: app_data.t('toast.save_as_png.error.title') }
+      type: 'group',
+      key: 'all_views_group',
+      label: 'Toutes les vues',
+      children: [
+        {
+          key: 'all_views_png',
+          label: 'PNG',
+          disabled: disabled_guard,
+          tooltip: tooltip_guard,
+          onClick: () => {
+            app_data.sendWaitingToast(
+              () => exportAllViewsAsPNGZip(app_data),
+              {
+                success: { title: app_data.t('toast.save_as_png.success.title') },
+                loading: { title: app_data.t('toast.save_as_png.loading.title') },
+                error: { title: app_data.t('toast.save_as_png.error.title') }
+              }
+            )
           }
-        )
-      }
-    },
-    {
-      key: 'all_views_pdf',
-      label: app_data.t('Menu.export_all_views_pdf'),
-      disabled: disabled_guard,
-      onClick: () => {
-        app_data.sendWaitingToast(
-          () => exportAllViewsAsPDFMerged(app_data),
-          {
-            success: { title: app_data.t('toast.save_as_pdf.success.title') },
-            loading: { title: app_data.t('toast.save_as_pdf.loading.title') },
-            error: { title: app_data.t('toast.save_as_pdf.error.title') }
+        },
+        {
+          key: 'all_views_pdf',
+          label: 'PDF',
+          disabled: disabled_guard,
+          tooltip: tooltip_guard,
+          onClick: () => {
+            app_data.sendWaitingToast(
+              () => exportAllViewsAsPDFMerged(app_data),
+              {
+                success: { title: app_data.t('toast.save_as_pdf.success.title') },
+                loading: { title: app_data.t('toast.save_as_pdf.loading.title') },
+                error: { title: app_data.t('toast.save_as_pdf.error.title') }
+              }
+            )
           }
-        )
-      }
+        },
+        {
+          key: 'all_views_animated',
+          label: 'Animation...',
+          disabled: disabled_guard,
+          tooltip: tooltip_guard,
+          onClick: () => {
+            app_data.menu_configuration_osp.ref_show_modal_animated_export.current(true)
+          }
+        }
+      ]
     }
   ]
 }

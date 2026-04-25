@@ -44,6 +44,8 @@ import {
   renderApplyLayoutExtraTabOSP,
 } from './components/SankeyPlusViews'
 
+import { ModalAnimatedExportOSP } from './components/ModalAnimatedExportOSP'
+
 import {
   ModalSelectionIcon
 } from './components/SankeyPlusCatalogIcon'
@@ -281,6 +283,9 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
       app_data={app_data}
     />,
     <ModalTrialExpiredOSP
+      app_data={app_data}
+    />,
+    <ModalAnimatedExportOSP
       app_data={app_data}
     />
   ]
