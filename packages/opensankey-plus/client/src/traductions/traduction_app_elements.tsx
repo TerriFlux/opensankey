@@ -60,6 +60,7 @@ export const resources_app_elements = {
         SNI: 'Use as geometric frame',
         detachTiedNodes: 'Use as simple frame',
         copyElement: 'Copy shape(s)',
+        editName: 'Edit name',
 
 
         'import_icon': 'Select icon',
@@ -553,6 +554,7 @@ export const resources_app_elements = {
         SNI: 'Utiliser comme cadre géométrique',
         detachTiedNodes: 'Utiliser comme cadre simple',
         copyElement: 'Copier la/les forme(s)',
+        editName: 'Éditer le nom',
 
         'toBeautify': 'Embellir le fichier JSON',
 
@@ -1022,6 +1024,7 @@ export const resources_app_elements = {
         SNI: 'Usar como marco geométrico',
         detachTiedNodes: 'Usar como marco simple',
         copyElement: 'Copiar forma(s)',
+        editName: 'Editar nombre',
 
         'import_icon': 'Seleccionar icono',
         'import_icon_from_pack': 'Importar iconos desde paquete',
@@ -1506,6 +1509,7 @@ export const resources_app_elements = {
         SNI: 'Als geometrischen Rahmen verwenden',
         detachTiedNodes: 'Als einfachen Rahmen verwenden',
         copyElement: 'Form(en) kopieren',
+        editName: 'Name bearbeiten',
 
         'import_icon': 'Symbol auswählen',
         'import_icon_from_pack': 'Symbole aus Paket importieren',
@@ -1990,6 +1994,7 @@ export const resources_app_elements = {
         SNI: 'Usa come cornice geometrica',
         detachTiedNodes: 'Usa come cornice semplice',
         copyElement: 'Copia forma/e',
+        editName: 'Modifica nome',
 
         'import_icon': 'Seleziona icona',
         'import_icon_from_pack': 'Importa icone dal pacchetto',

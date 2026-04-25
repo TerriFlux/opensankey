@@ -175,6 +175,19 @@ export const ContextZDT = (
     {t('Menu.copyElement')}
   </Button>
 
+  const btn_edit_name = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      if (!zdt_to_contextualise.name_label_is_visible) {
+        zdt_to_contextualise.name_label_is_visible = true
+        zdt_to_contextualise.drawNameLabel()
+      }
+      zdt_to_contextualise.setInputLabelVisible()
+      closeContextMenu()
+    }}>
+    {t('Menu.editName')}
+  </Button>
+
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
     id="context_zdd_pop_over"
@@ -185,6 +198,7 @@ export const ContextZDT = (
       zIndex: '1',
     }}>
     <ButtonGroup orientation='vertical' isAttached>
+      {btn_edit_name}
       {btn_copy}
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       {btn_move_to_first_plan}
