@@ -308,11 +308,14 @@ export class NodePositioning {
       }
 
 
-      // Algorithme d3-sankey-circular - les liens sont déjà marqués
+      // Algorithme d3-sankey-circular - les liens sont déjà marqués.
+      // Ne pas écraser le statut des liens dont le recyclage est verrouillé.
       Object.values(this.drawingArea.sankey.nodes_dict[node.id].output_links_list)
         .forEach(link => {
+          const link_data = this.drawingArea.sankey.links_dict[link.id]
+          if (link_data.shape_is_recycling_locked === true) return
           if (!recycling_links_ids.includes(link.id)) {
-            this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
+            link_data.shape_is_recycling = false
           }
         })
     })
@@ -560,22 +563,35 @@ export class NodePositioning {
         nodes_per_horizontal_indexes[u].push(node)
         if (u > max_horizontal_index) max_horizontal_index = u
       })
-      // Mark recycling links
+      // Mark recycling links — sauf si l'utilisateur a verrouillé le statut.
       nodes_to_process.forEach(node => {
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.output_links_list.forEach(link => {
-          const target_node_id = this.drawingArea.sankey.links_dict[link.id].target.id
+          const link_data = this.drawingArea.sankey.links_dict[link.id]
+          if (link_data.shape_is_recycling_locked === true) return
+          const target_node_id = link_data.target.id
           const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
           if (target_index !== undefined && node_index >= target_index) {
-            this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = true
+            link_data.shape_is_recycling = true
           } else {
-            this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
+            link_data.shape_is_recycling = false
           }
         })
       })
     } else {
       // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
       const possible_recycling_links_ids: string[] = []
+
+      // Pré-amorçage : les liens dont le statut recyclage est verrouillé par
+      // l'utilisateur (shape_is_recycling_locked === true et shape_is_recycling
+      // === true) sont injectés dans la liste des liens recyclage avant le DFS.
+      // Ainsi, la détection de cycles les considère déjà coupés et ne descend
+      // pas par eux pour calculer les index horizontaux.
+      this.drawingArea.sankey.visible_links_list.forEach(link => {
+        if (link.shape_is_recycling_locked === true && link.shape_is_recycling === true) {
+          possible_recycling_links_ids.push(link.id)
+        }
+      })
 
       // Initialiser tous les nœuds à index -1
       nodes_to_process.forEach(node => {
@@ -655,15 +671,17 @@ export class NodePositioning {
             max_horizontal_index = node_index
           }
 
-          // Marquer les liens de recyclage
+          // Marquer les liens de recyclage — sauf si l'utilisateur a verrouillé le statut.
           node.output_links_list.forEach(link => {
-            const target_node_id = this.drawingArea.sankey.links_dict[link.id].target.id
+            const link_data = this.drawingArea.sankey.links_dict[link.id]
+            if (link_data.shape_is_recycling_locked === true) return
+            const target_node_id = link_data.target.id
             const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
 
             if (target_index !== undefined && node_index >= target_index) {
-              this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = true
+              link_data.shape_is_recycling = true
             } else {
-              this.drawingArea.sankey.links_dict[link.id].shape_is_recycling = false
+              link_data.shape_is_recycling = false
             }
           })
         }

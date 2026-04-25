@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen } from 'react-icons/fa'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
 import { MdTextRotateVertical, MdTextRotationNone } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -1435,38 +1435,76 @@ export const MenuConfigurationAppearance = ({
                             </Box></Box>
                         </> : <></>}
 
+                      {/* Tous les boutons (recyclage + cadenas + 4 orientations) sur une même ligne.
+                          Le bouton recyclage est élargi via un grid 2fr / 1fr / 4fr. */}
+                      <Box as='span' display='grid' gridTemplateColumns='2fr 1fr 4fr' gridColumnGap='0.12rem'>
+                        <OverloadedButton
+                          elements={links_elements}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          attributePath='Flux.apparence'
+                          prefix={'shape'}
+                          attributeKey="is_recycling"
+                          variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
+                          onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
+                        >
+                          <FaRecycle />
+                        </OverloadedButton>
+                        {(() => {
+                          // Padlock toggle for is_recycling. When locked, computeAutoSankey
+                          // preserves the user-set shape_is_recycling value instead of
+                          // recomputing it from the cycle detection.
+                          const real_links = (links_elements as Array<Class_LinkElement | Class_ElementStyle>)
+                            .filter((el): el is Class_LinkElement => el instanceof Class_LinkElement)
+                          if (real_links.length === 0) return <Box />
+                          const first_locked = real_links[0].shape_is_recycling_locked === true
+                          const all_same_lock = real_links.every(l => (l.shape_is_recycling_locked === true) === first_locked)
+                          return (
+                            <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling_locked')}>
+                              <Button
+                                variant={first_locked && all_same_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                onClick={() => {
+                                  const new_locked = !(first_locked && all_same_lock)
+                                  linkShapeValues.is_recycling_locked = new_locked
+                                }}
+                              >
+                                {first_locked && all_same_lock ? <FaLock /> : <FaLockOpen />}
+                              </Button>
+                            </OSTooltip>
+                          )
+                        })()}
+                        <OverloadedButtonGroup
+                          elements={links_elements}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          prefix={'shape'}
+                          attributePath='Noeud.apparence'
+                          attributeKey="orientation"
+                          currentValue={linkShapeValues.orientation}
+                          items={['hh', 'vv', 'vh', 'hv'].map(orientation => ({
+                            value: orientation as Type_Orientation,
+                            icon: icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]
+                          }))}
+                          onChange={(value) => { linkShapeValues.orientation = value }}
+                          getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation')}
+                          t={t}
+                        />
+                      </Box>
+
+                      {/* Structure | Courbe + sélecteur de chemin bézier au même niveau. */}
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <Box layerStyle='options_5cols'>
-                          <OverloadedButton
-                            elements={links_elements}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            attributePath='Flux.apparence'
-                            prefix={'shape'}
-                            attributeKey="is_recycling"
-                            variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
-                            onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
-                          >
-                            {icon_library.icon_orientation_recycle}
-                          </OverloadedButton>
-
-                          <OverloadedButtonGroup
-                            elements={links_elements}
-                            config={LINK_SHAPE_SPECIFIC_CONFIG}
-                            prefix={'shape'}
-                            attributePath='Noeud.apparence'
-                            attributeKey="orientation"
-                            currentValue={linkShapeValues.orientation}
-                            items={['hh', 'vv', 'vh', 'hv'].map(orientation => ({
-                              value: orientation as Type_Orientation,
-                              icon: icon_library[`icon_orientation_${orientation}` as keyof typeof icon_library]
-                            }))}
-                            onChange={(value) => { linkShapeValues.orientation = value }}
-                            getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation')}
-                            t={t}
-                          />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-
+                        <OverloadedCheckbox
+                          elements={links_elements}
+                          config={LINK_SHAPE_SPECIFIC_CONFIG}
+                          prefix={'shape'}
+                          attributeKey="is_structure"
+                          isChecked={linkShapeValues.is_structure}
+                          onChange={(checked) => { linkShapeValues.is_structure = checked }}
+                          getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure')}
+                          tooltipLabel={t('Flux.apparence.tooltips.structure')}
+                          t={t}
+                        >
+                          {t('Flux.apparence.shape_is_structure')}
+                        </OverloadedCheckbox>
+                        <Box display='flex' alignItems='center' gap={1}>
                           <OverloadedCheckbox
                             elements={links_elements}
                             config={LINK_SHAPE_SPECIFIC_CONFIG}
@@ -1491,23 +1529,6 @@ export const MenuConfigurationAppearance = ({
                             </Select>
                           )}
                         </Box>
-                      </Box>
-
-
-                      <Box as='span' layerStyle='options_3cols'>
-                        <OverloadedCheckbox
-                          elements={links_elements}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                          attributeKey="is_structure"
-                          isChecked={linkShapeValues.is_structure}
-                          onChange={(checked) => { linkShapeValues.is_structure = checked }}
-                          getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure')}
-                          tooltipLabel={t('Flux.apparence.tooltips.structure')}
-                          t={t}
-                        >
-                          {t('Flux.apparence.shape_is_structure')}
-                        </OverloadedCheckbox>
                       </Box>
                       {/* Value of link local scale to override scale from DA, can be undefined */}
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols' >
@@ -2789,7 +2810,8 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical to vertical',
             of_vh: 'Vertical to horizontal',
             of_hv: 'Horizontal to vertical',
-            shape_is_recycling: 'Recycling flow'
+            shape_is_recycling: 'Recycling flow',
+            shape_is_recycling_locked: 'When locked, autosankey compute keeps the user-set recycling status of this link instead of recomputing it from the cycle detection.'
           }
         }
       }
@@ -2805,7 +2827,8 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical vers vertical',
             of_vh: 'Vertical vers horizontal',
             of_hv: 'Horizontal vers vertical',
-            shape_is_recycling: 'Flux de recyclage'
+            shape_is_recycling: 'Flux de recyclage',
+            shape_is_recycling_locked: 'Si verrouillé, le calcul autosankey conserve le statut recyclage défini par l\'utilisateur au lieu de le recalculer via la détection de cycles.'
           }
         }
       }
@@ -2821,7 +2844,8 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical a vertical',
             of_vh: 'Vertical a horizontal',
             of_hv: 'Horizontal a vertical',
-            shape_is_recycling: 'Flujo de reciclaje'
+            shape_is_recycling: 'Flujo de reciclaje',
+            shape_is_recycling_locked: 'Si está bloqueado, el cálculo autosankey conserva el estado de reciclaje definido por el usuario en lugar de recalcularlo mediante la detección de ciclos.'
           }
         }
       }
@@ -2837,7 +2861,8 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertikal zu vertikal',
             of_vh: 'Vertikal zu horizontal',
             of_hv: 'Horizontal zu vertikal',
-            shape_is_recycling: 'Recycling-Fluss'
+            shape_is_recycling: 'Recycling-Fluss',
+            shape_is_recycling_locked: 'Wenn gesperrt, behält die autosankey-Berechnung den vom Benutzer festgelegten Recycling-Status anstatt ihn über die Zyklenerkennung neu zu berechnen.'
           }
         }
       }
@@ -2853,7 +2878,8 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Verticale a verticale',
             of_vh: 'Verticale a orizzontale',
             of_hv: 'Orizzontale a verticale',
-            shape_is_recycling: 'Flusso di riciclaggio'
+            shape_is_recycling: 'Flusso di riciclaggio',
+            shape_is_recycling_locked: 'Se bloccato, il calcolo autosankey mantiene lo stato di riciclaggio definito dall\'utente invece di ricalcolarlo tramite la rilevazione dei cicli.'
           }
         }
       }
