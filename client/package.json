@@ -53,6 +53,7 @@
     "eslint": "^8.57.1",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.18.2",
+    "gifenc": "^1.0.3",
     "globals": "^15.15.0",
     "html-react-parser": "^5.2.3",
     "i18next": "^23.16.8",
