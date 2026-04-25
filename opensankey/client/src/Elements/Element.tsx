@@ -932,6 +932,16 @@ export abstract class Class_LinkAttribute extends Class_BaseShape {
       this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
       this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
     }
+    // Transition false → true : ramener les poignées Bézier à 0.01 (= 1 % en
+    // UI), ce qui produit des points de contrôle proches des extrémités et
+    // évite la boucle large par défaut (0.25 = 25 %) qui n'a pas de sens pour
+    // un flux de recyclage. Le fromJSON ne passe pas par ce setter (écriture
+    // directe dans `attributes`), donc les valeurs sauvegardées par
+    // l'utilisateur sont préservées au chargement.
+    if (value && !this.attributes.shape_is_recycling) {
+      this.attributes.shape_starting_tangeant = 0.01
+      this.attributes.shape_ending_tangeant = 0.01
+    }
     this.attributes.shape_is_recycling = value
   }
 
