@@ -67,10 +67,9 @@ export class Class_ElementValueTree {
     if (this.parent instanceof Class_ElementValueTree) {
       return this.parent.createValue(_)
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (typeof (this.parent as any).createValue === 'function') {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (this.parent as any).createValue(_)
+    const parent_with_factory = this.parent as { createValue?: (_: Class_ElementValueTree | ValueParentElement) => Class_ElementValue }
+    if (typeof parent_with_factory.createValue === 'function') {
+      return parent_with_factory.createValue(_)
     }
     // Fallback: create a LinkValue (default for backward compat)
     return new Class_LinkValue(_)
