@@ -129,7 +129,7 @@ dev_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER
     - cd $REPO_FOLDER
     - git reset --hard
-    - git clean -fdx -e env -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
     - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/LoginComponent
@@ -177,7 +177,7 @@ test_opensankey:
     # Clean and pull repo
     - cd $REPO_FOLDER
     - git reset --hard
-    - git clean -fdx -e env -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
     - git submodule init
@@ -215,7 +215,7 @@ prod_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER
     - cd $REPO_FOLDER
     - git reset --hard
-    - git clean -fdx -e env -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
+    - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
     - git config --global --add safe.directory /home/ubuntu/prod_opensankey/sankeyapplication/submodules/MFAProblem
