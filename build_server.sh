@@ -9,6 +9,12 @@ exit_if_error() {
     }
 }
 
+# Silence pip noise (already-satisfied, version-check, progress bar) — héritées par les build_server.sh des submodules
+export PIP_QUIET=${PIP_QUIET:-1}
+export PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK:-1}
+export PIP_PROGRESS_BAR=${PIP_PROGRESS_BAR:-off}
+export PIP_ROOT_USER_ACTION=${PIP_ROOT_USER_ACTION:-ignore}
+
 # Install requirements
 pip install -r requirements.txt  || exit_if_error $?
 
