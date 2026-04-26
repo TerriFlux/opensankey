@@ -9,16 +9,14 @@
 // External imports =================================================================================
 
 import React, { MutableRefObject, useEffect, useRef, useState } from 'react'
-import { HashRouter, Navigate, NavigateFunction, Route, Routes, useNavigate } from 'react-router-dom'
+import { HashRouter, Navigate, NavigateFunction, Route, Routes } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 
 import {
   Box,
-  Button,
   Center,
   ChakraProvider,
-  Spinner,
-  Tooltip
+  Spinner
 } from '@chakra-ui/react'
 
 import TextLoop from 'react-text-loop'
@@ -59,7 +57,6 @@ import { Type_AdditionalMenus } from './deps/OpenSankey+/deps/OpenSankey/types/M
 import { createLinkModifier } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextLinkConfig'
 import { PrivateRoute } from './deps/LoginComponent/Routes/PrivateRoutes'
 import { Class_ApplicationData } from './deps/OpenSankey+/deps/OpenSankey/types/ApplicationData'
-import { STATIC_NODE_MENU_CONFIG } from './deps/OpenSankey+/deps/OpenSankey/components/dialogs/ContextNodeConfig'
 import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './deps/OpenSankey+/components/UniversalConverterDialogConfig'
 import { ButtonOpenUSerPreference, ModalPreference } from './components/Preferences'
 
@@ -82,20 +79,6 @@ function shuffle(array: number[]) {
   }
 
   return array
-}
-
-const BannerSubscriptionSA = ({ app_data }: { app_data: Class_ApplicationDataSA }) => {
-  const navigate = useNavigate()
-  const { t } = app_data
-  if (app_data.has_sankey_plus || app_data.is_static) return <></>
-  return <Tooltip label={t('Menu.get_premium_tooltip')} placement='bottom'>
-    <Button
-      variant='button_banner_subscription'
-      onClick={() => navigate('/license/checkout')}
-    >
-      {t('Menu.get_premium')}
-    </Button>
-  </Tooltip>
 }
 
 type FType_InitializeAdditionalMenusSA = (

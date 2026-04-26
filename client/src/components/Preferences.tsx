@@ -17,7 +17,7 @@ import { SankeyPersistence } from '../deps/OpenSankey+/deps/OpenSankey/Persisten
 
 const paddingBoxPreference = '0.6rem'
 
-export const ModalPreference = ({new_data, additionalMenus}:{
+export const ModalPreference = ({new_data, additionalMenus: _additionalMenus}:{
   new_data: Class_ApplicationDataOSP,
   additionalMenus: MutableRefObject<Type_AdditionalMenus>
 }) => {
