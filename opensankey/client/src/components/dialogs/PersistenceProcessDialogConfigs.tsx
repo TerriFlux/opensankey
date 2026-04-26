@@ -739,6 +739,26 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
         it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
       }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    preserve_extra_columns: {
+      group: 'content',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Preserve user-added columns',
+        fr: 'Préserver les colonnes additionnelles',
+        es: 'Preservar las columnas añadidas',
+        de: 'Benutzerdefinierte Spalten beibehalten',
+        it: 'Conservare le colonne aggiunte'
+      },
+      tooltips: {
+        en: 'Best-effort: columns present in the input file but unknown to SankeyExcelParser are stashed at read time and re-added to the regenerated sheets via a left-join on the natural row key (e.g. constraint ID, node name, origin/destination). Rows added by the solver get empty cells; deleted rows lose their values; renamed keys break the join.',
+        fr: 'Best-effort : les colonnes présentes dans le fichier d\'entrée et inconnues de SankeyExcelParser sont mémorisées à la lecture puis réintroduites dans les feuilles régénérées via une jointure sur la clé naturelle de chaque ligne (ex : ID de contrainte, nom de nœud, origine/destination). Les lignes ajoutées par le solveur sortent avec des cellules vides ; les lignes supprimées perdent leurs valeurs ; un renommage de clé casse la jointure.',
+        es: 'Best-effort: las columnas presentes en el archivo de entrada pero desconocidas para SankeyExcelParser se almacenan al leer y se reintroducen en las hojas regeneradas mediante un left-join sobre la clave natural de cada fila. Las filas añadidas por el solver tienen celdas vacías; las eliminadas pierden sus valores; los renombres rompen la unión.',
+        de: 'Best-effort: Spalten, die in der Eingabedatei vorhanden, aber SankeyExcelParser unbekannt sind, werden beim Lesen zwischengespeichert und in den neu erzeugten Blättern über einen Left-Join auf den natürlichen Zeilenschlüssel wiederhergestellt. Vom Solver hinzugefügte Zeilen erhalten leere Zellen; gelöschte Zeilen verlieren ihre Werte; Umbenennungen brechen den Join.',
+        it: 'Best-effort: le colonne presenti nel file di input ma sconosciute a SankeyExcelParser vengono memorizzate alla lettura e reinserite nei fogli rigenerati tramite un left-join sulla chiave naturale di ciascuna riga. Le righe aggiunte dal solver escono con celle vuote; le righe eliminate perdono i loro valori; i rinominamenti rompono il join.'
+      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
