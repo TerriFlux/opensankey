@@ -884,26 +884,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    preserve_input_index: {
-      group: 'merge',
-      default: true,
-      type: (() => true) as (() => boolean),
-      labels: {
-        en: 'Preserve input Index format',
-        fr: 'Préserver le format de l\'Index d\'entrée',
-        es: 'Preservar el formato del Índice de entrada',
-        de: 'Format des Eingabe-Index beibehalten',
-        it: 'Conservare il formato dell\'Index di input'
-      },
-      tooltips: {
-        en: 'When the input file had an Index sheet, the output Index keeps the user\'s original column labels (e.g. Nom / Type / Options) and original Type/Options values for sheets present in the input. New rows added by the writer (e.g. Results / Analyses) use canonical values mapped to the same columns. Uncheck to fall back to the canonical English Index schema.',
-        fr: 'Quand le fichier d\'entrée avait une feuille Index, l\'Index de sortie conserve les libellés de colonnes utilisateur (ex : Nom / Type / Options) et les valeurs Type/Options originales pour les feuilles présentes en entrée. Les lignes ajoutées par le writer (ex : Résultats / Analyses) utilisent des valeurs canoniques mappées aux mêmes colonnes. Décocher pour revenir au schéma canonique anglais de l\'Index.',
-        es: 'Cuando el archivo de entrada tenía una hoja Index, el Index de salida conserva las etiquetas de columnas originales del usuario (p. ej. Nom / Type / Options) y los valores Type/Options originales para las hojas presentes en la entrada. Las filas añadidas por el writer (p. ej. Resultados / Análisis) usan valores canónicos mapeados a las mismas columnas. Desmarcar para volver al esquema canónico inglés.',
-        de: 'Wenn die Eingabedatei ein Index-Blatt hatte, behält der Ausgabe-Index die ursprünglichen Spaltenbeschriftungen des Benutzers (z. B. Nom / Type / Options) und die ursprünglichen Type/Options-Werte für Blätter aus der Eingabe bei. Vom Writer hinzugefügte Zeilen (z. B. Ergebnisse / Analysen) verwenden kanonische Werte, die denselben Spalten zugeordnet sind. Deaktivieren, um auf das kanonische englische Schema zurückzufallen.',
-        it: 'Quando il file di input aveva un foglio Index, l\'Index di output conserva le etichette delle colonne originali dell\'utente (es. Nom / Type / Options) e i valori Type/Options originali per i fogli presenti nell\'input. Le righe aggiunte dal writer (es. Risultati / Analisi) usano valori canonici mappati sulle stesse colonne. Deselezionare per tornare allo schema canonico inglese.'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
-
     with_sheet_formating: {
       group: 'presentation',
       default: true,
@@ -921,6 +901,26 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Activar el formato y coloreado automático de las hojas',
         de: 'Automatische Formatierung und Einfärbung der Blätter aktivieren',
         it: 'Attivare la formattazione automatica e la colorazione dei fogli'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    with_index_sheet: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Index sheet',
+        fr: 'Onglet Index',
+        es: 'Hoja Índice',
+        de: 'Index-Blatt',
+        it: 'Foglio Index'
+      },
+      tooltips: {
+        en: 'Write an Index sheet listing all written sheets with their type and options. Required for the file to be re-loaded in Index-driven mode. When the input file already had an Index, the user\'s original column labels and Type/Options values are preserved automatically.',
+        fr: 'Écrire un onglet Index qui liste toutes les feuilles écrites avec leur type et leurs options. Nécessaire pour pouvoir recharger le fichier en mode Index-driven. Quand le fichier d\'entrée avait déjà un Index, les libellés de colonnes et les valeurs Type/Options de l\'utilisateur sont préservés automatiquement.',
+        es: 'Escribir una hoja Índice que enumera todas las hojas escritas con su tipo y opciones. Necesaria para poder recargar el archivo en modo Index-driven. Cuando el archivo de entrada ya tenía un Índice, las etiquetas de columnas y los valores Type/Options del usuario se preservan automáticamente.',
+        de: 'Ein Index-Blatt schreiben, das alle geschriebenen Blätter mit Typ und Optionen auflistet. Erforderlich, um die Datei im Index-driven-Modus neu zu laden. Wenn die Eingabedatei bereits einen Index hatte, werden die ursprünglichen Spaltenbeschriftungen und Type/Options-Werte des Benutzers automatisch beibehalten.',
+        it: 'Scrivere un foglio Index che elenca tutti i fogli scritti con il loro tipo e le loro opzioni. Necessario per poter ricaricare il file in modalità Index-driven. Quando il file di input aveva già un Index, le etichette delle colonne e i valori Type/Options dell\'utente vengono preservati automaticamente.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
