@@ -15,8 +15,18 @@ export PIP_DISABLE_PIP_VERSION_CHECK=${PIP_DISABLE_PIP_VERSION_CHECK:-1}
 export PIP_PROGRESS_BAR=${PIP_PROGRESS_BAR:-off}
 export PIP_ROOT_USER_ACTION=${PIP_ROOT_USER_ACTION:-ignore}
 
+# Wrapper "medium-verbose" : garde Building wheels / Installing / Successfully installed,
+# masque uniquement le bruit "Requirement already satisfied" et "Using cached".
+pip_install() {
+  set -o pipefail
+  PIP_QUIET=0 pip install "$@" 2>&1 | grep -v -E "^(Requirement already satisfied|Using cached)"
+  local rc=${PIPESTATUS[0]}
+  set +o pipefail
+  return $rc
+}
+
 # Install requirements
-pip install -r requirements.txt  || exit_if_error $?
+pip_install -r requirements.txt  || exit_if_error $?
 
 # Install deps
 for submodule in OpenSankey+ LoginComponent MFAProblem; do
