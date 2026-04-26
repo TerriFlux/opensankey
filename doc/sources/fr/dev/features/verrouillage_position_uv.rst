@@ -161,5 +161,5 @@ Décisions et alternatives écartées
 Voir aussi
 ----------
 
-- :doc:`/user/features/verrouillage_position_uv` — documentation
+- :doc:`/user/guides/presentation/verrouillage_position_uv` — documentation
   utilisateur

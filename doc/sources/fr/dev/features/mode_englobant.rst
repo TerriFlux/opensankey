@@ -254,5 +254,5 @@ Pistes d'évolution
 Voir aussi
 ----------
 
-- :doc:`/user/features/mode_englobant` — documentation utilisateur du
+- :doc:`/user/guides/organisation/mode_englobant` — documentation utilisateur du
   mode englobant
