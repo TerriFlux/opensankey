@@ -99,10 +99,11 @@ test:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
+    - export TESTS_DIR=/home/ubuntu/Tests
     - python -m pytest
-        submodules/MFAProblem/mfa_problem/tests/
+        submodules/MFAProblem/tests/
         submodules/OpenSankey+/submodules/OpenSankey/opensankey/tests/
-        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/SankeyExcelParser/tests/
+        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/tests/
   dependencies:
     - build
 
