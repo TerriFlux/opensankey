@@ -91,14 +91,14 @@ test:
     - if: $CI_COMMIT_TAG
       when: never
     - when: always
-  variables:
-    TESTS_DIR: /home/ubuntu/dev_opensankey/sankeysuitemanager/Tests
   script:
     - echo $CI_PROJECT_DIR
-    - echo $TESTS_DIR
-    - echo $GITLAB_RUNNER_ENV/bin/activate
-    - source $GITLAB_RUNNER_ENV/bin/activate
-    - echo "No test" # TODO add some tests
+    - source /home/gitlab-runner/gitlab_dev/bin/activate
+    - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
+    - python -m pytest
+        submodules/MFAProblem/mfa_problem/tests/
+        submodules/OpenSankey+/submodules/OpenSankey/opensankey/tests/
+        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/SankeyExcelParser/tests/
   dependencies:
     - build
 
@@ -119,9 +119,10 @@ dev_opensankey:
     - when: manual
     - allow_failure: false
   needs:
-    - build  # Ignore l'ordre des stages - peut s'exécuter dès que build est fini
+    - build
+    - test
   dependencies:
-    - build  # Dépend seulement du build, pas du test
+    - build
   script:
     # DBG
     - echo $REPO_FOLDER
@@ -171,6 +172,11 @@ test_opensankey:
   rules:
     - when: manual
     - allow_failure: false
+  needs:
+    - build
+    - test
+  dependencies:
+    - build
   script:
     # DBG
     - echo $REPO_FOLDER
@@ -208,6 +214,11 @@ prod_opensankey:
     name: prod
   rules:
     - if: $CI_COMMIT_REF_NAME == $TAG_PROD
+  needs:
+    - build
+    - test
+  dependencies:
+    - build
   script:
     # DBG
     - echo $REPO_FOLDER
@@ -245,9 +256,10 @@ pages:
   variables:
     GIT_SUBMODULE_STRATEGY: none  # Pas de sous-modules du tout
   needs:
-    - build  # Ignore l'ordre des stages - peut s'exécuter dès que build est fini
+    - build
+    - test
   dependencies:
-    - build  # Dépend seulement du build, pas du test
+    - build
   rules:
     - when: manual
       allow_failure: false
