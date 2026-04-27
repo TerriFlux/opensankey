@@ -1067,7 +1067,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 
     activate_flux_matrix: {
       group: 'sheets',
-      default: false,
+      default: true,
       type: (() => false) as (() => boolean),
       labels: {
         en: 'Sheet SUT or IOT',
