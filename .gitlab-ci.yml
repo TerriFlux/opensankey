@@ -16,6 +16,10 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
   GIT_SUBMODULE_FORCE_HTTPS: "true"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_QUIET: "1"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_PROGRESS_BAR: "off"
+  PIP_ROOT_USER_ACTION: "ignore"
   TESTS_DIR: /home/ubuntu/Tests
   PUBLIC_URL: "/"
 build:
