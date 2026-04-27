@@ -100,10 +100,12 @@ test:
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
     - export TESTS_DIR=/home/ubuntu/Tests
-    - python -m pytest
-        submodules/MFAProblem/tests/
-        submodules/OpenSankey+/submodules/OpenSankey/opensankey/tests/
-        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/tests/
+    # Run pytest separately per submodule so each has its own rootdir/sys.path.
+    # Avoids "tests" package name collisions between sibling submodules and lets
+    # mfa_problem resolve to the local source (which contains the tests/ subpackage).
+    - (cd submodules/MFAProblem && python -m pytest tests/)
+    - (cd submodules/OpenSankey+/submodules/OpenSankey && python -m pytest opensankey/tests/)
+    - (cd submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser && python -m pytest tests/)
   dependencies:
     - build
 
