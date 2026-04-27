@@ -569,6 +569,9 @@ export interface FormatAttributeConfig<T> {
   tooltips: { en: string; fr: string; es?: string; de?: string; it?: string }
   visibilityConditions?: MenuCondition[]
   group?: OptionGroup
+  // Force a row break in the auto-generated options renderer before rendering
+  // this option's unit (parent + visibility-conditioned children).
+  breakBefore?: boolean
 }
 export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object>
 // ==================================================================================================
@@ -944,10 +947,31 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    layout: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet layout',
+        fr: 'Onglet mise en page',
+        es: 'Hoja de diseño',
+        de: 'Layout-Blatt',
+        it: 'Foglio layout'
+      },
+      tooltips: {
+        en: 'Sheet containing diagram layout',
+        fr: 'Onglet qui contient la mise en page du diagramme',
+        es: 'Hoja que contiene el diseño del diagrama',
+        de: 'Blatt mit dem Diagramm-Layout',
+        it: 'Foglio contenente il layout del diagramma'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     activate_data_table: {
       group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
+      breakBefore: true,
       labels: {
         en: 'Sheet data',
         fr: 'Onglet données',
@@ -1095,26 +1119,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
           value: true
         }
       ]
-    } satisfies FormatAttributeConfig<boolean>,
-
-    layout: {
-      group: 'sheets',
-      default: true,
-      type: (() => true) as (() => boolean),
-      labels: {
-        en: 'Sheet layout',
-        fr: 'Onglet mise en page',
-        es: 'Hoja de diseño',
-        de: 'Layout-Blatt',
-        it: 'Foglio layout'
-      },
-      tooltips: {
-        en: 'Sheet containing diagram layout',
-        fr: 'Onglet qui contient la mise en page du diagramme',
-        es: 'Hoja que contiene el diseño del diagrama',
-        de: 'Blatt mit dem Diagramm-Layout',
-        it: 'Foglio contenente il layout del diagramma'
-      }
     } satisfies FormatAttributeConfig<boolean>,
   },
   json: {
