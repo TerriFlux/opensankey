@@ -460,6 +460,9 @@ export const UniversalFileConverter = ({
   const [input_options_json, set_input_options_json] = useState(getDefaultInputOptions(input_config['json']))
   const [input_options_base, set_input_options_base] = useState(getDefaultOutputOptions(input_config['base']))
   //const [input_options_blob, set_input_options_blob] = useState(getDefaultInputOptions('blob'))
+  // POC: option for the reconciliation tab to drop redundant constraints so
+  // no measured variable stays tagged "redondant" by the solver.
+  const [remove_redundancy, set_remove_redundancy] = useState(false)
   const [launch_at_opening, setLaunchAtOpening] = useState(false)
   const [show_terminal, set_show_terminal] = useState(true)
   const [config, setConfig] = useState<ConverterConfig>(CONVERTER_CONFIGS['universal'])
@@ -665,7 +668,12 @@ export const UniversalFileConverter = ({
     }
   }
 
-  const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
+  const initialize = (
+    config: ConverterConfig,
+    file_path: string,
+    launch_at_opening: boolean,
+    default_solver_options?: { remove_redundancy?: boolean },
+  ) => {
     // The dialog is reused across "Open JSON" / "Open Excel" / etc., so a
     // previously picked file and the prior run's status (success/failure
     // banner, terminal output) must not leak into the next opening.
@@ -705,6 +713,11 @@ export const UniversalFileConverter = ({
     set_output_options_excel({ ...getDefaultOutputOptions(output_config['excel']), ...(config.output_overrides_excel ?? {}) })
     set_output_options_json({ ...getDefaultOutputOptions(output_config['json']), ...(config.output_overrides_json ?? {}) })
     set_output_options_base({ ...getDefaultOutputOptions(output_config['base']), ...(config.output_overrides_base ?? {}) })
+
+    // Pre-set solver-only flags from the caller (e.g. the "Compléter le
+    // diagramme" command pre-checks remove_redundancy so the user does not
+    // need to toggle it manually before launching).
+    set_remove_redundancy(Boolean(default_solver_options?.remove_redundancy))
 
     setLaunchAtOpening(launch_at_opening)
     set_show_terminal(false)
@@ -950,6 +963,11 @@ export const UniversalFileConverter = ({
     // No inversion: false = abort with a message naming the option,
     // true = fix + populate _auto_corrected_* for the red highlight.
     form_data.append('input_options', JSON.stringify(input_options))
+    // Solver-only flags (currently a single POC flag on the reconciliation
+    // tab). Sent as its own dict so input/output options stay focused on
+    // file I/O semantics.
+    const solver_options = { remove_redundancy }
+    form_data.append('solver_options', JSON.stringify(solver_options))
     if (input_format == 'blob') {
       // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
       // view, only serialize that view so the optimizer receives just the visible
@@ -1303,6 +1321,23 @@ export const UniversalFileConverter = ({
         )
       })()}
 
+
+      {/* POC: reconciliation-only toggle to drop redundant constraints so
+          the solver does not flag any measurement as redundant. */}
+      {config.title === 'ProcessDialog.reconciliation' && !launch_at_opening && (
+        <Box layerStyle='box_content_config' display='flex' alignItems='center' gap='0.5rem'>
+          <Checkbox
+            isChecked={remove_redundancy}
+            onChange={(e) => set_remove_redundancy(e.target.checked)}
+          >
+            <Text>
+              {lang === 'fr'
+                ? 'Réconciliation sans redondance (POC)'
+                : 'Reconciliation without redundancy (POC)'}
+            </Text>
+          </Checkbox>
+        </Box>
+      )}
 
       {/* Bouton de lancement */}
       {!launch_at_opening ? <>
