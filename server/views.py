@@ -140,6 +140,15 @@ def solve_optimisation_problem_unified(
                 trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
                 return
             input_options['do_coherence_checks'] = True
+            # preserve_extra_columns est exposé dans l'onglet "Options de sortie"
+            # côté UI (la décision est sémantiquement une décision d'écriture),
+            # mais le stash des colonnes inconnues doit être armé pendant la
+            # lecture. On propage donc le flag à input_options avant load_sankey.
+            if "preserve_extra_columns" in output_options:
+                input_options.setdefault(
+                    "preserve_extra_columns",
+                    output_options["preserve_extra_columns"],
+                )
             ok, msg = io_input.load_sankey(input_filename, **input_options)
             if not ok:
                 trace.logger.error("ERROR in input file.")
