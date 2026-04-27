@@ -94,7 +94,8 @@ def solve_optimisation_problem_unified(
     input_options: dict,
     output_options: dict,
     logname: str,
-    t_start: float
+    t_start: float,
+    solver_options: dict = None,
 ):
     """
     Fonction unifiée pour l'optimisation.
@@ -177,8 +178,14 @@ def solve_optimisation_problem_unified(
     t_prev = t
 
     # ========== PARTIE 2: OPTIMISATION (dans le thread) ==========
+    solver_options = solver_options or {}
+    optim_kwargs = {}
+    if solver_options.get("remove_redundancy"):
+        optim_kwargs["remove_redundancy"] = True
     try:
-        ok = mfa_problem_main.optimisation(model_name, io_input.sankey, False, 0, False)
+        ok = mfa_problem_main.optimisation(
+            model_name, io_input.sankey, False, 0, False, **optim_kwargs
+        )
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
@@ -337,6 +344,7 @@ def launch_optim():
 
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
+        solver_options = json.loads(request.form.get('solver_options', '{}'))
         # Stocker l'état
         set_process_state(
             process_started=True,
@@ -370,6 +378,7 @@ def launch_optim():
             output_options,
             log_filename,
             t_start,
+            solver_options,
         ),
     )
     thread.daemon = True
