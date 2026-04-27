@@ -1343,7 +1343,7 @@ export class Class_ApplicationData {
 
     // Ultra-shortcuts: typing on selected element opens inline edit ------------------
     // (issue su-model/opensankey#688)
-    const evtIsPrintable = evt.key.length === 1 && !evtModifier && !evt.altKey
+    const evtIsPrintable = evt.key?.length === 1 && !evtModifier && !evt.altKey
     const selectedNodes = app_ref.drawing_area.selected_nodes_list
     const selectedLinks = app_ref.drawing_area.selected_links_list
     const selectedContainers = app_ref.drawing_area.selected_containers_list
