@@ -491,6 +491,16 @@ def conversion_thread(
         else:
             raise ValueError(f"Format d'entrée '{input_format}' non supporté")
 
+        # preserve_extra_columns est exposé dans l'onglet "Options de sortie"
+        # côté UI (la décision est sémantiquement une décision d'écriture), mais
+        # le stash des colonnes inconnues doit être armé pendant la lecture.
+        # On propage donc le flag à input_options avant load_sankey.
+        if "preserve_extra_columns" in output_options:
+            input_options.setdefault(
+                "preserve_extra_columns",
+                output_options["preserve_extra_columns"],
+            )
+
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()

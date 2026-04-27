@@ -742,26 +742,6 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
         it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
       }
-    } satisfies FormatAttributeConfig<boolean>,
-
-    preserve_extra_columns: {
-      group: 'content',
-      default: false,
-      type: (() => false) as (() => boolean),
-      labels: {
-        en: 'Preserve user-added columns',
-        fr: 'Préserver les colonnes additionnelles',
-        es: 'Preservar las columnas añadidas',
-        de: 'Benutzerdefinierte Spalten beibehalten',
-        it: 'Conservare le colonne aggiunte'
-      },
-      tooltips: {
-        en: 'Best-effort: columns present in the input file but unknown to SankeyExcelParser are stashed at read time and re-added to the regenerated sheets via a left-join on the natural row key (e.g. constraint ID, node name, origin/destination). Rows added by the solver get empty cells; deleted rows lose their values; renamed keys break the join.',
-        fr: 'Best-effort : les colonnes présentes dans le fichier d\'entrée et inconnues de SankeyExcelParser sont mémorisées à la lecture puis réintroduites dans les feuilles régénérées via une jointure sur la clé naturelle de chaque ligne (ex : ID de contrainte, nom de nœud, origine/destination). Les lignes ajoutées par le solveur sortent avec des cellules vides ; les lignes supprimées perdent leurs valeurs ; un renommage de clé casse la jointure.',
-        es: 'Best-effort: las columnas presentes en el archivo de entrada pero desconocidas para SankeyExcelParser se almacenan al leer y se reintroducen en las hojas regeneradas mediante un left-join sobre la clave natural de cada fila. Las filas añadidas por el solver tienen celdas vacías; las eliminadas pierden sus valores; los renombres rompen la unión.',
-        de: 'Best-effort: Spalten, die in der Eingabedatei vorhanden, aber SankeyExcelParser unbekannt sind, werden beim Lesen zwischengespeichert und in den neu erzeugten Blättern über einen Left-Join auf den natürlichen Zeilenschlüssel wiederhergestellt. Vom Solver hinzugefügte Zeilen erhalten leere Zellen; gelöschte Zeilen verlieren ihre Werte; Umbenennungen brechen den Join.',
-        it: 'Best-effort: le colonne presenti nel file di input ma sconosciute a SankeyExcelParser vengono memorizzate alla lettura e reinserite nei fogli rigenerati tramite un left-join sulla chiave naturale di ciascuna riga. Le righe aggiunte dal solver escono con celle vuote; le righe eliminate perdono i loro valori; i rinominamenti rompono il join.'
-      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
@@ -887,6 +867,26 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    preserve_extra_columns: {
+      group: 'merge',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Preserve user-added columns',
+        fr: 'Préserver les colonnes additionnelles',
+        es: 'Preservar las columnas añadidas',
+        de: 'Benutzerdefinierte Spalten beibehalten',
+        it: 'Conservare le colonne aggiunte'
+      },
+      tooltips: {
+        en: 'Best-effort: columns present in the input file but unknown to SankeyExcelParser are stashed at read time and re-added to the regenerated sheets via a left-join on the natural row key (e.g. constraint ID, node name, origin/destination). Rows added by the solver get empty cells; deleted rows lose their values; renamed keys break the join. Toggled at write time but propagated to the read phase server-side so the stash can happen.',
+        fr: 'Best-effort : les colonnes présentes dans le fichier d\'entrée et inconnues de SankeyExcelParser sont mémorisées à la lecture puis réintroduites dans les feuilles régénérées via une jointure sur la clé naturelle de chaque ligne (ex : ID de contrainte, nom de nœud, origine/destination). Les lignes ajoutées par le solveur sortent avec des cellules vides ; les lignes supprimées perdent leurs valeurs ; un renommage de clé casse la jointure. Décidée à l\'écriture mais propagée côté serveur à la phase de lecture pour que la mémorisation puisse avoir lieu.',
+        es: 'Best-effort: las columnas presentes en el archivo de entrada pero desconocidas para SankeyExcelParser se almacenan al leer y se reintroducen en las hojas regeneradas mediante un left-join sobre la clave natural de cada fila. Las filas añadidas por el solver tienen celdas vacías; las eliminadas pierden sus valores; los renombres rompen la unión.',
+        de: 'Best-effort: Spalten, die in der Eingabedatei vorhanden, aber SankeyExcelParser unbekannt sind, werden beim Lesen zwischengespeichert und in den neu erzeugten Blättern über einen Left-Join auf den natürlichen Zeilenschlüssel wiederhergestellt. Vom Solver hinzugefügte Zeilen erhalten leere Zellen; gelöschte Zeilen verlieren ihre Werte; Umbenennungen brechen den Join.',
+        it: 'Best-effort: le colonne presenti nel file di input ma sconosciute a SankeyExcelParser vengono memorizzate alla lettura e reinserite nei fogli rigenerati tramite un left-join sulla chiave naturale di ciascuna riga. Le righe aggiunte dal solver escono con celle vuote; le righe eliminate perdono i loro valori; i rinominamenti rompono il join.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     with_sheet_formating: {
       group: 'presentation',
       default: true,
@@ -924,6 +924,26 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Escribir una hoja Índice que enumera todas las hojas escritas con su tipo y opciones. Necesaria para poder recargar el archivo en modo Index-driven. Cuando el archivo de entrada ya tenía un Índice, las etiquetas de columnas y los valores Type/Options del usuario se preservan automáticamente.',
         de: 'Ein Index-Blatt schreiben, das alle geschriebenen Blätter mit Typ und Optionen auflistet. Erforderlich, um die Datei im Index-driven-Modus neu zu laden. Wenn die Eingabedatei bereits einen Index hatte, werden die ursprünglichen Spaltenbeschriftungen und Type/Options-Werte des Benutzers automatisch beibehalten.',
         it: 'Scrivere un foglio Index che elenca tutti i fogli scritti con il loro tipo e le loro opzioni. Necessario per poter ricaricare il file in modalità Index-driven. Quando il file di input aveva già un Index, le etichette delle colonne e i valori Type/Options dell\'utente vengono preservati automaticamente.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    with_description_sheet: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Read-me sheet',
+        fr: 'Onglet Lisez-moi',
+        es: 'Hoja Léeme',
+        de: 'Lies-mich-Blatt',
+        it: 'Foglio Leggimi'
+      },
+      tooltips: {
+        en: 'Write a contextual Read-me sheet (placed first in the workbook) that documents only the sheets and columns actually present, with hyperlinks to the full online documentation for everything not listed inline. Purely decorative — ignored at re-load.',
+        fr: 'Écrire un onglet Lisez-moi contextuel (placé en première position du classeur) qui ne documente que les feuilles et colonnes effectivement présentes, avec des hyperliens vers la documentation complète en ligne pour tout ce qui n\'est pas listé. Purement décoratif — ignoré au rechargement.',
+        es: 'Escribir una hoja Léeme contextual (situada en primera posición del libro) que solo documenta las hojas y columnas realmente presentes, con hiperenlaces a la documentación completa en línea para todo lo demás. Puramente decorativa — ignorada al recargar.',
+        de: 'Ein kontextuelles Lies-mich-Blatt schreiben (an erster Stelle der Arbeitsmappe), das nur die tatsächlich vorhandenen Blätter und Spalten dokumentiert, mit Hyperlinks zur vollständigen Online-Dokumentation für alles Übrige. Rein dekorativ — beim erneuten Laden ignoriert.',
+        it: 'Scrivere un foglio Leggimi contestuale (posto in prima posizione nella cartella) che documenta solo i fogli e le colonne effettivamente presenti, con collegamenti ipertestuali alla documentazione completa online per tutto il resto. Puramente decorativo — ignorato al ricaricamento.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
