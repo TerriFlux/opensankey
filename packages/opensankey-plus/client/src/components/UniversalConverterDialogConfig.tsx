@@ -8,6 +8,7 @@ export const OSP_OUTPUT_ATTRIBUTES_CONFIG = {
 OSP_OUTPUT_ATTRIBUTES_CONFIG['base'] = {
   ...OUTPUT_ATTRIBUTES_CONFIG['base'],
   'only_current_view' : {
+    group: 'content',
     default: false,
     type: (() => false) as (() => boolean),
     labels: {
@@ -18,11 +19,11 @@ OSP_OUTPUT_ATTRIBUTES_CONFIG['base'] = {
       it: 'Solo la vista corrente'
     },
     tooltips: {
-      en: 'Load only the current view',
-      fr: 'Charger seulement la vue courante',
-      es: 'Cargar solo la vista actual',
-      de: 'Nur die aktuelle Ansicht laden',
-      it: 'Caricare solo la vista corrente'
+      en: 'Export only the current view (instead of all views) when saving the diagram.',
+      fr: 'Exporter uniquement la vue courante (au lieu de toutes les vues) lors de l\'enregistrement du diagramme.',
+      es: 'Exportar solo la vista actual (en lugar de todas las vistas) al guardar el diagrama.',
+      de: 'Beim Speichern des Diagramms nur die aktuelle Ansicht exportieren (anstatt alle Ansichten).',
+      it: 'Esportare solo la vista corrente (invece di tutte le viste) al salvataggio del diagramma.'
     },
     visibilityConditions: [
       {
@@ -33,7 +34,7 @@ OSP_OUTPUT_ATTRIBUTES_CONFIG['base'] = {
         }
       }
     ]
-  } satisfies FormatAttributeConfig<boolean> 
+  } satisfies FormatAttributeConfig<boolean>
 }
 
 export const OSP_INPUT_ATTRIBUTES_CONFIG = {
