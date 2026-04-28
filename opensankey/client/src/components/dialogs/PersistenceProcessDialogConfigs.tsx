@@ -233,6 +233,20 @@ export const translations = {
       de: 'JSON speichern',
       it: 'Salva JSON'
     },
+    create_index: {
+      en: 'Create Index sheet',
+      fr: 'Créer l\'onglet Index',
+      es: 'Crear hoja Índice',
+      de: 'Index-Blatt erstellen',
+      it: 'Crea foglio Index'
+    },
+    create_ter_tes: {
+      en: 'Create TER/TES sheet',
+      fr: 'Créer l\'onglet TER/TES',
+      es: 'Crear hoja TER/TES',
+      de: 'TER/TES-Blatt erstellen',
+      it: 'Crea foglio TER/TES'
+    },
     save: {
       en: 'Save',
       fr: 'Enregistrer',
@@ -1260,6 +1274,34 @@ export interface ConverterConfig {
       options?: FormatType[]
     }
   }
+
+  // Optional per-attribute overrides applied on top of getDefault*Options when
+  // initialize() resets the dialog state. Used by shortcut configs (e.g.
+  // create_index, create_ter) to pre-select a subset of sheets/options instead
+  // of starting from the global defaults. Keys are attribute names from
+  // OUTPUT_ATTRIBUTES_CONFIG / INPUT_ATTRIBUTES_CONFIG.
+  output_overrides_excel?: Record<string, unknown>
+  output_overrides_json?: Record<string, unknown>
+  output_overrides_base?: Record<string, unknown>
+  input_overrides_excel?: Record<string, unknown>
+  input_overrides_json?: Record<string, unknown>
+  input_overrides_base?: Record<string, unknown>
+
+  // Optional whitelist of attribute keys to render in the dialog options panel.
+  // When set, the dialog only shows checkboxes for these keys; other attributes
+  // keep their default/override values silently. Used by shortcuts like
+  // create_index that should expose only "Index" + "Read-me" toggles.
+  output_options_visible_excel?: string[]
+  output_options_visible_json?: string[]
+  output_options_visible_base?: string[]
+  input_options_visible_excel?: string[]
+  input_options_visible_json?: string[]
+  input_options_visible_base?: string[]
+
+  // Suppress the Layout tab. The default heuristic shows it whenever an Excel
+  // input could feed the in-app sankey, which is wrong for pure save-to-file
+  // shortcuts (create_index/ter/tes) where no diagram is reloaded.
+  hide_layout_tab?: boolean
 }
 
 export const hasOptionsFormat = (
@@ -1400,6 +1442,99 @@ export const CONVERTER_CONFIGS = {
         options: ['excel']  // Format fixe
       },
     }
+  } satisfies ConverterConfig,
+
+  // Shortcut: Excel save dialog focused on the Index sheet. Source picker shows
+  // both options ('blob' = current diagram, 'excel' = pick a file), so the
+  // input section actually renders we keep input.required = true (otherwise
+  // FileFormatSection short-circuits and no selector is drawn). The output
+  // options panel is narrowed to just two toggles (Index + Read-me); the
+  // "Contenu écrit" / "Contenu lu" sections are suppressed entirely by passing
+  // empty whitelists for the base buckets, and the Excel read options are
+  // suppressed too since the user only picks a file, not how to parse it.
+  create_index: {
+    title: 'ProcessDialog.create_index',
+    launch_button_label: 'ProcessDialog.save',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: true,
+      format: { options: ['blob', 'excel'] },
+    },
+    output: {
+      required: true,
+      format: { options: ['excel'] },
+    },
+    // The shortcut adds the missing Index sheet (and Read-me) to a workbook
+    // that doesn't have one, leaving every existing sheet untouched. We turn
+    // rewrite_format_sheets off specifically here so the SankeyExcelParser
+    // sheets already present in the input file stay verbatim — only the new
+    // Index and Read-me are appended. keep_other_sheets stays on for any
+    // custom user-added sheets outside the SankeyExcelParser format. The
+    // global default of rewrite_format_sheets in OUTPUT_ATTRIBUTES_CONFIG
+    // remains true; this is a per-shortcut opt-out.
+    output_overrides_excel: {
+      with_index_sheet: true,
+      with_description_sheet: true,
+      with_nodes_sheets: true,
+      layout: true,
+      activate_data_table: true,
+      activate_flux_matrix: true,
+      keep_other_sheets: true,
+      rewrite_format_sheets: false,
+    },
+    // Index/Read-me only need raw structure — drop the strict validation that
+    // would otherwise raise when an input file references unknown nodes/fluxes.
+    // Hidden from the user (input_options_visible_base = []) but still applied.
+    input_overrides_base: {
+      error_on_new_nodes: false,
+      error_on_new_flux: false,
+    },
+    output_options_visible_excel: ['with_index_sheet', 'with_description_sheet'],
+    output_options_visible_base: [],
+    input_options_visible_excel: [],
+    input_options_visible_base: [],
+    hide_layout_tab: true,
+  } satisfies ConverterConfig,
+
+  // Shortcut: add the TER/TES (flux matrix) sheet to a workbook that doesn't
+  // have one. Same hidden options as create_index — every existing sheet stays
+  // intact (rewrite_format_sheets=false), error_on_new_* off so loading a
+  // partial input doesn't raise, layout tab suppressed. The only checkbox
+  // exposed to the user is "Onglet TER ou TES" (activate_flux_matrix). The
+  // backend auto-decides between IO and TER layout based on the diagram's
+  // node-type tags (cf. xl_write_matrix_sheet, ok_for_ter heuristic), so
+  // there is no separate "TES" config — a single shortcut covers both.
+  create_ter_tes: {
+    title: 'ProcessDialog.create_ter_tes',
+    launch_button_label: 'ProcessDialog.save',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: true,
+      format: { options: ['blob', 'excel'] },
+    },
+    output: {
+      required: true,
+      format: { options: ['excel'] },
+    },
+    output_overrides_excel: {
+      with_index_sheet: true,
+      with_description_sheet: true,
+      with_nodes_sheets: true,
+      layout: true,
+      activate_data_table: true,
+      activate_flux_matrix: true,
+      keep_other_sheets: true,
+      rewrite_format_sheets: false,
+    },
+    input_overrides_base: {
+      error_on_new_nodes: false,
+      error_on_new_flux: false,
+    },
+    output_options_visible_excel: ['activate_flux_matrix'],
+    output_options_visible_base: [],
+    input_options_visible_excel: [],
+    input_options_visible_base: [],
+    hide_layout_tab: true,
   } satisfies ConverterConfig,
 
   reconciliation: {
