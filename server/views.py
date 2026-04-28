@@ -162,6 +162,16 @@ def solve_optimisation_problem_unified(
                     )
                 )
                 return
+            # Two-line summary: a red ERROR line so the dialog terminal shows
+            # in red that the reconciliation was NOT run (it only matters because
+            # the input file had inconsistencies that auto-correct had to fix),
+            # and a regular [COMPLETED] line so the frontend's success
+            # detection (Counter -> finishProcess(false)) still triggers.
+            trace.logger.error(
+                "Reconciliation skipped: auto-correct produced a corrected Excel "
+                "file (suffix _corrected.xlsx). Review the red-highlighted cells, "
+                "fix them as needed, then re-run the reconciliation on the corrected file."
+            )
             trace.logger.info(
                 "{:-<{w}}".format(
                     " [COMPLETED] Auto-correct produced a corrected file, no reconciliation",
