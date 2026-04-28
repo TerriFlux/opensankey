@@ -124,7 +124,7 @@ dev_opensankey:
     name: dev
   rules:
     - when: manual
-    - allow_failure: false
+      allow_failure: true
   needs:
     - build
     - test
@@ -178,7 +178,7 @@ test_opensankey:
     - git config --global safe.directory '*'
   rules:
     - when: manual
-    - allow_failure: false
+      allow_failure: true
   needs:
     - build
     - test
@@ -269,7 +269,7 @@ pages:
     - build
   rules:
     - when: manual
-      allow_failure: false
+      allow_failure: true
   script:
     # === Configuration des variables d'environnement pour React ===
     - echo "[INFO] Configuration des variables d'environnement pour le mode GitLab Pages"
