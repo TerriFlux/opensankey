@@ -119,14 +119,19 @@ export class Class_MenuConfig {
    */
   protected _menu_top_order = [
     [
-      'resetDA',
-      'open_sankey',
-      'save_sankey',
-      'export_sankey'
+      // Consolidated Fichier dropdown (Nouveau / Ouvrir / Enregistrer collapsed
+      // under MenuGroup sections). Exporter stays standalone next to it because
+      // it is reached often enough to warrant a top-level button. Legacy split
+      // keys (resetDA, open_sankey, save_sankey, export_sankey) remain
+      // registered for backwards-compatible custom menu_top_order arrays.
+      'fichier',
+      'export_sankey',
     ],
     [
+      // Édition dropdown carries MEP, the spreadsheet editor (ex format
+      // converter) and the Index/TER/TES shortcuts. Legacy 'mep' key kept.
+      'edition',
       'edit_style',
-      'mep',
     ],
     [
       // 'welcome',
