@@ -656,6 +656,14 @@ export const UniversalFileConverter = ({
       body: form_data
     }
 
+    // ``autocorrect`` lives inside input_options (validation group). When it
+    // was enabled, the backend short-circuits the reconciliation and produces
+    // a "_corrected.xlsx" file instead — the local download must reflect that
+    // suffix or the user ends up with a "reconciled" filename whose contents
+    // are actually the corrected (un-reconciled) input.
+    const _input_options_for_naming = getCurrentInputOptions() as Record<string, unknown>
+    const _autocorrect_active = Boolean(_input_options_for_naming?.['autocorrect'])
+
     fetch(url, fetchData)
       .then(response => {
         if (!response.ok) {
@@ -672,8 +680,9 @@ export const UniversalFileConverter = ({
         //@ts-expect-error xxx
         let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
         if (config.title == 'ProcessDialog.reconciliation') {
+          const suffix = _autocorrect_active ? '_corrected' : 'reconciled'
           //@ts-expect-error xxx
-          root_filename = input_file.name.split('.')[0] + 'reconciled'
+          root_filename = input_file.name.split('.')[0] + suffix
         }
 
         const filename = `${root_filename}${extensions[output_format] || ''}`
