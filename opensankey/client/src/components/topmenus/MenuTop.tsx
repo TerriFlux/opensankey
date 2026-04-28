@@ -223,6 +223,16 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
 
+  // Helper used by the Fichier/Édition menus to reset the universal converter
+  // dialog with a given config and open it. Centralizes the two boilerplate
+  // calls so each menu item stays a one-liner.
+  const open_converter_with = (config_key: keyof typeof CONVERTER_CONFIGS) => {
+    new_data.menu_configuration.ref_universal_converter_set_config.current(
+      CONVERTER_CONFIGS[config_key], '', false
+    )
+    ref_setter_show_modal_file_converter.current!(true)
+  }
+
   // Button reset DA & start either from empty sankey or template
   const button_resetDA = <ChakraMenu
     variant='menu_button_subnav_style'
@@ -601,16 +611,126 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // Button to launch tour of application
   const button_tour = <ButtonLaunchGuide new_data={new_data} />
 
+  // Consolidated "Fichier" dropdown — replaces the four side-by-side buttons
+  // (Nouveau / Ouvrir / Enregistrer / Exporter) with a single dropdown using
+  // MenuGroup sections. The original buttons stay registered in
+  // dict_components_menu_top below for retro-compat with custom menu_top_order
+  // arrays maintained outside this repo.
+  const button_fichier = <ChakraMenu
+    variant='menu_button_subnav_style'
+    placement='bottom-start' id='fichier'
+  >
+    <OSTooltip placement='bottom' label={t('Menu.tooltips.fichier')}>
+      <MenuButton className='menutop_button_fichier'>
+        <Box gridColumn='1' gridColumnEnd='span 2' gridRow='1'>
+          {new_data.icon_library.icon_open_sankey}
+        </Box>
+        <Box gridColumn='1' gridRow='2'>
+          {t('Menu.fichier_short')}
+        </Box>
+        <Box gridColumn='2' gridRow='2' height='1rem' width='1rem'>
+          <ChevronDownIcon style={{ 'height': '1rem', 'width': '1rem' }} />
+        </Box>
+      </MenuButton>
+    </OSTooltip>
+    <MenuList>
+      <MenuGroup title={t('Menu.new')}>
+        <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
+          {new_data.icon_library.icon_new_da}
+          {t('Menu.from_model')}
+        </MenuItem>
+        <MenuItem onClick={() => { set_show_excel_template(true) }}>
+          {new_data.icon_library.icon_open_sankey_excel}
+          {t('Menu.new_excel_template')}
+        </MenuItem>
+      </MenuGroup>
+      <MenuDivider />
+      <MenuGroup title={t('Menu.ouvrir')}>
+        <MenuItem onClick={() => open_converter_with('load_json')}>
+          {new_data.icon_library.icon_open_sankey_json}
+          {t('Menu.open_json')}
+        </MenuItem>
+        <MenuItem onClick={() => open_converter_with('load_excel')}>
+          {new_data.icon_library.icon_open_sankey_excel}
+          {t('Menu.open_excel')}
+        </MenuItem>
+        <MenuItem onClick={() => {
+          if (_load_sankeymatic.current) {
+            _load_sankeymatic.current.name = ''
+            _load_sankeymatic.current.click()
+          }
+        }}>
+          {new_data.icon_library.icon_open_sankey_sankeymatic}
+          {t('Menu.open_sankeymatic')}
+        </MenuItem>
+      </MenuGroup>
+      <MenuDivider />
+      <MenuGroup title={t('Menu.enregistrer')}>
+        <MenuItem onClick={() => open_converter_with('save_json')}>
+          {new_data.icon_library.icon_save_sankey_json}
+          {t('Menu.open_json')}
+        </MenuItem>
+        <MenuItem onClick={() => open_converter_with('save_excel')}>
+          {new_data.icon_library.icon_save_sankey_excel}
+          {t('Menu.open_excel')}
+        </MenuItem>
+      </MenuGroup>
+    </MenuList>
+  </ChakraMenu>
 
+  // New "Édition" dropdown — groups MEP (formerly standalone), the spreadsheet
+  // editor (formerly buried as the last item of the Open menu under "format
+  // converter"), and two pre-configured shortcuts for the Index-driven Excel
+  // workflow (Create Index, Create TER/TES). Reuses icon_mep as requested.
+  const button_edition = <ChakraMenu
+    variant='menu_button_subnav_style'
+    placement='bottom-start' id='edition'
+  >
+    <OSTooltip placement='bottom' label={t('Menu.tooltips.edit')}>
+      <MenuButton className='menutop_button_edition'>
+        <Box gridColumn='1' gridColumnEnd='span 2' gridRow='1'>
+          {new_data.icon_library.icon_mep}
+        </Box>
+        <Box gridColumn='1' gridRow='2'>
+          {t('Menu.edit_short')}
+        </Box>
+        <Box gridColumn='2' gridRow='2' height='1rem' width='1rem'>
+          <ChevronDownIcon style={{ 'height': '1rem', 'width': '1rem' }} />
+        </Box>
+      </MenuButton>
+    </OSTooltip>
+    <MenuList>
+      <MenuItem onClick={() => ref_setter_show_modal_apply_layout.current!(true)}>
+        {new_data.icon_library.icon_mep}
+        {t('Menu.Transformation.amp')}
+      </MenuItem>
+      <MenuItem onClick={() => open_converter_with('universal')}>
+        {new_data.icon_library.icon_open_sankey_pickle}
+        {t('Menu.spreadsheet_editor')}
+      </MenuItem>
+      <MenuDivider />
+      <MenuItem onClick={() => open_converter_with('create_index')}>
+        {new_data.icon_library.icon_open_sankey_excel}
+        {t('Menu.create_index')}
+      </MenuItem>
+      <MenuItem onClick={() => open_converter_with('create_ter_tes')}>
+        {new_data.icon_library.icon_open_sankey_excel}
+        {t('Menu.create_ter_tes')}
+      </MenuItem>
+    </MenuList>
+  </ChakraMenu>
 
   // Dict containing buttons of OpenSankey that will be displayed in order of menu_top_order
   const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
-    // Files open / save / export buttons
+    // New consolidated entries (default menu_top_order uses these)
+    'fichier': button_fichier,
+    'edition': button_edition,
+    // Legacy granular entries kept for retro-compat with custom menu_top_order
+    // arrays that referenced the original split buttons.
     'resetDA': button_resetDA,
     'open_sankey': button_open_sankey,
     'save_sankey': button_save_sankey,
     'export_sankey': button_export_sankey,
-    // Display related buttons
     'mep': button_mep,
     // Help buttons
     // 'welcome': button_welcome,
