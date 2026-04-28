@@ -411,6 +411,12 @@ export const UniversalFileConverter = ({
   const [marginMm, setMarginMm] = useState<number>(default_margin_mm)
   const [auto_load, setAutoLoad] = useState(false)
   const [auto_save, setAutoSave] = useState(false)
+  // Solver option: when true, the backend short-circuits the reconciliation /
+  // conversion to write a "_corrected.xlsx" file instead, with red highlights
+  // on the parent->child flux it had to add to make the Sankey structure
+  // coherent. Only meaningful for Excel input flowing through a Flask handler
+  // (reconciliation, universal converter).
+  const [autocorrect, setAutocorrect] = useState(false)
   const [input_file, set_input_file] = useState<Blob | undefined>(undefined)
   const [input_format, set_input_format] = useState<FormatType>('excel')
   const [output_format, set_output_format] = useState<FormatType>('json')
@@ -515,6 +521,7 @@ export const UniversalFileConverter = ({
       !config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob'
     )
     setAutoLayout(input_format == 'blob')
+    setAutocorrect(false)
     setConfig(config)
 
     // Reset options to defaults for the new config
@@ -733,6 +740,12 @@ export const UniversalFileConverter = ({
     form_data.append('output_options', JSON.stringify(output_options))
     const input_options = getCurrentInputOptions()
     form_data.append('input_options', JSON.stringify(input_options))
+    // Solver-side options (autocorrect, future: uncertainty, debug, ...). Only
+    // sent when at least one is set, to keep the payload identical to before
+    // when none of them is used.
+    if (autocorrect) {
+      form_data.append('solver_options', JSON.stringify({ autocorrect: true }))
+    }
     if (input_format == 'blob') {
       // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
       // view, only serialize that view so the optimizer receives just the visible
@@ -1009,6 +1022,22 @@ export const UniversalFileConverter = ({
         </Tabs>
       </WrapperBoxSubSectionMenu>}
 
+
+      {/* Solver / process options (autocorrect for now). Only rendered for
+          backend-handled Excel-in flows where SEP autocorrect can run. */}
+      {input_format === 'excel' && config.server_endpoint && (
+        <Box display='flex' flexDirection='column' gap='4px' mt='4px'>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={autocorrect}
+            onChange={(e: { target: { checked: boolean } }) => setAutocorrect(e.target.checked)}
+          >
+            <OSTooltip label={t('ProcessDialog.autocorrect_tt')}>
+              {t('ProcessDialog.autocorrect')}
+            </OSTooltip>
+          </Checkbox>
+        </Box>
+      )}
 
       {/* Bouton de lancement */}
       {!launch_at_opening ? <>
