@@ -25,8 +25,15 @@ from flask import Response
 from flask import jsonify
 from threading import Lock
 from opensankey.server.views import set_process_state
-from SankeyExcelParser.io_base import IOJson, IOExcel
+from SankeyExcelParser.io_base import (
+    AUTOCORRECT_CORRECTED,
+    AUTOCORRECT_LOAD_FAILED,
+    IOExcel,
+    IOJson,
+    run_autocorrect_pass,
+)
 import SankeyExcelParser.su_trace as trace
+from shutil import copyfile
 
 # from SankeyExcelParser.classes.sankey import Sankey
 
@@ -110,6 +117,69 @@ def solve_optimisation_problem_unified(
     trace.logger_init(logname, "a")
     trace.logger.info("-- Start optimisation")
     t_prev = time.time()
+    solver_options = solver_options or {}
+
+    # ========== PARTIE 0: AUTO-CORRECT (Excel input only) ==========
+    # When the UI checkbox is on, try parent/child flux auto-correction first.
+    # If any flux was added, write the corrected file at output_filename and
+    # short-circuit the reconciliation. The frontend's existing download flow
+    # picks up output_filename as-is.
+    if (
+        solver_options.get("autocorrect")
+        and input_source.get("type") == "file"
+        and input_source.get("format") == "excel"
+    ):
+        input_filename = input_source["path"]
+        output_dir = os.path.dirname(output_filename) or "."
+        try:
+            status, corrected_path, _ = run_autocorrect_pass(input_filename, output_dir)
+        except Exception as e:
+            trace.logger.error("-- UNEXPECTED ERROR in run_autocorrect_pass")
+            trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
+            trace.logger.debug(traceback.format_exc())
+            trace.logger.info(
+                "{:-<{w}}".format(" [FAILED] Auto-correct raised", w=MAX_LINE_LENGTH)
+            )
+            return
+        if status == AUTOCORRECT_LOAD_FAILED:
+            trace.logger.error("-- ERROR: auto-correct could not load input file")
+            trace.logger.info(
+                "{:-<{w}}".format(" [FAILED] Auto-correct load", w=MAX_LINE_LENGTH)
+            )
+            return
+        if status == AUTOCORRECT_CORRECTED:
+            trace.logger.info(f"-- AUTO-CORRECT: corrections written to {corrected_path}")
+            try:
+                copyfile(corrected_path, output_filename)
+            except Exception as e:
+                trace.logger.error("-- UNEXPECTED ERROR copying corrected file")
+                trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
+                trace.logger.debug(traceback.format_exc())
+                trace.logger.info(
+                    "{:-<{w}}".format(
+                        " [FAILED] Auto-correct could not publish corrected file",
+                        w=MAX_LINE_LENGTH,
+                    )
+                )
+                return
+            # Two-line summary: a red ERROR line so the dialog terminal shows
+            # in red that the reconciliation was NOT run (it only matters because
+            # the input file had inconsistencies that auto-correct had to fix),
+            # and a regular [COMPLETED] line so the frontend's success
+            # detection (Counter -> finishProcess(false)) still triggers.
+            trace.logger.error(
+                "Reconciliation skipped: auto-correct produced a corrected Excel "
+                "file (suffix _corrected.xlsx). Review the red-highlighted cells, "
+                "fix them as needed, then re-run the reconciliation on the corrected file."
+            )
+            trace.logger.info(
+                "{:-<{w}}".format(
+                    " [COMPLETED] Auto-correct produced a corrected file, no reconciliation",
+                    w=MAX_LINE_LENGTH,
+                )
+            )
+            return
+        # AUTOCORRECT_NO_CHANGES: nothing to fix, fall through to the regular flow.
 
     # ========== PARTIE 1: CHARGEMENT (dans le thread) ==========
     try:
@@ -178,7 +248,6 @@ def solve_optimisation_problem_unified(
     t_prev = t
 
     # ========== PARTIE 2: OPTIMISATION (dans le thread) ==========
-    solver_options = solver_options or {}
     optim_kwargs = {}
     if solver_options.get("remove_redundancy"):
         optim_kwargs["remove_redundancy"] = True
