@@ -656,6 +656,14 @@ export const UniversalFileConverter = ({
       body: form_data
     }
 
+    // ``autocorrect`` lives inside input_options (validation group). When it
+    // was enabled, the backend short-circuits the reconciliation and produces
+    // a "_corrected.xlsx" file instead — the local download must reflect that
+    // suffix or the user ends up with a "reconciled" filename whose contents
+    // are actually the corrected (un-reconciled) input.
+    const _input_options_for_naming = getCurrentInputOptions() as Record<string, unknown>
+    const _autocorrect_active = Boolean(_input_options_for_naming?.['autocorrect'])
+
     fetch(url, fetchData)
       .then(response => {
         if (!response.ok) {
@@ -672,8 +680,9 @@ export const UniversalFileConverter = ({
         //@ts-expect-error xxx
         let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
         if (config.title == 'ProcessDialog.reconciliation') {
+          const suffix = _autocorrect_active ? '_corrected' : 'reconciled'
           //@ts-expect-error xxx
-          root_filename = input_file.name.split('.')[0] + 'reconciled'
+          root_filename = input_file.name.split('.')[0] + suffix
         }
 
         const filename = `${root_filename}${extensions[output_format] || ''}`
@@ -731,8 +740,21 @@ export const UniversalFileConverter = ({
     const form_data = new FormData()
     const output_options = getCurrentOutputOptions()
     form_data.append('output_options', JSON.stringify(output_options))
-    const input_options = getCurrentInputOptions()
+    const input_options = getCurrentInputOptions() as Record<string, unknown>
+    // ``autocorrect`` is rendered in the input-options "validation" group for
+    // UX cohesion with the other coherence-related toggles, but it is a
+    // process-level decision (do we run the solver or stop and emit a
+    // corrected file?). Hand it to the backend via ``solver_options`` so the
+    // input/solver phases stay separated server-side. Strip it from
+    // ``input_options`` to avoid leaking an unknown kwarg into ``load_sankey``.
+    const autocorrect = Boolean(input_options['autocorrect'])
+    if ('autocorrect' in input_options) {
+      delete input_options['autocorrect']
+    }
     form_data.append('input_options', JSON.stringify(input_options))
+    if (autocorrect) {
+      form_data.append('solver_options', JSON.stringify({ autocorrect: true }))
+    }
     if (input_format == 'blob') {
       // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
       // view, only serialize that view so the optimizer receives just the visible
