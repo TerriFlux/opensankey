@@ -500,6 +500,20 @@ export const translations = {
       es: 'Depuración',
       de: 'Debug',
       it: 'Debug'
+    },
+    autocorrect: {
+      fr: 'Auto-correction',
+      en: 'Auto-correct',
+      es: 'Auto-corrección',
+      de: 'Auto-Korrektur',
+      it: 'Auto-correzione'
+    },
+    autocorrect_tt: {
+      fr: 'En cas d\'incohérences parent/enfant détectées dans la structure Sankey, propage les flux du parent vers les enfants manquants et écrit un fichier "_corrected.xlsx" avec les cellules ajoutées en rouge. La réconciliation est sautée — corrigez le fichier puis relancez.',
+      en: 'When parent/child inconsistencies are detected in the Sankey structure, propagate parent flux to children that lack them and write a "_corrected.xlsx" file with the added cells highlighted in red. The reconciliation is skipped — review the corrected file and re-run.',
+      es: 'Cuando se detectan incoherencias padre/hijo, propaga los flujos del padre a los hijos que carecen de ellos y escribe un archivo "_corrected.xlsx" con las celdas añadidas resaltadas en rojo. Se omite la reconciliación.',
+      de: 'Bei erkannten Eltern/Kind-Inkonsistenzen werden die Eltern-Flüsse auf die Kinder propagiert und eine "_corrected.xlsx"-Datei mit rot hervorgehobenen Zellen geschrieben. Die Abstimmung wird übersprungen.',
+      it: 'In caso di incoerenze padre/figlio rilevate, propaga i flussi del padre ai figli che ne sono privi e scrive un file "_corrected.xlsx" con le celle aggiunte evidenziate in rosso. La riconciliazione viene saltata.'
     }
   }
 }
