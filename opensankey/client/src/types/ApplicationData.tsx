@@ -1109,24 +1109,16 @@ export class Class_ApplicationData {
         content: this.t('guide.nav_menu'),
       },
       {
-        selector: '.menutop_button_new',
-        content: this.t('guide.menutop_new'),
-      },
-      {
-        selector: '.menutop_button_open',
-        content: this.t('guide.menutop_open'),
-      },
-      {
-        selector: '.menutop_button_save',
-        content: this.t('guide.menutop_save'),
+        selector: '.menutop_button_fichier',
+        content: this.t('guide.menutop_fichier'),
       },
       {
         selector: '.menutop_button_export',
         content: this.t('guide.menutop_export'),
       },
       {
-        selector: '.menutop_button_mep',
-        content: this.t('guide.menutop_mep'),
+        selector: '.menutop_button_edition',
+        content: this.t('guide.menutop_edition'),
       },
       {
         selector: '.menutop_button_save_in_cache',
