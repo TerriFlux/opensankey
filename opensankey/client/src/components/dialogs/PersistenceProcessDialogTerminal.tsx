@@ -4,7 +4,7 @@
 // Copyright (c) 2025 TerriFlux
 // ==================================================================================================
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button } from '@chakra-ui/react'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
@@ -243,8 +243,13 @@ interface LogDisplayProps {
 }
 
 const LogDisplay = ({ infos, value }: LogDisplayProps) => {
+  const scroll_ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scroll_ref.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [infos])
   return (
-    <Box overflowY='auto' maxHeight='25vh'>
+    <Box ref={scroll_ref} overflowY='auto' maxHeight='25vh'>
       {infos.map((info, index) => (
         <div key={index}>
           {value.includes(2) && info.includes('ERROR') ? (
@@ -308,10 +313,16 @@ const Counter = ({
     }
   }
 
+  const scroll_ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = scroll_ref.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [result])
+
   if (!result) return <></>
 
   return (
-    <Box overflowY='auto' maxHeight='25vh'>
+    <Box ref={scroll_ref} overflowY='auto' maxHeight='25vh'>
       {result.split('\n').map(
         (info, index) => (
           <div key={index}>
