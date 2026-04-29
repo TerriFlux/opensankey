@@ -27,6 +27,7 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { Checkbox, Box, Button, Input, Select, Text, Divider, Alert, AlertIcon } from '@chakra-ui/react'
 import { Tabs, TabList, TabPanels, Tab, TabPanel } from '@chakra-ui/react'
+import { WarningIcon } from '@chakra-ui/icons'
 import { MenuDraggable } from '../topmenus/SankeyMenus'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import FileSaver from 'file-saver'
@@ -1269,7 +1270,33 @@ export const UniversalFileConverter = ({
           <Box
             as='span'
             layerStyle='box_content_config'>
-            <center><span className='title_box2'>Terminal</span></center>
+            <Box display='flex' alignItems='center' justifyContent='center' gap='8px'>
+              <span className='title_box2'>Terminal</span>
+              {(() => {
+                const warning_count = result
+                  ? result.split('\n').filter((l: string) => l.includes('WARNING')).length
+                  : 0
+                if (warning_count === 0) return null
+                return (
+                  <Box
+                    display='inline-flex'
+                    alignItems='center'
+                    gap='4px'
+                    px='8px'
+                    py='2px'
+                    borderRadius='full'
+                    bg='#fef3c7'
+                    color='#b7791f'
+                    fontSize='sm'
+                    fontWeight='bold'
+                    title={t('ProcessDialog.warnings_to_read') || `${warning_count} warning(s) à lire`}
+                  >
+                    <WarningIcon />
+                    {warning_count}
+                  </Box>
+                )
+              })()}
+            </Box>
           </Box>
           <ProcessTerminal
             url_prefix={app_data.url_prefix}
