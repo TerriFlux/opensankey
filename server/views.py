@@ -25,15 +25,8 @@ from flask import Response
 from flask import jsonify
 from threading import Lock
 from opensankey.server.views import set_process_state
-from SankeyExcelParser.io_base import (
-    AUTOCORRECT_CORRECTED,
-    AUTOCORRECT_LOAD_FAILED,
-    IOExcel,
-    IOJson,
-    run_autocorrect_pass,
-)
+from SankeyExcelParser.io_base import IOExcel, IOJson
 import SankeyExcelParser.su_trace as trace
-from shutil import copyfile
 
 # from SankeyExcelParser.classes.sankey import Sankey
 
@@ -103,7 +96,6 @@ def solve_optimisation_problem_unified(
     logname: str,
     t_start: float,
     solver_options: dict = None,
-    process_options: dict = None,
 ):
     """
     Fonction unifiée pour l'optimisation.
@@ -119,75 +111,6 @@ def solve_optimisation_problem_unified(
     trace.logger.info("-- Start optimisation")
     t_prev = time.time()
     solver_options = solver_options or {}
-    process_options = process_options or {}
-
-    # ========== PARTIE 0: AUTO-CORRECT (Excel input only) ==========
-    # When the UI checkbox is on, try parent/child flux auto-correction first.
-    # If any flux was added, write the corrected file at output_filename and
-    # short-circuit the reconciliation. The frontend's existing download flow
-    # picks up output_filename as-is. ``autocorrect`` lives in ``process_options``
-    # because it's a process-level decision (run solver vs. emit corrected file),
-    # not a solver flag like ``remove_redundancy``.
-    if (
-        process_options.get("autocorrect")
-        and input_source.get("type") == "file"
-        and input_source.get("format") == "excel"
-    ):
-        input_filename = input_source["path"]
-        output_dir = os.path.dirname(output_filename) or "."
-        try:
-            # Forward the user's output_options so choices like
-            # ``activate_flux_matrix=False`` are respected.
-            status, corrected_path, _ = run_autocorrect_pass(
-                input_filename, output_dir, write_kwargs=output_options,
-            )
-        except Exception as e:
-            trace.logger.error("-- UNEXPECTED ERROR in run_autocorrect_pass")
-            trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
-            trace.logger.debug(traceback.format_exc())
-            trace.logger.info(
-                "{:-<{w}}".format(" [FAILED] Auto-correct raised", w=MAX_LINE_LENGTH)
-            )
-            return
-        if status == AUTOCORRECT_LOAD_FAILED:
-            trace.logger.error("-- ERROR: auto-correct could not load input file")
-            trace.logger.info(
-                "{:-<{w}}".format(" [FAILED] Auto-correct load", w=MAX_LINE_LENGTH)
-            )
-            return
-        if status == AUTOCORRECT_CORRECTED:
-            trace.logger.info(f"-- AUTO-CORRECT: corrections written to {corrected_path}")
-            try:
-                copyfile(corrected_path, output_filename)
-            except Exception as e:
-                trace.logger.error("-- UNEXPECTED ERROR copying corrected file")
-                trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
-                trace.logger.debug(traceback.format_exc())
-                trace.logger.info(
-                    "{:-<{w}}".format(
-                        " [FAILED] Auto-correct could not publish corrected file",
-                        w=MAX_LINE_LENGTH,
-                    )
-                )
-                return
-            # Two-line summary: a red ERROR line so the dialog terminal shows
-            # in red that the reconciliation was NOT run (it only matters because
-            # the input file had inconsistencies that auto-correct had to fix),
-            # and a regular [COMPLETED] line so the frontend's success
-            # detection (Counter -> finishProcess(false)) still triggers.
-            trace.logger.error(
-                "Reconciliation skipped: auto-correct produced a corrected Excel "
-                "file (suffix _corrected.xlsx). Review the red-highlighted cells, "
-                "fix them as needed, then re-run the reconciliation on the corrected file."
-            )
-            trace.logger.info(
-                "{:-<{w}}".format(
-                    " [COMPLETED] Auto-correct produced a corrected file, no reconciliation",
-                    w=MAX_LINE_LENGTH,
-                )
-            )
-            return
-        # AUTOCORRECT_NO_CHANGES: nothing to fix, fall through to the regular flow.
 
     # ========== PARTIE 1: CHARGEMENT (dans le thread) ==========
     try:
@@ -422,7 +345,6 @@ def launch_optim():
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
         solver_options = json.loads(request.form.get('solver_options', '{}'))
-        process_options = json.loads(request.form.get('process_options', '{}'))
         # Stocker l'état
         set_process_state(
             process_started=True,
@@ -457,7 +379,6 @@ def launch_optim():
             log_filename,
             t_start,
             solver_options,
-            process_options,
         ),
     )
     thread.daemon = True
