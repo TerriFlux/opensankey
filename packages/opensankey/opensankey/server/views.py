@@ -476,8 +476,8 @@ def conversion_thread(
     trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
     trace.logger.info(f"Output: {Path(output_file_name).name}")
-    trace.logger.info(f"input_options: {input_options}")
-    trace.logger.info(f"output_options: {output_options}")
+    trace.logger.debug(f"input_options: {input_options}")
+    trace.logger.debug(f"output_options: {output_options}")
     trace.logger.info("=" * 80)
 
     t_total_start = perf_counter()
