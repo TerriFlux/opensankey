@@ -891,17 +891,18 @@ export const UniversalFileConverter = ({
     const input_options = getCurrentInputOptions() as Record<string, unknown>
     // ``autocorrect`` is rendered in the input-options "validation" group for
     // UX cohesion with the other coherence-related toggles, but it is a
-    // process-level decision (do we run the solver or stop and emit a
-    // corrected file?). Hand it to the backend via ``solver_options`` so the
-    // input/solver phases stay separated server-side. Strip it from
-    // ``input_options`` to avoid leaking an unknown kwarg into ``load_sankey``.
+    // process-level decision (do we run the solver/conversion or stop and
+    // emit a corrected file?). Hand it to the backend via ``process_options``
+    // — distinct from ``solver_options`` which carries actual solver flags
+    // (e.g. remove_redundancy). Strip it from ``input_options`` to avoid
+    // leaking an unknown kwarg into ``load_sankey``.
     const autocorrect = Boolean(input_options['autocorrect'])
     if ('autocorrect' in input_options) {
       delete input_options['autocorrect']
     }
     form_data.append('input_options', JSON.stringify(input_options))
     if (autocorrect) {
-      form_data.append('solver_options', JSON.stringify({ autocorrect: true }))
+      form_data.append('process_options', JSON.stringify({ autocorrect: true }))
     }
     if (input_format == 'blob') {
       // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
