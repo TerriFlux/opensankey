@@ -37,6 +37,7 @@ import {
   CONVERTER_CONFIGS, ConverterConfig, FormatConfigStructure, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
   getInitialFormat, hasOptionsFormat
 } from './PersistenceProcessDialogConfigs'
+import { MenuConditionEvaluator } from './SankeyMenuContext'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
 import { AutoLayoutSpacingInputs } from './MenuContextWidgetFactory'
 import { Type_PaperFormat, Type_PaperOrientation, default_paper_format, default_paper_orientation, default_margin_mm } from '../../Elements/ElementsAttributesConfig'
@@ -497,6 +498,97 @@ export const UniversalFileConverter = ({
         stored_file_handles.delete(dialog_name)
       })
   }, [])
+
+  // [SA #136] Generic enforcement of `disabledConditions` + `forcedValueWhenDisabled`
+  // declared on FormatAttributeConfig entries. When an option's
+  // disabledConditions evaluate true on the merged options, its bucket value is
+  // forced to forcedValueWhenDisabled (typed-coerced where relevant).
+  // Concrete usage: output `activate_flux_matrix=false` forces
+  // `activate_data_table=true` + `data_table_with_all_flux=true` so propagated
+  // / auto-corrected flux remain visible (and the red highlight has cells to
+  // color) in the data sheet.
+  useEffect(() => {
+    const enforceForBucket = (
+      cfg_for_format: Record<string, unknown> | undefined,
+      bucket_options: Record<string, unknown>,
+      setter: (opts: Record<string, unknown>) => void,
+      merged: Record<string, unknown>,
+    ) => {
+      if (!cfg_for_format) return
+      const updates: Record<string, unknown> = {}
+      Object.entries(cfg_for_format).forEach(([key, attrValue]) => {
+        if (typeof attrValue !== 'object' || attrValue === null) return
+        const attr = attrValue as {
+          disabledConditions?: import('./SankeyMenuContext').MenuCondition[]
+          forcedValueWhenDisabled?: unknown
+        }
+        if (!attr.disabledConditions || attr.disabledConditions.length === 0) return
+        const cond_ok = MenuConditionEvaluator.evaluateAll(
+          attr.disabledConditions,
+          app_data as unknown as Class_ApplicationData,
+          merged,
+        )
+        if (!cond_ok) return
+        if (attr.forcedValueWhenDisabled === undefined) return
+        if (bucket_options[key] !== attr.forcedValueWhenDisabled) {
+          updates[key] = attr.forcedValueWhenDisabled
+        }
+      })
+      if (Object.keys(updates).length > 0) {
+        setter({ ...bucket_options, ...updates })
+      }
+    }
+
+    // Output side
+    const out_merged = { ...output_options_base, ...output_options_excel, ...output_options_json } as Record<string, unknown>
+    enforceForBucket(
+      output_config[output_format] as Record<string, unknown> | undefined,
+      output_format === 'excel'
+        ? output_options_excel as Record<string, unknown>
+        : output_format === 'json'
+          ? output_options_json as Record<string, unknown>
+          : output_options_base as Record<string, unknown>,
+      output_format === 'excel'
+        ? (opts) => set_output_options_excel(opts as typeof output_options_excel)
+        : output_format === 'json'
+          ? (opts) => set_output_options_json(opts as typeof output_options_json)
+          : (opts) => set_output_options_base(opts as typeof output_options_base),
+      out_merged,
+    )
+    enforceForBucket(
+      output_config['base'] as Record<string, unknown> | undefined,
+      output_options_base as Record<string, unknown>,
+      (opts) => set_output_options_base(opts as typeof output_options_base),
+      out_merged,
+    )
+
+    // Input side (same mechanism, for symmetry with future options).
+    const in_merged = { ...input_options_base, ...input_options_excel, ...input_options_json } as Record<string, unknown>
+    enforceForBucket(
+      input_config[input_format] as Record<string, unknown> | undefined,
+      input_format === 'excel'
+        ? input_options_excel as Record<string, unknown>
+        : input_format === 'json'
+          ? input_options_json as Record<string, unknown>
+          : input_options_base as Record<string, unknown>,
+      input_format === 'excel'
+        ? (opts) => set_input_options_excel(opts as typeof input_options_excel)
+        : input_format === 'json'
+          ? (opts) => set_input_options_json(opts as typeof input_options_json)
+          : (opts) => set_input_options_base(opts as typeof input_options_base),
+      in_merged,
+    )
+    enforceForBucket(
+      input_config['base'] as Record<string, unknown> | undefined,
+      input_options_base as Record<string, unknown>,
+      (opts) => set_input_options_base(opts as typeof input_options_base),
+      in_merged,
+    )
+  }, [
+    output_options_base, output_options_excel, output_options_json,
+    input_options_base, input_options_excel, input_options_json,
+    output_format, input_format,
+  ])
 
   // Switching input format must clear any previously picked file so the UI
   // does not display a stale filename from the other format (e.g. an Excel

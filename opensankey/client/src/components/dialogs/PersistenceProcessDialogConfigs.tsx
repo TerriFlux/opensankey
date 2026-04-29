@@ -582,6 +582,15 @@ export interface FormatAttributeConfig<T> {
   labels: { en: string; fr: string; es?: string; de?: string; it?: string }
   tooltips: { en: string; fr: string; es?: string; de?: string; it?: string }
   visibilityConditions?: MenuCondition[]
+  // When these evaluate true the checkbox/input is rendered as disabled. The
+  // dialog parent component additionally enforces `forcedValueWhenDisabled`
+  // on the bucket so the option keeps a coherent value while the user can
+  // see why it's locked (cf. SA #136: TER off forces include-all-flux on).
+  disabledConditions?: MenuCondition[]
+  forcedValueWhenDisabled?: T
+  // Optional alternate tooltip displayed when the option is disabled by
+  // disabledConditions. Falls back to `tooltips` when absent.
+  disabledTooltip?: { en: string; fr: string; es?: string; de?: string; it?: string }
   group?: OptionGroup
   // Force a row break in the auto-generated options renderer before rendering
   // this option's unit (parent + visibility-conditioned children).
@@ -1039,7 +1048,21 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Activar la escritura de la tabla DATA_SHEET',
         de: 'Schreiben der DATA_SHEET-Tabelle aktivieren',
         it: 'Attivare la scrittura della tabella DATA_SHEET'
-      }
+      },
+      // [SA #136] Forced ON when the TER/IO sheet is unchecked, otherwise
+      // propagated/auto-corrected flux would have nowhere to live in the
+      // output (and the red highlight would have nothing to color).
+      disabledConditions: [
+        { type: 'optionProperty', property: 'activate_flux_matrix', operator: '==', value: false },
+      ],
+      forcedValueWhenDisabled: true,
+      disabledTooltip: {
+        en: 'Forced on: when the TER/IO sheet is off, the data sheet must hold every flux so propagated/corrected flux remain visible.',
+        fr: 'Forcé activé : quand l\'onglet TER/TES est décoché, l\'onglet données doit contenir tous les flux pour que les flux propagés/corrigés restent visibles.',
+        es: 'Forzado activado: cuando la hoja TER/IO está desactivada, la hoja de datos debe contener todos los flujos para que los flujos propagados/corregidos permanezcan visibles.',
+        de: 'Erzwungen aktiv: wenn das TER/IO-Blatt deaktiviert ist, muss das Datenblatt alle Flüsse enthalten, damit propagierte/korrigierte Flüsse sichtbar bleiben.',
+        it: 'Forzato attivo: quando il foglio TER/IO è disattivato, il foglio dati deve contenere tutti i flussi affinché i flussi propagati/corretti rimangano visibili.',
+      },
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_with_all_flux: {
@@ -1068,7 +1091,20 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
           operator: '==',
           value: true
         }
-      ]
+      ],
+      // [SA #136] Forced ON when TER/IO is off so propagated/corrected flux
+      // (that have no data values yet) are emitted into the data sheet.
+      disabledConditions: [
+        { type: 'optionProperty', property: 'activate_flux_matrix', operator: '==', value: false },
+      ],
+      forcedValueWhenDisabled: true,
+      disabledTooltip: {
+        en: 'Forced on: with the TER/IO sheet off, the data sheet must include every flux to surface those without data values yet.',
+        fr: 'Forcé activé : avec l\'onglet TER/TES décoché, l\'onglet données doit inclure tous les flux pour que ceux sans valeurs apparaissent.',
+        es: 'Forzado activado: con la hoja TER/IO desactivada, la hoja de datos debe incluir todos los flujos para mostrar aquellos sin valores.',
+        de: 'Erzwungen aktiv: bei deaktiviertem TER/IO-Blatt muss das Datenblatt alle Flüsse enthalten, um auch jene ohne Werte zu zeigen.',
+        it: 'Forzato attivo: con il foglio TER/IO disattivato, il foglio dati deve includere tutti i flussi per mostrare quelli senza valori.',
+      },
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_only_leaf_flux: {
