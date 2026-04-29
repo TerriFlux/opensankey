@@ -305,11 +305,11 @@ export const translations = {
     },
 
     layout_section: {
-      en: 'Layout',
-      fr: 'Mise en page',
-      es: 'Diseño',
-      de: 'Layout',
-      it: 'Layout'
+      en: 'Loading options',
+      fr: 'Options chargement',
+      es: 'Opciones de carga',
+      de: 'Ladeoptionen',
+      it: 'Opzioni di caricamento'
     },
     layout_from_displayed: {
       en: 'From displayed sankey',

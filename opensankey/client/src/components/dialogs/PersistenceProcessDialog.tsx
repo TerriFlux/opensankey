@@ -1195,14 +1195,19 @@ export const UniversalFileConverter = ({
             <Tabs variant='tabs_variant_preference_tags'>
               <TabList sx={{
                 padding: '0.5rem 0 0 0 !important',
+                gap: '6px',
                 borderColor: 'primaire.2 !important',
-                '& [role="tab"]': {
-                  borderColor: 'primaire.2',
+                '&& [role="tab"]': {
+                  border: '1px solid !important',
+                  borderColor: 'primaire.2 !important',
+                  borderRadius: '6px !important',
+                  padding: '4px 12px !important',
                   color: 'primaire.2',
                   span: { color: 'primaire.2' },
                 },
-                '& [role="tab"][aria-selected="true"]': {
-                  background: 'primaire.2',
+                '&& [role="tab"][aria-selected="true"]': {
+                  background: 'primaire.2 !important',
+                  borderColor: 'primaire.2 !important',
                   color: 'white',
                   span: { color: 'white' },
                 },
