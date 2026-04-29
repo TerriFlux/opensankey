@@ -488,11 +488,11 @@ export const translations = {
       it: 'Apri'
     },
     file_converter: {
-      fr: 'Convertisseur de fichiers',
-      en: 'File convertor',
-      es: 'Convertidor de archivos',
-      de: 'Dateikonverter',
-      it: 'Convertitore di file'
+      fr: 'Édition de fichier',
+      en: 'File editing',
+      es: 'Edición de archivo',
+      de: 'Dateibearbeitung',
+      it: 'Modifica file'
     },
     log_infos: {
       fr: 'Infos',
@@ -519,23 +519,19 @@ export const translations = {
 }
 
 export type OptionGroup =
-  | 'validation'
-  | 'completion'
+  | 'autocorrection'
   | 'sheets'
   | 'content'
   | 'merge'
   | 'presentation'
-  | 'packaging'
 
 // Ordre d'affichage imposé des groupes dans la boîte de dialogue.
 export const OPTION_GROUP_ORDER: OptionGroup[] = [
-  'validation',
-  'completion',
+  'autocorrection',
   'sheets',
   'content',
   'merge',
   'presentation',
-  'packaging',
 ]
 
 export type OptionDirection = 'input' | 'output'
@@ -546,13 +542,9 @@ type DirectedLabel = Record<OptionDirection, LocalizedLabel>
 // Libellés directionnels : chaque groupe a une variante « lecture » et « écriture »
 // pour distinguer l'usage même quand il n'apparaît que d'un seul côté.
 export const OPTION_GROUP_LABELS: Record<OptionGroup, DirectedLabel> = {
-  validation: {
-    input: { en: 'Validation (read)', fr: 'Validation (lecture)', es: 'Validación (lectura)', de: 'Validierung (Lesen)', it: 'Convalida (lettura)' },
-    output: { en: 'Validation (write)', fr: 'Validation (écriture)', es: 'Validación (escritura)', de: 'Validierung (Schreiben)', it: 'Convalida (scrittura)' },
-  },
-  completion: {
-    input: { en: 'Graph completion (read)', fr: 'Complétion du graphe (lecture)', es: 'Completado del grafo (lectura)', de: 'Graphvervollständigung (Lesen)', it: 'Completamento del grafo (lettura)' },
-    output: { en: 'Graph completion (write)', fr: 'Complétion du graphe (écriture)', es: 'Completado del grafo (escritura)', de: 'Graphvervollständigung (Schreiben)', it: 'Completamento del grafo (scrittura)' },
+  autocorrection: {
+    input: { en: 'Autocompletion / autocorrection', fr: 'Autocomplétion / autocorrection', es: 'Autocompletado / autocorrección', de: 'Autovervollständigung / Autokorrektur', it: 'Autocompletamento / autocorrezione' },
+    output: { en: 'Autocompletion / autocorrection', fr: 'Autocomplétion / autocorrection', es: 'Autocompletado / autocorrección', de: 'Autovervollständigung / Autokorrektur', it: 'Autocompletamento / autocorrezione' },
   },
   sheets: {
     input: { en: 'Read sheets', fr: 'Onglets lus', es: 'Hojas leídas', de: 'Gelesene Blätter', it: 'Fogli letti' },
@@ -569,10 +561,6 @@ export const OPTION_GROUP_LABELS: Record<OptionGroup, DirectedLabel> = {
   presentation: {
     input: { en: 'Presentation (read)', fr: 'Présentation (lecture)', es: 'Presentación (lectura)', de: 'Präsentation (Lesen)', it: 'Presentazione (lettura)' },
     output: { en: 'Presentation (write)', fr: 'Présentation (écriture)', es: 'Presentación (escritura)', de: 'Präsentation (Schreiben)', it: 'Presentazione (scrittura)' },
-  },
-  packaging: {
-    input: { en: 'Packaging (read)', fr: 'Conditionnement (lecture)', es: 'Empaquetado (lectura)', de: 'Verpackung (Lesen)', it: 'Confezionamento (lettura)' },
-    output: { en: 'Packaging (write)', fr: 'Conditionnement (écriture)', es: 'Empaquetado (escritura)', de: 'Verpackung (Schreiben)', it: 'Confezionamento (scrittura)' },
   },
 }
 
@@ -604,48 +592,48 @@ export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean
 export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   // =================== BASE (communes à tous les formats) ===================
   base: {
-    error_on_new_nodes: {
-      group: 'validation',
-      default: true,
-      type: (() => true) as (() => boolean),
+    create_new_nodes: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
       labels: {
-        en: 'Block node creation from fluxes',
-        fr: 'Bloquer la création de nœuds depuis les flux',
-        es: 'Bloquear la creación de nodos desde los flujos',
-        de: 'Knotenerstellung aus Flüssen blockieren',
-        it: 'Bloccare la creazione di nodi dai flussi'
+        en: 'Create nodes from fluxes',
+        fr: 'Créer les nœuds depuis les flux',
+        es: 'Crear nodos desde los flujos',
+        de: 'Knoten aus Flüssen erstellen',
+        it: 'Creare nodi dai flussi'
       },
       tooltips: {
-        en: 'If checked: nodes referenced in fluxes but absent from the nodes sheet are NOT created and the load fails with a summary error. If unchecked: nodes are created but listed in the info log; details are available in the debug tab.',
-        fr: 'Si coché : les nœuds référencés dans les flux mais absents de l\'onglet nœuds ne sont PAS créés et le chargement échoue avec un récapitulatif. Si décoché : les nœuds sont créés mais listés dans les infos ; le détail est disponible dans l\'onglet debug.',
-        es: 'Si está marcado: los nodos referenciados en los flujos pero ausentes de la hoja de nodos NO se crean y la carga falla con un error resumen. Si no está marcado: los nodos se crean pero se listan en el registro de información; los detalles están disponibles en la pestaña de depuración.',
-        de: 'Wenn aktiviert: Knoten, die in Flüssen referenziert aber im Knotenblatt nicht vorhanden sind, werden NICHT erstellt und das Laden schlägt mit einer Zusammenfassung fehl. Wenn deaktiviert: Knoten werden erstellt aber im Info-Log aufgelistet; Details sind im Debug-Tab verfügbar.',
-        it: 'Se selezionato: i nodi referenziati nei flussi ma assenti dal foglio nodi NON vengono creati e il caricamento fallisce con un errore riepilogativo. Se non selezionato: i nodi vengono creati ma elencati nel registro informazioni; i dettagli sono disponibili nella scheda debug.'
+        en: 'If checked: nodes referenced in fluxes but absent from the nodes sheet are silently created and listed in the info log (details in the debug tab). If unchecked: the load fails with a summary error.',
+        fr: 'Si coché : les nœuds référencés dans les flux mais absents de l\'onglet nœuds sont créés silencieusement et listés dans les infos (détail dans l\'onglet debug). Si décoché : le chargement échoue avec un récapitulatif.',
+        es: 'Si está marcado: los nodos referenciados en los flujos pero ausentes de la hoja de nodos se crean silenciosamente y se listan en el registro de información (detalles en la pestaña de depuración). Si no está marcado: la carga falla con un error resumen.',
+        de: 'Wenn aktiviert: Knoten, die in Flüssen referenziert aber im Knotenblatt nicht vorhanden sind, werden still erstellt und im Info-Log aufgelistet (Details im Debug-Tab). Wenn deaktiviert: das Laden schlägt mit einer Zusammenfassung fehl.',
+        it: 'Se selezionato: i nodi referenziati nei flussi ma assenti dal foglio nodi vengono creati silenziosamente ed elencati nel registro informazioni (dettagli nella scheda debug). Se non selezionato: il caricamento fallisce con un errore riepilogativo.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    error_on_new_flux: {
-      group: 'validation',
-      default: true,
-      type: (() => true) as (() => boolean),
+    create_new_flux: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
       labels: {
-        en: 'Block flux creation from secondary sheets',
-        fr: 'Bloquer la création de flux depuis les onglets secondaires',
-        es: 'Bloquear la creación de flujos desde las hojas secundarias',
-        de: 'Flusserstellung aus sekundären Blättern blockieren',
-        it: 'Bloccare la creazione di flussi dai fogli secondari'
+        en: 'Create fluxes from secondary sheets',
+        fr: 'Créer les flux depuis les onglets secondaires',
+        es: 'Crear flujos desde las hojas secundarias',
+        de: 'Flüsse aus sekundären Blättern erstellen',
+        it: 'Creare flussi dai fogli secondari'
       },
       tooltips: {
-        en: 'If checked: fluxes referenced in data/constraints/min-max sheets but absent from base sheets (results, matrix) are NOT created and the load fails. If unchecked: fluxes are created but listed in the info log; details are available in the debug tab.',
-        fr: 'Si coché : les flux référencés dans les onglets données/contraintes/min-max mais absents des onglets de base (résultats, matrice) ne sont PAS créés et le chargement échoue. Si décoché : les flux sont créés mais listés dans les infos ; le détail est disponible dans l\'onglet debug.',
-        es: 'Si está marcado: los flujos referenciados en las hojas de datos/restricciones/min-max pero ausentes de las hojas base (resultados, matriz) NO se crean y la carga falla. Si no está marcado: los flujos se crean pero se listan en el registro de información; los detalles están disponibles en la pestaña de depuración.',
-        de: 'Wenn aktiviert: Flüsse, die in Daten-/Einschränkungs-/Min-Max-Blättern referenziert aber in Basisblättern (Ergebnisse, Matrix) nicht vorhanden sind, werden NICHT erstellt und das Laden schlägt fehl. Wenn deaktiviert: Flüsse werden erstellt aber im Info-Log aufgelistet; Details sind im Debug-Tab verfügbar.',
-        it: 'Se selezionato: i flussi referenziati nei fogli dati/vincoli/min-max ma assenti dai fogli base (risultati, matrice) NON vengono creati e il caricamento fallisce. Se non selezionato: i flussi vengono creati ma elencati nel registro informazioni; i dettagli sono disponibili nella scheda debug.'
+        en: 'If checked: fluxes referenced in data/constraints/min-max sheets but absent from base sheets (results, matrix) are silently created and listed in the info log (details in the debug tab). If unchecked: the load fails.',
+        fr: 'Si coché : les flux référencés dans les onglets données/contraintes/min-max mais absents des onglets de base (résultats, matrice) sont créés silencieusement et listés dans les infos (détail dans l\'onglet debug). Si décoché : le chargement échoue.',
+        es: 'Si está marcado: los flujos referenciados en las hojas de datos/restricciones/min-max pero ausentes de las hojas base (resultados, matriz) se crean silenciosamente y se listan en el registro de información. Si no está marcado: la carga falla.',
+        de: 'Wenn aktiviert: Flüsse, die in Daten-/Einschränkungs-/Min-Max-Blättern referenziert aber in Basisblättern (Ergebnisse, Matrix) nicht vorhanden sind, werden still erstellt und im Info-Log aufgelistet. Wenn deaktiviert: das Laden schlägt fehl.',
+        it: 'Se selezionato: i flussi referenziati nei fogli dati/vincoli/min-max ma assenti dai fogli base (risultati, matrice) vengono creati silenziosamente ed elencati nel registro informazioni. Se non selezionato: il caricamento fallisce.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
     propagate_flux_to_children: {
-      group: 'completion',
+      group: 'autocorrection',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -665,7 +653,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     propagate_flux_to_parent: {
-      group: 'completion',
+      group: 'autocorrection',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -685,7 +673,7 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     autogenerate_leveltags: {
-      group: 'completion',
+      group: 'autocorrection',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -732,11 +720,11 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
-        en: 'Sheet data',
-        fr: 'Onglet données',
-        es: 'Hoja de datos',
-        de: 'Datenblatt',
-        it: 'Foglio dati'
+        en: 'Sheet(s) data',
+        fr: 'Onglet(s) données',
+        es: 'Hoja(s) de datos',
+        de: 'Datenblatt(blätter)',
+        it: 'Foglio(i) dati'
       },
       tooltips: {
         en: 'Load DATA_SHEET table from the Excel file. Uncheck to skip loading it.',
@@ -752,11 +740,11 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
-        en: 'Sheet SUT or IOT',
-        fr: 'Onglet TER ou TES',
-        es: 'Hoja SUT o IOT',
-        de: 'Blatt SUT oder IOT',
-        it: 'Foglio SUT o IOT'
+        en: 'Sheet(s) SUT or IOT',
+        fr: 'Onglet(s) TER ou TES',
+        es: 'Hoja(s) SUT o IOT',
+        de: 'Blatt(blätter) SUT oder IOT',
+        it: 'Foglio(i) SUT o IOT'
       },
       tooltips: {
         en: 'Load IO_SHEET / TER_SHEET table from the Excel file. Uncheck to skip loading it.',
@@ -764,26 +752,6 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Cargar la tabla IO_SHEET / TER_SHEET desde el archivo Excel. Desmarcar para no cargarla.',
         de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
         it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
-
-    autocorrect: {
-      group: 'validation',
-      default: false,
-      type: (() => false) as (() => boolean),
-      labels: {
-        en: 'Auto-correct',
-        fr: 'Auto-correction',
-        es: 'Auto-corrección',
-        de: 'Auto-Korrektur',
-        it: 'Auto-correzione'
-      },
-      tooltips: {
-        en: 'When parent/child inconsistencies are detected in the Sankey structure, propagate parent flux to children that lack them and write a "_corrected.xlsx" file with the added cells highlighted in red. The reconciliation is skipped — review the corrected file and re-run.',
-        fr: 'En cas d\'incohérences parent/enfant détectées dans la structure Sankey, propage les flux du parent vers les enfants manquants et écrit un fichier "_corrected.xlsx" avec les cellules ajoutées en rouge. La réconciliation est sautée — corrigez le fichier puis relancez.',
-        es: 'Cuando se detectan incoherencias padre/hijo, propaga los flujos del padre a los hijos que carecen de ellos y escribe un archivo "_corrected.xlsx" con las celdas añadidas resaltadas en rojo. Se omite la reconciliación.',
-        de: 'Bei erkannten Eltern/Kind-Inkonsistenzen werden die Eltern-Flüsse auf die Kinder propagiert und eine "_corrected.xlsx"-Datei mit rot hervorgehobenen Zellen geschrieben. Die Abstimmung wird übersprungen.',
-        it: 'In caso di incoerenze padre/figlio rilevate, propaga i flussi del padre ai figli che ne sono privi e scrive un file "_corrected.xlsx" con le celle aggiunte evidenziate in rosso. La riconciliazione viene saltata.'
       }
     } satisfies FormatAttributeConfig<boolean>
   },
@@ -812,7 +780,25 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
   },
 
   blob: {
-
+    only_current_view: {
+      group: 'content',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Only current view',
+        fr: 'Seulement la vue courante',
+        es: 'Solo la vista actual',
+        de: 'Nur aktuelle Ansicht',
+        it: 'Solo la vista corrente'
+      },
+      tooltips: {
+        en: 'Only consider the current view of the in-memory Sankey',
+        fr: 'Considérer seulement la vue courante du Sankey en mémoire',
+        es: 'Considerar solo la vista actual del Sankey en memoria',
+        de: 'Nur die aktuelle Ansicht des Sankey im Speicher berücksichtigen',
+        it: 'Considerare solo la vista corrente del Sankey in memoria'
+      }
+    } satisfies FormatAttributeConfig<boolean>
   },
   example_excel: {},
   example_json: {}
@@ -821,28 +807,15 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 // Définir base en dehors
 const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
 
-  with_values: {
-    group: 'content',
-    default: true,
-    type: (() => true) as (() => boolean),
-    labels: {
-      en: 'Save with links\' values',
-      fr: 'Enregistrer avec les valeurs des flux',
-      es: 'Guardar con los valores de los flujos',
-      de: 'Mit Flusswerten speichern',
-      it: 'Salva con i valori dei flussi'
-    },
-    tooltips: {
-      en: 'Include link values in the export',
-      fr: 'Inclure les valeurs des flux dans l\'export',
-      es: 'Incluir los valores de los flujos en la exportación',
-      de: 'Flusswerte in den Export einbeziehen',
-      it: 'Includere i valori dei flussi nell\'esportazione'
-    }
-  } satisfies FormatAttributeConfig<boolean>,
-
+  // ``save_only_visible_elements`` n'apparaît que lorsque le format d'entrée
+  // est ``blob`` (Sankey courant) — c'est à ce moment-là que la sélection
+  // visible/invisible a un sens. La condition est évaluée via la clé
+  // synthétique ``_input_format`` injectée dans mergedOptions par
+  // AutoGeneratedOptions.
   save_only_visible_elements: {
-    group: 'content',
+    // Pas de ``group`` : rendu seul, au-dessus des sections nommées (cf. la
+    // logique UNGROUPED de PersistenceProcessDialogOptions qui place les
+    // attributs sans groupe en tête de liste).
     default: false,
     type: (() => false) as (() => boolean),
     labels: {
@@ -858,7 +831,10 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
       es: 'Exportar solo los elementos visibles en el diagrama',
       de: 'Nur sichtbare Elemente im Diagramm exportieren',
       it: 'Esportare solo gli elementi visibili nel diagramma'
-    }
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_input_format', operator: '==', value: 'blob' }
+    ]
   } satisfies FormatAttributeConfig<boolean>,
 
   example_excel: {},
@@ -895,11 +871,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
-        en: 'Rewrite SankeyExcelParser sheets',
-        fr: 'Réécrire les onglets SankeyExcelParser',
-        es: 'Reescribir las hojas SankeyExcelParser',
-        de: 'SankeyExcelParser-Blätter neu schreiben',
-        it: 'Riscrivere i fogli SankeyExcelParser'
+        en: 'Rewrite OpenSankey-specific sheets',
+        fr: 'Réécrire les onglets spécifiques OpenSankey',
+        es: 'Reescribir las hojas específicas de OpenSankey',
+        de: 'OpenSankey-spezifische Blätter neu schreiben',
+        it: 'Riscrivere i fogli specifici di OpenSankey'
       },
       tooltips: {
         en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave them untouched (only meaningful when keeping other sheets from the input).',
@@ -931,12 +907,12 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     with_sheet_formating: {
-      group: 'presentation',
+      group: 'merge',
       default: true,
       type: (() => true) as (() => boolean),
       labels: {
         en: 'Sheet formatting',
-        fr: 'Formattage des onglets excel',
+        fr: 'Formattage des onglets',
         es: 'Formato de hojas',
         de: 'Blattformatierung',
         it: 'Formattazione fogli'
@@ -1036,11 +1012,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       type: (() => true) as (() => boolean),
       breakBefore: true,
       labels: {
-        en: 'Sheet data',
-        fr: 'Onglet données',
-        es: 'Hoja de datos',
-        de: 'Datenblatt',
-        it: 'Foglio dati'
+        en: 'Sheet(s) data',
+        fr: 'Onglet(s) données',
+        es: 'Hoja(s) de datos',
+        de: 'Datenblatt(blätter)',
+        it: 'Foglio(i) dati'
       },
       tooltips: {
         en: 'Activate writing of DATA_SHEET table',
@@ -1066,7 +1042,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_with_all_flux: {
-      group: 'content',
+      group: 'sheets',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -1108,15 +1084,15 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     data_table_only_leaf_flux: {
-      group: 'content',
+      group: 'sheets',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
-        en: 'Leaf flux',
-        fr: 'Flux feuilles',
-        es: 'Flujos hoja',
-        de: 'Blattflüsse',
-        it: 'Flussi foglia'
+        en: 'Only leaf flux',
+        fr: 'Uniquement Flux feuilles',
+        es: 'Solo flujos hoja',
+        de: 'Nur Blattflüsse',
+        it: 'Solo flussi foglia'
       },
       tooltips: {
         en: 'Restrict DATA_SHEET rows to flux whose origin and destination are both leaf nodes (no children in the hierarchy).',
@@ -1139,12 +1115,13 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       group: 'sheets',
       default: true,
       type: (() => false) as (() => boolean),
+      breakBefore: true,
       labels: {
-        en: 'Sheet SUT or IOT',
-        fr: 'Onglet TER ou TES',
-        es: 'Hoja SUT o IOT',
-        de: 'Blatt SUT oder IOT',
-        it: 'Foglio SUT o IOT'
+        en: 'Sheets SUT or IOT',
+        fr: 'Onglet(s) TER ou TES',
+        es: 'Hojas SUT o IOT',
+        de: 'Blätter SUT oder IOT',
+        it: 'Fogli SUT o IOT'
       },
       tooltips: {
         en: 'Activate writing of IO_SHEET / TER_SHEET table',
@@ -1156,7 +1133,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     flux_matrix_with_data: {
-      group: 'content',
+      group: 'sheets',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -1184,15 +1161,15 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     flux_matrix_only_leaf_flux: {
-      group: 'content',
+      group: 'sheets',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
-        en: 'Leaf flux',
-        fr: 'Flux feuilles',
-        es: 'Flujos hoja',
-        de: 'Blattflüsse',
-        it: 'Flussi foglia'
+        en: 'Only leaf flux',
+        fr: 'Uniquement Flux feuilles',
+        es: 'Solo flujos hoja',
+        de: 'Nur Blattflüsse',
+        it: 'Solo flussi foglia'
       },
       tooltips: {
         en: 'Restrict the IO/TER matrix to leaf nodes (nodes without children) on both axes.',
@@ -1212,6 +1189,26 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
   },
   json: {
+    with_values: {
+      group: 'content',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Save with links\' values',
+        fr: 'Enregistrer avec les valeurs des flux',
+        es: 'Guardar con los valores de los flujos',
+        de: 'Mit Flusswerten speichern',
+        it: 'Salva con i valori dei flussi'
+      },
+      tooltips: {
+        en: 'Include link values in the export',
+        fr: 'Inclure les valeurs des flux dans l\'export',
+        es: 'Incluir los valores de los flujos en la exportación',
+        de: 'Flusswerte in den Export einbeziehen',
+        it: 'Includere i valori dei flussi nell\'esportazione'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     keep_siblings: {
       group: 'content',
       default: false,
@@ -1233,7 +1230,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
     } satisfies FormatAttributeConfig<boolean>,
 
     mode_compressed: {
-      group: 'packaging',
+      group: 'content',
       default: false,
       type: (() => false) as (() => boolean),
       labels: {
@@ -1566,7 +1563,11 @@ export const CONVERTER_CONFIGS = {
       error_on_new_nodes: false,
       error_on_new_flux: false,
     },
-    output_options_visible_excel: ['activate_flux_matrix'],
+    output_options_visible_excel: [
+      'activate_flux_matrix',
+      'flux_matrix_with_data',
+      'flux_matrix_only_leaf_flux',
+    ],
     output_options_visible_base: [],
     input_options_visible_excel: [],
     input_options_visible_base: [],

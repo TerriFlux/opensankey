@@ -249,6 +249,8 @@ const LogDisplay = ({ infos, value }: LogDisplayProps) => {
         <div key={index}>
           {value.includes(2) && info.includes('ERROR') ? (
             <div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>
+          ) : value.includes(1) && info.includes('WARNING') ? (
+            <div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>
           ) : value.includes(1) && info.includes('INFO') && !info.includes('POST') ? (
             <div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>
           ) : value.includes(3) && info.includes('DEBUG') ? (
@@ -315,10 +317,12 @@ const Counter = ({
           <div key={index}>
             {value.includes(2) && info.includes('ERROR') ?
               (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
-              : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
-                : value.includes(3) && (info.includes('DEBUG')) ?
-                  (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
+              : value.includes(1) && info.includes('WARNING') ?
+                (<div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>)
+                : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
+                  (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
+                  : value.includes(3) && (info.includes('DEBUG')) ?
+                    (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
             }
           </div>
         )

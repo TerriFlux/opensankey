@@ -56,14 +56,7 @@ from flask import send_file
 from flask import session
 
 import SankeyExcelParser.su_trace as trace
-from SankeyExcelParser.io_base import (
-    IOExcel,
-    IOJson,
-    run_autocorrect_pass,
-    AUTOCORRECT_LOAD_FAILED,
-    AUTOCORRECT_CORRECTED,
-    AUTOCORRECT_NO_CHANGES,
-)
+from SankeyExcelParser.io_base import IOExcel, IOJson
 from . import sankeymatic
 
 template_folder = os.path.join(
@@ -349,11 +342,6 @@ def launch_conversion():
         # `activate_data_table`) but mean opposite things on each side.
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
-        # Process-level options (autocorrect today; future: debug flags, …).
-        # `autocorrect` short-circuits the normal load/write flow into SEP
-        # `run_autocorrect_pass` for Excel input. Distinct from `solver_options`
-        # which carries actual solver flags consumed by reconciliation only.
-        process_options = json.loads(request.form.get('process_options', '{}'))
         ext_map = {
             'excel': '.xlsx',
             'json': '.json',
@@ -432,7 +420,6 @@ def launch_conversion():
                 output_options,
                 log_filename,
                 sankey_as_data,
-                process_options,
             ),
         )
         thread.daemon = True
@@ -460,7 +447,6 @@ def conversion_thread(
     output_options,
     log_filename,
     sankey_as_data,
-    process_options=None,
 ):
     """
     Thread de conversion universel.
@@ -497,51 +483,6 @@ def conversion_thread(
     t_total_start = perf_counter()
 
     try:
-        # Auto-correct short-circuit: when the UI checkbox is on and input is
-        # Excel, route through SEP `run_autocorrect_pass` to produce a
-        # `_corrected.xlsx` (red-highlighted cells on parent/child flux that
-        # had to be added to make the structure coherent) and copy it to the
-        # configured output. Skips the normal load/write path entirely.
-        process_options = process_options or {}
-        if process_options.get("autocorrect") and input_format == 'excel':
-            output_dir = os.path.dirname(output_file_name) or "."
-            try:
-                # Forward the user's output_options as write_kwargs so choices
-                # like ``activate_flux_matrix=False`` are respected. The
-                # write_sankey garde-fou ensures the data sheet still surfaces
-                # the corrected flux when TER is off.
-                status, corrected_path, _ = run_autocorrect_pass(
-                    input_file_name, output_dir, write_kwargs=output_options,
-                )
-            except Exception as e:
-                t_total = perf_counter() - t_total_start
-                trace.logger.error("=" * 80)
-                trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
-                trace.logger.error(f"Auto-correct erreur: {str(e)}")
-                trace.logger.error("=" * 80)
-                raise
-            if status == AUTOCORRECT_LOAD_FAILED:
-                t_total = perf_counter() - t_total_start
-                trace.logger.error("=" * 80)
-                trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
-                trace.logger.error("Auto-correct n'a pas pu charger le fichier d'entrée")
-                trace.logger.error("=" * 80)
-                return
-            if status == AUTOCORRECT_CORRECTED:
-                shutil.copyfile(corrected_path, output_file_name)
-                t_total = perf_counter() - t_total_start
-                trace.logger.info("=" * 80)
-                trace.logger.info(
-                    f"✓ AUTO-CORRECT TERMINÉ en {t_total:.3f}s — fichier corrigé écrit"
-                )
-                trace.logger.info("=" * 80)
-                return
-            # AUTOCORRECT_NO_CHANGES → nothing to fix; fall through to the
-            # normal conversion so the user still gets an output file.
-            trace.logger.info(
-                "Auto-correct: aucune incohérence détectée, conversion normale"
-            )
-
         # Choisir le bon IO selon le format
         if input_format == 'excel':
             io_input = IOExcel()
