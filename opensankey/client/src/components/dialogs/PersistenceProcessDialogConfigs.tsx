@@ -670,26 +670,6 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'Elternflüsse erstellen, wenn sie nur auf Kindknoten existieren',
         it: 'Creare flussi genitori quando esistono solo sui nodi figli'
       }
-    } satisfies FormatAttributeConfig<boolean>,
-
-    autogenerate_leveltags: {
-      group: 'autocorrection',
-      default: false,
-      type: (() => false) as (() => boolean),
-      labels: {
-        en: 'Auto-generate level tags',
-        fr: 'Générer les tags de niveau automatiques',
-        es: 'Generar etiquetas de nivel automáticas',
-        de: 'Ebenen-Tags automatisch erzeugen',
-        it: 'Generare tag di livello automatici'
-      },
-      tooltips: {
-        en: 'Create level tag groups (Dimension 1, 2, ...) from the node hierarchy. Disabled by default: auto-generated dimensions are often not antagonistic, so it is usually safer to aggregate/disaggregate locally. A single auto-dimension is never generated.',
-        fr: 'Créer les groupes de tags de niveau (Dimension 1, 2, ...) à partir de la hiérarchie des nœuds. Désactivé par défaut : les dimensions générées ne sont souvent pas antagonistes, il vaut mieux agréger/désagréger localement. Une dimension auto seule n\'est jamais générée.',
-        es: 'Crear grupos de etiquetas de nivel (Dimensión 1, 2, ...) a partir de la jerarquía de nodos. Desactivado por defecto: las dimensiones generadas a menudo no son antagónicas, es más seguro agregar/desagregar localmente. Una única dimensión auto nunca se genera.',
-        de: 'Ebenen-Tag-Gruppen (Dimension 1, 2, ...) aus der Knotenhierarchie erstellen. Standardmäßig deaktiviert: automatisch erzeugte Dimensionen sind oft nicht antagonistisch, lokale Aggregation ist meist sicherer. Eine einzelne Auto-Dimension wird nie erzeugt.',
-        it: 'Creare gruppi di tag di livello (Dimensione 1, 2, ...) dalla gerarchia dei nodi. Disattivato per impostazione predefinita: le dimensioni generate spesso non sono antagoniste, è più sicuro aggregare/disaggregare localmente. Una singola dimensione auto non viene mai generata.'
-      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
