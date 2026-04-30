@@ -664,11 +664,19 @@ export const UniversalFileConverter = ({
     set_input_format(input_format)
     const output_format = getInitialFormat(config.output.format, 'json')
     set_output_format(getInitialFormat(config.output.format, 'json'))
-    setAutoLoad(!config.output.required)
-    setAutoSave(
-      input_format == 'blob' && output_format == 'excel' || //save excel
-      !config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob'
-    )
+    // ``keep_terminal_open`` forces a manual end-of-process flow (Télécharger /
+    // Réinit buttons) so the user can actually read the verbose log. Used by
+    // ad-hoc shortcuts whose log is the actual feedback.
+    if (config.keep_terminal_open) {
+      setAutoLoad(false)
+      setAutoSave(false)
+    } else {
+      setAutoLoad(!config.output.required)
+      setAutoSave(
+        input_format == 'blob' && output_format == 'excel' || //save excel
+        !config.input.required && input_format != 'example_json' && input_format != 'example_excel' && input_format != 'blob'
+      )
+    }
     setAutoLayout(input_format == 'blob')
     setConfig(config)
 
