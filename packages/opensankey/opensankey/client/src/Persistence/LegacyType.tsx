@@ -128,7 +128,7 @@ export type SankeyNode = {
       antitag?: boolean,
       force_show_children?: boolean,
       force_show_parent?:boolean,
-      container_mode?: 'in_children_out_parent' | 'in_parent_out_children'
+      container_mode?: 'in_children_out_parent' | 'in_parent_out_children' | 'in_children_out_children' | 'in_parent_out_parent'
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
