@@ -401,6 +401,46 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       closeMenuAfter: true
     },
 
+    containerInChildrenOutChildren: {
+      type: 'action',
+      labels: {
+        en: 'Enclose (inputs → children, outputs ← children)',
+        fr: 'Englober (entrées → enfants, sorties ← enfants)',
+        es: 'Englobar (entradas → hijos, salidas ← hijos)',
+        de: 'Umschließen (Eingänge → Kinder, Ausgänge ← Kinder)',
+        it: 'Racchiudere (ingressi → figli, uscite ← figli)'
+      },
+      tooltips: {
+        en: 'Parent surrounds children as a pure visual envelope; all incoming and outgoing links land on the children',
+        fr: 'Le parent entoure les enfants comme une enveloppe visuelle ; tous les flux entrants et sortants vont sur les enfants',
+        es: 'El padre rodea a los hijos como una envoltura visual; todos los flujos entrantes y salientes llegan a los hijos',
+        de: 'Elternknoten umschließt Kinder als reine visuelle Hülle; alle eingehenden und ausgehenden Flüsse landen auf den Kindern',
+        it: 'Il genitore circonda i figli come pura busta visiva; tutti i flussi in ingresso e in uscita arrivano sui figli'
+      },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
+    containerInParentOutParent: {
+      type: 'action',
+      labels: {
+        en: 'Enclose (inputs → parent, outputs ← parent)',
+        fr: 'Englober (entrées → parent, sorties ← parent)',
+        es: 'Englobar (entradas → padre, salidas ← padre)',
+        de: 'Umschließen (Eingänge → Eltern, Ausgänge ← Eltern)',
+        it: 'Racchiudere (ingressi → genitore, uscite ← genitore)'
+      },
+      tooltips: {
+        en: 'Parent surrounds children; all incoming and outgoing links land on the parent — children are visible inside the envelope but carry no flux of their own',
+        fr: 'Le parent entoure les enfants ; tous les flux entrants et sortants vont sur le parent — les enfants sont visibles dans l\'enveloppe mais n\'ont aucun flux propre',
+        es: 'El padre rodea a los hijos; todos los flujos entrantes y salientes llegan al padre — los hijos son visibles dentro de la envoltura pero no llevan flujo propio',
+        de: 'Elternknoten umschließt Kinder; alle eingehenden und ausgehenden Flüsse landen auf dem Elternknoten — Kinder sind innerhalb der Hülle sichtbar, tragen aber keinen eigenen Fluss',
+        it: 'Il genitore circonda i figli; tutti i flussi in ingresso e in uscita arrivano sul genitore — i figli sono visibili dentro la busta ma non portano flusso proprio'
+      },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
     unsetContainerMode: {
       type: 'action',
       labels: { en: 'Exit enclosing mode', fr: 'Quitter mode englobant', es: 'Salir del modo englobante', de: 'Umschließungsmodus verlassen', it: 'Uscire dalla modalità di contenimento' },
