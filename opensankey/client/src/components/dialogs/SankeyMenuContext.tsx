@@ -25,12 +25,12 @@
 // ==================================================================================================
 
 import React, { useState, useMemo } from 'react'
-import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Menu, MenuButton, MenuList, Text } from '@chakra-ui/react'
 import { ChevronRightIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_MenuConfig } from '../../types/MenuConfig'
 import { Class_DrawingArea } from '../../types/DrawingArea'
-import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock, MenuContextAutoLayout, MenuContextResetVerticalIntervals } from './MenuContextWidgetFactory'
+import { ButtonNodeContextAssignStyle, MenuContextLinksData, ButtonLinkContextAssignTag, ButtonNodeContextAssignTag, ButtonLinkContextAssignStyle, ButtonContainerContextAssignStyle, MenuContextNodeStock, MenuContextAutoLayout, MenuContextResetVerticalIntervals, DimensionActionSelector } from './MenuContextWidgetFactory'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_LinkElement } from '../../Elements/Link'
 
@@ -319,49 +319,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
               titleName: `${dim.parent.name}  <- `,
               children: [
                 {
-                  type: 'button' as const,
-                  actionName: `aggregate_${dim.parent.id}`,
-                  titleKey: 'Sans expansion'
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `aggregateLeft_${dim.parent.id}`,
-                  titleKey: 'Expansion à gauche',
-                  visibilityConditions: [{
-                    type: 'custom',
-                    customCheck: (app_data: Class_ApplicationData) => {
-                      if (!app_data.has_sankey_dev) return false
-                      return true
-                    }
-                  }]
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `aggregateRight_${dim.parent.id}`,
-                  titleKey: 'Expansion à droite',
-                  visibilityConditions: [{
-                    type: 'custom',
-                    customCheck: (app_data: Class_ApplicationData) => {
-                      if (!app_data.has_sankey_dev) return false
-                      return true
-                    }
-                  }]
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInChildrenOutParent_${dim.parent.id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInParentOutChildren_${dim.parent.id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInChildrenOutChildren_${dim.parent.id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInParentOutParent_${dim.parent.id}`,
+                  type: 'widget' as const,
+                  widgetName: 'DimensionActionSelector',
+                  widgetProps: { other_id: dim.parent.id }
                 },
                 {
                   type: 'button' as const,
@@ -390,49 +350,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
               titleName: `${dim.short_name}`,
               children: [
                 {
-                  type: 'button' as const,
-                  actionName: `disaggregate_${dim.children[0].id}`,
-                  titleKey: 'Sans expansion'
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `expandLeft_${dim.children[0].id}`,
-                  titleKey: 'Expansion à gauche',
-                  visibilityConditions: [{
-                    type: 'custom',
-                    customCheck: (app_data: Class_ApplicationData) => {
-                      if (!app_data.has_sankey_dev) return false
-                      return true
-                    }
-                  }]
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `expandRight_${dim.children[0].id}`,
-                  titleKey: 'Expansion à droite',
-                  visibilityConditions: [{
-                    type: 'custom',
-                    customCheck: (app_data: Class_ApplicationData) => {
-                      if (!app_data.has_sankey_dev) return false
-                      return true
-                    }
-                  }]
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInChildrenOutParent_${dim.children[0].id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInParentOutChildren_${dim.children[0].id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInChildrenOutChildren_${dim.children[0].id}`,
-                },
-                {
-                  type: 'button' as const,
-                  actionName: `containerInParentOutParent_${dim.children[0].id}`,
+                  type: 'widget' as const,
+                  widgetName: 'DimensionActionSelector',
+                  widgetProps: { other_id: dim.children[0].id }
                 },
                 {
                   type: 'button' as const,
@@ -446,11 +366,15 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
             }))
           }
         }
-        return [{
-          ...item,
-          children: [...existingButtons, ...dimensionSubmenusAgg, ...dimensionSubmenusDesagg]
-        }]
+        const flat_items = [...existingButtons, ...dimensionSubmenusAgg, ...dimensionSubmenusDesagg]
+        if (flat_items.length === 0) return []
+        return [
+          { type: 'separator' as const, titleKey: 'navHierarchy' },
+          ...flat_items,
+          { type: 'separator' as const },
+        ]
       }
+      return []
     }
 
     return [item]
@@ -551,7 +475,18 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     }
 
     switch (item.type) {
-    case 'separator':
+    case 'separator': {
+      const sep_title = item.titleName ?? (item.titleKey ? t(`${path}.${item.titleKey}`) : '')
+      if (sep_title) {
+        return (
+          <Box key={`sep-${index}`} mt='6px' mb='1px' px='6px'>
+            <Text fontSize='9px' fontWeight='semibold' color='gray.500' textTransform='uppercase' letterSpacing='wide'>
+              {sep_title}
+            </Text>
+            <hr style={{ margin: '1px 0 0', border: 'none', borderTop: '1px solid #e2e8f0' }} />
+          </Box>
+        )
+      }
       return (
         <hr
           key={`sep-${index}`}
@@ -562,6 +497,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
           }}
         />
       )
+    }
 
     case 'button':
       if (item.actionName) {
@@ -611,8 +547,12 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
             as={Button}
             rightIcon={<ChevronRightIcon />}
             className="dropdown-basic"
+            maxW='260px'
+            title={sectionTitle}
           >
-            {sectionTitle}
+            <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap' display='block'>
+              {sectionTitle}
+            </Box>
           </MenuButton>
           <MenuList as={Box} layerStyle='context_menu'>
             {visibleChildren.map((child, childIndex) =>
@@ -801,6 +741,7 @@ widgetRegistry.register('ButtonContainerContextAssignStyle', ButtonContainerCont
 widgetRegistry.register('MenuContextNodeStock', MenuContextNodeStock as WidgetComponent)
 widgetRegistry.register('MenuContextAutoLayout', MenuContextAutoLayout as WidgetComponent)
 widgetRegistry.register('MenuContextResetVerticalIntervals', MenuContextResetVerticalIntervals as WidgetComponent)
+widgetRegistry.register('DimensionActionSelector', DimensionActionSelector as WidgetComponent)
 
 interface WidgetRendererProps {
   widgetName: string

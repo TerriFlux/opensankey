@@ -35,6 +35,8 @@ import { default_value_option } from '../configmenus/SankeyMenuConfigurationLink
 import { value_option_percent_constants } from '../../Elements/LinkValues'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_LinkElement } from '../../Elements/Link'
+import { Class_NodeDimension, Type_ContainerMode } from '../../Elements/NodeDimension'
+import { NodeActions } from './NodeActions'
 
 /*************************************************************************************************/
 
@@ -645,5 +647,127 @@ export const MenuContextNodeStock = ({ app_data }: { app_data: Class_Application
         step={1}
       />
     </Box>
+  </Box>
+}
+
+// ==================================================================================================
+// Sélecteur Type × Variante pour les actions de dimension (agréger/expansion/englober)
+// ==================================================================================================
+
+type DimActionType = 'normal' | 'expansion' | 'container'
+type ExpansionVariant = 'left' | 'right'
+
+const findDimByOtherId = (
+  app_data: Class_ApplicationData,
+  other_id: string
+): { dim: Class_NodeDimension, side: 'as_child' | 'as_parent' } | undefined => {
+  const node = app_data.drawing_area.node_contextualised
+  if (!node) return undefined
+  const target = node.master_node ?? node
+  const as_child = target.dimensions_as_child.find(d => d.parent.id === other_id)
+  if (as_child) return { dim: as_child, side: 'as_child' }
+  const as_parent = target.dimensions_as_parent.find(d => d.children.some(c => c.id === other_id))
+  if (as_parent) return { dim: as_parent, side: 'as_parent' }
+  return undefined
+}
+
+export const DimensionActionSelector = ({
+  app_data,
+  other_id,
+}: {
+  app_data: Class_ApplicationData
+  other_id: string
+}) => {
+  const found = findDimByOtherId(app_data, other_id)
+  const detected_type: DimActionType = found?.dim.container_mode ? 'container' : 'normal'
+  const detected_container: Exclude<Type_ContainerMode, null> = found?.dim.container_mode ?? 'in_children_out_parent'
+  const [ui_type, setUiType] = useState<DimActionType>(detected_type)
+  const [exp_variant, setExpVariant] = useState<ExpansionVariant>('left')
+  const [container_variant, setContainerVariant] = useState<Exclude<Type_ContainerMode, null>>(detected_container)
+  if (!found) return null
+  const { side } = found
+  const has_dev = app_data.has_sankey_dev
+
+  const normal_label = side === 'as_child' ? 'Agréger' : 'Désagréger'
+  const exp_dir_label = exp_variant === 'left' ? '← gauche' : 'droite →'
+  const container_label_map: Record<Exclude<Type_ContainerMode, null>, string> = {
+    in_children_out_parent: 'entrées enfants → sortie parent',
+    in_parent_out_children: 'entrée parent → sorties enfants',
+    in_children_out_children: 'entrées + sorties enfants',
+    in_parent_out_parent: 'entrées + sorties parent',
+  }
+
+  const apply_label =
+    ui_type === 'normal' ? `Appliquer ${normal_label.toLowerCase()}`
+      : ui_type === 'expansion' ? `Appliquer expansion ${exp_dir_label}`
+        : `Appliquer englobement (${container_label_map[container_variant]})`
+
+  const onApply = () => {
+    const actions = new NodeActions(app_data)
+    if (ui_type === 'normal') {
+      if (side === 'as_child') actions.aggregate(other_id)
+      else actions.disaggregate(other_id)
+    } else if (ui_type === 'expansion') {
+      if (side === 'as_child') {
+        if (exp_variant === 'left') actions.aggregateLeft(other_id)
+        else actions.aggregateRight(other_id)
+      } else {
+        if (exp_variant === 'left') actions.expandLeft(other_id)
+        else actions.expandRight(other_id)
+      }
+    } else {
+      switch (container_variant) {
+        case 'in_children_out_parent': actions.containerInChildrenOutParent(other_id); break
+        case 'in_parent_out_children': actions.containerInParentOutChildren(other_id); break
+        case 'in_children_out_children': actions.containerInChildrenOutChildren(other_id); break
+        case 'in_parent_out_parent': actions.containerInParentOutParent(other_id); break
+      }
+    }
+  }
+
+  return <Box display='flex' flexDirection='column' gap='4px' p='2px'>
+    <Box display='flex' flexDirection='row' gap='4px' alignItems='center'>
+      <Select
+        size='xs'
+        value={ui_type}
+        onChange={(e) => setUiType(e.target.value as DimActionType)}
+        width='135px'
+      >
+        <option value='normal'>{normal_label}</option>
+        {has_dev && <option value='expansion'>Expansion</option>}
+        <option value='container'>Englober</option>
+      </Select>
+      {ui_type === 'expansion' && has_dev && (
+        <Select
+          size='xs'
+          value={exp_variant}
+          onChange={(e) => setExpVariant(e.target.value as ExpansionVariant)}
+          width='105px'
+        >
+          <option value='left'>← Gauche</option>
+          <option value='right'>Droite →</option>
+        </Select>
+      )}
+      {ui_type === 'container' && (
+        <Select
+          size='xs'
+          value={container_variant}
+          onChange={(e) => setContainerVariant(e.target.value as Exclude<Type_ContainerMode, null>)}
+          width='220px'
+        >
+          <option value='in_children_out_parent'>entrées enfants → sortie parent</option>
+          <option value='in_parent_out_children'>entrée parent → sorties enfants</option>
+          <option value='in_children_out_children'>entrées + sorties enfants</option>
+          <option value='in_parent_out_parent'>entrées + sorties parent</option>
+        </Select>
+      )}
+    </Box>
+    <Button
+      variant='menuconfigpanel_option_button'
+      size='xs'
+      onClick={onApply}
+    >
+      {apply_label}
+    </Button>
   </Box>
 }
