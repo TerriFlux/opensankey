@@ -483,6 +483,40 @@ def conversion_thread(
     t_total_start = perf_counter()
 
     try:
+        # Ad-hoc shortcut: build the Index directly from the workbook's existing
+        # sheets, without parsing/re-emitting the Sankey content. Sidesteps the
+        # data-merge limitation of the full round-trip path (multiple
+        # "Valeurs"-typed tabs are collapsed into one on regular write).
+        if output_options.get("create_index_only"):
+            if input_format != 'excel' or output_format != 'excel':
+                raise ValueError(
+                    "create_index_only requires excel input and output"
+                )
+            io_input = IOExcel()
+            ok, msg = io_input.create_index_only(
+                input_file_name,
+                output_file_name,
+                with_index=bool(output_options.get("with_index_sheet", True)),
+                with_description=bool(
+                    output_options.get("with_description_sheet", False)
+                ),
+                with_formatting=bool(
+                    output_options.get("with_sheet_formating", False)
+                ),
+            )
+            t_total = perf_counter() - t_total_start
+            trace.logger.info("=" * 80)
+            if ok:
+                trace.logger.info(
+                    f"✓ CONVERSION TERMINÉE en {t_total:.3f}s — Index créé"
+                )
+            else:
+                trace.logger.error(
+                    f"✗ CRÉATION INDEX ÉCHOUÉE après {t_total:.3f}s: {msg}"
+                )
+            trace.logger.info("=" * 80)
+            return
+
         # Choisir le bon IO selon le format
         if input_format == 'excel':
             io_input = IOExcel()
