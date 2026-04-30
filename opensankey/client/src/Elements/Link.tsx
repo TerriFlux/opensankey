@@ -1172,9 +1172,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * at the same time and the links are split by side:
    * - 'in_children_out_parent': inputs land on children, outputs leave from parent
    * - 'in_parent_out_children': inputs land on parent, outputs leave from children
+   * - 'in_children_out_children': inputs and outputs both on children (parent is a pure envelope, no flux)
+   * - 'in_parent_out_parent': inputs and outputs both on parent (children carry no flux of their own)
    *
    * Links inside a group (child → child of the same dimension) stay visible in
-   * both modes. If any impacted dimension hides this link, the link is hidden.
+   * all modes. If any impacted dimension hides this link, the link is hidden.
    */
   public get is_allowed_by_container_modes(): boolean {
     const source = this._source
@@ -1207,15 +1209,19 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (source_is_parent) {
         // Outgoing link from the parent
         if (mode === 'in_parent_out_children') return false
+        if (mode === 'in_children_out_children') return false
       } else if (target_is_parent) {
         // Incoming link to the parent
         if (mode === 'in_children_out_parent') return false
+        if (mode === 'in_children_out_children') return false
       } else if (source_is_child) {
         // Outgoing link from a child
         if (mode === 'in_children_out_parent') return false
+        if (mode === 'in_parent_out_parent') return false
       } else if (target_is_child) {
         // Incoming link to a child
         if (mode === 'in_parent_out_children') return false
+        if (mode === 'in_parent_out_parent') return false
       }
     }
     return true
