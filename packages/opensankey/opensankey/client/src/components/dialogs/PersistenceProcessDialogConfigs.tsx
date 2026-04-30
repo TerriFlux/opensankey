@@ -234,11 +234,11 @@ export const translations = {
       it: 'Salva JSON'
     },
     create_index: {
-      en: 'Create Index sheet',
-      fr: 'Créer l\'onglet Index',
-      es: 'Crear hoja Índice',
-      de: 'Index-Blatt erstellen',
-      it: 'Crea foglio Index'
+      en: 'Document workbook',
+      fr: 'Documenter le classeur',
+      es: 'Documentar el libro',
+      de: 'Arbeitsmappe dokumentieren',
+      it: 'Documenta la cartella'
     },
     create_ter_tes: {
       en: 'Create TER/TES sheet',
@@ -1335,6 +1335,12 @@ export interface ConverterConfig {
   // input could feed the in-app sankey, which is wrong for pure save-to-file
   // shortcuts (create_index/ter/tes) where no diagram is reloaded.
   hide_layout_tab?: boolean
+
+  // Force the terminal to stay open at the end of the process: no auto-save,
+  // no auto-close. The user reads the log and clicks Télécharger / Réinit
+  // explicitly. Used by ad-hoc shortcuts (create_index) where the verbose log
+  // is the actual feedback.
+  keep_terminal_open?: boolean
 }
 
 export const hasOptionsFormat = (
@@ -1491,23 +1497,23 @@ export const CONVERTER_CONFIGS = {
     server_endpoint: '/opensankey/convert/launch',
     input: {
       required: true,
-      format: { options: ['blob', 'excel'] },
+      format: { options: ['excel'] },
     },
     output: {
       required: true,
       format: { options: ['excel'] },
     },
-    // The shortcut adds the missing Index sheet (and Read-me) to a workbook
-    // that doesn't have one, leaving every existing sheet untouched. We turn
-    // rewrite_format_sheets off specifically here so the SankeyExcelParser
-    // sheets already present in the input file stay verbatim — only the new
-    // Index and Read-me are appended. keep_other_sheets stays on for any
-    // custom user-added sheets outside the SankeyExcelParser format. The
-    // global default of rewrite_format_sheets in OUTPUT_ATTRIBUTES_CONFIG
-    // remains true; this is a per-shortcut opt-out.
+    // Ad-hoc Index builder: backend reads only the workbook's tab list and
+    // emits a fresh Index (and optionally Lisez-moi) from the matched sheet
+    // names — no Sankey parsing/re-emission. This sidesteps the data-merge
+    // limitation where multiple "Valeurs"-typed tabs collapse into one on
+    // round-trip. The other output overrides below are only honored by the
+    // legacy round-trip path and are ignored when create_index_only is on.
     output_overrides_excel: {
+      create_index_only: true,
       with_index_sheet: true,
       with_description_sheet: true,
+      with_sheet_formating: true,
       with_nodes_sheets: true,
       layout: true,
       activate_data_table: true,
@@ -1522,11 +1528,12 @@ export const CONVERTER_CONFIGS = {
       error_on_new_nodes: false,
       error_on_new_flux: false,
     },
-    output_options_visible_excel: ['with_index_sheet', 'with_description_sheet'],
+    output_options_visible_excel: ['with_index_sheet', 'with_description_sheet', 'with_sheet_formating'],
     output_options_visible_base: [],
     input_options_visible_excel: [],
     input_options_visible_base: [],
     hide_layout_tab: true,
+    keep_terminal_open: true,
   } satisfies ConverterConfig,
 
   // Shortcut: add the TER/TES (flux matrix) sheet to a workbook that doesn't
