@@ -288,7 +288,8 @@ export class NodePositioning {
     horizontal_indexes_per_nodes_ids: { [node_id: string]: number },
     recycling_links_ids: string[],
     launched_from_process: boolean,
-    echangeTag?: Class_Tag
+    echangeTag?: Class_Tag,
+    user_forced_recycling_ids?: Set<string>
   ) {
     // Use results from previous index computing
     let max_horizontal_index = 0
@@ -309,11 +310,15 @@ export class NodePositioning {
 
 
       // Algorithme d3-sankey-circular - les liens sont déjà marqués.
-      // Ne pas écraser le statut des liens dont le recyclage est verrouillé.
+      // Préserver les liens forcés recyclage par l'utilisateur (snapshot de
+      // shape_is_recycling=true pris en début de calcul).
       Object.values(this.drawingArea.sankey.nodes_dict[node.id].output_links_list)
         .forEach(link => {
           const link_data = this.drawingArea.sankey.links_dict[link.id]
-          if (link_data.shape_is_recycling_locked === true) return
+          if (user_forced_recycling_ids && user_forced_recycling_ids.has(link.id)) {
+            link_data.shape_is_recycling = true
+            return
+          }
           if (!recycling_links_ids.includes(link.id)) {
             link_data.shape_is_recycling = false
           }
@@ -548,6 +553,16 @@ export class NodePositioning {
     let max_horizontal_index = 0
     let nodes_per_horizontal_indexes: { [index: number]: Class_NodeElement[] } = {}
 
+    // Snapshot des liens marqués recyclage par l'utilisateur AVANT recalcul.
+    // Sémantique (issue OpenSankey#711) : un flux dont shape_is_recycling=true
+    // est considéré forcé — le calcul auto le préserve. Pas de cadenas séparé,
+    // c'est l'état qui fait foi.
+    const user_forced_recycling_ids = new Set<string>(
+      this.drawingArea.sankey.visible_links_list
+        .filter(l => l.shape_is_recycling === true)
+        .map(l => l.id)
+    )
+
     if (skip_horizontal) {
       // Skip horizontal recalculation — use existing position_u values
       const has_valid_u = nodes_to_process.some(n => n.position_u > 0)
@@ -563,12 +578,15 @@ export class NodePositioning {
         nodes_per_horizontal_indexes[u].push(node)
         if (u > max_horizontal_index) max_horizontal_index = u
       })
-      // Mark recycling links — sauf si l'utilisateur a verrouillé le statut.
+      // Mark recycling links — préserver les liens forcés par l'utilisateur.
       nodes_to_process.forEach(node => {
         const node_index = horizontal_indexes_per_nodes_ids[node.id]
         node.output_links_list.forEach(link => {
           const link_data = this.drawingArea.sankey.links_dict[link.id]
-          if (link_data.shape_is_recycling_locked === true) return
+          if (user_forced_recycling_ids.has(link.id)) {
+            link_data.shape_is_recycling = true
+            return
+          }
           const target_node_id = link_data.target.id
           const target_index = horizontal_indexes_per_nodes_ids[target_node_id]
           if (target_index !== undefined && node_index >= target_index) {
@@ -582,15 +600,13 @@ export class NodePositioning {
       // ÉTAPE 1: Calcul des index horizontaux - VERSION AMÉLIORÉE
       const possible_recycling_links_ids: string[] = []
 
-      // Pré-amorçage : les liens dont le statut recyclage est verrouillé par
-      // l'utilisateur (shape_is_recycling_locked === true et shape_is_recycling
-      // === true) sont injectés dans la liste des liens recyclage avant le DFS.
-      // Ainsi, la détection de cycles les considère déjà coupés et ne descend
-      // pas par eux pour calculer les index horizontaux.
-      this.drawingArea.sankey.visible_links_list.forEach(link => {
-        if (link.shape_is_recycling_locked === true && link.shape_is_recycling === true) {
-          possible_recycling_links_ids.push(link.id)
-        }
+      // Pré-amorçage : les liens marqués recyclage par l'utilisateur
+      // (snapshot user_forced_recycling_ids) sont injectés dans la liste des
+      // liens recyclage avant le DFS. Ainsi, la détection de cycles les
+      // considère déjà coupés et ne descend pas par eux pour calculer les
+      // index horizontaux.
+      user_forced_recycling_ids.forEach(link_id => {
+        possible_recycling_links_ids.push(link_id)
       })
 
       // Initialiser tous les nœuds à index -1
@@ -660,15 +676,15 @@ export class NodePositioning {
       // Set des liens reconnus comme recyclage par la détection de cycles.
       // possible_recycling_links_ids contient les back-edges trouvées par DFS
       // (computeHorizontalIndexImproved) ET les liens pré-amorcés par
-      // verrouillage utilisateur (cf. ÉTAPE 1). On utilise cette source de
-      // vérité pour le marquage final, plutôt qu'une comparaison
-      // node_index >= target_index : quand l'utilisateur verrouille UN flux
-      // d'un cycle comme recyclage, le DFS coupe à cet endroit et n'identifie
-      // PAS d'autres back-edges dans ce cycle ; mais la comparaison d'index
-      // re-flaguait quand même les autres arêtes du cycle (qui se retrouvent
-      // backward après relaxation topologique des index). Le set unique
-      // garantit la sémantique « candidate » : un seul flux locked-true
-      // suffit à forcer les autres du même cycle à non-recyclage.
+      // l'utilisateur (cf. ÉTAPE 1). On utilise cette source de vérité pour
+      // le marquage final, plutôt qu'une comparaison node_index >= target_index :
+      // quand l'utilisateur force UN flux d'un cycle comme recyclage, le DFS
+      // coupe à cet endroit et n'identifie PAS d'autres back-edges dans ce
+      // cycle ; mais la comparaison d'index re-flaguait quand même les autres
+      // arêtes du cycle (qui se retrouvent backward après relaxation
+      // topologique des index). Le set unique garantit la sémantique
+      // « candidate » : un seul flux user-forcé suffit à forcer les autres
+      // du même cycle à non-recyclage.
       const auto_recycling_set = new Set(possible_recycling_links_ids)
 
       // ÉTAPE 3: Construction des structures de données (logique existante)
@@ -685,10 +701,11 @@ export class NodePositioning {
             max_horizontal_index = node_index
           }
 
-          // Marquer les liens de recyclage — sauf si l'utilisateur a verrouillé le statut.
+          // Marquer les liens de recyclage. auto_recycling_set inclut déjà
+          // les liens pré-amorcés par l'utilisateur (cf. ÉTAPE 1), donc le
+          // statut user-forcé est naturellement préservé.
           node.output_links_list.forEach(link => {
             const link_data = this.drawingArea.sankey.links_dict[link.id]
-            if (link_data.shape_is_recycling_locked === true) return
             link_data.shape_is_recycling = auto_recycling_set.has(link.id)
           })
         }
