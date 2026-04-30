@@ -41,8 +41,15 @@ import { NodePositioning } from '../Algorithms/NodePositioning'
  *
  * - 'in_children_out_parent': incoming links land on children, outgoing links leave from parent
  * - 'in_parent_out_children': incoming links land on parent, outgoing links leave from children
+ * - 'in_children_out_children': incoming and outgoing links both land on children; parent is a pure visual envelope
+ * - 'in_parent_out_parent': incoming and outgoing links both land on parent; children are visible inside the envelope but carry no flux of their own
  */
-export type Type_ContainerMode = null | 'in_children_out_parent' | 'in_parent_out_children'
+export type Type_ContainerMode =
+  | null
+  | 'in_children_out_parent'
+  | 'in_parent_out_children'
+  | 'in_children_out_children'
+  | 'in_parent_out_parent'
 
 export class Class_NodeDimension {
 
@@ -691,7 +698,9 @@ export class NodeDimensionsManager {
                 // children_tags_ids.forEach(child_tag => {
                 const childDim = this.getOrCreateLowerDimension(cur_parent, this._node, _)
                 if (dimension_as_json.container_mode === 'in_children_out_parent' ||
-                  dimension_as_json.container_mode === 'in_parent_out_children') {
+                  dimension_as_json.container_mode === 'in_parent_out_children' ||
+                  dimension_as_json.container_mode === 'in_children_out_children' ||
+                  dimension_as_json.container_mode === 'in_parent_out_parent') {
                   childDim?.setContainerMode(dimension_as_json.container_mode as Exclude<Type_ContainerMode, null>, true)
                 } else if (dimension_as_json.force_show_children) {
                   const nodeDimParent = parent.nodeDimensionAsParent(this._node)!

@@ -357,6 +357,14 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                 },
                 {
                   type: 'button' as const,
+                  actionName: `containerInChildrenOutChildren_${dim.parent.id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInParentOutParent_${dim.parent.id}`,
+                },
+                {
+                  type: 'button' as const,
                   actionName: `unsetContainerMode_${dim.parent.id}`,
                   visibilityConditions: [{
                     type: 'custom',
@@ -417,6 +425,14 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                 {
                   type: 'button' as const,
                   actionName: `containerInParentOutChildren_${dim.children[0].id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInChildrenOutChildren_${dim.children[0].id}`,
+                },
+                {
+                  type: 'button' as const,
+                  actionName: `containerInParentOutParent_${dim.children[0].id}`,
                 },
                 {
                   type: 'button' as const,

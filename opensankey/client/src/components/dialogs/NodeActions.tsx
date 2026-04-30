@@ -198,6 +198,22 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  containerInChildrenOutChildren = (other_id: string) => {
+    const dim = this._findDimensionFromOtherId(other_id)
+    if (!dim) return
+    dim.setContainerMode('in_children_out_children')
+    this.drawing_area.draw()
+    this.refreshAndSave()
+  }
+
+  containerInParentOutParent = (other_id: string) => {
+    const dim = this._findDimensionFromOtherId(other_id)
+    if (!dim) return
+    dim.setContainerMode('in_parent_out_parent')
+    this.drawing_area.draw()
+    this.refreshAndSave()
+  }
+
   unsetContainerMode = (other_id: string) => {
     const dim = this._findDimensionFromOtherId(other_id)
     if (!dim) return
@@ -607,6 +623,8 @@ export class NodeActions {
       contractRight: nodeActions.contractRight,
       containerInChildrenOutParent: nodeActions.containerInChildrenOutParent,
       containerInParentOutChildren: nodeActions.containerInParentOutChildren,
+      containerInChildrenOutChildren: nodeActions.containerInChildrenOutChildren,
+      containerInParentOutParent: nodeActions.containerInParentOutParent,
       unsetContainerMode: nodeActions.unsetContainerMode,
       // createFluxOnChildren: nodeActions.createFluxOnChildren,
       // createNewDimension: nodeActions.createNewDimension,
