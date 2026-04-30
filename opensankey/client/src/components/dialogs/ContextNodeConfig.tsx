@@ -64,6 +64,61 @@ export const STATIC_NODE_MENU_CONFIG: MenuConfig = {
 // Configuration du menu contextuel des nœuds avec la structure hiérarchique correcte
 export const NODE_MENU_CONFIG: MenuConfig = {
   structure: [
+    // Navigation hiérarchie (agrégation/désagrégation) — aplatie en tête de menu
+    {
+      type: 'submenu',
+      titleKey: 'navHierarchy',
+      visibilityConditions: [
+        {
+          type: 'custom',
+          customCheck: (app_data) => {
+            const node = app_data.drawing_area.node_contextualised
+            if (!node) return false
+
+            const child_dims = node.master_node ?
+              node.master_node.dimensions_as_child :
+              node.dimensions_as_child
+            const parent_dims = node.master_node ?
+              node.master_node.dimensions_as_parent :
+              node.dimensions_as_parent
+
+            return (child_dims?.length > 0) ||
+              (parent_dims?.length > 0) ||
+              (!!node.master_node && (node.id.includes('expandleft') || node.id.includes('expandright')))
+          }
+        }
+      ],
+      children: [
+        {
+          type: 'button',
+          actionName: 'contractLeft',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) => {
+                if (!app_data.has_sankey_dev) return false
+                const node = app_data.drawing_area.node_contextualised
+                return !!(node?.master_node && node.id.includes('expandleft'))
+              }
+            }
+          ]
+        },
+        {
+          type: 'button',
+          actionName: 'contractRight',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) => {
+                if (!app_data.has_sankey_dev) return false
+                const node = app_data.drawing_area.node_contextualised
+                return !!(node?.master_node && node.id.includes('expandright'))
+              }
+            }
+          ]
+        }
+      ]
+    },
     {
       type: 'submenu',
       titleKey: 'editStyle',
@@ -153,64 +208,6 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       ]
     },
 
-    // Navigation hiérarchie (agrégation/désagrégation)
-    {
-      type: 'submenu',
-      titleKey: 'navHierarchy',
-      visibilityConditions: [
-        {
-          type: 'custom',
-          customCheck: (app_data) => {
-            const node = app_data.drawing_area.node_contextualised
-            if (!node) return false
-
-            // Vérifier s'il y a des dimensions child ou parent disponibles
-            const child_dims = node.master_node ?
-              node.master_node.dimensions_as_child :
-              node.dimensions_as_child
-            const parent_dims = node.master_node ?
-              node.master_node.dimensions_as_parent :
-              node.dimensions_as_parent
-
-            return (child_dims?.length > 0) ||
-              (parent_dims?.length > 0) ||
-              (!!node.master_node && (node.id.includes('expandleft') || node.id.includes('expandright')))
-          }
-        }
-      ],
-      children: [
-
-        // Boutons de contraction
-        {
-          type: 'button',
-          actionName: 'contractLeft',
-          visibilityConditions: [
-            {
-              type: 'custom',
-              customCheck: (app_data) => {
-                if (!app_data.has_sankey_dev) return false
-                const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandleft'))
-              }
-            }
-          ]
-        },
-        {
-          type: 'button',
-          actionName: 'contractRight',
-          visibilityConditions: [
-            {
-              type: 'custom',
-              customCheck: (app_data) => {
-                if (!app_data.has_sankey_dev) return false
-                const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandright'))
-              }
-            }
-          ]
-        }
-      ]
-    },
 
     // Reste du menu (alignement, style, etc.)
     {
