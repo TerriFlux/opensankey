@@ -1434,9 +1434,8 @@ export const MenuConfigurationAppearance = ({
                             </Box></Box>
                         </> : <></>}
 
-                      {/* Tous les boutons (recyclage + cadenas + 4 orientations) sur une même ligne.
-                          Le bouton recyclage est élargi via un grid 2fr / 1fr / 4fr. */}
-                      <Box as='span' display='grid' gridTemplateColumns='2fr 1fr 4fr' gridColumnGap='0.12rem'>
+                      {/* Bouton recyclage + 4 orientations sur une même ligne. */}
+                      <Box as='span' display='grid' gridTemplateColumns='2fr 4fr' gridColumnGap='0.12rem'>
                         <OverloadedButton
                           elements={links_elements}
                           config={LINK_SHAPE_SPECIFIC_CONFIG}
@@ -1448,29 +1447,6 @@ export const MenuConfigurationAppearance = ({
                         >
                           <FaRecycle />
                         </OverloadedButton>
-                        {(() => {
-                          // Padlock toggle for is_recycling. When locked, computeAutoSankey
-                          // preserves the user-set shape_is_recycling value instead of
-                          // recomputing it from the cycle detection.
-                          const real_links = (links_elements as Array<Class_LinkElement | Class_ElementStyle>)
-                            .filter((el): el is Class_LinkElement => el instanceof Class_LinkElement)
-                          if (real_links.length === 0) return <Box />
-                          const first_locked = real_links[0].shape_is_recycling_locked === true
-                          const all_same_lock = real_links.every(l => (l.shape_is_recycling_locked === true) === first_locked)
-                          return (
-                            <OSTooltip label={t('Flux.apparence.tooltips.shape_is_recycling_locked')}>
-                              <Button
-                                variant={first_locked && all_same_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                onClick={() => {
-                                  const new_locked = !(first_locked && all_same_lock)
-                                  linkShapeValues.is_recycling_locked = new_locked
-                                }}
-                              >
-                                {first_locked && all_same_lock ? <FaLock /> : <FaLockOpen />}
-                              </Button>
-                            </OSTooltip>
-                          )
-                        })()}
                         <OverloadedButtonGroup
                           elements={links_elements}
                           config={LINK_SHAPE_SPECIFIC_CONFIG}
@@ -2809,8 +2785,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical to vertical',
             of_vh: 'Vertical to horizontal',
             of_hv: 'Horizontal to vertical',
-            shape_is_recycling: 'Recycling flow',
-            shape_is_recycling_locked: 'When locked, autosankey compute keeps the user-set recycling status of this link instead of recomputing it from the cycle detection.'
+            shape_is_recycling: 'Recycling flow'
           }
         }
       }
@@ -2826,8 +2801,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical vers vertical',
             of_vh: 'Vertical vers horizontal',
             of_hv: 'Horizontal vers vertical',
-            shape_is_recycling: 'Flux de recyclage',
-            shape_is_recycling_locked: 'Si verrouillé, le calcul autosankey conserve le statut recyclage défini par l\'utilisateur au lieu de le recalculer via la détection de cycles.'
+            shape_is_recycling: 'Flux de recyclage'
           }
         }
       }
@@ -2843,8 +2817,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical a vertical',
             of_vh: 'Vertical a horizontal',
             of_hv: 'Horizontal a vertical',
-            shape_is_recycling: 'Flujo de reciclaje',
-            shape_is_recycling_locked: 'Si está bloqueado, el cálculo autosankey conserva el estado de reciclaje definido por el usuario en lugar de recalcularlo mediante la detección de ciclos.'
+            shape_is_recycling: 'Flujo de reciclaje'
           }
         }
       }
@@ -2860,8 +2833,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertikal zu vertikal',
             of_vh: 'Vertikal zu horizontal',
             of_hv: 'Horizontal zu vertikal',
-            shape_is_recycling: 'Recycling-Fluss',
-            shape_is_recycling_locked: 'Wenn gesperrt, behält die autosankey-Berechnung den vom Benutzer festgelegten Recycling-Status anstatt ihn über die Zyklenerkennung neu zu berechnen.'
+            shape_is_recycling: 'Recycling-Fluss'
           }
         }
       }
@@ -2877,8 +2849,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Verticale a verticale',
             of_vh: 'Verticale a orizzontale',
             of_hv: 'Orizzontale a verticale',
-            shape_is_recycling: 'Flusso di riciclaggio',
-            shape_is_recycling_locked: 'Se bloccato, il calcolo autosankey mantiene lo stato di riciclaggio definito dall\'utente invece di ricalcolarlo tramite la rilevazione dei cicli.'
+            shape_is_recycling: 'Flusso di riciclaggio'
           }
         }
       }
