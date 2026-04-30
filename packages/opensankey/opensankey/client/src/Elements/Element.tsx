@@ -837,7 +837,6 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_is_curved!: LinkShapeSpecificValues['is_curved']
   shape_curvature!: LinkShapeSpecificValues['curvature']
   shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
-  shape_is_recycling_locked!: boolean
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
   shape_orientation!: LinkShapeSpecificValues['orientation']
   shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
@@ -1101,7 +1100,6 @@ export class Class_ElementStyle {
   shape_is_curved!: LinkShapeSpecificValues['is_curved']
   shape_curvature!: LinkShapeSpecificValues['curvature']
   shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
-  shape_is_recycling_locked!: boolean
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
   shape_orientation!: LinkShapeSpecificValues['orientation']
   shape_starting_curve!: LinkShapeSpecificValues['starting_curve']

@@ -2364,27 +2364,6 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
-  is_recycling_locked: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
-    category: 'shape' as const,
-    actions: [] as LinkBaseActionType[],
-    labels: {
-      en: 'Lock recycling status',
-      fr: 'Verrouiller le statut recyclage',
-      es: 'Bloquear estado de reciclaje',
-      de: 'Recycling-Status sperren',
-      it: 'Blocca stato riciclaggio'
-    },
-    tooltips: {
-      en: 'When locked, autosankey compute keeps the user-set recycling status of this link instead of recomputing it from the cycle detection.',
-      fr: 'Si verrouillé, le calcul autosankey conserve le statut recyclage défini par l\'utilisateur au lieu de le recalculer via la détection de cycles.',
-      es: 'Si está bloqueado, el cálculo autosankey conserva el estado de reciclaje definido por el usuario en lugar de recalcularlo mediante la detección de ciclos.',
-      de: 'Wenn gesperrt, behält die autosankey-Berechnung den vom Benutzer festgelegten Recycling-Status anstatt ihn über die Zyklenerkennung neu zu berechnen.',
-      it: 'Se bloccato, il calcolo autosankey mantiene lo stato di riciclaggio definito dall\'utente invece di ricalcolarlo tramite la rilevazione dei cicli.'
-    }
-  } satisfies AttributeConfig<boolean>,
-
   is_structure: {
     default: false,
     type: (() => false) as (() => boolean),
