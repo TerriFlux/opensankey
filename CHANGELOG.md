@@ -11,6 +11,29 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [Non publié] — Mai 2026 — Refonte du mode englobant
+
+### Bump des submodules OpenSankey+ et OpenSankey
+
+Itération majeure sur le mode d'affichage englobant (parent + enfants visibles simultanément) :
+
+- **Comportement dynamique** : le parent englobant suit la taille de ses enfants à la volée (plus de redimensionnement figé via `shape_min_*`). À la sortie du mode, le parent retrouve immédiatement sa taille calée sur ses flux propres. Les enfants masqués par container_mode gardent une taille proportionnelle à leurs flux propres ; modifier la valeur d'un flux met la taille à jour en temps réel.
+- **Englobement emboîté** : un nœud lui-même englobé peut à son tour être englobé sur ses propres enfants. Le défaut du sélecteur reprend la variante du parent englobant et les autres variantes sont grisées (cohérence visuelle imposée). La propagation aux ancêtres se fait à chaque drag, disaggregate, aggregate, expand : l'enveloppe de chaque niveau emboîté se met à jour.
+- **Désagrégation/expansion sous englobé** : disaggregate sur un nœud englobé fait apparaître les sous-enfants à sa place dans la pile englobante (le nœud désagrégé s'efface visuellement mais peut rester dans le cadre géométrique). Expansion latérale : les clones d'expansion s'intègrent au cadre géométrique de l'ancêtre, leurs flux restent visibles dans toutes les variantes (l'expansion est une demande explicite). Décalage horizontal `shape_position_dx / 3` pour rester compact.
+- **4 variantes container_mode** documentées : `in_children_out_parent`, `in_parent_out_children`, `in_children_out_children`, `in_parent_out_parent`. Le menu hiérarchie filtre les autres dimensions tant qu'un englobement est actif sur le nœud cliqué.
+- **Styles de label d'extrémité** : nouveaux `NodeLeftExtremityStyle` / `NodeRightExtremityStyle` appliqués par `setNodeLabelPositioning` au lieu de muter directement `name_label_horiz/vert`. Préservation des overrides user.
+
+### Corrections
+
+- **Undo manquant sur expand/contract latéral** : ajouté via snapshot/restore full-JSON.
+- **Redo cassé sur aggregate/disaggregate** : l'undo de l'inverse re-déclenchait `saveUndo`/`saveRedo` pendant son exécution, écrasant le slot redo. Paramètre `register_history` ajouté.
+
+Documentation utilisateur mise à jour : [doc/sources/fr/user/guides/organisation/mode_englobant.rst](doc/sources/fr/user/guides/organisation/mode_englobant.rst).
+
+Voir [le changelog OpenSankey+](submodules/OpenSankey+/CHANGELOG.md) et [le changelog OpenSankey](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md) pour le détail technique.
+
+---
+
 ## [Non publié] — Avril 2026 — Refonte du dialogue de persistance / convertisseur de fichiers
 
 ### Ajouts
