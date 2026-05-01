@@ -145,6 +145,16 @@ export const ContextZDT = (
   >{t('Menu.SNI')}
   </Button>
 
+  const btn_fit_frame_to_attached = <Button
+    variant='contextmenu_button'
+    onClick={() => {
+      zdt_to_contextualise.computeSizeAndPositionFromAttachedNodes()
+      zdt_to_contextualise.draw()
+      closeContextMenu()
+    }}>
+    {t('Menu.fitFrameToAttached')}
+  </Button>
+
   const btn_move_to_first_plan = <Button
     variant='contextmenu_button'
     onClick={moveToFirstPlan}>
@@ -201,6 +211,7 @@ export const ContextZDT = (
       {btn_edit_name}
       {btn_copy}
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
+      {zdt_to_contextualise.tied_to_nodes && zdt_to_contextualise.attached_node.length > 0 ? btn_fit_frame_to_attached : <></>}
       {btn_move_to_first_plan}
       {btn_move_to_last_plan}
       <ButtonContainerContextAssignStyle app_data={app_data} />

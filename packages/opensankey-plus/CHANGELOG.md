@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Non publié] — Mai 2026
+
+### Bump du submodule OpenSankey — refonte du mode englobant
+
+Bump qui apporte la refonte complète du mode englobant : sizing dynamique du parent et des enfants masqués, container_mode transitif (les sous-nœuds d'un descendant désagrégé héritent du contrat du parent englobant), propagation aux ancêtres lors d'un drag / disaggregate / aggregate / expand, héritage du mode au sous-niveau dans le menu (autres options grisées), filtrage des dimensions non-actives, espacement compact des clones d'expansion (`shape_position_dx / 3`). Ajoute deux styles de label d'extrémité (`NodeLeftExtremityStyle` / `NodeRightExtremityStyle`) consommés par `setNodeLabelPositioning`. Corrige l'absence d'undo sur expand/contract (snapshot full-JSON) et le redo cassé sur aggregate/disaggregate (paramètre `register_history`). Voir le [changelog OpenSankey](submodules/OpenSankey/CHANGELOG.md) pour le détail technique fichier par fichier.
+
 ## [Non publié] — Avril 2026
 
 ### Ajouts
