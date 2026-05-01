@@ -75,11 +75,6 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _are_related_dimensions_selected: boolean | undefined = undefined
   protected _tooltip_text: string = ''
 
-  // Geometry snapshot taken before the node enters container display mode,
-  // so that unsetContainerMode can restore the node to its pre-container
-  // state. Undefined when the node is not acting as a container.
-  private _pre_container_geometry: { x: number, y: number, width: number, height: number } | undefined
-
   // Stock values (parallel to link values but for nodes)
   public has_stock: boolean = false
   public has_material_balance: boolean = true
@@ -297,123 +292,9 @@ export class Class_NodeElement extends Class_NodeBase {
    * Draw given node on drawing area
    */
   protected _draw() {
-    this.applyContainerEnvelopeIfNeeded()
     super._draw()
     this._nodeDrawValueLabel.drawGenericLabel()
     this.drawStockBox()
-  }
-
-  /**
-   * If this node is the parent of any dimension in container display mode,
-   * recompute its position and size so that it encloses the children of
-   * those dimensions. Returns true if the envelope was applied.
-   *
-   * Recurses inward first: if a contained child is itself a container for
-   * another dimension, its envelope is recomputed before we use its
-   * geometry, so nested containers converge regardless of draw order
-   * (important on load and for multi-level hierarchies).
-   */
-  public applyContainerEnvelopeIfNeeded(visited: Set<Class_NodeElement> = new Set()): boolean {
-    if (visited.has(this)) return false
-    visited.add(this)
-    const container_dims = this.dimensions_as_parent.filter(d => d.container_mode)
-    if (container_dims.length === 0) return false
-    const contained: Class_NodeElement[] = []
-    container_dims.forEach(dim => {
-      dim.children.forEach(c => {
-        if (!contained.includes(c)) contained.push(c as Class_NodeElement)
-      })
-    })
-    // Update inner containers first so their geometry is fresh when we
-    // compute our own bounding box.
-    contained.forEach(child => child.applyContainerEnvelopeIfNeeded(visited))
-    const bbox = this._computeEnvelopeBBox(contained)
-    if (!bbox) return false
-    this._applyEnvelopeBBox(bbox)
-    return true
-  }
-
-  /**
-   * Walk up the container chain from this node, refreshing every
-   * ancestor container's envelope and redrawing its shape. Used on drag
-   * so a move on a leaf propagates the size/position change all the way
-   * to the outermost enclosing container.
-   */
-  public propagateContainerEnvelopeToAncestors() {
-    const visited = new Set<Class_NodeElement>([this])
-    const start_parent_dims = this.dimensions_as_child.filter(d => d.container_mode)
-    if (start_parent_dims.length === 0) return
-    let current: Class_NodeElement = start_parent_dims[0].parent as Class_NodeElement
-    while (!visited.has(current)) {
-      visited.add(current)
-      if (current.applyContainerEnvelopeIfNeeded()) {
-        current.applyPosition()
-        current.drawShape()
-      }
-      const parent_dims = current.dimensions_as_child.filter(d => d.container_mode)
-      if (parent_dims.length === 0) break
-      current = parent_dims[0].parent as Class_NodeElement
-    }
-  }
-
-  /**
-   * Save the current position and size before entering container display
-   * mode. Safe to call multiple times: only the first call wins, so a
-   * second container-mode dimension activating on the same parent does
-   * not overwrite the original snapshot.
-   */
-  public saveGeometryForContainerMode() {
-    if (this._pre_container_geometry) return
-    this._pre_container_geometry = {
-      x: this.position_x,
-      y: this.position_y,
-      width: this.shape_min_width,
-      height: this.shape_min_height
-    }
-  }
-
-  /**
-   * Restore the position and size captured by
-   * saveGeometryForContainerMode, then clear the snapshot. No-op if no
-   * snapshot was taken.
-   */
-  public restoreGeometryAfterContainerMode() {
-    if (!this._pre_container_geometry) return
-    const prev = this._pre_container_geometry
-    this.position_x = prev.x
-    this.position_y = prev.y
-    this.shape_min_width = prev.width
-    this.shape_min_height = prev.height
-    this._pre_container_geometry = undefined
-  }
-
-  protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
-    super.eventMouseDrag(event)
-    if (!this.drawing_area.isInSelectionMode()) return
-    // Container display mode — parent drag propagates to contained children.
-    // Children already in the selection are skipped to avoid double movement
-    // (handleMouseDrag already moved them via setPosXY).
-    const dims_parent_container = this.dimensions_as_parent.filter(d => d.container_mode)
-    if (dims_parent_container.length > 0) {
-      const selected = new Set<Class_NodeBase>([
-        ...this.sankey.drawing_area.selected_nodes_list as unknown as Class_NodeBase[],
-        ...this.sankey.drawing_area.selected_containers_list as unknown as Class_NodeBase[]
-      ])
-      const already_moved = new Set<Class_NodeBase>(selected)
-      already_moved.add(this)
-      dims_parent_container.forEach(dim => {
-        dim.children.forEach(child => {
-          if (already_moved.has(child as unknown as Class_NodeBase)) return
-          child.position_x = child.position_x + event.dx
-          child.position_y = child.position_y + event.dy
-          child.applyPosition()
-          already_moved.add(child as unknown as Class_NodeBase)
-        })
-      })
-    }
-    // Container display mode — a drag on this node must refresh every
-    // ancestor container up the chain so nested containers follow too.
-    this.propagateContainerEnvelopeToAncestors()
   }
 
   /**
@@ -714,21 +595,26 @@ export class Class_NodeElement extends Class_NodeBase {
     // the node edges. This mirrors the natural behaviour of "data + intervals"
     // mode (where valueCurrent is null, so raw thickness is already 2).
     const clamped = this.drawing_area.type_data === 'structure'
-    const sum_of_top_thickness = this.getSumOfLinksThickness('top', clamped)
-    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom', clamped)
-    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, this.shape_min_width)
+    // for_sizing=true : la taille du nœud doit refléter ses propres flux
+    // même si ceux-ci sont masqués par un container_mode (cas typique :
+    // enfants d'un parent en mode englobant entrées/sorties parent).
+    const sum_of_top_thickness = this.getSumOfLinksThickness('top', clamped, true)
+    const sum_of_bottom_thickness = this.getSumOfLinksThickness('bottom', clamped, true)
+    // super.getShapeWidthToUse() inclut shape_min_width ET, si tied,
+    // la largeur de l'enveloppe des enfants attachés (mode englobant).
+    return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, super.getShapeWidthToUse())
   }
 
   public getShapeHeightToUse() {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
     const clamped = this.drawing_area.type_data === 'structure'
-    const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped)
-    const sum_of_right_thickness = this.getSumOfLinksThickness('right', clamped)
+    const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
+    const sum_of_right_thickness = this.getSumOfLinksThickness('right', clamped, true)
     if (echangeTag && this.hasGivenTag(echangeTag)) {
       // TODO code to be rewritten when rearchitecturing code for Import Export
       return Math.max(sum_of_left_thickness, sum_of_right_thickness, 3)
     }
-    return Math.max(sum_of_left_thickness, sum_of_right_thickness, this.shape_min_height)
+    return Math.max(sum_of_left_thickness, sum_of_right_thickness, super.getShapeHeightToUse())
   }
 
   // 🔄 LINKS METHODS - RÉINTÉGRÉS DIRECTEMENT ========================================
@@ -1115,10 +1001,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // 🔄 PRIVATE HELPER METHODS - RÉINTÉGRÉS DIRECTEMENT ============================
 
-  private getSumOfLinksThickness(side: Type_Side, clamped = false) {
+  private getSumOfLinksThickness(side: Type_Side, clamped = false, for_sizing = false) {
     let sum = 0
     this.getLinksOrdered(side)
-      .filter(link => link.is_visible)
+      .filter(link => for_sizing ? link.is_visible_for_sizing_of(this) : link.is_visible)
       .forEach(link => {
         // Default (clamped=false): raw thickness so node height and anchor offsets
         // stay proportional to link values. Visual draw still uses the clamped

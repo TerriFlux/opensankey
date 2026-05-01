@@ -1043,6 +1043,17 @@ export const MenuConfigurationAppearance = ({
       selected: !selection.hasContainers ? false : selection.containers[0].attached_node.includes(node)
     }))
     : []
+  // Tied-frame options for the contextual node (excluding the node itself).
+  const node_tied_element = selection.hasNodes ? selection.nodes[0] : undefined
+  const options_selector_for_node_tied = (!menu_for_style && node_tied_element)
+    ? app_data.drawing_area.sankey.nodes_list_sorted
+      .filter(n => n !== node_tied_element)
+      .map((node) => ({
+        'label': node.name,
+        'value': node.id,
+        selected: node_tied_element.attached_node.includes(node)
+      }))
+    : []
 
   return (
     <Box layerStyle='box_content_config'>
@@ -1576,8 +1587,20 @@ export const MenuConfigurationAppearance = ({
                         iconColor={'white'}
                         isChecked={elements.length > 0 ? container_element.tied_to_nodes : false}
                         onChange={(evt) => {
-                          container_element.tied_to_nodes = evt.target.checked
-                          refreshAll()
+                          const target = evt.target.checked
+                          const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
+                          const before = containerElements.map(c => ({ c, tied: c.tied_to_nodes }))
+                          const apply = () => {
+                            containerElements.forEach(c => { c.tied_to_nodes = target })
+                            refreshAll()
+                          }
+                          const revert = () => {
+                            before.forEach(({ c, tied }) => { c.tied_to_nodes = tied })
+                            refreshAll()
+                          }
+                          app_data.history.saveUndo(revert)
+                          app_data.history.saveRedo(apply)
+                          apply()
                         }}>
                         <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
                       </Checkbox>
@@ -1589,18 +1612,91 @@ export const MenuConfigurationAppearance = ({
                           onClick={(entries) => {
                             const entries_values = entries.map(d => d.value)
                             const containerElements = elements.filter(e => e instanceof Class_ContainerElement) as Class_ContainerElement[]
-
-                            app_data.drawing_area.sankey.nodes_list.forEach(node => {
-                              if (entries_values.includes(node.id)) {
-                                containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
-                              } else {
-                                containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
-                              }
-                            })
-                            refreshAll()
+                            const before = containerElements.map(zdt => ({ zdt, attached: [...zdt.attached_node] }))
+                            const apply = () => {
+                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                                if (entries_values.includes(node.id)) {
+                                  containerElements.forEach(zdt => { zdt.attachNodeToCont(node) })
+                                } else {
+                                  containerElements.forEach(zdt => { zdt.dettachNodeFromCont(node) })
+                                }
+                              })
+                              refreshAll()
+                            }
+                            const revert = () => {
+                              before.forEach(({ zdt, attached }) => {
+                                for (let i = zdt.attached_node.length - 1; i >= 0; i--) {
+                                  zdt.dettachNodeFromCont(zdt.attached_node[i])
+                                }
+                                attached.forEach(n => zdt.attachNodeToCont(n))
+                              })
+                              refreshAll()
+                            }
+                            app_data.history.saveUndo(revert)
+                            app_data.history.saveRedo(apply)
+                            apply()
                           }}
                         />
 
+                      </Box> : <></>}
+                    </Box></>
+                )}
+                {(selection.hasNodes && node_tied_element) && (
+                  <>
+                    <Box layerStyle='menu_sub_section'>
+                      <Checkbox
+                        variant='menuconfigpanel_option_checkbox'
+                        iconColor={'white'}
+                        isChecked={node_tied_element.tied_to_nodes}
+                        onChange={(evt) => {
+                          const target = evt.target.checked
+                          const before = selection.nodes.map(n => ({ n, tied: n.tied_to_nodes }))
+                          const apply = () => {
+                            selection.nodes.forEach(n => { n.tied_to_nodes = target })
+                            refreshAll()
+                          }
+                          const revert = () => {
+                            before.forEach(({ n, tied }) => { n.tied_to_nodes = tied })
+                            refreshAll()
+                          }
+                          app_data.history.saveUndo(revert)
+                          app_data.history.saveRedo(apply)
+                          apply()
+                        }}>
+                        <OSTooltip label={t('LL.tooltips.tiedToNodes')} placement='left'>{t('LL.tiedToNodes')}</OSTooltip>
+                      </Checkbox>
+
+                      {node_tied_element.tied_to_nodes ? <Box>
+                        <OSMultiSelect
+                          t={app_data.t}
+                          elements={options_selector_for_node_tied}
+                          onClick={(entries) => {
+                            const entries_values = entries.map(d => d.value)
+                            const before = selection.nodes.map(n => ({ n, attached: [...n.attached_node] }))
+                            const apply = () => {
+                              app_data.drawing_area.sankey.nodes_list.forEach(node => {
+                                if (entries_values.includes(node.id)) {
+                                  selection.nodes.forEach(n => { if (n !== node) n.attachNodeToCont(node) })
+                                } else {
+                                  selection.nodes.forEach(n => n.dettachNodeFromCont(node))
+                                }
+                              })
+                              refreshAll()
+                            }
+                            const revert = () => {
+                              before.forEach(({ n, attached }) => {
+                                for (let i = n.attached_node.length - 1; i >= 0; i--) {
+                                  n.dettachNodeFromCont(n.attached_node[i])
+                                }
+                                attached.forEach(a => n.attachNodeToCont(a))
+                              })
+                              refreshAll()
+                            }
+                            app_data.history.saveUndo(revert)
+                            app_data.history.saveRedo(apply)
+                            apply()
+                          }}
+                        />
                       </Box> : <></>}
                     </Box></>
                 )}

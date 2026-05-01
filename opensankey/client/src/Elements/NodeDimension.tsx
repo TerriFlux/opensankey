@@ -267,39 +267,20 @@ export class Class_NodeDimension {
     if (this._container_mode === mode) return
     if (this._is_currently_in_unsetting_recursion) return
     this._is_currently_in_unsetting_recursion = true
-    const entering = !this._container_mode
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = mode
-    // Snapshot the parent's geometry before the envelope overrides it, so
-    // that unsetContainerMode can restore it exactly. First-call-wins, so
-    // a second container-mode dimension on the same parent does not
-    // clobber the original values.
-    this._parent.saveGeometryForContainerMode()
-    // Apply the container style to the parent node so it renders as an
-    // enclosing dashed rectangle with its label in the top-left corner.
+    // Apply the enclosing-node visual style (transparent fill, dashed
+    // border, top-centered label). Geometry is handled separately by the
+    // tied_to_nodes coupling in NodeActions.
     const container_style = this._parent.sankey.styles_dict[NodeContainerStyle]
     if (container_style && !this._parent.style.includes(container_style)) {
       this._parent.addStyle(container_style)
     }
     // Bump visibility fingerprints and reset the cached
-    // _are_related_dimensions_selected on parent and children BEFORE the
-    // initial stack, so that child.getShapeHeightToUse() — which sums
-    // link thicknesses — sees the freshly visible links instead of
-    // their stale "source/target invisible" cache.
+    // _are_related_dimensions_selected on parent and children, so links
+    // see the freshly filtered visibility.
     this._updated()
-    // Initial vertical stack of children, anchored at the parent's current
-    // position. Only runs on the user-triggered null → mode transition,
-    // NOT on load from JSON (where children positions must be preserved)
-    // and not on a variant switch.
-    if (entering && !fromJSON) {
-      const anchor_x = this._parent.position_x
-      this._children.forEach(child => { child.position_x = anchor_x })
-      NodePositioning.stackNodesVertically(
-        this._children as Class_NodeElement[],
-        this._parent.position_y
-      )
-    }
     // When loading from JSON we skip the reorganize+draw phase; the caller
     // triggers a single full draw at the end of load, which handles nested
     // container dimensions correctly regardless of the order in which they
@@ -349,14 +330,12 @@ export class Class_NodeDimension {
   public unsetContainerMode() {
     if (!this._container_mode) return
     this._container_mode = null
-    // Remove the container style and restore the pre-container geometry,
-    // but only if no other dimension still wants this node to be an
-    // enclosing container.
+    // Remove the enclosing-node style only if no other dimension still
+    // wants this node to be a container.
     const still_container = this._parent.dimensions_as_parent
       .some(dim => dim !== this && dim.container_mode)
     if (!still_container) {
       this._parent.removeStyleById(NodeContainerStyle)
-      this._parent.restoreGeometryAfterContainerMode()
     }
     this._updated()
     const nodes_to_redraw = new Set([
@@ -885,6 +864,14 @@ export class NodeDimensionsManager {
     const in_container_mode_as_parent = this.dimensions_as_parent
       .some(dim => dim.container_mode)
     if (in_container_mode_as_child || in_container_mode_as_parent) {
+      // Exception : si ce nœud a été désagrégé sur l'une de ses propres
+      // dim_as_parent (force_show_children = true), ses enfants prennent
+      // sa place visuellement et ce nœud doit s'effacer — même si un
+      // ancêtre englobant le rendrait visible par défaut. Le cadre
+      // géométrique de l'ancêtre peut très bien le contenir, mais le
+      // nœud lui-même ne doit pas être dessiné.
+      const has_disaggregated_subdim = this.dimensions_as_parent.some(d => d.force_show_children)
+      if (has_disaggregated_subdim) return false
       return true
     }
 

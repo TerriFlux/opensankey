@@ -248,6 +248,45 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       titleKey: 'associatedElements',
       children: [
         { type: 'button', actionName: 'createTiedZdt' },
+        {
+          type: 'button',
+          actionName: 'setTiedFrame',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) => {
+                const node = app_data.drawing_area.node_contextualised
+                return !!node && !node.tied_to_nodes
+              }
+            }
+          ]
+        },
+        {
+          type: 'button',
+          actionName: 'unsetTiedFrame',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) => {
+                const node = app_data.drawing_area.node_contextualised
+                return !!node && node.tied_to_nodes
+              }
+            }
+          ]
+        },
+        {
+          type: 'button',
+          actionName: 'fitFrameToAttached',
+          visibilityConditions: [
+            {
+              type: 'custom',
+              customCheck: (app_data) => {
+                const node = app_data.drawing_area.node_contextualised
+                return !!node && node.tied_to_nodes && node.attached_node.length > 0
+              }
+            }
+          ]
+        },
         { type: 'button', actionName: 'reorg' },
         { type: 'button', actionName: 'selectOutputLinks' },
         { type: 'button', actionName: 'selectInputLinks' }
@@ -614,8 +653,29 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     },
     createTiedZdt: {
       type: 'action',
-      labels: { en: 'Creates geometric frame', fr: 'Créer un cadre géométrique', es: 'Crear marco geométrico', de: 'Geometrischen Rahmen erstellen', it: 'Crea cornice geometrica' },
-      tooltips: { en: 'Creates geometric frame', fr: 'Créer un cadre géométrique', es: 'Crear marco geométrico', de: 'Geometrischen Rahmen erstellen', it: 'Crea cornice geometrica' },
+      labels: { en: 'Wrap in geometric frame (ZDT)', fr: 'Envelopper dans un cadre (ZDT)', es: 'Envolver en marco (ZDT)', de: 'In Rahmen einhüllen (ZDT)', it: 'Avvolgi in cornice (ZDT)' },
+      tooltips: { en: 'Create a geometric frame (ZDT) tied to this node and its descendants/ancestors', fr: 'Créer un cadre géométrique (ZDT) lié à ce nœud et à ses descendants/ancêtres', es: 'Crear un marco geométrico (ZDT) vinculado a este nodo y sus descendientes/ancestros', de: 'Geometrischen Rahmen (ZDT) verknüpft mit diesem Knoten und seinen Nachfahren/Vorfahren erstellen', it: 'Crea una cornice geometrica (ZDT) legata a questo nodo e ai suoi discendenti/antenati' },
+      closeMenuAfter: true
+    },
+    setTiedFrame: {
+      type: 'action',
+      labels: { en: 'Use as geometric frame', fr: 'Utiliser comme cadre géométrique', es: 'Usar como marco geométrico', de: 'Als geometrischen Rahmen verwenden', it: 'Usa come cornice geometrica' },
+      tooltips: { en: 'Tie this node to its descendants — size and position auto-fit the enclosed nodes', fr: 'Lier ce nœud à ses descendants — taille et position s\'ajustent automatiquement aux nœuds englobés', es: 'Vincular este nodo a sus descendientes — tamaño y posición se ajustan automáticamente', de: 'Knoten an Nachfahren binden — Größe und Position passen sich automatisch an', it: 'Lega questo nodo ai discendenti — dimensione e posizione si adattano automaticamente' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    unsetTiedFrame: {
+      type: 'action',
+      labels: { en: 'Use as simple frame', fr: 'Utiliser comme cadre simple', es: 'Usar como marco simple', de: 'Als einfachen Rahmen verwenden', it: 'Usa come cornice semplice' },
+      tooltips: { en: 'Detach all tied nodes — size and position become fixed', fr: 'Détacher tous les nœuds liés — taille et position deviennent fixes', es: 'Desvincular todos los nodos atados — tamaño y posición se vuelven fijos', de: 'Alle verbundenen Knoten lösen — Größe und Position werden fest', it: 'Scollega tutti i nodi legati — dimensione e posizione diventano fisse' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+    fitFrameToAttached: {
+      type: 'action',
+      labels: { en: 'Fit frame to attached', fr: 'Ajuster le cadre aux nœuds attachés', es: 'Ajustar marco a los nodos vinculados', de: 'Rahmen an verbundene Knoten anpassen', it: 'Adatta cornice ai nodi legati' },
+      tooltips: { en: 'Snap every side of the frame onto the attached nodes bbox', fr: 'Ajuster les quatre bords du cadre sur la bbox des nœuds attachés', es: 'Ajustar los cuatro lados del marco a la bbox de los nodos vinculados', de: 'Alle vier Seiten des Rahmens an die Bbox der verbundenen Knoten anpassen', it: 'Allinea tutti i lati della cornice alla bbox dei nodi legati' },
+      undoable: true,
       closeMenuAfter: true
     },
     resetAttr: {

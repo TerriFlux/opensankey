@@ -293,19 +293,29 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         const existingButtons = item.children!.filter(child =>
           child.type === 'button' && child.actionName === 'contractLeft' ||
           child.actionName === 'contractRight')
+
+        // Si le nœud parent englobe un groupe d'enfants (container_mode actif
+        // sur l'une de ses dimensions_as_parent), restreindre le menu au seul
+        // groupe englobé : les actions liées à d'autres dimensions deviennent
+        // imprévisibles tant que ce mode est actif. Hypothèse : au plus une
+        // dim en container_mode à la fois sur un même nœud.
+        const englobed_parent_dim = parent_dims.find(dim => !!dim.container_mode)
+        const filtered_child_dims = englobed_parent_dim ? [] : child_dims
+        const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+
         // Créer un sous-menu pour chaque dimension child
         let dimensionSubmenusAgg: MenuStructureItem[] = []
-        if (child_dims.length > 0) {
+        if (filtered_child_dims.length > 0) {
           if (!app_data.has_sankey_dev) {
-            if (child_dims.filter(dim => dim.force_show_children).length === 0) {
-              dimensionSubmenusAgg = child_dims.map(dim => ({
+            if (filtered_child_dims.filter(dim => dim.force_show_children).length === 0) {
+              dimensionSubmenusAgg = filtered_child_dims.map(dim => ({
                 type: 'button' as const,
                 actionName: `aggregate_${dim.parent.id}`,
                 titleName: `${dim.parent.name} <- `,
               })
               )
             } else {
-              dimensionSubmenusAgg = child_dims.filter(dim => dim.force_show_children).map(dim => ({
+              dimensionSubmenusAgg = filtered_child_dims.filter(dim => dim.force_show_children).map(dim => ({
                 type: 'button' as const,
                 actionName: `aggregate_${dim.parent.id}`,
                 titleName: `${dim.parent.name} <- `,
@@ -314,7 +324,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
             }
 
           } else {
-            dimensionSubmenusAgg = child_dims.map((dim) => ({
+            dimensionSubmenusAgg = filtered_child_dims.map((dim) => ({
               type: 'submenu' as const,
               titleName: `${dim.parent.name}  <- `,
               children: [
@@ -337,15 +347,15 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         }
         // Créer un sous-menu pour chaque dimension parent
         let dimensionSubmenusDesagg: MenuStructureItem[] = []
-        if (parent_dims.length > 0) {
+        if (filtered_parent_dims.length > 0) {
           if (!app_data.has_sankey_dev) {
-            dimensionSubmenusDesagg = parent_dims.map((dim) => ({
+            dimensionSubmenusDesagg = filtered_parent_dims.map((dim) => ({
               type: 'button' as const,
               actionName: `disaggregate_${dim.children[0].id}`,
               titleName: `${dim.short_name}`,
             }))
           } else {
-            dimensionSubmenusDesagg = parent_dims.map((dim) => ({
+            dimensionSubmenusDesagg = filtered_parent_dims.map((dim) => ({
               type: 'submenu' as const,
               titleName: `${dim.short_name}`,
               children: [

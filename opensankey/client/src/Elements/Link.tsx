@@ -41,6 +41,7 @@ import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeElement } from './Node'
+import type { Class_NodeDimension } from './NodeDimension'
 import { Type_Side, } from './ElementsAttributesConfig'
 import { Class_LinkAttribute } from './Element'
 import { LinkDrawNameLabel, LinkDrawValueLabel } from './DrawLabel'
@@ -1137,6 +1138,38 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_multi_link() { return this._is_multi_link }
 
   public get is_visible() {
+    return this._is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
+  }
+
+  /**
+   * Décide si ce lien doit être compté dans le sizing de `node`
+   * (getShape{Height,Width}ToUse). Plus permissif qu'`is_visible` :
+   * un lien masqué *uniquement* par `is_allowed_by_container_modes` est
+   * inclus côté endpoint INTERNE au container (parent ou enfant de la dim
+   * en container_mode qui le masque). L'endpoint externe, lui, voit déjà
+   * le lien jumeau remonté sur le parent — il NE doit pas le compter en
+   * plus, sinon sa taille double.
+   */
+  public is_visible_for_sizing_of(node: Class_NodeElement): boolean {
+    if (this.is_visible) return true
+    if (!this._is_visible_ignoring_container_modes) return false
+    const s = this._source
+    const t = this._target
+    const my_dims = [...node.dimensions_as_parent, ...node.dimensions_as_child]
+    return my_dims.some(d =>
+      !!d.container_mode && (
+        s === d.parent || t === d.parent ||
+        d.children.includes(s) || d.children.includes(t)
+      )
+    )
+  }
+
+  /**
+   * Identique à `is_visible` mais sans le filtre `is_allowed_by_container_modes`.
+   * Helper interne — la décision finale de sizing par nœud est faite par
+   * `is_visible_for_sizing_of(node)`.
+   */
+  private get _is_visible_ignoring_container_modes(): boolean {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }
@@ -1160,8 +1193,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      this.is_not_zero &&
-      this.is_allowed_by_container_modes
+      this.is_not_zero
     )
   }
 
@@ -1181,14 +1213,60 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_allowed_by_container_modes(): boolean {
     const source = this._source
     const target = this._target
-    // Scan all dimensions that could impact this link through either endpoint
-    const impacting_dims = [
-      ...source.dimensions_as_parent,
-      ...source.dimensions_as_child,
-      ...target.dimensions_as_parent,
-      ...target.dimensions_as_child
-    ]
-    if (impacting_dims.length === 0) return true
+
+    // Les clones d'expansion latérale (master_node défini) sont des
+    // représentations visuelles explicitement demandées par l'utilisateur
+    // (expandLeft/expandRight). Ils doivent échapper au filtre
+    // container_modes hérité de leur master, sinon expand vers la droite
+    // sur un nœud englobé en `in_children_out_parent` masquerait les flux
+    // de sortie qu'on cherche justement à voir.
+    if (source.master_node || target.master_node) return true
+
+    // Walk up via dimensions_as_child pour collecter TOUS les dims qui
+    // peuvent impacter ce lien, y compris les ancêtres englobants
+    // grands-parents. Sans ça, après désagrégation d'un nœud englobé
+    // (ex. BO disaggrégé en BO F / BO R sous bois en container_mode),
+    // les liens des nouveaux sous-nœuds ne seraient plus filtrés et
+    // resteraient visibles alors que le contrat « in_parent_out_parent »
+    // de bois doit s'appliquer transitivement.
+    const collectAncestorDims = (n: Class_NodeElement): Set<Class_NodeDimension> => {
+      const dims = new Set<Class_NodeDimension>()
+      const seen_nodes = new Set<string>()
+      const stack: Class_NodeElement[] = [n]
+      while (stack.length > 0) {
+        const cur = stack.pop()!
+        if (seen_nodes.has(cur.id)) continue
+        seen_nodes.add(cur.id)
+        cur.dimensions_as_parent.forEach(d => dims.add(d))
+        cur.dimensions_as_child.forEach(d => {
+          dims.add(d)
+          stack.push(d.parent)
+        })
+      }
+      return dims
+    }
+
+    // Helper transitif : n est-il "contenu" comme enfant par dim ? Soit
+    // directement dans dim.children, soit via la chaîne dimensions_as_child
+    // de ses ancêtres.
+    const isInternalAsChild = (n: Class_NodeElement, dim: Class_NodeDimension): boolean => {
+      const seen = new Set<string>()
+      const stack: Class_NodeElement[] = [n]
+      while (stack.length > 0) {
+        const cur = stack.pop()!
+        if (seen.has(cur.id)) continue
+        seen.add(cur.id)
+        if (dim.children.includes(cur)) return true
+        cur.dimensions_as_child.forEach(cd => stack.push(cd.parent))
+      }
+      return false
+    }
+
+    const impacting_dims = new Set<Class_NodeDimension>()
+    collectAncestorDims(source).forEach(d => impacting_dims.add(d))
+    collectAncestorDims(target).forEach(d => impacting_dims.add(d))
+    if (impacting_dims.size === 0) return true
+
     const seen = new Set<string>()
     for (const dim of impacting_dims) {
       if (!dim.container_mode) continue
@@ -1196,8 +1274,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
       seen.add(dim.id + '@' + dim.parent.id)
       const source_is_parent = source === dim.parent
       const target_is_parent = target === dim.parent
-      const source_is_child = dim.children.includes(source)
-      const target_is_child = dim.children.includes(target)
+      const source_is_child = !source_is_parent && isInternalAsChild(source, dim)
+      const target_is_child = !target_is_parent && isInternalAsChild(target, dim)
+      if (!source_is_parent && !target_is_parent && !source_is_child && !target_is_child) continue
       // child ↔ child inside the same group — always visible
       if (source_is_child && target_is_child) continue
       // parent ↔ own child (shouldn't normally exist) — hide to avoid clutter

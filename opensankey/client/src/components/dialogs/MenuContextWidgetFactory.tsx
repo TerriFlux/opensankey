@@ -680,7 +680,16 @@ export const DimensionActionSelector = ({
 }) => {
   const found = findDimByOtherId(app_data, other_id)
   const detected_type: DimActionType = found?.dim.container_mode ? 'container' : 'normal'
-  const detected_container: Exclude<Type_ContainerMode, null> = found?.dim.container_mode ?? 'in_children_out_parent'
+  // Si le nœud contextualisé est lui-même un enfant englobé par un parent
+  // (au moins une dimensions_as_child a container_mode), on hérite du mode
+  // du parent englobant comme défaut. Logique : englober un sous-niveau
+  // dans une boîte déjà englobante a vocation à reproduire le même contrat
+  // visuel (entrées/sorties parent, etc.).
+  const ctx_node = app_data.drawing_area.node_contextualised
+  const ctx_target = ctx_node?.master_node ?? ctx_node
+  const inherited_mode = ctx_target?.dimensions_as_child.find(d => !!d.container_mode)?.container_mode
+  const detected_container: Exclude<Type_ContainerMode, null> =
+    found?.dim.container_mode ?? inherited_mode ?? 'in_children_out_parent'
   const [ui_type, setUiType] = useState<DimActionType>(detected_type)
   const [exp_variant, setExpVariant] = useState<ExpansionVariant>('left')
   const [container_variant, setContainerVariant] = useState<Exclude<Type_ContainerMode, null>>(detected_container)
@@ -755,10 +764,13 @@ export const DimensionActionSelector = ({
           onChange={(e) => setContainerVariant(e.target.value as Exclude<Type_ContainerMode, null>)}
           width='220px'
         >
-          <option value='in_children_out_parent'>entrées enfants → sortie parent</option>
-          <option value='in_parent_out_children'>entrée parent → sorties enfants</option>
-          <option value='in_children_out_children'>entrées + sorties enfants</option>
-          <option value='in_parent_out_parent'>entrées + sorties parent</option>
+          {/* Quand le nœud est déjà englobé par un parent (inherited_mode),
+              on verrouille les autres options : un sous-englobement doit
+              reproduire le contrat visuel hérité, pas le mélanger. */}
+          <option value='in_children_out_parent' disabled={!!inherited_mode && inherited_mode !== 'in_children_out_parent'}>entrées enfants → sortie parent</option>
+          <option value='in_parent_out_children' disabled={!!inherited_mode && inherited_mode !== 'in_parent_out_children'}>entrée parent → sorties enfants</option>
+          <option value='in_children_out_children' disabled={!!inherited_mode && inherited_mode !== 'in_children_out_children'}>entrées + sorties enfants</option>
+          <option value='in_parent_out_parent' disabled={!!inherited_mode && inherited_mode !== 'in_parent_out_parent'}>entrées + sorties parent</option>
         </Select>
       )}
     </Box>

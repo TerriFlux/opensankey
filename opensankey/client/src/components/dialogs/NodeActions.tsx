@@ -19,6 +19,8 @@ import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
 import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+import { NodePositioning } from '../../Algorithms/NodePositioning'
+import { Class_NodeDimension } from '../../Elements/NodeDimension'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -60,6 +62,37 @@ export class NodeActions {
     actionFn()
   }
 
+  // Snapshot every state mutated by tied-frame actions so undo can restore
+  // it. Captures the frame's own geometry, its tied flag, the list of
+  // attached nodes, and each attached node's own geometry (since drag /
+  // stack moves them too).
+  private _captureTiedFrameState = (nodes: Class_NodeElement[]) => nodes.map(n => ({
+    node: n,
+    tied: n.tied_to_nodes,
+    attached: [...n.attached_node],
+    x: n.position_x, y: n.position_y,
+    w: n.shape_min_width, h: n.shape_min_height,
+    children: [...n.attached_node, ...n.getListDescendantOfNode()].map(c => ({
+      c, x: c.position_x, y: c.position_y,
+    })),
+  }))
+
+  private _restoreTiedFrameState = (snap: ReturnType<NodeActions['_captureTiedFrameState']>) => {
+    snap.forEach(s => {
+      // Detach everything currently attached, then reattach the old set.
+      for (let i = s.node.attached_node.length - 1; i >= 0; i--) {
+        s.node.dettachNodeFromCont(s.node.attached_node[i])
+      }
+      s.attached.forEach(a => s.node.attachNodeToCont(a))
+      s.node.tied_to_nodes = s.tied
+      s.node.position_x = s.x
+      s.node.position_y = s.y
+      s.node.shape_min_width = s.w
+      s.node.shape_min_height = s.h
+      s.children.forEach(({ c, x, y }) => { c.position_x = x; c.position_y = y })
+    })
+  }
+
   // ==================================================================================================
   // MÉTHODES DE VISIBILITÉ POUR LES TOGGLES
   // ==================================================================================================
@@ -96,6 +129,7 @@ export class NodeActions {
 
     if (child_dims.length > 0) {
       aggregate(this.app_data, this.contextualised_node, parent)
+      this._restackEnglobingChain(this.contextualised_node)
       this.drawing_area.draw()
       this.drawing_area.purgeSelection()
       this.drawing_area.node_contextualised = undefined
@@ -114,6 +148,7 @@ export class NodeActions {
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
       aggregationExpansion(this.app_data, this.contextualised_node, true, parent)
+      this._restackEnglobingChain(this.contextualised_node)
     }
   }
 
@@ -127,6 +162,7 @@ export class NodeActions {
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
       aggregationExpansion(this.app_data, this.contextualised_node, false, parent)
+      this._restackEnglobingChain(this.contextualised_node)
     }
   }
 
@@ -140,6 +176,7 @@ export class NodeActions {
     if (childDims.length > 0) {
       const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
+      this._restackEnglobingChain(this.contextualised_node)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
       //this.drawing_area.areaAutoFit(false)
@@ -147,28 +184,56 @@ export class NodeActions {
     }
   }
 
-  expandLeft = (dim_name: string) => {
+  // Les expansions/contractions latérales mutent une grosse partie du graphe
+  // (création/suppression de nœuds et de liens, reroutage). Plutôt que de
+  // tenter une inverse symbolique fragile, on snapshot l'application complète
+  // (toJSON) et on restaure via fromJSON pour l'undo. Le redo réapplique
+  // simplement l'action sur l'état restauré (les ids stables permettent de
+  // re-résoudre le nœud contextualisé).
+  private _runExpansionWithUndo = (
+    fn: (node: Class_NodeElement) => void
+  ) => {
     if (!this.contextualised_node) return
-    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
-    disaggregationExpansion(this.app_data, this.contextualised_node, true, child)
+    const ctx_id = this.contextualised_node.id
+    const snapshot = this.app_data.toJSON()
+    const apply = () => {
+      const node = this.drawing_area.sankey.nodes_dict[ctx_id]
+      if (!node) return
+      fn(node)
+      this._restackEnglobingChain(node)
+      this.refreshAndSave()
+    }
+    const undo = () => {
+      this.app_data.fromJSON(snapshot)
+      this.refreshAndSave()
+    }
+    this.executeWithUndo(apply, undo)
+  }
+
+  expandLeft = (dim_name: string) => {
+    this._runExpansionWithUndo((node) => {
+      const child = this.drawing_area.sankey.nodes_dict[dim_name]
+      if (!child) return
+      disaggregationExpansion(this.app_data, node, true, child)
+    })
   }
 
   expandRight = (dim_name: string) => {
-    if (!this.contextualised_node) return
-    const child = this.contextualised_node.sankey.nodes_dict[dim_name]
-    disaggregationExpansion(this.app_data, this.contextualised_node, false, child)
+    this._runExpansionWithUndo((node) => {
+      const child = this.drawing_area.sankey.nodes_dict[dim_name]
+      if (!child) return
+      disaggregationExpansion(this.app_data, node, false, child)
+    })
   }
 
   contractLeft = () => {
-    if (this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT)) {
-      contract(this.app_data, this.contextualised_node)
-    }
+    if (!(this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT))) return
+    this._runExpansionWithUndo((node) => contract(this.app_data, node))
   }
 
   contractRight = () => {
-    if (this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.RIGHT)) {
-      contract(this.app_data, this.contextualised_node)
-    }
+    if (!(this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.RIGHT))) return
+    this._runExpansionWithUndo((node) => contract(this.app_data, node))
   }
 
   // Container display mode (parent surrounds children, links filtered per side)
@@ -182,45 +247,149 @@ export class NodeActions {
     )
   }
 
-  containerInChildrenOutParent = (other_id: string) => {
+  // Collecte les nœuds qui doivent appartenir au cadre tied d'un ancêtre
+  // englobant après désagrégation/expansion. On descend dans toute
+  // dim_as_parent en `force_show_children` (= dim désagrégée) pour
+  // attraper les enfants à la place du parent — même si le parent reste
+  // is_visible (ce qui arrive en imbriqué : un container_mode hérité
+  // garde le parent visible côté visibilité de nœud, mais visuellement
+  // ce sont les enfants qui prennent sa place dans la pile englobante).
+  // Les `slave_nodes` (clones d'expansion latérale) visibles sont aussi
+  // collectés.
+  private _collectVisibleEnglobedNodes = (roots: Class_NodeElement[]): Class_NodeElement[] => {
+    const out: Class_NodeElement[] = []
+    const seen = new Set<string>()
+    const visit = (n: Class_NodeElement) => {
+      if (seen.has(n.id)) return
+      const expanded_dim = n.dimensions_as_parent.find(d => d.force_show_children)
+      if (expanded_dim) {
+        seen.add(n.id) // on saute le parent au profit de ses enfants
+        expanded_dim.children.forEach(c => visit(c as Class_NodeElement))
+        return
+      }
+      seen.add(n.id)
+      if (n.is_visible) out.push(n)
+      // Slaves visibles (clones d'expansion latérale) du nœud lui-même.
+      n.slave_nodes?.forEach(s => {
+        if (!seen.has(s.id) && s.is_visible) { seen.add(s.id); out.push(s) }
+      })
+      // Descendre dans les sous-dims pour attraper les slaves des
+      // descendants : cas où n est encore empilé (non désagrégé) mais
+      // ses sous-children ont des clones d'expansion visibles. Sans ça,
+      // les clones expand resteraient hors du cadre géométrique de
+      // l'ancêtre englobant.
+      n.dimensions_as_parent.forEach(d => {
+        (d.children as Class_NodeElement[]).forEach(c => {
+          if (!seen.has(c.id)) visit(c)
+        })
+      })
+    }
+    roots.forEach(visit)
+    return out
+  }
+
+  // Re-stack une dim englobante (dim.parent doit être en container_mode) :
+  // détache l'attached_node courant, recollecte tous les descendants
+  // visibles de dim.children, les empile verticalement sur dim.parent et
+  // les ré-attache. La taille du parent suit dynamiquement via
+  // _envelopeSize() (NodeBase.getShape*ToUse).
+  private _restackEnglobingDim = (d: Class_NodeDimension) => {
+    const p = d.parent as Class_NodeElement
+    for (let i = p.attached_node.length - 1; i >= 0; i--) {
+      p.dettachNodeFromCont(p.attached_node[i])
+    }
+    const cs = this._collectVisibleEnglobedNodes(d.children as Class_NodeElement[])
+    // Les clones d'expansion latérale (master_node défini) ont déjà été
+    // positionnés par disaggregationExpansion (à gauche/droite de leur
+    // master). On NE les ré-empile PAS, sinon ils seraient ramenés dans
+    // la colonne du parent et le visuel d'expansion serait cassé. On
+    // les attache quand même au cadre tied pour que l'enveloppe les
+    // englobe (taille + drag suivent).
+    const stackable = cs.filter(c => !c.master_node)
+    const clones = cs.filter(c => !!c.master_node)
+    p.tied_to_nodes = true
+    stackable.forEach(c => { c.position_x = p.position_x })
+    NodePositioning.stackNodesVertically(stackable, p.position_y)
+    stackable.forEach(c => p.attachNodeToCont(c))
+    clones.forEach(c => p.attachNodeToCont(c))
+    p.expandToContainAttachedNodes()
+    // Le bascule de visibilité / la nouvelle pile changent l'ordre et
+    // les ancres des liens I/O. Reorganize sur le parent, chaque enfant
+    // collecté ET sur les sources/cibles externes — sinon les liens
+    // restent attachés à la mauvaise position côté nœud distant.
+    const to_reorg = new Set<Class_NodeElement>([p, ...cs])
+    cs.forEach(c => {
+      c.input_links_list.forEach(l => to_reorg.add(l.source))
+      c.output_links_list.forEach(l => to_reorg.add(l.target))
+    })
+    to_reorg.forEach(n => n.reorganizeIOLinks())
+  }
+
+  // Remonte la chaîne des ancêtres englobants à partir de `start_node` et
+  // re-stacke chaque dim englobée trouvée. À appeler après toute opération
+  // qui modifie la structure visible sous un nœud englobé : disaggregate,
+  // aggregate, expandLeft/Right, contractLeft/Right, mode container.
+  private _restackEnglobingChain = (start_node: Class_NodeElement) => {
+    let cur: Class_NodeElement = start_node
+    const visited = new Set<string>([cur.id])
+    while (true) {
+      const ancestor_dim = cur.dimensions_as_child.find(d => !!d.container_mode)
+      if (!ancestor_dim) break
+      const ancestor_parent = ancestor_dim.parent as Class_NodeElement
+      if (visited.has(ancestor_parent.id)) break
+      visited.add(ancestor_parent.id)
+      this._restackEnglobingDim(ancestor_dim)
+      cur = ancestor_parent
+    }
+  }
+
+  // Entering an enclosing mode also turns the parent into a geometric
+  // frame for its children, so the parent visually wraps them. Both
+  // capabilities stay independent in general; this is the only place
+  // where they are coupled.
+  private _runContainerModeWithUndo = (
+    other_id: string,
+    target_mode: 'in_children_out_parent' | 'in_parent_out_children' | 'in_children_out_children' | 'in_parent_out_parent' | null
+  ) => {
     const dim = this._findDimensionFromOtherId(other_id)
     if (!dim) return
-    dim.setContainerMode('in_children_out_parent')
-    this.drawing_area.draw()
+    const prev_mode = dim.container_mode
+    const parent = dim.parent
+    const before = this._captureTiedFrameState([parent])
+    const apply = () => {
+      if (target_mode === null) {
+        dim.unsetContainerMode()
+        // Mirror entering: detach this dim's children from the parent's
+        // frame; preserve sibling/manual attaches.
+        dim.children.forEach(child => parent.dettachNodeFromCont(child))
+        if (parent.attached_node.length === 0) parent.tied_to_nodes = false
+      } else {
+        dim.setContainerMode(target_mode)
+        parent.tied_to_nodes = true
+        this._restackEnglobingDim(dim)
+      }
+      // Propagation aux ancêtres englobants : indispensable quand la dim
+      // qu'on vient de modifier (ou son parent) est elle-même imbriquée
+      // dans un parent en container_mode — sinon l'enveloppe visuelle de
+      // l'ancêtre n'intègre pas les nouveaux enfants/petits-enfants.
+      this._restackEnglobingChain(parent)
+      this.drawing_area.draw()
+    }
+    const undo = () => {
+      if (prev_mode === null) dim.unsetContainerMode()
+      else dim.setContainerMode(prev_mode)
+      this._restoreTiedFrameState(before)
+      this.drawing_area.draw()
+    }
+    this.executeWithUndo(apply, undo)
     this.refreshAndSave()
   }
 
-  containerInParentOutChildren = (other_id: string) => {
-    const dim = this._findDimensionFromOtherId(other_id)
-    if (!dim) return
-    dim.setContainerMode('in_parent_out_children')
-    this.drawing_area.draw()
-    this.refreshAndSave()
-  }
-
-  containerInChildrenOutChildren = (other_id: string) => {
-    const dim = this._findDimensionFromOtherId(other_id)
-    if (!dim) return
-    dim.setContainerMode('in_children_out_children')
-    this.drawing_area.draw()
-    this.refreshAndSave()
-  }
-
-  containerInParentOutParent = (other_id: string) => {
-    const dim = this._findDimensionFromOtherId(other_id)
-    if (!dim) return
-    dim.setContainerMode('in_parent_out_parent')
-    this.drawing_area.draw()
-    this.refreshAndSave()
-  }
-
-  unsetContainerMode = (other_id: string) => {
-    const dim = this._findDimensionFromOtherId(other_id)
-    if (!dim) return
-    dim.unsetContainerMode()
-    this.drawing_area.draw()
-    this.refreshAndSave()
-  }
+  containerInChildrenOutParent = (other_id: string) => this._runContainerModeWithUndo(other_id, 'in_children_out_parent')
+  containerInParentOutChildren = (other_id: string) => this._runContainerModeWithUndo(other_id, 'in_parent_out_children')
+  containerInChildrenOutChildren = (other_id: string) => this._runContainerModeWithUndo(other_id, 'in_children_out_children')
+  containerInParentOutParent = (other_id: string) => this._runContainerModeWithUndo(other_id, 'in_parent_out_parent')
+  unsetContainerMode = (other_id: string) => this._runContainerModeWithUndo(other_id, null)
 
   createFluxOnChildren = () => {
     if (!this.contextualised_node || !this.contextualised_node.is_parent) return
@@ -547,10 +716,6 @@ export class NodeActions {
     const cont = this.drawing_area.sankey.addNewDefaultContainer()
     cont.tied_to_nodes = true
     this.drawing_area.selected_nodes_list.forEach(n => {
-      // node.getListDescendantOfNode().forEach(n => {
-      //   cont.attachNodeToCont(n)
-      // })
-      // cont.attachNodeToCont(node)
       n.getListDescendantOfNode().forEach(node => {
         cont.attachNodeToCont(node)
       })
@@ -561,6 +726,58 @@ export class NodeActions {
       cont.computeSizeAndPositionFromAttachedNodes()
     })
     this.drawing_area.draw()
+  }
+
+  // Cadre géométrique sur le nœud lui-même : attache ses descendants et auto-resize.
+  setTiedFrame = () => {
+    const nodes = [...this.drawing_area.selected_nodes_list]
+    const before = this._captureTiedFrameState(nodes)
+    this.executeWithUndo(
+      () => {
+        nodes.forEach(n => {
+          n.tied_to_nodes = true
+          n.getListDescendantOfNode().forEach(d => {
+            if (d !== n) n.attachNodeToCont(d)
+          })
+          n.computeSizeAndPositionFromAttachedNodes()
+        })
+        this.drawing_area.draw()
+      },
+      () => { this._restoreTiedFrameState(before); this.drawing_area.draw() }
+    )
+  }
+
+  // Repasse le nœud en cadre simple : détache tout, taille/position figées.
+  unsetTiedFrame = () => {
+    const nodes = [...this.drawing_area.selected_nodes_list]
+    const before = this._captureTiedFrameState(nodes)
+    this.executeWithUndo(
+      () => {
+        nodes.forEach(n => {
+          for (let i = n.attached_node.length - 1; i >= 0; i--) {
+            n.dettachNodeFromCont(n.attached_node[i])
+          }
+          n.tied_to_nodes = false
+        })
+        this.drawing_area.draw()
+      },
+      () => { this._restoreTiedFrameState(before); this.drawing_area.draw() }
+    )
+  }
+
+  // Action explicite : aligne tous les bords sur la bbox des attached_node.
+  fitFrameToAttached = () => {
+    const nodes = [...this.drawing_area.selected_nodes_list]
+    const before = this._captureTiedFrameState(nodes)
+    this.executeWithUndo(
+      () => {
+        nodes.forEach(n => {
+          if (n.tied_to_nodes) n.computeSizeAndPositionFromAttachedNodes()
+        })
+        this.drawing_area.draw()
+      },
+      () => { this._restoreTiedFrameState(before); this.drawing_area.draw() }
+    )
   }
 
   moveToFirstPlan = () => {
@@ -655,6 +872,9 @@ export class NodeActions {
 
       startAnimation: nodeActions.startAnimation,
       createTiedZdt: nodeActions.createTiedZdt,
+      setTiedFrame: nodeActions.setTiedFrame,
+      unsetTiedFrame: nodeActions.unsetTiedFrame,
+      fitFrameToAttached: nodeActions.fitFrameToAttached,
       reorg: nodeActions.reorg,
       moveToFirstPlan: nodeActions.moveToFirstPlan,
       moveToLastPlan: nodeActions.moveToLastPlan,

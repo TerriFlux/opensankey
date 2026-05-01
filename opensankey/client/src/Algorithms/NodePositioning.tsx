@@ -35,7 +35,7 @@ import { Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
-import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeSectorStyle } from '../Elements/ElementStyle'
+import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
 
 /**
@@ -1393,29 +1393,44 @@ export class NodePositioning {
   }
 
   /**
-   * Set label positioning for nodes based on their connectivity
+   * Positionne le label des nœuds en fonction de leur connectivité, via les
+   * styles d'extrémité (NodeLeftExtremityStyle / NodeRightExtremityStyle).
+   * Les nœuds centraux et lone ne reçoivent aucun style ni mutation d'attribut.
+   * Si l'utilisateur a déjà personnalisé name_label_horiz / name_label_vert
+   * localement, le style n'est pas (ré)appliqué pour préserver l'override.
    * @private
    */
   private setNodeLabelPositioning(node: Class_NodeElement) {
-    if (!node.hasInputLinks() && !node.hasOutputLinks()) {
-      // Node is lone node
-      node.name_label_horiz = 'middle'
-      node.name_label_vert = 'middle'
+    const styles_dict = this.drawingArea.sankey.styles_dict
+    const left_style = styles_dict[NodeLeftExtremityStyle]
+    const right_style = styles_dict[NodeRightExtremityStyle]
+
+    const is_source = node.hasOutputLinks() && !node.hasInputLinks()
+    const is_sink = node.hasInputLinks() && !node.hasOutputLinks()
+
+    const target_style = is_source ? left_style : (is_sink ? right_style : undefined)
+    const other_style = is_source ? right_style : (is_sink ? left_style : undefined)
+
+    // Nœuds centraux ou lone : retirer les styles d'extrémité éventuellement
+    // présents, sans toucher aux attributs.
+    if (!target_style) {
+      if (left_style && node.hasStyle(left_style.id)) node.removeStyleById(left_style.id)
+      if (right_style && node.hasStyle(right_style.id)) node.removeStyleById(right_style.id)
+      return
     }
-    else if (node.input_links_list.length === 0) {
-      // Node is a source : no input link
-      node.name_label_horiz = 'left'
-      node.name_label_vert = 'middle'
+
+    // Nettoyer le style d'extrémité opposé s'il était appliqué.
+    if (other_style && node.hasStyle(other_style.id)) {
+      node.removeStyleById(other_style.id)
     }
-    else if (node.output_links_list.length === 0) {
-      // Node is a sink : no output link
-      node.name_label_horiz = 'right'
-      node.name_label_vert = 'middle'
+
+    // Préserver tout override local user sur name_label_horiz/vert.
+    if (node.isAttributeOverloaded('name_label_horiz') || node.isAttributeOverloaded('name_label_vert')) {
+      return
     }
-    else {
-      // Node is in the middle of the sankey
-      node.name_label_horiz = 'left'
-      node.name_label_vert = 'middle'
+
+    if (!node.hasStyle(target_style.id)) {
+      node.addStyle(target_style)
     }
   }
 
