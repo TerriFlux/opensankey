@@ -330,9 +330,9 @@ export class NodeActions {
   // qui modifie la structure visible sous un nœud englobé : disaggregate,
   // aggregate, expandLeft/Right, contractLeft/Right, mode container.
   private _restackEnglobingChain = (start_node: Class_NodeElement) => {
-    let cur: Class_NodeElement = start_node
+    let cur: Class_NodeElement | undefined = start_node
     const visited = new Set<string>([cur.id])
-    while (true) {
+    while (cur) {
       const ancestor_dim = cur.dimensions_as_child.find(d => !!d.container_mode)
       if (!ancestor_dim) break
       const ancestor_parent = ancestor_dim.parent as Class_NodeElement
