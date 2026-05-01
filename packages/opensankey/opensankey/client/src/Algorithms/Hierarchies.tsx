@@ -411,9 +411,15 @@ const updateNodePositioning = (
   const parent_center_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2
   const anchor_y = parent_center_y - total_height / 2
 
+  // Décalage horizontal : `shape_position_dx / 3` pour que les clones
+  // d'expansion latérale restent visuellement proches du parent — sinon
+  // ils prenaient l'espacement complet d'une colonne et débordaient
+  // largement, surtout en mode englobé où on veut que l'enveloppe reste
+  // compacte autour du master.
+  const dx = contextualised_node.shape_position_dx / 3
   nodes.forEach((n) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
-    n.position_x = contextualised_node.position_x + (expand_left ? -contextualised_node.shape_position_dx : contextualised_node.shape_position_dx)
+    n.position_x = contextualised_node.position_x + (expand_left ? -dx : dx)
   })
   NodePositioning.stackNodesVertically(nodes, anchor_y)
 
@@ -827,7 +833,12 @@ const createAggregationExpansionNode = (
 export const aggregate = (
   new_data: Class_ApplicationData,
   contextualised_node: Class_NodeElement,
-  parent: string
+  parent: string,
+  // Quand cet aggregate est joué *en tant qu'inverse* d'un disaggregate
+  // précédent (undo), il NE FAUT PAS ré-enregistrer un couple
+  // saveUndo/saveRedo : ça écraserait le toNext du slot courant et casserait
+  // le redo de l'opération originale.
+  register_history: boolean = true
 ) => {
   if (!contextualised_node.is_child) {
     return
@@ -850,10 +861,12 @@ export const aggregate = (
     // handleExchangeNodes(new_data, contextualised_node, aggregateNode, 'aggregate')
   }
   const undo = () => {
-    disaggregate(new_data, parent_node, contextualised_node.id)
+    disaggregate(new_data, parent_node, contextualised_node.id, false)
   }
-  new_data.history.saveUndo(undo)
-  new_data.history.saveRedo(Do)
+  if (register_history) {
+    new_data.history.saveUndo(undo)
+    new_data.history.saveRedo(Do)
+  }
   Do()
 }
 
@@ -1026,7 +1039,10 @@ export const aggregate = (
 export const disaggregate = (
   new_data: Class_ApplicationData,
   aggregateNode: Class_NodeElement,
-  child: string
+  child: string,
+  // Idem aggregate(): à `false` quand appelé comme inverse d'un aggregate
+  // pour ne pas corrompre la pile d'historique.
+  register_history: boolean = true
 ) => {
   if (!aggregateNode.is_parent) {
     return
@@ -1086,10 +1102,12 @@ export const disaggregate = (
   }
 
   const undo = () => {
-    aggregate(new_data, child_node, parent_dim.parent.id)
+    aggregate(new_data, child_node, parent_dim.parent.id, false)
   }
-  new_data.history.saveUndo(undo)
-  new_data.history.saveRedo(Do)
+  if (register_history) {
+    new_data.history.saveUndo(undo)
+    new_data.history.saveRedo(Do)
+  }
   Do()
 }
 

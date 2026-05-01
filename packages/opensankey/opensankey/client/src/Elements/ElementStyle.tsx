@@ -14,6 +14,8 @@ export const NodeStyle = 'NodeStyle' as const
 export const LinkStyle = 'LinkStyle' as const
 export const ContainerStyle = 'ContainerStyle' as const
 export const NodeContainerStyle = 'NodeContainerStyle' as const
+export const NodeLeftExtremityStyle = 'NodeLeftExtremityStyle' as const
+export const NodeRightExtremityStyle = 'NodeRightExtremityStyle' as const
 export const NodeProductStyle = 'NodeProductStyle' as const
 export const NodeSectorStyle = 'NodeSectorStyle' as const
 export const NodeImportExportCloseStyle = 'NodeImportExportCloseStyle' as const
@@ -39,6 +41,8 @@ export type ElementStyleKey =
   | typeof LinkStyle
   | typeof ContainerStyle
   | typeof NodeContainerStyle
+  | typeof NodeLeftExtremityStyle
+  | typeof NodeRightExtremityStyle
   | typeof NodeProductStyle
   | typeof NodeSectorStyle
   | typeof NodeImportExportCloseStyle
@@ -117,6 +121,22 @@ elementStyleConfigs[NodeContainerStyle] = {
     'shape_margin_bottom': 10,
     'shape_margin_left': 5,
     'shape_margin_right': 5
+  }
+}
+
+elementStyleConfigs[NodeLeftExtremityStyle] = {
+  name: 'ElementStyle.NodeLeftExtremityStyle',
+  config: {
+    'name_label_horiz': 'left',
+    'name_label_vert': 'middle'
+  }
+}
+
+elementStyleConfigs[NodeRightExtremityStyle] = {
+  name: 'ElementStyle.NodeRightExtremityStyle',
+  config: {
+    'name_label_horiz': 'right',
+    'name_label_vert': 'middle'
   }
 }
 
@@ -350,7 +370,7 @@ elementStyleConfigs[LinkOutUnitaryStyle] = {
 } as const
 
 
-export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle] as const
+export const base_styles: readonly ElementStyleKey[] = [NodeStyle, LinkStyle, ContainerStyle, NodeContainerStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle] as const
 export const product_sector_styles: readonly ElementStyleKey[] = [NodeProductStyle, NodeSectorStyle] as const
 export const node_exchanges_style: readonly ElementStyleKey[] = [
   NodeExportBelowStyle, NodeExportCloseStyle, NodeImportAboveStyle, NodeImportCloseStyle,
