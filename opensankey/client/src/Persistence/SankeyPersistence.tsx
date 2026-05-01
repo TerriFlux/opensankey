@@ -197,6 +197,10 @@ export class NodeBasePersistence extends ProtoElementPersistence {
       json_object['u'] = node_base.position_u
       json_object['v'] = node_base.position_v
     }
+    if (node_base.tied_to_nodes) {
+      json_object['tiedToNode'] = true
+      json_object['attachedNodes'] = node_base.attached_node.map(n => n.id)
+    }
     return json_object
   }
 
@@ -227,6 +231,22 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
+
+    // Tied/attached frame state (shared by Class_NodeElement and Class_ContainerElement).
+    // Backwards compatible: defaults to false / [] when keys are absent.
+    node_base['_tied_to_nodes'] = getBooleanFromJSON(
+      json_node_object,
+      'tiedToNode',
+      node_base.tied_to_nodes
+    )
+    const list_id_nodes = (json_node_object['attachedNodes'] as string[]) || []
+    const nodes_dict = node_base.drawing_area.sankey.nodes_dict
+    list_id_nodes.forEach(node_id => {
+      const target = nodes_dict[node_id]
+      if (target && target !== node_base) {
+        node_base.attachNodeToCont(target)
+      }
+    })
   }
 }
 export class ContainerPersistence extends NodeBasePersistence {

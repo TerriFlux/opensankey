@@ -28,7 +28,6 @@ import * as d3 from 'd3'
 
 import { Class_ElementStyle } from './Element'
 import { NodeDrawNameLabel } from './DrawLabel'
-import { Class_ContainerElement } from './TextZone'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { NodeDrawShape } from './NodeDrawShape'
 import { Class_Handler } from './Handler'
@@ -67,11 +66,20 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected _drag: boolean = false
   protected _drag_start_pos: { [x: string]: [number, number] } = {}
+  // Snapshot of (shape_min_width, shape_min_height) for tied frames that may
+  // auto-grow during a drag; consumed by handleMouseDragEnd to build a single
+  // undo step covering positions AND sizes.
+  protected _drag_start_sizes: { [x: string]: [number, number] } = {}
   protected first_drag_move = true
   protected _node_current_dx = 0
   protected _node_current_dy = 0
 
-  protected _attached_container: Class_ContainerElement[] = []
+  // Tied/attached frame capability — shared by Class_NodeElement and Class_ContainerElement.
+  // _attached_node: elements this one geometrically encloses (when _tied_to_nodes is true).
+  // _attached_container: elements that geometrically enclose this one (inverse link).
+  protected _tied_to_nodes: boolean = false
+  protected _attached_node: Class_NodeBase[] = []
+  protected _attached_container: Class_NodeBase[] = []
 
   protected class_name = 'gg_nodes'
   constructor(
@@ -207,9 +215,32 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.d3_selection_g_shape = this.d3_selection?.append('g').attr('class', 'g_node_shape') ?? null
   }
 
-  public getShapeWidthToUse() { return this.shape_min_width }
+  public getShapeWidthToUse() {
+    return Math.max(this.shape_min_width, this._envelopeSize().w)
+  }
 
-  public getShapeHeightToUse() { return this.shape_min_height }
+  public getShapeHeightToUse() {
+    return Math.max(this.shape_min_height, this._envelopeSize().h)
+  }
+
+  /**
+   * Taille (w, h) du bbox des enfants attachés visibles, marges incluses,
+   * calculée dynamiquement quand ce nœud est un cadre tied. Sans ça, à la
+   * sortie d'un mode englobant le parent resterait figé à la taille bumpée
+   * via `shape_min_*` (l'ancien `expandToContainAttachedNodes` écrivait dans
+   * shape_min_*, ce qui ne se restaurait pas tout seul). Ici on lit
+   * l'enveloppe à la volée — comme `is_visible_for_sizing_of(node)` le fait
+   * pour les enfants masqués par container_mode.
+   */
+  protected _envelopeSize(): { w: number, h: number } {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return { w: 0, h: 0 }
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return { w: 0, h: 0 }
+    return {
+      w: (bbox.max_x - bbox.min_x) + this.shape_margin_left + this.shape_margin_right,
+      h: (bbox.max_y - bbox.min_y) + this.shape_margin_top + this.shape_margin_bottom,
+    }
+  }
 
   protected _orderD3Elements() {
     this.d3_selection_g_shape?.raise()
@@ -237,10 +268,25 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   protected eventMouseDrag(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDrag(event)
-    // if (this.drawing_area.isInSelectionMode()) {
-    //   this.moveSelectedContainerFromDragEvent(event)
-    // }
     this._nodeEventsHandler.handleMouseDrag(event)
+    // Geometric frame: drag pushes attached elements along (skipping
+    // those already moved by the selection drag, to avoid double offset).
+    if (this._tied_to_nodes && this.drawing_area.isInSelectionMode()) {
+      const da = this.drawing_area
+      const already_moved = new Set<Class_NodeBase>([
+        ...da.selected_nodes_list as unknown as Class_NodeBase[],
+        ...da.selected_containers_list as unknown as Class_NodeBase[],
+        this
+      ])
+      this._attached_node.forEach(n => {
+        if (!n.is_visible) return
+        if (already_moved.has(n)) return
+        n.position_x += event.dx
+        n.position_y += event.dy
+        n.applyPosition()
+        already_moved.add(n)
+      })
+    }
   }
   protected eventMouseDragStart(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragStart(event)
@@ -249,7 +295,23 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public eventMouseDragEnd(event: d3.D3DragEvent<SVGGElement, unknown, unknown>) {
     super.eventMouseDragEnd(event)
     if (this.drawing_area.isInSelectionMode()) {
-      this._attached_container.forEach(cont => cont.draw())
+      // Auto-grow containing frames whose attached child just moved
+      // (push only the impacted side; never shrink). Propagation
+      // récursive vers le haut : un conteneur englobant emboîté doit
+      // aussi croître quand son enfant (lui-même un conteneur) vient
+      // de grandir. Sans ça, dans des modes englobants emboîtés, seule
+      // la boîte la plus immédiate suit le drag, pas ses ancêtres.
+      const visited = new Set<Class_NodeBase>([this])
+      const propagate = (node: Class_NodeBase) => {
+        node._attached_container.forEach(cont => {
+          if (visited.has(cont)) return
+          visited.add(cont)
+          if (cont.tied_to_nodes) cont.expandToContainAttachedNodes()
+          cont.draw()
+          propagate(cont)
+        })
+      }
+      propagate(this)
       this.drawing_area.orderElementOnDA()
     }
     this._nodeEventsHandler.handleMouseDragEnd(event)
@@ -285,10 +347,68 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     return this._name
   }
 
-  public get attached_container(): Class_ContainerElement[] { return this._attached_container }
+  public get attached_container(): Class_NodeBase[] { return this._attached_container }
+  public get attached_node(): Class_NodeBase[] { return this._attached_node }
+  public get tied_to_nodes(): boolean { return this._tied_to_nodes }
+  public set tied_to_nodes(b: boolean) { this._tied_to_nodes = b }
+
+  // Bidirectional link: this._attached_node[i].attached_container contains this.
+  public attachNodeToCont(node: Class_NodeBase) {
+    if (!this._attached_node.includes(node)) {
+      this._attached_node.push(node)
+    }
+    if (!node._attached_container.includes(this)) {
+      node._attached_container.push(this)
+    }
+  }
+
+  // Inverse direction: I (container) attach myself onto `node`.
+  public attachContToNode(node: Class_NodeBase) {
+    this.attachNodeToCont(node)
+  }
+
+  public dettachNodeFromCont(node: Class_NodeBase) {
+    const idx_n = this._attached_node.indexOf(node)
+    if (idx_n >= 0) this._attached_node.splice(idx_n, 1)
+    const idx_c = node._attached_container.indexOf(this)
+    if (idx_c >= 0) node._attached_container.splice(idx_c, 1)
+  }
+
+  public dettachContFromNode(node: Class_NodeBase) {
+    this.dettachNodeFromCont(node)
+  }
+
+  // Fit-to-attached: explicit action only. Snaps every side onto the
+  // attached bbox (may shrink the frame).
+  public computeSizeAndPositionFromAttachedNodes() {
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    this._applyEnvelopeBBox(bbox)
+  }
+
+  // Auto-grow only: extends sides outward when an attached node overflows;
+  // never shrinks. Used during drag so the frame follows children outward.
+  // Ne touche QUE la position (re-ancrage du parent au top-left de
+  // l'enveloppe). La taille (w, h) est désormais calculée dynamiquement
+  // par getShape{Height,Width}ToUse() via `_envelopeSize()` — on n'écrit
+  // plus shape_min_*, sinon la valeur reste figée et empêche le parent de
+  // retrouver sa taille « fit aux flux » à la sortie du mode englobant.
+  public expandToContainAttachedNodes() {
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    const cur_left = this.position_x + this.shape_margin_left
+    const cur_top = this.position_y + this.shape_margin_top
+    const new_left = Math.min(cur_left, bbox.min_x)
+    const new_top = Math.min(cur_top, bbox.min_y)
+    if (new_left === cur_left && new_top === cur_top) return
+    this.position_x = new_left - this.shape_margin_left
+    this.position_y = new_top - this.shape_margin_top
+  }
 
   public setDragStartPositions(positions: { [x: string]: [number, number] }) { this._drag_start_pos = positions }
   public getDragStartPositions(): { [x: string]: [number, number] } { return this._drag_start_pos }
+  public setDragStartSizes(sizes: { [x: string]: [number, number] }) { this._drag_start_sizes = sizes }
+  public getDragStartSizes(): { [x: string]: [number, number] } { return this._drag_start_sizes }
   public setDragState(drag: boolean) { this._drag = drag }
   public getDragState(): boolean { return this._drag }
   public setFirstDragMove(value: boolean) { this.first_drag_move = value }
@@ -436,28 +556,40 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
   }
 
+  // Handles must sit on the visible shape edges, which include the
+  // shape_margin_* offsets (the rendered shape is translated by
+  // (-margin_left, -margin_top) and sized W+ml+mr × H+mt+mb).
   private computeTopHandlerPos() {
-    // Top handle pos
-    this._drag_handler.top.position_x = this.position_x + this.getShapeWidthToUse() / 2
-    this._drag_handler.top.position_y = this.position_y + 0
+    const ml = this.shape_margin_left
+    const mr = this.shape_margin_right
+    const mt = this.shape_margin_top
+    this._drag_handler.top.position_x = this.position_x + (this.getShapeWidthToUse() + mr - ml) / 2
+    this._drag_handler.top.position_y = this.position_y - mt
   }
 
   private computeBottomHandlerPos() {
-    // bottom handle pos
-    this._drag_handler.bottom.position_x = this.position_x + this.getShapeWidthToUse() / 2
-    this._drag_handler.bottom.position_y = this.position_y + this.getShapeHeightToUse()
+    const ml = this.shape_margin_left
+    const mr = this.shape_margin_right
+    const mb = this.shape_margin_bottom
+    this._drag_handler.bottom.position_x = this.position_x + (this.getShapeWidthToUse() + mr - ml) / 2
+    this._drag_handler.bottom.position_y = this.position_y + this.getShapeHeightToUse() + mb
   }
 
   private computeLeftHandlerPos() {
-    // left handle pos
-    this._drag_handler.left.position_x = this.position_x + 0
-    this._drag_handler.left.position_y = this.position_y + this.getShapeHeightToUse() / 2
+    const ml = this.shape_margin_left
+    const mt = this.shape_margin_top
+    const mb = this.shape_margin_bottom
+    this._drag_handler.left.position_x = this.position_x - ml
+    this._drag_handler.left.position_y = this.position_y + (this.getShapeHeightToUse() + mb - mt) / 2
   }
 
   private computeRightHandlerPos() {
     // right handle pos
-    this._drag_handler.right.position_x = this.position_x + this.getShapeWidthToUse()
-    this._drag_handler.right.position_y = this.position_y + this.getShapeHeightToUse() / 2
+    const mr = this.shape_margin_right
+    const mt = this.shape_margin_top
+    const mb = this.shape_margin_bottom
+    this._drag_handler.right.position_x = this.position_x + this.getShapeWidthToUse() + mr
+    this._drag_handler.right.position_y = this.position_y + (this.getShapeHeightToUse() + mb - mt) / 2
   }
 
   /**
@@ -504,7 +636,14 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     let found = false
     nodes.forEach(node => {
       if (!node.is_visible) return
-      const svg_bbox = node.d3_selection?.node()?.getBBox()
+      // Pour un nœud lui-même cadre tied (container avec enfants attachés),
+      // la taille logique est la vérité : `getShape{Width,Height}ToUse()`
+      // intègre dynamiquement l'enveloppe (cf. `_envelopeSize()`). Le
+      // `getBBox()` du SVG, lui, peut être en retard d'un tick après un
+      // re-stack en cascade et renvoyer l'ancienne taille — d'où des
+      // ancêtres englobants mal dimensionnés sans ce contournement.
+      const prefer_logical = node._tied_to_nodes && node._attached_node.length > 0
+      const svg_bbox = prefer_logical ? null : node.d3_selection?.node()?.getBBox()
       let left: number, top: number, right: number, bottom: number
       if (svg_bbox && (svg_bbox.width > 0 || svg_bbox.height > 0)) {
         left = node.position_x + svg_bbox.x

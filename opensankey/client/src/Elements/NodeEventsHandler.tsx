@@ -212,6 +212,7 @@ export class NodeEventsHandler {
 
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     const dict_old_pos: { [x: string]: [number, number] } = {}
+    const dict_old_sizes: { [x: string]: [number, number] } = {}
 
     if (nodes_selected.includes(this._node)) {
       // Memorize for undo
@@ -223,8 +224,28 @@ export class NodeEventsHandler {
       dict_old_pos[this._node.id] = [this._node.position_x, this._node.position_y]
     }
 
+    // Tied-frame extras: capture (a) positions of attached_node that the
+    // drag will push along, and (b) (w, h) of frames that may auto-grow.
+    const seed_nodes: Class_NodeBase[] = nodes_selected.includes(this._node) ? nodes_selected : [this._node]
+    seed_nodes.forEach(n => {
+      // n is itself a tied frame: capture its size + each attached_node pos.
+      if (n.tied_to_nodes) {
+        dict_old_sizes[n.id] = [n.shape_min_width, n.shape_min_height]
+        n.attached_node.forEach(a => {
+          if (!(a.id in dict_old_pos)) dict_old_pos[a.id] = [a.position_x, a.position_y]
+        })
+      }
+      // n is attached to one or more tied frames: capture each frame's pos+size.
+      n.attached_container.forEach(c => {
+        if (!c.tied_to_nodes) return
+        if (!(c.id in dict_old_pos)) dict_old_pos[c.id] = [c.position_x, c.position_y]
+        if (!(c.id in dict_old_sizes)) dict_old_sizes[c.id] = [c.shape_min_width, c.shape_min_height]
+      })
+    })
+
     // ✅ Utiliser les nouvelles méthodes d'accès
     this._node.setDragStartPositions(dict_old_pos)
+    this._node.setDragStartSizes(dict_old_sizes)
     this._node.setDragState(true)
     this.bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
@@ -342,6 +363,7 @@ export class NodeEventsHandler {
 
     // ✅ Utiliser la nouvelle méthode d'accès
     const dict_old_pos: { [x: string]: [number, number] } = { ...this._node.getDragStartPositions() }
+    const dict_old_sizes: { [x: string]: [number, number] } = { ...this._node.getDragStartSizes() }
 
     // Did the drag actually move 'this' node? If yes we'll save one combined undo/redo
     // step (positions + IO link orders) at the very end of this handler, once positions
@@ -487,12 +509,28 @@ export class NodeEventsHandler {
         if (!n) n = drawing_area.sankey.containers_dict[k] as Class_NodeBase | undefined
         if (n) dict_new_pos[k] = [n.position_x, n.position_y]
       })
+      // Snapshot final sizes (tied frames may have auto-grown).
+      const dict_new_sizes: { [x: string]: [number, number] } = {}
+      Object.keys(dict_old_sizes).forEach(k => {
+        let n = drawing_area.sankey.nodes_dict[k] as Class_NodeBase | undefined
+        if (!n) n = drawing_area.sankey.containers_dict[k] as Class_NodeBase | undefined
+        if (n) dict_new_sizes[k] = [n.shape_min_width, n.shape_min_height]
+      })
 
       function undo(_: Class_ProtoElement) {
         Object.keys(dict_old_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
           if (n) n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1])
+        })
+        Object.keys(dict_old_sizes).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) {
+            n.shape_min_width = dict_old_sizes[k][0]
+            n.shape_min_height = dict_old_sizes[k][1]
+            n.draw()
+          }
         })
         Object.keys(dict_old_orders).forEach(k => {
           const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
@@ -508,6 +546,15 @@ export class NodeEventsHandler {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
           if (n) n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1])
+        })
+        Object.keys(dict_new_sizes).forEach(k => {
+          let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
+          if (!n) n = _.drawing_area.sankey.containers_dict[k]
+          if (n) {
+            n.shape_min_width = dict_new_sizes[k][0]
+            n.shape_min_height = dict_new_sizes[k][1]
+            n.draw()
+          }
         })
         Object.keys(dict_new_orders).forEach(k => {
           const n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeElement
