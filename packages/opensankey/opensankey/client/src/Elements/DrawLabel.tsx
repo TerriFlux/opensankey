@@ -798,8 +798,11 @@ export abstract class DrawLabelBase {
     }
 
     if (!hasSpecialContent) {
-      this.drawBackground(this.d3_selection, tspanWidths)
+      // verticalText réancre le `<text>` avant que drawBackground ne lise sa bbox locale
+      // (sinon le bg se positionnerait sur l'ancienne bbox horizontale, déphasée du texte
+      // tourné). drawBackground appliquera la même transform au bg → bg suit le texte.
       this.verticalText(tspanWidths, textElement)
+      this.drawBackground(this.d3_selection, tspanWidths)
     }
 
     this.applyTextDragHandlers(textElement)
@@ -815,6 +818,14 @@ export abstract class DrawLabelBase {
     tspanWidths: number[]
   ): void {
     if (tspanWidths.length === 0) return
+
+    // Quand le texte est tourné (vertical_text), le décalage `y` selon `vert` et le `dx`
+    // par tspan calculé ici se retrouvent perpendiculaires à la lecture après rotation,
+    // ce qui décale les lignes latéralement au lieu de les empiler. La position d'ancrage
+    // est déjà encodée dans label_pos_x/label_pos_y/label_anchor/label_baseline via
+    // getLabelPos ; on laisse le wrapper d3 gérer le `dy` em par tspan, et la rotation
+    // appliquée par verticalText() s'occupe du reste.
+    if (this._label_values.vertical_text) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
     const maxWidth = Math.max(...tspanWidths, 1)
@@ -905,23 +916,80 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
   protected override verticalText(tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
     if (!this._label_values.vertical_text) return undefined
 
-    const [label_pos_x, label_pos_y] = this.getLabelPos()
-    const dx = this._label_values.font_size / 2
-    const vert = this._label_values.vert
-    const textWidth = tspanWidths[0] || 0
+    // Pivot dynamique = pivot mobile : tourner autour de (label_pos_x, label_pos_y) couple
+    // l'extent pré-rotation (text-anchor sur X, baseline sur Y) avec la position post-rotation
+    // (axes échangés). Résultat : changer `vert` décale horizontalement et inversement.
+    //
+    // Solution : on neutralise l'ancrage du texte (x=0, y=0, anchor=start, baseline=text-before-edge)
+    // et on calcule la position cible de la COLONNE tournée à partir de horiz/vert/inside_*/*_shift,
+    // puis on applique `translate(...) rotate(-90)` (ordre SVG : rotate appliquée d'abord).
+    //
+    // Texte horizontal pré-rotation : box (0, 0)-(textWidth, colWidth) avec colWidth = lineCount * lineHeight.
+    // Après rotate(-90, 0, 0)   : box (0, -textWidth)-(colWidth, 0).
+    // Translate (tx, ty + textWidth) → box finale (tx, ty)-(tx + colWidth, ty + textWidth).
+    const lineHeight = this._label_values.font_size
+    const textWidth = tspanWidths.length ? Math.max(...tspanWidths) : 0
+    const numLines = Math.max(1, tspanWidths.length)
+    const colWidth = numLines * lineHeight
+    const colHeight = textWidth
 
-    let dy = 0
-    if (vert === 'top') {
-      dy -= textWidth
-    } else if (vert === 'middle') {
-      dy -= textWidth / 2
-    } else if (vert === 'bottom') {
-      dy += 0
+    const horiz = this._label_values.horiz
+    const vert = this._label_values.vert
+    const inside_h = this._label_values.inside_horiz
+    const inside_v = this._label_values.inside_vert
+    const horiz_shift = this._label_values.horiz_shift ?? 0
+    const vert_shift = this._label_values.vert_shift ?? 0
+
+    let tx: number
+    let ty: number
+
+    if (this._label_values.position_absolute) {
+      // En mode absolu, position_x/position_y donnaient le centre du texte horizontal.
+      // On garde la même sémantique : centre la colonne tournée sur ce point.
+      tx = (this._label_values.position_x ?? 0) - colWidth / 2
+      ty = (this._label_values.position_y ?? 0) - colHeight / 2
+    } else {
+      const shape_w = this.node.getShapeWidthToUse()
+      const shape_h = this.node.getShapeHeightToUse()
+      const margin_l = this._element.shape_margin_left
+      const margin_r = this._element.shape_margin_right
+      const margin_t = this._element.shape_margin_top
+      const margin_b = this._element.shape_margin_bottom
+
+      if (horiz === 'left') {
+        tx = inside_h ? horiz_shift : -colWidth - margin_l + horiz_shift
+      } else if (horiz === 'right') {
+        tx = inside_h ? shape_w - colWidth + horiz_shift : shape_w + margin_r + horiz_shift
+      } else {
+        tx = (shape_w - colWidth) / 2 + horiz_shift
+      }
+
+      if (vert === 'top') {
+        ty = inside_v ? vert_shift : -colHeight - margin_t + vert_shift
+      } else if (vert === 'bottom') {
+        ty = inside_v ? shape_h - colHeight + vert_shift : shape_h + margin_b + vert_shift
+      } else {
+        ty = (shape_h - colHeight) / 2 + vert_shift
+      }
     }
 
-    textElement.attr('transform', `translate(${-dx}, ${label_pos_x + dy}) rotate(-90, ${label_pos_x}, ${label_pos_y})`)
+    // Réancrage neutre : seul le `<text>` est concerné par x/anchor/baseline ;
+    // les `<rect>` de background ignorent ces attributs. Idempotent.
+    if ((textElement.node() as Element)?.tagName === 'text') {
+      textElement
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('text-anchor', 'start')
+        .attr('dominant-baseline', 'text-before-edge')
+      textElement.selectAll('tspan')
+        .attr('x', 0)
+        .attr('text-anchor', 'start')
+        .attr('dominant-baseline', 'text-before-edge')
+    }
 
-    return -dx
+    textElement.attr('transform', `translate(${tx}, ${ty + textWidth}) rotate(-90)`)
+
+    return 0
   }
 
   protected getIconSize() {
