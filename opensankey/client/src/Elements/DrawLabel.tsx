@@ -981,10 +981,35 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
         .attr('y', 0)
         .attr('text-anchor', 'start')
         .attr('dominant-baseline', 'text-before-edge')
-      textElement.selectAll('tspan')
-        .attr('x', 0)
-        .attr('text-anchor', 'start')
-        .attr('dominant-baseline', 'text-before-edge')
+
+      // Multiline + text_align : chaque tspan i devient une colonne. Pré-rotation, le
+      // tspan i s'étend de x ∈ [0, tspanWidth_i] et y ∈ [i*lh, (i+1)*lh]. Après rotate(-90)
+      // CCW, l'axe X pré devient axe -Y post (low x → low -y = haut écran, mais en SVG y
+      // augmente vers le bas, donc low x → BAS de la colonne tournée). Donc :
+      //   - text_align=left  → caractères flush à x=0 → flush au BAS de la colonne (= début
+      //                        de ligne en lecture bottom-to-top)
+      //   - text_align=right → caractères flush à x=textWidth → flush au HAUT
+      //   - text_align=middle → centrés
+      // dx par tspan = (textWidth - tspanWidth) selon text_align.
+      // d3-textwrap pose dx=-prev_line_width sur les tspans suivants pour ramener au début
+      // de ligne avant retour ; on reprend le contrôle du positionnement via `x` absolu, donc
+      // on reset dx=0 (sinon position effective = x + dx, toujours fausse).
+      const text_align = this._label_values.text_align
+      textElement.selectAll('tspan').nodes().forEach((node, i) => {
+        const tspanWidth = tspanWidths[i] ?? 0
+        const slack = textWidth - tspanWidth
+        let x = 0
+        if (text_align === 'middle') {
+          x = slack / 2
+        } else if (text_align === 'right') {
+          x = slack
+        }
+        d3.select(node as SVGTSpanElement)
+          .attr('x', x)
+          .attr('dx', 0)
+          .attr('text-anchor', 'start')
+          .attr('dominant-baseline', 'text-before-edge')
+      })
     }
 
     textElement.attr('transform', `translate(${tx}, ${ty + textWidth}) rotate(-90)`)
