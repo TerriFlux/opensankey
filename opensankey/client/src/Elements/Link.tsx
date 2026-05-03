@@ -1138,7 +1138,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get is_multi_link() { return this._is_multi_link }
 
   public get is_visible() {
-    return this._is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
+    return this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
   }
 
   /**
@@ -1152,7 +1152,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    */
   public is_visible_for_sizing_of(node: Class_NodeElement): boolean {
     if (this.is_visible) return true
-    if (!this._is_visible_ignoring_container_modes) return false
+    if (!this.is_visible_ignoring_container_modes) return false
     const s = this._source
     const t = this._target
     const my_dims = [...node.dimensions_as_parent, ...node.dimensions_as_child]
@@ -1166,10 +1166,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   /**
    * Identique à `is_visible` mais sans le filtre `is_allowed_by_container_modes`.
-   * Helper interne — la décision finale de sizing par nœud est faite par
-   * `is_visible_for_sizing_of(node)`.
+   * Exposé public pour les agrégats côté nœud (data_value / data_label) :
+   * dans un mode englobant qui masque TOUS les liens d'un endpoint
+   * (typiquement `in_children_out_children` côté parent), le filtre
+   * `is_visible` retourne 0 lien et la valeur du nœud disparaît — alors
+   * que l'utilisateur, lui, considère ces liens comme visibles.
    */
-  private get _is_visible_ignoring_container_modes(): boolean {
+  public get is_visible_ignoring_container_modes(): boolean {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }

@@ -1600,10 +1600,20 @@ export class Class_NodeElement extends Class_NodeBase {
     let input_val = 0
     let output_val = 0
 
+    // Filtre par défaut = visibilité réelle. Fallback (cf. data_label) :
+    // si tout est masqué par container_mode, on retombe sur la visibilité
+    // « intention utilisateur » — sinon la valeur d'un parent englobant en
+    // mode `in_children_out_children` (et autres cas symétriques) est nulle.
+    const visible = (l: Class_LinkElement) => l.is_visible
+    const visible_user = (l: Class_LinkElement) => l.is_visible_ignoring_container_modes
+    const has_any_visible =
+      this.input_links_list.some(visible) || this.output_links_list.some(visible)
+    const filt = has_any_visible ? visible : visible_user
+
     // Éviter les problèmes de float
     let max_digit_in = 0
     const link_in = this.input_links_list
-      .filter(link => link.is_visible)
+      .filter(filt)
       .map(link => {
         // For input links, what arrives at the node = target value (or source if no target set)
         const v = link.valueCurrentTarget ?? link.valueCurrent
@@ -1619,7 +1629,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let max_digit_out = 0
     const link_out = this.output_links_list
-      .filter(link => link.is_visible)
+      .filter(filt)
       .map(link => {
         const v = link.valueCurrent
         const decimal_digit = String(v).split('.')[1]
@@ -1638,10 +1648,21 @@ export class Class_NodeElement extends Class_NodeBase {
     let input_val = 0
     let output_val = 0
 
+    // Si TOUS les liens du nœud sont masqués (cas typique : parent englobant
+    // en mode `in_children_out_children`, dont les liens d'entrée et de
+    // sortie sont tous masqués par container_mode), on retombe sur la
+    // visibilité « intention utilisateur » — sinon le label resterait vide
+    // et l'utilisateur ne pourrait jamais afficher la valeur du nœud.
+    const visible = (l: Class_LinkElement) => l.is_visible
+    const visible_user = (l: Class_LinkElement) => l.is_visible_ignoring_container_modes
+    const has_any_visible =
+      this.input_links_list.some(visible) || this.output_links_list.some(visible)
+    const filt = has_any_visible ? visible : visible_user
+
     // Éviter les problèmes de float
     let max_digit_in = 0
     const link_in = this.input_links_list
-      .filter(link => link.is_visible)
+      .filter(filt)
       .map(link => {
         // For input links, what arrives at the node = target value (or source if no target set)
         const v = link.valueCurrentTarget ?? link.valueCurrent
@@ -1657,7 +1678,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
     let max_digit_out = 0
     const link_out = this.output_links_list
-      .filter(link => link.is_visible)
+      .filter(filt)
       .map(link => {
         // For output links, what leaves the node = source value
         const v = link.valueCurrent
