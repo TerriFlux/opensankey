@@ -226,6 +226,7 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
   const [, setCount] = useState(0)
   const [elements, setElements] = useState<Class_NodeBase[] | Class_LinkElement[]>([])
   const [prefix, setPrefix] = useState<'name_label' | 'value_label' | 'icon'>('name_label')
+  const [editorMode, setEditorMode] = useState<'node' | 'link' | null>(null)
   const editorRef = useRef<ForeignObjectEditorHandle>(null)
   const [is_raw, setIsRaw] = useState(false)
 
@@ -235,6 +236,18 @@ export const LabelRichTextEditor = ({ app_data }: { app_data: Class_ApplicationD
   ) => {
     setElements(_elements)
     setPrefix(_prefix)
+    if (_elements.length > 0) {
+      if (_elements[0] instanceof Class_NodeBase) setEditorMode('node')
+      else if (_elements[0] instanceof Class_LinkElement) setEditorMode('link')
+    }
+  }
+
+  app_data.menu_configuration.r_rich_text_editor_refresh.current = () => {
+    if (editorMode === 'node') {
+      setElements(app_data.drawing_area.selected_nodes_list)
+    } else if (editorMode === 'link') {
+      setElements(app_data.drawing_area.selected_links_list)
+    }
   }
 
   app_data.menu_configuration.r_setter_editor_content_fo_node.current = sEditorContentFoNode
