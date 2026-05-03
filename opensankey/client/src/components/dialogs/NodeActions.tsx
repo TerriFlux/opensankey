@@ -366,6 +366,10 @@ export class NodeActions {
       } else {
         dim.setContainerMode(target_mode)
         parent.tied_to_nodes = true
+        // Mirror leaving: attach this dim's children into the parent's
+        // geometric frame, so the cadre géométrique behaves like a ZDT
+        // (the frame "contains" its elements via _attached_node).
+        dim.children.forEach(child => parent.attachNodeToCont(child))
         this._restackEnglobingDim(dim)
       }
       // Propagation aux ancêtres englobants : indispensable quand la dim
@@ -728,7 +732,9 @@ export class NodeActions {
     this.drawing_area.draw()
   }
 
-  // Cadre géométrique sur le nœud lui-même : attache ses descendants et auto-resize.
+  // Cadre géométrique sur le nœud lui-même : attache les nœuds géométriquement
+  // à l'intérieur des bornes du nœud (mêmes règles que ZDT — cf.
+  // ContextZDTOSP.btn_select_node_inside), puis auto-resize.
   setTiedFrame = () => {
     const nodes = [...this.drawing_area.selected_nodes_list]
     const before = this._captureTiedFrameState(nodes)
@@ -736,9 +742,28 @@ export class NodeActions {
       () => {
         nodes.forEach(n => {
           n.tied_to_nodes = true
-          n.getListDescendantOfNode().forEach(d => {
-            if (d !== n) n.attachNodeToCont(d)
-          })
+          const frame_x = n.position_x
+          const frame_y = n.position_y
+          const frame_w = n.getShapeWidthToUse()
+          const frame_h = n.getShapeHeightToUse()
+          this.drawing_area.sankey.visible_nodes_list
+            .filter(other => {
+              if (other === n) return false
+              const horizontally_in = (
+                other.position_x >= frame_x &&
+                (other.position_x + other.getShapeWidthToUse()) <= (frame_x + frame_w)
+              )
+              const vertically_in = (
+                other.position_y >= frame_y &&
+                (other.position_y + other.getShapeHeightToUse()) <= (frame_y + frame_h)
+              )
+              return horizontally_in && vertically_in
+            })
+            .forEach(inside => {
+              inside.getListDescendantOfNode().forEach(d => { if (d !== n) n.attachNodeToCont(d) })
+              inside.getListAncestorOfNode().forEach(a => { if (a !== n) n.attachNodeToCont(a) })
+              n.attachNodeToCont(inside)
+            })
           n.computeSizeAndPositionFromAttachedNodes()
         })
         this.drawing_area.draw()
