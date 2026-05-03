@@ -230,6 +230,70 @@ export abstract class DrawLabelBase {
         const height = divNode.offsetHeight || divNode.scrollHeight
 
         if (width > 0 && height > 0) {
+          // Cas vertical_text : on neutralise l'ancrage et on calcule la box cible de
+          // la colonne tournée à partir de horiz/vert/inside_*/*_shift, puis transform
+          // translate+rotate(-90). Mêmes principes que NodeDrawLabelBase.verticalText
+          // mais pour foreignObject. La colonne tournée a colWidth=height, colHeight=width.
+          if (this._label_values.vertical_text) {
+            const colWidth = height
+            const colHeight = width
+            const shape_w = this._element.shape_min_width
+            const shape_h = this._element.shape_min_height
+            const margin_l = this._element.shape_margin_left
+            const margin_r = this._element.shape_margin_right
+            const margin_t = this._element.shape_margin_top
+            const margin_b = this._element.shape_margin_bottom
+            const horiz = this._label_values.horiz
+            const vert = this._label_values.vert
+            const inside_h = this._label_values.inside_horiz
+            const inside_v = this._label_values.inside_vert
+            const horiz_shift = this._label_values.horiz_shift ?? 0
+            const vert_shift = this._label_values.vert_shift ?? 0
+
+            let tx: number
+            let ty: number
+            if (this._label_values.position_absolute) {
+              tx = (this._label_values.position_x ?? 0) - colWidth / 2
+              ty = (this._label_values.position_y ?? 0) - colHeight / 2
+            } else {
+              if (horiz === 'left') {
+                tx = inside_h ? horiz_shift : -colWidth - margin_l + horiz_shift
+              } else if (horiz === 'right') {
+                tx = inside_h ? shape_w - colWidth + horiz_shift : shape_w + margin_r + horiz_shift
+              } else {
+                tx = (shape_w - colWidth) / 2 + horiz_shift
+              }
+              if (vert === 'top') {
+                ty = inside_v ? vert_shift : -colHeight - margin_t + vert_shift
+              } else if (vert === 'bottom') {
+                ty = inside_v ? shape_h - colHeight + vert_shift : shape_h + margin_b + vert_shift
+              } else {
+                ty = (shape_h - colHeight) / 2 + vert_shift
+              }
+            }
+
+            d3_selection_g_FO
+              .attr('width', width)
+              .attr('height', height)
+              .attr('x', 0)
+              .attr('y', 0)
+              .attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+
+            this.drawGenericBackground(
+              this.d3_selection!,
+              0,
+              0,
+              width,
+              height,
+              { className: 'element_fo_background' }
+            )
+            const bg = this.d3_selection?.select('.element_fo_background')
+            if (bg && !bg.empty()) {
+              bg.attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+            }
+            return
+          }
+
           let adjusted_x = label_pos_x
           if (label_anchor === 'middle') {
             adjusted_x = label_pos_x - width / 2

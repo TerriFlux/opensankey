@@ -632,6 +632,31 @@ const LabelContentComponent = ({
         </Box></>)
       }
 
+      {/* En rich_text le formatage (alignement, couleur) est géré par l'éditeur HTML, mais
+        vertical_text est une rotation globale du label → on l'expose ici aussi. */}
+      {displayMode === 'rich_text' && (
+        <Box layerStyle='options_4cols'>
+          <OverloadedButton
+            elements={elements}
+            config={BASE_LABEL_CONFIG}
+            attributePath={attributePath}
+            prefix={prefix}
+            attributeKey="vertical_text"
+            variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
+            onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
+          >
+            {<span style={{
+              display: 'inline-flex',
+              width: '1rem',
+              height: '1rem',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0
+            }}>{labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
+          </OverloadedButton>
+        </Box>
+      )}
+
       {/* Section ICON */}
       {displayMode === 'icon' && (
         <>
