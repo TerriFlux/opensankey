@@ -142,14 +142,32 @@ export class NodeDrawShape {
       .attr('transform', 'translate(' + -1* margin_left + ',' + -1*margin_top+ ')')
 
     // Apply common properties
-    this._node.d3_selection_g_shape?.selectAll('.node_shape')
+    // Quand le nœud agit comme cadre géométrique (tied_to_nodes), seule
+    // la bordure capte les clics : l'intérieur laisse passer les events
+    // vers les nœuds enfants placés en dessous, sinon le drag du parent
+    // attrape l'enfant qu'on visait. La bordure est volontairement
+    // épaissie au mouseover pour faciliter sa préhension.
+    const acts_as_frame = this._node.tied_to_nodes
+    const base_thickness = this._node.shape_border_thickness
+    const sel = this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
       .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
       .attr('fill', color)
       .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
-      .attr('stroke-width', this._node.shape_border_thickness)
+      .attr('stroke-width', base_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
+      .attr('pointer-events', acts_as_frame ? 'visibleStroke' : null)
+    if (acts_as_frame && sel) {
+      const hover_thickness = Math.max(base_thickness * 3, base_thickness + 6)
+      sel
+        .on('mouseenter.tied_frame', (event: Event) => {
+          (event.currentTarget as SVGElement).setAttribute('stroke-width', String(hover_thickness))
+        })
+        .on('mouseleave.tied_frame', (event: Event) => {
+          (event.currentTarget as SVGElement).setAttribute('stroke-width', String(base_thickness))
+        })
+    }
   }
 
   /**

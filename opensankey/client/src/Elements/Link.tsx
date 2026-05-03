@@ -1153,15 +1153,32 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public is_visible_for_sizing_of(node: Class_NodeElement): boolean {
     if (this.is_visible) return true
     if (!this.is_visible_ignoring_container_modes) return false
+    // Le lien est masqué par `is_allowed_by_container_modes` quelque part.
+    // On ne le compte dans le sizing de `node` QUE si `node` est lui-même
+    // un endpoint du lien ET un enfant d'une dim englobante dont le mode
+    // masque précisément ce côté du lien (sortie ou entrée de l'enfant).
+    // Dans tous les autres cas il existe des liens jumeaux visibles
+    // (côté enfants ou côté parent) qui portent déjà la valeur — les
+    // ajouter doublerait la taille (bug observé sur deux englobants
+    // i_c_o_c reliés enfant↔enfant et sur l'arête parent↔enfant masquée
+    // qui retombait sur les enfants externes via la dim sœur).
     const s = this._source
     const t = this._target
     const my_dims = [...node.dimensions_as_parent, ...node.dimensions_as_child]
-    return my_dims.some(d =>
-      !!d.container_mode && (
-        s === d.parent || t === d.parent ||
-        d.children.includes(s) || d.children.includes(t)
-      )
-    )
+    return my_dims.some(d => {
+      if (!d.container_mode) return false
+      if (!d.children.includes(node)) return false
+      const mode = d.container_mode
+      if (s === node) {
+        // sortie du nœud-enfant masquée par ce mode → à compter pour son sizing
+        return mode === 'in_children_out_parent' || mode === 'in_parent_out_parent'
+      }
+      if (t === node) {
+        // entrée du nœud-enfant masquée par ce mode → à compter pour son sizing
+        return mode === 'in_parent_out_children' || mode === 'in_parent_out_parent'
+      }
+      return false
+    })
   }
 
   /**
