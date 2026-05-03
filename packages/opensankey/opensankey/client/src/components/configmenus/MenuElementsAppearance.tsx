@@ -138,6 +138,12 @@ export const LabelDisplayModeSelector = ({
   refreshAll: () => void
   t: TFunction
 }) => {
+  const setModeSimpleText = () => {
+    labelValues.has_fo = false
+    display_mode_name_label.current = 'simple_text'
+    refreshAll()
+  }
+
   const setModeText = () => {
     // Initialize fo_content from name_label if empty
     if (!labelValues.fo_content) {
@@ -175,10 +181,19 @@ export const LabelDisplayModeSelector = ({
 
   if (prefix === 'name_label') {
     return (
-      <Box layerStyle='options_2cols'>
+      <Box layerStyle='options_3cols'>
+        <OSTooltip label={t('Menu.display_mode.tooltips.simple_text')}>
+          <Button
+            variant={display_mode_name_label.current === 'simple_text' ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+            onClick={setModeSimpleText}
+          >
+            {app_data.icon_library.icon_text_mode_simple}
+          </Button>
+        </OSTooltip>
         <OSTooltip label={t('Menu.display_mode.tooltips.rich_text')}>
           <Button
-            variant={(display_mode_name_label.current === 'simple_text' || display_mode_name_label.current === 'rich_text') ? 'menuconfigpanel_option_button_activated_left' : 'menuconfigpanel_option_button_left'}
+            variant={display_mode_name_label.current === 'rich_text' ? 'menuconfigpanel_option_button_activated_center' : 'menuconfigpanel_option_button_center'}
             sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
             onClick={setModeText}
           >
