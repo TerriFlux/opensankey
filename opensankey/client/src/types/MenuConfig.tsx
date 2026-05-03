@@ -463,6 +463,7 @@ export class Class_MenuConfig {
       elements: Class_NodeBase[] | Class_LinkElement[],
       prefix: 'name_label' | 'value_label' | 'icon'
     ) => void>(() => null)
+    this._r_rich_text_editor_refresh = useRef<() => void>(() => null)
     this._icon_selector_set_elements = useRef<(
       elements: Class_NodeBase[] | Class_LinkElement[],
       prefix: 'name_label' | 'value_label' | 'icon'
@@ -622,6 +623,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToNodesSelection',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_nodes_selection_updater.current()
+        _this._r_rich_text_editor_refresh.current()
       }
     )
   }
@@ -693,6 +695,7 @@ export class Class_MenuConfig {
    */
   public updateComponentRelatedToLinksSelection() {
     this._ref_to_menu_config_links_selection_updater.current()
+    this._r_rich_text_editor_refresh.current()
   }
   public updateComponentRelatedToContainerSelection() {
     this._ref_to_menu_config_containers_selection_updater.current()
@@ -1276,6 +1279,7 @@ export class Class_MenuConfig {
   public get ref_to_menu_config_node_icon_updater() { return this._ref_to_menu_config_node_icon_updater }
 
   public get r_editor_content_set_elements() { return this._r_editor_content_set_elements }
+  public get r_rich_text_editor_refresh() { return this._r_rich_text_editor_refresh }
   public get icon_selector_set_elements() { return this._icon_selector_set_elements }
 
   public get ref_to_menu_config_node_name_label_bg_updater(): MutableRefObject<(() => void)> { return this._ref_to_menu_config_node_name_label_bg_updater }
@@ -1338,6 +1342,7 @@ export class Class_MenuConfig {
     _: Class_NodeBase[] | Class_LinkElement[],
     prefix: 'name_label' | 'value_label' | 'icon'
   ) => void)>
+  private _r_rich_text_editor_refresh: MutableRefObject<() => void>
   private _icon_selector_set_elements: MutableRefObject<((
     _: Class_NodeBase[] | Class_LinkElement[],
     prefix: 'name_label' | 'value_label' | 'icon'
