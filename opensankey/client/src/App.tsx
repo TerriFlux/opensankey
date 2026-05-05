@@ -49,19 +49,6 @@ import { NodeModifierType } from './components/dialogs/NodeActions'
 import { ToolbarFilter } from './components/topmenus/Toolbar'
 import { FormatConfigStructure } from './components/dialogs/PersistenceProcessDialogConfigs'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      diagram?: string,
-      diagram_layout?: string,
-      diagram_layout_options?: string[],
-      header?: string,
-      publish?: boolean
-      logo?: string,
-      toolbar?: boolean
-    }
-  }
-
 export const OpenSankeyApp = ({
   initializeApplicationData,
   initializeAdditionalMenus,
@@ -98,16 +85,22 @@ export const OpenSankeyApp = ({
   // Initialize data
   const app_data = initializeApplicationData()
   app_data.createNewMenuConfiguration()
-  if (window.sankey && window.sankey.diagram) {
-    console.log(window.sankey.diagram)
-    app_data.file_name = window.sankey.diagram
-    loadUniversalJSON(window.sankey.diagram as string).then(data => {
-      app_data.fromJSON(data as Type_JSON, {},false)
-      app_data.file_name = window.sankey.diagram as string
-      if (window.sankey.diagram_layout) {
-        loadUniversalJSON(window.sankey.diagram_layout).then(layout_data => {
-          const layout_mode = app_data.expandLayoutMode(window.sankey.diagram_layout_options ?? app_data.transform_layout_all_attr)
-          console.log('layout mode', layout_mode)
+  const opts = app_data.publish_options
+  const applyPublishRecenter = () => {
+    if (app_data.is_static && opts.recenter) {
+      app_data.drawing_area.to_recenter = true
+      app_data.drawing_area.recenter()
+      app_data.drawing_area.to_recenter = false
+    }
+  }
+  if (opts.diagram) {
+    app_data.file_name = opts.diagram
+    loadUniversalJSON(opts.diagram).then(data => {
+      app_data.fromJSON(data as Type_JSON, {}, !opts.diagram_layout)
+      app_data.file_name = opts.diagram as string
+      if (opts.diagram_layout) {
+        loadUniversalJSON(opts.diagram_layout).then(layout_data => {
+          const layout_mode = app_data.expandLayoutMode(opts.diagram_layout_options ?? app_data.transform_layout_all_attr)
           const tmp_DA = app_data.createNewDrawingArea()
           tmp_DA.bypass_redraws = true
           app_data.loadDrawingAreaFromJSON(tmp_DA, layout_data as Type_JSON)
@@ -116,7 +109,10 @@ export const OpenSankeyApp = ({
           updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
           app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
           app_data.drawing_area.draw()
+          applyPublishRecenter()
         }).catch(e => console.log(e))
+      } else {
+        applyPublishRecenter()
       }
     }).catch(e => console.log(e))
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
@@ -154,10 +150,11 @@ export const OpenSankeyApp = ({
     d3.select('#draw_zoom').remove()
     app_data.menu_configuration.ref_toolbar.current()
     app_data.draw()
+    applyPublishRecenter()
     app_data.menu_configuration.ref_to_toolbar_bottom_updater.current()//update bottom toolbar to place it above footer
   }, [app_data.language])
 
-  const background_color = window.sankey?.publish ? 'white' : 'WhiteSmoke'
+  const background_color = app_data.is_static ? 'white' : 'WhiteSmoke'
 
   /*************************************************************************************************/
   return <TourProvider steps={app_data.steps}>
@@ -175,7 +172,7 @@ export const OpenSankeyApp = ({
           ).map((e, i) => <React.Fragment key={'dialog_key_' + i}>{e}</React.Fragment>)
         }
         {
-          !app_data.is_static ?
+          app_data.is_editable ?
             <ModalDocumentation
               app_data={app_data}
             /> :
@@ -184,7 +181,7 @@ export const OpenSankeyApp = ({
         <ModalWelcome
           app_data={app_data}
         />
-        {window.sankey?.toolbar !== false ?
+        {(window.sankey?.toolbar !== false) ?
           <ToolbarFilter
             app_data={app_data}
           /> : <></>}

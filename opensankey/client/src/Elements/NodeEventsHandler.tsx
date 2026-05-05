@@ -144,7 +144,7 @@ export class NodeEventsHandler {
   public handleSimpleLMBClick(event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>) {
     const drawing_area = this._node.drawing_area
   
-    if (drawing_area.application_data.is_static) {
+    if (!drawing_area.application_data.is_editable) {
       drawing_area.purgeSelection()
       return
     }

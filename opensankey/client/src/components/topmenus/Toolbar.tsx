@@ -13,15 +13,6 @@ import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 
 const width_fitler_drawer = 270
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      data_type: boolean
-      value_filter: boolean
-      data_type_intervals: boolean
-    }
-  }
-
 /**
  * Component that show filters for for link value and tag group (node,flow &  data)
  *
@@ -33,8 +24,8 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
     const { sankey } = app_data.drawing_area
 
     // Vérifier les filtres conditionnels de base
-    const has_data_type_filter = window.sankey?.data_type !== false
-    const has_value_filter = window.sankey?.value_filter !== false
+    const has_data_type_filter = app_data.publish_options.data_type
+    const has_value_filter = app_data.publish_options.value_filter
 
     // Vérifier UnitaryTagGroupFilter
     const view_taggs = Object.values(sankey.view_taggs_dict).filter(tagg => tagg.banner !== 'none')
@@ -117,10 +108,10 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         >
           <Box layerStyle='drawerFilterBox'>
             {
-              window.sankey?.data_type != false ? <FilterDataType app_data={app_data} /> : <></>
+              app_data.publish_options.data_type ? <FilterDataType app_data={app_data} /> : <></>
             }
             {
-              window.sankey?.value_filter != false ? <FlowValueFilter app_data={app_data} /> : <></>
+              app_data.publish_options.value_filter ? <FlowValueFilter app_data={app_data} /> : <></>
             }
             <UnitaryTagGroupFilter app_data={app_data} />
             <LevelTagFilter app_data={app_data} />
@@ -315,7 +306,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
       </Select>
     </Box>
     {/* Selector 2: Interval display */}
-    {has_intervals && window.sankey?.data_type_intervals !== false ?
+    {has_intervals && app_data.publish_options.data_type_intervals ?
       <Box layerStyle='menuconfig_grid'>
         <Box fontStyle='h3' >
           {t('Banner.indetermined_value')}

@@ -108,7 +108,7 @@ export abstract class Class_BaseElement {
         }
         this.eventSimpleLMBClick(event)
       })
-    if (!this.drawing_area.static) {
+    if (this.drawing_area.editable) {
 
       this.d3_selection?.on(
         'dblclick',

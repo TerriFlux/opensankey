@@ -214,121 +214,19 @@ export abstract class DrawLabelBase {
       .attr('x', label_pos_x)
       .attr('y', label_pos_y)
 
-    const width_attr = this._label_values.horiz == 'middle' && this._label_values.vert == 'middle' ? '100%' : 'max-content'
-    const max_width_style = Math.max(this._label_values.box_width, this._element.shape_min_width) + 'px'
+    // Largeur pilotée par l'utilisateur (box_width du menu), bornée par
+    // shape_min_width pour ne pas être plus étroit que l'élément. On la fixe
+    // sur le foreignObject AVANT d'attacher la div, sinon `width:100%` côté
+    // div tombe sur un containing block de 0 et le browser mesure le mot le
+    // plus long (ex. "PAP" ≈ 30px) — c'était la cause du blocage à width=30.
+    const width = Math.max(this._label_values.box_width, this._element.shape_min_width)
+    d3_selection_g_FO.attr('width', width)
+
     const d3_div_selection = d3_selection_g_FO.append('xhtml:div')
       .attr('class', 'ql-editor')
-      .style('width', width_attr)
-      .style('max-width', max_width_style)
+      .style('width', '100%')
       .html(fo_content)
 
-    const measureAndResize = () => {
-      const divNode = d3_div_selection?.node() as HTMLDivElement
-
-      if (divNode) {
-        const width = divNode.offsetWidth || divNode.scrollWidth
-        const height = divNode.offsetHeight || divNode.scrollHeight
-
-        if (width > 0 && height > 0) {
-          // Cas vertical_text : on neutralise l'ancrage et on calcule la box cible de
-          // la colonne tournée à partir de horiz/vert/inside_*/*_shift, puis transform
-          // translate+rotate(-90). Mêmes principes que NodeDrawLabelBase.verticalText
-          // mais pour foreignObject. La colonne tournée a colWidth=height, colHeight=width.
-          if (this._label_values.vertical_text) {
-            const colWidth = height
-            const colHeight = width
-            const shape_w = this._element.shape_min_width
-            const shape_h = this._element.shape_min_height
-            const margin_l = this._element.shape_margin_left
-            const margin_r = this._element.shape_margin_right
-            const margin_t = this._element.shape_margin_top
-            const margin_b = this._element.shape_margin_bottom
-            const horiz = this._label_values.horiz
-            const vert = this._label_values.vert
-            const inside_h = this._label_values.inside_horiz
-            const inside_v = this._label_values.inside_vert
-            const horiz_shift = this._label_values.horiz_shift ?? 0
-            const vert_shift = this._label_values.vert_shift ?? 0
-
-            let tx: number
-            let ty: number
-            if (this._label_values.position_absolute) {
-              tx = (this._label_values.position_x ?? 0) - colWidth / 2
-              ty = (this._label_values.position_y ?? 0) - colHeight / 2
-            } else {
-              if (horiz === 'left') {
-                tx = inside_h ? horiz_shift : -colWidth - margin_l + horiz_shift
-              } else if (horiz === 'right') {
-                tx = inside_h ? shape_w - colWidth + horiz_shift : shape_w + margin_r + horiz_shift
-              } else {
-                tx = (shape_w - colWidth) / 2 + horiz_shift
-              }
-              if (vert === 'top') {
-                ty = inside_v ? vert_shift : -colHeight - margin_t + vert_shift
-              } else if (vert === 'bottom') {
-                ty = inside_v ? shape_h - colHeight + vert_shift : shape_h + margin_b + vert_shift
-              } else {
-                ty = (shape_h - colHeight) / 2 + vert_shift
-              }
-            }
-
-            d3_selection_g_FO
-              .attr('width', width)
-              .attr('height', height)
-              .attr('x', 0)
-              .attr('y', 0)
-              .attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
-
-            this.drawGenericBackground(
-              this.d3_selection!,
-              0,
-              0,
-              width,
-              height,
-              { className: 'element_fo_background' }
-            )
-            const bg = this.d3_selection?.select('.element_fo_background')
-            if (bg && !bg.empty()) {
-              bg.attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
-            }
-            return
-          }
-
-          let adjusted_x = label_pos_x
-          if (label_anchor === 'middle') {
-            adjusted_x = label_pos_x - width / 2
-          } else if (label_anchor === 'end') {
-            adjusted_x = label_pos_x - width
-          }
-
-          let adjusted_y = label_pos_y
-          if (label_baseline === 'text-after-edge') {
-            adjusted_y = label_pos_y - height
-          } else if (label_baseline === 'middle') {
-            adjusted_y = label_pos_y - height / 2
-          }
-
-          d3_selection_g_FO
-            .attr('width', width)
-            .attr('height', height)
-            .attr('x', adjusted_x)
-            .attr('y', adjusted_y)
-
-          this.drawGenericBackground(
-            this.d3_selection!,
-            adjusted_x,
-            adjusted_y,
-            width,
-            height,
-            {
-              className: 'element_fo_background'
-            }
-          )
-        } /*else {
-          requestAnimationFrame(measureAndResize)
-        }*/
-      }
-    }
     if (this._label_values.inside_vert && this._label_values.inside_horiz) {
       d3_selection_g_FO
         .attr('width', this._element.shape_min_width)
@@ -337,15 +235,107 @@ export abstract class DrawLabelBase {
         .attr('y', 0)
       d3_div_selection.attr('width', this._element.shape_min_width)
     } else {
-      requestAnimationFrame(measureAndResize)
+      // Mesure synchrone : lire `offsetHeight` force un layout immédiat,
+      // pas de requestAnimationFrame ni de race au redraw.
+      const divNode = d3_div_selection.node() as HTMLDivElement
+      const height = divNode.offsetHeight || divNode.scrollHeight
+
+      if (this._label_values.vertical_text) {
+        // Colonne tournée : colWidth=height, colHeight=width (mêmes principes
+        // que NodeDrawLabelBase.verticalText, mais pour foreignObject).
+        const colWidth = height
+        const colHeight = width
+        const shape_w = this._element.shape_min_width
+        const shape_h = this._element.shape_min_height
+        const margin_l = this._element.shape_margin_left
+        const margin_r = this._element.shape_margin_right
+        const margin_t = this._element.shape_margin_top
+        const margin_b = this._element.shape_margin_bottom
+        const horiz = this._label_values.horiz
+        const vert = this._label_values.vert
+        const inside_h = this._label_values.inside_horiz
+        const inside_v = this._label_values.inside_vert
+        const horiz_shift = this._label_values.horiz_shift ?? 0
+        const vert_shift = this._label_values.vert_shift ?? 0
+
+        let tx: number
+        let ty: number
+        if (this._label_values.position_absolute) {
+          tx = (this._label_values.position_x ?? 0) - colWidth / 2
+          ty = (this._label_values.position_y ?? 0) - colHeight / 2
+        } else {
+          if (horiz === 'left') {
+            tx = inside_h ? horiz_shift : -colWidth - margin_l + horiz_shift
+          } else if (horiz === 'right') {
+            tx = inside_h ? shape_w - colWidth + horiz_shift : shape_w + margin_r + horiz_shift
+          } else {
+            tx = (shape_w - colWidth) / 2 + horiz_shift
+          }
+          if (vert === 'top') {
+            ty = inside_v ? vert_shift : -colHeight - margin_t + vert_shift
+          } else if (vert === 'bottom') {
+            ty = inside_v ? shape_h - colHeight + vert_shift : shape_h + margin_b + vert_shift
+          } else {
+            ty = (shape_h - colHeight) / 2 + vert_shift
+          }
+        }
+
+        d3_selection_g_FO
+          .attr('width', width)
+          .attr('height', height)
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+
+        this.drawGenericBackground(
+          this.d3_selection!,
+          0,
+          0,
+          width,
+          height,
+          { className: 'element_fo_background' }
+        )
+        const bg = this.d3_selection?.select('.element_fo_background')
+        if (bg && !bg.empty()) {
+          bg.attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+        }
+      } else {
+        let adjusted_x = label_pos_x
+        if (label_anchor === 'middle') {
+          adjusted_x = label_pos_x - width / 2
+        } else if (label_anchor === 'end') {
+          adjusted_x = label_pos_x - width
+        }
+
+        let adjusted_y = label_pos_y
+        if (label_baseline === 'text-after-edge') {
+          adjusted_y = label_pos_y - height
+        } else if (label_baseline === 'middle') {
+          adjusted_y = label_pos_y - height / 2
+        }
+
+        d3_selection_g_FO
+          .attr('width', width)
+          .attr('height', height)
+          .attr('x', adjusted_x)
+          .attr('y', adjusted_y)
+
+        this.drawGenericBackground(
+          this.d3_selection!,
+          adjusted_x,
+          adjusted_y,
+          width,
+          height,
+          { className: 'element_fo_background' }
+        )
+      }
     }
 
     if (this._element.name_label_has_fo && this._element.name_label_inside_horiz && this._element.name_label_inside_vert) {
       return
     }
 
-    const isStatic = this._element.drawing_area?.static
-    if (isStatic) {
+    if (!this._element.drawing_area?.editable) {
       return
     }
     d3_selection_g_FO.call(d3.drag<SVGForeignObjectElement, unknown>()
@@ -420,8 +410,7 @@ export abstract class DrawLabelBase {
       return
     }
 
-    const isStatic = this._element.drawing_area?.static
-    if (isStatic) {
+    if (!this._element.drawing_area?.editable) {
       return
     }
 
@@ -485,8 +474,7 @@ export abstract class DrawLabelBase {
       .attr('d', this._element.sankey.getIconFromCatalog(this._label_values.icon_name))
 
     // ✅ Appliquer le drag générique unifié
-    const isStatic = this._element.drawing_area?.static
-    if (!isStatic) {
+    if (this._element.drawing_area?.editable) {
       this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
         .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area?.isInSelectionMode())
         .on('start', ev => this.dragGenericStart(ev))
@@ -688,7 +676,7 @@ export abstract class DrawLabelBase {
     box_width: number,
     box_height: number = 30
   ) {
-    if (this._element.drawing_area.static) return
+    if (!this._element.drawing_area.editable) return
 
     d3_selection?.append('foreignObject')
       .classed(this.prefix, true)
@@ -729,7 +717,7 @@ export abstract class DrawLabelBase {
   protected attachDoubleClickEdit(
     textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
-    if (this._element.drawing_area.static) return
+    if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
       .on('dblclick', (evt: MouseEvent) => {
         evt.stopPropagation()
@@ -753,7 +741,7 @@ export abstract class DrawLabelBase {
   protected applyTextDragHandlers(
     _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
-    if (!(this._element.drawing_area?.static)) {
+    if (this._element.drawing_area?.editable) {
       this.d3_selection?.call(d3.drag<SVGGElement, unknown>()
         .filter(evt => (evt.which == 1) && evt.altKey && (this._element.drawing_area?.isInSelectionMode()))
         .on('start', ev => this.dragGenericStart(ev))
@@ -1690,7 +1678,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       this.updateTextPathOffset()
 
       // ✅ Drag spécial pour textPath
-      if (!this._element.drawing_area.static) {
+      if (this._element.drawing_area.editable) {
         d3_textpath_selection.call(d3.drag<SVGTextPathElement, unknown>()
           .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area.isInSelectionMode())
           .on('start', ev => this.dragTextPathStart(ev))
@@ -1710,7 +1698,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   ): void {
     if (this._specific_label_values.on_path) return
 
-    if (!this._element.drawing_area.static) {
+    if (this._element.drawing_area.editable) {
       textElement.call(d3.drag<SVGTextElement, unknown>()
         .filter(evt => (evt.which == 1) && evt.altKey && this._element.drawing_area.isInSelectionMode())
         .on('start', ev => this.dragGenericStart(ev))

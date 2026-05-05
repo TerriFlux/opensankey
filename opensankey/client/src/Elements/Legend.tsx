@@ -221,7 +221,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   protected override eventMaintainedClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (this.drawing_area.static) return
+    if (!this.drawing_area.editable) return
     // Apply parent behavior first
     super.eventMaintainedClick(event)
     // Get related drawing area

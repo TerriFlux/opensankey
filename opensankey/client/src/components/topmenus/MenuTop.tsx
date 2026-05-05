@@ -73,45 +73,24 @@ import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 /*************************************************************************************************/
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish?: boolean
-      header?: string
-      sous_filieres: Record<string, string>
-      diagram?: string
-      toolbar?: boolean
-      data_type?: boolean
-      // Indexer pour accéder aux diagrammes dynamiquement
-      [key: string]: string | boolean | Record<string, string> | undefined
-    }
-  }
-
 export const setDiagram = (
   diagram_url: string,
   app_data: Class_ApplicationData
 ) => {
-  const diagrams = window.sankey.sous_filieres
-  // ✅ Récupérer le data_type depuis le diagramme spécifique
-  //const diagram_key = Object.keys(diagrams).find(key => diagrams[key] === diagram_url)
-  console.log('diagram_url: ' + diagram_url)
-  console.log('window.sankey keys:', Object.keys(window.sankey))
-  if (window.sankey[diagram_url]) {
-    const diagram_config = window.sankey[diagram_url]
-    console.log('diagram_config: ' + diagram_config)
+  if (!window.sankey) return
+  const sankey = window.sankey
+  const diagrams = sankey.sous_filieres
+  if (!diagrams) return
+  if (sankey[diagram_url]) {
+    const diagram_config = sankey[diagram_url]
     if (diagram_config && typeof diagram_config === 'object' && 'data_type' in diagram_config) {
-      const data_type_value = diagram_config.data_type
-      console.log('diagram_url: ' + diagram_url)
-      console.log('data_type: ' + data_type_value)
-
-      // Appliquer le data_type au sankey global
-      //@ts-expect-error xxx
-      window.sankey.data_type = data_type_value
+      const data_type_value = (diagram_config as { data_type?: boolean }).data_type
+      sankey.data_type = data_type_value
     }
   }
   loadUniversalJSON(diagrams[diagram_url] + '.gz').then(data => {
     app_data.fromJSON(data as Type_JSON)
-    app_data.file_name = window.sankey.diagram as string
+    app_data.file_name = sankey.diagram as string
   }).catch(e => console.log(e))
   app_data.menu_configuration.ref_toolbar.current()
 }
@@ -1039,7 +1018,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         </Box>}
       {
         // When application is static, search for a header (title of the project)
-        new_data.is_static && window.sankey.header ?
+        new_data.is_static && new_data.publish_options.header ?
           <Box
             margin='0.25rem'
             alignSelf='center'
@@ -1049,7 +1028,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
               fontWeight='bold'
               fontSize='24px'
             >
-              {parse(window.sankey.header)}
+              {parse(new_data.publish_options.header)}
             </Text>
           </Box> :
           <></>}
