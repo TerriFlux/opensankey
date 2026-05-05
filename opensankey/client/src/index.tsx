@@ -57,15 +57,6 @@ import { loadUniversalJSON } from './Persistence/UniversalJSONCompression'
 import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG } from './components/dialogs/PersistenceProcessDialogConfigs'
 
 // CONSTANTS =========================================================================================
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish?: boolean
-      diagram?: string
-      diagram_layout?: string
-    }
-  }
-
 // Link with React
 window.React = React
 const browserLang = navigator.language.slice(0, 2)
@@ -85,24 +76,23 @@ const App: FC = () => {
       const newDataApp = new Class_ApplicationData(!!window.sankey?.publish)
       newDataApp.t = translation.t
       newDataApp.i18n = translation.i18n
-      if (window.sankey && window.sankey.diagram) {
+      const opts = newDataApp.publish_options
+      if (opts.diagram) {
         setIsLoading(true)
 
-        // Afficher le toast d'attente
         newDataApp.sendWaitingToast(() => {
           console.log('Chargement du diagramme en cours...')
         })
 
         try {
-          console.log(window.sankey.diagram)
-          newDataApp.file_name = window.sankey.diagram
+          newDataApp.file_name = opts.diagram
 
-          const data = await loadUniversalJSON(window.sankey.diagram as string)
+          const data = await loadUniversalJSON(opts.diagram)
           newDataApp.fromJSON(data as Type_JSON)
-          newDataApp.file_name = window.sankey.diagram as string
+          newDataApp.file_name = opts.diagram
 
-          if (window.sankey.diagram_layout) {
-            const layout_data = await loadUniversalJSON(window.sankey.diagram_layout)
+          if (opts.diagram_layout) {
+            const layout_data = await loadUniversalJSON(opts.diagram_layout)
             newDataApp.updateFromJSON(layout_data as Type_JSON)
           }
 
@@ -179,7 +169,7 @@ const App: FC = () => {
       ZDD_MENU_CONFIG={ZDD_MENU_CONFIG}
       createLinkModifier={createLinkModifier}
       LINK_MENU_CONFIG={LINK_MENU_CONFIG}
-      NODE_MENU_CONFIG={dataApp.is_static ? STATIC_NODE_MENU_CONFIG :NODE_MENU_CONFIG}
+      NODE_MENU_CONFIG={dataApp.is_editable ? NODE_MENU_CONFIG : STATIC_NODE_MENU_CONFIG}
       createNodeModifier={(app_data) => createNodeModifier(app_data)}
       input_config={INPUT_ATTRIBUTES_CONFIG}
       output_config={OUTPUT_ATTRIBUTES_CONFIG}

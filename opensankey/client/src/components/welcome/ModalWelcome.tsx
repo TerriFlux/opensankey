@@ -53,8 +53,6 @@ export const ModalWelcome = ({ app_data, external_pagination, external_content }
   //   <p><b>{t('Menu.rcc_F9_bold')}</b>{t('Menu.rcc_F9')}</p>
   // </>
 
-  //external_content['rc'] = is_static ? <></> : external_content['rc']
-
   const content = <Modal
     isOpen={show_welcome}
     onClose={() => set_show_welcome(false)}
@@ -215,7 +213,7 @@ interface Resources {
 }
 
 export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
-  const { t, static_path, is_static } = app_data
+  const { t, static_path, is_editable } = app_data
   const [resources, setResources] = useState<Resources | null>(null)
   // const welcome_text = (app_data.options?.welcome_text as string) ?? ''
   // const has_welcome_text = welcome_text.length > 0
@@ -265,7 +263,7 @@ export const ModalWelcomeContent = (app_data: Class_ApplicationData) => {
   // }
 
   // Shortcuts / Essentials
-  if (!is_static) {
+  if (is_editable) {
     page_links['rc'] = <>{t('welcome.breadcrumbs.rc')}</>
     page_content['rc'] = buildShortcutsContent(app_data)
   }

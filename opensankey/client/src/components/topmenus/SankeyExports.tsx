@@ -58,8 +58,6 @@ type FType_ModalResolutionPDF = (
 
 // COMPONENTS ===========================================================================
 
-export declare const window: Window & typeof globalThis
-
 /**
  * Create modal to update PNG resolution for export
  * @param {*} app_data

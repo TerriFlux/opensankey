@@ -36,14 +36,6 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_BaseShape } from '../Elements/Element'
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish: boolean
-      logo: string
-    }
-  }
-
 export const default_file_name = 'Diagramme de Sankey'
 
 export const default_toast_duration: number = 1000 // 1sec

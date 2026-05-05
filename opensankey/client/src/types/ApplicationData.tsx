@@ -37,6 +37,7 @@ import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
 import { default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
 import { Class_DrawingArea } from './DrawingArea'
@@ -68,14 +69,6 @@ export type MenuColorPickerProps = {
   isDisabled?: boolean,
   textDisabled?: string
 }
-
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish: boolean
-      logo: string
-    }
-  }
 
 initializeTooltipSystem()
 
@@ -224,6 +217,12 @@ function convertForeignObjectToSvgText(
   textElement.setAttribute('fill', divStyle.color || '#000')
   textElement.setAttribute('text-anchor', rootPos.anchor)
 
+  // Propage le transform du <foreignObject> (typiquement translate+rotate(-90)
+  // posé pour vertical_text) sur le <text> de remplacement, sinon l'export PNG
+  // perd la rotation et le label apparaît horizontal au mauvais endroit.
+  const foTransform = foNode.getAttribute('transform')
+  if (foTransform) textElement.setAttribute('transform', foTransform)
+
   lines.forEach((spans, lineIdx) => {
     const lineAlign = spans[0]?.align || rootAlign
     const pos = anchorForAlign(lineAlign)
@@ -270,12 +269,17 @@ export class Class_ApplicationData {
   protected _has_sankey_plus: boolean = false
   protected _has_sankey_afm: boolean = false
 
+  public readonly publish_options: PublishOptions = getPublishOptions()
+
   public get has_sankey_dev() { return this._has_sankey_dev }
   public set has_sankey_dev(_) { this._has_sankey_dev = _ }
   public get has_sankey_plus() { return this._has_sankey_plus || this.is_static }
   public set has_sankey_plus(_) { this._has_sankey_plus = _ }
   public get has_sankey_afm() { return this._has_sankey_afm || this.is_static }
   public set has_sankey_afm(_) { this._has_sankey_afm = _ }
+
+  /** True hors mode publish, ou en publish si l'option `editable` est activée. */
+  public get is_editable(): boolean { return !this.is_static || this.publish_options.editable }
 
   public createNewMenuConfiguration(): Class_MenuConfig {
     this._toast = useToast()
@@ -1618,8 +1622,8 @@ export class Class_ApplicationData {
   public get url_prefix(): string { return this._url_prefix }
 
   public get logo(): string {
-    if (this.is_static && window.sankey && window.sankey.logo) {
-      return window.sankey.logo
+    if (this.is_static && this.publish_options.logo) {
+      return this.publish_options.logo
     }
     return this._logo_opensankey
   }

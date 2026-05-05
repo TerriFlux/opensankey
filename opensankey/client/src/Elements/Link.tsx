@@ -937,7 +937,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       super.eventSimpleLMBClick(event)
       // Get related drawing area
       const drawing_area = this.drawing_area
-      if (drawing_area.application_data.is_static) {
+      if (!drawing_area.application_data.is_editable) {
         drawing_area.purgeSelection()
         return
       }
@@ -976,7 +976,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected eventSimpleRMBClick(
     event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
-    if (this.drawing_area.application_data.is_static) {
+    if (!this.drawing_area.application_data.is_editable) {
       return
     }
     // Apply parent behavior first

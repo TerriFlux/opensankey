@@ -58,8 +58,6 @@ import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 // COMPONENTS ===========================================================================
 
-export declare const window: Window & typeof globalThis
-
 /**
  * Create modal to display tutorials files
  *
