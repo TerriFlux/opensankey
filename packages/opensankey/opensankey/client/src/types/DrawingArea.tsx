@@ -69,15 +69,6 @@ import {
 } from '../Persistence/SankeyPersistence'
 
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish: boolean
-      recenter: boolean
-      topbar: boolean
-      embedded: boolean
-    }
-  }
 
 function sortElementByIdOrder(
   el_a: Class_NodeBase | Class_LinkElement,
@@ -109,6 +100,9 @@ export class Class_DrawingArea {
   public static: boolean = !!window.sankey?.publish
   public to_recenter = false
   public is_unitary = false
+
+  /** True quand l'utilisateur peut interagir (édition normale, ou publish + editable). */
+  public get editable(): boolean { return this.application_data.is_editable }
 
   public drawing_link = false
   public bypass_redraws: boolean = false
@@ -388,7 +382,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   protected _initDraw() {
-    const height = window.sankey?.embedded ? '100%' : window.innerHeight
+    const height = this.application_data.publish_options.embedded ? '100%' : window.innerHeight
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
@@ -441,7 +435,7 @@ export class Class_DrawingArea {
     // Clean if needed
     this.d3_selection_grid?.selectAll('.line').remove()
     // Draw only if asked OR outside publishing mode
-    if (this.grid_visible && !this.static) {
+    if (this.grid_visible && this.editable) {
       // Draw horizontal lines
       const number_of_horizontal_lines = Math.min(200, this._zoom_height / this.grid_size)
       for (let row = 0; row < number_of_horizontal_lines; row++) {
@@ -1156,27 +1150,6 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Function that fit DA in screen, it determine if it have to fit it vertically or horizontally by processing ratio
-   *
-   * Function generally use at opening of file to automatically fit sankey on screen
-   *
-   * @memberof Class_DrawingArea
-   */
-  // public areaAutoFit(recenter: boolean = false) {
-  //   if (this.application_data.is_static) this.areaFitVertically(recenter)
-  //   // Ratios
-  //   const ratio_v = this._height / this.window_fitting_height // get ratio of sankey height / screen height
-  //   const ratio_h = this._width / this.window_fitting_width // get ratio of sankey width / screen width
-  //   // Fit from ratio
-  //   if (ratio_h > ratio_v) { // if sankey is wider than taller then fit horizontally
-  //     this.areaFitHorizontally(recenter)
-  //   }
-  //   else if (ratio_h <= ratio_v) {// if sankey is taller than wider then fit vertically
-  //     this.areaFitVertically(recenter)
-  //   }
-  // }
-
-  /**
    * Swaps overlaps position of element on DA
    *
    * @param {number} idx_src
@@ -1341,7 +1314,7 @@ export class Class_DrawingArea {
    * @param {*} drawing_area
    */
   protected drawBackground() {
-    const height = window.sankey?.embedded ? '100%' : this.height
+    const height = this.application_data.publish_options.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
     // Draw background
@@ -1354,7 +1327,7 @@ export class Class_DrawingArea {
       .attr(
         'transform',
         'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
-    if (!this.static) {
+    if (this.editable) {
       this.d3_selection_bg?.select('rect').style('stroke-width', 5)
       this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
     }
@@ -1407,7 +1380,7 @@ export class Class_DrawingArea {
           this.eventSimpleLMBClick(event))
     }
     if (
-      !this.static &&
+      this.editable &&
       (this.d3_selection !== null)
     ) {
 
@@ -1468,7 +1441,7 @@ export class Class_DrawingArea {
     this.closeAllContextMenus()
     const tooltipManager = TooltipEventManager.getInstance()
     tooltipManager.closeTooltip()
-    if (this.static) this.purgeSelection()
+    if (!this.editable) this.purgeSelection()
   }
 
   /**
@@ -2404,7 +2377,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   public getNavBarHeight() {
-    if (this.static && window.sankey?.topbar == false) {
+    if (this.static && !this.application_data.publish_options.topbar) {
       return 0
     }
     return (document.getElementsByClassName('TopMenu')[0]?.getBoundingClientRect().height) ?? 5 * parseFloat(getComputedStyle(document.documentElement).fontSize)

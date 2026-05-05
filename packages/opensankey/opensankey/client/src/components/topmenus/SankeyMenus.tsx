@@ -61,20 +61,6 @@ import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
-export declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      header?: string
-      help: { [key: string]: string }
-      excel: string
-      structure: boolean
-      advanced: boolean
-      footer: boolean
-      toolbar: boolean
-      topbar: boolean
-    }
-  }
-
 export const menu_config_width = 20
 
 /**
@@ -165,7 +151,7 @@ export const SankeyMenu = (
   return (
     <>
       {/* Top Navbar with navigation and edition elements */}
-      {((!app_data.is_static) || (window.sankey && window.sankey.topbar != false)) ?
+      {(!app_data.is_static || app_data.publish_options.topbar) ?
         <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
 
       {/* Bottom Navbar with some more info */}
@@ -178,10 +164,7 @@ export const SankeyMenu = (
           layerStyle='menubottom_layout_style'
         >
           <DrawerSequenceDataTagg new_data={app_data} />
-          {(
-            (!app_data.is_static) ||
-            (window.sankey && window.sankey.footer)
-          ) ? <Box
+          {(!app_data.is_static || app_data.publish_options.footer) ? <Box
               display='grid'
               gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
               margin='0.2rem'
@@ -224,7 +207,7 @@ export const SankeyMenu = (
       }
 
       {
-        (!app_data.is_static) ? <>
+        app_data.is_editable ? <>
           {sankey_file_name}
           <Drawer
             blockScrollOnMount={false}
@@ -263,7 +246,7 @@ export const SankeyMenu = (
           <></>}
 
 
-      {!(app_data.is_static ? app_data.is_static : false) ? (
+      {app_data.is_editable ? (
         <OSTooltip
           placement='left'
           label={t('Banner.open_configuration_menu')}
@@ -285,7 +268,7 @@ export const SankeyMenu = (
       ) : (<></>)}
 
 
-      {((!app_data.is_static) || (window.sankey && window.sankey.toolbar)) ? <ToolBarBottom
+      {(!app_data.is_static || app_data.publish_options.toolbar) ? <ToolBarBottom
         new_data={app_data}
       /> : <></>}
 
