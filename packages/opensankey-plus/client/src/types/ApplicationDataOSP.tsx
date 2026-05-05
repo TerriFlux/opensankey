@@ -11,13 +11,6 @@ import { convert_data_plus_legacy } from '../components/UtilsOSP'
 import { updateFrom } from '../deps/OpenSankey/Algorithms/UpdateFrom'
 import { isTrialActive } from '../utils/trial'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      logo: string
-    }
-  }
-
 /**
  * Override some Class_ApplicationData behaviors for OpenSankey+
  * @export

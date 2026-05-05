@@ -22,19 +22,12 @@ import { Class_ApplicationDataOSP } from './types/ApplicationDataOSP'
 import { OSP_INPUT_ATTRIBUTES_CONFIG, OSP_OUTPUT_ATTRIBUTES_CONFIG } from './components/UniversalConverterDialogConfig'
 
 // OpenSankeyApp for OpenSankey+ ========================================================================
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish?: boolean
-      diagram?: string
-    }
-  }
 
 export const OpenSankeyPlusApp = <ChakraProvider theme={opensankey_theme}>
   <OpenSankeyApp
     //@ts-expect-error xxx
     initializeApplicationData={() => {
-      const app_data = new Class_ApplicationDataOSP(window.sankey.publish!)
+      const app_data = new Class_ApplicationDataOSP(!!window.sankey?.publish)
       // Link keyboard listener with app key down detection
       document.onkeydown = app_data.keyboardEventListener(app_data)      
     }}

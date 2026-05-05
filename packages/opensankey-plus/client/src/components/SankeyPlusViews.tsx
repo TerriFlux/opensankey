@@ -159,6 +159,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const has_view_before = app_data.has_view_before
   const has_view_after = app_data.has_view_after
   const is_static = app_data.is_static
+  const is_editable = app_data.is_editable
 
   // Button to create a view ------------------------------------------------------------
 
@@ -518,7 +519,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     }}
   />
 
-  const style: React.CSSProperties = is_static ? {} : {
+  const style: React.CSSProperties = is_editable ? {
     position: 'fixed',
     top: drawing_area_plus.getNavBarHeight() + drawing_area_plus.fit_margin,
     zIndex: '1',
@@ -528,7 +529,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     width: 'fit-content',
     left: '50%',
     transform: 'translate(-50%)'
-  }
+  } : {}
 
   // ButtonsGrooup doesn't have variant so we set style here
   const buttonGroupView = <ButtonGroup
@@ -536,14 +537,14 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     style={style}
   >
     {/* Load + Save  */}
-    {is_static || !app_data.has_sankey_plus ? <></> : input_loader_json_catalog}
-    {is_static || !app_data.has_sankey_plus ? <></> : create_data_catalog}
+    {is_editable && app_data.has_sankey_plus ? input_loader_json_catalog : <></>}
+    {is_editable && app_data.has_sankey_plus ? create_data_catalog : <></>}
 
     {/* Return to Sankey master button */}
-    {is_static ? <></> : button_to_return_to_master}
+    {is_editable ? button_to_return_to_master : <></>}
 
     {/* Create, switch between or delete views */}
-    {is_static || !app_data.has_sankey_plus ? <></> : button_to_create_view}
+    {is_editable && app_data.has_sankey_plus ? button_to_create_view : <></>}
     {button_to_prev_view}
     {button_to_next_view}
     <Box
@@ -556,20 +557,20 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
     </Box>
     {
-      app_data.is_static || !app_data.has_sankey_plus ?
-        <></> :
+      is_editable && app_data.has_sankey_plus ?
         <>
           {button_to_delete_actual_view}
           {button_to_show_view_attr_transfert_modal}
           {button_to_show_modal_create_unitary_view}
-        </>
+        </> :
+        <></>
     }
-    {app_data.is_static ? <></> : <Button
+    {is_editable ? <Button
       variant='button_collapse_banner_view'
       size='sizeMenuTopButton'
       onClick={onToggle}>
       {isOpen ? icon_collapse_up : icon_collapse_down}
-    </Button>}
+    </Button> : <></>}
   </ButtonGroup>
 
   const buttonShowBanner = <OSTooltip placement='bottom' label={''}>
@@ -595,8 +596,8 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
       </Box>
     </Button>
   </OSTooltip>
-  if (app_data.is_static && app_data.has_views) return <>{buttonGroupView}</>
-  else if (!app_data.is_static) return <>
+  if (!is_editable && app_data.has_views) return <>{buttonGroupView}</>
+  else if (is_editable) return <>
     {buttonShowBanner}
     <Fade in={isOpen} style={{ display: isOpen ? 'unset' : 'none' }} >
       {buttonGroupView}
