@@ -13,14 +13,6 @@ import { loadUniversalJSON } from './deps/OpenSankey+/deps/OpenSankey/Persistenc
 import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { useTranslation } from 'react-i18next'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      publish?: boolean
-      diagram?: string
-    }
-  }
-
 window.React = React
 const browserLang = navigator.language.slice(0, 2)
 const supportedLangs = ['fr', 'en', 'es', 'de', 'it']
@@ -41,21 +33,20 @@ const App: FC = () => {
       const newDataApp = new Class_ApplicationDataSA(!!window.sankey?.publish)
       newDataApp.t = translation.t
       newDataApp.i18n = translation.i18n
-      if (window.sankey && window.sankey.diagram) {
+      const opts = newDataApp.publish_options
+      if (opts.diagram) {
         setIsLoading(true)
 
-        // Afficher le toast d'attente
         newDataApp.sendWaitingToast(() => {
           console.log('Chargement du diagramme en cours...')
         })
 
         try {
-          console.log(window.sankey.diagram)
-          newDataApp.file_name = window.sankey.diagram
+          newDataApp.file_name = opts.diagram
 
-          const data = await loadUniversalJSON(window.sankey.diagram as string)
+          const data = await loadUniversalJSON(opts.diagram)
           newDataApp.fromJSON(data as Type_JSON)
-          newDataApp.file_name = window.sankey.diagram as string
+          newDataApp.file_name = opts.diagram
 
           setDataApp(newDataApp)
         } catch (error) {

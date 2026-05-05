@@ -224,7 +224,7 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
       ZDD_MENU_CONFIG={createZDDMenuConfigPlus()}
       createLinkModifier={(app_data) => createLinkModifier(app_data as unknown as Class_ApplicationData)}
       LINK_MENU_CONFIG={createLinkMenuConfigPlus()}
-      NODE_MENU_CONFIG={new_data_app.is_static ? createStaticNodeMenuConfigPlus() : createNodeMenuConfigPlus()}
+      NODE_MENU_CONFIG={new_data_app.is_editable ? createNodeMenuConfigPlus() : createStaticNodeMenuConfigPlus()}
       createNodeModifier={(app_data) => createNodeModifierPlus(app_data as Class_ApplicationDataSA)}
       input_config={OSP_INPUT_ATTRIBUTES_CONFIG}
       output_config={OSP_OUTPUT_ATTRIBUTES_CONFIG}
@@ -320,30 +320,6 @@ export const SankeyApp = ({ new_data_app }: { new_data_app: Class_ApplicationDat
     </HelmetProvider>
   )
   const exemple_menu = {} as { [_: string]: JSX.Element }
-
-  // if (!new_data_app?.is_static) {
-  //   // Menus are not presents in mode publish
-  //   const path = window.location.origin
-  //   const url = path + '/opensankey/sankey/menu_examples'
-  //   // let formations_menu = {} as { [_: string]: JSX.Element }
-  //   fetch(url, fetchData).then(response => {
-  //     response.text().then(text => {
-  //       const json_data = JSON.parse(text)
-  //       exemple_menu = json_data.exemples_menu
-  //       if (Object.keys(json_data.exemples_menu['Formations']).length > 0) {
-  //         // formations_menu = Object.fromEntries(
-  //         //   Object.entries(json_data.exemples_menu['Formations']['Tutoriels']).filter(d => d[0] !== 'artifacts')
-  //         // ) as { [_: string]: JSX.Element }
-  //         delete json_data.exemples_menu['Formations']['Tutoriels']
-  //       }
-  //     }).catch(() => {
-  //       exemple_menu = {}
-  //       // formations_menu = {}
-  //     }).then(() => {
-  //       renderPage()
-  //     })
-  //   })
-  // }
 
   const blockers = {}
 

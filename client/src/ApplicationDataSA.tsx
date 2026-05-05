@@ -5,12 +5,6 @@ import { Class_ApplicationHistory } from './deps/OpenSankey+/deps/OpenSankey/typ
 import { Class_ApplicationDataOSP } from './deps/OpenSankey+/types/ApplicationDataOSP'
 import { LoginComponent } from './deps/LoginComponent/LoginComponent'
 
-declare const window: Window &
-  typeof globalThis & {
-    sankey: {
-      logo: string
-    }
-  }
 export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
   /**
    * Creates an instance of Class_ApplicationDataSA.
@@ -45,8 +39,8 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // Overrride logo
   public get logo() {
-    if ( this.is_static && window.sankey && window.sankey.logo) {
-      return window.sankey.logo
+    if (this.is_static && this.publish_options.logo) {
+      return this.publish_options.logo
     }
     if (this.has_sankey_afm) {
       return this._logo_mfa
