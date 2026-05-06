@@ -922,6 +922,29 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
     ]
   } satisfies FormatAttributeConfig<boolean>,
 
+  skip_rref: {
+    group: 'solver',
+    default: false,
+    type: (() => false) as (() => boolean),
+    labels: {
+      en: 'Skip RREF (raw constraint matrix)',
+      fr: 'Ignorer la RREF (matrice de contraintes brute)',
+      es: 'Omitir RREF (matriz de restricciones bruta)',
+      de: 'RREF überspringen (rohe Beschränkungsmatrix)',
+      it: 'Saltare RREF (matrice di vincoli grezza)'
+    },
+    tooltips: {
+      en: 'Skip the RREF / variable-classification preprocessing and minimise directly on the raw constraint matrix. Faster on large models. Disables interval computation and the redundant/determinable/free distinction (variables are tagged `mesuré` or `brut`). Incompatible with Monte-Carlo uncertainty analysis.',
+      fr: 'Ignorer le prétraitement RREF / classification des variables et minimiser directement sur la matrice de contraintes brute. Plus rapide sur les gros modèles. Désactive le calcul d\'intervalles et la distinction redondant/déterminé/libre (les variables sont étiquetées `mesuré` ou `brut`). Incompatible avec l\'analyse Monte-Carlo.',
+      es: 'Omitir el preprocesamiento RREF / clasificación de variables y minimizar directamente sobre la matriz de restricciones bruta. Más rápido en modelos grandes. Desactiva el cálculo de intervalos y la distinción redundante/determinable/libre (las variables se etiquetan `mesuré` o `brut`). Incompatible con el análisis Monte-Carlo.',
+      de: 'Die RREF-Vorverarbeitung / Variablenklassifizierung überspringen und direkt auf der rohen Beschränkungsmatrix minimieren. Schneller bei großen Modellen. Deaktiviert die Intervallberechnung und die Unterscheidung zwischen redundant/bestimmbar/frei (Variablen werden als `mesuré` oder `brut` gekennzeichnet). Inkompatibel mit der Monte-Carlo-Analyse.',
+      it: 'Saltare la preelaborazione RREF / classificazione delle variabili e minimizzare direttamente sulla matrice di vincoli grezza. Più veloce sui modelli grandi. Disabilita il calcolo degli intervalli e la distinzione tra ridondante/determinabile/libero (le variabili sono etichettate `mesuré` o `brut`). Incompatibile con l\'analisi Monte-Carlo.'
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
+    ]
+  } satisfies FormatAttributeConfig<boolean>,
+
   example_excel: {},
   example_json: {}
 } as const
@@ -1455,6 +1478,7 @@ export const SOLVER_OPTION_KEYS = [
   'nb_realisations',
   'record_simulations',
   'debug_mode',
+  'skip_rref',
 ] as const
 
 export const CONVERTER_CONFIGS = {
