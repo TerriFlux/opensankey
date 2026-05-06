@@ -1754,86 +1754,156 @@ export class DrawingAreaPersistence {
   }
 
   /**
-   * Migration 0.93 → 0.94 (issue #1225) — suppression des clones d'expansion
-   * latérale legacy. Avant la refonte, l'expansion latérale matérialisait des
-   * Class_NodeElement avec id suffixé `expandleft` / `expandright` et leurs
-   * propres liens. Ces nœuds n'ont plus de raison d'être dans le nouveau
-   * modèle où l'expansion est un flag sur Class_NodeDimension.
+   * Migration 0.93 → 0.94 (issue #1225) — rétrocompatibilité expansion latérale.
    *
-   * Cette migration nettoie simplement le JSON :
-   * - supprime tous les nœuds avec id finissant par `expandleft`/`expandright`
-   * - supprime tous les liens dont source ou target est un de ces nœuds
-   * - émet un warning console listant les expansions perdues
+   * Avant la refonte, l'expansion latérale matérialisait des Class_NodeElement
+   * avec id suffixé `expandleft` / `expandright` (clones du master) et leurs
+   * propres liens. Le nouveau modèle porte un flag `expanded_left|right` sur
+   * Class_NodeDimension et utilise les nœuds réels pour les liens d'expansion.
    *
-   * Conséquence : les fichiers legacy chargés perdent visuellement leurs
-   * expansions latérales. Le user devra réappliquer expandLeft/expandRight
-   * via le menu contextuel pour retrouver le rendu d'origine.
+   * Migration en 4 temps pour chaque clone :
+   *   1. Identifier le master (id sans suffixe) et le côté (left/right).
+   *   2. Identifier le parent expansé via les liens du clone : c'est le nœud
+   *      dont l'id est aussi `parent_name` d'une dim côté master.
+   *   3. Poser `expanded_left|right: true` sur cette dim du master.
+   *   4. Réécrire les liens du clone : remplacer `clone_id` par `master_id`
+   *      dans `idSource`/`idTarget`. Si le lien équivalent (même source/target)
+   *      existe déjà, supprimer le lien réécrit pour éviter le doublon.
+   *   5. Supprimer le nœud clone du JSON.
+   *
+   * Nettoyage final : `attachedNodes`, `inputLinksId`, `outputLinksId`,
+   * `links_order` purgés des références obsolètes.
    */
   public static fromJSON_pre_0_94(json_object: Type_JSON) {
     const SUFFIX_LEFT = 'expandleft'
     const SUFFIX_RIGHT = 'expandright'
-    const isLegacy = (id: string) => id.endsWith(SUFFIX_LEFT) || id.endsWith(SUFFIX_RIGHT)
 
-    const nodes = json_object['nodes'] as Type_JSON | undefined
-    const links = json_object['links'] as Type_JSON | undefined
+    const nodes = json_object['nodes'] as Record<string, Type_JSON> | undefined
+    const links = json_object['links'] as Record<string, Type_JSON> | undefined
+    if (!nodes || !links) return
+
+    type CloneInfo = { clone_id: string, master_id: string, side: 'left' | 'right' }
+    const clones: CloneInfo[] = []
+    Object.keys(nodes).forEach(id => {
+      let master_id: string | undefined
+      let side: 'left' | 'right' | undefined
+      if (id.endsWith(SUFFIX_LEFT)) {
+        master_id = id.slice(0, -SUFFIX_LEFT.length)
+        side = 'left'
+      } else if (id.endsWith(SUFFIX_RIGHT)) {
+        master_id = id.slice(0, -SUFFIX_RIGHT.length)
+        side = 'right'
+      }
+      if (master_id && side && nodes[master_id]) {
+        clones.push({ clone_id: id, master_id, side })
+      } else if (master_id && side) {
+        // Master introuvable : on supprime le clone sans rien reposer.
+        delete nodes[id]
+      }
+    })
+
+    if (clones.length === 0) return
+
     const removed_node_ids = new Set<string>()
+    const removed_link_ids = new Set<string>()
 
-    if (nodes && typeof nodes === 'object') {
-      Object.keys(nodes).forEach(node_id => {
-        if (isLegacy(node_id)) {
-          removed_node_ids.add(node_id)
-          delete (nodes as Record<string, unknown>)[node_id]
-        }
+    // Helper : un lien équivalent (même source + target) existe-t-il déjà ?
+    const equivalentExists = (
+      excluded_link_id: string,
+      new_source: string,
+      new_target: string
+    ) => {
+      return Object.entries(links).some(([other_lid, other_l]) => {
+        if (other_lid === excluded_link_id) return false
+        const other = other_l as Record<string, unknown>
+        return other['idSource'] === new_source && other['idTarget'] === new_target
       })
     }
 
-    if (links && typeof links === 'object') {
-      Object.entries(links as Record<string, Type_JSON>).forEach(([link_id, link_json]) => {
-        const src = link_json && (link_json as Record<string, unknown>)['idSource'] as string | undefined
-        const tgt = link_json && (link_json as Record<string, unknown>)['idTarget'] as string | undefined
-        if ((src && removed_node_ids.has(src)) || (tgt && removed_node_ids.has(tgt)) ||
-          isLegacy(link_id)) {
-          delete (links as Record<string, unknown>)[link_id]
+    clones.forEach(({ clone_id, master_id, side }) => {
+      const master_node = nodes[master_id] as Record<string, unknown>
+      const master_dimensions = master_node['dimensions'] as Record<string, Record<string, unknown>> | undefined
+
+      // Liens impliquant le clone
+      const involved_link_ids = Object.keys(links).filter(lid => {
+        const l = links[lid] as Record<string, unknown>
+        return l['idSource'] === clone_id || l['idTarget'] === clone_id
+      })
+
+      // Identifier les parents expansés : extrémités des liens du clone qui
+      // sont aussi `parent_name` d'une dim côté master.
+      const expansion_parent_ids = new Set<string>()
+      if (master_dimensions) {
+        const parent_names_of_master = new Set(
+          Object.values(master_dimensions)
+            .map(dim => dim['parent_name'] as string | undefined)
+            .filter((n): n is string => typeof n === 'string')
+        )
+        involved_link_ids.forEach(lid => {
+          const l = links[lid] as Record<string, unknown>
+          const other_id = (l['idSource'] === clone_id ? l['idTarget'] : l['idSource']) as string
+          if (parent_names_of_master.has(other_id)) {
+            expansion_parent_ids.add(other_id)
+          }
+        })
+
+        // Poser le flag expanded_<side> sur la dim correspondante.
+        Object.values(master_dimensions).forEach(dim => {
+          const pname = dim['parent_name'] as string | undefined
+          if (pname && expansion_parent_ids.has(pname)) {
+            dim[side === 'left' ? 'expanded_left' : 'expanded_right'] = true
+          }
+        })
+      }
+
+      // Réécrire les liens (clone → master) ou supprimer si doublon.
+      involved_link_ids.forEach(lid => {
+        const l = links[lid] as Record<string, unknown>
+        const new_source = l['idSource'] === clone_id ? master_id : l['idSource'] as string
+        const new_target = l['idTarget'] === clone_id ? master_id : l['idTarget'] as string
+
+        if (equivalentExists(lid, new_source, new_target)) {
+          delete links[lid]
+          removed_link_ids.add(lid)
+        } else {
+          l['idSource'] = new_source
+          l['idTarget'] = new_target
         }
       })
-    }
 
-    // Nettoyer aussi les attachedNodes / inputLinksId / outputLinksId / links_order
-    // qui peuvent référencer les nœuds supprimés.
-    if (nodes && typeof nodes === 'object') {
-      Object.values(nodes as Record<string, Type_JSON>).forEach((node_json) => {
-        const obj = node_json as Record<string, unknown>
-        if (Array.isArray(obj['attachedNodes'])) {
-          obj['attachedNodes'] = (obj['attachedNodes'] as string[]).filter(id => !removed_node_ids.has(id))
-        }
-        if (Array.isArray(obj['inputLinksId'])) {
-          obj['inputLinksId'] = (obj['inputLinksId'] as string[]).filter(id => {
-            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
-            return link_json !== undefined && !isLegacy(id)
-          })
-        }
-        if (Array.isArray(obj['outputLinksId'])) {
-          obj['outputLinksId'] = (obj['outputLinksId'] as string[]).filter(id => {
-            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
-            return link_json !== undefined && !isLegacy(id)
-          })
-        }
-        if (Array.isArray(obj['links_order'])) {
-          obj['links_order'] = (obj['links_order'] as string[]).filter(id => {
-            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
-            return link_json !== undefined && !isLegacy(id)
-          })
-        }
-      })
-    }
+      // Supprimer le nœud clone.
+      delete nodes[clone_id]
+      removed_node_ids.add(clone_id)
+    })
 
-    if (removed_node_ids.size > 0) {
-      console.warn(
-        `[migration 0.94] ${removed_node_ids.size} clone(s) d'expansion legacy supprimé(s) : `,
-        Array.from(removed_node_ids).join(', '),
-        ' — réappliquez expandLeft/expandRight depuis le menu contextuel pour retrouver le visuel.'
-      )
-    }
+    // Nettoyer attachedNodes / inputLinksId / outputLinksId / links_order
+    Object.values(nodes).forEach(node_json => {
+      const obj = node_json as Record<string, unknown>
+      if (Array.isArray(obj['attachedNodes'])) {
+        obj['attachedNodes'] = (obj['attachedNodes'] as string[]).filter(id => !removed_node_ids.has(id))
+      }
+      if (Array.isArray(obj['inputLinksId'])) {
+        obj['inputLinksId'] = (obj['inputLinksId'] as string[]).filter(id =>
+          !removed_link_ids.has(id) && links[id] !== undefined
+        )
+      }
+      if (Array.isArray(obj['outputLinksId'])) {
+        obj['outputLinksId'] = (obj['outputLinksId'] as string[]).filter(id =>
+          !removed_link_ids.has(id) && links[id] !== undefined
+        )
+      }
+      if (Array.isArray(obj['links_order'])) {
+        obj['links_order'] = (obj['links_order'] as string[]).filter(id =>
+          !removed_link_ids.has(id) && links[id] !== undefined
+        )
+      }
+    })
+
+    console.warn(
+      `[migration 0.94] ${clones.length} clone(s) d'expansion legacy migré(s) vers le modèle unifié — `,
+      `nœuds supprimés : ${Array.from(removed_node_ids).join(', ')}`,
+      removed_link_ids.size > 0 ? `; ${removed_link_ids.size} lien(s) doublon(s) supprimé(s)` : ''
+    )
   }
 
   public static fromJSON(
