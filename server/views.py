@@ -376,9 +376,12 @@ def launch_optim():
         output_options = json.loads(request.form.get('output_options', '{}'))
         solver_options = json.loads(request.form.get('solver_options', '{}'))
 
-        # Debug mode: pre-compute the zip bundle path now (request context) and
-        # route retrieve_result to it via process state. The optimisation thread
-        # cannot mutate the Flask session, so the swap must happen here.
+        # Debug mode: pre-compute the zip bundle path now (request context).
+        # The optimisation thread cannot mutate the Flask session, so the path
+        # is decided here. We keep the original output_file_name in state too;
+        # retrieve_result picks the zip if it exists at handoff time and falls
+        # back to the original output otherwise (covers MFAProblem failures
+        # that prevent the zip from being created).
         zip_bundle_path = None
         if solver_options.get("debug_mode"):
             zip_bundle_path = os.path.splitext(output_file_name)[0] + "_debug.zip"
@@ -388,7 +391,8 @@ def launch_optim():
             process_started=True,
             tmp_dir=tmp_dir,
             logname=log_filename,
-            output_file_name=zip_bundle_path or output_file_name,
+            output_file_name=output_file_name,
+            debug_zip_path=zip_bundle_path,
             input_filename=input_filename,
             input_format=input_format,
             output_json_file_abspath=os.path.join(tmp_dir, "tutu.json")
