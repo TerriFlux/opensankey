@@ -311,23 +311,9 @@ export class NodeActions {
     // ré-empile PAS dans la colonne du parent — sinon le visuel d'expansion
     // serait cassé. On les attache quand même au cadre tied pour que
     // l'enveloppe les englobe (taille + drag suivent).
-    // Transitivité (issue #1225) : un nœud peut être enfant transitif d'une
-    // expansion via une chaîne de désagrégations (force_show_children). On
-    // remonte jusqu'à trouver une dim is_expanded ou jusqu'à épuisement.
-    const isExpandedChild = (c: Class_NodeElement): boolean => {
-      const visited = new Set<string>()
-      let cur: Class_NodeElement | undefined = c
-      while (cur && !visited.has(cur.id)) {
-        visited.add(cur.id)
-        let next: Class_NodeElement | undefined
-        for (const dim of cur.dimensions_as_child) {
-          if (dim.is_expanded) return true
-          if (dim.force_show_children) { next = dim.parent as Class_NodeElement; break }
-        }
-        cur = next
-      }
-      return false
-    }
+    // Transitivité (issue #1225) — délégué à Class_NodeElement.findExpandedAncestor.
+    const isExpandedChild = (c: Class_NodeElement): boolean =>
+      c.findExpandedAncestor() !== null
     const stackable = cs.filter(c => !isExpandedChild(c))
     const expanded = cs.filter(isExpandedChild)
     p.tied_to_nodes = true

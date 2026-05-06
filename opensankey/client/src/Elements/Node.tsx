@@ -288,6 +288,33 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get sibling() { return this._sibling_node }
   public set sibling(_) { this._sibling_node = _ }
+
+  /**
+   * Issue #1225 — remonte la chaîne dim_as_child via les dims désagrégées
+   * (force_show_children) jusqu'à trouver une dim is_expanded. Renvoie le
+   * parent expansé et le côté de l'expansion, ou null si ce nœud n'est pas
+   * (transitivement) enfant d'une expansion.
+   *
+   * Utilisé en plusieurs endroits (Link.is_allowed_by_container_modes,
+   * Link._computeExpansionValue, NodeActions._restackEnglobingDim) pour
+   * traiter de la même façon les enfants directs et les petits-enfants
+   * d'une expansion en cascade.
+   */
+  public findExpandedAncestor(): { ancestor: Class_NodeElement, side: 'left' | 'right' } | null {
+    const visited = new Set<string>()
+    let cur: Class_NodeElement | undefined = this as unknown as Class_NodeElement
+    while (cur && !visited.has(cur.id)) {
+      visited.add(cur.id)
+      let next: Class_NodeElement | undefined
+      for (const d of cur.dimensions_as_child) {
+        if (d.expanded_left) return { ancestor: d.parent as Class_NodeElement, side: 'left' }
+        if (d.expanded_right) return { ancestor: d.parent as Class_NodeElement, side: 'right' }
+        if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
+      }
+      cur = next
+    }
+    return null
+  }
   /**
    * Draw given node on drawing area
    */
