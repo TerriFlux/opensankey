@@ -10,10 +10,6 @@ import {
   aggregationExpansion,
   disaggregationExpansion,
   contract,
-  // create_parent,
-  // set_child,
-  // applyDimension,
-  EXPANSION_SUFFIXES
 } from '../../Algorithms/Hierarchies'
 import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
@@ -116,9 +112,7 @@ export class NodeActions {
   aggregate = (parent: string) => {
     if (!this.contextualised_node) return
 
-    const child_dims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child :
-      this.contextualised_node.dimensions_as_child
+    const child_dims = this.contextualised_node.dimensions_as_child
 
     //let parent = dim_name ? this.app_data.drawing_area.sankey.level_taggs_dict[dim_name] : child_dims[0].parent
     // if (!dim_name) {
@@ -141,9 +135,7 @@ export class NodeActions {
   aggregateLeft = (_dim_name: string) => {
     if (!this.contextualised_node) return
 
-    const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child :
-      this.contextualised_node.dimensions_as_child
+    const parentDims = this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -155,9 +147,7 @@ export class NodeActions {
   aggregateRight = (_dim_name: string) => {
     if (!this.contextualised_node) return
 
-    const parentDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_child :
-      this.contextualised_node.dimensions_as_child
+    const parentDims = this.contextualised_node.dimensions_as_child
 
     if (parentDims.length > 0) {
       const parent = parentDims[0].parent
@@ -169,9 +159,7 @@ export class NodeActions {
   disaggregate = (dim_name: string) => {
     if (!this.contextualised_node) return
 
-    const childDims = this.contextualised_node.master_node ?
-      this.contextualised_node.master_node.dimensions_as_parent :
-      this.contextualised_node.dimensions_as_parent
+    const childDims = this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
       const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
@@ -227,19 +215,45 @@ export class NodeActions {
   }
 
   contractLeft = () => {
-    if (!(this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.LEFT))) return
+    if (!this.contextualised_node?.dimensions_as_parent.some(d => d.expanded_left)) return
     this._runExpansionWithUndo((node) => contract(this.app_data, node))
   }
 
   contractRight = () => {
-    if (!(this.contextualised_node?.master_node && this.contextualised_node.id.includes(EXPANSION_SUFFIXES.RIGHT))) return
+    if (!this.contextualised_node?.dimensions_as_parent.some(d => d.expanded_right)) return
     this._runExpansionWithUndo((node) => contract(this.app_data, node))
+  }
+
+  // Issue #1225 — contracter l'expansion d'un nœud parent depuis le menu
+  // d'un de ses enfants (bouton ← Parent dans le menu d'un enfant expansé).
+  contractParent = (parent_id: string) => {
+    const parent_node = this.drawing_area.sankey.nodes_dict[parent_id]
+    if (!parent_node) return
+    if (!parent_node.dimensions_as_parent.some(d => d.is_expanded)) return
+    const ctx_id = this.contextualised_node?.id
+    const snapshot = this.app_data.toJSON()
+    const apply = () => {
+      const p = this.drawing_area.sankey.nodes_dict[parent_id]
+      if (!p) return
+      contract(this.app_data, p)
+      this._restackEnglobingChain(p)
+      if (ctx_id) {
+        const ctx = this.drawing_area.sankey.nodes_dict[ctx_id]
+        if (ctx) this._restackEnglobingChain(ctx)
+      }
+      this.refreshAndSave()
+    }
+    const undo = () => {
+      this.app_data.fromJSON(snapshot)
+      this.refreshAndSave()
+    }
+    this.executeWithUndo(apply, undo)
   }
 
   // Container display mode (parent surrounds children, links filtered per side)
   private _findDimensionFromOtherId = (other_id: string) => {
     if (!this.contextualised_node) return undefined
-    const node = this.contextualised_node.master_node ?? this.contextualised_node
+    const node = this.contextualised_node
     const dim_as_child = node.dimensions_as_child.find(dim => dim.parent.id === other_id)
     if (dim_as_child) return dim_as_child
     return node.dimensions_as_parent.find(dim =>
@@ -254,8 +268,8 @@ export class NodeActions {
   // is_visible (ce qui arrive en imbriqué : un container_mode hérité
   // garde le parent visible côté visibilité de nœud, mais visuellement
   // ce sont les enfants qui prennent sa place dans la pile englobante).
-  // Les `slave_nodes` (clones d'expansion latérale) visibles sont aussi
-  // collectés.
+  // En mode expansion (issue #1225), les enfants d'une dim is_expanded
+  // sont aussi visibles à côté du parent — on les collecte également.
   private _collectVisibleEnglobedNodes = (roots: Class_NodeElement[]): Class_NodeElement[] => {
     const out: Class_NodeElement[] = []
     const seen = new Set<string>()
@@ -269,15 +283,8 @@ export class NodeActions {
       }
       seen.add(n.id)
       if (n.is_visible) out.push(n)
-      // Slaves visibles (clones d'expansion latérale) du nœud lui-même.
-      n.slave_nodes?.forEach(s => {
-        if (!seen.has(s.id) && s.is_visible) { seen.add(s.id); out.push(s) }
-      })
-      // Descendre dans les sous-dims pour attraper les slaves des
-      // descendants : cas où n est encore empilé (non désagrégé) mais
-      // ses sous-children ont des clones d'expansion visibles. Sans ça,
-      // les clones expand resteraient hors du cadre géométrique de
-      // l'ancêtre englobant.
+      // Descendre dans les sous-dims pour attraper les enfants visibles
+      // des dims désagrégées ou expansées en cascade.
       n.dimensions_as_parent.forEach(d => {
         (d.children as Class_NodeElement[]).forEach(c => {
           if (!seen.has(c.id)) visit(c)
@@ -299,19 +306,21 @@ export class NodeActions {
       p.dettachNodeFromCont(p.attached_node[i])
     }
     const cs = this._collectVisibleEnglobedNodes(d.children as Class_NodeElement[])
-    // Les clones d'expansion latérale (master_node défini) ont déjà été
-    // positionnés par disaggregationExpansion (à gauche/droite de leur
-    // master). On NE les ré-empile PAS, sinon ils seraient ramenés dans
-    // la colonne du parent et le visuel d'expansion serait cassé. On
-    // les attache quand même au cadre tied pour que l'enveloppe les
-    // englobe (taille + drag suivent).
-    const stackable = cs.filter(c => !c.master_node)
-    const clones = cs.filter(c => !!c.master_node)
+    // Les enfants d'une dim expansée ont déjà été positionnés par
+    // disaggregationExpansion (colonne latérale gauche/droite). On NE les
+    // ré-empile PAS dans la colonne du parent — sinon le visuel d'expansion
+    // serait cassé. On les attache quand même au cadre tied pour que
+    // l'enveloppe les englobe (taille + drag suivent).
+    // Transitivité (issue #1225) — délégué à Class_NodeElement.findExpandedAncestor.
+    const isExpandedChild = (c: Class_NodeElement): boolean =>
+      c.findExpandedAncestor() !== null
+    const stackable = cs.filter(c => !isExpandedChild(c))
+    const expanded = cs.filter(isExpandedChild)
     p.tied_to_nodes = true
     stackable.forEach(c => { c.position_x = p.position_x })
     NodePositioning.stackNodesVertically(stackable, p.position_y)
     stackable.forEach(c => p.attachNodeToCont(c))
-    clones.forEach(c => p.attachNodeToCont(c))
+    expanded.forEach(c => p.attachNodeToCont(c))
     p.expandToContainAttachedNodes()
     // Le bascule de visibilité / la nouvelle pile changent l'ordre et
     // les ancres des liens I/O. Reorganize sur le parent, chaque enfant
@@ -863,6 +872,7 @@ export class NodeActions {
       expandRight: nodeActions.expandRight,
       contractLeft: nodeActions.contractLeft,
       contractRight: nodeActions.contractRight,
+      contractParent: nodeActions.contractParent,
       containerInChildrenOutParent: nodeActions.containerInChildrenOutParent,
       containerInParentOutChildren: nodeActions.containerInParentOutChildren,
       containerInChildrenOutChildren: nodeActions.containerInChildrenOutChildren,

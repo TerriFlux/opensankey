@@ -65,8 +65,6 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _nodeDrawValueLabel: NodeDrawValueLabel
   protected d3_selection_g_value_label: d3.Selection<SVGGElement, unknown, SVGGElement, unknown> | null = null
   protected _sibling_node: Class_NodeElement | undefined = undefined
-  protected _master_node: Class_NodeElement | undefined = undefined
-  protected _slave_nodes: Class_NodeElement[] = []
   public _nodeTagsManager: NodeTagsManager
   protected _tags: Class_Tag[] = []
   protected _taggs_dict: { [x: string]: Class_Tag[] } = {}
@@ -222,11 +220,19 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
+    // Vraie copie : on efface d'abord les dimensions actuelles du nœud
+    // (sans quoi getOrCreateLowerDimension matche sur (id, parent) et crée
+    // une dim supplémentaire au lieu de reparenter quand src et dest
+    // diffèrent sur parent_name).
+    this._nodeDimensionsManager.dimensions_as_child.forEach(dim => {
+      this._nodeDimensionsManager.removeDimensionAsChild(dim)
+    })
+    this._nodeDimensionsManager.dimensions_as_parent.forEach(dim => {
+      this._nodeDimensionsManager.removeDimensionAsParent(dim)
+    })
     const json_object = {}
     node_to_copy._nodeDimensionsManager.toJSON(json_object)
     this._nodeDimensionsManager.fromJSON(json_object, false)
-    //this.copyDimensionsFrom(node_to_copy)
-    //this._nodeDimensionsManager.copyDimensionsFrom(node_to_copy)
   }
 
   // 🔄 LINK COPY METHODS - RÉINTÉGRÉS DIRECTEMENT
@@ -280,14 +286,35 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeDimensionsManager.fromJSON(json_node_object, create_tag, matching_nodes_id, matching_taggs_id, matching_tags_id)
   }
 
-  public get master_node() { return this._master_node }
-  public set master_node(_) {
-    this._master_node = _
-    _?._slave_nodes.push(this)
-  }
-  public get slave_nodes() { return this._slave_nodes }
   public get sibling() { return this._sibling_node }
   public set sibling(_) { this._sibling_node = _ }
+
+  /**
+   * Issue #1225 — remonte la chaîne dim_as_child via les dims désagrégées
+   * (force_show_children) jusqu'à trouver une dim is_expanded. Renvoie le
+   * parent expansé et le côté de l'expansion, ou null si ce nœud n'est pas
+   * (transitivement) enfant d'une expansion.
+   *
+   * Utilisé en plusieurs endroits (Link.is_allowed_by_container_modes,
+   * Link._computeExpansionValue, NodeActions._restackEnglobingDim) pour
+   * traiter de la même façon les enfants directs et les petits-enfants
+   * d'une expansion en cascade.
+   */
+  public findExpandedAncestor(): { ancestor: Class_NodeElement, side: 'left' | 'right' } | null {
+    const visited = new Set<string>()
+    let cur: Class_NodeElement | undefined = this as unknown as Class_NodeElement
+    while (cur && !visited.has(cur.id)) {
+      visited.add(cur.id)
+      let next: Class_NodeElement | undefined
+      for (const d of cur.dimensions_as_child) {
+        if (d.expanded_left) return { ancestor: d.parent as Class_NodeElement, side: 'left' }
+        if (d.expanded_right) return { ancestor: d.parent as Class_NodeElement, side: 'right' }
+        if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
+      }
+      cur = next
+    }
+    return null
+  }
   /**
    * Draw given node on drawing area
    */
