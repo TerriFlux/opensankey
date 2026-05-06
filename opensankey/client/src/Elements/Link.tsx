@@ -1594,11 +1594,108 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return null
     }
     this._is_computing = true
+    // Issue #1225 — pour les liens d'expansion, la valeur n'est pas stockée
+    // mais calculée dynamiquement à partir des flux pertinents de l'enfant
+    // (côté direction d'expansion s'il en a, sinon côté opposé — le parent
+    // joue alors le rôle d'agrégateur).
+    if (this._is_expansion_link) {
+      const v = this._computeExpansionValue()
+      this._is_computing = false
+      return v
+    }
     let value_current = null
     if (this.drawing_area.type_data === 'data') value_current = this.value?.valueData ?? null
     else value_current = this.value?.valueResult ?? ((this.value?.value_option == 'value' || this.value?.value_option == 'intervals') ? this.value?.valueData : null) ?? null
     this._is_computing = false
     return value_current
+  }
+
+  /**
+   * Calcule la valeur affichée d'un lien d'expansion (issue #1225).
+   *
+   * En expand_left, le lien va `enfant → parent`. La valeur représente la
+   * part de l'enfant dans le flux entrant agrégé du parent — calculée comme
+   * la somme des inputs visibles de l'enfant (flux venant de plus à gauche),
+   * EXCLUANT les autres liens d'expansion. Si l'enfant n'a pas d'inputs
+   * (extrémité), on retombe sur ses outputs (le parent joue le rôle
+   * d'agrégateur). Symétrique pour expand_right.
+   */
+  private _computeExpansionValue(): number | null {
+    // Détermine quel endpoint est l'enfant et quel est le parent expansé,
+    // ainsi que le côté d'expansion. On regarde les dimensions des deux
+    // endpoints pour trouver la dim parent↔enfant en mode is_expanded.
+    let childNode: Class_NodeElement | null = null
+    let expand_left = false
+    // Cas 1 : source est enfant, target est parent (expand_left)
+    for (const d of this._source.dimensions_as_child) {
+      if (d.is_expanded && d.parent.id === this._target.id) {
+        childNode = this._source
+        expand_left = d.expanded_left
+        break
+      }
+    }
+    // Cas 2 : target est enfant, source est parent (expand_right)
+    if (!childNode) {
+      for (const d of this._target.dimensions_as_child) {
+        if (d.is_expanded && d.parent.id === this._source.id) {
+          childNode = this._target
+          expand_left = d.expanded_left
+          break
+        }
+      }
+    }
+    // Cas 3 : transitivité — childNode est descendant transitif via dim
+    // force_show_children. Remontons. Pour un lien d'expansion transitif
+    // (ex. P → c1 où c1 est petit-enfant de P), le marker is_expansion_link
+    // est posé mais aucune dim directe is_expanded ne lie les deux endpoints.
+    if (!childNode) {
+      const findExpandedAncestor = (n: Class_NodeElement): { ancestor: Class_NodeElement, side: 'left' | 'right' } | null => {
+        const visited = new Set<string>()
+        let cur: Class_NodeElement | undefined = n
+        while (cur && !visited.has(cur.id)) {
+          visited.add(cur.id)
+          let next: Class_NodeElement | undefined
+          for (const d of cur.dimensions_as_child) {
+            if (d.expanded_left) return { ancestor: d.parent as Class_NodeElement, side: 'left' }
+            if (d.expanded_right) return { ancestor: d.parent as Class_NodeElement, side: 'right' }
+            if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
+          }
+          cur = next
+        }
+        return null
+      }
+      const sourceAnc = findExpandedAncestor(this._source)
+      if (sourceAnc && sourceAnc.ancestor.id === this._target.id) {
+        childNode = this._source
+        expand_left = sourceAnc.side === 'left'
+      } else {
+        const targetAnc = findExpandedAncestor(this._target)
+        if (targetAnc && targetAnc.ancestor.id === this._source.id) {
+          childNode = this._target
+          expand_left = targetAnc.side === 'left'
+        }
+      }
+    }
+    if (!childNode) return null
+    // Somme des flux pertinents côté direction X (côté de l'expansion).
+    // En expand_left : direction X = gauche → inputs de childNode (sources à gauche).
+    // En expand_right : direction X = droite → outputs de childNode (targets à droite).
+    // Exclure les liens d'expansion eux-mêmes pour éviter le cycle.
+    const sumLinks = (links: Class_LinkElement[]) => {
+      let total = 0
+      let any = false
+      for (const l of links) {
+        if (l === this) continue
+        if (l.is_expansion_link) continue
+        if (!l.is_visible_ignoring_container_modes) continue
+        const v = l.value?.valueResult ?? l.value?.valueData ?? null
+        if (v != null) { total += v; any = true }
+      }
+      return any ? total : null
+    }
+    const primary = expand_left ? childNode.input_links_list : childNode.output_links_list
+    const fallback = expand_left ? childNode.output_links_list : childNode.input_links_list
+    return sumLinks(primary) ?? sumLinks(fallback)
   }
 
   /**
