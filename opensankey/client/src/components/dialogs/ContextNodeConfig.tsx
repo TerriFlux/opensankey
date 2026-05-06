@@ -75,16 +75,12 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             const node = app_data.drawing_area.node_contextualised
             if (!node) return false
 
-            const child_dims = node.master_node ?
-              node.master_node.dimensions_as_child :
-              node.dimensions_as_child
-            const parent_dims = node.master_node ?
-              node.master_node.dimensions_as_parent :
-              node.dimensions_as_parent
+            const child_dims = node.dimensions_as_child
+            const parent_dims = node.dimensions_as_parent
 
             return (child_dims?.length > 0) ||
               (parent_dims?.length > 0) ||
-              (!!node.master_node && (node.id.includes('expandleft') || node.id.includes('expandright')))
+              parent_dims.some(d => d.is_expanded)
           }
         }
       ],
@@ -98,7 +94,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
               customCheck: (app_data) => {
                 if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandleft'))
+                return !!node?.dimensions_as_parent.some(d => d.expanded_left)
               }
             }
           ]
@@ -112,7 +108,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
               customCheck: (app_data) => {
                 if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandright'))
+                return !!node?.dimensions_as_parent.some(d => d.expanded_right)
               }
             }
           ]
@@ -393,6 +389,16 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Contract left', fr: 'Réduire à gauche', es: 'Contraer a la izquierda', de: 'Nach links reduzieren', it: 'Contrarre a sinistra' },
       tooltips: { en: 'Contract to the left', fr: 'Réduire vers la gauche', es: 'Contraer hacia la izquierda', de: 'Nach links reduzieren', it: 'Contrarre verso sinistra' },
+      closeMenuAfter: true
+    },
+
+    // Issue #1225 — contracter l'expansion d'un parent depuis le menu d'un
+    // enfant (bouton ← Parent qui défait l'expansion).
+    contractParent: {
+      type: 'action',
+      labels: { en: 'Contract', fr: 'Réduire', es: 'Contraer', de: 'Reduzieren', it: 'Contrarre' },
+      tooltips: { en: 'Contract the parent expansion', fr: 'Annuler l\'expansion du parent', es: 'Anular la expansión del padre', de: 'Eltern-Expansion aufheben', it: 'Annullare l\'espansione del genitore' },
+      undoable: true,
       closeMenuAfter: true
     },
 

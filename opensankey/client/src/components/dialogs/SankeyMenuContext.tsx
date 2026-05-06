@@ -284,12 +284,8 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     if (item.titleKey === 'navHierarchy') {
       const contextualised_node = app_data.drawing_area.node_contextualised
       if (contextualised_node) {
-        const child_dims = contextualised_node.master_node ?
-          contextualised_node.master_node.dimensions_as_child :
-          contextualised_node.dimensions_as_child
-        const parent_dims = contextualised_node.master_node ?
-          contextualised_node.master_node.dimensions_as_parent :
-          contextualised_node.dimensions_as_parent
+        const child_dims = contextualised_node.dimensions_as_child
+        const parent_dims = contextualised_node.dimensions_as_parent
         const existingButtons = item.children!.filter(child =>
           child.type === 'button' && child.actionName === 'contractLeft' ||
           child.actionName === 'contractRight')
@@ -303,28 +299,40 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         const filtered_child_dims = englobed_parent_dim ? [] : child_dims
         const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
 
-        // Créer un sous-menu pour chaque dimension child
+        // Créer un sous-menu pour chaque dimension child.
+        // Issue #1225 — quand une opération est active sur la dim (désagrégé,
+        // étendu, englobé), on n'affiche QU'un seul bouton « ← Parent » qui
+        // défait l'opération (Ctrl+Z métier). Pas de sous-menu dans ce cas.
+        // Sinon, comportement existant : bouton aggregate (mode utilisateur)
+        // ou sous-menu DimensionActionSelector (mode dev).
         let dimensionSubmenusAgg: MenuStructureItem[] = []
         if (filtered_child_dims.length > 0) {
-          if (!app_data.has_sankey_dev) {
-            if (filtered_child_dims.filter(dim => dim.force_show_children).length === 0) {
-              dimensionSubmenusAgg = filtered_child_dims.map(dim => ({
-                type: 'button' as const,
-                actionName: `aggregate_${dim.parent.id}`,
-                titleName: `${dim.parent.name} <- `,
-              })
-              )
-            } else {
-              dimensionSubmenusAgg = filtered_child_dims.filter(dim => dim.force_show_children).map(dim => ({
-                type: 'button' as const,
-                actionName: `aggregate_${dim.parent.id}`,
-                titleName: `${dim.parent.name} <- `,
-              })
-              )
-            }
+          dimensionSubmenusAgg = filtered_child_dims.map(dim => {
+            const inverse_action: string | null = dim.force_show_children
+              ? `aggregate_${dim.parent.id}`
+              : dim.is_expanded
+                ? `contractParent_${dim.parent.id}`
+                : dim.container_mode
+                  ? `unsetContainerMode_${dim.parent.id}`
+                  : null
 
-          } else {
-            dimensionSubmenusAgg = filtered_child_dims.map((dim) => ({
+            if (inverse_action) {
+              // Une opération est active : juste le bouton inverse.
+              return {
+                type: 'button' as const,
+                actionName: inverse_action,
+                titleName: `← ${dim.parent.name}`,
+              }
+            }
+            // Pas d'opération active : comportement existant.
+            if (!app_data.has_sankey_dev) {
+              return {
+                type: 'button' as const,
+                actionName: `aggregate_${dim.parent.id}`,
+                titleName: `${dim.parent.name} <- `,
+              }
+            }
+            return {
               type: 'submenu' as const,
               titleName: `${dim.parent.name}  <- `,
               children: [
@@ -333,17 +341,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
                   widgetName: 'DimensionActionSelector',
                   widgetProps: { other_id: dim.parent.id }
                 },
-                {
-                  type: 'button' as const,
-                  actionName: `unsetContainerMode_${dim.parent.id}`,
-                  visibilityConditions: [{
-                    type: 'custom',
-                    customCheck: () => !!dim.container_mode
-                  }]
-                },
               ]
-            }))
-          }
+            }
+          })
         }
         // Créer un sous-menu pour chaque dimension parent
         let dimensionSubmenusDesagg: MenuStructureItem[] = []

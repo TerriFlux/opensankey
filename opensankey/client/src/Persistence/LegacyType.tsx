@@ -128,7 +128,10 @@ export type SankeyNode = {
       antitag?: boolean,
       force_show_children?: boolean,
       force_show_parent?:boolean,
-      container_mode?: 'in_children_out_parent' | 'in_parent_out_children' | 'in_children_out_children' | 'in_parent_out_parent'
+      container_mode?: 'in_children_out_parent' | 'in_parent_out_children' | 'in_children_out_children' | 'in_parent_out_parent',
+      // Issue #1225 — expansion latérale unifiée
+      expanded_left?: boolean,
+      expanded_right?: boolean
     }
   }, local?: SankeyNodeAttrLocal, colorParameter: string,
   colorTag: string,
