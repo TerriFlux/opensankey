@@ -938,12 +938,13 @@ export class NodeDimensionsManager {
       return false
     }
 
-    // Container mode on any related dimension makes this node visible
-    // (both parent and children are displayed simultaneously).
+    // Container mode (englobant) ou expansion latérale (#1225) sur une dim
+    // liée rend ce nœud visible — dans les deux cas, parent ET enfants sont
+    // affichés simultanément.
     const in_container_mode_as_child = Object.values(dimensionsData.dimensions_as_child)
-      .some(dim => dim.container_mode)
+      .some(dim => dim.container_mode || dim.is_expanded)
     const in_container_mode_as_parent = this.dimensions_as_parent
-      .some(dim => dim.container_mode)
+      .some(dim => dim.container_mode || dim.is_expanded)
     if (in_container_mode_as_child || in_container_mode_as_parent) {
       // Exception : si ce nœud a été désagrégé sur l'une de ses propres
       // dim_as_parent (force_show_children = true), ses enfants prennent
