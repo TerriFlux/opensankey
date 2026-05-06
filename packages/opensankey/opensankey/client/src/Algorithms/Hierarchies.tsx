@@ -345,6 +345,44 @@ export const disaggregate = (
         child.output_links_list.filter(l => l.target.hasGivenTag(echangeTag)).forEach(l => l.target.dimensions_as_child[0].setForceToShowChildren())
       })
     }
+
+    // Issue #1225 — transitivité de l'expansion. Si aggregateNode (=C) est
+    // lui-même enfant d'une dim P→{...,C,...} en mode expand, alors les
+    // enfants désagrégés c1, c2 prennent la place de C en tant que cibles
+    // d'expansion de P : on crée des liens d'expansion P↔c1, P↔c2 (avec
+    // marker is_expansion_link, redistribution depuis P↔C) et on détruit
+    // l'ancien lien P↔C.
+    const expanded_parent_dim = aggregateNode.dimensions_as_child.find(d => d.is_expanded)
+    if (expanded_parent_dim) {
+      const sankey = new_data.drawing_area.sankey
+      const P = expanded_parent_dim.parent as Class_NodeElement
+      const expand_left = expanded_parent_dim.expanded_left
+      // Trouver l'ancien lien P↔C d'expansion
+      const old_link = sankey.links_list.find(l =>
+        expand_left
+          ? (l.source === aggregateNode && l.target === P)
+          : (l.source === P && l.target === aggregateNode)
+      )
+      // Créer un lien d'expansion P↔c pour chaque enfant désagrégé
+      new_nodes.forEach(childNode => {
+        const existing = sankey.links_list.find(l =>
+          expand_left
+            ? (l.source === childNode && l.target === P)
+            : (l.source === P && l.target === childNode)
+        )
+        const link = existing ?? (expand_left
+          ? sankey.addNewLink(childNode, P)
+          : sankey.addNewLink(P, childNode))
+        link.is_expansion_link = true
+        link.shape_color_rule = 'source'
+        link.shape_opacity = childNode.shape_opacity
+        if (old_link && !existing) {
+          link.copyValues(old_link)
+        }
+      })
+      // Détruire l'ancien lien P↔C
+      if (old_link) new_data.drawing_area.deleteLink(old_link)
+    }
   }
 
   const undo = () => {

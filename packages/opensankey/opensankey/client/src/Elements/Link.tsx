@@ -1265,18 +1265,42 @@ export class Class_LinkElement extends Class_LinkAttribute {
       target.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === source.id))
     if (isExpansionLink) return true
 
-    // B. Source = enfant d'une dim is_expanded (autre que le parent en target,
-    //    déjà couvert en A). Lien S→T est un OUTPUT de S.
-    //    - expanded_left  : enfant filtre ses outputs (autres que parent) → caché
-    //    - expanded_right : enfant garde ses outputs → on continue
-    for (const d of source.dimensions_as_child) {
-      if (d.expanded_left && d.parent.id !== target.id) return false
+    // Transitivité (issue #1225) : un nœud peut être enfant transitif d'une
+    // expansion via une chaîne de désagrégations (force_show_children). On
+    // remonte la chaîne dim_as_child tant qu'on traverse des dims désagrégées,
+    // et on s'arrête quand on rencontre une dim is_expanded.
+    const findExpandedAncestor = (
+      n: Class_NodeElement
+    ): { side: 'left' | 'right', ancestor: Class_NodeElement } | null => {
+      const visited = new Set<string>()
+      let cur: Class_NodeElement | undefined = n
+      while (cur && !visited.has(cur.id)) {
+        visited.add(cur.id)
+        let next: Class_NodeElement | undefined
+        for (const d of cur.dimensions_as_child) {
+          if (d.expanded_left) return { side: 'left', ancestor: d.parent as Class_NodeElement }
+          if (d.expanded_right) return { side: 'right', ancestor: d.parent as Class_NodeElement }
+          if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
+        }
+        cur = next
+      }
+      return null
     }
-    // C. Target = enfant d'une dim is_expanded. Lien S→T est un INPUT de T.
-    //    - expanded_right : enfant filtre ses inputs (autres que parent) → caché
+    // B. Source = enfant (transitivement) d'une dim is_expanded ; lien S→T
+    //    est un OUTPUT de S.
+    //    - expanded_left  : enfant filtre ses outputs (sauf vers ancêtre) → caché
+    //    - expanded_right : enfant garde ses outputs → on continue
+    const sourceAncestor = findExpandedAncestor(source)
+    if (sourceAncestor && sourceAncestor.side === 'left' && sourceAncestor.ancestor.id !== target.id) {
+      return false
+    }
+    // C. Target = enfant (transitivement) d'une dim is_expanded ; lien S→T
+    //    est un INPUT de T.
+    //    - expanded_right : enfant filtre ses inputs (sauf depuis ancêtre) → caché
     //    - expanded_left  : enfant garde ses inputs → on continue
-    for (const d of target.dimensions_as_child) {
-      if (d.expanded_right && d.parent.id !== source.id) return false
+    const targetAncestor = findExpandedAncestor(target)
+    if (targetAncestor && targetAncestor.side === 'right' && targetAncestor.ancestor.id !== source.id) {
+      return false
     }
     // D. Source = parent d'une dim is_expanded (T n'étant pas un enfant de
     //    cette dim — déjà couvert en A). Lien S→T est un OUTPUT de S.
