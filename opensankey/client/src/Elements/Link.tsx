@@ -1244,24 +1244,32 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source = this._source
     const target = this._target
 
-    // Les liens d'expansion latérale (issue #1225) sont des représentations
-    // visuelles explicitement demandées par l'utilisateur (expandLeft/Right).
-    // Ils doivent échapper au filtre container_modes hérité, sinon expand
-    // vers la droite sur un nœud englobé en `in_children_out_parent`
-    // masquerait les flux de sortie qu'on cherche justement à voir.
+    // Liens d'expansion latérale (issue #1225) — règles de visibilité :
     //
-    // Détection :
-    //  1. Marker transient `_is_expansion_link` posé par disaggregationExpansion
-    //     (cas des expansions interactives en cours de session).
-    //  2. À défaut, fallback structurel : ce lien relie le parent et un enfant
-    //     d'une dimension actuellement `is_expanded`. Ce cas couvre les liens
-    //     migrés depuis le legacy (fromJSON_pre_0_94) qui ne portent pas le
-    //     marker transient mais sont sémantiquement des liens d'expansion.
+    //   A. Lien parent↔enfant d'une dim `is_expanded` : c'est un lien
+    //      d'expansion légitime, toujours visible (échappe aux container_modes).
+    //      Détection par marker transient `_is_expansion_link` (posé par
+    //      disaggregationExpansion en session) OU fallback structurel via
+    //      la dim parent (couvre les liens migrés depuis le legacy).
+    //
+    //   B. Lien dont un endpoint est enfant d'une dim `is_expanded` mais
+    //      l'autre endpoint N'EST PAS le parent de cette dim : c'est un flux
+    //      "externe" de l'enfant qui ne doit pas apparaître en mode expansion
+    //      (l'enfant ne se présente que comme extrémité du lien d'expansion
+    //      vers son parent, pas comme nœud de plein droit). Caché.
     if (this._is_expansion_link) return true
-    const isExpansionLinkByDim =
-      source.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === target.id)) ||
-      target.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === source.id))
-    if (isExpansionLinkByDim) return true
+    const sourceIsExpansionTarget = source.dimensions_as_parent.some(d =>
+      d.is_expanded && d.children.some(c => c.id === target.id))
+    const targetIsExpansionTarget = target.dimensions_as_parent.some(d =>
+      d.is_expanded && d.children.some(c => c.id === source.id))
+    if (sourceIsExpansionTarget || targetIsExpansionTarget) return true
+    // Règle B : si un endpoint est enfant d'une dim is_expanded sans que
+    // l'autre soit le parent de cette dim, le lien est masqué.
+    const sourceIsExpandedChildElsewhere = source.dimensions_as_child.some(d =>
+      d.is_expanded && d.parent.id !== target.id)
+    const targetIsExpandedChildElsewhere = target.dimensions_as_child.some(d =>
+      d.is_expanded && d.parent.id !== source.id)
+    if (sourceIsExpandedChildElsewhere || targetIsExpandedChildElsewhere) return false
 
     // Walk up via dimensions_as_child pour collecter TOUS les dims qui
     // peuvent impacter ce lien, y compris les ancêtres englobants
