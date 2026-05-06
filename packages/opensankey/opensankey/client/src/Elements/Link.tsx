@@ -1244,32 +1244,53 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source = this._source
     const target = this._target
 
-    // Liens d'expansion latérale (issue #1225) — règles de visibilité :
+    // Liens d'expansion latérale (issue #1225) — règles directionnelles.
     //
-    //   A. Lien parent↔enfant d'une dim `is_expanded` : c'est un lien
-    //      d'expansion légitime, toujours visible (échappe aux container_modes).
-    //      Détection par marker transient `_is_expansion_link` (posé par
-    //      disaggregationExpansion en session) OU fallback structurel via
-    //      la dim parent (couvre les liens migrés depuis le legacy).
+    // En expand_left : les enfants apparaissent à GAUCHE du parent.
+    //   - Enfants gardent leurs INPUTS (flux venant de plus à gauche),
+    //     filtrent leurs OUTPUTS sauf le lien d'expansion (enfant→parent).
+    //   - Parent filtre ses INPUTS (remplacés par les liens d'expansion),
+    //     garde ses OUTPUTS (vers la droite).
     //
-    //   B. Lien dont un endpoint est enfant d'une dim `is_expanded` mais
-    //      l'autre endpoint N'EST PAS le parent de cette dim : c'est un flux
-    //      "externe" de l'enfant qui ne doit pas apparaître en mode expansion
-    //      (l'enfant ne se présente que comme extrémité du lien d'expansion
-    //      vers son parent, pas comme nœud de plein droit). Caché.
+    // En expand_right : symétrique.
+    //   - Enfants gardent leurs OUTPUTS (vers plus à droite), filtrent leurs
+    //     INPUTS sauf le lien d'expansion (parent→enfant).
+    //   - Parent filtre ses OUTPUTS, garde ses INPUTS.
+    //
+    // A. Lien d'expansion parent↔enfant : toujours visible (marker transient
+    //    OU dim is_expanded structurellement).
     if (this._is_expansion_link) return true
-    const sourceIsExpansionTarget = source.dimensions_as_parent.some(d =>
-      d.is_expanded && d.children.some(c => c.id === target.id))
-    const targetIsExpansionTarget = target.dimensions_as_parent.some(d =>
-      d.is_expanded && d.children.some(c => c.id === source.id))
-    if (sourceIsExpansionTarget || targetIsExpansionTarget) return true
-    // Règle B : si un endpoint est enfant d'une dim is_expanded sans que
-    // l'autre soit le parent de cette dim, le lien est masqué.
-    const sourceIsExpandedChildElsewhere = source.dimensions_as_child.some(d =>
-      d.is_expanded && d.parent.id !== target.id)
-    const targetIsExpandedChildElsewhere = target.dimensions_as_child.some(d =>
-      d.is_expanded && d.parent.id !== source.id)
-    if (sourceIsExpandedChildElsewhere || targetIsExpandedChildElsewhere) return false
+    const isExpansionLink =
+      source.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === target.id)) ||
+      target.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === source.id))
+    if (isExpansionLink) return true
+
+    // B. Source = enfant d'une dim is_expanded (autre que le parent en target,
+    //    déjà couvert en A). Lien S→T est un OUTPUT de S.
+    //    - expanded_left  : enfant filtre ses outputs (autres que parent) → caché
+    //    - expanded_right : enfant garde ses outputs → on continue
+    for (const d of source.dimensions_as_child) {
+      if (d.expanded_left && d.parent.id !== target.id) return false
+    }
+    // C. Target = enfant d'une dim is_expanded. Lien S→T est un INPUT de T.
+    //    - expanded_right : enfant filtre ses inputs (autres que parent) → caché
+    //    - expanded_left  : enfant garde ses inputs → on continue
+    for (const d of target.dimensions_as_child) {
+      if (d.expanded_right && d.parent.id !== source.id) return false
+    }
+    // D. Source = parent d'une dim is_expanded (T n'étant pas un enfant de
+    //    cette dim — déjà couvert en A). Lien S→T est un OUTPUT de S.
+    //    - expanded_right : parent filtre ses outputs → caché
+    //    - expanded_left  : parent garde ses outputs → on continue
+    for (const d of source.dimensions_as_parent) {
+      if (d.expanded_right && !d.children.some(c => c.id === target.id)) return false
+    }
+    // E. Target = parent d'une dim is_expanded. Lien S→T est un INPUT de T.
+    //    - expanded_left  : parent filtre ses inputs → caché
+    //    - expanded_right : parent garde ses inputs → on continue
+    for (const d of target.dimensions_as_parent) {
+      if (d.expanded_left && !d.children.some(c => c.id === source.id)) return false
+    }
 
     // Walk up via dimensions_as_child pour collecter TOUS les dims qui
     // peuvent impacter ce lien, y compris les ancêtres englobants
