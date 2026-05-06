@@ -382,6 +382,10 @@ export const disaggregate = (
       })
       // Détruire l'ancien lien P↔C
       if (old_link) new_data.drawing_area.deleteLink(old_link)
+      // Reorganize les liens I/O des nœuds concernés pour que les nouveaux
+      // liens d'expansion soient correctement attachés et rendus.
+      P.reorganizeIOLinks()
+      new_nodes.forEach(c => c.reorganizeIOLinks())
     }
   }
 
