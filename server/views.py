@@ -96,6 +96,7 @@ def solve_optimisation_problem_unified(
     logname: str,
     t_start: float,
     solver_options: dict = None,
+    zip_bundle_path: str = None,
 ):
     """
     Fonction unifiée pour l'optimisation.
@@ -182,9 +183,24 @@ def solve_optimisation_problem_unified(
     optim_kwargs = {}
     if solver_options.get("remove_redundancy"):
         optim_kwargs["remove_redundancy"] = True
+
+    # Monte-Carlo (uncertainty) — driven from the dialog's Solveur group.
+    # ``enable_uncertainty`` toggles the analysis; ``nb_realisations`` sets
+    # the draw count. Mirrors bin/run_reconciliation.py.
+    uncertainty = bool(solver_options.get("enable_uncertainty", False))
+    nb_realisations = int(solver_options.get("nb_realisations", 0)) if uncertainty else 0
+
+    # Debug — write the Ai constraint matrix sheet and a constraints_summary.txt
+    # next to the output file (same dir). Mirrors bin/run_reconciliation.py.
+    if solver_options.get("debug_mode"):
+        optim_kwargs["dbg_constraints__summary_xl_table"] = []
+        optim_kwargs["dbg_constraints__summary_txt_filename"] = os.path.join(
+            os.path.dirname(output_filename) or ".", "constraints_summary.txt"
+        )
+
     try:
         ok = mfa_problem_main.optimisation(
-            model_name, io_input.sankey, False, 0, False, **optim_kwargs
+            model_name, io_input.sankey, uncertainty, nb_realisations, False, **optim_kwargs
         )
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
@@ -214,6 +230,20 @@ def solve_optimisation_problem_unified(
         else:
             io_json = IOJson(io_input.sankey)
             io_json.write_sankey(file_name=output_filename, **output_options)
+
+        # Debug mode: bundle the produced output + constraints_summary.txt into a
+        # single zip so retrieve_result can hand it back as one download.
+        # ``zip_bundle_path`` is computed and stashed in the session state by
+        # launch_optim (request context) before this thread starts — we cannot
+        # mutate the Flask session from this background thread, so the path is
+        # pre-decided at request time. Only triggers when the txt file actually
+        # exists (cheap guard against broken / older MFAProblem versions).
+        debug_txt = optim_kwargs.get("dbg_constraints__summary_txt_filename")
+        if zip_bundle_path and debug_txt and os.path.exists(debug_txt):
+            import zipfile
+            with zipfile.ZipFile(zip_bundle_path, "w", zipfile.ZIP_DEFLATED) as zf:
+                zf.write(output_filename, arcname=os.path.basename(output_filename))
+                zf.write(debug_txt, arcname=os.path.basename(debug_txt))
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in output file writing.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
@@ -345,12 +375,20 @@ def launch_optim():
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
         solver_options = json.loads(request.form.get('solver_options', '{}'))
+
+        # Debug mode: pre-compute the zip bundle path now (request context) and
+        # route retrieve_result to it via process state. The optimisation thread
+        # cannot mutate the Flask session, so the swap must happen here.
+        zip_bundle_path = None
+        if solver_options.get("debug_mode"):
+            zip_bundle_path = os.path.splitext(output_file_name)[0] + "_debug.zip"
+
         # Stocker l'état
         set_process_state(
             process_started=True,
             tmp_dir=tmp_dir,
             logname=log_filename,
-            output_file_name=output_file_name,
+            output_file_name=zip_bundle_path or output_file_name,
             input_filename=input_filename,
             input_format=input_format,
             output_json_file_abspath=os.path.join(tmp_dir, "tutu.json")
@@ -379,6 +417,7 @@ def launch_optim():
             log_filename,
             t_start,
             solver_options,
+            zip_bundle_path,
         ),
     )
     thread.daemon = True
