@@ -114,65 +114,65 @@ def solve_optimisation_problem_unified(
     solver_options = solver_options or {}
 
     # ========== PARTIE 1: CHARGEMENT (dans le thread) ==========
-    try:
-        if input_source['type'] == 'json_string':
-            # Cas 1: Charger depuis un JSON string
-            trace.logger.info("-- Loading sankey from JSON string")
-            sankey_json = json.loads(input_source['data'])
+    # try:
+    if input_source['type'] == 'json_string':
+        # Cas 1: Charger depuis un JSON string
+        trace.logger.info("-- Loading sankey from JSON string")
+        sankey_json = json.loads(input_source['data'])
+        io_input = IOJson()
+        ok, msg = io_input.load_sankey_from_json(sankey_json, True)
+        if not ok:
+            trace.logger.error(f"-- ERROR loading sankey from JSON: {msg}")
+            trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
+            return
+        io_input.sankey.autocompute_mat_balance()
+        model_name = sankey_json.get("model_name", "model")
+
+    elif input_source['type'] == 'file':
+        # Cas 2: Charger depuis un fichier
+        input_filename = input_source['path']
+        input_format = input_source['format']
+        trace.logger.info(f"-- Loading sankey from file: {input_filename} (format: {input_format})")
+
+        if input_format == 'excel':
+            io_input = IOExcel()
+        elif input_format == 'json':
             io_input = IOJson()
-            ok, msg = io_input.load_sankey_from_json(sankey_json, True)
-            if not ok:
-                trace.logger.error(f"-- ERROR loading sankey from JSON: {msg}")
-                trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
-                return
-            io_input.sankey.autocompute_mat_balance()
-            model_name = sankey_json.get("model_name", "model")
-
-        elif input_source['type'] == 'file':
-            # Cas 2: Charger depuis un fichier
-            input_filename = input_source['path']
-            input_format = input_source['format']
-            trace.logger.info(f"-- Loading sankey from file: {input_filename} (format: {input_format})")
-
-            if input_format == 'excel':
-                io_input = IOExcel()
-            elif input_format == 'json':
-                io_input = IOJson()
-            else:
-                trace.logger.error(f"-- Unknown input format: {input_format}")
-                trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
-                return
-            input_options['do_coherence_checks'] = True
-            # preserve_extra_columns est exposé dans l'onglet "Options de sortie"
-            # côté UI (la décision est sémantiquement une décision d'écriture),
-            # mais le stash des colonnes inconnues doit être armé pendant la
-            # lecture. On propage donc le flag à input_options avant load_sankey.
-            if "preserve_extra_columns" in output_options:
-                input_options.setdefault(
-                    "preserve_extra_columns",
-                    output_options["preserve_extra_columns"],
-                )
-            ok, msg = io_input.load_sankey(input_filename, **input_options)
-            if not ok:
-                trace.logger.error("ERROR in input file.")
-                for line in msg.split("\n"):
-                    trace.logger.error(f"ERROR {line}")
-                trace.logger.info(
-                    "{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
-                return
-
-            model_name = os.path.splitext(os.path.basename(input_filename))[0]
         else:
-            trace.logger.error(f"-- Unknown input source type: {input_source['type']}")
+            trace.logger.error(f"-- Unknown input format: {input_format}")
+            trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
+            return
+        input_options['do_coherence_checks'] = True
+        # preserve_extra_columns est exposé dans l'onglet "Options de sortie"
+        # côté UI (la décision est sémantiquement une décision d'écriture),
+        # mais le stash des colonnes inconnues doit être armé pendant la
+        # lecture. On propage donc le flag à input_options avant load_sankey.
+        if "preserve_extra_columns" in output_options:
+            input_options.setdefault(
+                "preserve_extra_columns",
+                output_options["preserve_extra_columns"],
+            )
+        ok, msg = io_input.load_sankey(input_filename, **input_options)
+        if not ok:
+            trace.logger.error("ERROR in input file.")
+            for line in msg.split("\n"):
+                trace.logger.error(f"ERROR {line}")
+            trace.logger.info(
+                "{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
             return
 
-    except Exception as e:
-        trace.logger.error("-- UNEXPECTED ERROR when loading sankey")
-        trace.logger.error("-- Please report this issue to support@open-sankey.fr")
-        trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
-        trace.logger.debug(traceback.format_exc())
-        trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
+        model_name = os.path.splitext(os.path.basename(input_filename))[0]
+    else:
+        trace.logger.error(f"-- Unknown input source type: {input_source['type']}")
         return
+
+    # except Exception as e:
+    #     trace.logger.error("-- UNEXPECTED ERROR when loading sankey")
+    #     trace.logger.error("-- Please report this issue to support@open-sankey.fr")
+    #     trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
+    #     trace.logger.debug(traceback.format_exc())
+    #     trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
+    #     return
 
     t = time.time()
     trace.logger.info("{:-<{w}}".format("[OK] Loaded Datas succesfully ", w=MAX_LINE_LENGTH))
