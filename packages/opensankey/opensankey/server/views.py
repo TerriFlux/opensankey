@@ -168,6 +168,14 @@ def retrieve_result():
 
     try:
         output_file_name = state.get("output_file_name")
+        # Debug mode (reconciliation): SA pre-stashes a path to a .zip bundle
+        # produced by solve_optimisation_problem_unified once the run finishes.
+        # If that zip materialised, hand it back; otherwise fall through to the
+        # plain output (covers cases where MFAProblem couldn't write the
+        # constraints_summary.txt and the zip never got assembled).
+        debug_zip_path = state.get("debug_zip_path")
+        if debug_zip_path and os.path.exists(debug_zip_path):
+            output_file_name = debug_zip_path
         json_gz_path = output_file_name
         if output_file_name.endswith(".json"):
             json_gz_path = output_file_name + ".gz"
