@@ -663,10 +663,9 @@ const findDimByOtherId = (
 ): { dim: Class_NodeDimension, side: 'as_child' | 'as_parent' } | undefined => {
   const node = app_data.drawing_area.node_contextualised
   if (!node) return undefined
-  const target = node.master_node ?? node
-  const as_child = target.dimensions_as_child.find(d => d.parent.id === other_id)
+  const as_child = node.dimensions_as_child.find(d => d.parent.id === other_id)
   if (as_child) return { dim: as_child, side: 'as_child' }
-  const as_parent = target.dimensions_as_parent.find(d => d.children.some(c => c.id === other_id))
+  const as_parent = node.dimensions_as_parent.find(d => d.children.some(c => c.id === other_id))
   if (as_parent) return { dim: as_parent, side: 'as_parent' }
   return undefined
 }
@@ -686,8 +685,7 @@ export const DimensionActionSelector = ({
   // dans une boîte déjà englobante a vocation à reproduire le même contrat
   // visuel (entrées/sorties parent, etc.).
   const ctx_node = app_data.drawing_area.node_contextualised
-  const ctx_target = ctx_node?.master_node ?? ctx_node
-  const inherited_mode = ctx_target?.dimensions_as_child.find(d => !!d.container_mode)?.container_mode
+  const inherited_mode = ctx_node?.dimensions_as_child.find(d => !!d.container_mode)?.container_mode
   const detected_container: Exclude<Type_ContainerMode, null> =
     found?.dim.container_mode ?? inherited_mode ?? 'in_children_out_parent'
   const [ui_type, setUiType] = useState<DimActionType>(detected_type)

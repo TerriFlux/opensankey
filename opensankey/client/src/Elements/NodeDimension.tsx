@@ -61,10 +61,16 @@ export class Class_NodeDimension {
   private _parent: Class_NodeElement
   private _children: Class_NodeElement[]
 
-  // Forcing
+  // Forcing — mutually exclusive states for this dimension's display:
+  //   neutre | force_show_parent | force_show_children | container_mode | expanded_left | expanded_right
   private _force_show_children: boolean = false
   private _force_show_parent: boolean = false
   private _container_mode: Type_ContainerMode = null
+  // Expansion: parent stays visible AND children appear on one side, with
+  // expansion links (parent↔children) created with redistributed values.
+  // Replaces the old clone-based mechanism (master_node / slave_nodes).
+  private _expanded_left: boolean = false
+  private _expanded_right: boolean = false
 
   /**
    * True if element is currently on a deletion process
@@ -189,6 +195,8 @@ export class Class_NodeDimension {
     this._force_show_children = false
     this._force_show_parent = true
     this._container_mode = null
+    this._expanded_left = false
+    this._expanded_right = false
     this._updated()
     // Unset all other children node's dimensions
     const nodes_to_redraw = new Set([
@@ -229,6 +237,8 @@ export class Class_NodeDimension {
     this._force_show_children = true
     this._force_show_parent = false
     this._container_mode = null
+    this._expanded_left = false
+    this._expanded_right = false
     this._updated()
     // Unset other dimensions
     const nodes_to_redraw = new Set([
@@ -269,6 +279,8 @@ export class Class_NodeDimension {
     this._is_currently_in_unsetting_recursion = true
     this._force_show_children = false
     this._force_show_parent = false
+    this._expanded_left = false
+    this._expanded_right = false
     this._container_mode = mode
     // Apply the enclosing-node visual style (transparent fill, dashed
     // border, top-centered label). Geometry is handled separately by the
@@ -321,6 +333,8 @@ export class Class_NodeDimension {
     if (mode) {
       this._force_show_children = false
       this._force_show_parent = false
+      this._expanded_left = false
+      this._expanded_right = false
     }
   }
 
@@ -348,6 +362,62 @@ export class Class_NodeDimension {
     nodes_to_redraw.forEach(node => node.draw())
   }
 
+  /**
+   * Activate lateral expansion display: parent stays visible AND its children
+   * appear on the chosen side, with explicit expansion links (parent↔children)
+   * carrying redistributed values from the parent's external links.
+   *
+   * Mutually exclusive with force_show_*, container_mode, and the opposite side.
+   */
+  public setExpandedSide(
+    side: 'left' | 'right',
+    fromJSON: boolean = false
+  ) {
+    const target_left = side === 'left'
+    const target_right = side === 'right'
+    if (this._expanded_left === target_left &&
+      this._expanded_right === target_right &&
+      !this._force_show_parent && !this._force_show_children && !this._container_mode)
+      return
+    if (this._is_currently_in_unsetting_recursion) return
+    this._is_currently_in_unsetting_recursion = true
+    this._force_show_children = false
+    this._force_show_parent = false
+    this._container_mode = null
+    this._expanded_left = target_left
+    this._expanded_right = target_right
+    this._updated()
+    if (!fromJSON) {
+      const nodes_to_redraw = new Set([
+        this._parent,
+        ...this._children
+      ])
+      nodes_to_redraw.forEach(node => {
+        node.reorganizeIOLinks()
+        node.output_links_list.forEach(l => l.target.reorganizeIOLinks())
+        node.input_links_list.forEach(l => l.source.reorganizeIOLinks())
+      })
+      this._parent.drawing_area.drawElements()
+    }
+    this._is_currently_in_unsetting_recursion = false
+  }
+
+  /**
+   * Exit expansion mode and reset to a neutral state.
+   */
+  public unsetExpansion() {
+    if (!this._expanded_left && !this._expanded_right) return
+    this._expanded_left = false
+    this._expanded_right = false
+    this._updated()
+    const nodes_to_redraw = new Set([
+      this._parent,
+      ...this._children
+    ])
+    nodes_to_redraw.forEach(node => node.reorganizeIOLinks())
+    nodes_to_redraw.forEach(node => node.draw())
+  }
+
   // PROTECTED METHODS ==================================================================
 
   protected _updated() {
@@ -360,6 +430,8 @@ export class Class_NodeDimension {
     this._force_show_children = false
     this._force_show_parent = false
     this._container_mode = null
+    this._expanded_left = false
+    this._expanded_right = false
     this._updated()
   }
 
@@ -404,6 +476,15 @@ export class Class_NodeDimension {
   public get force_show_children() { return this._force_show_children }
 
   public get container_mode(): Type_ContainerMode { return this._container_mode }
+
+  public get expanded_left() { return this._expanded_left }
+  public get expanded_right() { return this._expanded_right }
+  public get is_expanded() { return this._expanded_left || this._expanded_right }
+  public get expansion_side(): 'left' | 'right' | null {
+    if (this._expanded_left) return 'left'
+    if (this._expanded_right) return 'right'
+    return null
+  }
 
   public normalize() {
     const group = this.parent.sankey.level_taggs_dict[this.id]
@@ -585,6 +666,9 @@ export class NodeDimensionsManager {
             if (dimension.force_show_children) dimensions[dimension.id].force_show_children = true
             if (dimension.force_show_parent) dimensions[dimension.id].force_show_parent = true
             if (dimension.container_mode) dimensions[dimension.id].container_mode = dimension.container_mode
+            // Issue #1225 — expansion latérale unifiée sur la dimension
+            if (dimension.expanded_left) dimensions[dimension.id].expanded_left = true
+            if (dimension.expanded_right) dimensions[dimension.id].expanded_right = true
           } else {
             const cur_children_tags = dimensions[dimension.id].children_tags as string[]
             dimensions[dimension.id].children_tags = [...cur_children_tags, dimension.id]
@@ -686,6 +770,13 @@ export class NodeDimensionsManager {
                   nodeDimParent.setForceToShowChildren(true)
                 } else if (dimension_as_json.force_show_parent) {
                   childDim?.setForceToShowParent()
+                } else if (dimension_as_json.expanded_left) {
+                  // Issue #1225 — pose le flag d'expansion gauche sur la dim parent
+                  const nodeDimParent = parent.nodeDimensionAsParent(this._node)!
+                  nodeDimParent?.setExpandedSide('left', true)
+                } else if (dimension_as_json.expanded_right) {
+                  const nodeDimParent = parent.nodeDimensionAsParent(this._node)!
+                  nodeDimParent?.setExpandedSide('right', true)
                 }
                 if (this._node.sankey.level_taggs_dict[_]) {
                   let level = 0
@@ -795,12 +886,7 @@ export class NodeDimensionsManager {
     const dimensionsData = this._node.internalDimensionsData
     if (dimensionsData.dimensions_as_parent[_.id]) {
       delete dimensionsData.dimensions_as_parent[_.id]
-      if (!this._node.master_node) {
-        _.removeNodeAsParent(this._node)
-      }
-      // //if (this._node.master_node == undefined) {
-      // _.removeNodeAsParent(this._node)
-      // //}
+      _.removeNodeAsParent(this._node)
     }
   }
 
@@ -808,12 +894,7 @@ export class NodeDimensionsManager {
     const dimensionsData = this._node.internalDimensionsData
     if (dimensionsData.dimensions_as_child[_.id]) {
       delete dimensionsData.dimensions_as_child[_.id]
-      if (!this._node.master_node) {
-        _.removeNodeFromChildren(this._node)
-      }
-      // //if (this._node.master_node == undefined) {
-      // _.removeNodeFromChildren(this._node)
-      // //}
+      _.removeNodeFromChildren(this._node)
     }
   }
 

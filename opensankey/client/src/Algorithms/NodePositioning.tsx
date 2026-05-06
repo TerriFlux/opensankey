@@ -2497,9 +2497,6 @@ export class NodePositioning {
     current_v: number,
     tag: Class_LevelTag
   ) {
-    // if (node.master_node) {
-    //   return current_v
-    // }
     if (node.position_v == -1) {
       // v is computed at the first path
       node.position_v = current_v
@@ -2512,9 +2509,6 @@ export class NodePositioning {
       const shift_y = (desagregated_nodes.length - 1) / 2 * node.shape_position_dy
 
       let current_y = node.position_y - shift_y
-      if (nn.master_node) {
-        return
-      }
       nn.position_v = -1
       nn.position_x = node.position_x
       nn.position_u = node.position_u
