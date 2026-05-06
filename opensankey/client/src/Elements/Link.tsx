@@ -204,6 +204,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // Boolean var only used when enlarging thickness when mouse hovering link
   private _artifical_enlargement: boolean = false
 
+  // Transient marker (not persisted) — true if this link was created as part of
+  // a lateral expansion (parent ↔ child of an expanded NodeDimension).
+  // Used by contract() to know which links to delete when collapsing back.
+  private _is_expansion_link: boolean = false
+
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
@@ -1137,6 +1142,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get child_links() { return this._child_links }
   public get is_multi_link() { return this._is_multi_link }
 
+  // Transient marker for expansion links — set by Hierarchies.disaggregationExpansion,
+  // read by contract() to know which links to delete. Not persisted.
+  public get is_expansion_link() { return this._is_expansion_link }
+  public set is_expansion_link(v: boolean) { this._is_expansion_link = v }
+
   public get is_visible() {
     return this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
   }
@@ -1234,13 +1244,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source = this._source
     const target = this._target
 
-    // Les clones d'expansion latérale (master_node défini) sont des
+    // Les liens d'expansion latérale (issue #1225 — flag transient
+    // _is_expansion_link posé par disaggregationExpansion) sont des
     // représentations visuelles explicitement demandées par l'utilisateur
     // (expandLeft/expandRight). Ils doivent échapper au filtre
-    // container_modes hérité de leur master, sinon expand vers la droite
-    // sur un nœud englobé en `in_children_out_parent` masquerait les flux
-    // de sortie qu'on cherche justement à voir.
-    if (source.master_node || target.master_node) return true
+    // container_modes hérité, sinon expand vers la droite sur un nœud
+    // englobé en `in_children_out_parent` masquerait les flux de sortie
+    // qu'on cherche justement à voir.
+    if (this._is_expansion_link) return true
 
     // Walk up via dimensions_as_child pour collecter TOUS les dims qui
     // peuvent impacter ce lien, y compris les ancêtres englobants
