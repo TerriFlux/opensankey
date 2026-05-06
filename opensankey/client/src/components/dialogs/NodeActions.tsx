@@ -224,6 +224,32 @@ export class NodeActions {
     this._runExpansionWithUndo((node) => contract(this.app_data, node))
   }
 
+  // Issue #1225 — contracter l'expansion d'un nœud parent depuis le menu
+  // d'un de ses enfants (bouton ← Parent dans le menu d'un enfant expansé).
+  contractParent = (parent_id: string) => {
+    const parent_node = this.drawing_area.sankey.nodes_dict[parent_id]
+    if (!parent_node) return
+    if (!parent_node.dimensions_as_parent.some(d => d.is_expanded)) return
+    const ctx_id = this.contextualised_node?.id
+    const snapshot = this.app_data.toJSON()
+    const apply = () => {
+      const p = this.drawing_area.sankey.nodes_dict[parent_id]
+      if (!p) return
+      contract(this.app_data, p)
+      this._restackEnglobingChain(p)
+      if (ctx_id) {
+        const ctx = this.drawing_area.sankey.nodes_dict[ctx_id]
+        if (ctx) this._restackEnglobingChain(ctx)
+      }
+      this.refreshAndSave()
+    }
+    const undo = () => {
+      this.app_data.fromJSON(snapshot)
+      this.refreshAndSave()
+    }
+    this.executeWithUndo(apply, undo)
+  }
+
   // Container display mode (parent surrounds children, links filtered per side)
   private _findDimensionFromOtherId = (other_id: string) => {
     if (!this.contextualised_node) return undefined
@@ -860,6 +886,7 @@ export class NodeActions {
       expandRight: nodeActions.expandRight,
       contractLeft: nodeActions.contractLeft,
       contractRight: nodeActions.contractRight,
+      contractParent: nodeActions.contractParent,
       containerInChildrenOutParent: nodeActions.containerInChildrenOutParent,
       containerInParentOutChildren: nodeActions.containerInParentOutChildren,
       containerInChildrenOutChildren: nodeActions.containerInChildrenOutChildren,

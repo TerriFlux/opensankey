@@ -392,6 +392,16 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       closeMenuAfter: true
     },
 
+    // Issue #1225 — contracter l'expansion d'un parent depuis le menu d'un
+    // enfant (bouton ← Parent qui défait l'expansion).
+    contractParent: {
+      type: 'action',
+      labels: { en: 'Contract', fr: 'Réduire', es: 'Contraer', de: 'Reduzieren', it: 'Contrarre' },
+      tooltips: { en: 'Contract the parent expansion', fr: 'Annuler l\'expansion du parent', es: 'Anular la expansión del padre', de: 'Eltern-Expansion aufheben', it: 'Annullare l\'espansione del genitore' },
+      undoable: true,
+      closeMenuAfter: true
+    },
+
     // Actions de mode englobant (parent entoure les enfants, flux filtrés par côté)
     containerInChildrenOutParent: {
       type: 'action',
