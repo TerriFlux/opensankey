@@ -211,7 +211,8 @@ def retrieve_result():
             '.pkl': 'application/octet-stream',
             '.json': 'application/json',
             '.csv': 'text/csv',
-            '.txt': 'text/plain'
+            '.txt': 'text/plain',
+            '.zip': 'application/zip'
         }
 
         # Mapping extensions → noms de téléchargement
@@ -219,14 +220,18 @@ def retrieve_result():
             '.xlsx': root_file_name + '.xlsx',
             '.json': root_file_name + '.json',
             '.csv': root_file_name + '.csv',
-            '.txt': root_file_name + '.txt'
+            '.txt': root_file_name + '.txt',
+            '.zip': root_file_name + '.zip'
         }
 
         mimetype = mimetype_map.get(ext, 'application/octet-stream')
         download_name = download_name_map.get(ext, root_file_name + ext)
 
         trace.logger.info(f"Envoi du fichier: {output_file_name} ({mimetype})")
-        if output_format == 'json':
+        # Skip the json gzip step when the actual file is already a zip bundle
+        # (debug-mode reconciliation reroutes the output to a zip containing
+        # both the reconciled file and constraints_summary.txt).
+        if output_format == 'json' and ext != '.zip':
             output_file_name = handle_json_or_compressed(output_file_name)
         return send_file(
             output_file_name,
