@@ -1,7 +1,9 @@
 import { Class_NodeElement } from '../Elements/Node'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_Sankey } from '../types/Sankey'
+import { Class_Tag } from '../types/Tag'
 import { getStringFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 
 const matchAndModifyJSONIds = (
@@ -257,20 +259,69 @@ export const updateFrom = (
         })
       )
     }
-    // Copy force_show_children on node dimensions
+
+    // Sync de la structure de dimensions des nœuds : on couvre dans le même
+    // mode `tagLevel` à la fois la mise à jour du tag de niveau ET la
+    // structure parent_name + container_mode + force_show_children + flags
+    // d'expansion. La séquence est :
+    //   1. reparent : déplacer chaque dim_as_child vers le parent du sankey
+    //      source (setter Class_NodeDimension.parent), ou créer la dim si
+    //      absente. Si le parent change, ré-appliquer le level tag dérivé
+    //      du nouveau niveau hiérarchique (réplique la logique de
+    //      NodeDimensionsManager.fromJSON ~690-710).
+    //   2. container/expansion : sur chaque dim existante, recopier
+    //      container_mode (quiet, sans redraw — le styleNode block + le
+    //      draw final s'occupent du visuel), force_show_children, et les
+    //      flags d'expansion `expanded_left/right` (issue #1225).
     Object.values(drawing_area.sankey.nodes_dict).forEach(node => {
       const src_node = other_drawing_area.sankey.nodes_dict[node.id]
       if (!src_node) return
+      // 1. Reparent
+      src_node.dimensions_as_child.forEach(src_dim => {
+        const new_parent = drawing_area.sankey.nodes_dict[src_dim.parent.id]
+        if (!new_parent) return
+        const dest_dim = node.dimensions_as_child.find(d => d.id === src_dim.id)
+        const old_parent_id = dest_dim?.parent.id
+        if (dest_dim) {
+          if (old_parent_id !== new_parent.id) {
+            dest_dim.parent = new_parent
+          }
+        } else {
+          drawing_area.sankey.nodes_dict[node.id]
+            ._nodeDimensionsManager.getOrCreateLowerDimension(new_parent, node, src_dim.id)
+        }
+        if (old_parent_id !== new_parent.id) {
+          // Re-applique le level tag : un changement de parent change le niveau
+          // hiérarchique, le tag doit suivre.
+          const tagg = drawing_area.sankey.level_taggs_dict[src_dim.id]
+          if (!tagg) return
+          let level = 0
+          let ancestor: Class_NodeElement | undefined = new_parent
+          while (ancestor) {
+            level++
+            if (ancestor.dimensions_as_child.length === 0) break
+            const ancestor_dim: Class_NodeDimension | undefined = ancestor.dimensions_as_child.find(d => d.id === src_dim.id && d.parent)
+            if (!ancestor_dim) break
+            ancestor = ancestor_dim.parent
+          }
+          const non_zero_tags = tagg.tags_list.filter(t => t.name !== '0')
+          const child_tag = non_zero_tags[level]
+          if (child_tag) node.addTag(child_tag as unknown as Class_Tag)
+          if (level === 1) {
+            const parent_tag = non_zero_tags[0]
+            if (parent_tag) new_parent.addTag(parent_tag as unknown as Class_Tag)
+          }
+        }
+      })
+      // 2. container_mode + force_show_children + expansion flags
       node.dimensions_as_child.forEach(dim => {
         const src_dim = src_node.dimensions_as_child.find(d => d.id === dim.id)
-        if (src_dim?.force_show_children) dim.setForceToShowChildren(true)
-        // Sync container display mode in place (no style touch, no
-        // geometry snapshot, no redraw — the visual style is handled by
-        // the styleNode block below and the caller's full draw will
-        // re-trigger applyContainerEnvelopeIfNeeded with the new flag).
-        if (src_dim) {
-          dim.setContainerModeQuiet(src_dim.container_mode)
-        }
+        if (!src_dim) return
+        if (src_dim.force_show_children) dim.setForceToShowChildren(true)
+        dim.setContainerModeQuiet(src_dim.container_mode)
+        // Issue #1225 — flags d'expansion latérale unifiés sur la dim
+        if (src_dim.expanded_left) dim.setExpandedSide('left', true)
+        else if (src_dim.expanded_right) dim.setExpandedSide('right', true)
       })
     })
     drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())

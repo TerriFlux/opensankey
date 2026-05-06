@@ -1753,6 +1753,89 @@ export class DrawingAreaPersistence {
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
   }
 
+  /**
+   * Migration 0.93 → 0.94 (issue #1225) — suppression des clones d'expansion
+   * latérale legacy. Avant la refonte, l'expansion latérale matérialisait des
+   * Class_NodeElement avec id suffixé `expandleft` / `expandright` et leurs
+   * propres liens. Ces nœuds n'ont plus de raison d'être dans le nouveau
+   * modèle où l'expansion est un flag sur Class_NodeDimension.
+   *
+   * Cette migration nettoie simplement le JSON :
+   * - supprime tous les nœuds avec id finissant par `expandleft`/`expandright`
+   * - supprime tous les liens dont source ou target est un de ces nœuds
+   * - émet un warning console listant les expansions perdues
+   *
+   * Conséquence : les fichiers legacy chargés perdent visuellement leurs
+   * expansions latérales. Le user devra réappliquer expandLeft/expandRight
+   * via le menu contextuel pour retrouver le rendu d'origine.
+   */
+  public static fromJSON_pre_0_94(json_object: Type_JSON) {
+    const SUFFIX_LEFT = 'expandleft'
+    const SUFFIX_RIGHT = 'expandright'
+    const isLegacy = (id: string) => id.endsWith(SUFFIX_LEFT) || id.endsWith(SUFFIX_RIGHT)
+
+    const nodes = json_object['nodes'] as Type_JSON | undefined
+    const links = json_object['links'] as Type_JSON | undefined
+    const removed_node_ids = new Set<string>()
+
+    if (nodes && typeof nodes === 'object') {
+      Object.keys(nodes).forEach(node_id => {
+        if (isLegacy(node_id)) {
+          removed_node_ids.add(node_id)
+          delete (nodes as Record<string, unknown>)[node_id]
+        }
+      })
+    }
+
+    if (links && typeof links === 'object') {
+      Object.entries(links as Record<string, Type_JSON>).forEach(([link_id, link_json]) => {
+        const src = link_json && (link_json as Record<string, unknown>)['idSource'] as string | undefined
+        const tgt = link_json && (link_json as Record<string, unknown>)['idTarget'] as string | undefined
+        if ((src && removed_node_ids.has(src)) || (tgt && removed_node_ids.has(tgt)) ||
+          isLegacy(link_id)) {
+          delete (links as Record<string, unknown>)[link_id]
+        }
+      })
+    }
+
+    // Nettoyer aussi les attachedNodes / inputLinksId / outputLinksId / links_order
+    // qui peuvent référencer les nœuds supprimés.
+    if (nodes && typeof nodes === 'object') {
+      Object.values(nodes as Record<string, Type_JSON>).forEach((node_json) => {
+        const obj = node_json as Record<string, unknown>
+        if (Array.isArray(obj['attachedNodes'])) {
+          obj['attachedNodes'] = (obj['attachedNodes'] as string[]).filter(id => !removed_node_ids.has(id))
+        }
+        if (Array.isArray(obj['inputLinksId'])) {
+          obj['inputLinksId'] = (obj['inputLinksId'] as string[]).filter(id => {
+            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
+            return link_json !== undefined && !isLegacy(id)
+          })
+        }
+        if (Array.isArray(obj['outputLinksId'])) {
+          obj['outputLinksId'] = (obj['outputLinksId'] as string[]).filter(id => {
+            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
+            return link_json !== undefined && !isLegacy(id)
+          })
+        }
+        if (Array.isArray(obj['links_order'])) {
+          obj['links_order'] = (obj['links_order'] as string[]).filter(id => {
+            const link_json = links ? (links as Record<string, Type_JSON>)[id] : undefined
+            return link_json !== undefined && !isLegacy(id)
+          })
+        }
+      })
+    }
+
+    if (removed_node_ids.size > 0) {
+      console.warn(
+        `[migration 0.94] ${removed_node_ids.size} clone(s) d'expansion legacy supprimé(s) : `,
+        Array.from(removed_node_ids).join(', '),
+        ' — réappliquez expandLeft/expandRight depuis le menu contextuel pour retrouver le visuel.'
+      )
+    }
+  }
+
   public static fromJSON(
     drawing_area: Class_DrawingArea,
     json_object: Type_JSON,
@@ -1780,6 +1863,16 @@ export class DrawingAreaPersistence {
     ) {
       this.fromJSON_0_91(drawing_area, json_object, kwargs)
       drawing_area.to_recenter = true
+    }
+    if (
+      (version === undefined) ||
+      (Number(version) < 0.94)
+    ) {
+      // Issue #1225 — refonte expansion : suppression des clones
+      // legacy `expandleft`/`expandright` et de leurs liens. Les flags
+      // d'expansion sont maintenant portés par Class_NodeDimension ;
+      // le user devra réeffectuer ses expansions sur les fichiers legacy.
+      this.fromJSON_pre_0_94(json_object)
     }
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')

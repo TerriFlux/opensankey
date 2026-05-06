@@ -284,12 +284,8 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     if (item.titleKey === 'navHierarchy') {
       const contextualised_node = app_data.drawing_area.node_contextualised
       if (contextualised_node) {
-        const child_dims = contextualised_node.master_node ?
-          contextualised_node.master_node.dimensions_as_child :
-          contextualised_node.dimensions_as_child
-        const parent_dims = contextualised_node.master_node ?
-          contextualised_node.master_node.dimensions_as_parent :
-          contextualised_node.dimensions_as_parent
+        const child_dims = contextualised_node.dimensions_as_child
+        const parent_dims = contextualised_node.dimensions_as_parent
         const existingButtons = item.children!.filter(child =>
           child.type === 'button' && child.actionName === 'contractLeft' ||
           child.actionName === 'contractRight')

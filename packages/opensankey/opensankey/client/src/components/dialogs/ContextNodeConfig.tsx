@@ -75,16 +75,12 @@ export const NODE_MENU_CONFIG: MenuConfig = {
             const node = app_data.drawing_area.node_contextualised
             if (!node) return false
 
-            const child_dims = node.master_node ?
-              node.master_node.dimensions_as_child :
-              node.dimensions_as_child
-            const parent_dims = node.master_node ?
-              node.master_node.dimensions_as_parent :
-              node.dimensions_as_parent
+            const child_dims = node.dimensions_as_child
+            const parent_dims = node.dimensions_as_parent
 
             return (child_dims?.length > 0) ||
               (parent_dims?.length > 0) ||
-              (!!node.master_node && (node.id.includes('expandleft') || node.id.includes('expandright')))
+              parent_dims.some(d => d.is_expanded)
           }
         }
       ],
@@ -98,7 +94,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
               customCheck: (app_data) => {
                 if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandleft'))
+                return !!node?.dimensions_as_parent.some(d => d.expanded_left)
               }
             }
           ]
@@ -112,7 +108,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
               customCheck: (app_data) => {
                 if (!app_data.has_sankey_dev) return false
                 const node = app_data.drawing_area.node_contextualised
-                return !!(node?.master_node && node.id.includes('expandright'))
+                return !!node?.dimensions_as_parent.some(d => d.expanded_right)
               }
             }
           ]
