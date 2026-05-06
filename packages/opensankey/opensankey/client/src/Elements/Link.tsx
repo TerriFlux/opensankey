@@ -1265,40 +1265,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       target.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === source.id))
     if (isExpansionLink) return true
 
-    // Transitivité (issue #1225) : un nœud peut être enfant transitif d'une
-    // expansion via une chaîne de désagrégations (force_show_children). On
-    // remonte la chaîne dim_as_child tant qu'on traverse des dims désagrégées,
-    // et on s'arrête quand on rencontre une dim is_expanded.
-    const findExpandedAncestor = (
-      n: Class_NodeElement
-    ): { side: 'left' | 'right', ancestor: Class_NodeElement } | null => {
-      const visited = new Set<string>()
-      let cur: Class_NodeElement | undefined = n
-      while (cur && !visited.has(cur.id)) {
-        visited.add(cur.id)
-        let next: Class_NodeElement | undefined
-        for (const d of cur.dimensions_as_child) {
-          if (d.expanded_left) return { side: 'left', ancestor: d.parent as Class_NodeElement }
-          if (d.expanded_right) return { side: 'right', ancestor: d.parent as Class_NodeElement }
-          if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
-        }
-        cur = next
-      }
-      return null
-    }
-    // B. Source = enfant (transitivement) d'une dim is_expanded ; lien S→T
-    //    est un OUTPUT de S.
-    //    - expanded_left  : enfant filtre ses outputs (sauf vers ancêtre) → caché
-    //    - expanded_right : enfant garde ses outputs → on continue
-    const sourceAncestor = findExpandedAncestor(source)
+    // B/C — transitivité (issue #1225) via Class_NodeElement.findExpandedAncestor.
+    // B. Source enfant (transitif) d'une dim is_expanded, lien = OUTPUT de S.
+    //    expanded_left → caché si target ≠ ancêtre.
+    const sourceAncestor = source.findExpandedAncestor()
     if (sourceAncestor && sourceAncestor.side === 'left' && sourceAncestor.ancestor.id !== target.id) {
       return false
     }
-    // C. Target = enfant (transitivement) d'une dim is_expanded ; lien S→T
-    //    est un INPUT de T.
-    //    - expanded_right : enfant filtre ses inputs (sauf depuis ancêtre) → caché
-    //    - expanded_left  : enfant garde ses inputs → on continue
-    const targetAncestor = findExpandedAncestor(target)
+    // C. Target enfant (transitif), lien = INPUT de T.
+    //    expanded_right → caché si source ≠ ancêtre.
+    const targetAncestor = target.findExpandedAncestor()
     if (targetAncestor && targetAncestor.side === 'right' && targetAncestor.ancestor.id !== source.id) {
       return false
     }
@@ -1645,31 +1621,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
       }
     }
     // Cas 3 : transitivité — childNode est descendant transitif via dim
-    // force_show_children. Remontons. Pour un lien d'expansion transitif
-    // (ex. P → c1 où c1 est petit-enfant de P), le marker is_expansion_link
-    // est posé mais aucune dim directe is_expanded ne lie les deux endpoints.
+    // force_show_children. On utilise Class_NodeElement.findExpandedAncestor.
     if (!childNode) {
-      const findExpandedAncestor = (n: Class_NodeElement): { ancestor: Class_NodeElement, side: 'left' | 'right' } | null => {
-        const visited = new Set<string>()
-        let cur: Class_NodeElement | undefined = n
-        while (cur && !visited.has(cur.id)) {
-          visited.add(cur.id)
-          let next: Class_NodeElement | undefined
-          for (const d of cur.dimensions_as_child) {
-            if (d.expanded_left) return { ancestor: d.parent as Class_NodeElement, side: 'left' }
-            if (d.expanded_right) return { ancestor: d.parent as Class_NodeElement, side: 'right' }
-            if (d.force_show_children) { next = d.parent as Class_NodeElement; break }
-          }
-          cur = next
-        }
-        return null
-      }
-      const sourceAnc = findExpandedAncestor(this._source)
+      const sourceAnc = this._source.findExpandedAncestor()
       if (sourceAnc && sourceAnc.ancestor.id === this._target.id) {
         childNode = this._source
         expand_left = sourceAnc.side === 'left'
       } else {
-        const targetAnc = findExpandedAncestor(this._target)
+        const targetAnc = this._target.findExpandedAncestor()
         if (targetAnc && targetAnc.ancestor.id === this._source.id) {
           childNode = this._target
           expand_left = targetAnc.side === 'left'
