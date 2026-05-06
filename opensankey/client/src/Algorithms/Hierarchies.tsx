@@ -30,6 +30,35 @@ import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { NodePositioning } from './NodePositioning'
 
+/**
+ * INVARIANT — expansion latérale (issue #1225)
+ * =============================================
+ *
+ * À tout moment de la vie d'un Sankey, l'ensemble des `Class_LinkElement`
+ * marqués `is_expansion_link === true` doit correspondre EXACTEMENT à
+ * l'ensemble des liens parent↔enfant des dims actuellement `is_expanded`,
+ * en tenant compte de la transitivité via `force_show_children`.
+ *
+ * Concrètement, pour chaque dim `P → {c1, c2, ...}` avec `is_expanded=true`,
+ * il existe un lien d'expansion P↔c (orienté selon `expanded_left/right`)
+ * pour chaque c ∈ {c1, c2, ...}. Si un c est lui-même désagrégé (sa
+ * dim_as_parent a `force_show_children=true`), alors les liens d'expansion
+ * vont à ses petits-enfants à la place de c (transitivité).
+ *
+ * Toute opération qui modifie l'état d'expansion (`disaggregationExpansion`,
+ * `contract`, `disaggregate`, `aggregate`) doit MAINTENIR cet invariant en
+ * créant et détruisant les liens d'expansion en synchro avec les flags
+ * `is_expanded` / `force_show_children` des dims.
+ *
+ * Sites où l'invariant est consommé (lecture seule) :
+ *  - `Class_NodeDimension.checkIfRelatedDimensionsAreSelected` — visibilité du nœud
+ *  - `Class_LinkElement.is_allowed_by_container_modes` — visibilité du lien
+ *  - `Class_LinkElement._computeExpansionValue` — valeur dynamique
+ *  - `NodeActions._collectVisibleEnglobedNodes` / `_restackEnglobingDim` — positionnement
+ *
+ * Helper partagé pour la transitivité : `Class_NodeElement.findExpandedAncestor()`.
+ */
+
 // ============================================================================
 // UTILITAIRES COMMUNS
 // ============================================================================
