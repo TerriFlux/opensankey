@@ -198,9 +198,15 @@ def solve_optimisation_problem_unified(
             os.path.dirname(output_filename) or ".", "constraints_summary.txt"
         )
 
+    # Skip RREF — direct CVX minimisation on the raw constraint matrix. Faster
+    # but disables interval computation and Monte-Carlo. Mirrors --skip_rref in
+    # bin/run_reconciliation.py.
+    skip_rref = bool(solver_options.get("skip_rref", False))
+
     try:
         ok = mfa_problem_main.optimisation(
-            model_name, io_input.sankey, uncertainty, nb_realisations, False, **optim_kwargs
+            model_name, io_input.sankey, uncertainty, nb_realisations, False,
+            skip_rref=skip_rref, **optim_kwargs,
         )
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
