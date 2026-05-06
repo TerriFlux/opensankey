@@ -1244,14 +1244,24 @@ export class Class_LinkElement extends Class_LinkAttribute {
     const source = this._source
     const target = this._target
 
-    // Les liens d'expansion latérale (issue #1225 — flag transient
-    // _is_expansion_link posé par disaggregationExpansion) sont des
-    // représentations visuelles explicitement demandées par l'utilisateur
-    // (expandLeft/expandRight). Ils doivent échapper au filtre
-    // container_modes hérité, sinon expand vers la droite sur un nœud
-    // englobé en `in_children_out_parent` masquerait les flux de sortie
-    // qu'on cherche justement à voir.
+    // Les liens d'expansion latérale (issue #1225) sont des représentations
+    // visuelles explicitement demandées par l'utilisateur (expandLeft/Right).
+    // Ils doivent échapper au filtre container_modes hérité, sinon expand
+    // vers la droite sur un nœud englobé en `in_children_out_parent`
+    // masquerait les flux de sortie qu'on cherche justement à voir.
+    //
+    // Détection :
+    //  1. Marker transient `_is_expansion_link` posé par disaggregationExpansion
+    //     (cas des expansions interactives en cours de session).
+    //  2. À défaut, fallback structurel : ce lien relie le parent et un enfant
+    //     d'une dimension actuellement `is_expanded`. Ce cas couvre les liens
+    //     migrés depuis le legacy (fromJSON_pre_0_94) qui ne portent pas le
+    //     marker transient mais sont sémantiquement des liens d'expansion.
     if (this._is_expansion_link) return true
+    const isExpansionLinkByDim =
+      source.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === target.id)) ||
+      target.dimensions_as_parent.some(d => d.is_expanded && d.children.some(c => c.id === source.id))
+    if (isExpansionLinkByDim) return true
 
     // Walk up via dimensions_as_child pour collecter TOUS les dims qui
     // peuvent impacter ce lien, y compris les ancêtres englobants
