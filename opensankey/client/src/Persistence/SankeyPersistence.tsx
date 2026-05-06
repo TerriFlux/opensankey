@@ -472,6 +472,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // Values
     if (!kwargs || kwargs['with_values'] !== false)
       json_object['value'] = link['_values'].toJSON(kwargs)
+    // Issue #1225 — marker d'expansion latérale (transitivité, lien créé par
+    // disaggregate sur un nœud lui-même expansé). Persisté pour que la
+    // transitivité survive sauvegarde + rechargement.
+    if (link.is_expansion_link) json_object['is_expansion_link'] = true
     // Out
     return json_object
   }
@@ -639,6 +643,10 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       matching_tags_id
     )
     link.tooltip_text = getStringFromJSON(json_object, 'tooltip_text', '')
+    // Issue #1225 — restaurer le marker d'expansion s'il est dans le JSON.
+    if (getBooleanFromJSON(json_object, 'is_expansion_link', false)) {
+      link.is_expansion_link = true
+    }
   }
 }
 export class NodeElementPersistence extends NodeBasePersistence {
