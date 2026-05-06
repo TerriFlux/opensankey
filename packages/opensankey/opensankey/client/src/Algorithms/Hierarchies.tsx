@@ -258,14 +258,55 @@ export const aggregate = (
   // const parent = child_dim.parent
   const Do = () => {
     child_dim.setForceToShowParent()
-    const aggregateNode = child_dim.parent
+    const aggregateNode = child_dim.parent as Class_NodeElement
     aggregateNode.input_links_list.forEach(l => l.source.draw())
     aggregateNode.output_links_list.forEach(l => l.target.draw())
 
     aggregateNode.position_u = contextualised_node.position_u
 
-    // Gestion des nœuds d'échange
-    // handleExchangeNodes(new_data, contextualised_node, aggregateNode, 'aggregate')
+    // Issue #1225 — inverse de la transitivité d'expansion. Si aggregateNode
+    // est lui-même enfant d'une dim P→{...,aggregateNode,...} en mode expand,
+    // alors les enfants étaient transitivement liés à P par des liens
+    // d'expansion. À l'aggregate, on inverse :
+    //   - détruire les liens transitifs P↔c1, P↔c2 (créés au disaggregate)
+    //   - re-créer le lien d'expansion direct P↔aggregateNode (avec
+    //     redistribution agrégée : addValues des liens transitifs détruits).
+    const expanded_parent_dim = aggregateNode.dimensions_as_child.find(d => d.is_expanded)
+    if (expanded_parent_dim) {
+      const sankey = new_data.drawing_area.sankey
+      const P = expanded_parent_dim.parent as Class_NodeElement
+      const expand_left = expanded_parent_dim.expanded_left
+      const children = child_dim.children as Class_NodeElement[]
+      // Récupérer les anciens liens transitifs P↔c
+      const transitive_links: Class_LinkElement[] = []
+      children.forEach(c => {
+        const l = sankey.links_list.find(link =>
+          expand_left
+            ? (link.source === c && link.target === P)
+            : (link.source === P && link.target === c)
+        )
+        if (l) transitive_links.push(l)
+      })
+      // Re-créer (ou retrouver) le lien d'expansion direct P↔aggregateNode
+      const existing_direct = sankey.links_list.find(l =>
+        expand_left
+          ? (l.source === aggregateNode && l.target === P)
+          : (l.source === P && l.target === aggregateNode)
+      )
+      const direct_link = existing_direct ?? (expand_left
+        ? sankey.addNewLink(aggregateNode, P)
+        : sankey.addNewLink(P, aggregateNode))
+      direct_link.is_expansion_link = true
+      direct_link.shape_color_rule = 'source'
+      direct_link.shape_opacity = aggregateNode.shape_opacity
+      // Redistribution agrégée : sommer les valeurs des liens transitifs
+      transitive_links.forEach(l => direct_link.addValues(l))
+      // Détruire les liens transitifs
+      transitive_links.forEach(l => new_data.drawing_area.deleteLink(l))
+      // Reorganize les I/O
+      P.reorganizeIOLinks()
+      aggregateNode.reorganizeIOLinks()
+    }
   }
   const undo = () => {
     disaggregate(new_data, parent_node, contextualised_node.id, false)
