@@ -76,6 +76,12 @@ const App: FC = () => {
       const newDataApp = new Class_ApplicationData(!!window.sankey?.publish)
       newDataApp.t = translation.t
       newDataApp.i18n = translation.i18n
+      // Debug : exposer app_data et sankey en globales en mode dev pour
+      // permettre l'inspection via la console DevTools.
+      if (newDataApp.has_sankey_dev) {
+        (window as unknown as Record<string, unknown>)['app_data'] = newDataApp
+        ;(window as unknown as Record<string, unknown>)['sankey_debug'] = newDataApp.drawing_area.sankey
+      }
       const opts = newDataApp.publish_options
       if (opts.diagram) {
         setIsLoading(true)
