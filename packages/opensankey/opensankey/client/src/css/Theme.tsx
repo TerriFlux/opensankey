@@ -129,7 +129,7 @@ export const createSizeStyle = (width: string, height: string, padding = '0.2rem
 })
 
 // Factory pour boutons avec position (left, center, right)
-export const createPositionedButtonStyle = (baseStyle: SystemStyleObject, position: 'left' | 'center' | 'right') => {
+export const createPositionedButtonStyle = (baseStyle: SystemStyleObject, position: 'left' | 'center' | 'right'): SystemStyleObject => {
   const borderRadiusMap = {
     left: '6px 0px 0px 6px',
     center: '0px',
@@ -138,7 +138,7 @@ export const createPositionedButtonStyle = (baseStyle: SystemStyleObject, positi
   return defineStyle({
     ...baseStyle,
     borderRadius: borderRadiusMap[position]
-  })
+  }) as SystemStyleObject
 }
 
 // Factory pour tables

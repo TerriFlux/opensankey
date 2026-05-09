@@ -1,0 +1,195 @@
+export const initial_data = {
+  version: "0.91",
+  height: 811.6000061035156,
+  width: 1859,
+  user_scale: 20000,
+  couleur_fond_sankey: "#ffffff",
+  style_link: {
+    default: {
+      value_label_custom_digit: false,
+      value_label_nb_digit: 0,
+      value_label_unit_visible: true,
+      value_label_unit: "k€",
+      value_label_unit_factor: 1000,
+      name_label_pos_auto: false,
+      name: "Style par default",
+    },
+  },
+  nodes: {
+    node0: {
+      x: 200,
+      y: 95,
+      name: "Sales - Product 1",
+      local: {
+        color: "#9141ac",
+        name_label_horiz: "left",
+        name_label_vert: "middle",
+      },
+      outputLinksId: ["Node 0 --> Node 1"],
+    },
+    node1: {
+      x: 400,
+      y: 120,
+      name: "Revenues",
+      local: {
+        name_label_bold: true,
+        name_label_background: false,
+      },
+      links_order: [
+        "Revenues --> Node 8",
+        "Revenues --> Node 7",
+        "Node 1 --> Node 3",
+        "Node 0 --> Node 1",
+        "Node 2 --> Node 1",
+      ],
+    },
+    node2: {
+      x: 200,
+      y: 245,
+      name: "Sales - Product 2",
+      local: {
+        color: "#865e3c",
+        name_label_horiz: "left",
+        name_label_vert: "middle",
+      },
+      links_order: ["Node 2 --> Node 1"],
+    },
+    node3: {
+      x: 600,
+      y: 300,
+      name: "Taxes",
+      local: {
+        color: "#e01b24",
+        name_label_horiz: "right",
+        name_label_vert: "middle",
+      },
+      links_order: ["Node 1 --> Node 3"],
+    },
+    node7: {
+      x: 600,
+      y: 140,
+      name: "Expenses",
+      local: {
+        color: "#3584e4",
+        name_label_bold: true,
+        name_label_background: false,
+      },
+      links_order: [
+        "Revenues --> Node 6",
+        "Node 1 --> Node 4",
+        "Node 1 --> Node 5",
+        "Revenues --> Node 7",
+      ],
+    },
+    node4: {
+      x: 800,
+      y: 157.5,
+      name: "Human ressources",
+      local: {
+        color: "#3584e4",
+        name_label_horiz: "right",
+        name_label_vert: "middle",
+      },
+      links_order: ["Node 1 --> Node 4"],
+    },
+    node5: {
+      x: 800,
+      y: 282.5,
+      name: "Marketing",
+      local: {
+        color: "#3584e4",
+        name_label_horiz: "right",
+        name_label_vert: "middle",
+      },
+      links_order: ["Node 1 --> Node 5"],
+    },
+    node6: {
+      x: 800,
+      y: 67.5,
+      name: "Production",
+      local: {
+        color: "#3584e4",
+        name_label_horiz: "right",
+        name_label_vert: "middle",
+      },
+      links_order: ["Revenues --> Node 6"],
+    },
+    node8: {
+      x: 600,
+      y: 50,
+      name: "Profits",
+      local: {
+        color: "#33d17a",
+        name_label_horiz: "right",
+        name_label_vert: "middle",
+      },
+      links_order: ["Revenues --> Node 8"],
+    },
+  },
+  links: {
+    "Node 0 --> Node 1": {
+      idSource: "node0",
+      idTarget: "node1",
+      local: {
+        color: "#c061cb",
+      },
+      value: {},
+    },
+    "Node 2 --> Node 1": {
+      idSource: "node2",
+      idTarget: "node1",
+      local: {
+        color: "#b5835a",
+      },
+      value: {},
+    },
+    "Node 1 --> Node 3": {
+      idSource: "node1",
+      idTarget: "node3",
+      local: {
+        color: "#f66151",
+      },
+      value: {},
+    },
+    "Node 1 --> Node 4": {
+      idSource: "node7",
+      idTarget: "node4",
+      local: {
+        color: "#62a0ea",
+      },
+      value: {},
+    },
+    "Node 1 --> Node 5": {
+      idSource: "node7",
+      idTarget: "node5",
+      local: {
+        color: "#62a0ea",
+      },
+      value: {},
+    },
+    "Revenues --> Node 6": {
+      idSource: "node7",
+      idTarget: "node6",
+      local: {
+        color: "#62a0ea",
+      },
+      value: {},
+    },
+    "Revenues --> Node 7": {
+      idSource: "node1",
+      idTarget: "node7",
+      local: {
+        color: "#62a0ea",
+      },
+      value: {},
+    },
+    "Revenues --> Node 8": {
+      idSource: "node1",
+      idTarget: "node8",
+      local: {
+        color: "#57e389",
+      },
+      value: {},
+    },
+  },
+};
