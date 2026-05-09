@@ -70,6 +70,13 @@ export class BaseElementPersistence {
   ) {
   }
 
+  public static fromJSON_1_1_1(
+    _base_element: BaseElementPersistence,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
   public static toJSON(
     base_element: Class_BaseElement,
     json_object: Type_JSON,
@@ -149,6 +156,13 @@ export class ProtoElementPersistence extends BaseElementPersistence {
     }
   }
 
+  public static fromJSON_1_1_1(
+    _proto_element: Class_ProtoElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
   public static fromJSON(
     version: number,
     proto_element: Class_ProtoElement,
@@ -212,6 +226,13 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   }
 
   public static fromJSON_0_9(
+    _base_element: Class_NodeBase,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
+  public static fromJSON_1_1_1(
     _base_element: Class_NodeBase,
     _json_object: Type_JSON,
     _kwargs?: Type_JSON
@@ -326,6 +347,13 @@ export class ContainerPersistence extends NodeBasePersistence {
       container.attributes['name_label_inside_horiz'] = true
 
     }
+  }
+
+  public static fromJSON_1_1_1(
+    _container: Class_ContainerElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
 
   /**
@@ -621,6 +649,13 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     }
   }
 
+  public static fromJSON_1_1_1(
+    _link: Class_LinkElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
   public static fromJSON(
     version: number,
     link: Class_LinkElement,
@@ -851,6 +886,13 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
   }
 
+  public static fromJSON_1_1_1(
+    _node: Class_NodeElement,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
   public static fromJSON(version: number, node: Class_NodeElement, json_node_object: Type_JSON, kwargs?: Type_JSON) {
     super.fromJSON(version, node, json_node_object, kwargs)
 
@@ -928,6 +970,13 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (!json_legend['legend_position']) return
     json_legend['x'] = +(json_legend['legend_position'] as Type_JSON)[0]
     json_legend['y'] = +(json_legend['legend_position'] as Type_JSON)[1]
+  }
+
+  public static fromJSON_1_1_1(
+    _legend: ClassTemplate_Legend,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
 
   public static fromJSON(
@@ -1082,6 +1131,13 @@ export class StylePersistence {
         style['_storage'][attrKey] = json_object[jsonKey]
       }
     })
+  }
+
+  public static fromJSON_1_1_1(
+    _style: Class_ElementStyle,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
 
   public static toJSON(style: Class_ElementStyle): Type_JSON {
@@ -1466,6 +1522,13 @@ export class SankeyPersistence {
     )
   }
 
+  public static fromJSON_1_1_1(
+    _sankey: Class_Sankey,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
+  }
+
   /**
    * Setting value of sankey and substructur from JSON
    *
@@ -1759,6 +1822,13 @@ export class DrawingAreaPersistence {
   ) {
     LegendPersistence.fromJSON_0_91(drawing_area.legend, json_object)
     SankeyPersistence.fromJSON_0_91(drawing_area.sankey, json_object)
+  }
+
+  public static fromJSON_1_1_1(
+    _drawing_area: Class_DrawingArea,
+    _json_object: Type_JSON,
+    _kwargs?: Type_JSON
+  ) {
   }
 
   /**
