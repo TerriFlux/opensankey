@@ -8,13 +8,16 @@ Self-contained React + TypeScript apps embedding `open-sankey`. Each example has
 examples/
 ├── current/                     # consumes the local OpenSankey build (file: link)
 │   ├── viewer/
-│   └── editor/
+│   ├── editor/
+│   └── html-viewer/
 ├── 1.1.1/                       # frozen on open-sankey@1.1.1
 │   ├── viewer/
-│   └── editor/
+│   ├── editor/
+│   └── html-viewer/
 └── 1.0.7/                       # frozen on open-sankey@1.0.7 (legacy)
     ├── viewer/
-    └── editor/
+    ├── editor/
+    └── html-viewer/
 ```
 
 - `current/<example>/` — `package.json` resolves `open-sankey` via `file:../../../opensankey/client`. Build the client first (`pnpm dist` in `opensankey/client`) before `pnpm install` here. Use this to validate examples against the work-in-progress code.
@@ -24,7 +27,9 @@ examples/
 
 | Example | What it shows |
 |---|---|
-| `viewer` | Minimal read-only viewer: `Class_ApplicationData(true)` + `fromJSON` + `draw`, with `window.sankey.publish = true`. |
+| `viewer` | Minimal read-only React/TypeScript viewer: `Class_ApplicationData(true)` + `fromJSON` + `draw`, with `window.sankey.publish = true`. |
+| `editor` | Editable React/TypeScript variant with `SpreadSheet` and a "Remplir" button to mutate link values. |
+| `html-viewer` | Pure HTML / `<script>` tag — no build step, loads the OpenSankey UMD bundle from GitLab Pages and configures via `window.sankey`. |
 
 > Multi-views and other OSP-only features are not in this folder — they belong to the `opensankey-plus` package and should be added under its own `examples/` directory.
 

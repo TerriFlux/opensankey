@@ -1,0 +1,24 @@
+<html>
+  <head>
+    <title>OpenSankey</title>
+    <script
+      defer="defer"
+      src="https://su-model.gitlab.io/opensankey/1.0.7/static/js/opensankey-v1.0.0.js"
+    ></script>
+  </head>
+  <div id="react-container"></div>
+  <body>
+    <script>
+      window.sankey = {
+        publish: true,
+        //topbar:false,
+        header: "Exemple de diagramme de Sankey",
+        //footer:true,
+        toolbar: false,
+        logo: "logo-socle.png",
+        //recenter:false
+        diagram: "example.json",
+      };
+    </script>
+  </body>
+</html>
