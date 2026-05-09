@@ -2,7 +2,7 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Non publié] — Mai 2026
+## [1.1.0] — 2026-05-09
 
 ### Refonte du mode englobant — emboîtement, sizing dynamique, intégration disaggregate/expand
 
