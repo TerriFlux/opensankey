@@ -1,19 +1,12 @@
 import { createRoot } from "react-dom/client";
 import { FunctionComponent, useEffect, useState } from "react";
 import * as Chakra from "@chakra-ui/react";
-import i18n from "i18next";
-import { I18nextProvider, initReactI18next, useTranslation } from "react-i18next";
+import { I18nextProvider, useTranslation } from "react-i18next";
 import { Class_ApplicationData } from "open-sankey/dist/types/ApplicationData";
 import { Type_JSON } from "open-sankey/dist/types/Utils";
 import { SpreadSheet } from "open-sankey/dist/components/spreadsheet/SpreadSheet";
+import i18n from "./traduction.js";
 import initial_data from "./example.json";
-
-i18n.use(initReactI18next).init({
-  resources: { en: { translation: {} } },
-  lng: "en",
-  fallbackLng: "en",
-  interpolation: { escapeValue: false },
-});
 
 const SpreadSheetWrapper: FunctionComponent<{
   app_data: Class_ApplicationData;

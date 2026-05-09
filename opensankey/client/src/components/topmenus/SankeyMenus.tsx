@@ -165,42 +165,42 @@ export const SankeyMenu = (
         >
           <DrawerSequenceDataTagg new_data={app_data} />
           {(!app_data.is_static || app_data.publish_options.footer) ? <Box
-              display='grid'
-              gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-              margin='0.2rem'
+            display='grid'
+            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
+            margin='0.2rem'
+          >
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='start'
             >
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='start'
-              >
               ©
-                <img
-                  width={75}
-                  src={logo_terriflux}
-                  onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-                />
+              <img
+                width={75}
+                src={logo_terriflux}
+                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
+              />
               - {t('tdr')}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                {app_name}
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-              </Box>
-              <Box layerStyle='menubottom_item_style'>
-                <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-              </Box>
-              <Box
-                layerStyle='menubottom_item_style'
-                justifySelf='end'
-                paddingRight='1.5rem'
-                display='flex'
-                alignItems='center'
-                gap='0.5rem'
-              >
-                {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
-              </Box>
-            </Box> :
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              {app_name}
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
+            </Box>
+            <Box layerStyle='menubottom_item_style'>
+              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
+            </Box>
+            <Box
+              layerStyle='menubottom_item_style'
+              justifySelf='end'
+              paddingRight='1.5rem'
+              display='flex'
+              alignItems='center'
+              gap='0.5rem'
+            >
+              {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
+            </Box>
+          </Box> :
             <></>
           }
         </Box>

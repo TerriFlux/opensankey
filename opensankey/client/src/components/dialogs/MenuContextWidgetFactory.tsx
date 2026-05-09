@@ -724,10 +724,10 @@ export const DimensionActionSelector = ({
       }
     } else {
       switch (container_variant) {
-        case 'in_children_out_parent': actions.containerInChildrenOutParent(other_id); break
-        case 'in_parent_out_children': actions.containerInParentOutChildren(other_id); break
-        case 'in_children_out_children': actions.containerInChildrenOutChildren(other_id); break
-        case 'in_parent_out_parent': actions.containerInParentOutParent(other_id); break
+      case 'in_children_out_parent': actions.containerInChildrenOutParent(other_id); break
+      case 'in_parent_out_children': actions.containerInParentOutChildren(other_id); break
+      case 'in_children_out_children': actions.containerInChildrenOutChildren(other_id); break
+      case 'in_parent_out_parent': actions.containerInParentOutParent(other_id); break
       }
     }
   }
