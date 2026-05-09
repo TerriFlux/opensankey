@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { FunctionComponent, useEffect, useState } from "react";
-import * as Chakra from "@chakra-ui/react";
+import { Button, ChakraProvider, Center, HStack, Stack } from "@chakra-ui/react";
 import { I18nextProvider, useTranslation } from "react-i18next";
 import { Class_ApplicationData } from "open-sankey/dist/types/ApplicationData";
 import { Type_JSON } from "open-sankey/dist/types/Utils";
@@ -45,25 +45,25 @@ const SpreadSheetWithLayoutSankeyApp: FunctionComponent = () => {
   };
 
   return (
-    <Chakra.Stack>
-      <Chakra.Center>
-        <Chakra.HStack>
-          <Chakra.Button variant="plain" onClick={fillValues}>
+    <Stack>
+      <Center>
+        <HStack>
+          <Button variant="plain" onClick={fillValues}>
             Remplir
-          </Chakra.Button>
+          </Button>
           <SpreadSheetWrapper app_data={app_data} />
-        </Chakra.HStack>
-      </Chakra.Center>
+        </HStack>
+      </Center>
       <div id="sankey_app" />
-    </Chakra.Stack>
+    </Stack>
   );
 };
 
 const root = createRoot(document.getElementById("root") as HTMLElement);
 root.render(
-  <Chakra.ChakraProvider>
+  <ChakraProvider>
     <I18nextProvider i18n={i18n}>
       <SpreadSheetWithLayoutSankeyApp />
     </I18nextProvider>
-  </Chakra.ChakraProvider>
+  </ChakraProvider>
 );

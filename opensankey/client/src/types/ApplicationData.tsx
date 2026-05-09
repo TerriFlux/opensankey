@@ -70,8 +70,6 @@ export type MenuColorPickerProps = {
   textDisabled?: string
 }
 
-initializeTooltipSystem()
-
 // FOREIGN OBJECT → SVG TEXT (rich) *****************************************************
 
 type FOSpanStyle = {
@@ -522,6 +520,10 @@ export class Class_ApplicationData {
     options: { [_: string]: boolean | string } = {}
   ) {
     // super()
+    // Initialiser le système de tooltip (idempotent ; appelé ici plutôt qu'au top-level
+    // pour ne pas marquer le module comme side-effectful, ce qui casse l'analyse webpack
+    // des named imports Chakra dans les consommateurs externes).
+    initializeTooltipSystem()
     // Options for application
     this.options = options
     // Deals with UI menu updates / each modifications
