@@ -1,6 +1,7 @@
 import { FunctionComponent, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { createRoot } from "react-dom/client";
+import "./traduction.js";
 import { SpreadSheet } from "open-sankey/dist/components/spreadsheet/SpreadSheet";
 import { Button, Stack, HStack, Center } from "@chakra-ui/react";
 import { Class_ApplicationData } from "open-sankey/dist/types/ApplicationData";
