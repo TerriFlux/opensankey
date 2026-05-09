@@ -4,6 +4,10 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [1.1.0] — 2026-05-09
 
+### Packaging
+
+- Restriction de la tarball npm via le champ `files` dans `package.json` : ne sont publiés que `dist/`, `README.md`, `CHANGELOG.md` et `LICENSE`. Les versions précédentes (≤ 1.0.7) embarquaient aussi `src/`, `build/` et `public/` (vidéos, images carousel, source maps), pour un tarball d'environ 13 Mo. Le tarball 1.1.0 fait environ 5 Mo.
+
 ### Refonte du mode englobant — emboîtement, sizing dynamique, intégration disaggregate/expand
 
 - **Sizing dynamique du parent englobant** ([NodeBase.tsx](opensankey/client/src/Elements/NodeBase.tsx), [Node.tsx](opensankey/client/src/Elements/Node.tsx)) : `getShape{Width,Height}ToUse()` intègre désormais l'enveloppe des `attached_node` à la volée via le nouvel helper `_envelopeSize()`, au lieu d'écrire dans `shape_min_*` (méthode `expandToContainAttachedNodes` simplifiée — ne touche plus que la position). Conséquence : à la sortie d'un mode englobant, le parent retrouve immédiatement sa taille calée sur ses flux propres ; à la modification d'une valeur de flux, la taille suit dynamiquement. Le getter en classe Node compose `Math.max(sum_of_link_thicknesses, super.getShapeXxxToUse())` pour bénéficier de la contribution envelope.

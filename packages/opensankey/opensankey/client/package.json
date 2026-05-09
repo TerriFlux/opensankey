@@ -12,6 +12,12 @@
   "version": "1.1.0",
   "description": "Open Sankey",
   "license": "MIT",
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

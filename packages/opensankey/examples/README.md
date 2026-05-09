@@ -7,11 +7,14 @@ Self-contained React + TypeScript apps embedding `open-sankey`. Each example has
 ```
 examples/
 ├── current/                     # consumes the local OpenSankey build (file: link)
-│   └── viewer/
+│   ├── viewer/
+│   └── editor/
 ├── 1.1.0/                       # frozen on open-sankey@1.1.0
-│   └── viewer/
+│   ├── viewer/
+│   └── editor/
 └── 1.0.7/                       # frozen on open-sankey@1.0.7 (legacy)
-    └── viewer/
+    ├── viewer/
+    └── editor/
 ```
 
 - `current/<example>/` — `package.json` resolves `open-sankey` via `file:../../../opensankey/client`. Build the client first (`pnpm dist` in `opensankey/client`) before `pnpm install` here. Use this to validate examples against the work-in-progress code.
