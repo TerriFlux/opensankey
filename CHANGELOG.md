@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.2] — 2026-05-09
+
+### Fixed
+
+- **Crash au démarrage en consommateur externe (`TypeError: can't access property "drawShape", this._nodeDrawShape is undefined`)** ([NodeBase.tsx](opensankey/client/src/Elements/NodeBase.tsx), [Node.tsx](opensankey/client/src/Elements/Node.tsx), [Link.tsx](opensankey/client/src/Elements/Link.tsx)) : la chaîne de build Babel CRA en mode `loose` émet, pour chaque déclaration `prop!: Type` de `Class_BaseShape`, un `this.prop = void 0` au début du constructeur de la classe. Ce write traverse le dynamic setter installé par `createDynamicProperties()` dans `Class_ProtoElement` et déclenche l'action `drawShape`/`drawElements` AVANT que les sous-classes (`Class_NodeBase`, `Class_LinkElement`, …) n'aient assigné leurs helpers (`_nodeDrawShape`, `_link_shape`, `_link_draw_value`, `_link_draw_label`, `_link_draw_icon`, `_nodeDrawNameLabel`, `_nodeDrawIcon`, `_nodeDrawValueLabel`). Guard défensif (`if (!this._nodeDrawShape) return`, etc.) ajouté dans toutes les méthodes `draw*` invoquées comme actions. Le bug ne se manifestait pas en SankeyApplication car `Class_ApplicationDataSA` override `createNewDrawingArea` et instancie une chaîne différente ; il sortait au lancement direct d'OpenSankey via `index.tsx` → `Class_ApplicationData` → `createNewDrawingArea` → `Class_DrawingArea` → `ClassTemplate_Legend` (super NodeBase).
+
 ## [1.1.1] — 2026-05-09
 
 ### Fixed

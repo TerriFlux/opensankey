@@ -391,23 +391,27 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawShape() {
+    if (!this._link_shape) return
     this._link_shape.drawShape()
     this._orderD3Elements()
   }
 
   public drawArrow() {
+    if (!this.d3_selection) return
     this._drawArrow()
     this._orderD3Elements()
   }
 
   public drawValueLabel() {
     if (this.drawing_area.bypass_redraws) return
+    if (!this._link_draw_value) return
     this._link_draw_value.drawGenericLabel()
     this._orderD3Elements()
   }
 
   public drawNameLabel() {
     if (this.drawing_area.bypass_redraws) return
+    if (!this._link_draw_label) return
     this._link_draw_label.drawGenericLabel()
     this._orderD3Elements()
   }
@@ -839,6 +843,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
 
   public drawIcon() {
+    if (!this._link_draw_icon) return
     this._link_draw_icon.drawGenericLabel()
   }
   /**
@@ -887,6 +892,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public drawElements() {
+    if (!this._link_shape || !this._link_draw_value || !this._link_draw_label || !this._link_draw_icon) return
     this._link_shape.drawShape()
     this._drawArrow()
     this._link_draw_value.drawGenericLabel()
@@ -1836,6 +1842,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawFO() {
+    if (!this._link_draw_label) return
     this._link_draw_label.drawFO()
   }
 
