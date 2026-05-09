@@ -265,9 +265,9 @@ pages-root:
   artifacts:
     paths:
       - public
-  dependencies:
-    - build
   needs:
+    - job: build
+      artifacts: true
     - job: pages
       artifacts: true
   rules:
