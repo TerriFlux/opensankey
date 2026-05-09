@@ -465,6 +465,7 @@ export class Class_NodeElement extends Class_NodeBase {
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
+    if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
     this._orderD3Elements()
   }
