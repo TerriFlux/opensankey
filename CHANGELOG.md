@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.1] — 2026-05-09
+
+### Fixed
+
+- **Compatibilité webpack 5 strict ESM des consommateurs externes** ([ApplicationData.tsx](opensankey/client/src/types/ApplicationData.tsx)) : déplacement de l'appel `initializeTooltipSystem()` du top-level vers le constructor de `Class_ApplicationData`. Le side-effect au top-level forçait webpack 5 à traiter le module en mode dynamique, ce qui marquait `@chakra-ui/react` comme `default-only` chez le consommateur et faisait échouer l'analyse statique des imports nommés (`useToast`, `ChakraProvider`, …). Avec l'appel dans le constructor, `Class_ApplicationData` reste statiquement analysable et les exemples `examples/1.1.x/*` compilent en CRA local.
+
 ## [1.1.0] — 2026-05-09
 
 ### Packaging

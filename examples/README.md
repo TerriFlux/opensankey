@@ -9,7 +9,7 @@ examples/
 ├── current/                     # consumes the local OpenSankey build (file: link)
 │   ├── viewer/
 │   └── editor/
-├── 1.1.0/                       # frozen on open-sankey@1.1.0
+├── 1.1.1/                       # frozen on open-sankey@1.1.1
 │   ├── viewer/
 │   └── editor/
 └── 1.0.7/                       # frozen on open-sankey@1.0.7 (legacy)

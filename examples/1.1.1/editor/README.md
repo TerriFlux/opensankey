@@ -1,8 +1,8 @@
-# OpenSankey Editor — version 1.1.0
+# OpenSankey Editor — version 1.1.1
 
 Sankey en mode édition (`Class_ApplicationData(false)`), avec `SpreadSheet` pour éditer les valeurs des flux et un bouton "Remplir" qui pré-remplit les valeurs et rafraîchit la spreadsheet.
 
-Pinned sur `open-sankey@1.1.0`. Adapté au sandbox CodeSandbox.
+Pinned sur `open-sankey@1.1.1`. Adapté au sandbox CodeSandbox.
 
 ## Run
 

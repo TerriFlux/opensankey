@@ -1,6 +1,6 @@
-# OpenSankey Viewer — version 1.1.0
+# OpenSankey Viewer — version 1.1.1
 
-Minimal React + TypeScript viewer pinned against the published `open-sankey@1.1.0` npm package. Suitable as a CodeSandbox template for external developers.
+Minimal React + TypeScript viewer pinned against the published `open-sankey@1.1.1` npm package. Suitable as a CodeSandbox template for external developers.
 
 ## What it does
 
@@ -24,4 +24,4 @@ Open http://localhost:3000.
 
 ## CodeSandbox
 
-This folder is meant to be uploaded as-is to https://codesandbox.io to provide an online playground frozen against `open-sankey@1.1.0`.
+This folder is meant to be uploaded as-is to https://codesandbox.io to provide an online playground frozen against `open-sankey@1.1.1`.
