@@ -2,13 +2,14 @@
   "name": "open-sankey",
   "type": "module",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "module": "dist/index.js",
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/terriflux-public/OpenSankey"
   },
   "author": "TerriFlux",
-  "version": "1.0.7",
+  "version": "1.1.0",
   "description": "Open Sankey",
   "license": "MIT",
   "scripts": {
