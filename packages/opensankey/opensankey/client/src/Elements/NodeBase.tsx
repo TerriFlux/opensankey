@@ -151,12 +151,17 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   }
 
   public drawAsSelected() {
+    // Guard: actions déclenchées par des setters d'attributs config peuvent
+    // tirer pendant la chaîne `super()` de cette classe, AVANT que
+    // _nodeDrawShape/_nodeDrawNameLabel/_nodeDrawIcon ne soient assignés.
+    if (!this._nodeDrawShape) return
     this._nodeDrawShape.drawShape()
     this.drawDragHandlers()
     // this._nodeDrawShape.updateSelectedStroke(this.is_selected)
   }
 
   protected drawElements() {
+    if (!this._nodeDrawShape || !this._nodeDrawNameLabel || !this._nodeDrawIcon) return
     this._nodeDrawShape.drawShape()
     if (this._is_selected) {
       this.drawDragHandlers()
@@ -165,9 +170,11 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._nodeDrawIcon.drawGenericLabel()
   }
   public drawIcon() {
+    if (!this._nodeDrawIcon) return
     this._nodeDrawIcon.drawGenericLabel()
   }
   public drawShape() {
+    if (!this._nodeDrawShape) return
     this._nodeDrawShape.drawShape()
     if (this._is_selected) {
       this.drawDragHandlers()
@@ -177,11 +184,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   public drawNameLabel() {
     if (this.drawing_area.bypass_redraws) return
+    if (!this._nodeDrawNameLabel) return
     this._nodeDrawNameLabel.drawGenericLabel()
     this._orderD3Elements()
   }
 
   public drawFO() {
+    if (!this._nodeDrawNameLabel) return
     this._nodeDrawNameLabel.drawGenericLabel()
   }
 
