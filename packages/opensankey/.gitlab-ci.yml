@@ -60,20 +60,30 @@ test:
     - when: always
 
 # =====================================================================
-# Déploiement versionné (parallel deployments — GitLab >= 16.7)
-# Chaque version est publiée sous /<APP_VERSION>/ et conservée par GitLab
-# indépendamment des autres. Pas d'écrasement des versions précédentes.
-# Quota par défaut : 100 déploiements parallèles par projet
-# (configurable dans Settings → Pages).
-# Doc : https://docs.gitlab.com/user/project/pages/#parallel-deployments
+# Déploiement Pages (single deployment, plan Free compatible)
+#
+# Le plan GitLab du namespace ne permet pas les "parallel deployments".
+# Stratégie : on republie TOUT le site à chaque pipeline, en récupérant
+# les versions précédentes depuis l'URL publique de Pages avant d'y
+# ajouter le build courant.
+#
+# Étapes :
+#   1. Mirror des anciennes versions (auto-découverte via index.html actuel)
+#      → public/<v>/ pour chaque version trouvée
+#   2. Build courant → public/$APP_VERSION/ + public/latest/
+#   3. Génération de public/index.html listant toutes les versions
+#
+# Tolérance : si une version est inaccessible (Pages down, version
+# supprimée), on continue sans bloquer ; un avertissement est loggé.
+# La toute première fois (pas d'index pré-existant), seule la version
+# courante sera publiée — l'historique se reconstruit à partir de là.
 # =====================================================================
 pages:
   image: node:18
   stage: deploy
   variables:
     GIT_SUBMODULE_STRATEGY: none  # Évite les problèmes de sous-modules SSH
-  pages:
-    path_prefix: "$APP_VERSION"
+    PAGES_BASE_URL: "https://su-model.gitlab.io/opensankey"
   script:
     # === Récupération de la version depuis package.json ===
     - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/opensankey/client/package.json"
@@ -89,8 +99,8 @@ pages:
         exit 1
       fi
     - echo "[INFO] Version détectée depuis package.json  $APP_VERSION"
-    # path_prefix utilise $APP_VERSION ; l'export pour la suite
-    - echo "APP_VERSION=$APP_VERSION" >> deploy.env
+    # === Outils ===
+    - apt-get update -qq && apt-get install -y -qq wget
     # === Vérification que le build existe ===
     - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
     - |
@@ -103,8 +113,10 @@ pages:
     - JS_DIR="$BUILD_DIR/static/js"
     - CSS_DIR="$BUILD_DIR/static/css"
     - INDEX_FILE="$BUILD_DIR/index.html"
-    # Avec path_prefix, public/ est la racine de CETTE version uniquement.
-    - VERSION_DIR="$CI_PROJECT_DIR/public"
+    - PUBLIC_DIR="$CI_PROJECT_DIR/public"
+    - VERSION_DIR="$PUBLIC_DIR/$APP_VERSION"
+    - LATEST_DIR="$PUBLIC_DIR/latest"
+    - mkdir -p "$PUBLIC_DIR"
     # === Vérification des dossiers nécessaires ===
     - |
       if [ ! -d "$JS_DIR" ]; then
@@ -153,90 +165,86 @@ pages:
     # === Chemins relatifs pour GitLab Pages
     - sed -i 's|="/static/|="./static/|g' "$INDEX_FILE"
     - echo "[INFO] Chemins convertis en relatifs pour GitLab Pages"
-    # === Préparation du dossier de déploiement (= public/, racine du path_prefix)
+
+    # =================================================================
+    # ÉTAPE 1 — Récupération des versions précédentes depuis Pages
+    # On parse l'index.html actuel pour découvrir les versions déjà
+    # déployées, puis on miroir chacune dans public/<v>/.
+    # =================================================================
+    - echo "[INFO] Récupération de l'index Pages courant pour découvrir les versions"
+    - |
+      if wget --quiet --tries=2 --timeout=15 -O current_index.html "$PAGES_BASE_URL/index.html"; then
+        echo "[INFO] index.html récupéré"
+        # Parse les liens de la forme href="./X.Y.Z/" ou href="X.Y.Z/"
+        grep -oE 'href="\.?/?[0-9]+\.[0-9]+\.[0-9]+/"' current_index.html \
+          | sed -E 's|href="\.?/?||; s|/"||' \
+          | sort -u > previous_versions.txt || true
+      else
+        echo "[ATTENTION] Pas d'index.html accessible (premier déploiement ?) — historique vide"
+        : > previous_versions.txt
+      fi
+    - echo "[INFO] Versions précédentes détectées :"
+    - cat previous_versions.txt || true
+    - |
+      mirror_version() {
+        local v="$1"
+        local target="$PUBLIC_DIR/$v"
+        echo "[INFO] Mirror $PAGES_BASE_URL/$v/ → $target"
+        mkdir -p "$target"
+        # --no-host-directories + --cut-dirs=2 pour aplatir su-model.gitlab.io/opensankey/<v>/...
+        # --no-parent pour rester sous <v>/
+        # || true : tolère les échecs partiels (Pages down, version supprimée…)
+        ( cd "$target" && wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=2 \
+            --reject "index.html.tmp*" \
+            --quiet \
+            --tries=2 \
+            --timeout=30 \
+            "$PAGES_BASE_URL/$v/" ) || echo "[ATTENTION] Mirror partiel ou échoué pour $v"
+        if [ ! -f "$target/index.html" ]; then
+          echo "[ATTENTION] $v sans index.html après mirror — supprimé"
+          rm -rf "$target"
+        fi
+      }
+    - |
+      while IFS= read -r v; do
+        [ -z "$v" ] && continue
+        # Skip la version courante : elle sera (re)construite à l'étape 2
+        if [ "$v" = "$APP_VERSION" ]; then
+          echo "[INFO] Skip $v (= version courante, reconstruite ci-dessous)"
+          continue
+        fi
+        mirror_version "$v"
+      done < previous_versions.txt
+
+    # =================================================================
+    # ÉTAPE 2 — Build courant → public/$APP_VERSION/ + public/latest/
+    # =================================================================
     - mkdir -p "$VERSION_DIR"
     - cp -r "$BUILD_DIR"/* "$VERSION_DIR"
     - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$VERSION_DIR/404.html"
-    - echo "[INFO] Version $APP_VERSION préparée dans $VERSION_DIR"
-    # === Création du fichier static.zip ===
+    - echo "[INFO] Version $APP_VERSION écrite dans $VERSION_DIR"
     - |
       if [ -d "$VERSION_DIR/static" ]; then
-        cd "$VERSION_DIR"
-        zip -r "static.zip" static/
-        echo "[INFO] Fichier static.zip créé pour la version $APP_VERSION"
-        echo "[INFO] Accessible à : https://su-model.gitlab.io/opensankey/$APP_VERSION/static.zip"
-      else
-        echo "[ATTENTION] Le dossier static n'existe pas dans $VERSION_DIR"
+        ( cd "$VERSION_DIR" && zip -rq "static.zip" static/ )
+        echo "[INFO] static.zip créé pour $APP_VERSION"
       fi
-    - echo "[INFO] Déploiement versionné terminé pour $APP_VERSION"
-  artifacts:
-    paths:
-      - public
-    reports:
-      dotenv: deploy.env
-  dependencies:
-    - build
-  rules:
-    - when: manual
-      allow_failure: true
-
-# =====================================================================
-# Déploiement de la racine (latest + index listant toutes les versions)
-# Ce job écrit à la racine de Pages (pas de path_prefix). Il interroge
-# l'API GitLab pour lister tous les déploiements parallèles actifs et
-# génère index.html dynamiquement.
-#
-# La page latest/ pointe vers la version qui vient d'être publiée par
-# le job `pages` ci-dessus.
-#
-# Pour autoriser l'API : créer un Project Access Token (scope read_api)
-# et l'exposer via une variable masquée PAGES_API_TOKEN. À défaut,
-# le job tente CI_JOB_TOKEN (peut échouer selon perm projet).
-# =====================================================================
-pages-root:
-  image: node:18
-  stage: deploy
-  variables:
-    GIT_SUBMODULE_STRATEGY: none
-  pages: true
-  script:
-    - apt-get update -qq && apt-get install -y -qq curl jq
-    - PACKAGE_JSON_PATH="$CI_PROJECT_DIR/opensankey/client/package.json"
-    - APP_VERSION=$(node -p "require('$PACKAGE_JSON_PATH').version")
-    - echo "[INFO] Version courante  $APP_VERSION"
-    - BUILD_DIR="$CI_PROJECT_DIR/opensankey/client/build"
-    - LATEST_DIR="$CI_PROJECT_DIR/public/latest"
-    # === latest/ = copie du build courant ===
-    - mkdir -p "$LATEST_DIR"
-    - cp -r "$BUILD_DIR"/* "$LATEST_DIR"
-    - sed -i 's|="/static/|="./static/|g' "$LATEST_DIR/index.html"
-    - echo '<meta http-equiv="refresh" content="0; url=/" />' > "$LATEST_DIR/404.html"
+    - rm -rf "$LATEST_DIR"
+    - cp -r "$VERSION_DIR" "$LATEST_DIR"
     - echo "[INFO] latest/ mis à jour avec $APP_VERSION"
-    # === Liste des déploiements parallèles actifs ===
-    - TOKEN="${PAGES_API_TOKEN:-$CI_JOB_TOKEN}"
-    - API_URL="${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/pages/deployments?active=true&per_page=100"
-    - echo "[INFO] Interrogation $API_URL"
+
+    # =================================================================
+    # ÉTAPE 3 — Génération de public/index.html
+    # =================================================================
     - |
-      if curl --silent --show-error --fail \
-           --header "PRIVATE-TOKEN: $TOKEN" \
-           "$API_URL" > deployments.json; then
-        echo "[INFO] Réponse API récupérée"
-      else
-        echo "[ATTENTION] API pages/deployments inaccessible — fallback liste vide"
-        echo '[]' > deployments.json
-      fi
-    # Extraction des path_prefix uniques (les noms de version), tri SemVer desc.
-    # Inclut $APP_VERSION même si l'API ne l'a pas encore retournée.
-    - |
-      jq -r '.[].path_prefix' deployments.json \
-        | grep -v '^$' \
-        | sort -u \
-        > versions_raw.txt || true
-      echo "$APP_VERSION" >> versions_raw.txt
-      sort -u -V -r versions_raw.txt > versions.txt
-      echo "[INFO] Versions à lister :"
-      cat versions.txt
-    # === Génération de l'index racine ===
+      ls -1 "$PUBLIC_DIR" \
+        | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+        | sort -u -V -r > all_versions.txt || true
+      echo "[INFO] Versions à lister dans index.html :"
+      cat all_versions.txt
     - |
       {
         echo '<!DOCTYPE html>'
@@ -245,6 +253,7 @@ pages-root:
         echo '<style>'
         echo 'body { font-family: Arial, sans-serif; margin: 40px; max-width: 800px; }'
         echo 'h1 { color: #333; }'
+        echo 'h2 { color: #555; margin-top: 30px; }'
         echo 'a { display: block; margin: 8px 0; padding: 10px; background: #f5f5f5; text-decoration: none; color: #333; border-radius: 4px; }'
         echo 'a:hover { background: #e0e0e0; }'
         echo '.latest { background: #e8f4fd; font-weight: bold; }'
@@ -252,24 +261,24 @@ pages-root:
         echo '.download { font-size: 0.9em; color: #555; }'
         echo '</style></head><body>'
         echo '<h1>OpenSankey — Versions disponibles</h1>'
-        echo "<a class=\"latest\" href=\"./latest/\">🚀 Dernière version (latest = $APP_VERSION)</a>"
+        echo "<a class=\"latest\" href=\"./latest/\">Derniere version (latest = $APP_VERSION)</a>"
         echo '<h2>Toutes les versions</h2>'
         while IFS= read -r v; do
           [ -z "$v" ] && continue
-          echo "<a href=\"./$v/\">📦 Version $v</a>"
-          echo "<a class=\"download\" href=\"./$v/static.zip\">📥 static.zip (v$v)</a>"
-        done < versions.txt
+          echo "<a href=\"./$v/\">Version $v</a>"
+          if [ -f "$PUBLIC_DIR/$v/static.zip" ]; then
+            echo "<a class=\"download\" href=\"./$v/static.zip\">static.zip (v$v)</a>"
+          fi
+        done < all_versions.txt
         echo '</body></html>'
-      } > "$CI_PROJECT_DIR/public/index.html"
-    - echo "[INFO] index.html racine généré"
+      } > "$PUBLIC_DIR/index.html"
+    - echo "[INFO] Déploiement terminé. Versions servies :"
+    - ls -1 "$PUBLIC_DIR"
   artifacts:
     paths:
       - public
-  needs:
-    - job: build
-      artifacts: true
-    - job: pages
-      artifacts: true
+  dependencies:
+    - build
   rules:
     - when: manual
       allow_failure: true
