@@ -40,24 +40,8 @@ build:
   except:
     - schedules
 
-test:
-  stage: test
-  tags:
-    - dev, prod, test
-  script:
-    # Env
-    - echo $CI_PROJECT_DIR
-    - echo $EIGEN_INCLUDE
-    - echo $TESTS_DIR
-    - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Test
-    - bash test.sh
-  dependencies:
-    - build
-  rules:
-    - if: '$CI_COMMIT_TAG == "prod"'
-      when: never
-    - when: always
+# Job 'test' supprimé sur release/1.0.7 : les références de tests ont divergé
+# depuis cette version. Seule la publication Pages nous intéresse ici.
 
 # =====================================================================
 # Déploiement Pages (single deployment, plan Free compatible)
