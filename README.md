@@ -1,31 +1,35 @@
 # OpenSankey
 
-> **⚠️ This is a read-only mirror.**
-> All development, issues and merge requests happen on GitLab:
-> **https://gitlab.com/su-model/opensankey**
->
-> Issues and pull requests opened here will not be reviewed.
-> Please use the GitLab project instead.
+> **⚠️ Read-only mirror.**
+> Active development happens on GitLab : **https://gitlab.com/su-model/opensankey**.
+> Issues and merge requests opened on GitHub will not be reviewed — please use the GitLab project.
 
 Interactive Sankey diagram library (viewer + editor) built with React and D3.js.
-Distributed as an embeddable CDN bundle, an npm package, and ready-to-run HTML examples.
+Distributed as :
+
+- a self-contained **CDN bundle** you embed with a single `<script>` tag,
+- an **npm package** for React/TypeScript projects,
+- a set of **ready-to-run examples** (zero install for the HTML variants).
 
 Maintained by [TerriFlux](https://terriflux.fr).
 
 ## Live demos
 
-A version-by-version showcase is available at **https://terriflux.github.io**.
+A version-by-version showcase is live at **https://terriflux.github.io**.
 
-You can also run any example locally — see [`examples/`](./examples).
+To run any example locally, see [`examples/`](./examples) and double-click
+`examples/serve.bat` (Windows) or `./examples/serve.sh` (Linux/Mac).
 
 ## Versions
 
-| Version | CDN bundle | Examples |
-|---|---|---|
-| `current` (dev) | — | [`examples/current/`](./examples/current) |
-| `1.1.2` | https://su-model.gitlab.io/opensankey/1.1.2/static/js/opensankey-v1.1.2.js | [`examples/1.1.2/`](./examples/1.1.2) |
-| `1.1.1` | https://su-model.gitlab.io/opensankey/1.1.1/static/js/opensankey-v1.1.1.js | [`examples/1.1.1/`](./examples/1.1.1) |
-| `1.0.7` | https://su-model.gitlab.io/opensankey/1.0.7/static/js/opensankey-v1.0.7.js | [`examples/1.0.7/`](./examples/1.0.7) |
+| Version | npm | CDN bundle (gitlab.io) | Sandbox (codesandbox.io) |
+|---|---|---|---|
+| **1.1.3** *(latest)* | [open-sankey@1.1.3](https://www.npmjs.com/package/open-sankey/v/1.1.3) | [opensankey-v1.1.3.js](https://su-model.gitlab.io/opensankey/1.1.3/static/js/opensankey-v1.1.3.js) | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/1.1.3/viewer/src/index.tsx) |
+| **1.0.7** | [open-sankey@1.0.7](https://www.npmjs.com/package/open-sankey/v/1.0.7) | [opensankey-v1.0.7.js](https://su-model.gitlab.io/opensankey/1.0.7/static/js/opensankey-v1.0.7.js) | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/1.0.7/viewer/src/index.tsx) |
+| `current` (dev) | — (uses `file:` link to the source) | — | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/current/viewer/src/index.tsx) |
+
+> Versions `1.1.0`, `1.1.1` and `1.1.2` were weekend iterations and are
+> deprecated on npm. Use `1.1.3` or higher.
 
 ## Quick start (HTML, no build)
 
@@ -36,7 +40,7 @@ You can also run any example locally — see [`examples/`](./examples).
     <title>OpenSankey</title>
     <script
       defer
-      src="https://su-model.gitlab.io/opensankey/1.1.2/static/js/opensankey-v1.1.2.js"
+      src="https://su-model.gitlab.io/opensankey/1.1.3/static/js/opensankey-v1.1.3.js"
     ></script>
   </head>
   <body>
@@ -51,8 +55,8 @@ You can also run any example locally — see [`examples/`](./examples).
 </html>
 ```
 
-A working version of this snippet is in [`examples/1.1.2/html-viewer/`](./examples/1.1.2/html-viewer)
-(double-click `serve.bat` on Windows, or run `./serve.sh` on Linux/Mac, then open the served page).
+A working version of this snippet is in [`examples/1.1.3/html-viewer/`](./examples/1.1.3/html-viewer)
+(double-click `serve.bat` then open the served page).
 
 ## Quick start (React + npm)
 
@@ -70,7 +74,7 @@ export default function App() {
 }
 ```
 
-A complete, runnable example is in [`examples/1.1.2/viewer/`](./examples/1.1.2/viewer).
+A complete, runnable example is in [`examples/1.1.3/viewer/`](./examples/1.1.3/viewer).
 
 ## License
 
