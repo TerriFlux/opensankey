@@ -2,7 +2,15 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
-## [Non publié] — Mai 2026
+## [1.1.3] — 2026-05-10
+
+### Bump du submodule OpenSankey — fix `ViewerOpenSankeyApp` + craco editor
+
+Voir [submodules/OpenSankey/CHANGELOG.md → 1.1.3](submodules/OpenSankey/CHANGELOG.md) : déplacement de `createNewMenuConfiguration` hors du `useEffect` (React error #321), suppression de l'alias forçant Chakra en CJS dans `examples/*/editor/craco.config.cjs`, suppression de `examples/1.1.2/`.
+
+Ce bump est uniquement un alignement d'OpenSankey+ sur OpenSankey 1.1.3 ; aucun changement fonctionnel propre à OSP.
+
+## [1.1.2] — Mai 2026
 
 ### Bump du submodule OpenSankey — refonte du mode englobant
 
