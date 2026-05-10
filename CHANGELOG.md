@@ -2,6 +2,21 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.3] — 2026-05-10
+
+### Fixed
+
+- **`ViewerOpenSankeyApp` crash en mode publish (`React error #321 — Invalid hook call`)** ([opensankey/client/src/ViewApp.tsx](opensankey/client/src/ViewApp.tsx)) : `createNewMenuConfiguration()` invoque en interne des hooks Chakra (`useToast`) ; il était appelé depuis un `useEffect`, ce qui viole les Rules of Hooks. Déplacé dans le body du composant (avant `return`), même pattern que `examples/current/editor`. L'appel `fromJSON(initial_data)` reste dans le `useEffect` pour ne pas le rejouer à chaque render. Le bug ne sortait qu'à l'usage du composant exporté `ViewerOpenSankeyApp` depuis le paquet npm en mode `publish: true` ; les démos `examples/<v>/viewer/` qui utilisaient ce composant crashaient à l'init.
+- **Examples editor — résolution `@chakra-ui/react`** ([examples/current/editor/craco.config.cjs](examples/current/editor/craco.config.cjs)) : suppression de l'alias forçant `@chakra-ui/react$ → dist/cjs/index.cjs`. Le forçage CJS empêchait l'import par namespace (`import * as Chakra`) d'extraire les exports nommés (`Chakra.Stack`, etc.) — webpack 5 traitait alors le module comme `default-only` et le build échouait sur `Can't import the named export 'Stack'`. Sans cet alias, webpack résout normalement vers `dist/esm/index.mjs` qui expose les nommés.
+
+### Removed
+
+- **`examples/1.1.2/`** : le tarball `open-sankey@1.1.2` publié sur npm contenait les deux bugs ci-dessus, l'exemple `1.1.2/viewer` ne pouvait pas tourner. La 1.1.2 ne sert à rien et est retirée du repo. Reste publiée sur npm pour ne pas casser d'éventuels consommateurs (à `npm deprecate` côté registry).
+
+### Added
+
+- **`examples/index.html` + `examples/serve.{bat,ps1,sh}`** : page d'accueil locale qui liste tous les exemples (par version × `viewer | editor | html-viewer`) et un lanceur HTTP à la racine d'`examples/`. Permet de tester n'importe quel exemple en double-cliquant `serve.bat`.
+
 ## [1.1.2] — 2026-05-09
 
 ### Fixed
