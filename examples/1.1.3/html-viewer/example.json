@@ -2,23 +2,8 @@
   "version": "0.91",
   "height": 811.6000061035156,
   "width": 1859,
-  "grid_visible": false,
   "user_scale": 20000,
   "couleur_fond_sankey": "#ffffff",
-  "show_structure": "reconciled",
-  "legend": {
-    "legend_position": [
-      "300",
-      "50"
-    ],
-    "legend_show_dataTags": true
-  },
-  "id": "sankey_maitre",
-  "style_node": {
-    "default": {
-      "name": "Style par default"
-    }
-  },
   "style_link": {
     "default": {
       "value_label_custom_digit": false,
@@ -32,44 +17,24 @@
   },
   "nodes": {
     "node0": {
-      "id": "node0",
       "x": 200,
       "y": 95,
-      "u": 1,
-      "v": 0,
       "name": "Sales - Product 1",
       "local": {
         "color": "#9141ac",
         "name_label_horiz": "left",
         "name_label_vert": "middle"
       },
-      "outputLinksId": [
-        "Node 0 --> Node 1"
-      ],
-      "links_order": [
-        "Node 0 --> Node 1"
-      ]
+      "outputLinksId": ["Node 0 --> Node 1"]
     },
     "node1": {
-      "id": "node1",
       "x": 400,
       "y": 120,
-      "u": 3,
-      "v": 0,
       "name": "Revenues",
       "local": {
         "name_label_bold": true,
         "name_label_background": false
       },
-      "inputLinksId": [
-        "Node 0 --> Node 1",
-        "Node 2 --> Node 1"
-      ],
-      "outputLinksId": [
-        "Node 1 --> Node 3",
-        "Revenues --> Node 7",
-        "Revenues --> Node 8"
-      ],
       "links_order": [
         "Revenues --> Node 8",
         "Revenues --> Node 7",
@@ -79,63 +44,36 @@
       ]
     },
     "node2": {
-      "id": "node2",
       "x": 200,
       "y": 245,
-      "u": 1,
-      "v": 1,
       "name": "Sales - Product 2",
       "local": {
         "color": "#865e3c",
         "name_label_horiz": "left",
         "name_label_vert": "middle"
       },
-      "outputLinksId": [
-        "Node 2 --> Node 1"
-      ],
-      "links_order": [
-        "Node 2 --> Node 1"
-      ]
+      "links_order": ["Node 2 --> Node 1"]
     },
     "node3": {
-      "id": "node3",
       "x": 600,
       "y": 300,
-      "u": 5,
-      "v": 2,
       "name": "Taxes",
       "local": {
         "color": "#e01b24",
         "name_label_horiz": "right",
         "name_label_vert": "middle"
       },
-      "inputLinksId": [
-        "Node 1 --> Node 3"
-      ],
-      "links_order": [
-        "Node 1 --> Node 3"
-      ]
+      "links_order": ["Node 1 --> Node 3"]
     },
     "node7": {
-      "id": "node7",
       "x": 600,
       "y": 140,
-      "u": 5,
-      "v": 1,
       "name": "Expenses",
       "local": {
         "color": "#3584e4",
         "name_label_bold": true,
         "name_label_background": false
       },
-      "inputLinksId": [
-        "Revenues --> Node 7"
-      ],
-      "outputLinksId": [
-        "Node 1 --> Node 4",
-        "Node 1 --> Node 5",
-        "Revenues --> Node 6"
-      ],
       "links_order": [
         "Revenues --> Node 6",
         "Node 1 --> Node 4",
@@ -144,221 +82,114 @@
       ]
     },
     "node4": {
-      "id": "node4",
       "x": 800,
       "y": 157.5,
-      "u": 7,
-      "v": 1,
       "name": "Human ressources",
       "local": {
         "color": "#3584e4",
         "name_label_horiz": "right",
         "name_label_vert": "middle"
       },
-      "inputLinksId": [
-        "Node 1 --> Node 4"
-      ],
-      "links_order": [
-        "Node 1 --> Node 4"
-      ]
+      "links_order": ["Node 1 --> Node 4"]
     },
     "node5": {
-      "id": "node5",
       "x": 800,
       "y": 282.5,
-      "u": 7,
-      "v": 2,
       "name": "Marketing",
       "local": {
         "color": "#3584e4",
         "name_label_horiz": "right",
         "name_label_vert": "middle"
       },
-      "inputLinksId": [
-        "Node 1 --> Node 5"
-      ],
-      "links_order": [
-        "Node 1 --> Node 5"
-      ]
+      "links_order": ["Node 1 --> Node 5"]
     },
     "node6": {
-      "id": "node6",
       "x": 800,
       "y": 67.5,
-      "u": 7,
-      "v": 0,
       "name": "Production",
       "local": {
         "color": "#3584e4",
         "name_label_horiz": "right",
         "name_label_vert": "middle"
       },
-      "inputLinksId": [
-        "Revenues --> Node 6"
-      ],
-      "links_order": [
-        "Revenues --> Node 6"
-      ]
+      "links_order": ["Revenues --> Node 6"]
     },
     "node8": {
-      "id": "node8",
       "x": 600,
       "y": 50,
-      "u": 5,
-      "v": 0,
       "name": "Profits",
       "local": {
         "color": "#33d17a",
         "name_label_horiz": "right",
         "name_label_vert": "middle"
       },
-      "inputLinksId": [
-        "Revenues --> Node 8"
-      ],
-      "links_order": [
-        "Revenues --> Node 8"
-      ]
+      "links_order": ["Revenues --> Node 8"]
     }
   },
   "links": {
     "Node 0 --> Node 1": {
-      "id": "Node 0 --> Node 1",
       "idSource": "node0",
       "idTarget": "node1",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#c061cb"
       },
-      "value": {
-        "id": "node0node1_value__CjFRt",
-        "data_value": 20000
-      }
+      "value": {}
     },
     "Node 2 --> Node 1": {
-      "id": "Node 2 --> Node 1",
       "idSource": "node2",
       "idTarget": "node1",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#b5835a"
       },
-      "value": {
-        "id": "node2node1_value__w3unm",
-        "data_value": 10000
-      }
+      "value": {}
     },
     "Node 1 --> Node 3": {
-      "id": "Node 1 --> Node 3",
       "idSource": "node1",
       "idTarget": "node3",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#f66151"
       },
-      "value": {
-        "id": "node1node3_value__bQbVE",
-        "data_value": 3000
-      }
+      "value": {}
     },
     "Node 1 --> Node 4": {
-      "id": "Node 1 --> Node 4",
       "idSource": "node7",
       "idTarget": "node4",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#62a0ea"
       },
-      "value": {
-        "id": "node1node4_value__rMXnL",
-        "data_value": 15000
-      }
+      "value": {}
     },
     "Node 1 --> Node 5": {
-      "id": "Node 1 --> Node 5",
       "idSource": "node7",
       "idTarget": "node5",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#62a0ea"
       },
-      "value": {
-        "id": "node1node5_value__4KQWU",
-        "data_value": 2000
-      }
+      "value": {}
     },
     "Revenues --> Node 6": {
-      "id": "Revenues --> Node 6",
       "idSource": "node7",
       "idTarget": "node6",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#62a0ea"
       },
-      "value": {
-        "id": "revenuesnode6_value__LEYWo",
-        "data_value": 5000
-      }
+      "value": {}
     },
     "Revenues --> Node 7": {
-      "id": "Revenues --> Node 7",
       "idSource": "node1",
       "idTarget": "node7",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#62a0ea"
       },
-      "value": {
-        "id": "revenuesnode7_value__z0I7m",
-        "data_value": 22000
-      }
+      "value": {}
     },
     "Revenues --> Node 8": {
-      "id": "Revenues --> Node 8",
       "idSource": "node1",
       "idTarget": "node8",
-      "style": [
-        "default"
-      ],
       "local": {
         "color": "#57e389"
       },
-      "value": {
-        "id": "revenuesnode8_value__oigxb",
-        "data_value": 5000
-      }
+      "value": {}
     }
-  },
-  "order_g_elements": [
-    "node8",
-    "node6",
-    "node5",
-    "node4",
-    "node7",
-    "node3",
-    "node2",
-    "node1",
-    "node0",
-    "Node 0 --> Node 1",
-    "Node 2 --> Node 1",
-    "Node 1 --> Node 3",
-    "Node 1 --> Node 4",
-    "Node 1 --> Node 5",
-    "Revenues --> Node 6",
-    "Revenues --> Node 7",
-    "Revenues --> Node 8"
-  ]
+  }
 }
