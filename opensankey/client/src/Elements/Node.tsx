@@ -844,6 +844,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   protected drawElements() {
     super.drawElements()
+    if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
     //this._drawLinksStartCaps() // Ajouter ici
   }
