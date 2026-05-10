@@ -11,6 +11,18 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [Unreleased] — Publication npm privée + GitLab Pages multi-versions + ViewerSankeyApplication
+
+### Ajouté
+
+- **Lib npm publiable `@terriflux/sankeyapplication`** : le package SankeyApplication peut désormais être publié sur le GitLab Package Registry du projet. `client/package.json` expose `main`, `module`, `types`, `files`, et `publishConfig` pointant vers le registre privé. Surface publique consolidée dans [client/src/lib.ts](client/src/lib.ts) : `SankeyApp`, `ViewerSankeyApplication`, `Class_ApplicationDataSA`, `Type_JSON`.
+- **`ViewerSankeyApplication`** ([client/src/ViewAppSA.tsx](client/src/ViewAppSA.tsx)) : composant viewer minimal en lecture seule, calque de `ViewerOpenSankeyApp` mais instanciant `Class_ApplicationDataSA(true)` pour valider la chaîne SA → OSP → OS sur un même JSON.
+- **Examples React/TypeScript** ([examples/current/](examples/current/)) : reprise 1:1 des examples OpenSankey (`viewer/`, `editor/`, `html-viewer/`), avec mêmes datasets — seuls les imports pointent vers `@terriflux/sankeyapplication` et la classe `Class_ApplicationDataSA`. Page d'index local [examples/index.html](examples/index.html), scripts `build-all.{sh,ps1,bat}` et `serve.{sh,ps1,bat}`.
+- **GitLab CI/CD** ([.gitlab-ci.yml](.gitlab-ci.yml)) :
+  - Nouveau job `build:examples` : `npm run dist` du client puis build des examples React, artifacts `client/dist/` + `examples/current/*/build/`.
+  - Nouveau job `publish:npm` (déclenché sur tag git) : publie sur le GitLab Package Registry, auth via `CI_JOB_TOKEN`.
+  - Job `pages:` étendu avec : mirror multi-versions depuis `$CI_PAGES_URL` (l'historique des versions précédentes est préservé à chaque déploiement), copie des examples buildés dans `public/$APP_VERSION/examples/`, génération automatique de `public/index.html` listant toutes les versions découvertes (template OpenSankey).
+
 ## [1.1.3] — 2026-05-10 — Fix `ViewerOpenSankeyApp` + nettoyage examples
 
 ### Bump alignés OpenSankey, OpenSankey+, LoginComponent et SankeyApplication
