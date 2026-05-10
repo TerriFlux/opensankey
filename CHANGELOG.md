@@ -11,7 +11,15 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
-## [Non publié] — Mai 2026 — Refonte du mode englobant
+## [1.1.3] — 2026-05-10 — Fix `ViewerOpenSankeyApp` + nettoyage examples
+
+### Bump alignés OpenSankey, OpenSankey+, LoginComponent et SankeyApplication
+
+- **OpenSankey 1.1.3** ([submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)) : fix `ViewerOpenSankeyApp` (hooks Chakra appelés depuis `useEffect` → React error #321 ; déplacés dans le body), suppression d'un alias `@chakra-ui/react → CJS` qui cassait l'import par namespace dans `examples/*/editor`, suppression du dossier `examples/1.1.2/` (release npm cassée), ajout d'une `examples/index.html` + `serve.bat/ps1/sh` pour tester localement n'importe quel exemple en HTTP.
+- **OpenSankey+ 1.1.3** : alignement seulement (pas de changement fonctionnel).
+- **LoginComponent 1.1.3** : alignement seulement.
+
+## [1.1.2] — Mai 2026 — Refonte du mode englobant
 
 ### Bump des submodules OpenSankey+ et OpenSankey
 
