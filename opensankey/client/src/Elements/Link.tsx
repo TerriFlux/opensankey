@@ -394,7 +394,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public unDraw() {
     super.unDraw()
-    this._link_control_points.unDrawControlPoints()
+    if (this._link_control_points) this._link_control_points.unDrawControlPoints()
     this._arrow_shape = undefined // reset shape also
   }
 
@@ -430,6 +430,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawAsSelected() {
+    if (!this._link_control_points) return
     this._link_control_points.drawControlPoint()
   }
 
@@ -880,6 +881,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public drawControlPoint() {
+    if (!this._link_control_points) return
     this._link_control_points.drawControlPoint()
   }
 
