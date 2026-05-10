@@ -284,11 +284,11 @@ build:examples:
     - when: manual
       allow_failure: true
   script:
-    - echo "[INFO] Install + dist de la lib SA"
-    - cd client
-    - npm install --no-audit --no-fund --prefer-offline --legacy-peer-deps
-    - npm run dist
-    - cd ..
+    # build_client.sh -I -D : install pnpm deps + recree les symlinks
+    # client/src/deps/{OpenSankey+,LoginComponent} (sans quoi tsc echoue
+    # avec TS2307 sur tous les imports './deps/...') + lance pnpm run dist.
+    - echo "[INFO] Install + symlinks + dist de la lib SA"
+    - bash build_client.sh -I -D
     - echo "[INFO] Build des examples React"
     - cd examples
     - bash build-all.sh
