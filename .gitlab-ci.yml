@@ -316,13 +316,14 @@ publish:npm:
     - build:examples
   script:
     - cd client
-    # L'URL doit matcher EXACTEMENT publishConfig dans package.json (path
-    # encoded `su-model%2Fsankeyapplication`), sinon npm ne trouve pas le
-    # token et echoue avec ENEEDAUTH.
+    # GitLab Package Registry exige l'ID numerique du projet pour npm publish
+    # (le path encoded fonctionne en read mais pas en publish). On declare
+    # le scope @terriflux uniquement ici (pas de publishConfig dans
+    # package.json) pour que les deux URLs soient trivialement identiques.
     - |
       cat > .npmrc <<EOF
-      @terriflux:registry=https://gitlab.com/api/v4/projects/su-model%2Fsankeyapplication/packages/npm/
-      //gitlab.com/api/v4/projects/su-model%2Fsankeyapplication/packages/npm/:_authToken=${CI_JOB_TOKEN}
+      @terriflux:registry=https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
+      //gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
       EOF
     - npm publish
 

@@ -13,9 +13,6 @@
     "CHANGELOG.md",
     "LICENSE"
   ],
-  "publishConfig": {
-    "@terriflux:registry": "https://gitlab.com/api/v4/projects/su-model%2Fsankeyapplication/packages/npm/"
-  },
   "scripts": {
     "//": "Comment on craco : It overrides  react-script webpack config file ",
     "start": "craco start",
