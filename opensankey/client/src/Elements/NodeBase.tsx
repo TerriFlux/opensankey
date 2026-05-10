@@ -140,6 +140,16 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     }
 
     //drawing_area.list_g_element.unshift(this.id)
+
+    // Tous les helpers (_nodeDrawShape, _nodeDrawNameLabel, _nodeDrawIcon,
+    // _nodeEventsHandler) sont maintenant assignés ; les actions de setters
+    // peuvent à nouveau s'exécuter. Cf. Class_ProtoElement._suspend_actions.
+    // NB : pour ClassTemplate_Legend (extends NodeBase, ctor minimal qui
+    //      n'écrit aucun attribut config), ce flip suffit. Pour
+    //      Class_NodeElement (extends NodeBase), le ctor de Node assigne
+    //      ses propres helpers (_nodeDrawValueLabel, _nodeTooltip, etc.)
+    //      AVANT toute écriture d'attribut config, donc OK aussi.
+    this._suspend_actions = false
   }
 
   protected _copyFrom(_: Class_NodeBase): void {

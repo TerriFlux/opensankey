@@ -344,6 +344,18 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
   protected _storage: StorageType<ConfigType> = {}
   protected _config: ConfigType
 
+  // Suspend les actions des setters dynamiques pendant la chaîne de
+  // construction. Indispensable car Babel CRA loose émet pour chaque
+  // déclaration `prop!:` de Class_BaseShape un `this.prop = void 0` au
+  // début du constructeur de la classe, ce qui passe par le dynamic
+  // setter installé par createDynamicProperties() AVANT que les feuilles
+  // (NodeBase, Node, Link, Legend...) n'aient assigné leurs helpers
+  // (_nodeDrawShape, _link_shape, _stock_values, ...). Tant que ce flag
+  // est true, les actions (drawShape, drawElements, drawStockBox, ...)
+  // sont skippées. Chaque feuille remet ce flag à false à la fin de son
+  // constructeur (cf. NodeBase, Link).
+  protected _suspend_actions: boolean = true
+
 
   protected _position: Type_BaseElementPosition
   protected _style: Class_ElementStyle[]
@@ -393,7 +405,7 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
               callback.call(this)
             }
           }
-          if (attribute.actions) {
+          if (attribute.actions && !this._suspend_actions) {
             attribute.actions.forEach(action => {
               const actionMethod = this[action as keyof this]
               if (typeof actionMethod === 'function') {

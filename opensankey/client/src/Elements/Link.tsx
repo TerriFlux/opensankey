@@ -266,6 +266,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (!this.sankey.drawing_area.bypass_redraws) {
       this._link_control_points.computeControlPoints()
     }
+    // Tous les helpers sont assignés : on réactive les actions des setters.
+    // Cf. Class_ProtoElement._suspend_actions.
+    this._suspend_actions = false
     this.draw()
   }
 
