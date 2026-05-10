@@ -4,9 +4,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "module": "dist/index.js",
+  "homepage": "https://terriflux.github.io",
   "repository": {
     "type": "git",
-    "url": "https://gitlab.com/terriflux-public/OpenSankey"
+    "url": "https://github.com/TerriFlux/opensankey.git"
+  },
+  "bugs": {
+    "url": "https://gitlab.com/su-model/opensankey/-/issues"
   },
   "author": "TerriFlux",
   "version": "1.1.3",
