@@ -134,7 +134,8 @@ dev_opensankey:
       allow_failure: true
   needs:
     - build
-    - test
+    - job: test
+      optional: true
   dependencies:
     - build
   script:
@@ -188,7 +189,8 @@ test_opensankey:
       allow_failure: true
   needs:
     - build
-    - test
+    - job: test
+      optional: true
   dependencies:
     - build
   script:
@@ -230,7 +232,8 @@ prod_opensankey:
     - if: $CI_COMMIT_REF_NAME == $TAG_PROD
   needs:
     - build
-    - test
+    - job: test
+      optional: true
   dependencies:
     - build
   script:
@@ -330,7 +333,8 @@ pages:
     PAGES_BASE_URL: "${CI_PAGES_URL}"
   needs:
     - build
-    - test
+    - job: test
+      optional: true
     - build:examples
   dependencies:
     - build
