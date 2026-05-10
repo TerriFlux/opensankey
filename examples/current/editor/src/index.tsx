@@ -2,7 +2,7 @@ import { createRoot } from "react-dom/client";
 import { FunctionComponent, useEffect, useState } from "react";
 import * as Chakra from "@chakra-ui/react";
 import { I18nextProvider, useTranslation } from "react-i18next";
-import { Class_ApplicationDataSASA } from "@terriflux/sankeyapplication/dist/ApplicationDataSA";
+import { Class_ApplicationDataSA } from "@terriflux/sankeyapplication/dist/ApplicationDataSA";
 import { Type_JSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
 import { SpreadSheet } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/components/spreadsheet/SpreadSheet";
 import i18n from "./traduction.js";

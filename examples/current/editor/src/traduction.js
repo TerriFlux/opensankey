@@ -2,7 +2,7 @@ import i18next from 'i18next'
 import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 
-import { resources_opensankey } from 'open-sankey/dist/traductions/traduction.js'
+import { resources_opensankey } from '@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/traductions/traduction.js'
 
 i18next
   .use(LanguageDetector)
