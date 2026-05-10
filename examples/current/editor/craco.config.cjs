@@ -1,10 +1,3 @@
-const path = require('path');
-
-const chakraCjs = path.join(
-  path.dirname(require.resolve('@chakra-ui/react/package.json')),
-  'dist/cjs/index.cjs'
-);
-
 module.exports = {
   webpack: {
     configure: (config) => {
@@ -16,10 +9,6 @@ module.exports = {
         ...(config.resolve.extensions || []),
         '.cjs',
       ];
-      config.resolve.alias = {
-        ...(config.resolve.alias || {}),
-        '@chakra-ui/react$': chakraCjs,
-      };
       return config;
     },
   },

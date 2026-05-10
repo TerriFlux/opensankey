@@ -56,12 +56,16 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data }) => {
     return data
   })
 
+  // createNewMenuConfiguration appelle des hooks Chakra (useToast) en interne :
+  // doit etre invoque pendant le render, pas depuis un useEffect (sinon
+  // React error #321 "Invalid hook call").
+  if (typeof app_data.createNewMenuConfiguration === 'function') {
+    app_data.createNewMenuConfiguration()
+  }
+
   useEffect(() => {
     if (initial_data) {
       app_data.fromJSON(initial_data)
-    }
-    if (typeof app_data.createNewMenuConfiguration === 'function') {
-      app_data.createNewMenuConfiguration()
     }
     app_data.draw()
   }, [app_data, initial_data])
