@@ -32,9 +32,9 @@ To run any example locally, see [`examples/`](./examples) and double-click
 
 | Démo | Live (terriflux.github.io) | Éditer (CodeSandbox) |
 |---|---|---|
-| viewer (React, lecture seule) | [open ↗](https://terriflux.github.io/1.1.3/viewer/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/viewer) |
-| editor (React, édition) | [open ↗](https://terriflux.github.io/1.1.3/editor/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/editor) |
-| html-viewer (HTML pur, bundle CDN) | [open ↗](https://terriflux.github.io/1.1.3/html-viewer/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/html-viewer) |
+| viewer (React, lecture seule) | [open ↗](https://terriflux.github.io/1.1.3/viewer/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/viewer) |
+| editor (React, édition) | [open ↗](https://terriflux.github.io/1.1.3/editor/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/editor) |
+| html-viewer (HTML pur, bundle CDN) | [open ↗](https://terriflux.github.io/1.1.3/html-viewer/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.1.3/html-viewer) |
 
 ### 1.0.7
 
@@ -44,9 +44,9 @@ To run any example locally, see [`examples/`](./examples) and double-click
 
 | Démo | Live | Éditer (CodeSandbox) |
 |---|---|---|
-| viewer | [open ↗](https://terriflux.github.io/1.0.7/viewer/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/viewer) |
-| editor | [open ↗](https://terriflux.github.io/1.0.7/editor/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/editor) |
-| html-viewer | [open ↗](https://terriflux.github.io/1.0.7/html-viewer/) | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/html-viewer) |
+| viewer | [open ↗](https://terriflux.github.io/1.0.7/viewer/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/viewer) |
+| editor | [open ↗](https://terriflux.github.io/1.0.7/editor/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/editor) |
+| html-viewer | [open ↗](https://terriflux.github.io/1.0.7/html-viewer/) | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/1.0.7/html-viewer) |
 
 ### current (dev)
 
@@ -56,9 +56,9 @@ en clonant le repo.
 
 | Démo | Éditer (CodeSandbox) |
 |---|---|
-| viewer | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/current/viewer) |
-| editor | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/current/editor) |
-| html-viewer | [open ↗](https://codesandbox.io/p/sandbox/github/TerriFlux/opensankey/tree/main/examples/current/html-viewer) |
+| viewer | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/current/viewer) |
+| editor | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/current/editor) |
+| html-viewer | [open ↗](https://codesandbox.io/p/devbox/github/TerriFlux/opensankey/tree/main/examples/current/html-viewer) |
 
 ## Quick start (HTML, no build)
 
