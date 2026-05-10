@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenSankey examples</title>
+  <style>
+    :root {
+      --bg: #f7f7f8;
+      --fg: #1a1a1a;
+      --muted: #5f6368;
+      --card: #ffffff;
+      --border: #e3e3e6;
+      --accent: #2b6cb0;
+      --ok: #2f855a;
+      --warn: #b45309;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.5;
+    }
+    header { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+    header h1 { margin: 0 0 .25rem; font-size: 1.5rem; }
+    header p { margin: 0; color: var(--muted); font-size: .9rem; }
+    main { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem 3rem; }
+
+    .version {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .version h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: .5rem;
+    }
+    .ex {
+      display: flex;
+      flex-direction: column;
+      padding: .6rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--fg);
+      background: #fafbfc;
+      transition: background .1s;
+    }
+    .ex:hover { background: #f0f4f8; }
+    .ex strong { color: var(--accent); font-size: .95rem; }
+    .ex span { color: var(--muted); font-size: .75rem; margin-top: .15rem; }
+    .ex .badge {
+      display: inline-block;
+      font-size: .65rem;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: .35rem;
+      vertical-align: middle;
+    }
+    .badge-build { background: #ebf8ff; color: var(--accent); }
+    .badge-html { background: #fef3c7; color: var(--warn); }
+
+    .note {
+      margin-top: 1.5rem;
+      padding: .75rem 1rem;
+      background: #fff8e1;
+      border-left: 3px solid var(--warn);
+      border-radius: 4px;
+      font-size: .85rem;
+      color: #4a3300;
+    }
+    .note code {
+      background: #fff;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: .9em;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OpenSankey examples — index local</h1>
+    <p>Lance n'importe quel exemple en cliquant. Les <em>viewer</em> et <em>editor</em> sont des apps React (besoin d'avoir fait <code>npm run build</code> avant). Les <em>html-viewer</em> sont des HTML purs.</p>
+  </header>
+
+  <main>
+
+    <section class="version">
+      <h2>current (dev)</h2>
+      <div class="grid">
+        <a class="ex" href="./current/viewer/build/index.html">
+          <strong>viewer<span class="badge badge-build">build</span></strong>
+          <span>React app, mode lecture seule</span>
+        </a>
+        <a class="ex" href="./current/editor/build/index.html">
+          <strong>editor<span class="badge badge-build">build</span></strong>
+          <span>React app, mode edition complete</span>
+        </a>
+        <a class="ex" href="./current/html-viewer/index.html">
+          <strong>html-viewer<span class="badge badge-html">http</span></strong>
+          <span>HTML pur, charge bundle CDN local</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="version">
+      <h2>1.1.2</h2>
+      <div class="grid">
+        <a class="ex" href="./1.1.2/viewer/build/index.html">
+          <strong>viewer<span class="badge badge-build">build</span></strong>
+          <span>React app, mode lecture seule</span>
+        </a>
+        <a class="ex" href="./1.1.2/editor/build/index.html">
+          <strong>editor<span class="badge badge-build">build</span></strong>
+          <span>React app, mode edition complete</span>
+        </a>
+        <a class="ex" href="./1.1.2/html-viewer/index.html">
+          <strong>html-viewer<span class="badge badge-html">http</span></strong>
+          <span>HTML pur, charge bundle CDN GitLab</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="version">
+      <h2>1.1.1</h2>
+      <div class="grid">
+        <a class="ex" href="./1.1.1/viewer/build/index.html">
+          <strong>viewer<span class="badge badge-build">build</span></strong>
+          <span>React app, mode lecture seule</span>
+        </a>
+        <a class="ex" href="./1.1.1/editor/build/index.html">
+          <strong>editor<span class="badge badge-build">build</span></strong>
+          <span>React app, mode edition complete</span>
+        </a>
+        <a class="ex" href="./1.1.1/html-viewer/index.html">
+          <strong>html-viewer<span class="badge badge-html">http</span></strong>
+          <span>HTML pur, charge bundle CDN GitLab</span>
+        </a>
+      </div>
+    </section>
+
+    <section class="version">
+      <h2>1.0.7</h2>
+      <div class="grid">
+        <a class="ex" href="./1.0.7/viewer/build/index.html">
+          <strong>viewer<span class="badge badge-build">build</span></strong>
+          <span>React app, mode lecture seule</span>
+        </a>
+        <a class="ex" href="./1.0.7/editor/build/index.html">
+          <strong>editor<span class="badge badge-build">build</span></strong>
+          <span>React app, mode edition complete</span>
+        </a>
+        <a class="ex" href="./1.0.7/html-viewer/index.html">
+          <strong>html-viewer<span class="badge badge-html">http</span></strong>
+          <span>HTML pur, charge bundle CDN GitLab</span>
+        </a>
+      </div>
+    </section>
+
+    <div class="note">
+      <strong>Important :</strong> les <code>html-viewer</code> font un <code>fetch('example.json')</code> qui plante en file://
+      a cause de la politique CORS du navigateur. Lance <code>serve.bat</code> dans ce dossier pour servir tout en HTTP local.
+      Les liens <code>build</code> (viewer/editor) marchent en file:// directement (le JSON est bundle dans le JS).
+    </div>
+
+  </main>
+</body>
+</html>
