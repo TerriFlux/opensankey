@@ -86,7 +86,7 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
+  printf ">>> Build standalone\n" && CI= DISABLE_ESLINT_PLUGIN=true pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
