@@ -47,14 +47,22 @@
       padding: .6rem .75rem;
       border: 1px solid var(--border);
       border-radius: 6px;
-      text-decoration: none;
-      color: var(--fg);
       background: #fafbfc;
       transition: background .1s;
     }
     .ex:hover { background: #f0f4f8; }
-    .ex strong { color: var(--accent); font-size: .95rem; }
-    .ex span { color: var(--muted); font-size: .75rem; margin-top: .15rem; }
+    .ex > a { text-decoration: none; color: var(--fg); display: block; }
+    .ex > a strong { color: var(--accent); font-size: .95rem; }
+    .ex > a span { color: var(--muted); font-size: .75rem; margin-top: .15rem; display: block; }
+    .ex .cs {
+      margin-top: .35rem;
+      padding-top: .35rem;
+      border-top: 1px dashed var(--border);
+      font-size: .7rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .ex .cs:hover { text-decoration: underline; }
     .ex .badge {
       display: inline-block;
       font-size: .65rem;
@@ -94,54 +102,81 @@
     <section class="version">
       <h2>current (dev)</h2>
       <div class="grid">
-        <a class="ex" href="./current/viewer/build/index.html">
-          <strong>viewer<span class="badge badge-build">build</span></strong>
-          <span>React app, mode lecture seule</span>
-        </a>
-        <a class="ex" href="./current/editor/build/index.html">
-          <strong>editor<span class="badge badge-build">build</span></strong>
-          <span>React app, mode edition complete</span>
-        </a>
-        <a class="ex" href="./current/html-viewer/index.html">
-          <strong>html-viewer<span class="badge badge-html">http</span></strong>
-          <span>HTML pur, charge bundle CDN local</span>
-        </a>
+        <div class="ex">
+          <a href="./current/viewer/build/index.html">
+            <strong>viewer<span class="badge badge-build">build</span></strong>
+            <span>React app, mode lecture seule</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./current/editor/build/index.html">
+            <strong>editor<span class="badge badge-build">build</span></strong>
+            <span>React app, mode edition complete</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/editor" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./current/html-viewer/index.html">
+            <strong>html-viewer<span class="badge badge-html">http</span></strong>
+            <span>HTML pur, charge bundle CDN local</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/html-viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
       </div>
     </section>
 
     <section class="version">
       <h2>1.1.3</h2>
       <div class="grid">
-        <a class="ex" href="./1.1.3/viewer/build/index.html">
-          <strong>viewer<span class="badge badge-build">build</span></strong>
-          <span>React app, mode lecture seule</span>
-        </a>
-        <a class="ex" href="./1.1.3/editor/build/index.html">
-          <strong>editor<span class="badge badge-build">build</span></strong>
-          <span>React app, mode edition complete</span>
-        </a>
-        <a class="ex" href="./1.1.3/html-viewer/index.html">
-          <strong>html-viewer<span class="badge badge-html">http</span></strong>
-          <span>HTML pur, charge bundle CDN GitLab</span>
-        </a>
+        <div class="ex">
+          <a href="./1.1.3/viewer/build/index.html">
+            <strong>viewer<span class="badge badge-build">build</span></strong>
+            <span>React app, mode lecture seule</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./1.1.3/editor/build/index.html">
+            <strong>editor<span class="badge badge-build">build</span></strong>
+            <span>React app, mode edition complete</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/editor" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./1.1.3/html-viewer/index.html">
+            <strong>html-viewer<span class="badge badge-html">http</span></strong>
+            <span>HTML pur, charge bundle CDN GitLab</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/html-viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
       </div>
     </section>
 
     <section class="version">
       <h2>1.0.7</h2>
       <div class="grid">
-        <a class="ex" href="./1.0.7/viewer/build/index.html">
-          <strong>viewer<span class="badge badge-build">build</span></strong>
-          <span>React app, mode lecture seule</span>
-        </a>
-        <a class="ex" href="./1.0.7/editor/build/index.html">
-          <strong>editor<span class="badge badge-build">build</span></strong>
-          <span>React app, mode edition complete</span>
-        </a>
-        <a class="ex" href="./1.0.7/html-viewer/index.html">
-          <strong>html-viewer<span class="badge badge-html">http</span></strong>
-          <span>HTML pur, charge bundle CDN GitLab</span>
-        </a>
+        <div class="ex">
+          <a href="./1.0.7/viewer/build/index.html">
+            <strong>viewer<span class="badge badge-build">build</span></strong>
+            <span>React app, mode lecture seule</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./1.0.7/editor/build/index.html">
+            <strong>editor<span class="badge badge-build">build</span></strong>
+            <span>React app, mode edition complete</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/editor" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
+        <div class="ex">
+          <a href="./1.0.7/html-viewer/index.html">
+            <strong>html-viewer<span class="badge badge-html">http</span></strong>
+            <span>HTML pur, charge bundle CDN GitLab</span>
+          </a>
+          <a class="cs" href="https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/html-viewer" target="_blank" rel="noopener">éditer dans CodeSandbox ↗</a>
+        </div>
       </div>
     </section>
 

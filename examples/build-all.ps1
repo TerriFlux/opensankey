@@ -23,7 +23,9 @@ $examples = @(
     "1.0.7/viewer",
     "1.0.7/editor",
     "1.1.3/viewer",
-    "1.1.3/editor"
+    "1.1.3/editor",
+    "current/viewer",
+    "current/editor"
 )
 
 if ($Only) { $examples = $examples | Where-Object { $_ -like "$Only/*" } }
@@ -34,6 +36,33 @@ if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
 }
 
 $root = $PSScriptRoot
+
+# Si on builde un current/*, opensankey/client/ doit avoir son propre
+# node_modules pour que le file:link resolve les transitives (Chakra,
+# d3, fortawesome, etc.). On le fait une fois en amont.
+$buildsCurrent = $examples | Where-Object { $_ -like "current/*" }
+if ($buildsCurrent.Count -gt 0) {
+    $osClient = Resolve-Path (Join-Path $root "..\opensankey\client")
+    Write-Host ""
+    Write-Host "[PREP] $osClient/node_modules pour current/*..." -ForegroundColor Cyan
+    if ($Force -or -not (Test-Path (Join-Path $osClient "node_modules"))) {
+        Push-Location $osClient
+        try {
+            $prevPref = $ErrorActionPreference
+            $ErrorActionPreference = 'Continue'
+            cmd /c "npm install --no-audit --no-fund --prefer-offline --legacy-peer-deps 2>&1"
+            if ($LASTEXITCODE -ne 0) {
+                Write-Host "[ERR] install opensankey/client a echoue" -ForegroundColor Red
+                exit 1
+            }
+            $ErrorActionPreference = $prevPref
+        }
+        finally { Pop-Location }
+    }
+    else {
+        Write-Host "[SKIP] node_modules deja present" -ForegroundColor DarkGray
+    }
+}
 $built = @()
 $failed = @()
 $skipped = @()
