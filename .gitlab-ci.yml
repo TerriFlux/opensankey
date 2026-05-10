@@ -270,7 +270,6 @@ prod_opensankey:
 # le SaaS) et ne necessite pas de python ni de submodules natifs.
 # =====================================================================
 build:examples:
-  image: node:18
   stage: build
   tags:
     - dev
@@ -303,7 +302,6 @@ build:examples:
 # Déclenche uniquement sur tag git (CI_COMMIT_TAG).
 # =====================================================================
 publish:npm:
-  image: node:18
   stage: deploy
   tags:
     - dev
@@ -342,7 +340,8 @@ pages:
       allow_failure: true
   script:
     # === Outils ===
-    - apt-get update -qq && apt-get install -y -qq wget zip
+    # Le runner SA est un shell runner (pas docker), donc wget/zip sont deja
+    # presents sur la machine — pas d'apt-get a faire.
     # === Configuration des variables d'environnement pour React ===
     - echo "[INFO] Configuration des variables d'environnement pour le mode GitLab Pages"
 
