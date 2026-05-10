@@ -20,16 +20,45 @@ A version-by-version showcase is live at **https://terriflux.github.io**.
 To run any example locally, see [`examples/`](./examples) and double-click
 `examples/serve.bat` (Windows) or `./examples/serve.sh` (Linux/Mac).
 
-## Versions
+## Versions & démos
 
-| Version | npm | CDN bundle (gitlab.io) | Sandbox (codesandbox.io) |
-|---|---|---|---|
-| **1.1.3** *(latest)* | [open-sankey@1.1.3](https://www.npmjs.com/package/open-sankey/v/1.1.3) | [opensankey-v1.1.3.js](https://su-model.gitlab.io/opensankey/1.1.3/static/js/opensankey-v1.1.3.js) | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/1.1.3/viewer/src/index.tsx) |
-| **1.0.7** | [open-sankey@1.0.7](https://www.npmjs.com/package/open-sankey/v/1.0.7) | [opensankey-v1.0.7.js](https://su-model.gitlab.io/opensankey/1.0.7/static/js/opensankey-v1.0.7.js) | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/1.0.7/viewer/src/index.tsx) |
-| `current` (dev) | — (uses `file:` link to the source) | — | [open in CodeSandbox](https://codesandbox.io/p/github/TerriFlux/opensankey/main?file=examples/current/viewer/src/index.tsx) |
+> Versions `1.1.0`, `1.1.1` and `1.1.2` are deprecated on npm (weekend iterations). Use `1.1.3` or higher.
 
-> Versions `1.1.0`, `1.1.1` and `1.1.2` were weekend iterations and are
-> deprecated on npm. Use `1.1.3` or higher.
+### 1.1.3 *(latest)*
+
+[npm](https://www.npmjs.com/package/open-sankey/v/1.1.3) ·
+[CDN bundle](https://su-model.gitlab.io/opensankey/1.1.3/static/js/opensankey-v1.1.3.js) ·
+[code source GitHub](https://github.com/TerriFlux/opensankey/tree/main/examples/1.1.3)
+
+| Démo | Live (terriflux.github.io) | Éditer (CodeSandbox) |
+|---|---|---|
+| viewer (React, lecture seule) | [open ↗](https://terriflux.github.io/1.1.3/viewer/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/viewer) |
+| editor (React, édition) | [open ↗](https://terriflux.github.io/1.1.3/editor/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/editor) |
+| html-viewer (HTML pur, bundle CDN) | [open ↗](https://terriflux.github.io/1.1.3/html-viewer/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.1.3/html-viewer) |
+
+### 1.0.7
+
+[npm](https://www.npmjs.com/package/open-sankey/v/1.0.7) ·
+[CDN bundle](https://su-model.gitlab.io/opensankey/1.0.7/static/js/opensankey-v1.0.7.js) ·
+[code source GitHub](https://github.com/TerriFlux/opensankey/tree/main/examples/1.0.7)
+
+| Démo | Live | Éditer (CodeSandbox) |
+|---|---|---|
+| viewer | [open ↗](https://terriflux.github.io/1.0.7/viewer/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/viewer) |
+| editor | [open ↗](https://terriflux.github.io/1.0.7/editor/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/editor) |
+| html-viewer | [open ↗](https://terriflux.github.io/1.0.7/html-viewer/) | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/1.0.7/html-viewer) |
+
+### current (dev)
+
+`open-sankey` y est référencé via `file:../../../opensankey/client` pour bosser
+sur la source en direct. Pas de bundle CDN, pas de version npm, mais utilisable
+en clonant le repo.
+
+| Démo | Éditer (CodeSandbox) |
+|---|---|
+| viewer | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/viewer) |
+| editor | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/editor) |
+| html-viewer | [open ↗](https://codesandbox.io/s/github/TerriFlux/opensankey/tree/main/examples/current/html-viewer) |
 
 ## Quick start (HTML, no build)
 

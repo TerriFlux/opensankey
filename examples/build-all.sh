@@ -24,6 +24,8 @@ EXAMPLES=(
     "1.0.7/editor"
     "1.1.3/viewer"
     "1.1.3/editor"
+    "current/viewer"
+    "current/editor"
 )
 
 if [ -n "$ONLY" ]; then
