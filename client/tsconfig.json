@@ -21,6 +21,8 @@
     "downlevelIteration": true,
     "jsx": "react",
     "outDir": "dist",
+    "declaration": true,
+    "declarationMap": true,
   },
   "include": ["src", "../submodules/LoginComponent/client/src/UserPages/UserPages.tsx", "../submodules/LoginComponent/client/src/IconLibraryLoginComponent.tsx"]
 }
