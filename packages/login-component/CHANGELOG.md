@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.4] — 2026-05-11
+
+### Aligné
+
+- Bump de version aligné sur OpenSankey 1.1.4. Aucun changement fonctionnel propre à LoginComponent.
+
 ## [1.1.3] — 2026-05-10
 
 ### Aligné
