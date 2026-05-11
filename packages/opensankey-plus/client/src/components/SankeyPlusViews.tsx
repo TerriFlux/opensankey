@@ -813,11 +813,11 @@ export const ViewsConfig = (
 //     set_data: (d: OSPData) => void,
 //     convert_data: (d: OSPData, DefaultSankeyData: () => OSPData) => void
 //   ) => {
-//     const sous_filieres = window.sankey.sous_filieres
+//     const diagrams_list = window.sankey.diagrams_list ?? window.sankey.sous_filieres
 
 //     const new_data = JSON.parse(
 //       JSON.stringify(
-//         window.sankey[sous_filieres[the_diagram]]
+//         window.sankey[diagrams_list[the_diagram]]
 //       )
 //     ) as OSPData
 //     convert_data(new_data, DefaultSankeyData)
