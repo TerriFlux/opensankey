@@ -3,7 +3,7 @@
 # Usage :
 #   ./build-all.sh             # build tout (skip si node_modules existe)
 #   ./build-all.sh --force     # force npm install partout
-#   ./build-all.sh --only 1.1.3   # build seulement une version
+#   ./build-all.sh --only 1.1.4   # build seulement une version
 
 set -uo pipefail
 

@@ -42,11 +42,15 @@ const App: FC = () => {
         })
 
         try {
-          newDataApp.file_name = opts.diagram
-
-          const data = await loadUniversalJSON(opts.diagram)
-          newDataApp.fromJSON(data as Type_JSON)
-          newDataApp.file_name = opts.diagram
+          if (typeof opts.diagram === 'string') {
+            newDataApp.file_name = opts.diagram
+            const data = await loadUniversalJSON(opts.diagram)
+            newDataApp.fromJSON(data as Type_JSON)
+            newDataApp.file_name = opts.diagram
+          } else {
+            // Objet JSON inline
+            newDataApp.fromJSON(opts.diagram as unknown as Type_JSON)
+          }
 
           setDataApp(newDataApp)
         } catch (error) {

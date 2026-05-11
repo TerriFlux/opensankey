@@ -11,6 +11,18 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [1.1.4] — 2026-05-11
+
+### Viewer SA — toutes les options `window.sankey` en props React + chrome complet
+
+- **`ViewerSankeyApplication` rend désormais le chrome complet** ([client/src/ViewAppSA.tsx](client/src/ViewAppSA.tsx)) : le Viewer délègue à `SankeyApp` → `OpenSankeyApp`, ce qui rend `MenuTop`, `ToolbarFilter`, `Modals`, etc. — les options `topbar`/`footer`/`toolbar`/`logo`/`header` ont enfin un effet. `fromJSON()` déplacé dans `useEffect` après le mount d'`OpenSankeyApp` (qui initialise `menu_configuration`).
+- **Toutes les options `window.sankey` exposées en props** ([ViewAppSA.tsx](client/src/ViewAppSA.tsx)) : `editable`, `topbar`, `footer`, `toolbar`, `embedded`, `recenter`, `logo`, `header`, `diagram` (URL OU objet inline), `diagram_layout`, `diagram_layout_options`, `diagrams_list`, `diagrams_config`, `data_type`, `data_type_intervals`, `value_filter`. Props prioritaires sur `window.sankey`, `publish:true` forcé.
+- **`initial_data` typé `Type_AnyJSON`** (permissif) pour éviter les conflits de typage sur les JSON Sankey complexes (arrays de nombres, null, etc.). `Type_JSON` strict reste pour la persistance.
+- **Import side-effect des traductions complètes** dans le Viewer (`import './traductions/traduction'`) — sans quoi i18next n'avait que les ressources minimales et les libellés du chrome ne s'affichaient pas.
+- **`examples/1.1.4/`** remplace `examples/1.1.3/` : tous les exemples renommés (1.1.3 npm devient `deprecated`). Démo `diagrams_list` active avec 3 diagrammes gzippés + `serve.bat`/`.ps1`/`.sh` pour servir `build/` en HTTP local + README adapté pour intégration externe (registry GitLab, `.npmrc`, options).
+
+Voir aussi : [submodules/OpenSankey+/CHANGELOG.md → 1.1.4](submodules/OpenSankey+/CHANGELOG.md) et [submodules/OpenSankey/CHANGELOG.md → 1.1.4](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
+
 ## [Unreleased] — Publication npm privée + GitLab Pages multi-versions + ViewerSankeyApplication
 
 ### Ajouté
