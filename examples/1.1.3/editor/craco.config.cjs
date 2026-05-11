@@ -11,11 +11,8 @@ module.exports = {
         ...(config.resolve.extensions || []),
         '.cjs',
       ];
-      // Force une seule copie de React/React-DOM : le `file:` link vers
-      // ../../client copie node_modules verbatim, ce qui peut entrainer
-      // 2 copies de React (hooks dispatcher casse → "M.current is null"
-      // au premier useToast/useContext). Idem aussi pour les @chakra-ui/*
-      // qui utilisent useContext pour leur color-mode-context.
+      // Force une seule copie de React/React-DOM (hooks dispatcher
+      // casse "M.current is null" sinon, declenche au premier useToast).
       config.resolve.alias = {
         ...(config.resolve.alias || {}),
         react: path.resolve(__dirname, 'node_modules/react'),

@@ -20,14 +20,27 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-EXAMPLES=(
-    "current/viewer"
-    "current/editor"
-)
+# Detection dynamique : tous les sous-dossiers examples/<version>/{viewer,editor}
+# trouves (current + chaque snapshot semver figé).
+EXAMPLES=()
+for vdir in "$DIR"/*/; do
+    v=$(basename "$vdir")
+    for kind in viewer editor; do
+        if [ -f "$vdir/$kind/package.json" ]; then
+            EXAMPLES+=("$v/$kind")
+        fi
+    done
+done
 
 if [ -n "$ONLY" ]; then
     EXAMPLES=($(printf '%s\n' "${EXAMPLES[@]}" | grep "^$ONLY/"))
 fi
+
+if [ ${#EXAMPLES[@]} -eq 0 ]; then
+    echo "[ERR] Aucun example trouve (--only=$ONLY)"
+    exit 1
+fi
+echo "[INFO] Examples a builder: ${EXAMPLES[*]}"
 
 built=()
 failed=()

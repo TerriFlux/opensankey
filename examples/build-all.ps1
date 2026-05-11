@@ -16,15 +16,24 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Liste a maintenir alignee avec les dossiers presents dans examples/
-# (current/ exclu : utilise file:../../../opensankey/client en dep, donc
-# necessite une preparation differente).
-$examples = @(
-    "current/viewer",
-    "current/editor"
-)
+# Detection dynamique : tous les sous-dossiers examples/<version>/{viewer,editor}
+# trouves (current + chaque snapshot semver figé).
+$examples = @()
+foreach ($vdir in Get-ChildItem -Path $PSScriptRoot -Directory) {
+    foreach ($kind in @("viewer", "editor")) {
+        if (Test-Path (Join-Path $vdir.FullName "$kind\package.json")) {
+            $examples += "$($vdir.Name)/$kind"
+        }
+    }
+}
 
 if ($Only) { $examples = $examples | Where-Object { $_ -like "$Only/*" } }
+
+if ($examples.Count -eq 0) {
+    Write-Host "[ERR] Aucun example trouve (-Only $Only)" -ForegroundColor Red
+    exit 1
+}
+Write-Host "[INFO] Examples a builder: $($examples -join ', ')" -ForegroundColor Cyan
 
 if (-not (Get-Command npm -ErrorAction SilentlyContinue)) {
     Write-Host "[ERR] npm introuvable dans le PATH." -ForegroundColor Red
