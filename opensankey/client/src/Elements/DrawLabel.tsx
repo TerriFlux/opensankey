@@ -1340,6 +1340,49 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
   }
+
+  /**
+   * Quand value_label_stick_to_label est on, redessine le fond du name_label
+   * pour qu'il englobe à la fois le label et la valeur (le fond du value_label
+   * est skip côté NodeDrawValueLabel.drawBackground).
+   * À appeler APRÈS que NodeDrawValueLabel.drawGenericLabel() ait rendu son <text>.
+   */
+  public refreshBackgroundForStick(): void {
+    if (this.prefix !== 'name_label') return
+    if (!this.d3_selection) return
+    const node = this.node as Class_NodeElement
+    if (!node.value_label_stick_to_label) return
+    if (!node.name_label_background_visible) return
+    if (!node.value_label_is_visible) return
+    if (!this._label_values.is_visible) return
+
+    const nameTextNode = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
+    const valueTextNode = this._element.d3_selection
+      ?.select('.value_label_text').node() as SVGGraphicsElement | null
+    if (!nameTextNode || !valueTextNode) return
+
+    let nameBBox: DOMRect | { x: number, y: number, width: number, height: number }
+    let valueBBox: DOMRect | { x: number, y: number, width: number, height: number }
+    try {
+      nameBBox = nameTextNode.getBBox()
+      valueBBox = valueTextNode.getBBox()
+    } catch {
+      return
+    }
+
+    const x_min = Math.min(nameBBox.x, valueBBox.x)
+    const y_min = Math.min(nameBBox.y, valueBBox.y)
+    const x_max = Math.max(nameBBox.x + nameBBox.width, valueBBox.x + valueBBox.width)
+    const y_max = Math.max(nameBBox.y + nameBBox.height, valueBBox.y + valueBBox.height)
+
+    this.drawGenericBackground(
+      this.d3_selection,
+      x_min,
+      y_min,
+      x_max - x_min,
+      y_max - y_min
+    )
+  }
 }
 
 export class NodeDrawValueLabel extends NodeDrawLabelBase {
@@ -1360,7 +1403,108 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
 
   protected shouldDrawLabel(): boolean {
     if (this._element.drawing_area.type_data === 'structure') return false
-    return this._label_values.is_visible
+    if (!this._label_values.is_visible) return false
+    if (this._nodeElement.value_label_stick_to_label && !this._nodeElement.name_label_is_visible) return false
+    return true
+  }
+
+  private getNameLabelTextBBox(): { x: number, y: number, width: number, height: number } | null {
+    const textNode = this._element.d3_selection?.select('.name_label_text').node() as SVGGraphicsElement | null
+    if (!textNode) return null
+    try {
+      const b = textNode.getBBox()
+      if (b.width === 0 && b.height === 0) return null
+      return { x: b.x, y: b.y, width: b.width, height: b.height }
+    } catch {
+      return null
+    }
+  }
+
+  protected override getLabelPos(): [number, number, string, string] {
+    if (!this._nodeElement.value_label_stick_to_label) {
+      return super.getLabelPos()
+    }
+    const nameBBox = this.getNameLabelTextBBox()
+    if (!nameBBox) return super.getLabelPos()
+
+    let label_pos_x = 0
+    let label_anchor: string = 'start'
+
+    if (this._label_values.position_absolute) {
+      label_pos_x = this._label_values.position_x
+      label_anchor = 'middle'
+    } else {
+      const inside_horiz = this._label_values.inside_horiz
+      if (this._label_values.horiz === 'right') {
+        if (inside_horiz) {
+          label_anchor = 'end'
+          label_pos_x = nameBBox.x + nameBBox.width + this._label_values.horiz_shift
+        } else {
+          label_anchor = 'start'
+          label_pos_x = nameBBox.x + nameBBox.width + this._label_values.horiz_shift
+        }
+      } else if (this._label_values.horiz === 'left') {
+        if (inside_horiz) {
+          label_anchor = 'start'
+          label_pos_x = nameBBox.x + this._label_values.horiz_shift
+        } else {
+          label_anchor = 'end'
+          label_pos_x = nameBBox.x + this._label_values.horiz_shift
+        }
+      } else if (this._label_values.horiz === 'middle') {
+        label_anchor = 'middle'
+        label_pos_x = nameBBox.x + nameBBox.width / 2 + this._label_values.horiz_shift
+      }
+    }
+
+    let label_pos_y = 0
+    let label_baseline: string = 'text-before-edge'
+
+    if (this._label_values.position_absolute) {
+      label_pos_y = this._label_values.position_y
+      label_baseline = 'middle'
+    } else {
+      const inside_vert = this._label_values.inside_vert
+      if (this._label_values.vert === 'top') {
+        if (inside_vert) {
+          label_pos_y = nameBBox.y + this._label_values.vert_shift
+          label_baseline = 'text-before-edge'
+        } else {
+          label_pos_y = nameBBox.y + this._label_values.vert_shift
+          label_baseline = 'text-after-edge'
+        }
+      } else if (this._label_values.vert === 'bottom') {
+        if (inside_vert) {
+          label_pos_y = nameBBox.y + nameBBox.height + this._label_values.vert_shift
+          label_baseline = 'text-after-edge'
+        } else {
+          label_pos_y = nameBBox.y + nameBBox.height + this._label_values.vert_shift
+          label_baseline = 'text-before-edge'
+        }
+      } else if (this._label_values.vert === 'middle') {
+        label_pos_y = nameBBox.y + nameBBox.height / 2 + this._label_values.vert_shift
+        label_baseline = 'middle'
+      }
+    }
+
+    return [label_pos_x, label_pos_y, label_anchor, label_baseline]
+  }
+
+  protected override drawBackground(
+    group: d3_selection_type | undefined,
+    tspanWidths: number[]
+  ) {
+    // Quand stick_to_label est on et que le background du name_label est visible,
+    // c'est NodeDrawNameLabel.refreshBackgroundForStick() qui dessine un fond
+    // unifié englobant label + valeur. On skip ici pour éviter le double fond.
+    if (
+      this._nodeElement.value_label_stick_to_label &&
+      this._nodeElement.name_label_background_visible
+    ) {
+      group?.select(`.${this.prefix}_background`).remove()
+      return
+    }
+    super.drawBackground(group, tspanWidths)
   }
 }
 

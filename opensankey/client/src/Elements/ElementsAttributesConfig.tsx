@@ -1854,6 +1854,27 @@ export const STOCK_LABEL_CONFIG = {
 
 export const VALUE_LABEL_CONFIG = {
   ...VALUE_LABEL_BASE_CONFIG,
+
+  stick_to_label: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'value_label' as const,
+    actions: ['drawValueLabel', 'drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Stick to label',
+      fr: 'Coller au libellé',
+      es: 'Pegar a la etiqueta',
+      de: 'An Beschriftung haften',
+      it: 'Attaccare all\'etichetta'
+    },
+    tooltips: {
+      en: 'Position the value relative to the node label instead of the shape. Background of the label (if visible) covers both label and value.',
+      fr: 'Positionner la valeur par rapport au libellé du nœud au lieu de la forme. Le fond du libellé (s\'il est visible) englobe libellé et valeur.',
+      es: 'Posicionar el valor respecto a la etiqueta del nodo en lugar de la forma. El fondo de la etiqueta (si está visible) cubre etiqueta y valor.',
+      de: 'Wert relativ zur Knotenbeschriftung statt zur Form positionieren. Hintergrund der Beschriftung (falls sichtbar) umfasst Beschriftung und Wert.',
+      it: 'Posizionare il valore rispetto all\'etichetta del nodo invece della forma. Lo sfondo dell\'etichetta (se visibile) copre etichetta e valore.'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const HYPER_LINK_CONFIG = {
