@@ -79,7 +79,7 @@ export const setDiagram = (
 ) => {
   if (!window.sankey) return
   const sankey = window.sankey
-  const diagrams = sankey.sous_filieres
+  const diagrams = sankey.diagrams_list ?? sankey.sous_filieres
   if (!diagrams) return
   if (sankey[diagram_url]) {
     const diagram_config = sankey[diagram_url]
@@ -784,15 +784,17 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   new_data.menu_configuration.ref_to_submenu_updater.current = () => setUpdate(b => b + 1)
 
 
-  const sous_filieres = window.sankey && window.sankey.sous_filieres ? window.sankey.sous_filieres : undefined
+  const diagrams_list = window.sankey
+    ? (window.sankey.diagrams_list ?? window.sankey.sous_filieres)
+    : undefined
 
   let is_split = false
   const diagrams: { [keys: string]: string[]; } = {}
 
-  if (sous_filieres) {
-    is_split = Object.keys(sous_filieres)[0].includes('/')
+  if (diagrams_list) {
+    is_split = Object.keys(diagrams_list)[0].includes('/')
     if (is_split) {
-      Object.keys(sous_filieres).forEach(s => {
+      Object.keys(diagrams_list).forEach(s => {
         const path = s.split('/')
         if (!(path[0] in diagrams)) {
           diagrams[path[0]] = [path[1]]
@@ -801,13 +803,13 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
         }
       })
     } else {
-      Object.keys(sous_filieres).forEach(s => diagrams[s] = [s])
+      Object.keys(diagrams_list).forEach(s => diagrams[s] = [s])
     }
   }
   const [s_diagram, sDiagram] = useState(Object.keys(diagrams).length > 0 ? Object.keys(diagrams)[0] : '')
   const [s_diagram_2, sDiagram2] = useState(Object.keys(diagrams).length > 0 ? Object.values(diagrams)[0][0] : '')
 
-  let diagrams_element = (new_data.is_static && sous_filieres && !is_split) ?
+  let diagrams_element = (new_data.is_static && diagrams_list && !is_split) ?
     <Box
       margin='0.25rem'
       alignSelf='center'
@@ -820,13 +822,13 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
             setDiagram(evt.target.value, new_data)
           }}
           value={s_diagram}>
-          {Object.keys(sous_filieres).map((name, i) => <option key={i} value={name}>{name}</option>)}
+          {Object.keys(diagrams_list).map((name, i) => <option key={i} value={name}>{name}</option>)}
         </Select>
       </FormControl>
     </Box> :
     <React.Fragment key={'1'} />
 
-  if (new_data.is_static && sous_filieres && is_split) {
+  if (new_data.is_static && diagrams_list && is_split) {
     diagrams_element = <Box
       margin='0.25rem'
       alignSelf='center'
@@ -909,7 +911,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
     </OSTooltip>
 
   let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
-  if (new_data.is_static && sous_filieres) dict_components_menu_top['diagrams'] = diagrams_element
+  if (new_data.is_static && diagrams_list) dict_components_menu_top['diagrams'] = diagrams_element
   dict_components_menu_top = { ...dict_components_menu_top, ...additionalMenus.current.external_top_buttons_item }
   if (new_data.is_static) dict_components_menu_top['edit'] = edit_button
   dict_components_menu_top['help'] = help_button
