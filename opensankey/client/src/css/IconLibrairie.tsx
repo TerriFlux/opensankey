@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 import React from 'react'
-import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
+import { faAnchor, faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
@@ -668,6 +668,9 @@ const logo_label_inside_vert = (
     />
   </svg>
 )
+
+// Valeur verrouillée au label (stick_to_label) : icône cadenas (même sémantique que locked)
+const logo_label_stick_to_label = <FaLock />
 
 // Texte suivant le chemin du flux (on_path)
 const logo_label_on_path = (
@@ -1534,6 +1537,7 @@ export class Class_IconLibrary {
 
   protected _icon_label_inside_horiz = logo_label_inside_horiz
   protected _icon_label_inside_vert = logo_label_inside_vert
+  protected _icon_label_stick_to_label = logo_label_stick_to_label
 
 
   protected _icon_open_modal_icon = <FontAwesomeIcon icon={faIcons} />
@@ -1723,6 +1727,7 @@ export class Class_IconLibrary {
   public get icon_text_vert_pos_bottom() { return this.normalizeIcon(this._icon_text_vert_pos_bottom) }
   public get icon_label_inside_horiz() { return this.normalizeIcon(this._icon_label_inside_horiz) }
   public get icon_label_inside_vert() { return this.normalizeIcon(this._icon_label_inside_vert) }
+  public get icon_label_stick_to_label() { return this.normalizeIcon(this._icon_label_stick_to_label) }
   public get icon_label_on_path() { return this.normalizeIcon(this._icon_label_on_path) }
   public get icon_label_auto_position() { return this.normalizeIcon(this._icon_label_auto_position) }
   public get icon_open_modal_icon() { return this.normalizeIcon(this._icon_open_modal_icon) }

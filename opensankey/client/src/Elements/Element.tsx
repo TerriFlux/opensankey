@@ -749,6 +749,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   value_label_text_align!: ValueLabelAttributeTypes['text_align']
   value_label_inside_horiz!: ValueLabelAttributeTypes['inside_horiz']
   value_label_inside_vert!: ValueLabelAttributeTypes['inside_vert']
+  value_label_stick_to_label!: ValueLabelAttributeTypes['stick_to_label']
   // Background
   value_label_background_visible!: ValueLabelAttributeTypes['background_visible']
   value_label_background_color!: ValueLabelAttributeTypes['background_color']

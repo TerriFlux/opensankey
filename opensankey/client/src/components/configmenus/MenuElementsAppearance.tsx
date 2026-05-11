@@ -50,6 +50,7 @@ import {
   getLinkShapeValues,
   getNodeShapeValues,
   getElementsLabelValues,
+  getElementsValueLabelValues,
   getElementsNameLabelValues,
   getLinksLabelValues,
   getIconValues,
@@ -475,7 +476,7 @@ const LabelContentComponent = ({
           attributePath={attributePath}
           refreshParentComponent={refreshParentComponent}
         />
-        {prefix === 'value_label' && selection.hasNodes && (
+        {prefix === 'value_label' && (menu_for_style || selection.hasNodes) && (
           <OverloadedButtonGroup
             elements={elements}
             config={VALUE_LABEL_CONFIG}
@@ -819,6 +820,28 @@ const LabelContentComponent = ({
             {app_data.icon_library.icon_label_inside_vert}
           </OverloadedButton>
         </Box>
+
+        {prefix === 'value_label' && (menu_for_style || selection.hasNodes) && (() => {
+          const valueLabelValues = getElementsValueLabelValues(elements, prefix, refreshParentComponent)
+          return (
+            <Box layerStyle='options_4cols'>
+              <OverloadedButton
+                elements={elements}
+                config={VALUE_LABEL_CONFIG}
+                attributePath={attributePath}
+                prefix={prefix}
+                attributeKey="stick_to_label"
+                variant={getButtonVariant('', isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'stick_to_label', prefix), valueLabelValues.stick_to_label)}
+                onClick={() => { valueLabelValues.stick_to_label = !valueLabelValues.stick_to_label }}
+              >
+                {app_data.icon_library.icon_label_stick_to_label}
+              </OverloadedButton>
+              <Box />
+              <Box />
+              <Box />
+            </Box>
+          )
+        })()}
 
       </Box>
 
@@ -2667,8 +2690,10 @@ export const missing_node_labels_translations = {
           value_label_is_visible: 'Value label',
           icon_is_visible: 'Icon',
           value_label_unit_visible: 'Unit',
+          value_label_stick_to_label: 'Stick to label',
 
           tooltips: {
+            value_label_stick_to_label: 'Position the value relative to the node label. The label background (if visible) covers label and value together.',
             left_align: 'Align left',
             center_align: 'Center',
             right_align: 'Align right',
@@ -2691,8 +2716,10 @@ export const missing_node_labels_translations = {
           value_label_is_visible: 'Valeur',
           icon_is_visible: 'Icône',
           value_label_unit_visible: 'Unité',
+          value_label_stick_to_label: 'Coller au libellé',
 
           tooltips: {
+            value_label_stick_to_label: 'Positionner la valeur par rapport au libellé du nœud. Le fond du libellé (s\'il est visible) englobe libellé et valeur.',
             left_align: 'Aligner à gauche',
             center_align: 'Centrer',
             right_align: 'Aligner à droite',
@@ -2715,8 +2742,10 @@ export const missing_node_labels_translations = {
           value_label_is_visible: 'Valor',
           icon_is_visible: 'Icono',
           value_label_unit_visible: 'Unidad',
+          value_label_stick_to_label: 'Pegar a la etiqueta',
 
           tooltips: {
+            value_label_stick_to_label: 'Posicionar el valor respecto a la etiqueta del nodo. El fondo de la etiqueta (si está visible) cubre etiqueta y valor.',
             left_align: 'Alinear a la izquierda',
             center_align: 'Centrar',
             right_align: 'Alinear a la derecha',
@@ -2739,8 +2768,10 @@ export const missing_node_labels_translations = {
           value_label_is_visible: 'Wert',
           icon_is_visible: 'Symbol',
           value_label_unit_visible: 'Einheit',
+          value_label_stick_to_label: 'An Beschriftung haften',
 
           tooltips: {
+            value_label_stick_to_label: 'Wert relativ zur Knotenbeschriftung positionieren. Hintergrund der Beschriftung (falls sichtbar) umfasst Beschriftung und Wert.',
             left_align: 'Linksbündig',
             center_align: 'Zentriert',
             right_align: 'Rechtsbündig',
@@ -2763,8 +2794,10 @@ export const missing_node_labels_translations = {
           value_label_is_visible: 'Valore',
           icon_is_visible: 'Icona',
           value_label_unit_visible: 'Unità',
+          value_label_stick_to_label: 'Attaccare all\'etichetta',
 
           tooltips: {
+            value_label_stick_to_label: 'Posizionare il valore rispetto all\'etichetta del nodo. Lo sfondo dell\'etichetta (se visibile) copre etichetta e valore.',
             left_align: 'Allineare a sinistra',
             center_align: 'Centrare',
             right_align: 'Allineare a destra',
