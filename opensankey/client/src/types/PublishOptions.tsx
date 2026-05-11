@@ -27,8 +27,8 @@ export interface SankeyGlobals {
   header?: string        // HTML brut injecté en haut
 
   // Diagrammes
-  diagram?: string                          // URL d'un JSON à charger
-  diagram_layout?: string                   // URL d'un layout à surimprimer
+  diagram?: string | Record<string, unknown> // URL d'un JSON à charger, OU objet JSON inline
+  diagram_layout?: string                    // URL d'un layout à surimprimer
   diagram_layout_options?: string[]
   diagrams_list?: Record<string, string>    // dropdown multi-diagrammes (clés "a/b" pour groupage)
   /** @deprecated utiliser `diagrams_list` */
@@ -56,7 +56,7 @@ export interface PublishOptions {
   value_filter: boolean
   logo: string | null
   header: string | null
-  diagram: string | null
+  diagram: string | Record<string, unknown> | null
   diagram_layout: string | null
   diagram_layout_options: string[] | null
   diagrams_list: Record<string, string> | null
@@ -100,7 +100,11 @@ export const getPublishOptions = (): PublishOptions => {
     value_filter: bool(s.value_filter, true),
     logo: str(s.logo),
     header: str(s.header),
-    diagram: str(s.diagram),
+    diagram: (typeof s.diagram === 'string')
+      ? s.diagram
+      : (s.diagram && typeof s.diagram === 'object' && !Array.isArray(s.diagram))
+        ? (s.diagram as Record<string, unknown>)
+        : null,
     diagram_layout: str(s.diagram_layout),
     diagram_layout_options: Array.isArray(s.diagram_layout_options)
       ? (s.diagram_layout_options as string[])
@@ -124,7 +128,7 @@ export type ViewerSankeyOptions = {
   recenter?: boolean
   logo?: string
   header?: string
-  diagram?: string
+  diagram?: string | Record<string, unknown>
   diagram_layout?: string
   diagram_layout_options?: string[]
   diagrams_list?: Record<string, string>

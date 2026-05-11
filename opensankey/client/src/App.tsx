@@ -93,28 +93,38 @@ export const OpenSankeyApp = ({
       app_data.drawing_area.to_recenter = false
     }
   }
-  if (opts.diagram) {
-    app_data.file_name = opts.diagram
-    loadUniversalJSON(opts.diagram).then(data => {
-      app_data.fromJSON(data as Type_JSON, {}, !opts.diagram_layout)
-      app_data.file_name = opts.diagram as string
-      if (opts.diagram_layout) {
-        loadUniversalJSON(opts.diagram_layout).then(layout_data => {
-          const layout_mode = app_data.expandLayoutMode(opts.diagram_layout_options ?? app_data.transform_layout_all_attr)
-          const tmp_DA = app_data.createNewDrawingArea()
-          tmp_DA.bypass_redraws = true
-          app_data.loadDrawingAreaFromJSON(tmp_DA, layout_data as Type_JSON)
-          tmp_DA.afterFromJSON()
-          app_data.drawing_area.bypass_redraws = true
-          updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
-          app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
-          app_data.drawing_area.draw()
-          applyPublishRecenter()
-        }).catch(e => console.log(e))
-      } else {
+  const applyDiagramData = (data: Type_JSON) => {
+    app_data.fromJSON(data, {}, !opts.diagram_layout)
+    if (opts.diagram_layout) {
+      loadUniversalJSON(opts.diagram_layout).then(layout_data => {
+        const layout_mode = app_data.expandLayoutMode(opts.diagram_layout_options ?? app_data.transform_layout_all_attr)
+        const tmp_DA = app_data.createNewDrawingArea()
+        tmp_DA.bypass_redraws = true
+        app_data.loadDrawingAreaFromJSON(tmp_DA, layout_data as Type_JSON)
+        tmp_DA.afterFromJSON()
+        app_data.drawing_area.bypass_redraws = true
+        updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
+        app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+        app_data.drawing_area.draw()
         applyPublishRecenter()
-      }
-    }).catch(e => console.log(e))
+      }).catch(e => console.log(e))
+    } else {
+      applyPublishRecenter()
+    }
+  }
+
+  if (opts.diagram) {
+    if (typeof opts.diagram === 'string') {
+      // URL : fetch + décompression + parse
+      app_data.file_name = opts.diagram
+      loadUniversalJSON(opts.diagram).then(data => {
+        app_data.file_name = opts.diagram as string
+        applyDiagramData(data as Type_JSON)
+      }).catch(e => console.log(e))
+    } else {
+      // Objet JSON inline : appliqué directement (use case embed HTML one-file)
+      applyDiagramData(opts.diagram as unknown as Type_JSON)
+    }
   } else if (json_data !== null && json_data != '' && json_data != 'null') {
     app_data.fromJSON(JSON.parse(json_data))
   }

@@ -7,7 +7,7 @@
 # Usage :
 #   ./build-all.ps1                # build tout (skip si node_modules existe deja)
 #   ./build-all.ps1 -Force         # force npm install partout (apres update repo)
-#   ./build-all.ps1 -Only 1.1.3    # build seulement les exemples d'une version
+#   ./build-all.ps1 -Only 1.1.4    # build seulement les exemples d'une version
 
 param(
     [switch]$Force,
@@ -22,8 +22,8 @@ $ErrorActionPreference = 'Stop'
 $examples = @(
     "1.0.7/viewer",
     "1.0.7/editor",
-    "1.1.3/viewer",
-    "1.1.3/editor",
+    "1.1.4/viewer",
+    "1.1.4/editor",
     "current/viewer",
     "current/editor"
 )
