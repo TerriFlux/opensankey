@@ -31,6 +31,7 @@ import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next
 
 import { Class_ApplicationData } from './types/ApplicationData'
 import { Type_JSON } from './types/Utils'
+import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
 
 if (!i18next.isInitialized) {
   i18next.use(initReactI18next).init({
@@ -41,15 +42,15 @@ if (!i18next.isInitialized) {
   })
 }
 
-type ViewerOpenSankeyAppProps = {
+export type ViewerOpenSankeyAppProps = ViewerSankeyOptions & {
   initial_data?: Type_JSON
 }
 
-const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data }) => {
+const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options }) => {
   const { t, i18n } = useTranslation()
 
   const [app_data] = useState<Class_ApplicationData>(() => {
-    ;(window as unknown as { sankey?: { publish?: boolean } }).sankey = { publish: true }
+    applyViewerOptions(options)
     const data = new Class_ApplicationData(true)
     data.t = t
     data.i18n = i18n
