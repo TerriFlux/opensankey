@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { ViewerSankeyApplication } from "@terriflux/sankeyapplication/dist/ViewAppSA";
-import { Type_AnyJSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
-import initial_data from "./example2.json";
+//import { Type_AnyJSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
+//import initial_data from "./example3.json";
 
 // ============================================================================
 // ViewerSankeyApplication — toutes les options
@@ -17,8 +17,8 @@ root.render(
     // ------------------------------------------------------------------------
     // Données
     // ------------------------------------------------------------------------
-    initial_data={initial_data as Type_AnyJSON}
-    // diagram="diagram.json"                  // URL d'un JSON à charger (alternative à initial_data)
+    //initial_data={initial_data as Type_AnyJSON}
+    diagram="exemple1.json.gz"               // URL complète d'un JSON (ou .json.gz) à charger ; alternative à initial_data
     // diagram_layout="layout.json"            // URL d'un layout à surimprimer
     // diagram_layout_options={["nodes", "links"]}  // options du layout
 
@@ -45,23 +45,22 @@ root.render(
     // ------------------------------------------------------------------------
     // Filtres dans la topbar
     // ------------------------------------------------------------------------
-    // data_type={true}                        // default true  — afficher le filtre type de données
+    data_type={false}                        // default true  — afficher le filtre type de données
     // data_type_intervals={true}              // default true  — afficher le filtre intervalles
-    // value_filter={true}                     // default true  — afficher le filtre valeurs
+    value_filter={false}                     // default true  — afficher le filtre valeurs
 
     // ------------------------------------------------------------------------
     // Multi-diagrammes (dropdown dans la topbar)
     // ----------------------------------------------------------------------------
-    // Clé = libellé affiché, valeur = URL relative du JSON (.json.gz chargé automatiquement).
+    // Clé = libellé affiché, valeur = nom de base ; le viewer fetch `<valeur>.gz`.
     // Une clé "categorie/nom" active un second dropdown groupé par catégorie.
     // `diagrams_list` remplace l'ancien `sous_filieres` (toujours accepté en alias).
     // ------------------------------------------------------------------------
-    // diagrams_list={{
-    //   "Energie": "diagram_energie",
-    //   "Eau":     "diagram_eau",
-    //   "Climat/CO2":  "diagram_co2",
-    //   "Climat/CH4":  "diagram_ch4",
-    // }}
+    diagrams_list={{
+      "Exemple 1": "exemple1.json",
+      "Exemple 2": "exemple2.json",
+      "Exemple 3": "exemple3.json",
+    }}
 
     // ------------------------------------------------------------------------
     // Configs par diagramme (clé = même libellé que dans diagrams_list)

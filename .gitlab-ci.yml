@@ -289,9 +289,13 @@ build:examples:
     # avec TS2307 sur tous les imports './deps/...') + lance pnpm run dist.
     - echo "[INFO] Install + symlinks + dist de la lib SA"
     - bash build_client.sh -I -D
-    - echo "[INFO] Build des examples React"
+    # Seul current/ est buildé en CI : il utilise `file:../../../client` (link
+    # local). Les snapshots versionnés (1.1.3/, etc.) installent depuis le
+    # registry npm — non disponibles avant que publish:npm n'ait tourné.
+    # Ils sont vérifiés en local avant freeze.
+    - echo "[INFO] Build des examples React (current uniquement)"
     - cd examples
-    - bash build-all.sh
+    - bash build-all.sh --only current
   artifacts:
     paths:
       - client/dist
