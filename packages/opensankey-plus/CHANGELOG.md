@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.4] — 2026-05-11
+
+### Bump du submodule OpenSankey — Viewer props complets + `diagrams_list` + `diagram` inline
+
+Voir [submodules/OpenSankey/CHANGELOG.md → 1.1.4](submodules/OpenSankey/CHANGELOG.md). Côté OSP propre : mise à jour du commentaire obsolète dans `SankeyPlusViews.tsx` (`sous_filieres` → `diagrams_list`).
+
 ## [1.1.3] — 2026-05-10
 
 ### Bump du submodule OpenSankey — `value_label_stick_to_label` + fix `ViewerOpenSankeyApp` + craco editor
