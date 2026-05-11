@@ -30,7 +30,7 @@ import i18next from 'i18next'
 import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
 
 import { Class_ApplicationData } from './types/ApplicationData'
-import { Type_JSON } from './types/Utils'
+import { Type_AnyJSON, Type_JSON } from './types/Utils'
 import { applyViewerOptions, ViewerSankeyOptions } from './types/PublishOptions'
 
 if (!i18next.isInitialized) {
@@ -43,7 +43,7 @@ if (!i18next.isInitialized) {
 }
 
 export type ViewerOpenSankeyAppProps = ViewerSankeyOptions & {
-  initial_data?: Type_JSON
+  initial_data?: Type_AnyJSON
 }
 
 const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options }) => {
@@ -66,7 +66,7 @@ const ViewerInner: FC<ViewerOpenSankeyAppProps> = ({ initial_data, ...options })
 
   useEffect(() => {
     if (initial_data) {
-      app_data.fromJSON(initial_data)
+      app_data.fromJSON(initial_data as unknown as Type_JSON)
     }
     app_data.draw()
   }, [app_data, initial_data])

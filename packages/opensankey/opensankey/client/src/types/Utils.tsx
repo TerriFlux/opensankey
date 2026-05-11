@@ -64,13 +64,15 @@ export type Type_MacroTagGroup = 'node_taggs' | 'flux_taggs' | 'data_taggs' | 'l
 /**
  * Define type properties for Sankey JSON Saving format
  * @type Type_JSON
- *
- * Représente un objet JSON arbitraire : les valeurs peuvent être primitives,
- * tableaux (de n'importe quel type JSON, y compris nombres, null, objets),
- * ou objets imbriqués. Conforme à la grammaire JSON standard.
  */
-export type Type_JSON_Value = null | boolean | number | string | Type_JSON_Value[] | Type_JSON
-export type Type_JSON = { [_: string]: Type_JSON_Value }
+export type Type_JSON = { [_: string]: boolean | number | string | string[] | Type_JSON }
+
+/**
+ * Type d'entrée permissif pour les Viewers (cast safe vers Type_JSON en interne).
+ * Accepte n'importe quel objet JSON conforme à la grammaire standard,
+ * y compris arrays de nombres, null, structures imbriquées arbitraires.
+ */
+export type Type_AnyJSON = { [_: string]: unknown }
 
 export const default_main_sankey_id = 'sankey_maitre'
 
