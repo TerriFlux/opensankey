@@ -1,0 +1,764 @@
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OpenSankey</title>
+    <link rel="stylesheet" href="./bundle.css" />
+    <script defer="defer" src="./bundle.js"></script>
+  </head>
+  <div id="react-container"></div>
+  <body>
+
+<script>
+mydiagram = {
+    "node_label_separator": "",
+    "node_label_separator_part": "before",
+    "version": "0.91",
+    "height": 796.6000061035156,
+    "width": 1858,
+    "grid_visible": false,
+    "grid_square_size": 50,
+    "h_space": 200,
+    "v_space": 50,
+    "user_scale": 20000,
+    "couleur_fond_sankey": "#f6f5f4",
+    "filter_label": 0,
+    "filter_link_value": 0,
+    "show_structure": "reconciled",
+    "number_of_elements": 16,
+    "id": "sankey_maitre",
+    "is_visible": true,
+    "svg_parent_group": "grp_legend",
+    "x": 50,
+    "y": 96,
+    "u": 0,
+    "v": 0,
+    "legend": {
+      "legend_position": [
+        "50",
+        "96"
+      ],
+      "mask_legend": true,
+      "legend_dx": 0,
+      "legend_dy": 0,
+      "legend_scale": 1,
+      "legend_width": 180,
+      "display_legend_scale": false,
+      "legend_police": 16,
+      "legend_bg_border": false,
+      "legend_bg_color": "#a9a9a9",
+      "legend_bg_opacity": 0,
+      "legend_show_dataTags": false,
+      "node_label_separator": "",
+      "info_link_value_void": false
+    },
+    "levelTags": {},
+    "nodeTags": {},
+    "fluxTags": {},
+    "dataTags": {},
+    "style_node": {
+      "default": {
+        "version": 1,
+        "shape_visible": true,
+        "shape": "rect",
+        "node_arrow_angle_factor": 30,
+        "node_arrow_angle_direction": "right",
+        "node_width": 40,
+        "node_height": 40,
+        "color": "#a9a9a9",
+        "colorSustainable": false,
+        "name_label_is_visible": true,
+        "name_label_font_family": "Arial,sans-serif",
+        "name_label_font_size": 14,
+        "name_label_uppercase": false,
+        "name_label_bold": false,
+        "name_label_italic": false,
+        "name_label_color": "black",
+        "name_label_vert": "bottom",
+        "name_label_horiz": "middle",
+        "name_label_background": true,
+        "name_label_horiz_shift": 0,
+        "name_label_vert_shift": 0,
+        "name_label_box_width": 150,
+        "value_label_is_visible": false,
+        "value_label_font_family": "Arial,sans-serif",
+        "value_label_font_size": 14,
+        "value_label_uppercase": false,
+        "value_label_bold": false,
+        "value_label_italic": false,
+        "value_label_color": "black",
+        "value_label_horiz": "middle",
+        "value_label_vert": "top",
+        "value_label_background": false,
+        "value_label_horiz_shift": 0,
+        "value_label_vert_shift": 0,
+        "value_label_box_width": 150,
+        "value_label_scientific_notation": false,
+        "value_label_significant_digits": false,
+        "value_label_nb_significant_digits": 3,
+        "value_label_custom_digit": true,
+        "value_label_nb_digit": 2,
+        "value_label_unit_visible": false,
+        "value_label_unit": "",
+        "value_label_unit_factor": 1,
+        "name": "Style par default"
+      }
+    },
+    "style_link": {
+      "default": {
+        "version": 1,
+        "curved": true,
+        "curvature": 0.5,
+        "recycling": false,
+        "is_structur": false,
+        "orientation": "hh",
+        "left_horiz_shift": 0.05,
+        "right_horiz_shift": 0.05,
+        "starting_tangeant": 0.25,
+        "ending_tangeant": 0.25,
+        "vert_shift": 100,
+        "arrow": true,
+        "arrow_size": 10,
+        "dashed": false,
+        "color": "#a9a9a9",
+        "opacity": 0.85,
+        "value_label_is_visible": true,
+        "value_label_font_family": "Arial,sans-serif",
+        "value_label_font_size": 20,
+        "value_label_uppercase": false,
+        "value_label_bold": false,
+        "value_label_italic": false,
+        "value_label_color": "black",
+        "value_label_horiz": "middle",
+        "value_label_vert": "middle",
+        "value_label_on_path": true,
+        "value_label_pos_auto": false,
+        "value_label_scientific_notation": false,
+        "value_label_significant_digits": false,
+        "value_label_nb_significant_digits": 3,
+        "value_label_custom_digit": false,
+        "value_label_nb_digit": 0,
+        "value_label_unit_visible": false,
+        "value_label_unit": "",
+        "value_label_unit_factor": 1,
+        "name_label_is_visible": true,
+        "name_label_font_family": "Arial,sans-serif",
+        "name_label_font_size": 20,
+        "name_label_uppercase": false,
+        "name_label_bold": false,
+        "name_label_italic": false,
+        "name_label_color": "black",
+        "name_label_horiz": "middle",
+        "name_label_vert": "top",
+        "name_label_on_path": true,
+        "name_label_pos_auto": false,
+        "name": "Style par default"
+      }
+    },
+    "nodes": {
+      "node0": {
+        "id": "node0",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 200,
+        "y": 95,
+        "u": 1,
+        "v": 0,
+        "name": "Sales - Product 1",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#9141ac",
+          "name_label_vert": "middle",
+          "name_label_horiz": "left"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [],
+        "outputLinksId": [
+          "Node 0 --> Node 1"
+        ],
+        "links_order": [
+          "Node 0 --> Node 1"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node1": {
+        "id": "node1",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 400,
+        "y": 120,
+        "u": 3,
+        "v": 0,
+        "name": "Revenues",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "name_label_bold": true,
+          "name_label_background": false
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Node 0 --> Node 1",
+          "Node 2 --> Node 1"
+        ],
+        "outputLinksId": [
+          "Node 1 --> Node 3",
+          "Revenues --> Node 7",
+          "Revenues --> Node 8"
+        ],
+        "links_order": [
+          "Revenues --> Node 8",
+          "Revenues --> Node 7",
+          "Node 1 --> Node 3",
+          "Node 0 --> Node 1",
+          "Node 2 --> Node 1"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node6": {
+        "id": "node6",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 800,
+        "y": 67.5,
+        "u": 7,
+        "v": 0,
+        "name": "Production",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#3584e4",
+          "name_label_vert": "middle",
+          "name_label_horiz": "right"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Revenues --> Node 6"
+        ],
+        "outputLinksId": [],
+        "links_order": [
+          "Revenues --> Node 6"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node8": {
+        "id": "node8",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 600,
+        "y": 50,
+        "u": 5,
+        "v": 0,
+        "name": "Profits",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#33d17a",
+          "name_label_vert": "middle",
+          "name_label_horiz": "right"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Revenues --> Node 8"
+        ],
+        "outputLinksId": [],
+        "links_order": [
+          "Revenues --> Node 8"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node2": {
+        "id": "node2",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 200,
+        "y": 245,
+        "u": 1,
+        "v": 1,
+        "name": "Sales - Product 2",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#865e3c",
+          "name_label_vert": "middle",
+          "name_label_horiz": "left"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [],
+        "outputLinksId": [
+          "Node 2 --> Node 1"
+        ],
+        "links_order": [
+          "Node 2 --> Node 1"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node7": {
+        "id": "node7",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 600,
+        "y": 140,
+        "u": 5,
+        "v": 1,
+        "name": "Expenses",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#3584e4",
+          "name_label_bold": true,
+          "name_label_vert": "bottom",
+          "name_label_horiz": "middle",
+          "name_label_background": false
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Revenues --> Node 7"
+        ],
+        "outputLinksId": [
+          "Node 1 --> Node 4",
+          "Node 1 --> Node 5",
+          "Revenues --> Node 6"
+        ],
+        "links_order": [
+          "Revenues --> Node 6",
+          "Node 1 --> Node 4",
+          "Node 1 --> Node 5",
+          "Revenues --> Node 7"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node4": {
+        "id": "node4",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 800,
+        "y": 157.5,
+        "u": 7,
+        "v": 1,
+        "name": "Human ressources",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#3584e4",
+          "name_label_vert": "middle",
+          "name_label_horiz": "right"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Node 1 --> Node 4"
+        ],
+        "outputLinksId": [],
+        "links_order": [
+          "Node 1 --> Node 4"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node3": {
+        "id": "node3",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 600,
+        "y": 300,
+        "u": 5,
+        "v": 2,
+        "name": "Taxes",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#e01b24",
+          "name_label_vert": "middle",
+          "name_label_horiz": "right"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Node 1 --> Node 3"
+        ],
+        "outputLinksId": [],
+        "links_order": [
+          "Node 1 --> Node 3"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      },
+      "node5": {
+        "id": "node5",
+        "is_visible": true,
+        "svg_parent_group": "g_nodes",
+        "x": 800,
+        "y": 282.5,
+        "u": 7,
+        "v": 2,
+        "name": "Marketing",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "color": "#3584e4",
+          "name_label_vert": "middle",
+          "name_label_horiz": "right"
+        },
+        "tags": {},
+        "dimensions": {},
+        "inputLinksId": [
+          "Node 1 --> Node 5"
+        ],
+        "outputLinksId": [],
+        "links_order": [
+          "Node 1 --> Node 5"
+        ],
+        "iconName": "",
+        "iconColor": "",
+        "iconVisible": false,
+        "iconColorSustainable": false,
+        "has_FO": false,
+        "is_FO_raw": false,
+        "FO_content": "",
+        "is_image": false,
+        "image_src": "",
+        "hyperlink": ""
+      }
+    },
+    "links": {
+      "Node 0 --> Node 1": {
+        "id": "Node 0 --> Node 1",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node0",
+        "idTarget": "node1",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#c061cb",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 0,
+        "position_starting_x": 240,
+        "position_starting_y": 145,
+        "position_ending_x": 400,
+        "position_ending_y": 170,
+        "tooltip_text": "",
+        "value": {
+          "id": "node0node1_value__CjFRt",
+          "data_value": 20000,
+          "tags": {}
+        }
+      },
+      "Node 2 --> Node 1": {
+        "id": "Node 2 --> Node 1",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node2",
+        "idTarget": "node1",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#b5835a",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 2,
+        "position_starting_x": 240,
+        "position_starting_y": 270,
+        "position_ending_x": 400,
+        "position_ending_y": 245,
+        "tooltip_text": "",
+        "value": {
+          "id": "node2node1_value__w3unm",
+          "data_value": 10000,
+          "tags": {}
+        }
+      },
+      "Node 1 --> Node 3": {
+        "id": "Node 1 --> Node 3",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node1",
+        "idTarget": "node3",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#f66151",
+          "value_label_horiz": "middle",
+          "value_label_vert": "middle",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 4,
+        "position_starting_x": 440,
+        "position_starting_y": 262.5,
+        "position_ending_x": 600,
+        "position_ending_y": 320,
+        "tooltip_text": "",
+        "value": {
+          "id": "node1node3_value__bQbVE",
+          "data_value": 3000,
+          "tags": {}
+        }
+      },
+      "Node 1 --> Node 4": {
+        "id": "Node 1 --> Node 4",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node7",
+        "idTarget": "node4",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#62a0ea",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 6,
+        "position_starting_x": 640,
+        "position_starting_y": 202.5,
+        "position_ending_x": 800,
+        "position_ending_y": 195,
+        "tooltip_text": "",
+        "value": {
+          "id": "node1node4_value__rMXnL",
+          "data_value": 15000,
+          "tags": {}
+        }
+      },
+      "Node 1 --> Node 5": {
+        "id": "Node 1 --> Node 5",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node7",
+        "idTarget": "node5",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#62a0ea",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 8,
+        "position_starting_x": 640,
+        "position_starting_y": 245,
+        "position_ending_x": 800,
+        "position_ending_y": 302.5,
+        "tooltip_text": "",
+        "value": {
+          "id": "node1node5_value__4KQWU",
+          "data_value": 2000,
+          "tags": {}
+        }
+      },
+      "Revenues --> Node 6": {
+        "id": "Revenues --> Node 6",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node7",
+        "idTarget": "node6",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#62a0ea",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 10,
+        "position_starting_x": 640,
+        "position_starting_y": 152.5,
+        "position_ending_x": 800,
+        "position_ending_y": 87.5,
+        "tooltip_text": "",
+        "value": {
+          "id": "revenuesnode6_value__LEYWo",
+          "data_value": 5000,
+          "tags": {}
+        }
+      },
+      "Revenues --> Node 7": {
+        "id": "Revenues --> Node 7",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node1",
+        "idTarget": "node7",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#62a0ea",
+          "value_label_horiz": "middle",
+          "value_label_vert": "middle",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 12,
+        "position_starting_x": 440,
+        "position_starting_y": 200,
+        "position_ending_x": 600,
+        "position_ending_y": 195,
+        "tooltip_text": "",
+        "value": {
+          "id": "revenuesnode7_value__z0I7m",
+          "data_value": 22000,
+          "tags": {}
+        }
+      },
+      "Revenues --> Node 8": {
+        "id": "Revenues --> Node 8",
+        "is_visible": true,
+        "svg_parent_group": "g_links",
+        "idSource": "node1",
+        "idTarget": "node8",
+        "style": "default",
+        "local": {
+          "version": 1,
+          "recycling": false,
+          "color": "#57e389",
+          "value_label_horiz": "middle",
+          "value_label_vert": "middle",
+          "value_label_unit_visible": true,
+          "value_label_unit": "k€",
+          "value_label_unit_factor": 1000,
+          "gradient": false
+        },
+        "displaying_order": 14,
+        "position_starting_x": 440,
+        "position_starting_y": 132.5,
+        "position_ending_x": 600,
+        "position_ending_y": 70,
+        "tooltip_text": "",
+        "value": {
+          "id": "revenuesnode8_value__oigxb",
+          "data_value": 5000,
+          "tags": {}
+        }
+      }
+    },
+    "labels": {},
+    "icon_catalog": {},
+    "show_background_image": false,
+    "background_image": "",
+    "name": "sankey_maitre",
+    "heredited_attr": [],
+    "views": {},
+    "current_view": "sankey_maitre"
+  }
+  </script>
+
+
+
+
+
+
+    <script>
+      window.sankey = {
+        publish: true,
+        topbar:false,
+        header: "Exemple de diagramme de Sankey",
+        //footer:true,
+        toolbar: false,
+        logo: "logo-socle.png",
+        recenter:false,
+        diagram: mydiagram,
+        //diagram: "example.json",
+        embedded:true,
+      };
+    </script>
+
+  </body>
+</html>
