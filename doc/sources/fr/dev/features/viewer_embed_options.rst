@@ -35,8 +35,10 @@ Données
      - Type
      - Effet
    * - ``initial_data``
-     - ``Type_JSON``
-     - Données du diagramme, chargées via ``fromJSON()`` au montage.
+     - ``Type_AnyJSON``
+     - Données du diagramme, chargées via ``fromJSON()`` au montage. ``Type_AnyJSON``
+       (= ``Record<string, unknown>``) est permissif et accepte n'importe quel
+       JSON parsé ; le Viewer cast vers ``Type_JSON`` en interne.
    * - ``diagram``
      - ``string``
      - URL d'un JSON à charger (alternative à ``initial_data``).
@@ -195,13 +197,13 @@ Exemple complet
 
    import { createRoot } from "react-dom/client";
    import { ViewerSankeyApplication } from "@terriflux/sankeyapplication/dist/ViewAppSA";
-   import { Type_JSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
+   import { Type_AnyJSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
    import initial_data from "./example.json";
 
    const root = createRoot(document.getElementById("root") as HTMLElement);
    root.render(
      <ViewerSankeyApplication
-       initial_data={initial_data as Type_JSON}
+       initial_data={initial_data as Type_AnyJSON}
        topbar={true}
        toolbar={false}
        recenter={true}

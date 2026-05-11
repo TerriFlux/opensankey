@@ -6,27 +6,28 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
+// Traductions — side-effect import : initialise i18next avec toutes les ressources SA/OSP/OS
+import './traductions/traduction'
+
+// NB : les CSS (main.css, style_elements_sankey.css, react-quill.css) ne sont PAS
+// importés ici car `tsc -p .` ne copie pas les fichiers .css dans dist/.
+// Le consommateur doit les importer dans son propre point d'entrée, par ex. :
+//   import "@terriflux/sankeyapplication/src/deps/OpenSankey+/deps/OpenSankey/css/main.css"
+// (chemin source — fonctionne via webpack/craco qui résolvent depuis node_modules).
+// Sans ces CSS, Chakra rend la majorité du chrome correctement, mais le SVG D3 et
+// react-quill peuvent manquer de style.
+
 import React, { FC, useEffect, useState } from 'react'
-import { ChakraProvider } from '@chakra-ui/react'
 import i18next from 'i18next'
-import { I18nextProvider, initReactI18next, useTranslation } from 'react-i18next'
+import { I18nextProvider, useTranslation } from 'react-i18next'
 
 import { Class_ApplicationDataSA } from './ApplicationDataSA'
-import { Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
+import { Type_AnyJSON, Type_JSON } from './deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { applyViewerOptions, ViewerSankeyOptions } from './deps/OpenSankey+/deps/OpenSankey/types/PublishOptions'
-import { Theme_SankeyApplication } from './chakra/Theme'
-
-if (!i18next.isInitialized) {
-  i18next.use(initReactI18next).init({
-    resources: { en: { translation: {} } },
-    lng: 'en',
-    fallbackLng: 'en',
-    interpolation: { escapeValue: false },
-  })
-}
+import { SankeyApp } from './AppSA'
 
 export type ViewerSankeyApplicationProps = ViewerSankeyOptions & {
-  initial_data?: Type_JSON
+  initial_data?: Type_AnyJSON
 }
 
 const ViewerInner: FC<ViewerSankeyApplicationProps> = ({ initial_data, ...options }) => {
@@ -40,26 +41,22 @@ const ViewerInner: FC<ViewerSankeyApplicationProps> = ({ initial_data, ...option
     return data
   })
 
-  if (typeof app_data.createNewMenuConfiguration === 'function') {
-    app_data.createNewMenuConfiguration()
-  }
-
+  // Le menu_configuration est créé pendant le render de OpenSankeyApp (enfant),
+  // donc fromJSON ne peut pas être appelé avant le mount du sous-arbre.
   useEffect(() => {
-    if (initial_data) {
-      app_data.fromJSON(initial_data)
+    if (initial_data && app_data.menu_configuration) {
+      app_data.fromJSON(initial_data as unknown as Type_JSON)
+      app_data.draw()
     }
-    app_data.draw()
   }, [app_data, initial_data])
 
-  return <div id="sankey_app" style={{ backgroundColor: 'WhiteSmoke' }} />
+  return <SankeyApp new_data_app={app_data} />
 }
 
 export const ViewerSankeyApplication: FC<ViewerSankeyApplicationProps> = (props) => (
-  <ChakraProvider theme={Theme_SankeyApplication}>
-    <I18nextProvider i18n={i18next}>
-      <ViewerInner {...props} />
-    </I18nextProvider>
-  </ChakraProvider>
+  <I18nextProvider i18n={i18next}>
+    <ViewerInner {...props} />
+  </I18nextProvider>
 )
 
 export default ViewerSankeyApplication

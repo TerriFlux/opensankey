@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { ViewerSankeyApplication } from "@terriflux/sankeyapplication/dist/ViewAppSA";
-import { Type_JSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
-import initial_data from "./example.json";
+import { Type_AnyJSON } from "@terriflux/sankeyapplication/dist/deps/OpenSankey+/deps/OpenSankey/types/Utils";
+import initial_data from "./example2.json";
 
 // ============================================================================
 // ViewerSankeyApplication — toutes les options
@@ -17,7 +17,7 @@ root.render(
     // ------------------------------------------------------------------------
     // Données
     // ------------------------------------------------------------------------
-    initial_data={initial_data as Type_JSON}
+    initial_data={initial_data as Type_AnyJSON}
     // diagram="diagram.json"                  // URL d'un JSON à charger (alternative à initial_data)
     // diagram_layout="layout.json"            // URL d'un layout à surimprimer
     // diagram_layout_options={["nodes", "links"]}  // options du layout
