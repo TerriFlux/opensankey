@@ -2,6 +2,22 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [1.1.4] — 2026-05-11
+
+### Added
+
+- **Toutes les options `window.sankey` exposées en props React** sur `ViewerOpenSankeyApp` ([ViewApp.tsx](opensankey/client/src/ViewApp.tsx), [PublishOptions.tsx](opensankey/client/src/types/PublishOptions.tsx)) : nouveau type `ViewerSankeyOptions` (`editable`, `topbar`, `footer`, `toolbar`, `embedded`, `recenter`, `logo`, `header`, `diagram`, `diagram_layout`, `diagram_layout_options`, `diagrams_list`, `diagrams_config`, `data_type`, `data_type_intervals`, `value_filter`) + helper `applyViewerOptions()` qui merge les props dans `window.sankey` (props prioritaires, `publish:true` forcé).
+- **`Type_AnyJSON` permissif** ([Utils.tsx](opensankey/client/src/types/Utils.tsx)) : `Record<string, unknown>` pour les `initial_data` des Viewers ; `Type_JSON` (strict) reste pour la persistance interne.
+- **`window.sankey.diagram` accepte URL **OU** objet JS inline** ([App.tsx](opensankey/client/src/App.tsx), [index.tsx](opensankey/client/src/index.tsx), [PublishOptions.tsx](opensankey/client/src/types/PublishOptions.tsx)) : si `string` → `loadUniversalJSON(url)` (existant) ; si `object` → `fromJSON()` direct, skip fetch. Use case "embed HTML one-file" sans serveur additionnel pour le JSON.
+- **`<meta charset="UTF-8">`** ajouté dans `examples/current/{html-viewer,embedded}/index.html` (évite mojibake sur `k€` etc.).
+- **`examples/current/embedded/`** : équivalent `html-viewer` mais pour intégration full-bundle ; passé en `./bundle.js` local + `prepare-local.cjs`.
+- **`examples/1.1.4/embedded/`** : snapshot figé sur CDN `opensankey-v1.1.4.js`.
+
+### Changed
+
+- **Renommage `sous_filieres` → `diagrams_list`** ([PublishOptions.tsx](opensankey/client/src/types/PublishOptions.tsx), [MenuTop.tsx](opensankey/client/src/components/topmenus/MenuTop.tsx)) : alias rétrocompat (`sous_filieres` toujours accepté en entrée avec `console.warn` déprécié, une seule fois par session). Les configs internes (`publish_options.diagrams_list`) utilisent le nouveau nom.
+- **`examples/1.1.3/` renommé `examples/1.1.4/`** : la 1.1.3 sur le registry contenait l'API Viewer minimaliste (props `initial_data` seul) ; remplacée par 1.1.4 qui expose toutes les options. La 1.1.3 doit être marquée `deprecated` côté registry.
+
 ## [1.1.3] — 2026-05-10
 
 ### Added
