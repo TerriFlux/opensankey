@@ -321,7 +321,21 @@ export class Class_NodeElement extends Class_NodeBase {
   protected _draw() {
     super._draw()
     this._nodeDrawValueLabel.drawGenericLabel()
+    // Si la valeur est collée au label, le fond du name_label doit englober
+    // label + valeur (la valeur n'a pas dessiné son propre fond).
+    this._nodeDrawNameLabel.refreshBackgroundForStick()
     this.drawStockBox()
+  }
+
+  public override drawNameLabel() {
+    super.drawNameLabel()
+    // Quand stick_to_label est on, la valeur se positionne par rapport à la
+    // BBox du <text> du name_label. Une mise à jour isolée du name_label doit
+    // donc re-déclencher le draw de la valeur (et le fond combiné).
+    if (this.value_label_stick_to_label && this._nodeDrawValueLabel) {
+      this._nodeDrawValueLabel.drawGenericLabel()
+      this._nodeDrawNameLabel.refreshBackgroundForStick()
+    }
   }
 
   /**
