@@ -4,11 +4,15 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [1.1.3] — 2026-05-10
 
-### Bump du submodule OpenSankey — fix `ViewerOpenSankeyApp` + craco editor
+### Bump du submodule OpenSankey — `value_label_stick_to_label` + fix `ViewerOpenSankeyApp` + craco editor
 
-Voir [submodules/OpenSankey/CHANGELOG.md → 1.1.3](submodules/OpenSankey/CHANGELOG.md) : déplacement de `createNewMenuConfiguration` hors du `useEffect` (React error #321), suppression de l'alias forçant Chakra en CJS dans `examples/*/editor/craco.config.cjs`, suppression de `examples/1.1.2/`.
+Voir [submodules/OpenSankey/CHANGELOG.md → 1.1.3](submodules/OpenSankey/CHANGELOG.md) :
 
-Ce bump est uniquement un alignement d'OpenSankey+ sur OpenSankey 1.1.3 ; aucun changement fonctionnel propre à OSP.
+- Nouveau booléen `value_label_stick_to_label` sur les nœuds : la valeur s'ancre au libellé du nœud (au lieu de la forme), avec fond unifié englobant libellé + valeur. UI : bouton cadenas à droite des 8 boutons d'alignement.
+- Bump de la version de persistance à `1.1.3` (`Class_ApplicationData.version`).
+- Déplacement de `createNewMenuConfiguration` hors du `useEffect` (React error #321), suppression de l'alias forçant Chakra en CJS dans `examples/*/editor/craco.config.cjs`, suppression de `examples/1.1.2/`.
+
+Aucun changement fonctionnel propre à OSP.
 
 ## [1.1.2] — Mai 2026
 
