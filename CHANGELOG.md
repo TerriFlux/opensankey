@@ -23,11 +23,14 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
   - Nouveau job `publish:npm` (déclenché sur tag git) : publie sur le GitLab Package Registry, auth via `CI_JOB_TOKEN`.
   - Job `pages:` étendu avec : mirror multi-versions depuis `$CI_PAGES_URL` (l'historique des versions précédentes est préservé à chaque déploiement), copie des examples buildés dans `public/$APP_VERSION/examples/`, génération automatique de `public/index.html` listant toutes les versions découvertes (template OpenSankey).
 
-## [1.1.3] — 2026-05-10 — Fix `ViewerOpenSankeyApp` + nettoyage examples
+## [1.1.3] — 2026-05-10 — `value_label_stick_to_label` + Fix `ViewerOpenSankeyApp` + nettoyage examples
 
 ### Bump alignés OpenSankey, OpenSankey+, LoginComponent et SankeyApplication
 
-- **OpenSankey 1.1.3** ([submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)) : fix `ViewerOpenSankeyApp` (hooks Chakra appelés depuis `useEffect` → React error #321 ; déplacés dans le body), suppression d'un alias `@chakra-ui/react → CJS` qui cassait l'import par namespace dans `examples/*/editor`, suppression du dossier `examples/1.1.2/` (release npm cassée), ajout d'une `examples/index.html` + `serve.bat/ps1/sh` pour tester localement n'importe quel exemple en HTTP.
+- **OpenSankey 1.1.3** ([submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)) :
+  - **Nouveau : `value_label_stick_to_label` sur les nœuds.** Quand activé, la valeur s'ancre au libellé du nœud (BBox du `<text>` du `name_label`) au lieu de la forme. Si le libellé n'est pas visible, la valeur ne s'affiche pas. Le fond du libellé (s'il est visible) englobe label + valeur, le fond propre de la valeur est ignoré. UI : un bouton cadenas (icône `FaLock`) ajouté à droite des 8 boutons d'alignement du panneau d'apparence des nœuds. Traductions en/fr/es/de/it.
+  - **Bump de la version de persistance à `1.1.3`** (`Class_ApplicationData.version`).
+  - Fix `ViewerOpenSankeyApp` (hooks Chakra appelés depuis `useEffect` → React error #321 ; déplacés dans le body), suppression d'un alias `@chakra-ui/react → CJS` qui cassait l'import par namespace dans `examples/*/editor`, suppression du dossier `examples/1.1.2/` (release npm cassée), ajout d'une `examples/index.html` + `serve.bat/ps1/sh` pour tester localement n'importe quel exemple en HTTP.
 - **OpenSankey+ 1.1.3** : alignement seulement (pas de changement fonctionnel).
 - **LoginComponent 1.1.3** : alignement seulement.
 
