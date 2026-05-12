@@ -518,7 +518,7 @@ export const format_value = (
     return text_value
   }
   // Add unit suffix
-  if (data_type == 'data' || data_type == 'data_label' && link.value!.value_option == 'unit_ratio') return text_value
+  if ((data_type == 'data' || data_type == 'data_label') && link.value!.value_option == 'unit_ratio') return text_value
   if (label_values.unit_type == 'unit_ratio') { text_value = link.value?.valueData + ' ' + unit_name + '/' + link.value?.ratio_unit_tag!.name }
   else if (label_values.unit_type == 'unit_name') text_value = text_value + ' ' + label_values.unit
   else if (label_values.unit_type == 'unit_tag' && unit_taggs.length > 0) {
