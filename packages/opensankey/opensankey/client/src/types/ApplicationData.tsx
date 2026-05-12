@@ -263,6 +263,10 @@ function convertForeignObjectToSvgText(
  */
 export class Class_ApplicationData {
 
+  // Per-side SVG-space padding applied around the diagram in raster/PDF/SVG exports
+  // to absorb stroke-widths and font ascenders that getBBox doesn't include.
+  public static readonly export_edge_padding: number = 5
+
   protected _has_sankey_dev: boolean = false
   protected _has_sankey_plus: boolean = false
   protected _has_sankey_afm: boolean = false
@@ -977,6 +981,9 @@ export class Class_ApplicationData {
 
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
+    // Matches the SVG-space inset applied to the g_drawing translate so the diagram
+    // sits inside the export viewport with comfortable padding on every side.
+    const edge_pad = Class_ApplicationData.export_edge_padding
     let export_width: number, export_height: number
     if (this.drawing_area.is_paper_mode) {
       // Paper mode: use paper dimensions, but expand if content (labels) extends beyond
@@ -987,12 +994,12 @@ export class Class_ApplicationData {
       const bbox = this.drawing_area.d3_selection_elements_group?.node()?.getBBox()
       const content_right = bbox ? bbox.x + bbox.width : 0
       const content_bottom = bbox ? bbox.y + bbox.height : 0
-      export_width = Math.max(paper_w, content_right + 5)
-      export_height = Math.max(paper_h, content_bottom + 5)
+      export_width = Math.max(paper_w, content_right + 5) + 2 * edge_pad
+      export_height = Math.max(paper_h, content_bottom + 5) + 2 * edge_pad
     } else {
       const scale_da = this.drawing_area.getZoomScale()
-      export_width = (this.drawing_area.width * scale_da) + legend_w + 5
-      export_height = this.drawing_area.height * scale_da + 5
+      export_width = (this.drawing_area.width * scale_da) + legend_w + 5 + 2 * edge_pad
+      export_height = this.drawing_area.height * scale_da + 5 + 2 * edge_pad
     }
 
     // Watermark "réalisé avec OpenSankey.fr" for raster/PDF exports without
@@ -1002,9 +1009,11 @@ export class Class_ApplicationData {
     let watermark = ''
     if (convert_fo && !this.has_sankey_plus) {
       const font_size = Math.max(12, Math.min(export_width, export_height) * 0.018)
-      const margin = font_size * 0.8
+      // Inset >= 1 line-height keeps the baseline clear of the body's default 8px
+      // margin in wkhtmltopdf/wkhtmltoimage, so the watermark never overflows the page.
+      const inset = font_size * 1.6
       watermark =
-        `<text x='${export_width - margin}' y='${export_height - margin}'` +
+        `<text x='${export_width - inset}' y='${export_height - inset}'` +
         ' text-anchor=\'end\' dominant-baseline=\'alphabetic\'' +
         ` font-family='Arial, Helvetica, sans-serif' font-size='${font_size}'` +
         ' fill=\'#000000\' fill-opacity=\'0.45\'>' +
@@ -1584,7 +1593,16 @@ export class Class_ApplicationData {
     // Legend width (if present)
     const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
-    svg_clone?.select('#g_drawing').attr('transform', 'translate(0,0) scale(' + scale_da + ')')
+    // areaAutoFit may shift the canvas origin to negative coordinates when content
+    // (e.g. value labels above flows) extends past y=0; counter-translate g_drawing
+    // so the canvas top-left maps to (0,0) in the export SVG instead of clipping.
+    // The extra export_edge_padding px absorbs the bg rect stroke-width (5 px → 2.5 px
+    // half-stroke outside the rect bounds) and font ascender heights so nothing peeks
+    // outside the export viewport. The matching padding on export_width/height keeps
+    // bottom/right unaffected.
+    const tx = -this.drawing_area.background_shift_x * scale_da + Class_ApplicationData.export_edge_padding
+    const ty = -this.drawing_area.background_shift_y * scale_da + Class_ApplicationData.export_edge_padding
+    svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
     // For some reason when attr 'dominant-baseline' is 'text-after-edge',
