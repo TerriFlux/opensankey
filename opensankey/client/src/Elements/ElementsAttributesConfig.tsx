@@ -2368,7 +2368,7 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     type: (() => false) as (() => boolean),
     category: 'shape' as const,
     setter: 'customShapeIsRecycling',
-    actions: ['drawWithNodes', 'drawControlPoint'] as LinkBaseActionType[],
+    actions: ['drawWithNodes', 'drawElements', 'drawControlPoint'] as LinkBaseActionType[],
     labels: {
       en: 'Recycling',
       fr: 'Recyclage',
