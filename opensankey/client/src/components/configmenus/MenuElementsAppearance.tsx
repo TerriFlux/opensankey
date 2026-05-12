@@ -1505,7 +1505,24 @@ export const MenuConfigurationAppearance = ({
                                   />
                                 </InputGroup>
                               )}
-                            </Box></Box>
+                            </Box>
+                            {linkShapeValues.is_arrow && (
+                              <Box layerStyle='menuconfigpanel_row_2cols'>
+                                <OverloadedCheckbox
+                                  elements={links_elements}
+                                  config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                  prefix={'shape'}
+                                  attributeKey="is_arrow_reversed"
+                                  isChecked={linkShapeValues.is_arrow_reversed}
+                                  onChange={(checked) => { linkShapeValues.is_arrow_reversed = checked }}
+                                  getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow_reversed')}
+                                  tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow_reversed')}`)}
+                                  t={t}
+                                >
+                                  {t('Flux.apparence.shape_is_arrow_reversed')}
+                                </OverloadedCheckbox>
+                              </Box>
+                            )}</Box>
                         </> : <></>}
 
                       {/* Bouton recyclage + 4 orientations sur une même ligne. */}
