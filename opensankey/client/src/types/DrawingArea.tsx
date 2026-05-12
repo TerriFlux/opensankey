@@ -2295,6 +2295,13 @@ export class Class_DrawingArea {
     if (this.is_bg_image_ratio_mode) this.applyBgImageRatio()
     this.drawBackground(); this.drawGrid(); this.drawBgImage()
   }
+
+  // Read-only exposure of the canvas origin shifts so consumers (e.g. SVG export)
+  // can align the export viewport on the actual content origin instead of (0,0)
+  // when areaAutoFit has pushed content to negative coordinates.
+  public get background_shift_x(): number { return this._background_d3_groups_shift_x }
+  public get background_shift_y(): number { return this._background_d3_groups_shift_y }
+
   public get height() { return this._height }
   public set height(_: number) {
     if (this.is_paper_mode) return

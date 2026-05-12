@@ -107,13 +107,14 @@ def _html_to_image(
             options["margin-bottom"] = "0"
             options["margin-left"] = "0"
         else:
-            # Free mode: custom dimensions with margins
+            # Free mode: page = exact SVG size, no margins so watermark stays in page
             options.update(
                 {
-                    "margin-top": margin_top or "1cm",
-                    "margin-right": margin_right or "1cm",
-                    "margin-bottom": margin_bottom or "1cm",
-                    "margin-left": margin_left or "1cm",
+                    "margin-top": margin_top or "0",
+                    "margin-right": margin_right or "0",
+                    "margin-bottom": margin_bottom or "0",
+                    "margin-left": margin_left or "0",
+                    "disable-smart-shrinking": "",
                 }
             )
             if output_height_px is not None:
