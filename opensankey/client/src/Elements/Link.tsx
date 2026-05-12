@@ -868,7 +868,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // draw arrow if needed
     if (this.shape_is_arrow && this.is_visible) {
       if (this._arrow_shape === undefined) {
-        this.target.drawLinksArrow()
+        if (this.shape_is_arrow_reversed) {
+          this.source.drawLinksArrow()
+        } else {
+          this.target.drawLinksArrow()
+        }
       }
       else {
         const arrow_color = this.getArrowColorToUse() // Avoid recomputing
@@ -1942,32 +1946,50 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public get position_x_start() {
     const source_side = this.source_side
+    // Si la flèche est inversée, le trait est raccourci côté source pour laisser
+    // place à la pointe (symétrique de position_x_end côté cible).
+    let shifting_start_point_x = 0
+    if (this.shape_is_arrow && this.shape_is_arrow_reversed) {
+      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
+      const sign = is_revert ? -1 : 1
+      shifting_start_point_x = is_horizontal_at_source ? this.shape_arrow_size * sign : 0
+    }
+    const base_x = this._position.x - shifting_start_point_x
     if (source_side === 'right') {
-      return this._position.x + this.source.shape_margin_right
+      return base_x + this.source.shape_margin_right
     } else if (source_side === 'left') {
-      return this._position.x - this.source.shape_margin_left
+      return base_x - this.source.shape_margin_left
     } else {
       // top ou bottom : ajuster pour le centrage horizontal
-      return this._position.x
+      return base_x
     }
   }
 
   public get position_y_start() {
     const source_side = this.source_side
+    let shifting_start_point_y = 0
+    if (this.shape_is_arrow && this.shape_is_arrow_reversed) {
+      const is_horizontal_at_source = this.is_horizontal || this.is_horizontal_vertical
+      const is_revert = (is_horizontal_at_source && source_side === 'right') || (!is_horizontal_at_source && source_side === 'bottom')
+      const sign = is_revert ? -1 : 1
+      shifting_start_point_y = !is_horizontal_at_source ? this.shape_arrow_size * sign : 0
+    }
+    const base_y = this._position.y - shifting_start_point_y
     if (source_side === 'top') {
-      return this._position.y - this.source.shape_margin_top
+      return base_y - this.source.shape_margin_top
     } else if (source_side === 'bottom') {
-      return this._position.y + this.source.shape_margin_bottom
+      return base_y + this.source.shape_margin_bottom
     } else {
       // left ou right : ajuster pour le centrage vertical
-      return this._position.y
+      return base_y
     }
   }
 
   public get position_x_end() {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_x = 0
-    if (this.shape_is_arrow) {
+    if (this.shape_is_arrow && !this.shape_is_arrow_reversed) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1
@@ -1990,7 +2012,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public get position_y_end() {
     // Calcul du décalage pour la flèche (code existant)
     let shifting_end_point_y = 0
-    if (this.shape_is_arrow) {
+    if (this.shape_is_arrow && !this.shape_is_arrow_reversed) {
       const is_horizontal_at_target = this.is_horizontal || this.is_vertical_horizontal
       const is_revert = (is_horizontal_at_target && this.target_side == 'right') || (!is_horizontal_at_target && this.target_side == 'bottom')
       const sign_shifting_end_point = (is_revert) ? -1 : 1

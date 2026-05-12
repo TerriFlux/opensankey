@@ -920,13 +920,27 @@ export class Class_NodeElement extends Class_NodeBase {
    * Function that draw all the arrow of link visible linked to this node
    */
   private _drawLinksArrow() {
-    const list_link_to_add_arrow = this.input_links_list
-      .filter(link => {
-        return link.is_visible
-          && link.shape_is_arrow
-          && link.isRelatedD3SelectionPresentAndSynced
-      })
-      .sort((l1, l2) => this._links_order.indexOf(l1) - this._links_order.indexOf(l2))
+    // Normal arrows: this node is the target, arrow drawn on link.target_side.
+    const normal_arrows = this.input_links_list
+      .filter(link => link.is_visible && link.shape_is_arrow && !link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+      .map(link => ({
+        link,
+        arrow_side: link.target_side,
+        link_thickness: link.thicknessTarget,
+        is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
+      }))
+    // Reversed arrows: this node is the source, arrow drawn on link.source_side
+    // (visual reversal only — the data flow direction is unchanged).
+    const reversed_arrows = this.output_links_list
+      .filter(link => link.is_visible && link.shape_is_arrow && link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+      .map(link => ({
+        link,
+        arrow_side: link.source_side,
+        link_thickness: link.thicknessSource,
+        is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
+      }))
+    const list_link_to_add_arrow = [...normal_arrows, ...reversed_arrows]
+      .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
 
     let cum_v_left = 0
     let cum_h_top = 0
@@ -944,25 +958,24 @@ export class Class_NodeElement extends Class_NodeBase {
     const sumLinkTop = this.getSumOfLinksThickness('top', true)
     const sumLinkBottom = this.getSumOfLinksThickness('bottom', true)
 
-    // Loop on all visible input links
+    // Loop on all visible arrows attached to this node (input arrows + reversed output arrows)
     list_link_to_add_arrow
-      .forEach(link => {
+      .forEach(item => {
+        const link = item.link
+        const arrow_side = item.arrow_side
         // Some variable parameters for arrow
         const arrow_length = link.shape_arrow_size
         const node_arrow_shift = 0
         const arrows_adjustment = 0
 
-        // Get side of target node from which arrow as to be drawn
-        const link_arrow_side_right = link.target_side == 'right'
-        const link_arrow_side_left = link.target_side == 'left'
-        const link_arrow_side_top = link.target_side == 'top'
-        const link_arrow_side_bottom = link.target_side == 'bottom'
+        // Get side of anchor node from which arrow as to be drawn
+        const link_arrow_side_right = arrow_side == 'right'
+        const link_arrow_side_left = arrow_side == 'left'
+        const link_arrow_side_top = arrow_side == 'top'
+        const link_arrow_side_bottom = arrow_side == 'bottom'
 
-        // Thickness of the link influences arrow size and stacking. Use the clamped
-        // thickness (>= minimum_flux, >= 2px) so the arrow base matches the visible
-        // trait and ratios in draw_arrow_part stay bounded. Sums on each side are
-        // computed in the same clamped space above.
-        const link_value = link.thicknessTarget
+        // Thickness of the link at the anchor side (clamped space).
+        const link_value = item.link_thickness
 
         let xt: number
         let yt: number
@@ -998,7 +1011,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const p5 = [xt, yt] // Starting point of arrow
 
         // Some variables parameters influencing arrow shape processing
-        const is_horizontal_at_target = link.is_horizontal || link.is_vertical_horizontal
+        const is_horizontal_at_target = item.is_horizontal_at_anchor
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
         // Draw arrow on link.

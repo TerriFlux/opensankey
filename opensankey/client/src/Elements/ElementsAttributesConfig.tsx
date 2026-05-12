@@ -2559,6 +2559,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  is_arrow_reversed: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Reverse arrow',
+      fr: 'Inverser la flèche',
+      es: 'Invertir flecha',
+      de: 'Pfeil umkehren',
+      it: 'Inverti freccia'
+    },
+    tooltips: {
+      en: 'Draw the arrow tip on the source side instead of the target side (graphical only, the data flow direction is unchanged)',
+      fr: 'Dessine la pointe de flèche du côté source au lieu du côté cible (purement graphique, le sens du flux dans les données reste inchangé)',
+      es: 'Dibuja la punta de flecha en el lado de origen en lugar del lado de destino (solo gráfico, el sentido del flujo no cambia)',
+      de: 'Zeichnet die Pfeilspitze auf der Quellseite statt auf der Zielseite (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
+      it: 'Disegna la punta della freccia sul lato sorgente invece che sul lato destinazione (solo grafico, il senso del flusso non cambia)'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   arrow_size: {
     default: 10,
     type: (() => 10) as (() => number),
