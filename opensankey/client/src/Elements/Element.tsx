@@ -938,23 +938,41 @@ export abstract class Class_LinkAttribute extends Class_BaseShape {
   }
 
   private customShapeIsRecycling(value: boolean) {
-    // En mode recycling, pas de limite supérieure pour starting & ending
-    // En mode normal, on a des limites, donc on doit les appliquer
-    if (!value && this.attributes.shape_is_recycling) {
-      this.shape_starting_curve = Math.min(this.shape_starting_curve, 0.25)
-      this.shape_ending_curve = Math.min(this.shape_ending_curve, 0.25)
-    }
-    // Transition false → true : ramener les poignées Bézier à 0.01 (= 1 % en
-    // UI), ce qui produit des points de contrôle proches des extrémités et
-    // évite la boucle large par défaut (0.25 = 25 %) qui n'a pas de sens pour
-    // un flux de recyclage. Le fromJSON ne passe pas par ce setter (écriture
-    // directe dans `attributes`), donc les valeurs sauvegardées par
-    // l'utilisateur sont préservées au chargement.
-    if (value && !this.attributes.shape_is_recycling) {
+    const was_recycling = this.attributes.shape_is_recycling ?? false
+    // Flip the flag first so any draw triggered by the outer dynamic-setter
+    // actions (drawWithNodes, drawElements, drawControlPoint — see
+    // is_recycling.actions) reads the new state. fromJSON writes directly
+    // into `attributes` and never reaches this setter, so user-saved
+    // tangent values are preserved on load.
+    this.attributes.shape_is_recycling = value
+    // Transition false → true: collapse Bézier tangent handles to 1% so the
+    // recycling loop is tight. The 25% default (= shape_*_tangeant default)
+    // would balloon the loop out.
+    if (value && !was_recycling) {
       this.attributes.shape_starting_tangeant = 0.01
       this.attributes.shape_ending_tangeant = 0.01
     }
-    this.attributes.shape_is_recycling = value
+    // Transition true → false: restore tangent handles to their default so
+    // the normal Bézier renders with its usual curvature. Without this the
+    // tangents stay at 1%, producing a near-degenerate path whose control
+    // points sit on top of the endpoints (issue #140). Direct attribute
+    // writes — the per-attribute draw actions would fire mid-transition;
+    // the link path is redrawn cleanly by the outer is_recycling actions.
+    else if (!value && was_recycling) {
+      this.attributes.shape_starting_tangeant = this._config.shape_starting_tangeant.default
+      this.attributes.shape_ending_tangeant = this._config.shape_ending_tangeant.default
+      // Recycling mode lifts the per-axis curve clamp; bring each curve
+      // back to at most 25% so a normal flow doesn't render with the
+      // wide curves that only make sense for a recycling loop.
+      this.attributes.shape_starting_curve = Math.min(
+        this.shape_starting_curve ?? this._config.shape_starting_curve.default,
+        0.25
+      )
+      this.attributes.shape_ending_curve = Math.min(
+        this.shape_ending_curve ?? this._config.shape_ending_curve.default,
+        0.25
+      )
+    }
   }
 
 
