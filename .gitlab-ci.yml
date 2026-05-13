@@ -46,6 +46,7 @@ test:
     - dev, prod, test
   script:
     # Env
+    - export TESTS_DIR="$CI_PROJECT_DIR/TestData"
     - echo $CI_PROJECT_DIR
     - echo $EIGEN_INCLUDE
     - echo $TESTS_DIR
