@@ -636,7 +636,7 @@ export class Class_NodeElement extends Class_NodeBase {
     // their values, and arrows (which also live in clamped space) align with
     // the node edges. This mirrors the natural behaviour of "data + intervals"
     // mode (where valueCurrent is null, so raw thickness is already 2).
-    const clamped = this.drawing_area.type_data === 'structure'
+    const clamped = this.drawing_area.is_structure_display
     // for_sizing=true : la taille du nœud doit refléter ses propres flux
     // même si ceux-ci sont masqués par un container_mode (cas typique :
     // enfants d'un parent en mode englobant entrées/sorties parent).
@@ -649,7 +649,7 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public getShapeHeightToUse() {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
-    const clamped = this.drawing_area.type_data === 'structure'
+    const clamped = this.drawing_area.is_structure_display
     const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
     const sum_of_right_thickness = this.getSumOfLinksThickness('right', clamped, true)
     if (echangeTag && this.hasGivenTag(echangeTag)) {

@@ -2512,6 +2512,21 @@ export class Class_DrawingArea {
   public get interval_display(): Type_IntervalDisplay { return this._interval_display }
   public set interval_display(value: Type_IntervalDisplay) { this._interval_display = value }
 
+  /**
+   * True when the diagram is in a "structure-like" display:
+   * - data_source === 'structure' (whole diagram is structure-only), OR
+   * - data_source === 'reconciled' AND interval_display === 'structure' (user
+   *   explicitly hides intervals on a reconciled diagram).
+   *
+   * `interval_display === 'structure'` alone is not enough: it is also the
+   * default value technically set when data_source switches to 'data'/'data_label',
+   * where the user still wants thicknesses proportional to data.
+   */
+  public get is_structure_display(): boolean {
+    return this._data_source === 'structure' ||
+      (this._data_source === 'reconciled' && this._interval_display === 'structure')
+  }
+
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
 
