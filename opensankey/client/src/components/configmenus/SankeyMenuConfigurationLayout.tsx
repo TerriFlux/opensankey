@@ -186,6 +186,14 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'structure_mode_force_min', evt.target.checked, f)
   }
 
+  const eventArrowStandaloneLayout = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.arrow_use_standalone_layout = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'arrow_use_standalone_layout', evt.target.checked, f)
+  }
+
   const eventMaxLinkThickness = (evt: number | null | undefined) => {
     if (evt == null) return
     const f = (_: number | undefined) => {
@@ -447,6 +455,18 @@ export const DrawingAreaConfig = ({
     >
       <OSTooltip label={t('MEP.tooltips.StructureForceMin')}>
         {t('MEP.StructureForceMin')}
+      </OSTooltip>
+    </Checkbox>
+
+    {/* Layout des flèches : triangle indépendant par flux (défaut) vs éventail partagé (legacy) */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={app_data.drawing_area.arrow_use_standalone_layout}
+      icon={<CustomFaEyeCheckIcon />}
+      onChange={eventArrowStandaloneLayout}
+    >
+      <OSTooltip label={t('MEP.tooltips.ArrowStandaloneLayout')}>
+        {t('MEP.ArrowStandaloneLayout')}
       </OSTooltip>
     </Checkbox>
 

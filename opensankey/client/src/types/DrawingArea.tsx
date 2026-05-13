@@ -167,6 +167,15 @@ export class Class_DrawingArea {
   // remains proportional to value even in structure mode (legacy behaviour).
   private _structure_mode_force_min: boolean = true
 
+  // Arrow layout : when false (default, legacy), arrows on each node side
+  // share a single "fan" base : tilts and cumulative offsets stack in
+  // clamped space. The fan is nicer visually when raw == clamped (no flow
+  // gets clamped up) but produces misalignment otherwise (see #681).
+  // When true, each arrow is a standalone triangle whose base = its link's
+  // clamped thickness, centered on the link's actual visible end (correct
+  // alignment in all clamping regimes) — opt-in fix.
+  private _arrow_use_standalone_layout: boolean = false
+
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
 
@@ -318,6 +327,7 @@ export class Class_DrawingArea {
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
     this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
+    this._arrow_use_standalone_layout = drawing_area_to_copy._arrow_use_standalone_layout
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -2480,6 +2490,12 @@ export class Class_DrawingArea {
     this.drawElements()
   }
 
+  public get arrow_use_standalone_layout(): boolean { return this._arrow_use_standalone_layout }
+  public set arrow_use_standalone_layout(value: boolean) {
+    this._arrow_use_standalone_layout = value
+    this.drawElements()
+  }
+
   public get scaleValueToPx() { return this._scaleValueToPx }
 
   public get filter_label(): number { return this._filter_label }
@@ -2515,16 +2531,21 @@ export class Class_DrawingArea {
   /**
    * True when the diagram is in a "structure-like" display:
    * - data_source === 'structure' (whole diagram is structure-only), OR
-   * - data_source === 'reconciled' AND interval_display === 'structure' (user
-   *   explicitly hides intervals on a reconciled diagram).
+   * - data_source === 'reconciled' AND interval_display === 'structure' AND
+   *   the sankey actually has intervals (= the interval-display selector was
+   *   visible and the user explicitly picked "structure" in it).
    *
-   * `interval_display === 'structure'` alone is not enough: it is also the
-   * default value technically set when data_source switches to 'data'/'data_label',
-   * where the user still wants thicknesses proportional to data.
+   * The `has_intervals` guard is critical : `interval_display === 'structure'`
+   * is *also* the legacy default for reconciled diagrams without intervals,
+   * where the user just wants normal proportional thicknesses. Without the
+   * guard, every legacy file would load in forced-min mode.
    */
   public get is_structure_display(): boolean {
-    return this._data_source === 'structure' ||
-      (this._data_source === 'reconciled' && this._interval_display === 'structure')
+    if (this._data_source === 'structure') return true
+    if (this._data_source === 'reconciled' && this._interval_display === 'structure') {
+      return this.sankey.links_list.some(l => l.has_intervals || l.value?.value_option === 'intervals')
+    }
+    return false
   }
 
   public get filter_link_value(): number { return this._filter_link_value }
