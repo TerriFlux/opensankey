@@ -1890,6 +1890,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get thickness() {
+    // Structure mode + force_min option: ignore the value, return the clamped
+    // minimum so all links display at minimum_flux (or 2px) regardless of
+    // their data value. Nodes pick this up through thicknessSource/Target.
+    if (this.drawing_area.type_data === 'structure' && this.drawing_area.structure_mode_force_min) {
+      return this._clampThickness(0)
+    }
     const data_value = this.valueCurrent
     const linkValueInPx = (data_value !== null) ? this.scaleValueToPx(data_value) : 2
     return this._clampThickness(linkValueInPx)
@@ -1907,6 +1913,9 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * When valueCurrentTarget is null, returns same as thicknessSource (uniform link).
    */
   public get thicknessTarget() {
+    if (this.drawing_area.type_data === 'structure' && this.drawing_area.structure_mode_force_min) {
+      return this._clampThickness(0)
+    }
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thickness
     const linkValueInPx = this.scaleValueToPx(target_value)
@@ -1926,12 +1935,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get thicknessSourceRaw() {
+    // Structure mode + force_min : collapse raw thickness too so node anchor
+    // offsets and link starting positions stay inside the (now small) node.
+    if (this.drawing_area.type_data === 'structure' && this.drawing_area.structure_mode_force_min) {
+      return this.thickness
+    }
     const data_value = this.valueCurrent
     if (data_value === null) return 2
     return this._safeRawThickness(this.scaleValueToPx(data_value))
   }
 
   public get thicknessTargetRaw() {
+    if (this.drawing_area.type_data === 'structure' && this.drawing_area.structure_mode_force_min) {
+      return this.thicknessTarget
+    }
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thicknessSourceRaw
     return this._safeRawThickness(this.scaleValueToPx(target_value))

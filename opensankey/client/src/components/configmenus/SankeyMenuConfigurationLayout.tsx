@@ -178,6 +178,14 @@ export const DrawingAreaConfig = ({
     app_data.setValueAndSaveHistory(app_data.drawing_area, 'minimum_flux', evt, f)
   }
 
+  const eventStructureForceMin = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.structure_mode_force_min = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area, 'structure_mode_force_min', evt.target.checked, f)
+  }
+
   const eventMaxLinkThickness = (evt: number | null | undefined) => {
     if (evt == null) return
     const f = (_: number | undefined) => {
@@ -429,6 +437,19 @@ export const DrawingAreaConfig = ({
       </Box>
 
     </Box>
+
+    {/* Mode Structure : forcer toutes les épaisseurs à minimum_flux */}
+    <Checkbox
+      variant='menuconfigpanel_option_checkbox'
+      isChecked={app_data.drawing_area.structure_mode_force_min}
+      icon={<CustomFaEyeCheckIcon />}
+      onChange={eventStructureForceMin}
+    >
+      <OSTooltip label={t('MEP.tooltips.StructureForceMin')}>
+        {t('MEP.StructureForceMin')}
+      </OSTooltip>
+    </Checkbox>
+
     {extra_background_element}
 
     <WrapperBoxSubSectionMenu title={t('Menu.ElOrder')} new_data={app_data} is_open={false}>

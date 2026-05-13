@@ -162,6 +162,11 @@ export class Class_DrawingArea {
   private _maximum_flux?: number
   private _minimum_flux?: number
 
+  // In structure mode (type_data === 'structure'), force all link thicknesses
+  // to minimum_flux (or 2px) regardless of value. When false, link thickness
+  // remains proportional to value even in structure mode (legacy behaviour).
+  private _structure_mode_force_min: boolean = true
+
   // Filter out link inferior to this value (when filter value is at 0 doesn't filter link even null)
   private _filter_link_value: number = 0
 
@@ -312,6 +317,7 @@ export class Class_DrawingArea {
     this._height = drawing_area_to_copy._height
     this._maximum_flux = drawing_area_to_copy._maximum_flux
     this._minimum_flux = drawing_area_to_copy._minimum_flux
+    this._structure_mode_force_min = drawing_area_to_copy._structure_mode_force_min
     this._scale = drawing_area_to_copy._scale
     this._scaleValueToPx.domain([0, this._scale])
     this._type_data = drawing_area_to_copy._type_data
@@ -2466,6 +2472,12 @@ export class Class_DrawingArea {
       this._minimum_flux = value
       this.drawElements()
     }
+  }
+
+  public get structure_mode_force_min(): boolean { return this._structure_mode_force_min }
+  public set structure_mode_force_min(value: boolean) {
+    this._structure_mode_force_min = value
+    this.drawElements()
   }
 
   public get scaleValueToPx() { return this._scaleValueToPx }
