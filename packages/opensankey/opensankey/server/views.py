@@ -548,6 +548,15 @@ def conversion_thread(
                 output_options["preserve_extra_columns"],
             )
 
+        # Active les coherence checks comme dans la réconciliation. Sans ça,
+        # E6 (redondance de référence dans les contraintes) passe silencieusement
+        # à la conversion et les toggles autofix_* du dialogue n'ont aucun effet
+        # visible. Avec do_coherence_checks=True : E6 fait abort l'absence
+        # d'autofix, et avec les toggles on les autofixes du load (E5/E6) tournent
+        # avant le check, le silencent et accumulent les corrections sur
+        # _auto_corrected_node_cells / _auto_corrected_constraint_ids.
+        input_options.setdefault('do_coherence_checks', True)
+
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
@@ -610,6 +619,35 @@ def conversion_thread(
                 trace.logger.info("✓ Input Excel copied to output to preserve other sheets")
             else:
                 trace.logger.warning("keep_other_sheets ignored: input is not Excel")
+
+        # Si l'un des autofixes a tourné (toggles cochés dans le dialogue), les
+        # accumulateurs _auto_corrected_* sont peuplés sur le sankey en mémoire.
+        # On force highlight_autocorrect=True sur l'écriture Excel pour que les
+        # cellules/lignes corrigées apparaissent en rouge dans la sortie, et on
+        # log un résumé pour que l'utilisateur sache qu'une correction a eu lieu.
+        autofix_applied = (
+            len(getattr(io_input.sankey, "_auto_corrected_node_cells", []) or []) > 0
+            or len(getattr(io_input.sankey, "_auto_corrected_constraint_ids", []) or []) > 0
+            or len(getattr(io_input.sankey, "_auto_corrected_flux", []) or []) > 0
+            or len(getattr(io_input.sankey, "_auto_corrected_nodes", []) or []) > 0
+        )
+        if autofix_applied:
+            node_cells = getattr(io_input.sankey, "_auto_corrected_node_cells", []) or []
+            constraint_ids = getattr(io_input.sankey, "_auto_corrected_constraint_ids", []) or []
+            if node_cells:
+                trace.logger.warning(
+                    "Autofix mat_balance : {} cellule(s) corrigée(s) (premiers : {})".format(
+                        len(node_cells), ", ".join('"{}"/{}'.format(n, c) for n, c in node_cells[:5])
+                    )
+                )
+            if constraint_ids:
+                trace.logger.warning(
+                    "Autofix contraintes : {} id(s) avec doublons dédupliqués (premiers : {})".format(
+                        len(constraint_ids), ", ".join(str(i) for i in constraint_ids[:5])
+                    )
+                )
+            if output_format == 'excel':
+                output_options['highlight_autocorrect'] = True
 
         # Écrire avec les options de sortie
         trace.logger.info("📝 Écriture du fichier de sortie...")
