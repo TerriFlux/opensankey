@@ -1935,10 +1935,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get thicknessSourceRaw() {
-    // Structure mode + force_min : collapse raw thickness too so node anchor
-    // offsets and link starting positions stay inside the (now small) node.
+    // Structure mode + force_min : raw thickness = 0 so that every link on
+    // the same node side attaches at the same y (no cumulative offset in
+    // updateLinksPositions). Visually all structure flows overlap at the
+    // node anchor, matching the "structure flows carry no quantity" intent.
     if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
-      return this.thickness
+      return 0
     }
     const data_value = this.valueCurrent
     if (data_value === null) return 2
@@ -1947,7 +1949,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public get thicknessTargetRaw() {
     if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
-      return this.thicknessTarget
+      return 0
     }
     const target_value = this.valueCurrentTarget
     if (target_value === null) return this.thicknessSourceRaw

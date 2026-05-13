@@ -1761,6 +1761,7 @@ export class DrawingAreaPersistence {
     if (drawing_area.maximum_flux) json_object['maximum_flux'] = drawing_area.maximum_flux
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
+    if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2034,6 +2035,7 @@ export class DrawingAreaPersistence {
     drawing_area['_maximum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'maximum_flux')
     drawing_area['_minimum_flux'] = getNumberOrUndefinedFromJSON(json_object, 'minimum_flux')
     drawing_area['_structure_mode_force_min'] = getBooleanFromJSON(json_object, 'structure_mode_force_min', true)
+    drawing_area['_arrow_use_standalone_layout'] = getBooleanFromJSON(json_object, 'arrow_use_standalone_layout', false)
     drawing_area['_scale'] = getNumberFromJSON(json_object, 'user_scale', drawing_area.scale)
     drawing_area.scaleValueToPx.domain([0, drawing_area.scale])
     drawing_area['_type_data'] = getStringFromJSON(json_object, 'show_structure', drawing_area.type_data) as Type_Structure

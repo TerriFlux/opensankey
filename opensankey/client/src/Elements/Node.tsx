@@ -942,107 +942,145 @@ export class Class_NodeElement extends Class_NodeBase {
     const list_link_to_add_arrow = [...normal_arrows, ...reversed_arrows]
       .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
 
+    const node_height = this.getShapeHeightToUse()
+    const node_width = this.getShapeWidthToUse()
+
+    // Two layout modes, driven by drawing_area.arrow_use_standalone_layout :
+    //
+    // - standalone (default true, issue #681) : each arrow is an independent
+    //   triangle, base = link's clamped thickness, base center = link's
+    //   actual visible end center. Always aligned with the link stroke,
+    //   even when flows are clamped above their raw value (the typical
+    //   case where bases on the same side visually overlap).
+    //
+    // - fan (opt-in, set flag to false) : all arrows on a node side share
+    //   a single fan whose total height = Σ clamped thicknesses. Each link
+    //   gets a cumulative offset inside that fan, which produces sloped
+    //   tips that converge toward the node side center. Looks nice when no
+    //   flow gets clamped (raw == clamped), drifts otherwise.
+    // Structure mode + force_min forces standalone arrow geometry: with all
+    // flows clamped to minimum_flux but the fan cum_v_left still advancing
+    // by link_value per link, fan ratios drift past 1 and produce a sawtooth
+    // of arrows escaping leftwards. Standalone gives each link its own
+    // independent triangle centered on link.position_y_end — which my
+    // thicknessSourceRaw=0 makes identical for all links on the same side,
+    // so the N triangles overlap exactly.
+    const force_overlap = this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min
+    const use_standalone = this.drawing_area.arrow_use_standalone_layout || force_overlap
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
     let cum_h_bottom = 0
-    const node_height = this.getShapeHeightToUse()
-    const node_width = this.getShapeWidthToUse()
+    const sumLinkLeft = !use_standalone ? this.getSumOfLinksThickness('left', true) : 0
+    const sumLinkRight = !use_standalone ? this.getSumOfLinksThickness('right', true) : 0
+    const sumLinkTop = !use_standalone ? this.getSumOfLinksThickness('top', true) : 0
+    const sumLinkBottom = !use_standalone ? this.getSumOfLinksThickness('bottom', true) : 0
 
-    // Vars to keep track of sum of stacking links.
-    // Clamped space: arrow geometry must live in the same space as the visible
-    // trait so the base of the arrow matches the stroke thickness (>= minimum_flux),
-    // and draw_arrow_part's internal ratios stay bounded.
-    const sumLinkLeft = this.getSumOfLinksThickness('left', true)
-    const sumLinkRight = this.getSumOfLinksThickness('right', true)
-    const sumLinkTop = this.getSumOfLinksThickness('top', true)
-    const sumLinkBottom = this.getSumOfLinksThickness('bottom', true)
-
-    // Loop on all visible arrows attached to this node (input arrows + reversed output arrows)
     list_link_to_add_arrow
       .forEach(item => {
         const link = item.link
         const arrow_side = item.arrow_side
-        // Some variable parameters for arrow
-        const arrow_length = link.shape_arrow_size
         const node_arrow_shift = 0
         const arrows_adjustment = 0
 
-        // Get side of anchor node from which arrow as to be drawn
         const link_arrow_side_right = arrow_side == 'right'
         const link_arrow_side_left = arrow_side == 'left'
         const link_arrow_side_top = arrow_side == 'top'
         const link_arrow_side_bottom = arrow_side == 'bottom'
 
-        // Thickness of the link at the anchor side (clamped space).
+        // Visible link thickness at the anchor (clamped to minimum_flux / 2px).
         const link_value = item.link_thickness
+        const is_reversed = link.shape_is_arrow_reversed
+        // Arrow length : in fan mode, the user-set shape_arrow_size is used
+        // as-is (the fan's cumulative ratios naturally compress narrow links'
+        // horizontal extent). In standalone, each arrow is a full triangle
+        // of length shape_arrow_size, which looks like an elongated needle
+        // when shape_arrow_size >> link_value (typical for clamped flows).
+        // Cap the length to link_value so the arrow stays at most isosceles
+        // (1:1 base/height ratio) for thin flows. Thick flows keep the
+        // user-set length unchanged.
+        // In structure_force_min mode (force_overlap), keep the user-set
+        // arrow length even though link_value is clamped to minimum_flux —
+        // the "needle" shape is desirable here: it visually fills the gap
+        // between the dashed flow end and the node edge, signalling
+        // structure (no quantity) rather than a vanishing 2×2 dot.
+        const arrow_length = (use_standalone && !force_overlap)
+          ? Math.min(link.shape_arrow_size, link_value)
+          : link.shape_arrow_size
 
         let xt: number
         let yt: number
-        let current_cumul_of_side = 0 // sum of link thickness we already draw a arrow on , for this side of the node
-        let total_cumul_of_side = 0 // Maximum sum of link thickness, for this side of the node
-
-        if (link_arrow_side_left) {
-          xt = + this.position_x - this.shape_margin_left
-          yt = + this.position_y + node_height / 2
-          current_cumul_of_side = cum_v_left
-          total_cumul_of_side = sumLinkLeft
+        let arrow_half_height: number
+        let arrow_already_computed: number
+        if (!use_standalone) {
+          // Fan : arrow_half_height = side total / 2, position centered on node side.
+          let total_cumul_of_side = 0
+          let current_cumul_of_side = 0
+          if (link_arrow_side_left) {
+            xt = + this.position_x - this.shape_margin_left
+            yt = + this.position_y + node_height / 2
+            current_cumul_of_side = cum_v_left ; total_cumul_of_side = sumLinkLeft
+            cum_v_left += link_value
+          }
+          else if (link_arrow_side_right) {
+            xt = + this.position_x + node_width + this.shape_margin_right
+            yt = + this.position_y + node_height / 2
+            current_cumul_of_side = cum_v_right ; total_cumul_of_side = sumLinkRight
+            cum_v_right += link_value
+          }
+          else if (link_arrow_side_top) {
+            xt = + this.position_x + node_width / 2
+            yt = + this.position_y
+            current_cumul_of_side = cum_h_top ; total_cumul_of_side = sumLinkTop
+            cum_h_top += link_value
+          }
+          else {
+            xt = + this.position_x + node_width / 2
+            yt = + this.position_y + node_height
+            current_cumul_of_side = cum_h_bottom ; total_cumul_of_side = sumLinkBottom
+            cum_h_bottom += link_value
+          }
+          arrow_half_height = total_cumul_of_side / 2
+          arrow_already_computed = current_cumul_of_side
         }
-        else if (link_arrow_side_right) {
-          xt = + this.position_x + node_width + this.shape_margin_right
-          yt = + this.position_y + node_height / 2
-          current_cumul_of_side = cum_v_right
-          total_cumul_of_side = sumLinkRight
+        else {
+          // Standalone : base centered on link's actual visible end, half_height = link/2,
+          // no cumulative offset → draw_arrow_part renders a clean pointed triangle.
+          if (link_arrow_side_left) {
+            xt = + this.position_x - this.shape_margin_left
+            yt = is_reversed ? link.position_y_start : link.position_y_end
+          }
+          else if (link_arrow_side_right) {
+            xt = + this.position_x + node_width + this.shape_margin_right
+            yt = is_reversed ? link.position_y_start : link.position_y_end
+          }
+          else if (link_arrow_side_top) {
+            xt = is_reversed ? link.position_x_start : link.position_x_end
+            yt = + this.position_y
+          }
+          else {
+            xt = is_reversed ? link.position_x_start : link.position_x_end
+            yt = + this.position_y + node_height
+          }
+          arrow_half_height = link_value / 2
+          arrow_already_computed = 0
         }
-        else if (link_arrow_side_top) {
-          xt = + this.position_x + node_width / 2
-          yt = + this.position_y
-          current_cumul_of_side = cum_h_top
-          total_cumul_of_side = sumLinkTop
+        const p5 = [xt, yt]
 
-        }
-        else { // if (link_arrow_side_bottom)
-          xt = + this.position_x + node_width / 2
-          yt = + this.position_y + node_height
-          current_cumul_of_side = cum_h_bottom
-          total_cumul_of_side = sumLinkBottom
-        }
-
-        const p5 = [xt, yt] // Starting point of arrow
-
-        // Some variables parameters influencing arrow shape processing
         const is_horizontal_at_target = item.is_horizontal_at_anchor
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        // Draw arrow on link.
-        // All inputs to draw_arrow_part live in the clamped space so the arrow base
-        // matches the visible trait (>= minimum_flux) and ratio_cur/ratio_cum stay <= 1.
         link.shape_arrow_path = draw_arrow_part(
-          total_cumul_of_side / 2,
+          arrow_half_height,
           p5,
           +link_value,
-          current_cumul_of_side,
+          arrow_already_computed,
           is_horizontal_at_target,
           is_revert,
           arrow_length,
           node_arrow_shift,
           arrows_adjustment
         )
-
-        // Increment side cumul of drawn arrow to influence next arrow starting position.
-        // Clamped space, consistent with sumLinkXxx above.
-        if (link_arrow_side_left) {
-          cum_v_left += link_value
-        }
-        else if (link_arrow_side_right) {
-          cum_v_right += link_value
-        }
-        else if (link_arrow_side_top) {
-          cum_h_top += link_value
-        }
-        else if (link_arrow_side_bottom) {
-          cum_h_bottom += link_value
-        }
       })
 
     //this._drawLinksStartCaps()
@@ -1058,6 +1096,16 @@ export class Class_NodeElement extends Class_NodeBase {
   // 🔄 PRIVATE HELPER METHODS - RÉINTÉGRÉS DIRECTEMENT ============================
 
   private getSumOfLinksThickness(side: Type_Side, clamped = false, for_sizing = false) {
+    // Structure mode + force_min : flows all overlap at the same anchor (raw
+    // thickness is 0). The "cumulated" thickness is therefore that of a single
+    // flow, not N × minimum_flux — so the node only needs minimum_flux of room
+    // when clamped, and 0 in raw space (consistent with thickness*Raw = 0).
+    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
+      if (!clamped) return 0
+      const has_link = this.getLinksOrdered(side)
+        .some(link => for_sizing ? link.is_visible_for_sizing_of(this) : link.is_visible)
+      return has_link ? (this.drawing_area.minimum_flux ?? 2) : 0
+    }
     let sum = 0
     this.getLinksOrdered(side)
       .filter(link => for_sizing ? link.is_visible_for_sizing_of(this) : link.is_visible)
