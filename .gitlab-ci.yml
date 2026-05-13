@@ -154,6 +154,7 @@ dev_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
+    - git config --global --add safe.directory $REPO_FOLDER/TestData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
@@ -251,6 +252,7 @@ prod_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
+    - git config --global --add safe.directory $REPO_FOLDER/TestData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
