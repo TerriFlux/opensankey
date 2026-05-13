@@ -676,6 +676,47 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'Elternflüsse erstellen, wenn sie nur auf Kindknoten existieren',
         it: 'Creare flussi genitori quando esistono solo sui nodi figli'
       }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autofix_parenthood_mat_balance: {
+      group: 'autocorrection',
+      breakBefore: true,
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Fix matter balance parent/children incoherence',
+        fr: 'Corriger l\'incohérence balance matière parent/enfants',
+        es: 'Corregir la incoherencia del balance de materia padre/hijos',
+        de: 'Materialbilanz-Inkonsistenz Eltern/Kinder korrigieren',
+        it: 'Correggere l\'incoerenza del bilancio materia genitore/figli'
+      },
+      tooltips: {
+        en: 'If checked: when a parent node has mat_balance=1 but some children have mat_balance!=1, children are aligned to 1 (lift strategy). Otherwise: warning only.',
+        fr: 'Si coché : lorsqu\'un nœud parent a mat_balance=1 mais que certains enfants ont mat_balance!=1, les enfants sont alignés à 1 (stratégie lift). Sinon : simple avertissement.',
+        es: 'Si está marcado: cuando un nodo padre tiene mat_balance=1 pero algunos hijos tienen mat_balance!=1, los hijos se alinean a 1 (estrategia lift). De lo contrario: solo advertencia.',
+        de: 'Wenn aktiviert: hat ein Elternknoten mat_balance=1, aber einige Kinder mat_balance!=1, werden die Kinder auf 1 angeglichen (lift-Strategie). Andernfalls: nur Warnung.',
+        it: 'Se selezionato: quando un nodo genitore ha mat_balance=1 ma alcuni figli hanno mat_balance!=1, i figli vengono allineati a 1 (strategia lift). Altrimenti: solo avviso.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autofix_constraint_redundancies: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Deduplicate redundant constraint references',
+        fr: 'Dédupliquer les références redondantes dans les contraintes',
+        es: 'Deduplicar referencias redundantes en las restricciones',
+        de: 'Redundante Constraint-Referenzen deduplizieren',
+        it: 'Deduplicare i riferimenti ridondanti nei vincoli'
+      },
+      tooltips: {
+        en: 'If checked: when a constraint id references the same data more than once, keep only the first occurrence (dedup_first strategy). Otherwise: load fails.',
+        fr: 'Si coché : lorsqu\'un id de contrainte référence plusieurs fois la même donnée, seule la première occurrence est conservée (stratégie dedup_first). Sinon : le chargement échoue.',
+        es: 'Si está marcado: cuando un id de restricción referencia los mismos datos más de una vez, solo se conserva la primera ocurrencia (estrategia dedup_first). De lo contrario: la carga falla.',
+        de: 'Wenn aktiviert: referenziert eine Constraint-ID dieselben Daten mehrfach, wird nur das erste Vorkommen behalten (dedup_first-Strategie). Andernfalls: das Laden schlägt fehl.',
+        it: 'Se selezionato: quando un id di vincolo fa riferimento agli stessi dati più volte, viene mantenuta solo la prima occorrenza (strategia dedup_first). Altrimenti: il caricamento fallisce.'
+      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
