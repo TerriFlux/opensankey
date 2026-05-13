@@ -99,7 +99,7 @@ test:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
-    - export TESTS_DIR=/home/ubuntu/Tests
+    - export TESTS_DIR=$CI_PROJECT_DIR/TestData
     # Force-reinstall SEP and MFAProblem from the SA-pinned submodule paths so the
     # shared runner venv reflects this pipeline's pins (otherwise a previous job on
     # the runner can leave a stale install and tests run against the wrong code).

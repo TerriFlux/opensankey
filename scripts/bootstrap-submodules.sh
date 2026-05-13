@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Init all submodules recursively, then deinit the nested TestData/ working trees.
+# Only SA/TestData/ remains populated (the single shared test data source).
+set -euo pipefail
+
+SA_ROOT="$(git rev-parse --show-toplevel)"
+cd "$SA_ROOT"
+
+git submodule update --init --recursive
+
+# Parents of nested TestData submodules — deinit must run from each parent.
+NESTED_PARENTS=(
+  "submodules/MFAProblem"
+  "submodules/OpenSankey+"
+  "submodules/OpenSankey+/submodules/OpenSankey"
+  "submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser"
+)
+
+for parent in "${NESTED_PARENTS[@]}"; do
+  if [ -d "$parent/TestData" ]; then
+    git -C "$parent" submodule deinit -f TestData || true
+  fi
+done
+
+echo ""
+echo "TestData populated at: $SA_ROOT/TestData"
+echo "Set TESTS_DIR=$SA_ROOT/TestData in your environment (see start_vscode.bat)."
