@@ -20,7 +20,7 @@ variables:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_PROGRESS_BAR: "off"
   PIP_ROOT_USER_ACTION: "ignore"
-  TESTS_DIR: /home/ubuntu/Tests
+  TESTS_DIR: $CI_PROJECT_DIR/TestData
   PUBLIC_URL: "/"
 build:
   stage: build
