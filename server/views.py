@@ -120,7 +120,9 @@ def solve_optimisation_problem_unified(
         trace.logger.info("-- Loading sankey from JSON string")
         sankey_json = json.loads(input_source['data'])
         io_input = IOJson()
-        ok, msg = io_input.load_sankey_from_json(sankey_json, True)
+        # Forward the six symmetric input options so the JSON load path
+        # enforces the same false=abort / true=fix contract as the Excel one.
+        ok, msg = io_input.load_sankey_from_json(sankey_json, True, **input_options)
         if not ok:
             trace.logger.error(f"-- ERROR loading sankey from JSON: {msg}")
             trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
