@@ -101,10 +101,43 @@
       "Bash(node_modules/.bin/eslint --config \"../submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/eslint.config.mjs\" \"../submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/Elements/Link.tsx\" \"../submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/Elements/NodeDrawShape.tsx\" \"../submodules/OpenSankey+/submodules/OpenSankey/opensankey/client/src/components/dialogs/NodeActions.tsx\")",
       "Bash(node_modules/.bin/tsc -p . --noEmit)",
       "Bash(findstr /C:\"\\\\\"lint\\\\\"\" /C:\"\\\\\"build\\\\\"\" /C:\"\\\\\"tsc\\\\\"\" /C:\"\\\\\"type\")",
-      "Bash(copy \"D:\\\\Dev\\\\sankeyapp\\\\MFAData\\\\Clients\\\\Pays Voironnais\\\\Diagramme de Sankey16.json\" \"D:\\\\Dev\\\\sankeyapp\\\\MFAData\\\\Clients\\\\Pays Voironnais\\\\Diagramme de Sankey16_test_3modes.json\")"
+      "Bash(copy \"D:\\\\Dev\\\\sankeyapp\\\\MFAData\\\\Clients\\\\Pays Voironnais\\\\Diagramme de Sankey16.json\" \"D:\\\\Dev\\\\sankeyapp\\\\MFAData\\\\Clients\\\\Pays Voironnais\\\\Diagramme de Sankey16_test_3modes.json\")",
+      "Bash(stat -c \"%s\" \"C:/Users/JulienAlapetite/Documents/Copie de Liste_tonnagesSimplifie2.xlsx\")",
+      "Read(//d/Dev/sankeyapp/dev/sankeyapplication/submodules/MFAProblem/**)",
+      "Bash(mkdir -p \"d:/Dev/sankeyapp/dev/sankeyapplication/submodules/MFAProblem/tests/unit/fixtures\" && cp \"C:/Users/JulienAlapetite/Documents/Copie de Liste_tonnagesSimplifie2.xlsx\" \"d:/Dev/sankeyapp/dev/sankeyapplication/submodules/MFAProblem/tests/unit/fixtures/liste_tonnages_simplifie.xlsx\" && ls -la \"d:/Dev/sankeyapp/dev/sankeyapplication/submodules/MFAProblem/tests/unit/fixtures/\")",
+      "Bash(c:/Users/JulienAlapetite/.conda/envs/dev/python.exe -m pytest tests/unit/test_classification_redondant_bug.py -v)",
+      "Bash(c:/Users/JulienAlapetite/.conda/envs/dev/python.exe -c \"import mfa_problem.mfa_problem_main; print\\('OK'\\)\")",
+      "Bash(c:/Users/JulienAlapetite/.conda/envs/dev/python.exe bin/run_reconciliation.py --input_file \"d:/tmp/repro_bug_classif.xlsx\" --output_dir tmp --skip_rref)",
+      "Bash(c:/Users/JulienAlapetite/.conda/envs/dev/python.exe bin/run_reconciliation.py --input_file \"d:/tmp/repro_clean.xlsx\" --output_dir tmp --skip_rref)",
+      "Bash(c:/Users/JulienAlapetite/.conda/envs/dev/python.exe bin/run_reconciliation.py --input_file \"d:/tmp/repro_bug_classif.xlsx\" --output_dir tmp --debug)",
+      "Bash(cp 'D:\\\\Dev\\\\sankeyapp\\\\opensource\\\\CustomOpenSankey\\\\ViewerOpenSankeyTypeScript\\\\src\\\\example.js' 'D:\\\\Dev\\\\sankeyapp\\\\dev\\\\sankeyapplication\\\\submodules\\\\OpenSankey+\\\\submodules\\\\OpenSankey\\\\examples/current/viewer/src/example.js')",
+      "Bash(cp 'D:\\\\Dev\\\\sankeyapp\\\\opensource\\\\CustomOpenSankey\\\\ViewerOpenSankeyTypeScript\\\\src\\\\example.js' 'D:\\\\Dev\\\\sankeyapp\\\\dev\\\\sankeyapplication\\\\submodules\\\\OpenSankey+\\\\submodules\\\\OpenSankey\\\\examples/1.0.7/viewer/src/example.js')",
+      "Bash(cp example.js example.mjs)",
+      "Bash(node --input-type=module -e \"import\\('./example.mjs'\\).then\\(m => process.stdout.write\\(JSON.stringify\\(m.initial_data, null, 2\\)\\)\\)\")",
+      "Bash(rm example.mjs)",
+      "Bash(cp D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/index.html D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/example.json D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/example2colonnes.json D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/logo-socle.png D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/logo_terriflux.png D:/Dev/sankeyapp/dev/sankeyapplication/submodules/OpenSankey+/submodules/OpenSankey/examples/__TRACKED_VAR__/html-viewer/)",
+      "Bash(cp D:/Dev/sankeyapp/opensource/CustomOpenSankey/HTMLViewerOpenSankey/logos/logo_opensankey.png D:/Dev/sankeyapp/dev/sankeyapplication/submodules/OpenSankey+/submodules/OpenSankey/examples/__TRACKED_VAR__/html-viewer/logos/)",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey\" -o /tmp/os.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.2\" -o /tmp/os112.json -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.1\")",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.1\" -o /tmp/v.json)",
+      "Bash(D:/miniconda3/python.exe -c \"import json; d=json.load\\(open\\('/tmp/v.json'\\)\\); print\\('unpacked:', d['dist'].get\\('unpackedSize'\\), 'files:', d['dist'].get\\('fileCount'\\)\\)\")",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.1\" -o \"d:/tmp/v.json\" -w \"HTTP %{http_code} size %{size_download}\\\\n\")",
+      "Bash(D:/miniconda3/python.exe -c \"import json; d=json.load\\(open\\('d:/tmp/v.json'\\)\\); print\\('unpacked:', d['dist'].get\\('unpackedSize'\\), 'files:', d['dist'].get\\('fileCount'\\)\\)\")",
+      "Bash(curl -4 -sS -o NUL -w \"IPv4: %{http_code} in %{time_total}s\\\\n\" https://registry.npmjs.org/)",
+      "Bash(curl -6 -sS -o NUL -w \"IPv6: %{http_code} in %{time_total}s\\\\n\" https://registry.npmjs.org/)",
+      "Bash(NODE_OPTIONS=\"--dns-result-order=ipv4first\" npm publish)",
+      "Bash(curl -4 -sS https://registry.npmjs.org/open-sankey)",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.1\" -o \"d:/tmp/os.json\")",
+      "Bash(D:/miniconda3/python.exe -c \"import json; d=json.load\\(open\\('d:/tmp/os.json'\\)\\); print\\('main:', d.get\\('main'\\)\\); print\\('module:', d.get\\('module'\\)\\); print\\('exports:', d.get\\('exports'\\)\\); print\\('files:', d.get\\('files'\\)\\); print\\('tarball:', d['dist']['tarball']\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(D:/miniconda3/python.exe -m http.server 8000)",
+      "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.2\" -o \"d:/tmp/os112.json\")",
+      "Bash(gh run *)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\JulienAlapetite\\.claude"
+      "C:\\Users\\JulienAlapetite\\.claude",
+      "C:\\Users\\JulienAlapetite\\Documents"
     ]
   }
 }
