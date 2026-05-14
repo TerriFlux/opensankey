@@ -121,6 +121,7 @@ export abstract class DrawLabelBase {
     options?: {
       bgPrefix?: ShapePrefix
       className?: string
+      anchor?: string
     }
   ) {
 
@@ -136,6 +137,27 @@ export abstract class DrawLabelBase {
     )
 
     if (!bgValues.visible) return null
+
+    // Largeur du fond : "verrouillée" → valeur fixe pilotée par l'utilisateur
+    // (box_width), sinon → s'adapte au contenu (largeur passée en paramètre,
+    // ex. bbox du texte). Quand verrouillée, le fond garde le même ancrage que
+    // le contenu (text-anchor) pour rester calé sur la forme du nœud :
+    //   - start  → bord gauche du fond aligné sur le bord gauche du contenu
+    //   - end    → bord droit du fond aligné sur le bord droit du contenu
+    //   - middle → centre du fond aligné sur le centre du contenu
+    let bg_x = x
+    let bg_width = width
+    if (bgValues.width_locked) {
+      bg_width = bgValues.box_width
+      if (options?.anchor === 'start') {
+        bg_x = x
+      } else if (options?.anchor === 'end') {
+        bg_x = x + width - bg_width
+      } else {
+        bg_x = x + width / 2 - bg_width / 2
+      }
+    }
+
     const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
     const bgElement = parent.append(type_to_use)
       .classed(`${this.prefix}_bg`, true)
@@ -150,15 +172,15 @@ export abstract class DrawLabelBase {
 
     if (bgValues.type === 'ellipse') {
       bgElement
-        .attr('cx', x + width / 2)
+        .attr('cx', bg_x + bg_width / 2)
         .attr('cy', y + height / 2)
-        .attr('rx', width / 2 + bgValues.margin_left + bgValues.margin_right)
+        .attr('rx', bg_width / 2 + bgValues.margin_left + bgValues.margin_right)
         .attr('ry', height / 2 + bgValues.margin_top + bgValues.margin_bottom)
     } else if (bgValues.type === 'rect') {
       bgElement
-        .attr('x', x - bgValues.margin_left)
+        .attr('x', bg_x - bgValues.margin_left)
         .attr('y', y - bgValues.margin_top)
-        .attr('width', width + bgValues.margin_left + bgValues.margin_right)
+        .attr('width', bg_width + bgValues.margin_left + bgValues.margin_right)
         .attr('height', height + bgValues.margin_top + bgValues.margin_bottom)
         .attr('rx', bgValues.border_radius)
     }
@@ -175,15 +197,20 @@ export abstract class DrawLabelBase {
   ) {
     if (!group) return
 
-    const bbox = (group?.select(this.getTextSelector()).node() as SVGGElement)?.getBBox()
+    const textSelection = group?.select(this.getTextSelector())
+    const bbox = (textSelection?.node() as SVGGElement)?.getBBox()
       ?? { x: 0, y: 0, height: 0, width: 0 }
+    // Ancrage du texte (start/middle/end) — sert à caler le fond verrouillé
+    // sur la forme du nœud, exactement comme le texte.
+    const anchor = textSelection?.attr('text-anchor') ?? 'middle'
 
     const bgElement = this.drawGenericBackground(
       group,
       bbox.x,
       bbox.y,
       bbox.width,
-      bbox.height
+      bbox.height,
+      { anchor }
     )
 
     if (bgElement) {
@@ -1342,17 +1369,19 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   }
 
   /**
-   * Quand value_label_stick_to_label est on, redessine le fond du name_label
-   * pour qu'il englobe à la fois le label et la valeur (le fond du value_label
-   * est skip côté NodeDrawValueLabel.drawBackground).
+   * Quand value_label_stick_to_label est on :
+   *  1. recale le bloc combiné (nom + valeur) pour qu'il soit ancré sur la forme
+   *     comme le serait le name_label seul — les deux <g> (nom + valeur) sont
+   *     décalés ensemble de (dx, dy) ;
+   *  2. redessine le fond du name_label pour qu'il englobe nom + valeur (le fond
+   *     du value_label est skip côté NodeDrawValueLabel.drawBackground).
    * À appeler APRÈS que NodeDrawValueLabel.drawGenericLabel() ait rendu son <text>.
    */
-  public refreshBackgroundForStick(): void {
+  public refreshStickLayout(): void {
     if (this.prefix !== 'name_label') return
     if (!this.d3_selection) return
     const node = this.node as Class_NodeElement
     if (!node.value_label_stick_to_label) return
-    if (!node.name_label_background_visible) return
     if (!node.value_label_is_visible) return
     if (!this._label_values.is_visible) return
 
@@ -1375,13 +1404,48 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
     const x_max = Math.max(nameBBox.x + nameBBox.width, valueBBox.x + valueBBox.width)
     const y_max = Math.max(nameBBox.y + nameBBox.height, valueBBox.y + valueBBox.height)
 
-    this.drawGenericBackground(
-      this.d3_selection,
-      x_min,
-      y_min,
-      x_max - x_min,
-      y_max - y_min
-    )
+    // Le name_label est positionné pour être ancré seul sur la forme, et la
+    // valeur se contente de coller à son bord → le bloc combiné nom+valeur
+    // n'est pas calé sur la forme. On recale l'ensemble en décalant les deux
+    // <g> (nom + valeur) de (dx, dy), pour que le point d'ancrage du bloc
+    // combiné tombe là où le name_label devrait être ancré :
+    //   - horizontal : centre/bord selon le text-anchor (horiz)
+    //   - vertical   : centre/bord selon la dominant-baseline (vert)
+    const [name_label_pos_x, name_label_pos_y, name_label_anchor, name_label_baseline] = this.getLabelPos()
+    const current_anchor_x =
+      name_label_anchor === 'start'
+        ? x_min
+        : name_label_anchor === 'end'
+          ? x_max
+          : (x_min + x_max) / 2
+    const current_anchor_y =
+      name_label_baseline === 'text-before-edge'
+        ? y_min
+        : name_label_baseline === 'text-after-edge'
+          ? y_max
+          : (y_min + y_max) / 2
+    const dx = name_label_pos_x - current_anchor_x
+    const dy = name_label_pos_y - current_anchor_y
+    const transform = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
+      ? `translate(${dx},${dy})`
+      : null
+    this.d3_selection.attr('transform', transform)
+    d3.select(valueTextNode.parentNode as SVGGElement).attr('transform', transform)
+
+    // Le fond englobe le bloc combiné. Il est ajouté dans g_name_label (déjà
+    // décalé de dx), donc dessiné sur les coordonnées locales du contenu : il
+    // suit le bloc recalé. L'anchor du name_label sert au fond à largeur
+    // verrouillée pour rester calé comme le texte.
+    if (node.name_label_background_visible) {
+      this.drawGenericBackground(
+        this.d3_selection,
+        x_min,
+        y_min,
+        x_max - x_min,
+        y_max - y_min,
+        { anchor: name_label_anchor }
+      )
+    }
   }
 }
 
@@ -1495,8 +1559,8 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     tspanWidths: number[]
   ) {
     // Quand stick_to_label est on et que le background du name_label est visible,
-    // c'est NodeDrawNameLabel.refreshBackgroundForStick() qui dessine un fond
-    // unifié englobant label + valeur. On skip ici pour éviter le double fond.
+    // c'est NodeDrawNameLabel.refreshStickLayout() qui dessine un fond unifié
+    // englobant label + valeur. On skip ici pour éviter le double fond.
     if (
       this._nodeElement.value_label_stick_to_label &&
       this._nodeElement.name_label_background_visible
