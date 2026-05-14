@@ -584,6 +584,12 @@ def conversion_thread(
 
         t_read = perf_counter() - t_read_start
 
+        # Symmetric input-options contract: load_sankey returns ok=False only
+        # when one of the six options is OFF and its problem was detected. That
+        # is a deliberate abort — the user must enable the named option — so
+        # the conversion hard-fails here. (No "best-effort" output: in strict
+        # mode the offending node/flux is *detected* but not created, so the
+        # Sankey would silently revert to its base structure.)
         if not ok:
             t_total = perf_counter() - t_total_start
             trace.logger.error("=" * 80)
@@ -593,6 +599,15 @@ def conversion_thread(
                     trace.logger.error(f"  {line}")
             trace.logger.error("=" * 80)
             return
+
+        # Load succeeded — inspect the autocorrect accumulators populated when
+        # the create_new_* / autofix_* options were ON, to drive the red
+        # highlighting in write_sankey below.
+        added_nodes = getattr(io_input.sankey, "_auto_corrected_nodes", []) or []
+        added_flux = getattr(io_input.sankey, "_auto_corrected_flux", []) or []
+        node_cells = getattr(io_input.sankey, "_auto_corrected_node_cells", []) or []
+        constraint_ids = getattr(io_input.sankey, "_auto_corrected_constraint_ids", []) or []
+        autofix_applied = bool(added_nodes or added_flux or node_cells or constraint_ids)
 
         # Taille du fichier d'entrée
         input_size = Path(input_file_name).stat().st_size / (1024 * 1024)
@@ -620,20 +635,25 @@ def conversion_thread(
             else:
                 trace.logger.warning("keep_other_sheets ignored: input is not Excel")
 
-        # Si l'un des autofixes a tourné (toggles cochés dans le dialogue), les
-        # accumulateurs _auto_corrected_* sont peuplés sur le sankey en mémoire.
-        # On force highlight_autocorrect=True sur l'écriture Excel pour que les
-        # cellules/lignes corrigées apparaissent en rouge dans la sortie, et on
-        # log un résumé pour que l'utilisateur sache qu'une correction a eu lieu.
-        autofix_applied = (
-            len(getattr(io_input.sankey, "_auto_corrected_node_cells", []) or []) > 0
-            or len(getattr(io_input.sankey, "_auto_corrected_constraint_ids", []) or []) > 0
-            or len(getattr(io_input.sankey, "_auto_corrected_flux", []) or []) > 0
-            or len(getattr(io_input.sankey, "_auto_corrected_nodes", []) or []) > 0
-        )
+        # Si la lecture tolérante a accumulé des corrections (toggles
+        # create_new_* / autofix_* cochés), on log un résumé par catégorie et
+        # on force highlight_autocorrect=True sur l'écriture Excel pour que les
+        # cellules / lignes ajoutées ou corrigées apparaissent en rouge.
         if autofix_applied:
-            node_cells = getattr(io_input.sankey, "_auto_corrected_node_cells", []) or []
-            constraint_ids = getattr(io_input.sankey, "_auto_corrected_constraint_ids", []) or []
+            if added_nodes:
+                trace.logger.warning(
+                    "Nœuds créés : {} nœud(s) absent(s) de l'onglet Noeuds, "
+                    "créé(s) et surligné(s) en rouge (premiers : {})".format(
+                        len(added_nodes), ", ".join('"{}"'.format(n) for n in added_nodes[:5])
+                    )
+                )
+            if added_flux:
+                trace.logger.warning(
+                    "Flux créés / propagés : {} flux surligné(s) en rouge (premiers : {})".format(
+                        len(added_flux),
+                        ", ".join('"{}"->"{}"'.format(o, d) for o, d in added_flux[:5])
+                    )
+                )
             if node_cells:
                 trace.logger.warning(
                     "Autofix mat_balance : {} cellule(s) corrigée(s) (premiers : {})".format(
