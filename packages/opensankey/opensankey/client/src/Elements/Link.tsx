@@ -557,12 +557,6 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
       const n_target = this.target
       const n_target_color = n_target.getShapeColorToUse()
-      const l_ori = this.shape_orientation
-      const l_recy = this.shape_is_recycling
-
-      const width_src = n_source.getShapeWidthToUse()
-      const height_src = n_target.getShapeHeightToUse()
-      const width_trgt = n_target.getShapeWidthToUse()
       // Create a gradient
       const gradient = defGradient?.append('defs')
         .attr('id', 'def_gradient_' + n_source.id + '-' + n_target.id)
@@ -573,121 +567,25 @@ export class Class_LinkElement extends Class_LinkAttribute {
       gradient?.append('stop')
         .attr('id', 'stop-start')
         .attr('offset', '0%')
-        .attr('stop-color', () => {
-          if (n_source.position_x <= n_target.position_x) {
-            return n_source_color
-          }
-          else {
-            return n_target_color
-          }
-        })
+        .attr('stop-color', n_source_color)
         .attr('stop-opacity', 1)
 
       gradient?.append('stop')
         .attr('id', 'stop-end')
         .attr('offset', '100%')
-        .attr('stop-color', () => {
-          if (n_source.position_x <= n_target.position_x) {
-            return n_target_color
-          }
-          else {
-            return n_source_color
-          }
-        })
+        .attr('stop-color', n_target_color)
         .attr('stop-opacity', 1)
 
-      // In case the link is horizontal-horizontal or horizontal-vertical
-      // the gradient will gradually change from left to right
-      if (l_ori === 'hh' || l_ori === 'hv') {
+      // Le gradient suit la diagonale entre le point de depart (cote source) et
+      // le point d'arrivee (cote cible) du trace. Cela couvre toute l'etendue du
+      // flux, y compris les traces en L (hv / vh) ou un gradient purement
+      // horizontal ou vertical se retrouvait comprime sur le premier segment.
+      gradient
+        ?.attr('x1', this.position_x_start)
+        .attr('y1', this.position_y_start)
+        .attr('x2', this.position_x_end)
+        .attr('y2', this.position_y_end)
 
-        if ((!l_recy && n_source.position_x < n_target.position_x) || (l_recy && n_source.position_x >= n_target.position_x)) {
-          // In case when when link isn't recycling & the source is at the left of target
-          // or the link is recycling but the source is at the right of the target
-          // the gradient go from color of source to color of target
-
-          // Position lienear gradient (it start & stop position )
-          gradient
-            ?.attr('x1', n_source.position_x + width_src)
-            .attr('y1', '0')
-            .attr('x2', n_target.position_x)
-            .attr('y2', 0)
-
-          // Set starting gradient color & ending gradient color
-          gradient?.select('#stop-start').attr('stop-color', n_source_color)
-          gradient?.select('#stop-end').attr('stop-color', n_target_color)
-        }
-        else {
-
-          // Position lienear gradient (it start & stop position )
-          gradient
-            ?.attr('x1', n_target.position_x + width_trgt)
-            .attr('y1', '0')
-            .attr('x2', n_source.position_x)
-            .attr('y2', 0)
-
-          // Set starting gradient color & ending gradient color
-          gradient?.select('#stop-start').attr('stop-color', n_target_color)
-          gradient?.select('#stop-end').attr('stop-color', n_source_color)
-        }
-      }
-      // In case the link is vertical-vertical or vertical-horizontal
-      // the gradient will gradually change from top to bottom
-      else if (l_ori === 'vv' || l_ori === 'vh') {
-
-        if (n_source.position_y < n_target.position_y) {
-          // In case when when link isn't recycling & the source is on top of target
-          // or the link is recycling but the source is at the bottom of the target
-          // the gradient go from color of source to color of target
-
-          // Position lienear gradient (it start & stop position )
-          gradient?.attr('x1', 0)
-            .attr('y1', n_source.position_y + height_src)
-            .attr('x2', 0)
-            .attr('y2', n_target.position_y)
-
-          // Set starting gradient color & ending gradient color
-          gradient?.select('#stop-start').attr('stop-color', n_source_color)
-          gradient?.select('#stop-end').attr('stop-color', n_target_color)
-        }
-        else {
-
-          // Position lienear gradient (it start & stop position )
-          gradient?.attr('x1', 0)
-            .attr('y1', n_target.position_y + height_src)
-            .attr('x2', 0)
-            .attr('y2', n_source.position_y)
-
-          // Set starting gradient color & ending gradient color
-          gradient?.select('#stop-start').attr('stop-color', n_target_color)
-          gradient?.select('#stop-end').attr('stop-color', n_source_color)
-        }
-      }
-      // else if (l_ori === 'vh') {
-      //   d3.select(' .opensankey #gradient-' + n_source.id + '-' + n_target.id + ' #stop-start').attr('stop-color', () => {
-      //     if (n_source.position_x < n_target.position_x) {
-      //       gradient?.attr('x1', n_source.position_x + width_src - 10)
-      //         .attr('y1', '0')
-      //         .attr('x2', n_target.position_x)
-      //         .attr('y2', 0)
-      //       return n_source_color
-      //     } else {
-      //       gradient?.attr('x1', n_target.position_x + width_trgt + 10)
-      //         .attr('y1', '0')
-      //         .attr('x2', n_source.position_x)
-      //         .attr('y2', 0)
-      //       return n_target_color
-      //     }
-      //   }
-      //   )
-      //   d3.select(' .opensankey #gradient-' + n_source.id + '-' + n_target.id + ' #stop-end').attr('stop-color', () => {
-      //     if (n_source.position_x > n_target.position_x) {
-      //       return n_source_color
-      //     } else {
-      //       return n_target_color
-      //     }
-      //   }
-      //   )
-      // }
       return 'url(#gradient-' + n_source.id + '-' + n_target.id + ')'
 
     } else if (this.shape_color_rule == 'auto' && this.drawing_area.sankey.flux_taggs_list.filter(tagg => tagg.use_colors).length == 0) {
