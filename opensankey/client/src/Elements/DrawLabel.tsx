@@ -109,6 +109,15 @@ export abstract class DrawLabelBase {
     return `.${this.prefix}_text`
   }
 
+  // =================== STICK TO LABEL (valeur collée au libellé) ===================
+  // Sélecteurs des <text> nom/valeur — surchargés côté liens (classes link_*).
+  protected getStickNameTextSelector(): string {
+    return '.name_label_text'
+  }
+  protected getStickValueTextSelector(): string {
+    return '.value_label_text'
+  }
+
   /**
    * ✅ Dessine un background générique (texte, icône, FO)
    */
@@ -197,6 +206,18 @@ export abstract class DrawLabelBase {
   ) {
     if (!group) return
 
+    // En mode stick, le fond du value_label est skip : c'est refreshStickLayout()
+    // (côté name_label) qui dessine un fond unifié englobant nom + valeur.
+    const stick_el = this._element as unknown as Class_NodeElement
+    if (
+      this.prefix === 'value_label' &&
+      stick_el.value_label_stick_to_label &&
+      stick_el.name_label_background_visible
+    ) {
+      group.select(`.${this.prefix}_background`).remove()
+      return
+    }
+
     const textSelection = group?.select(this.getTextSelector())
     const bbox = (textSelection?.node() as SVGGElement)?.getBBox()
       ?? { x: 0, y: 0, height: 0, width: 0 }
@@ -216,6 +237,167 @@ export abstract class DrawLabelBase {
     if (bgElement) {
       //@ts-expect-error xxx
       this.verticalText(tspanWidths, bgElement)
+    }
+  }
+
+  // =================== STICK TO LABEL : helpers communs ===================
+
+  /** BBox du <text> du name_label — réf. pour positionner la valeur en mode stick. */
+  protected getStickNameTextBBox(): { x: number, y: number, width: number, height: number } | null {
+    const textNode = this._element.d3_selection
+      ?.select(this.getStickNameTextSelector()).node() as SVGGraphicsElement | null
+    if (!textNode) return null
+    try {
+      const b = textNode.getBBox()
+      if (b.width === 0 && b.height === 0) return null
+      return { x: b.x, y: b.y, width: b.width, height: b.height }
+    } catch {
+      return null
+    }
+  }
+
+  /**
+   * Position d'un value_label collé (stick_to_label) : calculée par rapport à la
+   * bbox du <text> du name_label, selon horiz/vert/inside/shift du value_label.
+   */
+  protected computeStickPos(
+    nameBBox: { x: number, y: number, width: number, height: number }
+  ): [number, number, string, string] {
+    let label_pos_x = 0
+    let label_anchor: string = 'start'
+
+    if (this._label_values.position_absolute) {
+      label_pos_x = this._label_values.position_x
+      label_anchor = 'middle'
+    } else {
+      const inside_horiz = this._label_values.inside_horiz
+      if (this._label_values.horiz === 'right') {
+        label_anchor = inside_horiz ? 'end' : 'start'
+        label_pos_x = nameBBox.x + nameBBox.width + this._label_values.horiz_shift
+      } else if (this._label_values.horiz === 'left') {
+        label_anchor = inside_horiz ? 'start' : 'end'
+        label_pos_x = nameBBox.x + this._label_values.horiz_shift
+      } else if (this._label_values.horiz === 'middle') {
+        label_anchor = 'middle'
+        label_pos_x = nameBBox.x + nameBBox.width / 2 + this._label_values.horiz_shift
+      }
+    }
+
+    let label_pos_y = 0
+    let label_baseline: string = 'text-before-edge'
+
+    if (this._label_values.position_absolute) {
+      label_pos_y = this._label_values.position_y
+      label_baseline = 'middle'
+    } else {
+      const inside_vert = this._label_values.inside_vert
+      if (this._label_values.vert === 'top') {
+        label_pos_y = nameBBox.y + this._label_values.vert_shift
+        label_baseline = inside_vert ? 'text-before-edge' : 'text-after-edge'
+      } else if (this._label_values.vert === 'bottom') {
+        label_pos_y = nameBBox.y + nameBBox.height + this._label_values.vert_shift
+        label_baseline = inside_vert ? 'text-after-edge' : 'text-before-edge'
+      } else if (this._label_values.vert === 'middle') {
+        label_pos_y = nameBBox.y + nameBBox.height / 2 + this._label_values.vert_shift
+        label_baseline = 'middle'
+      }
+    }
+
+    return [label_pos_x, label_pos_y, label_anchor, label_baseline]
+  }
+
+  /**
+   * En mode stick, le bloc combiné est-il recalé verticalement sur l'ancrage du
+   * name_label ? Vrai pour les nœuds (name_label centré/ancré sur la forme).
+   * Faux pour les liens : le name_label y est positionné par rapport au flux
+   * (convention de baseline propre aux liens), on le laisse en place et la
+   * valeur se contente d'y coller.
+   */
+  protected stickRecentersVertically(): boolean {
+    return true
+  }
+
+  /**
+   * Quand value_label_stick_to_label est on, à appeler sur le drawer du
+   * name_label APRÈS que le value_label ait rendu son <text> :
+   *  1. recale le bloc combiné (nom + valeur) pour qu'il soit ancré sur la forme
+   *     comme le serait le name_label seul — les deux <g> (nom + valeur) sont
+   *     décalés ensemble de (dx, dy) ;
+   *  2. redessine le fond du name_label pour qu'il englobe nom + valeur (le fond
+   *     du value_label est skip côté drawBackground).
+   */
+  public refreshStickLayout(): void {
+    if (this.prefix !== 'name_label') return
+    if (!this.d3_selection) return
+    const el = this._element as unknown as Class_NodeElement
+    if (!el.value_label_stick_to_label) return
+    if (!el.value_label_is_visible) return
+    if (!this._label_values.is_visible) return
+
+    const nameTextNode = this.d3_selection
+      .select(this.getStickNameTextSelector()).node() as SVGGraphicsElement | null
+    const valueTextNode = this._element.d3_selection
+      ?.select(this.getStickValueTextSelector()).node() as SVGGraphicsElement | null
+    if (!nameTextNode || !valueTextNode) return
+
+    let nameBBox: DOMRect | { x: number, y: number, width: number, height: number }
+    let valueBBox: DOMRect | { x: number, y: number, width: number, height: number }
+    try {
+      nameBBox = nameTextNode.getBBox()
+      valueBBox = valueTextNode.getBBox()
+    } catch {
+      return
+    }
+
+    const x_min = Math.min(nameBBox.x, valueBBox.x)
+    const y_min = Math.min(nameBBox.y, valueBBox.y)
+    const x_max = Math.max(nameBBox.x + nameBBox.width, valueBBox.x + valueBBox.width)
+    const y_max = Math.max(nameBBox.y + nameBBox.height, valueBBox.y + valueBBox.height)
+
+    // Le name_label est positionné pour être ancré seul sur la forme, et la
+    // valeur se contente de coller à son bord → le bloc combiné nom+valeur
+    // n'est pas calé sur la forme. On recale l'ensemble en décalant les deux
+    // <g> (nom + valeur) de (dx, dy), pour que le point d'ancrage du bloc
+    // combiné tombe là où le name_label devrait être ancré :
+    //   - horizontal : centre/bord selon le text-anchor (horiz)
+    //   - vertical   : centre/bord selon la dominant-baseline (vert) — nœuds
+    //     uniquement (cf. stickRecentersVertically).
+    const [name_label_pos_x, name_label_pos_y, name_label_anchor, name_label_baseline] = this.getLabelPos()
+    const current_anchor_x =
+      name_label_anchor === 'start'
+        ? x_min
+        : name_label_anchor === 'end'
+          ? x_max
+          : (x_min + x_max) / 2
+    const current_anchor_y =
+      name_label_baseline === 'text-before-edge'
+        ? y_min
+        : name_label_baseline === 'text-after-edge'
+          ? y_max
+          : (y_min + y_max) / 2
+    const dx = name_label_pos_x - current_anchor_x
+    const dy = this.stickRecentersVertically()
+      ? name_label_pos_y - current_anchor_y
+      : 0
+    const transform = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
+      ? `translate(${dx},${dy})`
+      : null
+    this.d3_selection.attr('transform', transform)
+    d3.select(valueTextNode.parentNode as SVGGElement).attr('transform', transform)
+
+    // Le fond englobe le bloc combiné. Il est ajouté dans g_name_label (déjà
+    // décalé de (dx,dy)), donc dessiné sur les coordonnées locales du contenu :
+    // il suit le bloc recalé. L'anchor du name_label sert au fond à largeur
+    // verrouillée pour rester calé comme le texte.
+    if (el.name_label_background_visible) {
+      this.drawGenericBackground(
+        this.d3_selection,
+        x_min,
+        y_min,
+        x_max - x_min,
+        y_max - y_min,
+        { anchor: name_label_anchor }
+      )
     }
   }
 
@@ -1367,86 +1549,6 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
   }
-
-  /**
-   * Quand value_label_stick_to_label est on :
-   *  1. recale le bloc combiné (nom + valeur) pour qu'il soit ancré sur la forme
-   *     comme le serait le name_label seul — les deux <g> (nom + valeur) sont
-   *     décalés ensemble de (dx, dy) ;
-   *  2. redessine le fond du name_label pour qu'il englobe nom + valeur (le fond
-   *     du value_label est skip côté NodeDrawValueLabel.drawBackground).
-   * À appeler APRÈS que NodeDrawValueLabel.drawGenericLabel() ait rendu son <text>.
-   */
-  public refreshStickLayout(): void {
-    if (this.prefix !== 'name_label') return
-    if (!this.d3_selection) return
-    const node = this.node as Class_NodeElement
-    if (!node.value_label_stick_to_label) return
-    if (!node.value_label_is_visible) return
-    if (!this._label_values.is_visible) return
-
-    const nameTextNode = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
-    const valueTextNode = this._element.d3_selection
-      ?.select('.value_label_text').node() as SVGGraphicsElement | null
-    if (!nameTextNode || !valueTextNode) return
-
-    let nameBBox: DOMRect | { x: number, y: number, width: number, height: number }
-    let valueBBox: DOMRect | { x: number, y: number, width: number, height: number }
-    try {
-      nameBBox = nameTextNode.getBBox()
-      valueBBox = valueTextNode.getBBox()
-    } catch {
-      return
-    }
-
-    const x_min = Math.min(nameBBox.x, valueBBox.x)
-    const y_min = Math.min(nameBBox.y, valueBBox.y)
-    const x_max = Math.max(nameBBox.x + nameBBox.width, valueBBox.x + valueBBox.width)
-    const y_max = Math.max(nameBBox.y + nameBBox.height, valueBBox.y + valueBBox.height)
-
-    // Le name_label est positionné pour être ancré seul sur la forme, et la
-    // valeur se contente de coller à son bord → le bloc combiné nom+valeur
-    // n'est pas calé sur la forme. On recale l'ensemble en décalant les deux
-    // <g> (nom + valeur) de (dx, dy), pour que le point d'ancrage du bloc
-    // combiné tombe là où le name_label devrait être ancré :
-    //   - horizontal : centre/bord selon le text-anchor (horiz)
-    //   - vertical   : centre/bord selon la dominant-baseline (vert)
-    const [name_label_pos_x, name_label_pos_y, name_label_anchor, name_label_baseline] = this.getLabelPos()
-    const current_anchor_x =
-      name_label_anchor === 'start'
-        ? x_min
-        : name_label_anchor === 'end'
-          ? x_max
-          : (x_min + x_max) / 2
-    const current_anchor_y =
-      name_label_baseline === 'text-before-edge'
-        ? y_min
-        : name_label_baseline === 'text-after-edge'
-          ? y_max
-          : (y_min + y_max) / 2
-    const dx = name_label_pos_x - current_anchor_x
-    const dy = name_label_pos_y - current_anchor_y
-    const transform = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
-      ? `translate(${dx},${dy})`
-      : null
-    this.d3_selection.attr('transform', transform)
-    d3.select(valueTextNode.parentNode as SVGGElement).attr('transform', transform)
-
-    // Le fond englobe le bloc combiné. Il est ajouté dans g_name_label (déjà
-    // décalé de dx), donc dessiné sur les coordonnées locales du contenu : il
-    // suit le bloc recalé. L'anchor du name_label sert au fond à largeur
-    // verrouillée pour rester calé comme le texte.
-    if (node.name_label_background_visible) {
-      this.drawGenericBackground(
-        this.d3_selection,
-        x_min,
-        y_min,
-        x_max - x_min,
-        y_max - y_min,
-        { anchor: name_label_anchor }
-      )
-    }
-  }
 }
 
 export class NodeDrawValueLabel extends NodeDrawLabelBase {
@@ -1472,103 +1574,13 @@ export class NodeDrawValueLabel extends NodeDrawLabelBase {
     return true
   }
 
-  private getNameLabelTextBBox(): { x: number, y: number, width: number, height: number } | null {
-    const textNode = this._element.d3_selection?.select('.name_label_text').node() as SVGGraphicsElement | null
-    if (!textNode) return null
-    try {
-      const b = textNode.getBBox()
-      if (b.width === 0 && b.height === 0) return null
-      return { x: b.x, y: b.y, width: b.width, height: b.height }
-    } catch {
-      return null
-    }
-  }
-
   protected override getLabelPos(): [number, number, string, string] {
     if (!this._nodeElement.value_label_stick_to_label) {
       return super.getLabelPos()
     }
-    const nameBBox = this.getNameLabelTextBBox()
+    const nameBBox = this.getStickNameTextBBox()
     if (!nameBBox) return super.getLabelPos()
-
-    let label_pos_x = 0
-    let label_anchor: string = 'start'
-
-    if (this._label_values.position_absolute) {
-      label_pos_x = this._label_values.position_x
-      label_anchor = 'middle'
-    } else {
-      const inside_horiz = this._label_values.inside_horiz
-      if (this._label_values.horiz === 'right') {
-        if (inside_horiz) {
-          label_anchor = 'end'
-          label_pos_x = nameBBox.x + nameBBox.width + this._label_values.horiz_shift
-        } else {
-          label_anchor = 'start'
-          label_pos_x = nameBBox.x + nameBBox.width + this._label_values.horiz_shift
-        }
-      } else if (this._label_values.horiz === 'left') {
-        if (inside_horiz) {
-          label_anchor = 'start'
-          label_pos_x = nameBBox.x + this._label_values.horiz_shift
-        } else {
-          label_anchor = 'end'
-          label_pos_x = nameBBox.x + this._label_values.horiz_shift
-        }
-      } else if (this._label_values.horiz === 'middle') {
-        label_anchor = 'middle'
-        label_pos_x = nameBBox.x + nameBBox.width / 2 + this._label_values.horiz_shift
-      }
-    }
-
-    let label_pos_y = 0
-    let label_baseline: string = 'text-before-edge'
-
-    if (this._label_values.position_absolute) {
-      label_pos_y = this._label_values.position_y
-      label_baseline = 'middle'
-    } else {
-      const inside_vert = this._label_values.inside_vert
-      if (this._label_values.vert === 'top') {
-        if (inside_vert) {
-          label_pos_y = nameBBox.y + this._label_values.vert_shift
-          label_baseline = 'text-before-edge'
-        } else {
-          label_pos_y = nameBBox.y + this._label_values.vert_shift
-          label_baseline = 'text-after-edge'
-        }
-      } else if (this._label_values.vert === 'bottom') {
-        if (inside_vert) {
-          label_pos_y = nameBBox.y + nameBBox.height + this._label_values.vert_shift
-          label_baseline = 'text-after-edge'
-        } else {
-          label_pos_y = nameBBox.y + nameBBox.height + this._label_values.vert_shift
-          label_baseline = 'text-before-edge'
-        }
-      } else if (this._label_values.vert === 'middle') {
-        label_pos_y = nameBBox.y + nameBBox.height / 2 + this._label_values.vert_shift
-        label_baseline = 'middle'
-      }
-    }
-
-    return [label_pos_x, label_pos_y, label_anchor, label_baseline]
-  }
-
-  protected override drawBackground(
-    group: d3_selection_type | undefined,
-    tspanWidths: number[]
-  ) {
-    // Quand stick_to_label est on et que le background du name_label est visible,
-    // c'est NodeDrawNameLabel.refreshStickLayout() qui dessine un fond unifié
-    // englobant label + valeur. On skip ici pour éviter le double fond.
-    if (
-      this._nodeElement.value_label_stick_to_label &&
-      this._nodeElement.name_label_background_visible
-    ) {
-      group?.select(`.${this.prefix}_background`).remove()
-      return
-    }
-    super.drawBackground(group, tspanWidths)
+    return this.computeStickPos(nameBBox)
   }
 }
 
@@ -1634,6 +1646,20 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
   protected override getTextSelector(): string {
     return `.link_${this.displayPrefix}_text`
+  }
+
+  // Côté liens, les <text> portent les classes link_name_text / link_value_text.
+  protected override getStickNameTextSelector(): string {
+    return '.link_name_text'
+  }
+  protected override getStickValueTextSelector(): string {
+    return '.link_value_text'
+  }
+
+  // Côté liens, le name_label est positionné par rapport au flux : on ne le
+  // recale pas verticalement, la valeur se contente d'y coller.
+  protected override stickRecentersVertically(): boolean {
+    return false
   }
 
   protected getTextPathSelector(): string {
@@ -1871,7 +1897,9 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     const yf = this.link.position_y_end
     const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
     const show_as_path = /*Math.abs(yf - y0) < 50 ||*/ ((dist / this.link.thickness) > 2)
-    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && !this.link.isTapered) {
+    // En mode stick_to_label, nom et valeur doivent être en <text> droit pour
+    // pouvoir se coller l'un à l'autre — on désactive le rendu textPath.
+    if (this._specific_label_values.on_path && show_as_path && this.link.shape_type !== 'bezier_outline' && !this.link.isTapered && !this.link.value_label_stick_to_label) {
       const d3_textpath_selection = textElement.append('textPath')
         .classed('link', true)
         .classed(`link_${this.displayPrefix}`, true)
@@ -2051,6 +2079,34 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
     return this.link.data_label(this.prefix as 'value_label')
+  }
+
+  protected override getLabelPos(): [number, number, string, string] {
+    // En mode stick, la valeur se positionne par rapport à la bbox du <text>
+    // du name_label du flux. Sinon, positionnement normal le long du flux.
+    if (!this.link.value_label_stick_to_label) {
+      return super.getLabelPos()
+    }
+    const nameBBox = this.getStickNameTextBBox()
+    if (!nameBBox) return super.getLabelPos()
+    return this.computeStickPos(nameBBox)
+  }
+
+  protected override updateLabelPos(): void {
+    // En mode stick, la position vient de computeStickPos et est exprimée via
+    // la dominant-baseline — que LinkDrawLabelBase.updateLabelPos n'applique pas
+    // (les liens encodent l'offset vertical directement dans label_pos_y). Il
+    // faut donc l'appliquer ici, sinon la valeur reste sur la ligne du nom.
+    if (!this.link.value_label_stick_to_label) {
+      super.updateLabelPos()
+      return
+    }
+    const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+    this.d3_selection?.selectAll(this.getTextSelector())
+      .attr('x', label_pos_x)
+      .attr('y', label_pos_y)
+      .attr('text-anchor', label_anchor)
+      .attr('dominant-baseline', label_baseline ?? 'text-before-edge')
   }
 
   protected override getInputInitialValue(): string {

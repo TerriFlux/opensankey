@@ -821,7 +821,7 @@ const LabelContentComponent = ({
           </OverloadedButton>
         </Box>
 
-        {prefix === 'value_label' && (menu_for_style || selection.hasNodes) && (() => {
+        {prefix === 'value_label' && (menu_for_style || selection.hasNodes || selection.hasLinks) && (() => {
           const valueLabelValues = getElementsValueLabelValues(elements, prefix, refreshParentComponent)
           return (
             <Box layerStyle='options_4cols'>
@@ -2743,7 +2743,7 @@ export const missing_node_labels_translations = {
           value_label_stick_to_label: 'Stick to label',
 
           tooltips: {
-            value_label_stick_to_label: 'Position the value relative to the node label. The label background (if visible) covers label and value together.',
+            value_label_stick_to_label: 'Position the value relative to the label. The label background (if visible) covers label and value together.',
             left_align: 'Align left',
             center_align: 'Center',
             right_align: 'Align right',
@@ -2769,7 +2769,7 @@ export const missing_node_labels_translations = {
           value_label_stick_to_label: 'Coller au libellé',
 
           tooltips: {
-            value_label_stick_to_label: 'Positionner la valeur par rapport au libellé du nœud. Le fond du libellé (s\'il est visible) englobe libellé et valeur.',
+            value_label_stick_to_label: 'Positionner la valeur par rapport au libellé. Le fond du libellé (s\'il est visible) englobe libellé et valeur.',
             left_align: 'Aligner à gauche',
             center_align: 'Centrer',
             right_align: 'Aligner à droite',
@@ -2795,7 +2795,7 @@ export const missing_node_labels_translations = {
           value_label_stick_to_label: 'Pegar a la etiqueta',
 
           tooltips: {
-            value_label_stick_to_label: 'Posicionar el valor respecto a la etiqueta del nodo. El fondo de la etiqueta (si está visible) cubre etiqueta y valor.',
+            value_label_stick_to_label: 'Posicionar el valor respecto a la etiqueta. El fondo de la etiqueta (si está visible) cubre etiqueta y valor.',
             left_align: 'Alinear a la izquierda',
             center_align: 'Centrar',
             right_align: 'Alinear a la derecha',
@@ -2821,7 +2821,7 @@ export const missing_node_labels_translations = {
           value_label_stick_to_label: 'An Beschriftung haften',
 
           tooltips: {
-            value_label_stick_to_label: 'Wert relativ zur Knotenbeschriftung positionieren. Hintergrund der Beschriftung (falls sichtbar) umfasst Beschriftung und Wert.',
+            value_label_stick_to_label: 'Wert relativ zur Beschriftung positionieren. Hintergrund der Beschriftung (falls sichtbar) umfasst Beschriftung und Wert.',
             left_align: 'Linksbündig',
             center_align: 'Zentriert',
             right_align: 'Rechtsbündig',
@@ -2847,7 +2847,7 @@ export const missing_node_labels_translations = {
           value_label_stick_to_label: 'Attaccare all\'etichetta',
 
           tooltips: {
-            value_label_stick_to_label: 'Posizionare il valore rispetto all\'etichetta del nodo. Lo sfondo dell\'etichetta (se visibile) copre etichetta e valore.',
+            value_label_stick_to_label: 'Posizionare il valore rispetto all\'etichetta. Lo sfondo dell\'etichetta (se visibile) copre etichetta e valore.',
             left_align: 'Allineare a sinistra',
             center_align: 'Centrare',
             right_align: 'Allineare a destra',
