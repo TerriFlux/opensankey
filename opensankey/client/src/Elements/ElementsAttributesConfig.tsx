@@ -530,6 +530,48 @@ export const BASE_SHAPE_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
 
+  width_locked: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Fixed width',
+      fr: 'Largeur fixe',
+      es: 'Ancho fijo',
+      de: 'Feste Breite',
+      it: 'Larghezza fissa'
+    },
+    tooltips: {
+      en: 'Lock the background width to a fixed value instead of fitting the text',
+      fr: 'Verrouiller la largeur du fond à une valeur fixe au lieu de s\'adapter au texte',
+      es: 'Bloquear el ancho del fondo a un valor fijo en lugar de ajustarse al texto',
+      de: 'Hintergrundbreite auf einen festen Wert sperren statt an den Text anzupassen',
+      it: 'Bloccare la larghezza dello sfondo a un valore fisso invece di adattarsi al testo'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  box_width: {
+    default: 150,
+    type: (() => 150) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Width',
+      fr: 'Largeur',
+      es: 'Ancho',
+      de: 'Breite',
+      it: 'Larghezza'
+    },
+    tooltips: {
+      en: 'Fixed width of the background in pixels (when fixed width is enabled)',
+      fr: 'Largeur fixe du fond en pixels (quand la largeur fixe est activée)',
+      es: 'Ancho fijo del fondo en píxeles (cuando el ancho fijo está activado)',
+      de: 'Feste Breite des Hintergrunds in Pixeln (wenn feste Breite aktiviert ist)',
+      it: 'Larghezza fissa dello sfondo in pixel (quando la larghezza fissa è attiva)'
+    }
+  } satisfies AttributeConfig<number>,
+
   color_visible: {
     default: true as boolean,
     type: (() => true) as (() => boolean),

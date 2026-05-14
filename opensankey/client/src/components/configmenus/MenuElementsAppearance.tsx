@@ -2200,6 +2200,39 @@ export const MenuShapeAttributes = ({
           </Box>
           <Box />
         </Box>
+
+        {/* Largeur du fond : verrouillée (valeur fixe) ou ajustée au texte */}
+        {prefix.includes('_background') && (
+          <Box as='span' layerStyle='options_2cols'>
+            <OverloadedCheckbox
+              elements={elements}
+              config={config}
+              prefix={prefix}
+              attributeKey="width_locked"
+              isChecked={shapeValues.width_locked}
+              onChange={(checked) => { shapeValues.width_locked = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'width_locked')}
+              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'width_locked')}`)}
+              t={t}
+            >
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'width_locked')}`)}
+            </OverloadedCheckbox>
+            {shapeValues.width_locked
+              ? <ElementAttrSetterNumberInput2Cols
+                app_data={app_data}
+                elements={elements}
+                attributePath={attributePath}
+                attributeKey={'box_width'}
+                config={BASE_SHAPE_CONFIG}
+                prefix={prefix}
+                refreshParentComponent={refreshUI}
+                unit_text='px'
+                minimum_value={0}
+                stepper={true}
+                isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
+              : <Box />}
+          </Box>
+        )}
       </Box>
     </>
   )
