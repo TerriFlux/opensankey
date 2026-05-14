@@ -943,20 +943,12 @@ export const UniversalFileConverter = ({
     }
     form_data.append('output_options', JSON.stringify(output_options))
     const input_options = getCurrentInputOptions() as Record<string, unknown>
-    // UI exposes positive ``create_new_*`` toggles (default off = block).
-    // Backend ``load_sankey`` still takes the inverted ``error_on_new_*``
-    // kwargs, so transform here. The Create / Propagate toggles together act
-    // as the "auto-correction" feature: any flux/node added during load or
-    // propagation populates ``_auto_corrected_*`` and write_sankey then
-    // auto-applies the red highlights without needing a separate flag.
-    if ('create_new_nodes' in input_options) {
-      input_options['error_on_new_nodes'] = !input_options['create_new_nodes']
-      delete input_options['create_new_nodes']
-    }
-    if ('create_new_flux' in input_options) {
-      input_options['error_on_new_flux'] = !input_options['create_new_flux']
-      delete input_options['create_new_flux']
-    }
+    // The six input options (create_new_nodes, create_new_flux,
+    // propagate_flux_to_children, propagate_flux_to_parent,
+    // autofix_parenthood_mat_balance, autofix_constraint_redundancies) are
+    // passed through verbatim — load_sankey consumes those literal names.
+    // No inversion: false = abort with a message naming the option,
+    // true = fix + populate _auto_corrected_* for the red highlight.
     form_data.append('input_options', JSON.stringify(input_options))
     if (input_format == 'blob') {
       // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
