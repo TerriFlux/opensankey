@@ -109,10 +109,9 @@ export class LinkDrawShape {
       }
       else {
         const bezier_outline = this._link.shape_type == 'bezier_outline' || (this._link.shape_border_visible && !this._link.linkIsStructure()) || this._link.isTapered
-        let path = ''
-        if (this._link.shape_orientation == 'vh') path = this.getBezierPathHV()
-        else if (this._link.shape_orientation == 'hv') path = this.getBezierPathVH()
-        else path = this.getBezierPath(bezier_outline)
+        // vh/hv links share the control-point-driven path of hh/vv so their curve
+        // and tangent handles are correctly positioned and the curvature editable.
+        const path = this.getBezierPath(bezier_outline)
 
         const da = this._link.sankey.drawing_area
 
@@ -770,94 +769,6 @@ export class LinkDrawShape {
         + ' Q ' + x9 + ',' + y9 + ' ' + x10 + ',' + y10
         + ' L ' + xf + ',' + yf
       return path
-    }
-  }
-
-  /**
- * Fonction pour dessiner les liens VH (Vertical vers Horizontal)
- * Utilise seulement starting_curve_point et ending_curve_point
- * Basée sur bezier_link_classic_vh
- */
-  public getBezierPathVH() {
-    const x0 = this._link.position_x_start
-    const y0 = this._link.position_y_start
-    const x5 = this._link.position_x_end
-    const y5 = this._link.position_y_end
-
-    // Utilise les points de contrôle existants au lieu de les recalculer
-    // const starting_curve = this._link_control_points_internal.controlPoints.starting_curve_point
-    // const ending_curve = this._link_control_points_internal.controlPoints.ending_curve_point
-
-    // Points intermédiaires basés sur l'ancien code
-    let x1
-    if (this._link.shape_is_curved) {
-      x1 = x0 + (x5 - x0) * 2 / 3
-    } else {
-      x1 = x5
-    }
-    const y1 = y0
-    const x4 = x5
-    let y4
-    if (this._link.shape_is_curved) {
-      y4 = y5 - (y5 - y0) * 2 / 3
-    } else {
-      y4 = y0
-    }
-
-    // Points de contrôle pour les courbes de Bézier
-    const curvature = 0.5 // Paramètre par défaut, peut être rendu configurable
-    const x2 = x1 + (x4 - x1) * curvature + 1
-    const y2 = y1
-    const x3 = x4
-    const y3 = y1 + (y4 - y1) * (1 - curvature) - 1
-
-    if (this._link.shape_is_curved) {
-      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
-        ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4 +
-        ' L ' + x5 + ',' + y5
-    } else {
-      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
-        ' L ' + x5 + ',' + y5
-    }
-  }
-
-  /**
-   * Fonction pour dessiner les liens HV (Horizontal vers Vertical)
-   * Utilise seulement starting_curve_point et ending_curve_point
-   * Basée sur bezier_link_classic_hv
-   */
-  public getBezierPathHV() {
-    const x0 = this._link.position_x_start
-    const y0 = this._link.position_y_start
-    const x5 = this._link.position_x_end
-    const y5 = this._link.position_y_end
-
-    // Points intermédiaires basés sur l'ancien code
-    const x1 = x0
-    let x4, y1
-    if (this._link.shape_is_curved) {
-      y1 = y0 + (y5 - y0) * 2 / 3
-      x4 = x5 - (x5 - x0) * 2 / 3
-    } else {
-      y1 = y5
-      x4 = x0
-    }
-    const y4 = y5
-
-    // Points de contrôle pour les courbes de Bézier
-    const curvature = 0.5 // Paramètre par défaut, peut être rendu configurable
-    const x2 = x1
-    const y2 = y1 + (y4 - y1) * curvature + 1
-    const x3 = x1 + (x4 - x1) * (1 - curvature) - 1
-    const y3 = y4
-
-    if (this._link.shape_is_curved) {
-      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
-        ' C ' + x2 + ',' + y2 + ' ' + x3 + ',' + y3 + ' ' + x4 + ',' + y4 +
-        ' L ' + x5 + ',' + y5
-    } else {
-      return 'M ' + x0 + ',' + y0 + ' L ' + x1 + ',' + y1 +
-        ' L ' + x5 + ',' + y5
     }
   }
 
