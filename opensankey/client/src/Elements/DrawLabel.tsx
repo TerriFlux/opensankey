@@ -70,6 +70,30 @@ function breakLongWords(text: string, maxWidth: number, font: string): string {
 }
 
 /**
+ * BBox d'un élément SVG dans le repère de son parent, en tenant compte de SA
+ * PROPRE transform (rotation de verticalText, etc.) — `getBBox()` seul l'ignore.
+ */
+function getTransformedBBox(
+  node: SVGGraphicsElement
+): { x: number, y: number, width: number, height: number } {
+  const b = node.getBBox()
+  const t = node.transform.baseVal.consolidate()
+  if (!t) return { x: b.x, y: b.y, width: b.width, height: b.height }
+  const m = t.matrix
+  const corners = [
+    [b.x, b.y],
+    [b.x + b.width, b.y],
+    [b.x, b.y + b.height],
+    [b.x + b.width, b.y + b.height]
+  ].map(([x, y]) => ({ x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f }))
+  const xs = corners.map(c => c.x)
+  const ys = corners.map(c => c.y)
+  const x_min = Math.min(...xs)
+  const y_min = Math.min(...ys)
+  return { x: x_min, y: y_min, width: Math.max(...xs) - x_min, height: Math.max(...ys) - y_min }
+}
+
+/**
  * Classe de base abstraite pour tous les labels (nodes et links)
  */
 export abstract class DrawLabelBase {
@@ -242,15 +266,19 @@ export abstract class DrawLabelBase {
 
   // =================== STICK TO LABEL : helpers communs ===================
 
-  /** BBox du <text> du name_label — réf. pour positionner la valeur en mode stick. */
+  /**
+   * BBox du <text> du name_label — réf. pour positionner la valeur en mode stick.
+   * Tient compte de la transform propre du <text> (rotation si vertical_text),
+   * sinon la valeur se collerait à la bbox horizontale et ne suivrait pas.
+   */
   protected getStickNameTextBBox(): { x: number, y: number, width: number, height: number } | null {
     const textNode = this._element.d3_selection
       ?.select(this.getStickNameTextSelector()).node() as SVGGraphicsElement | null
     if (!textNode) return null
     try {
-      const b = textNode.getBBox()
+      const b = getTransformedBBox(textNode)
       if (b.width === 0 && b.height === 0) return null
-      return { x: b.x, y: b.y, width: b.width, height: b.height }
+      return b
     } catch {
       return null
     }
@@ -340,19 +368,33 @@ export abstract class DrawLabelBase {
       ?.select(this.getStickValueTextSelector()).node() as SVGGraphicsElement | null
     if (!nameTextNode || !valueTextNode) return
 
-    let nameBBox: DOMRect | { x: number, y: number, width: number, height: number }
-    let valueBBox: DOMRect | { x: number, y: number, width: number, height: number }
+    // BBox tenant compte de la transform propre des <text> (rotation si
+    // vertical_text), sinon ni la valeur ni le fond ne suivent le nom tourné.
+    let nameBBox: { x: number, y: number, width: number, height: number }
+    let valueBBox: { x: number, y: number, width: number, height: number }
     try {
-      nameBBox = nameTextNode.getBBox()
-      valueBBox = valueTextNode.getBBox()
+      nameBBox = getTransformedBBox(nameTextNode)
+      valueBBox = getTransformedBBox(valueTextNode)
     } catch {
       return
     }
 
+    // Co-centrage vertical : quand la valeur est posée À CÔTÉ du nom
+    // (value vert='middle'), 'dominant-baseline:middle' (métrique de la police)
+    // ne coïncide pas avec le centre géométrique de la bbox → nom et valeur
+    // paraissent décalés (l'un trop haut, l'autre trop bas). On aligne le centre
+    // géométrique de la valeur sur celui du nom : les deux se retrouvent alors
+    // centrés verticalement dans le fond combiné.
+    let value_dy = 0
+    if (el.value_label_vert === 'middle') {
+      value_dy = (nameBBox.y + nameBBox.height / 2) - (valueBBox.y + valueBBox.height / 2)
+    }
+    const value_y = valueBBox.y + value_dy
+
     const x_min = Math.min(nameBBox.x, valueBBox.x)
-    const y_min = Math.min(nameBBox.y, valueBBox.y)
+    const y_min = Math.min(nameBBox.y, value_y)
     const x_max = Math.max(nameBBox.x + nameBBox.width, valueBBox.x + valueBBox.width)
-    const y_max = Math.max(nameBBox.y + nameBBox.height, valueBBox.y + valueBBox.height)
+    const y_max = Math.max(nameBBox.y + nameBBox.height, value_y + valueBBox.height)
 
     // Le name_label est positionné pour être ancré seul sur la forme, et la
     // valeur se contente de coller à son bord → le bloc combiné nom+valeur
@@ -379,11 +421,16 @@ export abstract class DrawLabelBase {
     const dy = this.stickRecentersVertically()
       ? name_label_pos_y - current_anchor_y
       : 0
-    const transform = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
+    // Le nom prend le recalage du bloc ; la valeur prend en plus son co-centrage.
+    const name_transform = (Math.abs(dx) > 0.01 || Math.abs(dy) > 0.01)
       ? `translate(${dx},${dy})`
       : null
-    this.d3_selection.attr('transform', transform)
-    d3.select(valueTextNode.parentNode as SVGGElement).attr('transform', transform)
+    const value_total_dy = dy + value_dy
+    const value_transform = (Math.abs(dx) > 0.01 || Math.abs(value_total_dy) > 0.01)
+      ? `translate(${dx},${value_total_dy})`
+      : null
+    this.d3_selection.attr('transform', name_transform)
+    d3.select(valueTextNode.parentNode as SVGGElement).attr('transform', value_transform)
 
     // Le fond englobe le bloc combiné. Il est ajouté dans g_name_label (déjà
     // décalé de (dx,dy)), donc dessiné sur les coordonnées locales du contenu :
