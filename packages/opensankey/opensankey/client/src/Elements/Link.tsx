@@ -408,7 +408,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public drawValueLabel() {
     if (this.drawing_area.bypass_redraws) return
     if (!this._link_draw_value) return
+    // En mode stick, la valeur se cale sur la bbox du <text> du name_label :
+    // on rafraîchit le nom d'abord pour avoir une bbox à jour.
+    if (this.value_label_stick_to_label && this._link_draw_label) {
+      this._link_draw_label.drawGenericLabel()
+    }
     this._link_draw_value.drawGenericLabel()
+    if (this.value_label_stick_to_label && this._link_draw_label) {
+      this._link_draw_label.refreshStickLayout()
+    }
     this._orderD3Elements()
   }
 
@@ -416,6 +424,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (this.drawing_area.bypass_redraws) return
     if (!this._link_draw_label) return
     this._link_draw_label.drawGenericLabel()
+    // Quand stick_to_label est on, la valeur se positionne par rapport au
+    // name_label : redessiner la valeur puis recaler le bloc combiné.
+    if (this.value_label_stick_to_label && this._link_draw_value) {
+      this._link_draw_value.drawGenericLabel()
+      this._link_draw_label.refreshStickLayout()
+    }
     this._orderD3Elements()
   }
 
@@ -902,9 +916,14 @@ export class Class_LinkElement extends Class_LinkAttribute {
     if (!this._link_shape || !this._link_draw_value || !this._link_draw_label || !this._link_draw_icon) return
     this._link_shape.drawShape()
     this._drawArrow()
-    this._link_draw_value.drawGenericLabel()
+    // Le nom est dessiné avant la valeur : en mode stick, la valeur se cale sur
+    // la bbox du <text> du name_label.
     this._link_draw_label.drawGenericLabel()
+    this._link_draw_value.drawGenericLabel()
     this._link_draw_icon.drawGenericLabel()
+    if (this.value_label_stick_to_label) {
+      this._link_draw_label.refreshStickLayout()
+    }
     this._orderD3Elements()
   }
 
