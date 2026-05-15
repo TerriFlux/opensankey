@@ -960,15 +960,7 @@ export class Class_NodeElement extends Class_NodeBase {
     //   gets a cumulative offset inside that fan, which produces sloped
     //   tips that converge toward the node side center. Looks nice when no
     //   flow gets clamped (raw == clamped), drifts otherwise.
-    // Structure mode + force_min forces standalone arrow geometry: with all
-    // flows clamped to minimum_flux but the fan cum_v_left still advancing
-    // by link_value per link, fan ratios drift past 1 and produce a sawtooth
-    // of arrows escaping leftwards. Standalone gives each link its own
-    // independent triangle centered on link.position_y_end — which my
-    // thicknessSourceRaw=0 makes identical for all links on the same side,
-    // so the N triangles overlap exactly.
-    const force_overlap = this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min
-    const use_standalone = this.drawing_area.arrow_use_standalone_layout || force_overlap
+    const use_standalone = this.drawing_area.arrow_use_standalone_layout
     let cum_v_left = 0
     let cum_h_top = 0
     let cum_v_right = 0
@@ -994,19 +986,13 @@ export class Class_NodeElement extends Class_NodeBase {
         const link_value = item.link_thickness
         const is_reversed = link.shape_is_arrow_reversed
         // Arrow length : in fan mode, the user-set shape_arrow_size is used
-        // as-is (the fan's cumulative ratios naturally compress narrow links'
-        // horizontal extent). In standalone, each arrow is a full triangle
-        // of length shape_arrow_size, which looks like an elongated needle
-        // when shape_arrow_size >> link_value (typical for clamped flows).
-        // Cap the length to link_value so the arrow stays at most isosceles
-        // (1:1 base/height ratio) for thin flows. Thick flows keep the
-        // user-set length unchanged.
-        // In structure_force_min mode (force_overlap), keep the user-set
-        // arrow length even though link_value is clamped to minimum_flux —
-        // the "needle" shape is desirable here: it visually fills the gap
-        // between the dashed flow end and the node edge, signalling
-        // structure (no quantity) rather than a vanishing 2×2 dot.
-        const arrow_length = (use_standalone && !force_overlap)
+        // as-is. In standalone, cap the length to link_value so a wide flow
+        // doesn't end with a squashed triangle (height/base <<1) — unless
+        // the link is structural, in which case keep the full length to
+        // produce a "needle" signalling "no quantity" rather than a
+        // vanishing 2×2 dot.
+        const cap_arrow_length = use_standalone && !link.linkIsStructure()
+        const arrow_length = cap_arrow_length
           ? Math.min(link.shape_arrow_size, link_value)
           : link.shape_arrow_size
 
@@ -1098,16 +1084,10 @@ export class Class_NodeElement extends Class_NodeBase {
   // 🔄 PRIVATE HELPER METHODS - RÉINTÉGRÉS DIRECTEMENT ============================
 
   private getSumOfLinksThickness(side: Type_Side, clamped = false, for_sizing = false) {
-    // Structure mode + force_min : flows all overlap at the same anchor (raw
-    // thickness is 0). The "cumulated" thickness is therefore that of a single
-    // flow, not N × minimum_flux — so the node only needs minimum_flux of room
-    // when clamped, and 0 in raw space (consistent with thickness*Raw = 0).
-    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
-      if (!clamped) return 0
-      const has_link = this.getLinksOrdered(side)
-        .some(link => for_sizing ? link.is_visible_for_sizing_of(this) : link.is_visible)
-      return has_link ? (this.drawing_area.minimum_flux ?? 2) : 0
-    }
+    // Per-link cumulation. Structural flows in force_min mode contribute
+    // 0 (raw) / minimum_flux (clamped) via Link.thickness*/Raw getters, while
+    // value-bearing flows contribute their proportional thickness — so mixed
+    // sides naturally size to "sum of real values + minimum_flux per structural".
     let sum = 0
     this.getLinksOrdered(side)
       .filter(link => for_sizing ? link.is_visible_for_sizing_of(this) : link.is_visible)

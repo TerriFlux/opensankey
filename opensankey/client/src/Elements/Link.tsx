@@ -1904,10 +1904,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get thickness() {
-    // Structure mode + force_min option: ignore the value, return the clamped
-    // minimum so all links display at minimum_flux (or 2px) regardless of
-    // their data value. Nodes pick this up through thicknessSource/Target.
-    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
+    // force_min only impacts STRUCTURAL flows (intervals / indéterminés / dashed).
+    // Solid flows with a real value keep their proportional thickness even in
+    // structure_display mode — otherwise a single value-bearing flow alongside
+    // structural ones would get crushed to minimum_flux too.
+    if (
+      this.drawing_area.is_structure_display
+      && this.drawing_area.structure_mode_force_min
+      && this.linkIsStructure()
+    ) {
       return this._clampThickness(0)
     }
     const data_value = this.valueCurrent
@@ -1927,7 +1932,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * When valueCurrentTarget is null, returns same as thicknessSource (uniform link).
    */
   public get thicknessTarget() {
-    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
+    if (
+      this.drawing_area.is_structure_display
+      && this.drawing_area.structure_mode_force_min
+      && this.linkIsStructure()
+    ) {
       return this._clampThickness(0)
     }
     const target_value = this.valueCurrentTarget
@@ -1949,11 +1958,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get thicknessSourceRaw() {
-    // Structure mode + force_min : raw thickness = 0 so that every link on
-    // the same node side attaches at the same y (no cumulative offset in
-    // updateLinksPositions). Visually all structure flows overlap at the
-    // node anchor, matching the "structure flows carry no quantity" intent.
-    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
+    // Per-link force_min : a structural flow contributes 0 raw thickness so
+    // structural siblings stack at the same y (overlap at the node anchor),
+    // while value-bearing solid flows keep claiming their proportional space
+    // in the cumulative offset.
+    if (
+      this.drawing_area.is_structure_display
+      && this.drawing_area.structure_mode_force_min
+      && this.linkIsStructure()
+    ) {
       return 0
     }
     const data_value = this.valueCurrent
@@ -1962,7 +1975,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   public get thicknessTargetRaw() {
-    if (this.drawing_area.is_structure_display && this.drawing_area.structure_mode_force_min) {
+    if (
+      this.drawing_area.is_structure_display
+      && this.drawing_area.structure_mode_force_min
+      && this.linkIsStructure()
+    ) {
       return 0
     }
     const target_value = this.valueCurrentTarget
