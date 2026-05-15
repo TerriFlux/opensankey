@@ -209,6 +209,23 @@ export class Class_LinkElement extends Class_LinkAttribute {
   // Used by contract() to know which links to delete when collapsing back.
   private _is_expansion_link: boolean = false
 
+  // I/O anchor lock & delta — per link end ('source' / 'target').
+  // The "anchor" of a link is its attachment point on a node side; the side
+  // is normally re-derived from node relative positions (cf. source_side /
+  // target_side getters). When the user manually arranges the I/O order
+  // (dragging the handle, or the arrows in the "Ordre des flux E/S" menu)
+  // the anchor is locked: its side is frozen so moving the *opposite* node
+  // no longer flips it. Locks are released by any automatic layout pass
+  // (Class_NodePositioning.computeAutoSankey, Node.reorganizeIOLinks).
+  private _source_side_locked: boolean = false
+  private _target_side_locked: boolean = false
+  private _source_side_frozen: Type_Side | undefined = undefined
+  private _target_side_frozen: Type_Side | undefined = undefined
+  // Extra gap (px) inserted *before* this end's anchor in the node-side
+  // cumulative packing, so anchors arriving on a node can be spaced out.
+  private _source_anchor_delta: number = 0
+  private _target_anchor_delta: number = 0
+
   /**
    * _scaleValueToPx transform a value to a proportional size in px according to data scale
    *
@@ -1343,6 +1360,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get source_side(): Type_Side {
+    // Locked anchor : keep the side captured when the user locked it, so
+    // moving the opposite node does not flip this anchor.
+    if (this._source_side_locked && this._source_side_frozen !== undefined)
+      return this._source_side_frozen
+    return this._computed_source_side
+  }
+
+  /** Side derived from node relative positions, ignoring any anchor lock. */
+  private get _computed_source_side(): Type_Side {
     // Failsafe : because of constructor
     if (this.source === undefined || this.target === undefined) {
       return 'right'
@@ -1415,6 +1441,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * @memberof Class_LinkElement
    */
   public get target_side(): Type_Side {
+    // Locked anchor : keep the side captured when the user locked it, so
+    // moving the opposite node does not flip this anchor.
+    if (this._target_side_locked && this._target_side_frozen !== undefined)
+      return this._target_side_frozen
+    return this._computed_target_side
+  }
+
+  /** Side derived from node relative positions, ignoring any anchor lock. */
+  private get _computed_target_side(): Type_Side {
     // Failsafe : because of constructor
     if (this.source === undefined || this.target === undefined) {
       return 'left'
@@ -1449,6 +1484,68 @@ export class Class_LinkElement extends Class_LinkAttribute {
           return 'top'
       }
     }
+  }
+
+  // I/O ANCHOR LOCK & DELTA ============================================================
+
+  public get source_side_locked(): boolean { return this._source_side_locked }
+  public set source_side_locked(value: boolean) {
+    this._source_side_locked = value
+    // Capture the current side on lock, drop it on unlock.
+    this._source_side_frozen = value ? this._computed_source_side : undefined
+  }
+
+  public get target_side_locked(): boolean { return this._target_side_locked }
+  public set target_side_locked(value: boolean) {
+    this._target_side_locked = value
+    this._target_side_frozen = value ? this._computed_target_side : undefined
+  }
+
+  public get source_anchor_delta(): number { return this._source_anchor_delta }
+  public set source_anchor_delta(value: number) {
+    // Negative values are allowed (anchor pulled up / before its packed slot).
+    this._source_anchor_delta = value || 0
+  }
+
+  public get target_anchor_delta(): number { return this._target_anchor_delta }
+  public set target_anchor_delta(value: number) {
+    // Negative values are allowed (anchor pulled up / before its packed slot).
+    this._target_anchor_delta = value || 0
+  }
+
+  /** Which end of this link is attached to `node` ('source' / 'target' / undefined). */
+  private endForNode(node: Class_NodeElement): 'source' | 'target' | undefined {
+    if (this._source === node) return 'source'
+    if (this._target === node) return 'target'
+    return undefined
+  }
+
+  /** Is the anchor on `node`'s side locked ? */
+  public getAnchorLockedForNode(node: Class_NodeElement): boolean {
+    return this.endForNode(node) === 'target' ? this._target_side_locked : this._source_side_locked
+  }
+
+  /** Lock / unlock the anchor on `node`'s side. */
+  public setAnchorLockedForNode(node: Class_NodeElement, value: boolean) {
+    if (this.endForNode(node) === 'target') this.target_side_locked = value
+    else this.source_side_locked = value
+  }
+
+  /** Spacing inserted before the anchor on `node`'s side. */
+  public getAnchorDeltaForNode(node: Class_NodeElement): number {
+    return this.endForNode(node) === 'target' ? this._target_anchor_delta : this._source_anchor_delta
+  }
+
+  /** Set the spacing inserted before the anchor on `node`'s side. */
+  public setAnchorDeltaForNode(node: Class_NodeElement, value: number) {
+    if (this.endForNode(node) === 'target') this.target_anchor_delta = value
+    else this.source_anchor_delta = value
+  }
+
+  /** Release both anchor locks — called by automatic layout passes. */
+  public resetAnchorLocks() {
+    this.source_side_locked = false
+    this.target_side_locked = false
   }
 
   public valueForTags(_: Class_ProtoTag[]): Class_LinkValue | null {

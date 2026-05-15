@@ -32,7 +32,7 @@ import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
   default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure,
   default_paper_format, default_paper_orientation, default_margin_mm,
-  Type_PaperFormat, Type_PaperOrientation
+  Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
@@ -504,6 +504,17 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // disaggregate sur un nœud lui-même expansé). Persisté pour que la
     // transitivité survive sauvegarde + rechargement.
     if (link.is_expansion_link) json_object['is_expansion_link'] = true
+    // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
+    if (link.source_side_locked) {
+      json_object['source_side_locked'] = true
+      if (link['_source_side_frozen']) json_object['source_side_frozen'] = link['_source_side_frozen']
+    }
+    if (link.target_side_locked) {
+      json_object['target_side_locked'] = true
+      if (link['_target_side_frozen']) json_object['target_side_frozen'] = link['_target_side_frozen']
+    }
+    if (link.source_anchor_delta) json_object['source_anchor_delta'] = link.source_anchor_delta
+    if (link.target_anchor_delta) json_object['target_anchor_delta'] = link.target_anchor_delta
     // Out
     return json_object
   }
@@ -681,6 +692,18 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     // Issue #1225 — restaurer le marker d'expansion s'il est dans le JSON.
     if (getBooleanFromJSON(json_object, 'is_expansion_link', false)) {
       link.is_expansion_link = true
+    }
+    // Cadenas + espacement des ancres E/S (cf. menu "Ordre des flux E/S").
+    // Clés absentes d'un fichier antérieur → valeurs par défaut (pas de migration).
+    link.source_anchor_delta = getNumberFromJSON(json_object, 'source_anchor_delta', 0)
+    link.target_anchor_delta = getNumberFromJSON(json_object, 'target_anchor_delta', 0)
+    if (getBooleanFromJSON(json_object, 'source_side_locked', false)) {
+      link['_source_side_frozen'] = getStringFromJSON(json_object, 'source_side_frozen', link['_computed_source_side']) as Type_Side
+      link['_source_side_locked'] = true
+    }
+    if (getBooleanFromJSON(json_object, 'target_side_locked', false)) {
+      link['_target_side_frozen'] = getStringFromJSON(json_object, 'target_side_frozen', link['_computed_target_side']) as Type_Side
+      link['_target_side_locked'] = true
     }
   }
 }

@@ -513,6 +513,9 @@ export class NodePositioning {
   ) {
     console.log('🔧 Calcul automatique des positions - version améliorée')
     this.drawingArea.bypass_redraws = true
+    // Recalcul automatique : on relâche tous les cadenas d'ancres E/S posés
+    // manuellement par l'utilisateur (drag de poignée / menu "Ordre des flux E/S").
+    this.drawingArea.sankey.links_list.forEach(l => l.resetAnchorLocks())
     // Calculate max value of flows (inchangé)
     const unit_taggs = this.drawingArea.sankey.getTagGroupsAsList('data_taggs').filter(tagg => tagg.is_unit) as Class_DataTagGroup[]
     if (unit_taggs.length > 0) {

@@ -806,6 +806,8 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public reorganizeIOLinks() {
+    // Automatic reorg : release the anchor locks set manually on this node.
+    this._links_order.forEach(l => l.setAnchorLockedForNode(this, false))
     const echangeTag = this.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
     const import_links = this.input_links_list.filter(l => l.source.hasGivenTag(echangeTag as Class_Tag))
     const export_links = this.output_links_list.filter(l => l.target.hasGivenTag(echangeTag as Class_Tag))
@@ -1125,12 +1127,26 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private getLinksStartingPositionOffSet(side: Type_Side) {
+    // The cumulative packing also consumes the user-set anchor deltas, so the
+    // centering offset must account for them to keep the stack centered.
+    const occupied = this.getSumOfLinksThickness(side) + this.getSumOfAnchorDeltas(side)
     if (side === 'left' || side === 'right') {
-      return Math.max(0, (this.getShapeHeightToUse() - this.getSumOfLinksThickness(side)) / 2)
+      return Math.max(0, (this.getShapeHeightToUse() - occupied) / 2)
     }
     else {
-      return Math.max(0, (this.getShapeWidthToUse() - this.getSumOfLinksThickness(side)) / 2)
+      return Math.max(0, (this.getShapeWidthToUse() - occupied) / 2)
     }
+  }
+
+  /** Sum of the user-set anchor deltas of this node's visible links on `side`. */
+  private getSumOfAnchorDeltas(side: Type_Side) {
+    let sum = 0
+    this.getLinksOrdered(side)
+      .filter(link => link.is_visible)
+      .forEach(link => {
+        sum += (link.source === this) ? link.source_anchor_delta : link.target_anchor_delta
+      })
+    return sum
   }
 
   private removeLinkFromOrderingLinksList(link: Class_LinkElement) {
@@ -1205,22 +1221,28 @@ export class Class_NodeElement extends Class_NodeBase {
         if (is_source && !doublon.includes(link)) {
           let link_starting_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_starting_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          // User-set spacing inserted before this anchor (cf. "Ordre des flux E/S").
+          const anchor_delta = link.source_anchor_delta
           if (link.source_side === 'right') {
+            dy_right = dy_right + anchor_delta
             link_starting_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x + handle_position_shift), y: link_starting_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.source_side === 'left') {
+            dy_left = dy_left + anchor_delta
             link_starting_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
             link_starting_handle_point = { x: (link_starting_point.x - handle_position_shift), y: link_starting_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.source_side === 'top') {
+            dx_top = dx_top + anchor_delta
             link_starting_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y - handle_position_shift }
             dx_top = dx_top + thickness
           }
           else {  // link.source_side === 'bottom'
+            dx_bottom = dx_bottom + anchor_delta
             link_starting_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
             link_starting_handle_point = { x: link_starting_point.x, y: link_starting_point.y + handle_position_shift }
             dx_bottom = dx_bottom + thickness
@@ -1262,22 +1284,28 @@ export class Class_NodeElement extends Class_NodeBase {
         if ((!is_source || is_self_loop) && link.target === this) {
           let link_ending_point: { x: number, y: number } = { x: x0, y: y0 }
           let link_ending_handle_point: { x: number, y: number } = { x: x0, y: y0 }
+          // User-set spacing inserted before this anchor (cf. "Ordre des flux E/S").
+          const anchor_delta = link.target_anchor_delta
           if (link.target_side === 'right') {
+            dy_right = dy_right + anchor_delta
             link_ending_point = { x: (x0 + width), y: (y0 + dy_right + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x + handle_position_shift), y: link_ending_point.y }
             dy_right = dy_right + thickness
           }
           else if (link.target_side === 'left') {
+            dy_left = dy_left + anchor_delta
             link_ending_point = { x: x0, y: (y0 + dy_left + thickness / 2) }
             link_ending_handle_point = { x: (link_ending_point.x - handle_position_shift), y: link_ending_point.y }
             dy_left = dy_left + thickness
           }
           else if (link.target_side === 'top') {
+            dx_top = dx_top + anchor_delta
             link_ending_point = { x: (x0 + dx_top + thickness / 2), y: y0 }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y - handle_position_shift) }
             dx_top = dx_top + thickness
           }
           else {  // link.target_side === 'bottom'
+            dx_bottom = dx_bottom + anchor_delta
             link_ending_point = { x: (x0 + dx_bottom + thickness / 2), y: (y0 + height) }
             link_ending_handle_point = { x: link_ending_point.x, y: (link_ending_point.y + handle_position_shift) }
             dx_bottom = dx_bottom + thickness
@@ -1399,6 +1427,9 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   private dragEndHandlerMoveLink = (_event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+    // The user manually moved this anchor : lock its side so a later move of
+    // the opposite node won't reposition it.
+    if (this._link_dragged) (this._link_dragged as Class_LinkElement).setAnchorLockedForNode(this, true)
     this._link_dragged = undefined
 
     const saveCurrOder = this._links_order.map(l => l.id)
