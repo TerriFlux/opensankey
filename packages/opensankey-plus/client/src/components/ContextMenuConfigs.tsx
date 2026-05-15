@@ -71,7 +71,8 @@ export const createLinkMenuConfigPlus = (): MenuConfig => {
 }
 
 const new_structure = [...NODE_MENU_CONFIG.structure]
-new_structure[0].children!.push({
+const edit_style_submenu = new_structure.find(item => item.type === 'submenu' && item.titleKey === 'editStyle')!
+edit_style_submenu.children!.push({
   type: 'widget',
   widgetName: 'ButtonNodeContextAssignTag', // Réutiliser le même widget
   widgetProps: {
