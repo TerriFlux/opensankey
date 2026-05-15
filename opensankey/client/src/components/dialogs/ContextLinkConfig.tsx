@@ -30,6 +30,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
+      actionName: 'splitLink'
+    },
+    {
+      type: 'button',
       actionName: 'copyElement'
     }
   ],
@@ -51,6 +55,26 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         de: 'Quelle und Ziel des/der ausgewählten Flusses/Flüsse umkehren',
         it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i'
       }
+    },
+
+    splitLink: {
+      type: 'action',
+      labels: {
+        en: 'Split into two',
+        fr: 'Scinder en deux',
+        es: 'Dividir en dos',
+        de: 'In zwei teilen',
+        it: 'Dividi in due'
+      },
+      tooltips: {
+        en: 'Insert a new node at the middle of this link, replacing it by two links of equal value',
+        fr: 'Insérer un nouveau nœud au milieu du flux, remplaçant le flux par deux flux de même valeur',
+        es: 'Insertar un nuevo nodo en el medio del flujo, reemplazándolo por dos flujos del mismo valor',
+        de: 'Einen neuen Knoten in der Mitte des Flusses einfügen und ihn durch zwei Flüsse gleichen Wertes ersetzen',
+        it: 'Inserire un nuovo nodo al centro del flusso, sostituendolo con due flussi dello stesso valore'
+      },
+      closeMenuAfter: true,
+      undoable: true
     },
 
     copyElement: {
@@ -388,6 +412,84 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
       drawing_area.link_contextualised = undefined
       menu_configuration.ref_to_save_in_cache_indicator.current(false)
       menu_configuration.ref_to_menu_context_links_updater.current()
+    },
+
+    splitLink: () => {
+      const sankey = drawing_area.sankey
+      const link = contextualised_link
+      if (!link) return
+
+      const original_source = link.source
+      const original_target = link.target
+
+      // Milieu géométrique du segment visible du flux (avant modification)
+      const mx = (link.position_x_start + link.position_x_end) / 2
+      const my = (link.position_y_start + link.position_y_end) / 2
+
+      // Snapshot des ordres de flux pour preservation lors du split/undo
+      const source_order_ids_before = original_source.links_order.map(l => l.id)
+      const target_order_ids_before = original_target.links_order.map(l => l.id)
+
+      // Id unique pour le nouveau nœud (capturé une fois, réutilisé en redo)
+      let n = Object.keys(sankey.nodes_dict).length
+      let node_id = 'split_node_' + n
+      while (sankey.nodes_dict[node_id]) {
+        n += 1
+        node_id = 'split_node_' + n
+      }
+      const node_name = 'Node ' + n
+
+      // Références persistées dans la closure pour undo/redo
+      let new_node: typeof original_target | null = null
+      let link_out: typeof link | null = null
+
+      const doSplit = () => {
+        new_node = sankey.addNewNode(node_id, node_name)
+        const w = new_node.getShapeWidthToUse?.() ?? 20
+        const h = new_node.getShapeHeightToUse?.() ?? 20
+        new_node.setPosXY(mx - w / 2, my - h / 2)
+
+        // Nouveau flux newNode -> target_original, copie de la valeur d'origine
+        link_out = sankey.addNewLink(new_node, original_target)
+        link_out.copyValues(link)
+        // Le flux d'origine devient source -> newNode (en place, pas de delete/recreate)
+        link.target = new_node
+
+        // Conserver la place du flux dans l'ordre du target : link_out remplace link
+        const target_order_after = target_order_ids_before.map(id => id === link.id ? link_out!.id : id)
+        original_target.reorganizeIOFromListIds(target_order_after)
+
+        new_node.draw()
+        link.draw()
+        link_out.draw()
+        original_target.draw()
+
+        drawing_area.link_contextualised = undefined
+        refreshThisAndToggleSaving()
+        menu_configuration.updateAllComponentsRelatedToNodes()
+      }
+
+      const undoSplit = () => {
+        // Restaurer la cible d'origine (link revient en fin de _links_order du target)
+        link.target = original_target
+        // Supprimer le second flux puis le nœud intermédiaire
+        if (link_out) drawing_area.deleteLink(link_out)
+        if (new_node) drawing_area.deleteNode(new_node)
+        new_node = null
+        link_out = null
+
+        // Remettre les ordres d'origine sur source et target
+        original_source.reorganizeIOFromListIds(source_order_ids_before)
+        original_target.reorganizeIOFromListIds(target_order_ids_before)
+
+        link.draw()
+        original_source.draw()
+        original_target.draw()
+        refreshThisAndToggleSaving()
+        menu_configuration.updateAllComponentsRelatedToNodes()
+      }
+
+      executeWithUndo(doSplit, undoSplit)
     }
   }
 }
