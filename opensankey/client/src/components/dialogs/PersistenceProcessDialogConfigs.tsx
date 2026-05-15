@@ -615,7 +615,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: los nodos referenciados en los flujos pero ausentes de la hoja de nodos se crean silenciosamente y se listan en el registro de información (detalles en la pestaña de depuración). Si no está marcado: la carga falla con un error resumen.',
         de: 'Wenn aktiviert: Knoten, die in Flüssen referenziert aber im Knotenblatt nicht vorhanden sind, werden still erstellt und im Info-Log aufgelistet (Details im Debug-Tab). Wenn deaktiviert: das Laden schlägt mit einer Zusammenfassung fehl.',
         it: 'Se selezionato: i nodi referenziati nei flussi ma assenti dal foglio nodi vengono creati silenziosamente ed elencati nel registro informazioni (dettagli nella scheda debug). Se non selezionato: il caricamento fallisce con un errore riepilogativo.'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     create_new_flux: {
@@ -635,7 +638,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: los flujos referenciados en las hojas de datos/restricciones/min-max pero ausentes de las hojas base (resultados, matriz) se crean silenciosamente y se listan en el registro de información. Si no está marcado: la carga falla.',
         de: 'Wenn aktiviert: Flüsse, die in Daten-/Einschränkungs-/Min-Max-Blättern referenziert aber in Basisblättern (Ergebnisse, Matrix) nicht vorhanden sind, werden still erstellt und im Info-Log aufgelistet. Wenn deaktiviert: das Laden schlägt fehl.',
         it: 'Se selezionato: i flussi referenziati nei fogli dati/vincoli/min-max ma assenti dai fogli base (risultati, matrice) vengono creati silenziosamente ed elencati nel registro informazioni. Se non selezionato: il caricamento fallisce.'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     propagate_flux_to_children: {
@@ -655,7 +661,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Crear flujos hijos cuando existen solo en los nodos padre',
         de: 'Kindflüsse erstellen, wenn sie nur auf Elternknoten existieren',
         it: 'Creare flussi figli quando esistono solo sui nodi genitore'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     propagate_flux_to_parent: {
@@ -675,7 +684,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Crear flujos padres cuando existen solo en los nodos hijos',
         de: 'Elternflüsse erstellen, wenn sie nur auf Kindknoten existieren',
         it: 'Creare flussi genitori quando esistono solo sui nodi figli'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     autofix_parenthood_mat_balance: {
@@ -696,7 +708,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: cuando un nodo padre tiene mat_balance=1 pero algunos hijos tienen mat_balance!=1, los hijos se alinean a 1 (estrategia lift). De lo contrario: solo advertencia.',
         de: 'Wenn aktiviert: hat ein Elternknoten mat_balance=1, aber einige Kinder mat_balance!=1, werden die Kinder auf 1 angeglichen (lift-Strategie). Andernfalls: nur Warnung.',
         it: 'Se selezionato: quando un nodo genitore ha mat_balance=1 ma alcuni figli hanno mat_balance!=1, i figli vengono allineati a 1 (strategia lift). Altrimenti: solo avviso.'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>,
 
     autofix_constraint_redundancies: {
@@ -716,7 +731,10 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: cuando un id de restricción referencia los mismos datos más de una vez, solo se conserva la primera ocurrencia (estrategia dedup_first). De lo contrario: la carga falla.',
         de: 'Wenn aktiviert: referenziert eine Constraint-ID dieselben Daten mehrfach, wird nur das erste Vorkommen behalten (dedup_first-Strategie). Andernfalls: das Laden schlägt fehl.',
         it: 'Se selezionato: quando un id di vincolo fa riferimento agli stessi dati più volte, viene mantenuta solo la prima occorrenza (strategia dedup_first). Altrimenti: il caricamento fallisce.'
-      }
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
