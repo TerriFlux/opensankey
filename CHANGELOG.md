@@ -2,6 +2,12 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Panneau de configuration tronqué sur petites fenêtres** ([SankeyMenus.tsx](opensankey/client/src/components/topmenus/SankeyMenus.tsx)) : le drawer de droite (`width: 20%`) devenait illisible en dessous d'une certaine largeur de viewport (contrôles à droite tronqués). Largeur passée à `max(20%, 320px)` (nouvelle constante `menu_config_min_width_px = 320`), position du bouton d'ouverture recalculée avec le même `max(...)` pour rester collée au bord gauche du drawer, et `overflowX: 'auto'` ajouté sur le `DrawerBody` comme filet de sécurité.
+
 ## [1.1.4] — 2026-05-11
 
 ### Added
