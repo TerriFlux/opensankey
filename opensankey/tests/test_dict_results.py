@@ -220,10 +220,19 @@ class DictResultTest(unittest.TestCase):
             return
         # Read sankey struct
         io_excel = IOExcel()
+        # The kwarg names were renamed during the symmetric-input-options
+        # refactor (commit 428d621b) — legacy `error_on_new_*=False` keys are
+        # silently swallowed by **kwargs and the strict default kicks in,
+        # which makes any minor inconsistency in the fixtures (e.g. the
+        # singular/plural typo "Carcasse" vs "Carcasses" in LoadWrite2)
+        # short-circuit the read on the I/O sheet and skip the entire
+        # post-pass (mat_balance / reindex / autocompute_dimension_tag).
+        # Pass the current kwargs so the refs reflect the fully-loaded
+        # Sankey, like they used to.
         io_excel.load_sankey(
             os.path.join(TESTS_DIR, file_name),
-            error_on_new_nodes=False,
-            error_on_new_flux=False,
+            create_new_nodes=True,
+            create_new_flux=True,
             propagate_flux_to_parent=True,
         )
         # Convert in json format
