@@ -94,6 +94,19 @@ EXPECTED_RESULTS = {}
 TEST_PARAMETERS = []
 
 
+def _round_floats(obj, decimals=3):
+    """Recursively round all floats in `obj` to `decimals` places. Stabilises
+    test refs against numeric noise in the mantissa tail without padding
+    trailing zeros (1.5 stays "1.5", not "1.500")."""
+    if isinstance(obj, float):
+        return round(obj, decimals)
+    if isinstance(obj, dict):
+        return {k: _round_floats(v, decimals) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_round_floats(v, decimals) for v in obj]
+    return obj
+
+
 # Functions -------------------------------------------------------------------
 def keep_exploring_file_or_folder(file_or_folder):
     # Exclude certains files or folders
@@ -251,7 +264,9 @@ class DictResultTest(unittest.TestCase):
         if cls.generate_results:
             for test_name in cls.new_results:
                 # Construct path
-                test_ref = json.dumps(cls.new_results[test_name], indent=2)
+                test_ref = json.dumps(
+                    _round_floats(cls.new_results[test_name]), indent=2
+                )
                 test_dir, test_subname = os.path.split(test_name)
                 test_ref_dir = os.path.join(
                     TESTS_DIR, test_dir, OPENSANKEY_TESTS_REFS_DIR
