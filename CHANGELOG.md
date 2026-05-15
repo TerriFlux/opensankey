@@ -23,6 +23,13 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 Voir aussi : [submodules/OpenSankey+/CHANGELOG.md → 1.1.4](submodules/OpenSankey+/CHANGELOG.md) et [submodules/OpenSankey/CHANGELOG.md → 1.1.4](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
 
+## [Unreleased] — Infrastructure : migration VPS `dev.open-sankey.fr`
+
+### Infrastructure
+
+- **Migration du VPS de l'environnement `dev`** ([doc/migrations/2026-05-vps-py3.12.md](doc/migrations/2026-05-vps-py3.12.md)) : OS Ubuntu 20.04 → 24.04 LTS, Python 3.8.10 → 3.12.3, ajout de Node.js 22 (via NodeSource — apt 24.04 ne fournit que Node 18, alors que pnpm requiert ≥ 22.13). Port SSH reconfiguré via `ssh.socket` (Ubuntu 24.04 abandonne `sshd_config` pour la socket systemd). Le runbook documente aussi le service systemd, la config nginx et la procédure certbot ; il est réutilisable pour les migrations `test` et `prod` à venir.
+- **Corrections de compatibilité Python 3.12 (à committer dans MFAProblem)** : `scipy==1.10.1` → `>=1.11.1` et `numpy==1.24.4` → `>=1.26.0` (les pins stricts ne supportent pas Python 3.12), exclusion de `bin/archives` dans le `flake8` du `build_server.sh`, et `pip install --no-build-isolation .` pour contourner la suppression de `pkgutil.ImpImporter`. Appliquées manuellement sur `dev` pour l'instant ; à remonter dans le repo `mfa_problem` avant la migration des environnements `test` et `prod`.
+
 ## [Unreleased] — Publication npm privée + GitLab Pages multi-versions + ViewerSankeyApplication
 
 ### Ajouté

@@ -80,6 +80,8 @@ bash build_server.sh
 bash deploy_SankeyApp.sh
 ```
 
+Pour le déploiement sur un VPS (préparation OS, service systemd, nginx, certbot) et l'historique des migrations d'infrastructure, voir [doc/migrations/](doc/migrations/).
+
 ### Excution en local de l'application
 
 Partie server, à la racine du repo (après l'installation)
