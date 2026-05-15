@@ -131,7 +131,7 @@ if [ -d "public" ]; then
   rm -r public
   git restore public
 fi
-cp -rs $SCRIPT_DIR/submodules/OpenSankey+/client/public .
+cp -rsn $SCRIPT_DIR/submodules/OpenSankey+/client/public .
 cd $SCRIPT_DIR
 printf "OK ------------------------------------------------------------------\n"
 
