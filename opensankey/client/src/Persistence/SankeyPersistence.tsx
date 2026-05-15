@@ -705,6 +705,19 @@ export class LinkElementPersistence extends ProtoElementPersistence {
       link['_target_side_frozen'] = getStringFromJSON(json_object, 'target_side_frozen', link['_computed_target_side']) as Type_Side
       link['_target_side_locked'] = true
     }
+    // Issue OpenSankey#711 — migration : avant 1.1.4, shape_is_recycling=true
+    // dans le JSON signifiait « forcé recyclage » (single-state). Avec le passage
+    // au tristate (locked + value), il faut promouvoir ces flux à locked=true
+    // sinon ils reviendraient en mode auto et seraient potentiellement
+    // recalculés par le DFS comme non-recyclage.
+    const json_local = getJSONOrUndefinedFromJSON(json_object, 'local')
+    if (
+      json_local
+      && json_local['shape_is_recycling'] === true
+      && json_local['shape_is_recycling_locked'] === undefined
+    ) {
+      link.attributes['shape_is_recycling_locked'] = true
+    }
   }
 }
 export class NodeElementPersistence extends NodeBasePersistence {

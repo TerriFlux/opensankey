@@ -2427,6 +2427,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  is_recycling_locked: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes'] as LinkBaseActionType[],
+    labels: {
+      en: 'Recycling locked',
+      fr: 'Recyclage verrouillé',
+      es: 'Reciclaje bloqueado',
+      de: 'Recycling gesperrt',
+      it: 'Riciclaggio bloccato'
+    },
+    tooltips: {
+      en: 'When locked, autosankey keeps the user-set recycling status (on or off) instead of recomputing it via cycle detection',
+      fr: 'Si verrouillé, le calcul autosankey conserve le statut recyclage défini par l\'utilisateur (forcé recyclage ou forcé non-recyclage) au lieu de le recalculer via la détection de cycles',
+      es: 'Si está bloqueado, el cálculo autosankey conserva el estado de reciclaje definido por el usuario (forzado o no) en lugar de recalcularlo mediante la detección de ciclos',
+      de: 'Wenn gesperrt, behält die Autosankey-Berechnung den vom Benutzer festgelegten Recycling-Status bei, anstatt ihn über die Zykluserkennung neu zu berechnen',
+      it: 'Se bloccato, il calcolo autosankey conserva lo stato di riciclaggio definito dall\'utente invece di ricalcolarlo tramite il rilevamento di cicli'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   is_structure: {
     default: false,
     type: (() => false) as (() => boolean),

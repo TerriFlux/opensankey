@@ -1525,7 +1525,12 @@ export const MenuConfigurationAppearance = ({
                             )}</Box>
                         </> : <></>}
 
-                      {/* Bouton recyclage + 4 orientations sur une même ligne. */}
+                      {/* Bouton recyclage tristate + 4 orientations sur une même ligne.
+                          Tristate (issue OpenSankey#711, retour Alexandre 13/05) :
+                          - unlocked → auto (icône FaRecycle seule, opacité réduite)
+                          - locked + recycling=true → forcé recyclage (variant activé + petit FaLock)
+                          - locked + recycling=false → forcé non-recyclage (FaRecycle barré + petit FaLock)
+                          Cycle au clic : auto → forcé on → forcé off → auto. */}
                       <Box as='span' display='grid' gridTemplateColumns='2fr 4fr' gridColumnGap='0.12rem'>
                         <OverloadedButton
                           elements={links_elements}
@@ -1533,10 +1538,51 @@ export const MenuConfigurationAppearance = ({
                           attributePath='Flux.apparence'
                           prefix={'shape'}
                           attributeKey="is_recycling"
-                          variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling'), linkShapeValues.is_recycling)}
-                          onClick={() => { linkShapeValues.is_recycling = !linkShapeValues.is_recycling }}
+                          variant={getButtonVariant(
+                            '',
+                            isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling') || isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling_locked'),
+                            linkShapeValues.is_recycling_locked && linkShapeValues.is_recycling
+                          )}
+                          onClick={() => {
+                            const locked = linkShapeValues.is_recycling_locked
+                            const on = linkShapeValues.is_recycling
+                            if (!locked) {
+                              linkShapeValues.is_recycling = true
+                              linkShapeValues.is_recycling_locked = true
+                            } else if (on) {
+                              linkShapeValues.is_recycling = false
+                            } else {
+                              linkShapeValues.is_recycling_locked = false
+                            }
+                          }}
                         >
-                          <FaRecycle />
+                          <Box position='relative' display='inline-flex' alignItems='center' justifyContent='center'>
+                            <Box
+                              as='span'
+                              display='inline-flex'
+                              opacity={linkShapeValues.is_recycling_locked ? 1 : 0.45}
+                              sx={
+                                linkShapeValues.is_recycling_locked && !linkShapeValues.is_recycling
+                                  ? { textDecoration: 'line-through', textDecorationThickness: '2px' }
+                                  : undefined
+                              }
+                            >
+                              <FaRecycle />
+                            </Box>
+                            {linkShapeValues.is_recycling_locked && (
+                              <Box
+                                as='span'
+                                position='absolute'
+                                top='-3px'
+                                right='-5px'
+                                fontSize='0.55em'
+                                lineHeight='1'
+                                color='gray.700'
+                              >
+                                <FaLock />
+                              </Box>
+                            )}
+                          </Box>
                         </OverloadedButton>
                         <OverloadedButtonGroup
                           elements={links_elements}
@@ -3004,7 +3050,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical to vertical',
             of_vh: 'Vertical to horizontal',
             of_hv: 'Horizontal to vertical',
-            shape_is_recycling: 'Recycling flow'
+            shape_is_recycling: 'Recycling flow — click to cycle: auto / forced recycling / forced non-recycling'
           }
         }
       }
@@ -3020,7 +3066,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical vers vertical',
             of_vh: 'Vertical vers horizontal',
             of_hv: 'Horizontal vers vertical',
-            shape_is_recycling: 'Flux de recyclage'
+            shape_is_recycling: 'Flux de recyclage — clic pour cycler : auto / forcé recyclage / forcé non-recyclage'
           }
         }
       }
@@ -3036,7 +3082,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertical a vertical',
             of_vh: 'Vertical a horizontal',
             of_hv: 'Horizontal a vertical',
-            shape_is_recycling: 'Flujo de reciclaje'
+            shape_is_recycling: 'Flujo de reciclaje — clic para alternar: auto / forzado reciclaje / forzado no-reciclaje'
           }
         }
       }
@@ -3052,7 +3098,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Vertikal zu vertikal',
             of_vh: 'Vertikal zu horizontal',
             of_hv: 'Horizontal zu vertikal',
-            shape_is_recycling: 'Recycling-Fluss'
+            shape_is_recycling: 'Recycling-Fluss — Klick zum Wechseln: Auto / erzwungenes Recycling / erzwungenes Nicht-Recycling'
           }
         }
       }
@@ -3068,7 +3114,7 @@ export const missing_flux_apparence_translations = {
             of_vv: 'Verticale a verticale',
             of_vh: 'Verticale a orizzontale',
             of_hv: 'Orizzontale a verticale',
-            shape_is_recycling: 'Flusso di riciclaggio'
+            shape_is_recycling: 'Flusso di riciclaggio — clic per alternare: auto / forzato riciclaggio / forzato non-riciclaggio'
           }
         }
       }
