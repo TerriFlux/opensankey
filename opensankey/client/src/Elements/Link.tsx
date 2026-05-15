@@ -612,8 +612,13 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const target_color_tags = this.target.tags_list.filter(tag => tag.is_selected && tag.group.use_colors)
 
       // 1. Common color tag between source and target → priority
-      const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
-      if (common_tag) return common_tag.color
+      // (#1208) Only use the common-tag shortcut when each side has exactly one
+      // visible color tag — otherwise the choice is ambiguous and we must defer
+      // to getShapeColorToUse() which applies the "exactly 1 visible tag" rule.
+      if (source_color_tags.length === 1 && target_color_tags.length === 1) {
+        const common_tag = source_color_tags.find(tagg => target_color_tags.includes(tagg))
+        if (common_tag) return common_tag.color
+      }
 
       // 2. Only one side has a color tag → take that side
       if (source_color_tags.length > 0 && target_color_tags.length === 0) return this.source.getShapeColorToUse()
