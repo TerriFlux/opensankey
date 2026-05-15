@@ -175,10 +175,11 @@ export class Class_NodeElement extends Class_NodeBase {
       const selected_tags_for_colormap = tags_for_colormap
         .filter(tag => tag.is_selected)
 
-      if (selected_tags_for_colormap.length > 0) {
+      if (selected_tags_for_colormap.length === 1) {
+        // Exactly one visible tag in the color group: unambiguous, use its color
         shape_color = selected_tags_for_colormap[0].color
       } else {
-        // Node has no tag in the active color group: keep its own color
+        // 0 or >=2 visible tags: ambiguous or none, keep the node's own color (#1208)
         shape_color = this.shape_color
       }
     } else {
