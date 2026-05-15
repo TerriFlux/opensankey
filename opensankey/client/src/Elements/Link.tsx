@@ -651,13 +651,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
       const tags_for_colormap = this.flux_tags_list
         .filter(tag => (tag.group === tagg_for_colormap))
         .filter(tag => tag.is_selected)
-      if (tags_for_colormap.length > 0)
+      // Only color the link when exactly one tag is visible (#1208).
+      // 0 or >=2 visible tags: keep the link's own color.
+      if (tags_for_colormap.length === 1)
         shape_color = tags_for_colormap[0].color
     }
     else if (dataTagColorActivated.length > 0) {
-      // Do we apply colors of data tags ?
-      dataTagColorActivated
-        .forEach(tag => shape_color = tag.color)
+      // Do we apply colors of data tags ? Same one-visible-tag rule (#1208).
+      if (dataTagColorActivated.length === 1)
+        shape_color = dataTagColorActivated[0].color
     }
 
     return shape_color
