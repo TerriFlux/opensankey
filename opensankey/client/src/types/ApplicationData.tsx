@@ -1024,7 +1024,8 @@ export class Class_ApplicationData {
     const svg_with_header = '<svg version="1.1" ' +
       ' height=\'' + export_height.toString() + '\'' +
       ' width=\'' + export_width.toString() + '\'' +
-      ' xmlns="http://www.w3.org/2000/svg">' +
+      ' xmlns="http://www.w3.org/2000/svg"' +
+      ' xmlns:xlink="http://www.w3.org/1999/xlink">' +
       (d3_select?.node()?.innerHTML ?? '') +
       watermark +
       '</svg>'
@@ -1605,10 +1606,28 @@ export class Class_ApplicationData {
     svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
-    // For some reason when attr 'dominant-baseline' is 'text-after-edge',
-    // at the export to image the text is shifted to the bottom by half the font size of the text.
-    // So before the convertion to image modify the svg clone to correct the error
+    // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
+    // render fine but link labels collide with their value-label sibling. We
+    // convert non-default baselines to an equivalent y-offset (and drop the
+    // attribute) only for link labels, to avoid regressing node rendering.
+    svg_clone?.selectAll('.link_name_text, .link_value_text').nodes().forEach((el: d3.BaseType) => {
+      const sel = d3.select(el)
+      const db = sel.attr('dominant-baseline')
+      if (!db || db === 'alphabetic' || db === 'auto') return
+      const fontSizeAttr = sel.attr('font-size') ?? (el as Element).getAttribute('font-size') ?? ''
+      const fontSize = parseFloat(fontSizeAttr.replace('px', ''))
+      if (!Number.isFinite(fontSize)) return
+      const yPos = parseFloat((sel.attr('y') ?? '0').replace('px', ''))
+      let dy = 0
+      if (db === 'text-after-edge' || db === 'ideographic') dy = -fontSize / 2
+      else if (db === 'text-before-edge' || db === 'hanging') dy = fontSize * 0.8
+      else if (db === 'middle' || db === 'central') dy = fontSize * 0.35
+      sel.attr('y', yPos + dy)
+      sel.attr('dominant-baseline', null)
+    })
+    // Legacy fix for node labels with 'text-after-edge' baseline.
     svg_clone?.selectAll('.name_label_text, .value_label_text').nodes().forEach((el: d3.BaseType) => {
+      if (d3.select(el).classed('link_name_text') || d3.select(el).classed('link_value_text')) return
       if (d3.select(el).attr('dominant-baseline') == 'text-after-edge') {
         const fontSize = +d3.select(el).attr('font-size').replace('px', '')
         const yPos = +d3.select(el).attr('y').replace('px', '')
