@@ -190,11 +190,15 @@ export const resources_nodes = {
           filter_links: 'Links to display',
           visible_links: 'Visible links',
           all_links: 'All links',
+          lock: 'Lock',
+          delta: 'Spacing',
           tooltips: {
             io: 'Choose either the incoming or outgoing links of the selected node',
             side: 'Choose either the right, left, top or bottom links of the selected node',
             lti: 'Display the lines of the links table with their respective colors to better identify them',
-            filter_links: 'Show only visible links or all links including hidden ones'
+            filter_links: 'Show only visible links or all links including hidden ones',
+            lock: 'Lock this anchor side: moving the opposite node will no longer reposition it. Released by any automatic layout pass.',
+            delta: 'Extra spacing inserted before this anchor, to space out the links arriving on the node'
           }
         }
       },
@@ -407,11 +411,15 @@ export const resources_nodes = {
           filter_links: 'Flux à afficher',
           visible_links: 'Flux visibles',
           all_links: 'Tous les flux',
+          lock: 'Cadenas',
+          delta: 'Espacement',
           tooltips: {
             io: 'Choisir les flux entrants ou sortant du noeud selectionné',
             side: 'Choisir les flux de droite, gauche, bas ou haut du noeud selectionné',
             lti: 'Affiche les lignes du tableau des flux avec leur couleurs respectives pour mieux les identifier',
-            filter_links: 'Afficher uniquement les flux visibles ou tous les flux y compris les masqués'
+            filter_links: 'Afficher uniquement les flux visibles ou tous les flux y compris les masqués',
+            lock: 'Verrouille le côté de cette ancre : déplacer le noeud opposé ne la repositionnera plus. Relâché par tout recalcul automatique.',
+            delta: 'Espacement supplémentaire inséré avant cette ancre, pour espacer les flux qui arrivent sur le noeud'
           }
         }
       },
@@ -626,11 +634,15 @@ export const resources_nodes = {
           filter_links: 'Flujos a mostrar',
           visible_links: 'Flujos visibles',
           all_links: 'Todos los flujos',
+          lock: 'Candado',
+          delta: 'Espaciado',
           tooltips: {
             io: 'Elegir los flujos entrantes o salientes del nodo seleccionado',
             side: 'Elegir los flujos de la derecha, izquierda, arriba o abajo del nodo seleccionado',
             lti: 'Mostrar las líneas de la tabla de flujos con sus colores respectivos para identificarlos mejor',
-            filter_links: 'Mostrar solo los flujos visibles o todos los flujos incluidos los ocultos'
+            filter_links: 'Mostrar solo los flujos visibles o todos los flujos incluidos los ocultos',
+            lock: 'Bloquea el lado de este anclaje: mover el nodo opuesto ya no lo reposicionará. Se libera con cualquier cálculo automático.',
+            delta: 'Espaciado adicional insertado antes de este anclaje, para separar los flujos que llegan al nodo'
           }
         }
       },
@@ -845,11 +857,15 @@ export const resources_nodes = {
           filter_links: 'Anzuzeigende Flüsse',
           visible_links: 'Sichtbare Flüsse',
           all_links: 'Alle Flüsse',
+          lock: 'Schloss',
+          delta: 'Abstand',
           tooltips: {
             io: 'Eingehende oder ausgehende Flüsse des ausgewählten Knotens auswählen',
             side: 'Rechte, linke, obere oder untere Flüsse des ausgewählten Knotens auswählen',
             lti: 'Zeigt die Zeilen der Flusstabelle mit ihren jeweiligen Farben an, um sie besser zu identifizieren',
-            filter_links: 'Nur sichtbare Flüsse oder alle Flüsse einschließlich der verborgenen anzeigen'
+            filter_links: 'Nur sichtbare Flüsse oder alle Flüsse einschließlich der verborgenen anzeigen',
+            lock: 'Sperrt die Seite dieses Ankers: Das Verschieben des gegenüberliegenden Knotens positioniert ihn nicht mehr neu. Wird durch jede automatische Berechnung aufgehoben.',
+            delta: 'Zusätzlicher Abstand vor diesem Anker, um die am Knoten ankommenden Flüsse zu verteilen'
           }
         }
       },
@@ -1064,11 +1080,15 @@ export const resources_nodes = {
           filter_links: 'Flussi da visualizzare',
           visible_links: 'Flussi visibili',
           all_links: 'Tutti i flussi',
+          lock: 'Lucchetto',
+          delta: 'Spaziatura',
           tooltips: {
             io: 'Scegliere i flussi in ingresso o in uscita del nodo selezionato',
             side: 'Scegliere i flussi a destra, sinistra, sopra o sotto del nodo selezionato',
             lti: 'Mostra le righe della tabella dei flussi con i rispettivi colori per identificarli meglio',
-            filter_links: 'Mostra solo i flussi visibili o tutti i flussi compresi quelli nascosti'
+            filter_links: 'Mostra solo i flussi visibili o tutti i flussi compresi quelli nascosti',
+            lock: 'Blocca il lato di questa ancora: spostare il nodo opposto non la riposizionerà più. Rilasciato da qualsiasi calcolo automatico.',
+            delta: 'Spaziatura aggiuntiva inserita prima di questa ancora, per distanziare i flussi che arrivano sul nodo'
           }
         }
       },

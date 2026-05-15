@@ -26,9 +26,9 @@
 
 import React, { useState } from 'react'
 import { DragDropContext, Droppable, Draggable, DraggingStyle, NotDraggingStyle } from 'react-beautiful-dnd'
-import { Box, Button, Checkbox, Select, Table, Tbody, Th, Thead, Tr, } from '@chakra-ui/react'
+import { Box, Button, Checkbox, Select, Table, Tbody, Tr, } from '@chakra-ui/react'
 
-import { OSTooltip } from '../configmenus/MenuCommon'
+import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Type_Side } from '../../Elements/ElementsAttributesConfig'
@@ -45,7 +45,7 @@ export const NodeIOReorganizer = ({
 }: NodeIOReorganizerProps) => {
   // ✅ Constantes
   const { t, icon_library } = app_data
-  const { icon_move_element_down, icon_move_element_up } = icon_library
+  const { icon_move_element_down, icon_move_element_up, icon_locked, icon_unlocked } = icon_library
   
   // ✅ TOUS LES HOOKS D'ABORD (avant tout return)
   const [_, setCount] = useState(0)
@@ -135,6 +135,8 @@ export const NodeIOReorganizer = ({
 
     const _moveLinkBefore = () => {
       node.moveLinkToPositionInOrderBefore(link, link_target)
+      // L'utilisateur a manipulé cette ancre : on verrouille son côté.
+      link.setAnchorLockedForNode(node, true)
       setCount(a => a + 1)
     }
 
@@ -154,6 +156,8 @@ export const NodeIOReorganizer = ({
 
     const _moveLinkAfter = () => {
       node.moveLinkToPositionInOrderAfter(link, link_target)
+      // L'utilisateur a manipulé cette ancre : on verrouille son côté.
+      link.setAnchorLockedForNode(node, true)
       setCount(a => a + 1)
     }
 
@@ -267,12 +271,6 @@ export const NodeIOReorganizer = ({
 
       {/* Table montrant les liens */}
       <Table variant='table_edit_node_io'>
-        <Thead>
-          <Tr>
-            <Th>{t('Menu.flux')}</Th>
-            <Th>{t('Tags.Position')}</Th>
-          </Tr>
-        </Thead>
         <DragDropContext
           onDragEnd={(evt) => {
             if (evt.destination && evt.destination.index !== undefined) {
@@ -316,7 +314,7 @@ export const NodeIOReorganizer = ({
                             provided.draggableProps.style
                           )}
                         >
-                          <td style={bc}>{link.name}</td>
+                          <td style={{ ...bc, fontSize: '0.7rem', lineHeight: '0.85rem' }}>{link.name}</td>
                           <td style={{ width: '10%' }}>
                             <Box layerStyle="options_2cols">
                               <Button
@@ -352,6 +350,35 @@ export const NodeIOReorganizer = ({
                                 {icon_move_element_down}
                               </Button>
                             </Box>
+                          </td>
+                          <td style={{ width: '1%' }}>
+                            <OSTooltip label={t('Noeud.PF.tooltips.lock')}>
+                              <Button
+                                variant='menuconfigpanel_move_order_node_io'
+                                minWidth='0'
+                                onClick={() => {
+                                  link.setAnchorLockedForNode(node, !link.getAnchorLockedForNode(node))
+                                  node.draw()
+                                  setCount(a => a + 1)
+                                }}
+                              >
+                                {link.getAnchorLockedForNode(node) ? icon_locked : icon_unlocked}
+                              </Button>
+                            </OSTooltip>
+                          </td>
+                          <td style={{ width: '100%', margin: 0 }}>
+                            <ConfigMenuNumberInput
+                              t={t}
+                              default_value={link.getAnchorDeltaForNode(node)}
+                              stepper={true}
+                              step={5}
+                              fixed_dec={0}
+                              function_on_blur={(value) => {
+                                link.setAnchorDeltaForNode(node, value ?? 0)
+                                node.draw()
+                                setCount(a => a + 1)
+                              }}
+                            />
                           </td>
                         </Tr>
                       )}
