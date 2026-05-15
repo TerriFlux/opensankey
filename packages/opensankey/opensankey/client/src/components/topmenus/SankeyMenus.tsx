@@ -62,6 +62,7 @@ import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export const menu_config_width = 20
+export const menu_config_min_width_px = 320
 
 /**
  * Description placeholder
@@ -90,7 +91,8 @@ export const SankeyMenu = (
 
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
-  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + menu_config_width + '% + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin / 2
+  const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
+  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin / 2
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -232,13 +234,13 @@ export const SankeyMenu = (
             <DrawerContent
               className='drawer_menu_config'
               style={{
-                width: menu_config_width + '%',
+                width: drawer_width_css,
                 height: 50 + '%',
                 right: app_data.drawing_area.fit_margin / 2,
                 marginTop: posTopMenuConfig
               }}
             >
-              <DrawerBody>
+              <DrawerBody style={{ overflowX: 'auto' }}>
                 <ConfigMenu app_data={app_data} additional_menus={additionalMenus} />
               </DrawerBody>
             </DrawerContent>
