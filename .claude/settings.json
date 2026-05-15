@@ -133,7 +133,15 @@
       "Bash(netstat -ano)",
       "Bash(D:/miniconda3/python.exe -m http.server 8000)",
       "Bash(curl -s \"https://registry.npmjs.org/open-sankey/1.1.2\" -o \"d:/tmp/os112.json\")",
-      "Bash(gh run *)"
+      "Bash(gh run *)",
+      "Bash(where:*)",
+      "Bash(PYTHONPATH=*)",
+      "Bash(TESTS_DIR=*)",
+      "Bash(grep -c:*)",
+      "Bash(grep -rn:*)",
+      "Bash(grep -rln:*)",
+      "Bash(git diff:*)",
+      "Bash(git diff --stat:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\JulienAlapetite\\.claude",
