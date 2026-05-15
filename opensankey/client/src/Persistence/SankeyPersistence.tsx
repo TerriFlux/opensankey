@@ -1877,7 +1877,15 @@ export class DrawingAreaPersistence {
    * propres liens. Le nouveau modèle porte un flag `expanded_left|right` sur
    * Class_NodeDimension et utilise les nœuds réels pour les liens d'expansion.
    *
-   * Migration en 4 temps pour chaque clone :
+   * Suffixe reconnu : `expand(left|right)(_<n>)?` (variante `_0` observée).
+   *
+   * Phase 0 — promotion des clones orphelins : sur certains fichiers legacy,
+   * seul le clone est sérialisé (pas de master séparé). On renomme le premier
+   * clone par master_id pour préserver x, y, name, style, local, tags,
+   * links_order, etc. L'expansion sera à refaire côté UI (les dims n'existent
+   * pas sur ce format).
+   *
+   * Phase 1 — pour chaque clone restant (master présent à l'origine) :
    *   1. Identifier le master (id sans suffixe) et le côté (left/right).
    *   2. Identifier le parent expansé via les liens du clone : c'est le nœud
    *      dont l'id est aussi `parent_name` d'une dim côté master.
@@ -1891,8 +1899,9 @@ export class DrawingAreaPersistence {
    * `links_order` purgés des références obsolètes.
    */
   public static fromJSON_pre_0_94(json_object: Type_JSON) {
-    const SUFFIX_LEFT = 'expandleft'
-    const SUFFIX_RIGHT = 'expandright'
+    // Suffix : `expandleft` ou `expandright`, optionnellement suivi de `_<n>`
+    // (variante observée sur certains fichiers legacy).
+    const SUFFIX_RE = /expand(left|right)(_\d+)?$/
 
     const nodes = json_object['nodes'] as Record<string, Type_JSON> | undefined
     const links = json_object['links'] as Record<string, Type_JSON> | undefined
@@ -1901,26 +1910,35 @@ export class DrawingAreaPersistence {
     type CloneInfo = { clone_id: string, master_id: string, side: 'left' | 'right' }
     const clones: CloneInfo[] = []
     Object.keys(nodes).forEach(id => {
-      let master_id: string | undefined
-      let side: 'left' | 'right' | undefined
-      if (id.endsWith(SUFFIX_LEFT)) {
-        master_id = id.slice(0, -SUFFIX_LEFT.length)
-        side = 'left'
-      } else if (id.endsWith(SUFFIX_RIGHT)) {
-        master_id = id.slice(0, -SUFFIX_RIGHT.length)
-        side = 'right'
-      }
-      if (master_id && side && nodes[master_id]) {
+      const m = id.match(SUFFIX_RE)
+      if (!m) return
+      const master_id = id.slice(0, -m[0].length)
+      const side = m[1] as 'left' | 'right'
+      if (master_id) {
         clones.push({ clone_id: id, master_id, side })
-      } else if (master_id && side) {
-        // Master introuvable : on supprime le clone sans rien reposer.
-        delete nodes[id]
       }
     })
 
     if (clones.length === 0) return
 
-    const removed_node_ids = new Set<string>()
+    // Phase 0 — promotion des clones orphelins (master absent du JSON).
+    // Certains fichiers legacy ne sérialisent QUE les clones expansés (pas de
+    // master séparé) ; toutes les données utilisateur (x, y, name, style, local,
+    // tags, links_order, …) sont portées par le clone. Sans promotion, le clone
+    // serait supprimé et la position/forme du nœud serait perdue.
+    // Stratégie : pour chaque master_id sans nœud correspondant, on renomme le
+    // premier clone rencontré vers master_id. Les éventuels autres clones du
+    // même master suivent le chemin de merge classique ci-dessous.
+    const promoted_clone_ids = new Set<string>()
+    clones.forEach(c => {
+      if (!nodes[c.master_id]) {
+        nodes[c.master_id] = nodes[c.clone_id] as Type_JSON
+        delete nodes[c.clone_id]
+        promoted_clone_ids.add(c.clone_id)
+      }
+    })
+
+    const removed_node_ids = new Set<string>(promoted_clone_ids)
     const removed_link_ids = new Set<string>()
 
     // Helper : un lien équivalent (même source + target) existe-t-il déjà ?
@@ -1937,39 +1955,42 @@ export class DrawingAreaPersistence {
     }
 
     clones.forEach(({ clone_id, master_id, side }) => {
-      const master_node = nodes[master_id] as Record<string, unknown>
-      const master_dimensions = master_node['dimensions'] as Record<string, Record<string, unknown>> | undefined
+      const was_promoted = promoted_clone_ids.has(clone_id)
+      const master_node = nodes[master_id] as Record<string, unknown> | undefined
 
-      // Liens impliquant le clone
+      // Liens impliquant le clone (idSource ou idTarget).
       const involved_link_ids = Object.keys(links).filter(lid => {
         const l = links[lid] as Record<string, unknown>
         return l['idSource'] === clone_id || l['idTarget'] === clone_id
       })
 
-      // Identifier les parents expansés : extrémités des liens du clone qui
-      // sont aussi `parent_name` d'une dim côté master.
-      const expansion_parent_ids = new Set<string>()
-      if (master_dimensions) {
-        const parent_names_of_master = new Set(
-          Object.values(master_dimensions)
-            .map(dim => dim['parent_name'] as string | undefined)
-            .filter((n): n is string => typeof n === 'string')
-        )
-        involved_link_ids.forEach(lid => {
-          const l = links[lid] as Record<string, unknown>
-          const other_id = (l['idSource'] === clone_id ? l['idTarget'] : l['idSource']) as string
-          if (parent_names_of_master.has(other_id)) {
-            expansion_parent_ids.add(other_id)
-          }
-        })
-
-        // Poser le flag expanded_<side> sur la dim correspondante.
-        Object.values(master_dimensions).forEach(dim => {
-          const pname = dim['parent_name'] as string | undefined
-          if (pname && expansion_parent_ids.has(pname)) {
-            dim[side === 'left' ? 'expanded_left' : 'expanded_right'] = true
-          }
-        })
+      // Poser le flag `expanded_<side>` sur les dims du master quand elles
+      // existent (cas où master+clone coexistent dans le legacy). Pour les
+      // clones promus, le master est en réalité l'ancien clone et n'a pas
+      // de structure `dimensions` → on saute, l'expansion sera à refaire.
+      if (!was_promoted && master_node) {
+        const master_dimensions = master_node['dimensions'] as Record<string, Record<string, unknown>> | undefined
+        if (master_dimensions) {
+          const parent_names_of_master = new Set(
+            Object.values(master_dimensions)
+              .map(dim => dim['parent_name'] as string | undefined)
+              .filter((n): n is string => typeof n === 'string')
+          )
+          const expansion_parent_ids = new Set<string>()
+          involved_link_ids.forEach(lid => {
+            const l = links[lid] as Record<string, unknown>
+            const other_id = (l['idSource'] === clone_id ? l['idTarget'] : l['idSource']) as string
+            if (parent_names_of_master.has(other_id)) {
+              expansion_parent_ids.add(other_id)
+            }
+          })
+          Object.values(master_dimensions).forEach(dim => {
+            const pname = dim['parent_name'] as string | undefined
+            if (pname && expansion_parent_ids.has(pname)) {
+              dim[side === 'left' ? 'expanded_left' : 'expanded_right'] = true
+            }
+          })
+        }
       }
 
       // Réécrire les liens (clone → master) ou supprimer si doublon.
@@ -1987,9 +2008,11 @@ export class DrawingAreaPersistence {
         }
       })
 
-      // Supprimer le nœud clone.
-      delete nodes[clone_id]
-      removed_node_ids.add(clone_id)
+      // Supprimer le nœud clone (déjà fait pour les clones promus en phase 0).
+      if (!was_promoted) {
+        delete nodes[clone_id]
+        removed_node_ids.add(clone_id)
+      }
     })
 
     // Nettoyer attachedNodes / inputLinksId / outputLinksId / links_order
