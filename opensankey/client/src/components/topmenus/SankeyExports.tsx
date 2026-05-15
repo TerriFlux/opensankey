@@ -311,10 +311,12 @@ export const modalResolutionPDF: FType_ModalResolutionPDF = (
 export const clickSaveSVG = (
   app_data: Class_ApplicationData
 ) => {
-  const svg = app_data.pre_process_export_svg(false)
+  // Convert foreignObjects (rich-text Quill HTML) into native SVG <text> so the
+  // standalone SVG renders without external CSS — same conversion as the PNG/PDF
+  // pipeline.
+  const svg = app_data.pre_process_export_svg(true)
   const blob = new Blob([svg], { type: 'image/svg+xml' })
 
-  // Sauvegarder directement côté client
   FileSaver.saveAs(blob, 'sankey_diagram.svg')
 
   post_process_export_svg()
