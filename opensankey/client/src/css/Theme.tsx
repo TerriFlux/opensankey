@@ -945,8 +945,8 @@ export const buttonStyles = {
 
   menuconfigpanel_move_order_node_io: defineStyle({
     height: '1.5rem',
-    width: '3.5rem',
-    padding: '0.5rem',
+    width: '1.75rem',
+    padding: '0.25rem',
     fontSize: 'unset',
     backgroundColor: 'white',
     color: 'tertiaire.3',
@@ -2027,7 +2027,7 @@ export const tableStyles = {
   table_edit_tag_node_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_tag_link_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_node_io: createTableStyle('2fr 2fr'),
+  table_edit_node_io: createTableStyle('3fr 1fr 0.7fr 1.3fr'),
 
   table_welcome_buttons: table.definePartsStyle({
     table: {
