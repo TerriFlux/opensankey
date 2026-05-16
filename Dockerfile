@@ -41,7 +41,7 @@ RUN mkdir -p ~/.ssh && chmod 700 ~/.ssh && \
 COPY --chown=sankey:sankey . .
 
 # S'assurer que les scripts sont exécutables
-RUN chmod +x build_client.sh
+RUN chmod +x scripts/build_client.sh
 RUN chmod +x *.py 2>/dev/null || echo "No Python scripts to make executable"
 
 # Initialiser et mettre à jour les submodules git
@@ -51,7 +51,7 @@ RUN git config --global --add safe.directory /app && \
     git submodule update --init --recursive || echo "Submodules initialized"
 
 # Exécuter le script de build avec l'option -I (install dependencies)
-RUN bash build_client.sh -I
+RUN bash scripts/build_client.sh -I
 
 # Créer la structure pour le générateur web
 RUN mkdir -p /app/web-generator && \

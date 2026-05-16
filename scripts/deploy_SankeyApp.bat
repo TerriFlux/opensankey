@@ -42,9 +42,8 @@ chcp 65001 > nul
 setlocal enabledelayedexpansion
 
 
-REM === Garder le dossier courant comme racine ===
-set "SANKEY_DIR=%~dp0"
-set "SANKEY_DIR=%SANKEY_DIR:~0,-1%"
+REM === Repo root (this script lives in scripts/) ===
+for %%I in ("%~dp0..") do set "SANKEY_DIR=%%~fI"
 echo Répertoire du projet : %SANKEY_DIR%
 
 REM === Demande de création d'un nouvel environnement conda ===
@@ -58,12 +57,6 @@ if /I "%create_env%"=="y" (
 
 REM === Demander si on souhaite installer les dépendances ===
 set /p install=Souhaitez-vous installer les dépendances (avec npm et pip) ? (y/n)
-
-REM === Demander si on souhaite repartir d'une version propre ===
-set /p clean_repo=Souhaitez-vous repartir d'une version propre ? (y/n)
-if /I "%clean_repo%"=="y" (
-    call "%SANKEY_DIR%\git_clean.bat"
-)
 
 REM === Choix de compilation client ===
 set /p build_client=Souhaitez-vous construire le client ? (y/n)
@@ -90,9 +83,9 @@ if /I "%build_client%"=="y" (
     echo SankeyApp Client --------------------------------------------------
     cd /d "%SANKEY_DIR%"
     if /I "%install%"=="y" (
-        call build_client.bat -I -B
+        call scripts\build_client.bat -I -B
     ) else (
-        call build_client -B
+        call scripts\build_client.bat -B
     )
 )
 
@@ -101,9 +94,9 @@ if /I "%build_server%"=="y" (
     echo SankeyApp Server --------------------------------------------------
     cd /d "%SANKEY_DIR%"
     if /I "%install%"=="y" (
-        call build_server.bat -I
+        call scripts\build_server.bat -I
     ) else (
-        call build_server.bat
+        call scripts\build_server.bat
     )
 )
 

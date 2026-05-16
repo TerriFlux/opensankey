@@ -71,8 +71,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Get script dir
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+# Repo root (this script lives in scripts/)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." &> /dev/null && pwd )
 
 # Install global dependencies
 if [ "$gdeps" = true ] ; then

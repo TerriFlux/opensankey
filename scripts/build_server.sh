@@ -25,6 +25,9 @@ pip_install() {
   return $rc
 }
 
+# Anchor to repo root (this script lives in scripts/)
+cd "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." && pwd )"
+
 # Install requirements
 pip_install -r requirements.txt  || exit_if_error $?
 

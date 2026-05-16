@@ -89,9 +89,9 @@ def deploy_opensankey(
         # Mise à jour des sous-modules
         "git submodule update --init --recursive",
         # Déploiement
-        "bash deploy_SankeyApp.sh",
+        "bash scripts/deploy_SankeyApp.sh",
         # Redémarrage du site
-        f"bash restart_site.sh {env}",
+        f"bash scripts/restart_site.sh {env}",
     ]
 
     print("\n🔧 Exécution du déploiement à distance...")

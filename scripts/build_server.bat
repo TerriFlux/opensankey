@@ -34,6 +34,9 @@ exit /b 1
 
 :end_args
 
+REM === Anchor to repo root (this script lives in scripts/) ===
+pushd "%~dp0.."
+
 rem === Install requirements ===
 if "%install%"=="true" (
     echo Install SankeyApp requirements
@@ -54,4 +57,6 @@ for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
 rem === Check PEP (flake8) ===
 pushd server
 flake8
+popd
+
 popd

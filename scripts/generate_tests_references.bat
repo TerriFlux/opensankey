@@ -7,6 +7,9 @@ REM ========================================
 
 chcp 65001 >nul
 
+REM === Anchor to repo root (this script lives in scripts/) ===
+pushd "%~dp0.."
+
 rem === Install deps ===
 for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
     echo %%S generate_tests_references.bat
@@ -14,5 +17,7 @@ for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
     call generate_tests_references.bat
     popd
 )
+
+popd
 
 REM pause  (décommenter si besoin)

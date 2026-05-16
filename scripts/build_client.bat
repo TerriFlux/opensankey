@@ -34,9 +34,8 @@ exit /b 1
 
 :end_args
 
-REM === Get script directory ===
-set "SCRIPT_DIR=%~dp0"
-set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
+REM === Repo root (this script lives in scripts/) ===
+for %%I in ("%~dp0..") do set "SCRIPT_DIR=%%~fI"
 
 REM === Install global dependencies ===
 if "%gdeps%"=="true" (

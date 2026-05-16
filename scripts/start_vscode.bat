@@ -1,4 +1,4 @@
-pushd "%~dp0"
+pushd "%~dp0.."
 set SankeyDir=%cd%
 set MFADATA=%SankeyDir%\..\..\MFADATA
 set TESTS_DIR=%SankeyDir%\TestData

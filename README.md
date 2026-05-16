@@ -42,19 +42,19 @@ Ces dépendances externes sont necessaires
 Installation des libs
 
 ```sh
-bash build_client.sh -I
+bash scripts/build_client.sh -I
 ```
 
 Linter check
 
 ```sh
-bash build_client.sh -L
+bash scripts/build_client.sh -L
 ```
 
 Build check
 
 ```sh
-bash build_client.sh -B
+bash scripts/build_client.sh -B
 ```
 
 ### Installation server (Python)
@@ -71,13 +71,13 @@ conda activate sankeyapp
 Installation / Mise à jour libs Python
 
 ```sh
-bash build_server.sh
+bash scripts/build_server.sh
 ```
 
 ### Deploiement total de l'application
 
 ```sh
-bash deploy_SankeyApp.sh
+bash scripts/deploy_SankeyApp.sh
 ```
 
 Pour le déploiement sur un VPS (préparation OS, service systemd, nginx, certbot) et l'historique des migrations d'infrastructure, voir [doc/migrations/](doc/migrations/).

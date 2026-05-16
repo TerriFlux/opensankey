@@ -38,10 +38,10 @@ git submodule update --recursive
 
 # --- Build & deploy ---
 echo ">>> deploy_SankeyApp.sh"
-bash deploy_SankeyApp.sh
+bash scripts/deploy_SankeyApp.sh
 
 # --- Restart service ---
 echo ">>> restart_site.sh ${ENV}"
-bash restart_site.sh "$ENV"
+bash scripts/restart_site.sh "$ENV"
 
 echo "=== Déploiement ${ENV} terminé ==="

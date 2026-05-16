@@ -11,12 +11,12 @@ exit_if_error() {
 }
 
 # Keep current directory path
-SANKEY_DIR=`pwd`
+SANKEY_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." && pwd )
 
 # Build scripts for SankeyApp client
 printf "SankeyApp Client --------------------------------------------------\n"
 cd $SANKEY_DIR
-bash build_client.sh -I -B || exit_if_error $?
+bash scripts/build_client.sh -I -B || exit_if_error $?
 
 # Need to change static paths in built SankeyApp client
 printf "Change static paths in built SankeyApp client ---------------------\n"
@@ -29,4 +29,4 @@ sed -i -e 's/static\/opensankey/\/static\/sankeyapp\//g' ./build/static/*/* || e
 # Then build server side and documentation for submodules
 printf "SankeyApp Server --------------------------------------------------\n"
 cd $SANKEY_DIR
-bash build_server.sh || exit_if_error $?
+bash scripts/build_server.sh || exit_if_error $?
