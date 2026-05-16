@@ -8,7 +8,7 @@ chcp 65001 > nul
 ::
 :: 1. Création ou activation d'un environnement Conda :
 ::    - Supprime l'environnement s'il existe déjà (si "create" choisi).
-::    - Le recrée avec une version fixe de Python (3.8.18).
+::    - Le recrée avec une version fixe de Python (3.12).
 ::    - Ou propose de sélectionner un environnement existant.
 ::
 :: 2. Nettoyage du dépôt Git :
@@ -67,7 +67,7 @@ if /I "%create_env%"=="y" (
     set CONDA_ENVS_PATH=USERPROFILE%\.conda\envs
     set MY_ENV_PATH=%USERPROFILE%\.conda\envs\!conda_env!
     echo !MY_ENV_PATH!
-    set python_version=3.8.10
+    set python_version=3.12
     echo Suppression ^(si existant^) de l'environnement conda : !conda_env!
     call conda deactivate
     call conda remove -y --name !conda_env! --all >nul 2>&1

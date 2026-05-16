@@ -34,18 +34,21 @@ exit /b 1
 
 :end_args
 
-REM === Anchor to repo root (this script lives in scripts/) ===
-pushd "%~dp0.."
+REM === Repo root (this script lives in scripts/) ===
+for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
 
 rem === Install requirements ===
 if "%install%"=="true" (
     echo Install SankeyApp requirements
-    powershell -Command "pip install -r requirements.txt | Select-String -NotMatch 'Requirement already satisfied'"
+    pip install -r "%REPO_ROOT%\requirements.txt"
 )
 
 rem === Install deps ===
 for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
-    pushd submodules\%%S
+    pushd "%REPO_ROOT%\submodules\%%S" || (
+        echo ERROR: pushd vers submodules\%%S a echoue
+        exit /b 1
+    )
     if "%install%"=="true" (
         call build_server.bat -I
     ) else (
@@ -55,8 +58,6 @@ for %%S in (OpenSankey+ LoginComponent MFAProblem) do (
 )
 
 rem === Check PEP (flake8) ===
-pushd server
+pushd "%REPO_ROOT%\server"
 flake8
-popd
-
 popd
