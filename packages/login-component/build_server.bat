@@ -47,5 +47,6 @@ flake8
 popd
 
 REM Étape 3 : Installation du package courant
+REM Editable install : le .bat est dev-local uniquement, on veut que les modifs source soient effectives sans réinstall
 echo === Installation du package ===
-pip install .
+pip install -e .
