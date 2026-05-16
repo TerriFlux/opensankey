@@ -197,7 +197,13 @@ class DictResultTest(unittest.TestCase):
                 self.check_dict(to_test[key], ref[key])
             else:
                 try:
-                    self.assertEqual(to_test[key], ref[key])
+                    # assertAlmostEqual for floats absorbs floating-point noise
+                    # (numpy/pandas version bumps can introduce 1e-15 drift on
+                    # values that are mathematically integers).
+                    if isinstance(ref[key], float) and isinstance(to_test[key], float):
+                        self.assertAlmostEqual(to_test[key], ref[key], places=9)
+                    else:
+                        self.assertEqual(to_test[key], ref[key])
                 except Exception:
                     self.assertEqual(to_test, ref)
 
