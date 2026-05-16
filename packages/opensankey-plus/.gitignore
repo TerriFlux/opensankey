@@ -25,6 +25,7 @@
 
 # Misc
 client/pnpm-lock.yaml
+client/public/resources.json
 debug.log
 opensankey/client/.eslintcache
 opensankey/client/.vscode/launch.json
