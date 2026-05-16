@@ -8,7 +8,7 @@ wheel
 pdfkit
 imgkit
 webcolors
-uwsgi
+uwsgi; sys_platform != "win32"
 black
 autopep8>=2.3.0
 ruff
