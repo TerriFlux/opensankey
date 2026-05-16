@@ -79,7 +79,7 @@ fi
 printf "\nBuild --------------------------------------------------------------\n"
 cd opensankey/client
 if [ "$install" = true ] ; then
-  printf ">>> Install deps\n\n" && pnpm install || exit_if_error $?
+  printf ">>> Install deps\n\n" && pnpm install --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
   printf "\n"
 fi
 if [ "$linter" = true ] ; then
