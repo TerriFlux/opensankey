@@ -11,11 +11,11 @@ import os
 
 def get_long_description():
     try:
-        with open("mfa_problem/README.md") as f:
+        with open("mfa_problem/README.md", encoding="utf-8") as f:
             long_description = f.read()
             return long_description
     except Exception:
-        with open("README.md") as f:
+        with open("README.md", encoding="utf-8") as f:
             long_description = f.read()
             return long_description
 
