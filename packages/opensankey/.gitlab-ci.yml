@@ -24,8 +24,7 @@ variables:
   PUBLIC_URL: "/"
 build:
   stage: build
-  tags:
-    - dev, prod, test
+  tags: [py312]
   script:
     # Env
     - echo $CI_PROJECT_DIR
@@ -42,8 +41,7 @@ build:
 
 test:
   stage: test
-  tags:
-    - dev, prod, test
+  tags: [py312]
   script:
     # Env
     - export TESTS_DIR="$CI_PROJECT_DIR/TestData"
