@@ -23,8 +23,7 @@ variables:
 
 build:
   stage: build
-  tags:
-    - dev
+  tags: [py312]
   script:
     # Prepare env
     - echo $CI_PROJECT_DIR
