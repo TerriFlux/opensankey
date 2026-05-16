@@ -57,7 +57,8 @@ flake8
 popd
 
 REM Étape 4 : Installation du package principal
+REM Editable install : le .bat est dev-local uniquement, on veut que les modifs source soient effectives sans réinstall
 echo OpenSankey install
-pip install .
+pip install -e .
 echo OpenSankey done
 
