@@ -1,6 +1,9 @@
 @echo off
 setlocal enabledelayedexpansion
 
+REM === Capture script dir BEFORE shift (sinon %~dp0 devient le dir de %1) ===
+set "SCRIPT_DIR=%~dp0"
+
 REM === Initialize flags ===
 set "install=false"
 set "linter=false"
@@ -35,7 +38,9 @@ exit /b 1
 :end_args
 
 REM === Repo root (this script lives in scripts/) ===
-for %%I in ("%~dp0..") do set "REPO_ROOT=%%~fI"
+pushd "%SCRIPT_DIR%.."
+set "REPO_ROOT=%CD%"
+popd
 
 rem === Install requirements ===
 if "%install%"=="true" (
