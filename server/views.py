@@ -183,8 +183,26 @@ def solve_optimisation_problem_unified(
 
     # ========== PARTIE 2: OPTIMISATION (dans le thread) ==========
     optim_kwargs = {}
-    if solver_options.get("remove_redundancy"):
-        optim_kwargs["remove_redundancy"] = True
+
+    # POC dual-output: two independent flags drive the optimisation passes.
+    #   with_reconciled (default True) → standard reconciliation pass
+    #   with_completed  (default False) → no-redundancy pass (measured values kept as-is)
+    # When both are True we run two passes: the first writes data_value
+    # (reconciled), the second writes completed_value on the same alterego.
+    # Legacy remove_redundancy is mapped to "completed only" for backward compat.
+    with_reconciled = bool(solver_options.get("with_reconciled", True))
+    with_completed = bool(solver_options.get("with_completed", False))
+    if (
+        solver_options.get("remove_redundancy")
+        and "with_reconciled" not in solver_options
+        and "with_completed" not in solver_options
+    ):
+        with_reconciled = False
+        with_completed = True
+    if not with_reconciled and not with_completed:
+        trace.logger.error("-- both with_reconciled and with_completed are False, nothing to do")
+        trace.logger.info("{:-<{w}}".format(" [FAILED] no solver pass requested", w=MAX_LINE_LENGTH))
+        return
 
     # Monte-Carlo (uncertainty) — driven from the dialog's Solveur group.
     # ``enable_uncertainty`` toggles the analysis; ``nb_realisations`` sets
@@ -205,11 +223,32 @@ def solve_optimisation_problem_unified(
     # bin/run_reconciliation.py.
     skip_rref = bool(solver_options.get("skip_rref", False))
 
-    try:
-        ok = mfa_problem_main.optimisation(
+    def _run_pass(remove_redundancy_flag: bool, target_field: str, skip_reset: bool):
+        pass_kwargs = {**optim_kwargs}
+        if remove_redundancy_flag:
+            pass_kwargs["remove_redundancy"] = True
+        if target_field != "data_value":
+            pass_kwargs["target_field"] = target_field
+        if skip_reset:
+            pass_kwargs["skip_reset_results"] = True
+        return mfa_problem_main.optimisation(
             model_name, io_input.sankey, uncertainty, nb_realisations, False,
-            skip_rref=skip_rref, **optim_kwargs,
+            skip_rref=skip_rref, **pass_kwargs,
         )
+
+    try:
+        if with_reconciled:
+            ok = _run_pass(remove_redundancy_flag=False, target_field="data_value", skip_reset=False)
+            if ok and with_completed:
+                # Second pass: results go into alterego.completed_value, alterego
+                # already exists from the first pass — don't reset.
+                ok = _run_pass(
+                    remove_redundancy_flag=True, target_field="completed_value", skip_reset=True,
+                )
+        else:
+            # Only the completed pass requested. Standard single-pass write into
+            # data_value (preserves the legacy "Compléter le diagramme" UX).
+            ok = _run_pass(remove_redundancy_flag=True, target_field="data_value", skip_reset=False)
     except Exception as e:
         trace.logger.error("-- UNEXPECTED ERROR in optimisation process.")
         trace.logger.error("-- Please report this issue to support@open-sankey.fr")
