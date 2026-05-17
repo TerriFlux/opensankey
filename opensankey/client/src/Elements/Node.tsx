@@ -603,6 +603,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public drawAsSelected() {
     super.drawAsSelected()
+    // Toggle léger des poignées du value_label aussi.
+    if (this._is_selected) {
+      this._nodeDrawValueLabel?.refreshLabelResizeHandles()
+    }
     this.links_order_visible
       .forEach(link => {
         if (link.source === this) this._output_links_handle[link.id].draw()
@@ -863,6 +867,11 @@ export class Class_NodeElement extends Class_NodeBase {
     super.drawElements()
     if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
+    // En mode stick, le fond combiné nom+valeur n'est dessiné que via
+    // refreshStickLayout — il faut le rappeler après chaque redraw.
+    if (this.value_label_stick_to_label) {
+      this._nodeDrawNameLabel?.refreshStickLayout()
+    }
     //this._drawLinksStartCaps() // Ajouter ici
   }
   /**

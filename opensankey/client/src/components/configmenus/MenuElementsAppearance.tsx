@@ -18,6 +18,7 @@ import { Type_Position } from '../../types/Utils'
 import { svg_label_upper } from '../../css/IconLibrairie'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
 import {
+  ElementAttrSetter2Cols,
   ElementAttrSetterNumberInput2Cols,
   ConfigMenuNumberInput,
   OSTooltip,
@@ -1141,6 +1142,7 @@ export const MenuConfigurationAppearance = ({
           <Box layerStyle='options_4cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
               onClick={() => {
                 app_data.menu_configuration.tab_selected = 'shape'
                 setActiveTab('shape')
@@ -1150,6 +1152,7 @@ export const MenuConfigurationAppearance = ({
             </Button>
             <Button
               variant={activeTab === 'name_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
               onClick={() => {
                 app_data.menu_configuration.tab_selected = 'name_label'
                 setActiveTab('name_label')
@@ -1159,6 +1162,7 @@ export const MenuConfigurationAppearance = ({
             </Button>
             <Button
               variant={activeTab === 'value_label' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+              sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
               onClick={() => {
                 app_data.menu_configuration.tab_selected = 'value_label'
                 setActiveTab('value_label')
@@ -1170,6 +1174,7 @@ export const MenuConfigurationAppearance = ({
               <Button
                 isDisabled={!app_data.has_sankey_plus}
                 variant={activeTab === 'icon' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.25rem', minWidth: 'auto', width: '100%' }}
                 onClick={() => {
                   app_data.menu_configuration.tab_selected = 'icon'
                   setActiveTab('icon')
@@ -2247,38 +2252,58 @@ export const MenuShapeAttributes = ({
           <Box />
         </Box>
 
-        {/* Largeur du fond : verrouillée (valeur fixe) ou ajustée au texte */}
-        {prefix.includes('_background') && (
-          <Box as='span' layerStyle='options_2cols'>
-            <OverloadedCheckbox
-              elements={elements}
-              config={config}
+        {/* Largeur du fond :
+            - cadenas ouvert (défaut) → input désactivé, affiche label.box_width
+              (le fond suit la largeur du label).
+            - cadenas fermé           → input éditable, écrit dans bg.box_width
+              (le fond a sa largeur propre).
+            Le label "Largeur fixe" reste dans le tooltip du cadenas, pas dans
+            l'interface. */}
+        {prefix.includes('_background') && (() => {
+          const label_prefix = prefix.replace('_background', '') as 'name_label' | 'value_label' | 'icon'
+          const labelValues = getElementsLabelValues(elements, label_prefix, refreshUI)
+          const menu_for_style = elements.length > 0 && (elements[0] instanceof Class_ElementStyle)
+          const display_value = shapeValues.width_locked
+            ? shapeValues.box_width
+            : labelValues.box_width
+          const lock_tooltip = t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'width_locked')}`)
+          return (
+            <ElementAttrSetter2Cols
+              attributePath={attributePath}
+              attributeKey={'box_width'}
+              config={BASE_SHAPE_CONFIG}
               prefix={prefix}
-              attributeKey="width_locked"
-              isChecked={shapeValues.width_locked}
-              onChange={(checked) => { shapeValues.width_locked = checked }}
-              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'width_locked')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'width_locked')}`)}
               t={t}
             >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'width_locked')}`)}
-            </OverloadedCheckbox>
-            {shapeValues.width_locked
-              ? <ElementAttrSetterNumberInput2Cols
-                app_data={app_data}
-                elements={elements}
-                attributePath={attributePath}
-                attributeKey={'box_width'}
-                config={BASE_SHAPE_CONFIG}
-                prefix={prefix}
-                refreshParentComponent={refreshUI}
-                unit_text='px'
-                minimum_value={0}
-                stepper={true}
-                isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('box_width') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-              : <Box />}
-          </Box>
-        )}
+              <Box display='flex' alignItems='center' gap={1}>
+                <ConfigMenuNumberInput
+                  t={t}
+                  default_value={display_value}
+                  menu_for_style={menu_for_style}
+                  minimum_value={0}
+                  step={1}
+                  stepper={true}
+                  unit_text='px'
+                  disabled={!shapeValues.width_locked}
+                  function_on_blur={(value) => {
+                    if (shapeValues.width_locked) {
+                      shapeValues.box_width = value ?? 0
+                    }
+                  }}
+                  isOverloaded={shapeValues.width_locked && isElementAttributeOverloaded(elements, prefix + '_' + 'box_width' as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+                />
+                <OSTooltip label={lock_tooltip}>
+                  <Button
+                    variant={shapeValues.width_locked ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                    onClick={() => { shapeValues.width_locked = !shapeValues.width_locked }}
+                  >
+                    {shapeValues.width_locked ? <FaLock /> : <FaLockOpen />}
+                  </Button>
+                </OSTooltip>
+              </Box>
+            </ElementAttrSetter2Cols>
+          )
+        })()}
       </Box>
     </>
   )
