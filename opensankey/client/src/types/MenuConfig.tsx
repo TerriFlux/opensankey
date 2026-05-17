@@ -261,7 +261,7 @@ export class Class_MenuConfig {
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
-  private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean, default_solver_options?: { remove_redundancy?: boolean }) => void>
+  private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean, default_solver_options?: { with_reconciled?: boolean, with_completed?: boolean }) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
   /** If provided, row keys returning true will be greyed in UpdateModeGrid */
