@@ -67,3 +67,6 @@ preferences/**
 client/.env
 .claude/settings.local.json
 dbg_constraints__summary_txt_filename
+
+# Local POC outputs (test_dual_output_poc.py)
+tmp_poc/
