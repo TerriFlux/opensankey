@@ -1579,6 +1579,10 @@ export class Class_DrawingArea {
           target,
           this)
         this.drawing_link = true
+        // Peuple source._output_links_starting_point[ghost_link.id] pour que le
+        // 1er rendu du ghost_link voie son starting_point (sinon drawElements
+        // est skip et aucun path n'est tracé pendant le drag initial).
+        source.applyPosition()
         this._ghost_link_source = source
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
