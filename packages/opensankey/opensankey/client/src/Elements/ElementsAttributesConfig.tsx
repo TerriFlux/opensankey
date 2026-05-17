@@ -450,7 +450,10 @@ export const BASE_SHAPE_CONFIG = {
     default: true as boolean,
     type: (() => true) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements en plus de drawShape pour que toggler la visibilité d'un
+    // fond de label rafraîchisse aussi le label (sinon le fond et ses
+    // poignées de redimensionnement n'apparaissent/disparaissent pas).
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Shape and background',
       fr: 'Forme et Fond',
@@ -534,7 +537,10 @@ export const BASE_SHAPE_CONFIG = {
     default: false as boolean,
     type: (() => false) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements (en plus de drawShape) pour que le toggle du fond et de la
+    // largeur fixe redessine les labels : les poignées de redimensionnement
+    // sont rendues dans drawGenericBackground, donc le label doit être redessiné.
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Fixed width',
       fr: 'Largeur fixe',
@@ -555,7 +561,8 @@ export const BASE_SHAPE_CONFIG = {
     default: 150,
     type: (() => 150) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements pour que le label (et donc les poignées) soit redessiné.
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Width',
       fr: 'Largeur',
@@ -576,7 +583,7 @@ export const BASE_SHAPE_CONFIG = {
     default: true as boolean,
     type: (() => true) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Background',
       fr: 'Fond',
@@ -1127,7 +1134,10 @@ export const BASE_LABEL_CONFIG = {
     default: 150,
     type: (() => 150) as (() => number),
     category: '',
-    actions: [] as BaseActionType[],
+    // drawElements pour que les poignées de redimensionnement du label et le
+    // fond (qui suit la largeur du label en mode unlocked) soient refresh
+    // après modification depuis le menu.
+    actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Width',
       fr: 'Largeur',

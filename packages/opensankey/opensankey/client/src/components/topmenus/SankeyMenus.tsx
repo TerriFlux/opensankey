@@ -62,7 +62,7 @@ import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export const menu_config_width = 20
-export const menu_config_min_width_px = 320
+export const menu_config_min_width_px = 420
 
 /**
  * Description placeholder
