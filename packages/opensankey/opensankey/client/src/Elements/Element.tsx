@@ -646,6 +646,12 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
 
 }
 export abstract class Class_BaseShape extends Class_ProtoElement {
+  // Sous-sélection : préfixe du label actuellement focus (clic sur le <text>
+  // du label). Sert à n'afficher les poignées de redimensionnement du label
+  // que quand l'utilisateur a cliqué sur le label lui-même, pas sur la forme.
+  // null si aucun label n'est sub-sélectionné.
+  public selected_label_prefix: 'name_label' | 'value_label' | 'icon' | null = null
+
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
