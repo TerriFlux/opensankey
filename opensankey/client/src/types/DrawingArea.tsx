@@ -94,6 +94,9 @@ export class Class_DrawingArea {
   // Scrollbars
   private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // Border drawn directly on the SVG root (outside g_drawing's zoom transform)
+  // so it always frames the visible viewport, regardless of pan/zoom.
+  private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
   private _scrollbar_size = 10
 
 
@@ -440,6 +443,14 @@ export class Class_DrawingArea {
 
     // Scrollbars (outside g_drawing so they stay fixed in viewport)
     this._initScrollbars()
+
+    // Viewport border (outside g_drawing → fixed frame, unaffected by pan/zoom)
+    this._d3_viewport_border = this.d3_selection_zoom_area.append('rect')
+      .attr('id', 'viewport_border')
+      .attr('fill', 'none')
+      .style('pointer-events', 'none')
+      .style('shape-rendering', 'crispEdges')
+    this._updateViewportBorder()
   }
 
   /**
@@ -1267,6 +1278,7 @@ export class Class_DrawingArea {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
       this.d3_selection_zoom_area = null
+      this._d3_viewport_border = null
     }
   }
 
@@ -1333,7 +1345,9 @@ export class Class_DrawingArea {
     const height = this.application_data.publish_options.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Draw background
+    // Draw background (fill only — the editable-canvas border is drawn separately
+    // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
+    // and doesn't slide off-screen when the user pans content).
     this.d3_selection_bg?.append('rect')
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
@@ -1343,13 +1357,36 @@ export class Class_DrawingArea {
       .attr(
         'transform',
         'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
-    if (this.editable) {
-      this.d3_selection_bg?.select('rect').style('stroke-width', 1)
-      this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
-      this.d3_selection_bg?.select('rect').style('shape-rendering', 'crispEdges')
-    }
+    this._updateViewportBorder()
     this.drawCursor()
     this.drawBgImage()
+  }
+
+  /**
+   * Position and size the viewport border rect so it frames the visible drawing
+   * area on the SVG root (outside g_drawing). Called on init and on every
+   * drawBackground() so it tracks navbar/bottombar/window changes.
+   */
+  private _updateViewportBorder() {
+    if (!this._d3_viewport_border) return
+    if (!this.editable) {
+      this._d3_viewport_border.attr('visibility', 'hidden')
+      return
+    }
+    const fm = this._fit_margin / 2
+    const navH = this.getNavBarHeight()
+    const viewW = this.window_fitting_width
+    const viewH = this.window_fitting_height
+    // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
+    // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
+    this._d3_viewport_border
+      .attr('visibility', 'visible')
+      .attr('x', fm)
+      .attr('y', navH + fm)
+      .attr('width', Math.max(0, viewW))
+      .attr('height', Math.max(0, viewH))
+      .style('stroke', default_black_color)
+      .style('stroke-width', 1)
   }
 
   /**
