@@ -209,7 +209,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   // Trial active — show countdown CTA pointing at the subscription page.
   if (state.is_active) {
     return (
-      <Tooltip label={t('Trial.banner_active_tooltip')} placement='bottom'>
+      <Tooltip label={t('Trial.banner_active_tooltip')} placement='top'>
         <Button
           variant='button_banner_subscription'
           onClick={goToCheckout}
@@ -223,7 +223,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
   // Trial expired (or trial active but at day 31) — fall back to plain "Unlock" CTA.
   if (hasTrialStarted()) {
     return (
-      <Tooltip label={t('Menu.get_premium_tooltip')} placement='bottom'>
+      <Tooltip label={t('Menu.get_premium_tooltip')} placement='top'>
         <Button
           variant='button_banner_subscription'
           onClick={goToCheckout}
@@ -241,7 +241,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     bumpBanner()
   }
   return (
-    <Tooltip label={t('Trial.banner_start_tooltip')} placement='bottom'>
+    <Tooltip label={t('Trial.banner_start_tooltip')} placement='top'>
       <Button
         variant='button_banner_subscription'
         onClick={handleStart}

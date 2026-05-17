@@ -584,7 +584,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
       >
         <Box
           gridRow='1'
-          padding='0.1rem 0 0.1rem 0'
         >
           {logo_view}
         </Box>
