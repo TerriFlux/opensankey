@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { MutableRefObject, useRef, useState } from 'react'
+import React, { MutableRefObject, useLayoutEffect, useRef, useState } from 'react'
 
 import Draggable from 'react-draggable'
 
@@ -91,6 +91,19 @@ export const SankeyMenu = (
 
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
+
+  // getNavBarHeight() lit le DOM via getBoundingClientRect sur .TopMenu, qui
+  // n'existe pas encore au tout premier render -> fallback (~5rem) trop bas.
+  // Force un re-render apres mount (et re-mesure le navbar si sa taille change)
+  // pour que le bouton orange et le drawer aient le bon top immediatement.
+  useLayoutEffect(() => {
+    setCount(a => a + 1)
+    const navbar = document.getElementsByClassName('TopMenu')[0]
+    if (!navbar || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => setCount(a => a + 1))
+    ro.observe(navbar)
+    return () => ro.disconnect()
+  }, [])
   const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
   const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin
   //Switch the variable value that handle opening and closing the configuration menu
