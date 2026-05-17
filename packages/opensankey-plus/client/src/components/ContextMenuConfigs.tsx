@@ -27,7 +27,17 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
             return (app_data as Class_ApplicationDataOSP).has_sankey_afm
           }
         }]
-      }    
+      },
+      {
+        type: 'button',
+        actionName: 'afmCompleteOnly',
+        visibilityConditions: [{
+          type: 'custom',
+          customCheck: (app_data) => {
+            return (app_data as Class_ApplicationDataOSP).has_sankey_afm
+          }
+        }]
+      }
     ],
     actions: {
       ...ZDD_MENU_CONFIG.actions,
@@ -46,6 +56,23 @@ export const createZDDMenuConfigPlus = (): MenuConfig => {
           es: 'Reconciliar el diagrama Sankey actual',
           de: 'Aktuelles Sankey-Diagramm abgleichen',
           it: 'Riconciliare il diagramma Sankey attuale'
+        }
+      },
+      afmCompleteOnly: {
+        type: 'action',
+        labels: {
+          en: 'Complete the diagram (no redundancy)',
+          fr: 'Compléter le diagramme',
+          es: 'Completar el diagrama (sin redundancia)',
+          de: 'Diagramm vervollständigen (ohne Redundanz)',
+          it: 'Completare il diagramma (senza ridondanza)'
+        },
+        tooltips: {
+          en: 'Run reconciliation in no-redundancy mode: redundant balance constraints are dropped so measured values are kept as-is and only unknown flows are filled in',
+          fr: "Lance la réconciliation en mode sans redondance : les bilans en trop sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés",
+          es: 'Ejecuta la reconciliación en modo sin redundancia',
+          de: 'Abgleich im Modus ohne Redundanz ausführen',
+          it: 'Esegue la riconciliazione in modalità senza ridondanza'
         }
       }
     }
@@ -196,6 +223,18 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
     afmReconciliation: () => {
       app_data.menu_configuration.ref_universal_converter_set_config.current(
         CONVERTER_CONFIGS['reconciliation_sankey'], '', true
+      )
+      dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+      app_data.drawing_area.is_drawing_area_contextualised = false
+      app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
+    },
+    afmCompleteOnly: () => {
+      // "Compléter le diagramme" — single-pass no-redundancy mode: measured
+      // values are preserved as-is and only unknown flows are filled in. The
+      // reconciliation pass is skipped so no measure is adjusted.
+      app_data.menu_configuration.ref_universal_converter_set_config.current(
+        CONVERTER_CONFIGS['reconciliation_sankey'], '', true,
+        { with_reconciled: false, with_completed: true }
       )
       dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
