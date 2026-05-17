@@ -8,6 +8,7 @@ import { faArrowsUpDown, faLocationDot } from '@fortawesome/free-solid-svg-icons
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
+import { OpenSankeySaveButton } from './MenuTop'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -36,6 +37,25 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
     layerStyle={new_data.is_static ? 'toolbar_right' : 'toolbar_bottom'} // Changement du layerStyle
     bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
   >
+    {/* Save (cache) + Help — moved here from the topbar/floating area so all
+        canvas-level shortcuts sit in the same toolbar. */}
+    {!new_data.is_static ? <ButtonGroup spacing='0.5rem'>
+      <OpenSankeySaveButton new_data={new_data} />
+      <OSTooltip
+        placement='top'
+        label={t('Banner.tooltipHelp')}
+        isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
+      >
+        <Button
+          className='toolbar_bottom_help'
+          variant='info'
+          size='sizeToolbarButton'
+          onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
+        >
+          ?
+        </Button>
+      </OSTooltip>
+    </ButtonGroup> : <></>}
     {btn_mouse_mode_edition}
     {!new_data.is_static ? <ComponentPositionMode
       app_data={new_data}
@@ -45,21 +65,6 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       app_data={new_data}
       updateParentComponent={refreshThis}
     />
-    {!new_data.is_static ? <OSTooltip
-      placement='top'
-      label={t('Banner.tooltipHelp')}
-      isAlwaysOpen={!new_data.is_static && new_data.menu_configuration.show_splashscreen}
-    >
-      <Button
-        className='toolbar_bottom_help'
-        variant='info'
-        size='sizeToolbarButton'
-        onClick={() => new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_welcome.current!(true)}
-      >
-        ?
-      </Button>
-    </OSTooltip> : <></>
-    }
   </Box>
 }
 

@@ -26,7 +26,7 @@
 
 import React, { useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, InfoOutlineIcon } from '@chakra-ui/icons'
 import parse from 'html-react-parser'
 import {
   Box,
@@ -45,7 +45,15 @@ import {
   Text,
   Divider,
   Menu,
-  Portal
+  Portal,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  IconButton,
+  Link,
+  VStack
 } from '@chakra-ui/react'
 import {
   faCheck,
@@ -999,24 +1007,23 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
       }}>
 
       {
-        // Application image that indicate which module is activated
+        // Application image that indicate which module is activated.
+        // Logo is height-constrained and contain-fitted so OS and SS logos
+        // render with consistent visual weight despite different aspect ratios.
         <Box
-          alignSelf='left'
-          justifySelf='left'
-          display='inline-grid'
+          alignSelf='center'
+          justifySelf='start'
+          display='flex'
+          alignItems='center'
           height='100%'
+          paddingLeft='0.5rem'
         >
-          {/* {!new_data.is_static ? */}
           <Image
-            height='80%'
-            justifySelf='left'
-            alignSelf='left'
-            src={logo} />
-          {/* <Image
-              height='5rem'
-              margin='5% 0'
-              src={logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />} */}
+            src={logo}
+            objectFit='contain'
+            maxHeight='2.75rem'
+            width='auto'
+          />
         </Box>}
       {
         // When application is static, search for a header (title of the project)
@@ -1066,9 +1073,44 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         </Menu> : <></>}
 
         {constent_additional_nav_item}
+        <AppInfoPopover />
       </Box>
     </Box>
   </Box>
+}
+
+/**
+ * Topbar info popover: shows app version, build date and a support mailto.
+ * Replaces the legacy bottom footer. Version/date are inlined at build time
+ * by the consumer's bundler from REACT_APP_VERSION / REACT_APP_RELEASE_DATE.
+ */
+const AppInfoPopover = () => {
+  const version = process.env.REACT_APP_VERSION ?? ''
+  const release_date = process.env.REACT_APP_RELEASE_DATE ?? ''
+  return <Popover placement='bottom-end' trigger='hover' openDelay={150}>
+    <PopoverTrigger>
+      <IconButton
+        aria-label='Informations'
+        icon={<InfoOutlineIcon />}
+        size='sm'
+        variant='ghost'
+      />
+    </PopoverTrigger>
+    <Portal>
+      <PopoverContent width='auto' minWidth='12rem'>
+        <PopoverArrow />
+        <PopoverBody>
+          <VStack align='start' spacing='0.25rem' fontSize='sm'>
+            {version && <Text>Version {version}</Text>}
+            {release_date && <Text color='gray.500'>Build {release_date}</Text>}
+            <Link href='mailto:support@terriflux.fr' color='blue.500'>
+              support@terriflux.fr
+            </Link>
+          </VStack>
+        </PopoverBody>
+      </PopoverContent>
+    </Portal>
+  </Popover>
 }
 
 
