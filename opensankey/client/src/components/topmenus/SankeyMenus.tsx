@@ -212,7 +212,7 @@ export const SankeyMenu = (
             value='menuConfigButton'
             style={{
               right: app_data.drawing_area.fit_margin,
-              top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin,
+              top: app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin / 2),
             }}
           >
             {icon_open_close_config}
