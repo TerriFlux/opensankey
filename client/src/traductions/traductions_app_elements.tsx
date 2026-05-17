@@ -142,6 +142,8 @@ export const resources_app_elements = {
           export: 'Export as image',
           reconcil: 'Reconcile data',
           tool_afm: 'Use annex tools for reconciliation',
+          view: 'Show/hide the view bar (create, navigate and manage views)',
+          sankeytheque: 'Open the Sankey library: browse and load example diagrams',
         },
         xl_check: 'Excel checks',
         ter_gen: 'Gen. Supply-Use table'
@@ -202,13 +204,17 @@ export const resources_app_elements = {
         'to_app': 'Back to the application',
         'to_acc': 'My account',
         'to_dbd': 'Dashboard',
+        'to_dashboard': 'Dashboard',
+        'to_logout': 'Log out',
         tooltip: {
           'to_con': 'Log in or create an account',
           'to_reg': 'Sign up',
           'to_buy': 'Sign up',
           'to_app': 'Back to the application',
           'to_acc': 'My account',
-          'to_dbd': 'Dashboard'
+          'to_dbd': 'Dashboard',
+          'to_dashboard': 'Open dashboard',
+          'to_logout': 'Log out'
         }
       },
       Register: {
@@ -605,6 +611,8 @@ export const resources_app_elements = {
           export: 'Exporter comme une image',
           reconcil: 'Réconcilier les données',
           tool_afm: 'Utiliser des outils annexes à la réconciliation',
+          view: 'Afficher/masquer la barre des vues (créer, naviguer et gérer les vues)',
+          sankeytheque: 'Ouvrir la Sankeythèque : parcourir et charger des diagrammes d\'exemple',
         },
         xl_check: 'Vérif. excel',
         featureBeta: 'Experimental',
@@ -665,13 +673,17 @@ export const resources_app_elements = {
         'to_app': 'Retour à l\'application',
         'to_acc': 'Mon compte',
         'to_dbd': 'Dashboard',
+        'to_dashboard': 'Dashboard',
+        'to_logout': 'Déconnexion',
         tooltip: {
           'to_con': 'Connectez vous',
           'to_reg': 'Créez un compte',
           'to_buy': 'Créez un compte',
           'to_app': 'Retour à l\'application',
           'to_acc': 'Mon compte',
-          'to_dbd': 'Dashboard'
+          'to_dbd': 'Dashboard',
+          'to_dashboard': 'Ouvrir le dashboard',
+          'to_logout': 'Se déconnecter'
         }
       },
       Register: {
@@ -1078,6 +1090,8 @@ export const resources_app_elements = {
           export: 'Exportar como imagen',
           reconcil: 'Reconciliar datos',
           tool_afm: 'Usar herramientas auxiliares para la reconciliación',
+          view: 'Mostrar/ocultar la barra de vistas (crear, navegar y gestionar vistas)',
+          sankeytheque: 'Abrir la Sankeyteca: explorar y cargar diagramas de ejemplo',
         },
         xl_check: 'Verif. Excel',
         ter_gen: 'Gen. tabla oferta-utilización'
@@ -1137,13 +1151,17 @@ export const resources_app_elements = {
         'to_app': 'Volver a la aplicación',
         'to_acc': 'Mi cuenta',
         'to_dbd': 'Panel de control',
+        'to_dashboard': 'Panel de control',
+        'to_logout': 'Cerrar sesión',
         tooltip: {
           'to_con': 'Iniciar sesión o crear una cuenta',
           'to_reg': 'Registrarse',
           'to_buy': 'Registrarse',
           'to_app': 'Volver a la aplicación',
           'to_acc': 'Mi cuenta',
-          'to_dbd': 'Panel de control'
+          'to_dbd': 'Panel de control',
+          'to_dashboard': 'Abrir panel de control',
+          'to_logout': 'Cerrar sesión'
         }
       },
       Register: {
@@ -1563,6 +1581,8 @@ export const resources_app_elements = {
           export: 'Als Bild exportieren',
           reconcil: 'Daten abstimmen',
           tool_afm: 'Hilfswerkzeuge für die Abstimmung verwenden',
+          view: 'Ansichtsleiste ein-/ausblenden (Ansichten erstellen, navigieren und verwalten)',
+          sankeytheque: 'Sankey-Bibliothek öffnen: Beispieldiagramme durchsuchen und laden',
         },
         xl_check: 'Excel-Prüfung',
         ter_gen: 'Aufkommens-Verwendungs-Tabelle generieren'
@@ -1622,13 +1642,17 @@ export const resources_app_elements = {
         'to_app': 'Zurück zur Anwendung',
         'to_acc': 'Mein Konto',
         'to_dbd': 'Dashboard',
+        'to_dashboard': 'Dashboard',
+        'to_logout': 'Abmelden',
         tooltip: {
           'to_con': 'Anmelden oder Konto erstellen',
           'to_reg': 'Registrieren',
           'to_buy': 'Registrieren',
           'to_app': 'Zurück zur Anwendung',
           'to_acc': 'Mein Konto',
-          'to_dbd': 'Dashboard'
+          'to_dbd': 'Dashboard',
+          'to_dashboard': 'Dashboard öffnen',
+          'to_logout': 'Abmelden'
         }
       },
       Register: {
@@ -2048,6 +2072,8 @@ export const resources_app_elements = {
           export: 'Esporta come immagine',
           reconcil: 'Riconciliare i dati',
           tool_afm: 'Utilizzare strumenti ausiliari per la riconciliazione',
+          view: 'Mostra/nascondi la barra delle viste (creare, navigare e gestire le viste)',
+          sankeytheque: 'Apri la Sankeyteca: sfogliare e caricare diagrammi di esempio',
         },
         xl_check: 'Verifica Excel',
         ter_gen: 'Gen. tabella risorse-impieghi'
@@ -2107,13 +2133,17 @@ export const resources_app_elements = {
         'to_app': 'Torna all\'applicazione',
         'to_acc': 'Il mio account',
         'to_dbd': 'Pannello di controllo',
+        'to_dashboard': 'Pannello di controllo',
+        'to_logout': 'Disconnetti',
         tooltip: {
           'to_con': 'Accedi o crea un account',
           'to_reg': 'Registrati',
           'to_buy': 'Registrati',
           'to_app': 'Torna all\'applicazione',
           'to_acc': 'Il mio account',
-          'to_dbd': 'Pannello di controllo'
+          'to_dbd': 'Pannello di controllo',
+          'to_dashboard': 'Apri pannello di controllo',
+          'to_logout': 'Disconnetti'
         }
       },
       Register: {

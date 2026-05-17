@@ -25,6 +25,7 @@ import {
 import { Class_ApplicationDataSA } from '../ApplicationDataSA'
 import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 
 const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
@@ -60,28 +61,33 @@ export const ButtonOpenModalSankeyTheque: FC<{ new_data: Class_ApplicationDataSA
   const [, setUpdate] = useState(0)
   new_data.menu_configuration_sa.ref_to_btn_top_sankeytheque_updater.current = () => setUpdate(a => a + 1)
 
-  return <Button
-    variant='menutop_button'
-    size='sizeMenuTopButton'
-    onClick={() => {
-      new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true)
-    }}
+  return <OSTooltip
+    placement='bottom'
+    label={new_data.t('Menu.tooltips.sankeytheque')}
   >
-    <Box
-      layerStyle='menutop_button_style'
+    <Button
+      variant='menutop_button'
+      size='sizeMenuTopButton'
+      onClick={() => {
+        new_data.menu_configuration_sa.dict_setter_show_dialog_SA.ref_setter_show_modal_sankeytheque.current(true)
+      }}
     >
       <Box
-        gridRow='1'
+        layerStyle='menutop_button_style'
       >
-        {logo_sankeytheque}
+        <Box
+          gridRow='1'
+        >
+          {logo_sankeytheque}
+        </Box>
+        <Box
+          gridRow='2'
+        >
+          {new_data.t('Menu.sankeytheque')}
+        </Box>
       </Box>
-      <Box
-        gridRow='2'
-      >
-        {new_data.t('Menu.sankeytheque')}
-      </Box>
-    </Box>
-  </Button>
+    </Button>
+  </OSTooltip>
 }
 
 
