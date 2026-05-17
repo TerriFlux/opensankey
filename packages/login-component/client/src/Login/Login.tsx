@@ -240,9 +240,14 @@ export const LoginOutButton = (
       aria-label={t('UserNav.to_logout') || 'Logout'}
       icon={on_wait ? <Spinner /> : <FaPowerOff />}
       size='sm'
-      variant='ghost'
       boxSize='2rem'
       fontSize='1rem'
+      bg='transparent'
+      bgColor='transparent'
+      borderColor='transparent'
+      color='gray.700'
+      _hover={{ bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' }}
+      _active={{ bg: 'gray.200', bgColor: 'gray.200' }}
       disabled={on_wait}
       onClick={() => {
         setOnWait(true)

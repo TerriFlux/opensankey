@@ -39,6 +39,15 @@ export const UserPagesButtons = (
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
+  const ghost_icon_btn_style = {
+    bg: 'transparent',
+    bgColor: 'transparent',
+    borderColor: 'transparent',
+    color: 'gray.700',
+    _hover: { bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' },
+    _active: { bg: 'gray.200', bgColor: 'gray.200' },
+  }
+
   const user_navigation_bar_free = <ButtonGroup spacing='0.25rem' size='sm'>
     <OSTooltip
       label={t('UserNav.tooltip.to_buy') || t('UserNav.to_buy')}
@@ -47,9 +56,9 @@ export const UserPagesButtons = (
         aria-label={t('UserNav.to_buy')}
         icon={<FontAwesomeIcon icon={faUserPlus} />}
         size='sm'
-        variant='ghost'
         boxSize='2rem'
         fontSize='1rem'
+        {...ghost_icon_btn_style}
         onClick={() => navigate('/register')}
       />
     </OSTooltip>
@@ -58,9 +67,9 @@ export const UserPagesButtons = (
         aria-label={t('UserNav.to_con')}
         icon={<FontAwesomeIcon icon={faRightToBracket} />}
         size='sm'
-        variant='ghost'
         boxSize='2rem'
         fontSize='1rem'
+        {...ghost_icon_btn_style}
         onClick={() => navigate('/login')}
       />
     </OSTooltip>
@@ -72,9 +81,9 @@ export const UserPagesButtons = (
         aria-label={t('UserNav.to_dashboard') || 'Dashboard'}
         icon={icon_user}
         size='sm'
-        variant='ghost'
         boxSize='2rem'
         fontSize='1rem'
+        {...ghost_icon_btn_style}
         onClick={() => {
           navigate('/account')
           // Save current json before moving to login page
