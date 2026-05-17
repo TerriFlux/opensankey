@@ -573,7 +573,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     </Button> : <></>}
   </ButtonGroup>
 
-  const buttonShowBanner = <OSTooltip placement='bottom' label={''}>
+  const buttonShowBanner = <OSTooltip placement='bottom' label={t('Menu.tooltips.view')}>
     <Button
       variant={isOpen ? 'menutop_button_view_activated' : 'menutop_button'}
       size='sizeMenuTopButton'
