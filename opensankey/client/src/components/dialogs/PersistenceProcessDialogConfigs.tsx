@@ -1009,6 +1009,52 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
     ]
   } satisfies FormatAttributeConfig<boolean>,
 
+  with_reconciled: {
+    group: 'solver',
+    default: true,
+    type: (() => true) as (() => boolean),
+    labels: {
+      en: 'Reconcile',
+      fr: 'Réconcilier',
+      es: 'Reconciliar',
+      de: 'Abgleichen',
+      it: 'Riconciliare'
+    },
+    tooltips: {
+      en: 'Run the standard reconciliation pass. Measured values may be adjusted to satisfy all mass balances.',
+      fr: 'Lance la passe de réconciliation standard. Les valeurs mesurées peuvent être ajustées pour satisfaire tous les bilans matière.',
+      es: 'Ejecuta la pasada de reconciliación estándar. Los valores medidos pueden ajustarse para satisfacer todos los balances de masa.',
+      de: 'Führt den Standardabgleich aus. Messwerte können angepasst werden, damit alle Massenbilanzen erfüllt sind.',
+      it: 'Esegue la riconciliazione standard. I valori misurati possono essere modificati per soddisfare tutti i bilanci di massa.'
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
+    ]
+  } satisfies FormatAttributeConfig<boolean>,
+
+  with_completed: {
+    group: 'solver',
+    default: false,
+    type: (() => false) as (() => boolean),
+    labels: {
+      en: 'Complete (no-redundancy)',
+      fr: 'Compléter (sans redondance)',
+      es: 'Completar (sin redundancia)',
+      de: 'Vervollständigen (ohne Redundanz)',
+      it: 'Completare (senza ridondanza)'
+    },
+    tooltips: {
+      en: 'Add a "Completed value" column to the analysis sheet: redundant balance constraints are dropped, measured values are preserved as-is, and only unknown flows are filled in.',
+      fr: 'Ajoute une colonne « Valeur complétée » à la feuille d\'analyse : les bilans redondants sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés.',
+      es: 'Añade una columna "Valor completado" a la hoja de análisis: se eliminan las restricciones redundantes, los valores medidos se conservan tal cual y solo se completan los flujos desconocidos.',
+      de: 'Fügt der Analyseblatt eine Spalte „Vervollständigter Wert" hinzu: redundante Bilanzgleichungen werden entfernt, Messwerte bleiben unverändert und nur unbekannte Flüsse werden ergänzt.',
+      it: 'Aggiunge una colonna « Valore completato » al foglio di analisi: i vincoli di bilancio ridondanti vengono rimossi, i valori misurati sono mantenuti invariati e vengono completati solo i flussi sconosciuti.'
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
+    ]
+  } satisfies FormatAttributeConfig<boolean>,
+
   skip_rref: {
     group: 'solver',
     default: false,
@@ -1566,6 +1612,8 @@ export const SOLVER_OPTION_KEYS = [
   'record_simulations',
   'debug_mode',
   'skip_rref',
+  'with_reconciled',
+  'with_completed',
 ] as const
 
 export const CONVERTER_CONFIGS = {
