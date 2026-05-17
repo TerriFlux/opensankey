@@ -341,8 +341,8 @@ export const buttonStyles = {
     bg: 'transparent',
     bgColor: 'transparent',
     svg: {
-      'height': '2rem',
-      'width': '3rem'
+      'height': '1.25rem',
+      'width': '1.75rem'
     },
     _hover: {
       color: 'gray.600',
@@ -1140,16 +1140,17 @@ export const buttonStyles = {
   button_banner_subscription: defineStyle({
     border: '0',
     borderRadius: '4px',
-    lineHeight: 'unset',
-    padding: '0.3rem 0.75rem',
+    lineHeight: '1.1',
+    padding: '0.2rem 0.6rem',
     margin: '0',
     bg: 'tertiaire.1',
     bgColor: 'tertiaire.1',
     marginInlineStart: 0,
     color: 'white',
-    fontSize: '0.85rem',
+    fontSize: '0.72rem',
     fontWeight: 'semibold',
     whiteSpace: 'nowrap',
+    height: '1.7rem',
     _hover: {
       bg: '#A36F4D',
       bgColor: '#A36F4D',
@@ -1275,7 +1276,25 @@ export const menuStyles = {
       borderColor: 'transparent',
       bg: 'transparent',
       bgColor: 'transparent',
-      'svg': { 'height': '2rem', 'width': '3rem' },
+      height: '2.25rem',
+      minWidth: '2.75rem',
+      padding: '0',
+      marginRight: '0.25rem',
+      marginLeft: '0.25rem',
+      fontSize: '0.62rem',
+      lineHeight: '1',
+      'svg': { 'height': '1.25rem', 'width': '1.75rem' },
+      // Chakra MenuButton wraps content in a span — apply grid there so the
+      // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      span: {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gridTemplateRows: '1.45rem 0.8rem',
+        alignItems: 'center',
+        justifyItems: 'center',
+        height: '100%',
+        width: '100%',
+      },
       _hover: {
         color: 'gray.600',
         borderColor: 'transparent',
@@ -2134,12 +2153,12 @@ export const sizes = {
     margin: 'auto'
   }),
   sizeMenuTopButton: defineStyle({
-    width: '3rem',
-    height: '3rem',
+    width: '2.75rem',
+    height: '2.25rem',
     minW: 'unset',
-    padding: '0.2rem',
-    marginRight: '0.5rem',
-    marginLeft: '0.5rem'
+    padding: '0',
+    marginRight: '0.25rem',
+    marginLeft: '0.25rem'
   }),
   sizeMenuTopButtonSaveCache: defineStyle({
     height: '2rem',
@@ -2244,7 +2263,25 @@ export const tabsStyles = {
       borderColor: 'transparent',
       bg: 'transparent',
       bgColor: 'transparent',
-      'svg': { 'height': '2rem', 'width': '3rem' },
+      height: '2.25rem',
+      minWidth: '2.75rem',
+      padding: '0',
+      marginRight: '0.25rem',
+      marginLeft: '0.25rem',
+      fontSize: '0.62rem',
+      lineHeight: '1',
+      'svg': { 'height': '1.25rem', 'width': '1.75rem' },
+      // Chakra MenuButton wraps content in a span — apply grid there so the
+      // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      span: {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gridTemplateRows: '1.45rem 0.8rem',
+        alignItems: 'center',
+        justifyItems: 'center',
+        height: '100%',
+        width: '100%',
+      },
       _hover: {
         color: 'gray.600',
         borderColor: 'transparent',
@@ -2679,7 +2716,7 @@ const layerStyles = {
   menutop_layout_style: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    height: '3.75rem',
+    height: '2.5rem',
     width: 'auto',
     padding: '0',
     margin: '0px 3px 0px 3px',
@@ -2699,20 +2736,23 @@ const layerStyles = {
   menutop_button_style: {
     display: 'grid',
     gridTemplateColumns: '3fr',
-    gridTemplateRows: '2fr 1fr',
+    gridTemplateRows: '1.45rem 0.8rem',
     gridColumnGap: '0',
     gridRowGap: '0',
-    height: '3rem',
-    width: '4rem',
+    height: '100%',
+    width: '100%',
     padding: '0',
     margin: '0',
     textStyle: 'h4',
-    fontSize: default_font_size,
+    fontSize: '0.62rem',
+    lineHeight: '1',
     color: 'gray.600',
     stroke: 'gray.600',
     fill: 'gray.600',
     alignItems: 'center',
-    justifyItems: 'center'
+    justifyItems: 'center',
+    alignContent: 'center',
+    'svg': { 'height': '1.25rem', 'width': '1.75rem', display: 'block', margin: 'auto' }
   },
 
   menubottom_layout_style: {

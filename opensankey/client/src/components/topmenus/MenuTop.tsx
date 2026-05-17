@@ -1021,7 +1021,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <Image
             src={logo}
             objectFit='contain'
-            maxHeight='2.75rem'
+            maxHeight='2.1rem'
             width='auto'
           />
         </Box>}
