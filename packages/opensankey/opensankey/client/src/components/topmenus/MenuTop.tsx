@@ -1058,7 +1058,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
       >
         {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
-            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.75rem', width: '1rem', margin: 'auto' }} title={flag} />
+            <ReactCountryFlag countryCode={flag} svg style={{ height: '1.1rem', width: '1.6rem', margin: 'auto' }} title={flag} />
             <ChevronDownIcon />
           </MenuButton>
           <Portal>
