@@ -15,7 +15,8 @@ import {
   InputGroup,
   InputLeftAddon,
   InputRightElement,
-  Spinner
+  Spinner,
+  IconButton
 } from '@chakra-ui/react'
 
 import { loginOut, loginUser } from './LoginFunctions'
@@ -233,9 +234,14 @@ export const LoginOutButton = (
 
   const [on_wait, setOnWait] = useState(false)
 
-  return <Button
-    variant='menutop_button_logout'
-    size='sizeBtnTextLogin'
+  return <IconButton
+    aria-label={t('UserNav.to_logout') || 'Logout'}
+    icon={on_wait ? <Spinner /> : <FaPowerOff />}
+    bg='primaire.1'
+    color='white'
+    _hover={{ bg: 'secondaire.1' }}
+    _active={{ bg: 'secondaire.1' }}
+    size='sm'
     disabled={on_wait}
     onClick={() => {
       setOnWait(true)
@@ -247,13 +253,7 @@ export const LoginOutButton = (
           returnToApp(navigate)
         })
     }}
-  >
-    {
-      on_wait ?
-        <Spinner /> :
-        <FaPowerOff />
-    }
-  </Button>
+  />
 }
 
 

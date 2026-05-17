@@ -4,7 +4,10 @@ import { useNavigate, NavigateFunction } from 'react-router-dom'
 import {
   Button,
   ButtonGroup,
+  IconButton,
 } from '@chakra-ui/react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUserPlus, faRightToBracket } from '@fortawesome/free-solid-svg-icons'
 import { LoginOutButton } from '../Login/Login'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 import { TFunction } from 'i18next'
@@ -36,48 +39,55 @@ export const UserPagesButtons = (
 
   // Either create a menu to select where we navigate to (login or register account)
   // or add a button to navigate to
-  const user_navigation_bar_free = <ButtonGroup
-    // layerStyle='menutop_layout_style'
-    // height='5rem'
-    // gridTemplateColumns='11rem 11rem'
-    isAttached
-  >
+  const user_navigation_bar_free = <ButtonGroup spacing='0.25rem' size='sm'>
     <OSTooltip
-      label={t('UserNav.tooltip.to_buy')}
+      label={t('UserNav.tooltip.to_buy') || t('UserNav.to_buy')}
       isAlwaysOpen={show_splashscreen}>
-      <Button
-        variant='btn_lone_navigation_primary'
-        size='sizeBtnTextLogin'
+      <IconButton
+        aria-label={t('UserNav.to_buy')}
+        icon={<FontAwesomeIcon icon={faUserPlus} />}
+        bg='primaire.1'
+        color='white'
+        _hover={{ bg: 'secondaire.1' }}
+        _active={{ bg: 'secondaire.1' }}
+        size='sm'
         onClick={() => navigate('/register')}
-      >
-        {t('UserNav.to_buy')}
-      </Button></OSTooltip>
-    <Button
-      variant='btn_lone_navigation_secondary'
-      size='sizeBtnTextLogin'
-      onClick={() => navigate('/login')}
-    >
-      {t('UserNav.to_con')}
-    </Button>
+      />
+    </OSTooltip>
+    <OSTooltip label={t('UserNav.to_con')}>
+      <IconButton
+        aria-label={t('UserNav.to_con')}
+        icon={<FontAwesomeIcon icon={faRightToBracket} />}
+        bg='primaire.2'
+        color='white'
+        _hover={{ bg: 'secondaire.2' }}
+        _active={{ bg: 'secondaire.2' }}
+        size='sm'
+        onClick={() => navigate('/login')}
+      />
+    </OSTooltip>
   </ButtonGroup>
 
-  const user_navigation_bar_connected = <ButtonGroup
-    isAttached
-  >
-    <Button
-      variant={'menutop_button_goto_dashboard'}
-      size='sizeBtnTextLogin'
-      onClick={() => {
-        navigate('/account')
-        // Save current json before moving to login page
-        const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp)
-        }
-      }}>
-
-      {icon_user}
-    </Button>
+  const user_navigation_bar_connected = <ButtonGroup spacing='0.25rem' size='sm'>
+    <OSTooltip label={t('UserNav.to_dashboard') || 'Dashboard'}>
+      <IconButton
+        aria-label='Dashboard'
+        icon={icon_user}
+        bg='primaire.2'
+        color='white'
+        _hover={{ bg: 'secondaire.2' }}
+        _active={{ bg: 'secondaire.2' }}
+        size='sm'
+        onClick={() => {
+          navigate('/account')
+          // Save current json before moving to login page
+          const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp)
+          }
+        }}
+      />
+    </OSTooltip>
     <LoginOutButton
       t={t}
       logo={logo}
