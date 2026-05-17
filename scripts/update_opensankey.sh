@@ -29,6 +29,20 @@ export EIGEN_INCLUDE="${APP_DIR}/submodules/MFAProblem/submodules/eigen"
 # --- Go to app dir ---
 cd "$APP_DIR"
 
+# --- Archive currently-deployed version before overwriting it ---
+# Enabled for dev + prod (dev used as canary before activating on prod).
+if [[ "$ENV" == "prod" || "$ENV" == "dev" ]]; then
+    CURRENT_VERSION=$(grep -m1 '"version"' "${APP_DIR}/client/package.json" \
+                      | sed -E 's/.*"version"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
+    SLOT_DIR="${HOME_DIR}/${ENV}_v${CURRENT_VERSION}_opensankey"
+    if [[ -n "$CURRENT_VERSION" && ! -e "$SLOT_DIR" ]]; then
+        echo ">>> archive_version.sh ${ENV} ${CURRENT_VERSION}"
+        bash "${APP_DIR}/archive_version.sh" "$ENV" "$CURRENT_VERSION"
+    else
+        echo ">>> skip archive (slot ${SLOT_DIR} already exists or version unknown)"
+    fi
+fi
+
 # --- Pull & update submodules ---
 echo ">>> git pull"
 git pull
