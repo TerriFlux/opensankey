@@ -98,8 +98,9 @@ export const initializeAdditionalMenusOSP: FType_InitializeAdditionalMenusOSP = 
 
   additionalMenus.current.external_top_buttons_item['views'] = <BannerViewsOSP app_data={new_data_plus} />
 
-  // Trial state-aware bottom-bar CTA. Hidden when the user holds a real OS+ licence.
-  additionalMenus.current.additional_bottom_item.push(
+  // Trial state-aware topbar CTA. Hidden when the user holds a real OS+ licence.
+  // Rendered in the top-right via additional_nav_item, alongside login buttons.
+  additionalMenus.current.additional_nav_item.push(
     <BannerTrialOSP app_data={new_data_plus} />
   )
 
