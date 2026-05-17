@@ -460,12 +460,6 @@ export const UniversalFileConverter = ({
   const [input_options_json, set_input_options_json] = useState(getDefaultInputOptions(input_config['json']))
   const [input_options_base, set_input_options_base] = useState(getDefaultOutputOptions(input_config['base']))
   //const [input_options_blob, set_input_options_blob] = useState(getDefaultInputOptions('blob'))
-  // POC dual-output: two independent flags on the reconciliation tab.
-  // ``with_reconciled`` runs the standard reconciliation pass (default on).
-  // ``with_completed`` runs an extra no-redundancy pass whose result lands in
-  // the new "Valeur complétée" column on the analysis sheet (default off).
-  const [with_reconciled, set_with_reconciled] = useState(true)
-  const [with_completed, set_with_completed] = useState(false)
   const [launch_at_opening, setLaunchAtOpening] = useState(false)
   const [show_terminal, set_show_terminal] = useState(true)
   const [config, setConfig] = useState<ConverterConfig>(CONVERTER_CONFIGS['universal'])
@@ -718,14 +712,16 @@ export const UniversalFileConverter = ({
     set_input_options_base({ ...getDefaultOutputOptions(input_config['base']), ...(config.input_overrides_base ?? {}) })
     set_output_options_excel({ ...getDefaultOutputOptions(output_config['excel']), ...(config.output_overrides_excel ?? {}) })
     set_output_options_json({ ...getDefaultOutputOptions(output_config['json']), ...(config.output_overrides_json ?? {}) })
-    set_output_options_base({ ...getDefaultOutputOptions(output_config['base']), ...(config.output_overrides_base ?? {}) })
-
     // Pre-set solver-only flags from the caller (e.g. the "Compléter le
     // diagramme" command pre-checks with_completed so the user does not need
-    // to toggle it manually before launching). Falls back to the standard
-    // (reconcile only) defaults when no override is provided.
-    set_with_reconciled(default_solver_options?.with_reconciled ?? true)
-    set_with_completed(default_solver_options?.with_completed ?? false)
+    // to toggle it manually before launching). These flags live in
+    // output_options_base, declared with group='solver' in the config so they
+    // render alongside enable_uncertainty / debug_mode / skip_rref.
+    set_output_options_base({
+      ...getDefaultOutputOptions(output_config['base']),
+      ...(config.output_overrides_base ?? {}),
+      ...(default_solver_options ?? {}),
+    })
 
     setLaunchAtOpening(launch_at_opening)
     set_show_terminal(false)
@@ -960,11 +956,6 @@ export const UniversalFileConverter = ({
           delete output_options[key]
         }
       }
-      // POC dual-output flags : independent of the Solveur option group, they
-      // come from their own checkboxes at the bottom of the reconciliation
-      // dialog. Sent only on the reconciliation flow.
-      solver_options.with_reconciled = with_reconciled
-      solver_options.with_completed = with_completed
       form_data.append('solver_options', JSON.stringify(solver_options))
     }
     form_data.append('output_options', JSON.stringify(output_options))
@@ -1330,30 +1321,6 @@ export const UniversalFileConverter = ({
       })()}
 
 
-      {/* POC dual-output: two independent checkboxes on the reconciliation
-          dialog. with_reconciled drives the standard reconciliation pass;
-          with_completed adds a second no-redundancy pass whose result lands
-          in the new "Valeur complétée" column. */}
-      {config.title === 'ProcessDialog.reconciliation' && !launch_at_opening && (
-        <Box layerStyle='box_content_config' display='flex' alignItems='center' gap='1rem'>
-          <Checkbox
-            isChecked={with_reconciled}
-            onChange={(e) => set_with_reconciled(e.target.checked)}
-          >
-            <Text title={t('ProcessDialog.with_reconciled_tooltip')}>
-              {t('ProcessDialog.with_reconciled_label')}
-            </Text>
-          </Checkbox>
-          <Checkbox
-            isChecked={with_completed}
-            onChange={(e) => set_with_completed(e.target.checked)}
-          >
-            <Text title={t('ProcessDialog.with_completed_tooltip')}>
-              {t('ProcessDialog.with_completed_label')}
-            </Text>
-          </Checkbox>
-        </Box>
-      )}
 
       {/* Bouton de lancement */}
       {!launch_at_opening ? <>
@@ -1366,7 +1333,11 @@ export const UniversalFileConverter = ({
             size='sizeButtonDialog'
             isDisabled={
               (input_format !== 'blob' && config.input.required && !input_file)
-              || (config.title === 'ProcessDialog.reconciliation' && !with_reconciled && !with_completed)
+              || (
+                config.title === 'ProcessDialog.reconciliation'
+                && !output_options_base.with_reconciled
+                && !output_options_base.with_completed
+              )
             }
             onClick={generic_process}
           >
