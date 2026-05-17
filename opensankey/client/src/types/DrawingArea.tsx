@@ -1344,8 +1344,9 @@ export class Class_DrawingArea {
         'transform',
         'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
     if (this.editable) {
-      this.d3_selection_bg?.select('rect').style('stroke-width', 5)
+      this.d3_selection_bg?.select('rect').style('stroke-width', 1)
       this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
+      this.d3_selection_bg?.select('rect').style('shape-rendering', 'crispEdges')
     }
     this.drawCursor()
     this.drawBgImage()
@@ -1996,30 +1997,15 @@ export class Class_DrawingArea {
 
     // Get the real bounding box of all content in g_drawing's local coordinate system
     // This handles negative coordinates correctly since getBBox returns the untransformed extent
-    let bbox: DOMRect
+    let bbox: DOMRect | null = null
     try {
       bbox = gNode.getBBox()
     } catch {
-      return // getBBox can throw if element has no rendered content
+      // getBBox can throw if element has no rendered content; treat as empty
     }
-    if (bbox.width === 0 && bbox.height === 0) return
+    const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
 
-    // Map content bbox to screen coordinates using the zoom transform
-    const transform = d3.zoomTransform(svgNode)
-    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
-    const screenLeft = transform.x + bbox.x * transform.k
-    const screenRight = transform.x + (bbox.x + bbox.width) * transform.k
-    const screenTop = transform.y + bbox.y * transform.k
-    const screenBottom = transform.y + (bbox.y + bbox.height) * transform.k
-    const screenW = screenRight - screenLeft
-    const screenH = screenBottom - screenTop
-
-    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
-    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
-    // The translateExtent must include the "canvas" rectangle (paper in paper mode,
-    // background rect in free mode) so the custom constrain (anchor top-left) aligns
-    // that canvas to the viewport's top-left — not the elements bbox, which could be
-    // a small sub-region and would leave the canvas off-anchored.
+    // Canvas (paper or free-mode background) bounds in world coords
     let canvasX0: number
     let canvasY0: number
     let canvasX1: number
@@ -2035,13 +2021,35 @@ export class Class_DrawingArea {
       canvasX1 = canvasX0 + this._zoom_width
       canvasY1 = canvasY0 + this._zoom_height
     }
-    const panX0 = Math.min(bbox.x, canvasX0)
-    const panY0 = Math.min(bbox.y, canvasY0)
-    const panX1 = Math.max(bbox.x + bbox.width, canvasX1)
-    const panY1 = Math.max(bbox.y + bbox.height, canvasY1)
+    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
+    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
+    // The translateExtent must include the "canvas" rectangle so the custom constrain
+    // (anchor top-left) aligns that canvas to the viewport's top-left.
+    const panX0 = has_bbox ? Math.min(bbox!.x, canvasX0) : canvasX0
+    const panY0 = has_bbox ? Math.min(bbox!.y, canvasY0) : canvasY0
+    const panX1 = has_bbox ? Math.max(bbox!.x + bbox!.width, canvasX1) : canvasX1
+    const panY1 = has_bbox ? Math.max(bbox!.y + bbox!.height, canvasY1) : canvasY1
+    // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
+    // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
+    // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
+    const fm = this._fit_margin / 2
     this.zoomListener
-      .extent([[0, navH], [viewW, navH + viewH]])
+      .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
       .translateExtent([[panX0, panY0], [panX1, panY1]])
+    // Without an actual bbox we can't (and don't need to) update scrollbars — they
+    // stay hidden until there is content. The extent / translateExtent above are
+    // enough for the initial draw and for empty-diagram resets to anchor correctly.
+    if (!has_bbox) return
+
+    // Map content bbox to screen coordinates using the zoom transform
+    const transform = d3.zoomTransform(svgNode)
+    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
+    const screenLeft = transform.x + bbox!.x * transform.k
+    const screenRight = transform.x + (bbox!.x + bbox!.width) * transform.k
+    const screenTop = transform.y + bbox!.y * transform.k
+    const screenBottom = transform.y + (bbox!.y + bbox!.height) * transform.k
+    const screenW = screenRight - screenLeft
+    const screenH = screenBottom - screenTop
 
     // Horizontal scrollbar: content wider than viewport
     // interrupt() cancels any pending d3 transition that could override opacity
