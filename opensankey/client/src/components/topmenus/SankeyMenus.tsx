@@ -92,7 +92,7 @@ export const SankeyMenu = (
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
   const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
-  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin / 2
+  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -211,7 +211,7 @@ export const SankeyMenu = (
             onClick={toggleShow}
             value='menuConfigButton'
             style={{
-              right: app_data.drawing_area.fit_margin,
+              right: posBtnOpenConfig,
               top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin,
             }}
           >
