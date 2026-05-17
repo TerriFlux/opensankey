@@ -1,7 +1,19 @@
 // Standard libs
 import React, { useState, useEffect } from 'react'
-import { Box, Spinner, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
-import ReactMarkdown from 'react-markdown'
+import { Box, Heading, Spinner, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react'
+import ReactMarkdown, { type Components } from 'react-markdown'
+
+// Chakra's CSSReset flattens h1..h6 to inherit, which makes raw <h2>/<h3>
+// rendered by react-markdown indistinguishable from body text. Re-map them
+// onto Chakra Heading so the WHATSNEW sections stay visually structured.
+const whatsnewComponents: Components = {
+  h2: ({ children }) => (
+    <Heading as='h2' size='lg' marginTop='1.5rem' marginBottom='0.75rem'>{children}</Heading>
+  ),
+  h3: ({ children }) => (
+    <Heading as='h3' size='md' marginTop='1rem' marginBottom='0.5rem'>{children}</Heading>
+  ),
+}
 
 // OpenSankey libs
 import {
@@ -63,7 +75,7 @@ const WhatsNewContent = ({ app_data }: { app_data: Class_ApplicationData }) => {
     paddingRight='1rem'
     className='whatsnew-markdown'
   >
-    <ReactMarkdown>{content}</ReactMarkdown>
+    <ReactMarkdown components={whatsnewComponents}>{content}</ReactMarkdown>
   </Box>
 }
 

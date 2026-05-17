@@ -7,7 +7,30 @@
 
 <!-- LANG:fr -->
 
-## Avril 2026
+## v1.1.4 — Mai 2026
+
+### Mode englobant — refonte
+
+- **Sizing dynamique** : un nœud parent affiché comme cadre pointillé autour de ses enfants suit désormais leur taille en temps réel — plus de redimensionnement figé. À la sortie du mode, le parent retrouve aussitôt sa taille calée sur ses propres flux. Modifier la valeur d'un flux met l'enveloppe à jour à la volée.
+- **Englobement emboîté** : un nœud déjà englobé peut être englobé à son tour sur ses propres enfants. Le mode du parent est repris automatiquement par défaut au sous-niveau, et les variantes incompatibles sont grisées pour garder une mise en scène cohérente.
+- **Désagrégation et expansion latérale sous englobé** : désagréger un nœud englobé fait apparaître ses sous-enfants à sa place dans la pile englobante ; les clones d'expansion s'intègrent au même cadre géométrique sans déborder.
+- **Drag transitif** : déplacer un enfant met à jour l'enveloppe de tous les ancêtres englobants à chaque cran de drag, plus seulement la boîte immédiate.
+
+### Visualisation
+
+- **Valeur ancrée au libellé d'un nœud** : un nouveau bouton cadenas, à droite des huit boutons d'alignement du panneau d'apparence, permet d'ancrer la valeur d'un nœud sur son libellé plutôt que sur sa forme. Lorsque le fond du libellé est visible, il englobe désormais libellé et valeur d'un seul tenant. Si le libellé n'est pas affiché, la valeur disparaît avec lui.
+
+### Mise en page
+
+- **Styles d'extrémité automatiques** : les nœuds sources et puits reçoivent des styles dédiés qui positionnent leur libellé à gauche ou à droite, sans plus écraser les réglages manuels du label.
+
+### Corrections
+
+- **Undo des expansions latérales** : Ctrl+Z restaure désormais proprement les opérations *Expansion à gauche / à droite*.
+- **Redo cohérent sur agréger / désagréger** : le redo d'une agrégation puis désagrégation n'est plus perdu après un undo.
+- Corrections internes de stabilité pour l'intégration du Viewer dans des applications tierces.
+
+## v1.0.x — Avril 2026
 
 ### Export et communication
 
@@ -53,7 +76,30 @@
 
 <!-- LANG:en -->
 
-## April 2026
+## v1.1.4 — May 2026
+
+### Container mode — overhaul
+
+- **Dynamic sizing**: a parent node rendered as a dashed frame around its children now tracks their size in real time — no more frozen resize. On exiting container mode, the parent immediately reverts to its own flow-driven size. Editing a flow value updates the envelope on the fly.
+- **Nested containers**: a node that is already contained can itself contain its own children. The sub-level inherits the parent's mode by default, and incompatible variants are greyed out to keep a consistent visual contract.
+- **Disaggregation and lateral expansion under a container**: disaggregating a contained node now reveals its sub-children in place within the containing stack; expansion clones fit into the same geometric frame without overflowing.
+- **Transitive drag**: moving a child updates the envelope of every enclosing ancestor at each drag tick, not just the immediate box.
+
+### Visualization
+
+- **Value anchored to a node's label**: a new padlock button, to the right of the eight alignment buttons in the appearance panel, lets you anchor a node's value to its label instead of its shape. When the label background is visible, it now wraps label and value as a single block. If the label is hidden, the value disappears with it.
+
+### Layout
+
+- **Automatic extremity styles**: source and sink nodes get dedicated styles that place their label on the left or right, without overwriting manual label tweaks.
+
+### Fixes
+
+- **Undo on lateral expansion / contraction**: Ctrl+Z now properly reverts *Expand left / right* operations.
+- **Consistent redo on aggregate / disaggregate**: the redo of an aggregation followed by disaggregation is no longer lost after an undo.
+- Internal stability fixes for embedding the Viewer in third-party applications.
+
+## v1.0.x — April 2026
 
 ### Export and sharing
 
