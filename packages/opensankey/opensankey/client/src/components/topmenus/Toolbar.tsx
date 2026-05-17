@@ -53,7 +53,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
-  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
+  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
   app_data.menu_configuration.ref_toolbar.current = forceUpdate
 
