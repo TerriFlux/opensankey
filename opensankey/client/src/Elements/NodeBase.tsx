@@ -170,16 +170,12 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // NB: on NE redessine PAS les labels ici. Sinon un simple clic
     // (re-sélection) détruit et recrée le <text> entre les deux clics d'un
     // double-clic → le dblclick natif ne déclenche pas l'éditeur du label.
-    // Toggle léger des poignées de redimensionnement du label :
-    //   - désélectionné → on retire les poignées du DOM
-    //   - sélectionné   → on les ré-attache (sans redessiner le <text>,
-    //                     sinon on casse le double-clic d'édition)
-    if (this._is_selected) {
-      this._nodeDrawNameLabel?.refreshLabelResizeHandles()
-      this._nodeDrawIcon?.refreshLabelResizeHandles()
-    } else {
-      this.d3_selection?.selectAll('.label_resize_handle').remove()
-    }
+    // drawAsSelected reflète un changement de sélection au niveau ÉLÉMENT
+    // (typiquement clic sur la forme). On clear la sub-sélection du label
+    // dans tous les cas — l'utilisateur doit cliquer sur le <text> du label
+    // pour faire (ré)apparaître les poignées.
+    this.selected_label_prefix = null
+    this.d3_selection?.selectAll('.label_resize_handle').remove()
     // this._nodeDrawShape.updateSelectedStroke(this.is_selected)
   }
 

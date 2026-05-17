@@ -259,7 +259,9 @@ export abstract class DrawLabelBase {
     text_bbox_height: number
   ) {
     if (!this._element.drawing_area?.editable) return
-    if (!this._element.is_selected) return
+    // Affichage uniquement si CE label est sub-sélectionné (clic sur son <text>),
+    // pas juste si la forme est sélectionnée.
+    if ((this._element as Class_BaseShape).selected_label_prefix !== this.prefix) return
     if (this._label_values == null) return
     const box_width = (this._label_values as { box_width?: number }).box_width ?? 0
     if (!Number.isFinite(box_width) || box_width <= 0) return
@@ -1207,6 +1209,15 @@ export abstract class DrawLabelBase {
   ): void {
     if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
+      .on('click', (evt: MouseEvent) => {
+        // Clic sur le label : sous-sélectionne ce label sur l'élément (les
+        // poignées de redimensionnement n'apparaîtront que pour ce label).
+        // stopPropagation pour que le clic ne désélectionne pas l'élément.
+        evt.stopPropagation()
+        const el = this._element as Class_BaseShape
+        el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
+        this.refreshLabelResizeHandles()
+      })
       .on('dblclick', (evt: MouseEvent) => {
         evt.stopPropagation()
         evt.preventDefault()

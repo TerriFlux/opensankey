@@ -459,15 +459,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public drawAsSelected() {
     this._link_control_points.drawControlPoint()
-    // Toggle léger des poignées de redimensionnement des labels (sans
-    // redessiner le <text>, sinon on casse le double-clic d'édition).
-    if (this._is_selected) {
-      this._link_draw_label?.refreshLabelResizeHandles()
-      this._link_draw_value?.refreshLabelResizeHandles()
-      this._link_draw_icon?.refreshLabelResizeHandles()
-    } else {
-      this.d3_selection?.selectAll('.label_resize_handle').remove()
-    }
+    // Tout changement de sélection au niveau élément (clic sur le flux)
+    // clear la sub-sélection du label — l'utilisateur doit cliquer sur
+    // le <text> d'un label pour faire (ré)apparaître les poignées.
+    this.selected_label_prefix = null
+    this.d3_selection?.selectAll('.label_resize_handle').remove()
   }
 
   /**
