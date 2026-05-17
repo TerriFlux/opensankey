@@ -628,6 +628,10 @@ export class NodeEventsHandler {
         target,
         this._node.drawing_area,
       )
+      // Peuple source._output_links_starting_point[ghost_link.id] pour que le
+      // 1er rendu du ghost_link voie son starting_point (sinon drawElements
+      // est skip et aucun path n'est tracé pendant le drag initial).
+      this._node.applyPosition()
     }
   }
 
