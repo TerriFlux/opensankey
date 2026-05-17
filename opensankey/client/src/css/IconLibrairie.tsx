@@ -25,7 +25,7 @@
 // ==================================================================================================
 import React from 'react'
 import { faAnchor, faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
-import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
+import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
@@ -1493,7 +1493,7 @@ export class Class_IconLibrary {
 
   protected _icon_open_config = <FaAngleDoubleLeft />
   protected _icon_close_config = <FaAngleDoubleRight />
-  protected _icon_open_close_config = <FontAwesomeIcon icon={faScrewdriverWrench} />
+  protected _icon_open_close_config = <FaCog />
 
   protected _icon_move_element_down = <FaArrowAltCircleDown />
   protected _icon_move_element_up = <FaArrowAltCircleUp />
