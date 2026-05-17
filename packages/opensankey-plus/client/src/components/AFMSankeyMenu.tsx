@@ -19,7 +19,7 @@ export const AFMEditionMenu = ({ app_data }: {
     data-prefix='fas'
     className='svg-inline--fa'
     viewBox="0 0 24 24"
-    style={{ 'height': '2rem', 'width': '2rem' }}
+    style={{ 'height': '1.25rem', 'width': '1.25rem' }}
   >
     <path
       fill='currentColor'
