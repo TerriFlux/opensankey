@@ -28,12 +28,12 @@ export const AFMEditionMenu = ({ app_data }: {
   </svg>
 
   return <>
-    <OSTooltip
-      placement='bottom' label={t('Menu.tooltips.reconcil')}>
-      <Menu
-        variant='menu_button_subnav_style'
-        placement='bottom-start'
-      >
+    <Menu
+      variant='menu_button_subnav_style'
+      placement='bottom-start'
+    >
+      <OSTooltip
+        placement='bottom' label={t('Menu.tooltips.reconcil')}>
         <MenuButton>
           <Box
             gridColumn='1'
@@ -59,8 +59,9 @@ export const AFMEditionMenu = ({ app_data }: {
             />
           </Box>
         </MenuButton>
+      </OSTooltip>
 
-        <MenuList>
+      <MenuList>
           <MenuItem
             onClick={() => {
               app_data.menu_configuration.ref_universal_converter_set_config.current(
@@ -76,8 +77,7 @@ export const AFMEditionMenu = ({ app_data }: {
               {t('Menu.afm_reconcil_excel')}
             </Box>
           </MenuItem>
-        </MenuList>
-      </Menu>
-    </OSTooltip>
+      </MenuList>
+    </Menu>
   </>
 }
