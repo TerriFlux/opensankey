@@ -787,9 +787,11 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  value_label_text_source!: LinkLabelSpecificValues['text_source']
 
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  name_label_text_source!: LinkLabelSpecificValues['text_source']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
@@ -1155,9 +1157,11 @@ export class Class_ElementStyle {
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  value_label_text_source!: LinkLabelSpecificValues['text_source']
 
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  name_label_text_source!: LinkLabelSpecificValues['text_source']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
