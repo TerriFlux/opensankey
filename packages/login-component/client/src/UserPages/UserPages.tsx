@@ -46,11 +46,10 @@ export const UserPagesButtons = (
       <IconButton
         aria-label={t('UserNav.to_buy')}
         icon={<FontAwesomeIcon icon={faUserPlus} />}
-        bg='primaire.1'
-        color='white'
-        _hover={{ bg: 'secondaire.1' }}
-        _active={{ bg: 'secondaire.1' }}
         size='sm'
+        variant='ghost'
+        boxSize='2rem'
+        fontSize='1rem'
         onClick={() => navigate('/register')}
       />
     </OSTooltip>
@@ -58,26 +57,24 @@ export const UserPagesButtons = (
       <IconButton
         aria-label={t('UserNav.to_con')}
         icon={<FontAwesomeIcon icon={faRightToBracket} />}
-        bg='primaire.2'
-        color='white'
-        _hover={{ bg: 'secondaire.2' }}
-        _active={{ bg: 'secondaire.2' }}
         size='sm'
+        variant='ghost'
+        boxSize='2rem'
+        fontSize='1rem'
         onClick={() => navigate('/login')}
       />
     </OSTooltip>
   </ButtonGroup>
 
   const user_navigation_bar_connected = <ButtonGroup spacing='0.25rem' size='sm'>
-    <OSTooltip label={t('UserNav.to_dashboard') || 'Dashboard'}>
+    <OSTooltip label={t('UserNav.tooltip.to_dashboard') || t('UserNav.to_dashboard') || 'Dashboard'}>
       <IconButton
-        aria-label='Dashboard'
+        aria-label={t('UserNav.to_dashboard') || 'Dashboard'}
         icon={icon_user}
-        bg='primaire.2'
-        color='white'
-        _hover={{ bg: 'secondaire.2' }}
-        _active={{ bg: 'secondaire.2' }}
         size='sm'
+        variant='ghost'
+        boxSize='2rem'
+        fontSize='1rem'
         onClick={() => {
           navigate('/account')
           // Save current json before moving to login page

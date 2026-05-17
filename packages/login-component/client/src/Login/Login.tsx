@@ -21,6 +21,7 @@ import {
 
 import { loginOut, loginUser } from './LoginFunctions'
 import { LoginComponent } from '../LoginComponent'
+import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 
 export const Login = ({
   t,
@@ -234,26 +235,27 @@ export const LoginOutButton = (
 
   const [on_wait, setOnWait] = useState(false)
 
-  return <IconButton
-    aria-label={t('UserNav.to_logout') || 'Logout'}
-    icon={on_wait ? <Spinner /> : <FaPowerOff />}
-    bg='primaire.1'
-    color='white'
-    _hover={{ bg: 'secondaire.1' }}
-    _active={{ bg: 'secondaire.1' }}
-    size='sm'
-    disabled={on_wait}
-    onClick={() => {
-      setOnWait(true)
-      loginOut(
-        loginComponent,
-        setLicenses,
-        () => {
-          setOnWait(false)
-          returnToApp(navigate)
-        })
-    }}
-  />
+  return <OSTooltip label={t('UserNav.tooltip.to_logout') || t('UserNav.to_logout') || 'Logout'}>
+    <IconButton
+      aria-label={t('UserNav.to_logout') || 'Logout'}
+      icon={on_wait ? <Spinner /> : <FaPowerOff />}
+      size='sm'
+      variant='ghost'
+      boxSize='2rem'
+      fontSize='1rem'
+      disabled={on_wait}
+      onClick={() => {
+        setOnWait(true)
+        loginOut(
+          loginComponent,
+          setLicenses,
+          () => {
+            setOnWait(false)
+            returnToApp(navigate)
+          })
+      }}
+    />
+  </OSTooltip>
 }
 
 
