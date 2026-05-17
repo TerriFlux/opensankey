@@ -98,8 +98,9 @@ export const SankeyMenu = (
     set_show_nav(!show_nav)
   }
 
-  // 1.75rem is the size of the btn save in cache + edit diagram name
-  const posTopMenuConfig = 'calc(' + (app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)) + 'px + 1.75rem)'
+  // Aligned with the floating config toggle button (same top as the wrench).
+  // The legacy +1.75rem offset was for the now-removed file_name Editable.
+  const posTopMenuConfig = app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin
 
   // JSX.Elements for the component ----------------------------------------------------------------
 
