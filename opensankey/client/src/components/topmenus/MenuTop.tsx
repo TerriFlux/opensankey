@@ -1094,6 +1094,8 @@ const AppInfoPopover = () => {
         icon={<InfoOutlineIcon />}
         size='sm'
         variant='ghost'
+        boxSize='2rem'
+        fontSize='1rem'
       />
     </PopoverTrigger>
     <Portal>
