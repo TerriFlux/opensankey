@@ -229,13 +229,12 @@ export const createZDDModifierPlus = (app_data: Class_ApplicationDataOSP) => {
       app_data.menu_configuration_osp.ref_to_menu_context_drawing_area_updater.current()
     },
     afmCompleteOnly: () => {
-      // Reuse the reconciliation_sankey config but pre-set the
-      // remove_redundancy solver flag so the run drops redundant balance
-      // constraints. Measured values are then preserved (no reconciliation
-      // adjustment), and only unknown flows are completed.
+      // "Compléter le diagramme" — single-pass no-redundancy mode: measured
+      // values are preserved as-is and only unknown flows are filled in. The
+      // reconciliation pass is skipped so no measure is adjusted.
       app_data.menu_configuration.ref_universal_converter_set_config.current(
         CONVERTER_CONFIGS['reconciliation_sankey'], '', true,
-        { remove_redundancy: true }
+        { with_reconciled: false, with_completed: true }
       )
       dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
       app_data.drawing_area.is_drawing_area_contextualised = false
