@@ -171,24 +171,22 @@ export abstract class DrawLabelBase {
 
     if (!bgValues.visible) return null
 
-    // Largeur du fond : "verrouillée" → valeur fixe pilotée par l'utilisateur
-    // (box_width), sinon → s'adapte au contenu (largeur passée en paramètre,
-    // ex. bbox du texte). Quand verrouillée, le fond garde le même ancrage que
-    // le contenu (text-anchor) pour rester calé sur la forme du nœud :
-    //   - start  → bord gauche du fond aligné sur le bord gauche du contenu
-    //   - end    → bord droit du fond aligné sur le bord droit du contenu
-    //   - middle → centre du fond aligné sur le centre du contenu
+    // Largeur du fond :
+    //   - locked   → valeur fixe pilotée par l'utilisateur (bgValues.box_width).
+    //   - unlocked → s'adapte à la largeur effective du contenu (bbox du
+    //     texte ou bbox combinée en mode stick). label.box_width n'est que
+    //     la limite de wrap, pas la largeur visible du label.
     let bg_x = x
     let bg_width = width
     if (bgValues.width_locked) {
       bg_width = bgValues.box_width
-      if (options?.anchor === 'start') {
-        bg_x = x
-      } else if (options?.anchor === 'end') {
-        bg_x = x + width - bg_width
-      } else {
-        bg_x = x + width / 2 - bg_width / 2
-      }
+    }
+    if (options?.anchor === 'start') {
+      bg_x = x
+    } else if (options?.anchor === 'end') {
+      bg_x = x + width - bg_width
+    } else {
+      bg_x = x + width / 2 - bg_width / 2
     }
 
     const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
@@ -219,6 +217,180 @@ export abstract class DrawLabelBase {
     }
     bgElement.lower()
     return bgElement
+  }
+
+  /**
+   * Poignées horizontales sur le label permettant de redimensionner
+   * `label.box_width` à la souris. Le fond (qui peut suivre la largeur du
+   * label ou être verrouillé sur sa propre valeur) est rendu cohérent au
+   * redraw qui suit le drag.
+   */
+  /**
+   * Ré-attache les poignées sur le label déjà dessiné, sans redessiner le
+   * texte ni le fond. Lit la bbox actuelle du <text> du label et calcule les
+   * positions des poignées à partir d'elle.
+   *
+   * Appelé par drawAsSelected pour faire apparaître les poignées quand
+   * l'élément est (re-)sélectionné, sans recréer le <text> (ce qui casserait
+   * le double-clic d'édition).
+   */
+  public refreshLabelResizeHandles(): void {
+    if (!this.d3_selection) return
+    this.d3_selection.selectAll('.label_resize_handle').remove()
+    const text_node = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
+    if (!text_node) return
+    const text_bbox = text_node.getBBox()
+    const anchor = (text_node as SVGTextElement).getAttribute('text-anchor') ?? 'middle'
+    const [label_pos_x] = this.getLabelPos()
+    this.drawLabelResizeHandles(
+      this.d3_selection,
+      anchor,
+      label_pos_x,
+      text_bbox.y,
+      text_bbox.height
+    )
+  }
+
+  protected drawLabelResizeHandles(
+    parent: d3_selection_type,
+    anchor: string,
+    label_pos_x: number,
+    text_bbox_y: number,
+    text_bbox_height: number
+  ) {
+    if (!this._element.drawing_area?.editable) return
+    if (!this._element.is_selected) return
+    if (this._label_values == null) return
+    const box_width = (this._label_values as { box_width?: number }).box_width ?? 0
+    if (!Number.isFinite(box_width) || box_width <= 0) return
+
+    // Bords gauche/droit de la "boîte" du label, calculés à partir de la
+    // position d'ancrage et de box_width — indépendant de la bbox réelle du
+    // texte (qui peut être plus étroite si le texte ne remplit pas la boîte).
+    let box_left: number
+    let box_right: number
+    if (anchor === 'start') {
+      box_left = label_pos_x
+      box_right = label_pos_x + box_width
+    } else if (anchor === 'end') {
+      box_left = label_pos_x - box_width
+      box_right = label_pos_x
+    } else {
+      box_left = label_pos_x - box_width / 2
+      box_right = label_pos_x + box_width / 2
+    }
+
+    const handleWidth = 6
+    const handleHeight = Math.max(text_bbox_height, 12)
+    const handle_y = text_bbox_y + text_bbox_height / 2 - handleHeight / 2
+
+    const widthAttr = `${this.prefix}_box_width`
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const element = this._element as any
+
+    // Redraw complet de la moitié du label concernée — via la méthode de
+    // l'élément pour que refreshStickLayout fire en mode stick.
+    const fullRedraw = () => {
+      if (this.prefix === 'name_label' && typeof element.drawNameLabel === 'function') {
+        element.drawNameLabel()
+      } else if (this.prefix === 'value_label' && typeof element.drawValueLabel === 'function') {
+        element.drawValueLabel()
+      } else {
+        this.drawGenericLabel()
+      }
+    }
+
+    const dragState = { initial_width: 0, total_dx: 0, prev_suspend: false }
+
+    const attachDrag = (handle: d3_selection_type, side: 'left' | 'right') => {
+      handle.call(
+        d3.drag<SVGGElement, unknown>()
+          .filter(evt => evt.which === 1 && !evt.altKey)
+          .on('start', (event) => {
+            event.sourceEvent?.stopPropagation?.()
+            this._element.drawing_area.bypass_redraws = true
+            dragState.prev_suspend = Boolean(element._suspend_actions)
+            element._suspend_actions = true
+            dragState.initial_width = Number(Reflect.get(element, widthAttr) ?? box_width)
+            dragState.total_dx = 0
+          })
+          .on('drag', (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+            // En 'middle', le label est centré sur son ancre : un dx de
+            // poignée fait varier la moitié de la largeur de chaque côté →
+            // box_width varie de 2*dx. En 'start'/'end', un seul bord bouge,
+            // donc box_width varie de 1*dx.
+            dragState.total_dx += event.dx
+            const factor = anchor === 'middle' ? 2 : 1
+            const bw_sign = side === 'right' ? 1 : -1
+            const new_box_width = Math.max(
+              10,
+              dragState.initial_width + bw_sign * dragState.total_dx * factor
+            )
+            Reflect.set(element, widthAttr, new_box_width)
+
+            // Live update visuel des poignées (le fond et le texte seront
+            // recalés au redraw final ; tenter une mise à jour live ici
+            // recréerait le <g> portant le drag).
+            let new_left: number, new_right: number
+            if (anchor === 'start') {
+              new_left = label_pos_x
+              new_right = label_pos_x + new_box_width
+            } else if (anchor === 'end') {
+              new_left = label_pos_x - new_box_width
+              new_right = label_pos_x
+            } else {
+              new_left = label_pos_x - new_box_width / 2
+              new_right = label_pos_x + new_box_width / 2
+            }
+            parent.select('.label_resize_handle_left rect')
+              .attr('x', new_left - handleWidth / 2)
+            parent.select('.label_resize_handle_right rect')
+              .attr('x', new_right - handleWidth / 2)
+          })
+          .on('end', () => {
+            element._suspend_actions = dragState.prev_suspend
+            this._element.drawing_area.bypass_redraws = false
+            const final_width = Number(Reflect.get(element, widthAttr))
+            const initial_width = dragState.initial_width
+            if (Math.abs(final_width - initial_width) > 0.5) {
+              const inv = () => {
+                Reflect.set(element, widthAttr, initial_width)
+                fullRedraw()
+              }
+              const redo = () => {
+                Reflect.set(element, widthAttr, final_width)
+                fullRedraw()
+              }
+              this._element.drawing_area.application_data.history.saveUndo(inv)
+              this._element.drawing_area.application_data.history.saveRedo(redo)
+            }
+            fullRedraw()
+          })
+      )
+    }
+
+    const makeHandle = (cx: number, side: 'left' | 'right') => {
+      const g = parent.append('g')
+        .classed('label_resize_handle', true)
+        .classed(`label_resize_handle_${side}`, true)
+        .attr('id', `label_resize_handle_${side}_${this.prefix}_${this.getElementId()}`)
+        .style('cursor', 'ew-resize')
+      g.append('rect')
+        .attr('x', cx - handleWidth / 2)
+        .attr('y', handle_y)
+        .attr('width', handleWidth)
+        .attr('height', handleHeight)
+        .attr('fill', '#1f77b4')
+        .attr('fill-opacity', 0.85)
+        .attr('stroke', '#ffffff')
+        .attr('stroke-width', 1)
+        .attr('rx', 1)
+      attachDrag(g, side)
+      g.raise()
+    }
+
+    makeHandle(box_left, 'left')
+    makeHandle(box_right, 'right')
   }
 
   /**
@@ -895,24 +1067,30 @@ export abstract class DrawLabelBase {
   }
 
   /**
-   * ✅ Input d'édition générique
+   * ✅ Input d'édition générique (contenteditable, multi-ligne, WYSIWYG)
    */
   public setInputLabelVisible(initialValue?: string) {
     const foSel = this.d3_selection?.select(`.${this.prefix}_fo_input`)
     foSel?.style('display', null)
     this.d3_selection?.select(`.${this.prefix}_text`).style('display', 'none')
     const inputId = `${this.prefix}_input_${this.getElementId()}`
-    const input = document.getElementById(inputId) as HTMLInputElement | null
+    const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
-    // Same focus sequence as double-click (which works): pre-fill value first,
-    // then select() to focus + select content, then move caret to end.
     if (initialValue !== undefined) {
-      input.value = initialValue
+      input.textContent = initialValue
     }
-    input.select()
+    input.focus()
+    // Sélectionne tout le contenu (équivalent input.select()), puis si une
+    // valeur initiale a été fournie, recale le caret en fin.
+    const sel = window.getSelection()
+    const range = document.createRange()
+    range.selectNodeContents(input)
+    sel?.removeAllRanges()
+    sel?.addRange(range)
     if (initialValue !== undefined) {
-      const len = input.value.length
-      input.setSelectionRange(len, len)
+      range.collapse(false)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
       input.dispatchEvent(new Event('input', { bubbles: true }))
     }
   }
@@ -934,30 +1112,84 @@ export abstract class DrawLabelBase {
   ) {
     if (!this._element.drawing_area.editable) return
 
-    d3_selection?.append('foreignObject')
+    // WYSIWYG : on utilise un <div contenteditable> à la largeur du label
+    // (label.box_width). Le texte wrappe au même point que le rendu, et la
+    // boîte grandit verticalement à mesure que des lignes sont ajoutées.
+    // Quand wrap_long_words est on, les mots longs cassent aussi.
+    // Quand le label tient sur une ligne sans espace, la boîte d\'édition
+    // déborde horizontalement (overflow visible) plutôt que de wrapper.
+    const lbl = this._label_values as { box_width?: number, wrap_long_words?: boolean, font_size?: number } | undefined
+    const target_width = lbl?.box_width ?? box_width
+    const wrap_long = lbl?.wrap_long_words ?? false
+    const font_size = lbl?.font_size ?? 12
+    const line_height = Math.max(font_size * 1.3, 14)
+    // Hauteur généreuse pour ne pas clipper plusieurs lignes ; overflow visible.
+    const fo_height = Math.max(box_height, line_height * 10)
+
+    const fo = d3_selection?.append('foreignObject')
       .classed(this.prefix, true)
       .classed(`${this.prefix}_fo_input`, true)
       .attr('x', box_pos_x)
       .attr('y', box_pos_y)
-      .attr('width', box_width)
-      .attr('height', box_height)
+      .attr('width', target_width)
+      .attr('height', fo_height)
+      .attr('overflow', 'visible')
       .style('display', 'none')
-      .append('xhtml:div')
-      .append('input')
+
+    if (!fo) return
+
+    // Comportement demandé :
+    //  - césure (wrap_long_words) ON  → la boîte fait `target_width` et le
+    //    texte wrappe en bout de ligne (y compris en cassant les mots longs).
+    //  - césure OFF                  → la boîte grandit horizontalement au
+    //    fur et à mesure qu'on tape (pas de wrap).
+    const div = fo.append('xhtml:div')
       .classed(this.prefix, true)
       .classed(`${this.prefix}_input`, true)
       .attr('id', `${this.prefix}_input_${this._element.id}`)
-      .attr('type', 'text')
-      .attr('value', this.getInputInitialValue())
-      .attr('font-size', String(this._label_values.font_size) + 'px')
-      .on('input', (evt) => {
+      .attr('contenteditable', 'true')
+      .style('display', 'inline-block')
+      .style('min-height', `${line_height}px`)
+      .style('font-size', `${font_size}px`)
+      .style('line-height', `${line_height}px`)
+      .style('outline', '1px solid #1f77b4')
+      .style('background', 'rgba(255,255,255,0.95)')
+      .style('padding', '1px 2px')
+      .style('box-sizing', 'content-box')
+      .style('cursor', 'text')
+    if (wrap_long) {
+      div
+        .style('width', `${target_width}px`)
+        .style('white-space', 'pre-wrap')
+        .style('overflow-wrap', 'break-word')
+        .style('word-break', 'break-word')
+    } else {
+      div
+        .style('white-space', 'nowrap')
+    }
+    (div.node() as HTMLDivElement).textContent = this.getInputInitialValue()
+    div
+      // Empêcher les events souris de bubbler vers le <g> de l'élément :
+      // sinon mouseup/click déclenche eventSimpleLMBClick → drawAsSelected →
+      // redraw du label → l'input disparaît dès qu'on relâche la souris.
+      .on('mousedown', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('mouseup', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('click', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('dblclick', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('input', (evt: Event) => {
         this._element.sankey.drawing_area.bypass_redraws = true
-        this.onInputChange?.(evt.target.value)
+        const text = (evt.target as HTMLElement).innerText ?? ''
+        this.onInputChange?.(text)
         this._element.sankey.drawing_area.bypass_redraws = false
       })
       .on('keydown', (evt: KeyboardEvent) => {
-        if (evt.key === 'Enter' || evt.key === 'Escape') {
-          (evt.target as HTMLInputElement).blur()
+        // Enter valide (sans insérer de saut de ligne) ; Shift+Enter insère
+        // un saut ; Escape valide aussi (le blur déclenche le redraw final).
+        if (evt.key === 'Enter' && !evt.shiftKey) {
+          evt.preventDefault();
+          (evt.target as HTMLElement).blur()
+        } else if (evt.key === 'Escape') {
+          (evt.target as HTMLElement).blur()
         }
       })
       .on('blur', () => this.setInputLabelInvisible())
@@ -1115,6 +1347,23 @@ export abstract class DrawLabelBase {
 
     this.applyTextDragHandlers(textElement)
     this.finalizeLabelCreation(textElement)
+
+    // Poignées de redimensionnement du label (modifient label.box_width).
+    // Rendues sur le <g> du label → seront naturellement nettoyées au prochain
+    // drawGenericLabel via cleanupPreviousLabel.
+    if (this.d3_selection) {
+      const [label_pos_x] = this.getLabelPos()
+      const anchor = textElement.attr('text-anchor') ?? 'middle'
+      const text_node = textElement.node() as SVGGraphicsElement | null
+      const text_bbox = text_node?.getBBox() ?? { x: 0, y: 0, width: 0, height: 0 }
+      this.drawLabelResizeHandles(
+        this.d3_selection,
+        anchor,
+        label_pos_x,
+        text_bbox.y,
+        text_bbox.height
+      )
+    }
   }
 
   protected verticalText(_tspanWidths: number[], _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
