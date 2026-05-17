@@ -1154,8 +1154,8 @@ export const BASE_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
   wrap_long_words: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
+    default: true as boolean,
+    type: (() => true) as (() => boolean),
     category: '',
     actions: [] as BaseActionType[],
     labels: {
