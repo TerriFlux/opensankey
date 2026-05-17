@@ -2759,6 +2759,32 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       it: 'Regolare automaticamente la posizione verticale'
     }
   } satisfies AttributeConfig<boolean>,
+
+  // Source du texte du label de flux. 'custom' = comportement actuel (texte saisi
+  // via text_value). 'none' masque, 'source'/'target' affichent le nom du nœud
+  // amont/aval, 'source_target' affiche "source → target".
+  // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
+  // mais ignoré côté valeur.
+  text_source: {
+    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target',
+    type: (() => 'custom') as (() => string),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Label content',
+      fr: 'Contenu du label',
+      es: 'Contenido de la etiqueta',
+      de: 'Beschriftungstext',
+      it: 'Contenuto etichetta'
+    },
+    tooltips: {
+      en: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
+      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, ou source → destination',
+      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, o origen → destino',
+      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens oder Quelle → Ziel',
+      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, o sorgente → destinazione'
+    }
+  } satisfies AttributeConfig<string>,
 } as const
 
 const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: string, drawAction: BaseActionType) => {

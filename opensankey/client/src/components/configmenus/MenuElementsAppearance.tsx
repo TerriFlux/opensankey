@@ -451,7 +451,10 @@ const LabelContentComponent = ({
 
   const linkLabelValues = elements.length > 0
     ? getLinksLabelValues(links_elements, prefix, refreshParentComponent)
-    : Object.fromEntries(Object.entries(LINKS_LABEL_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default]))
+    : Object.fromEntries(Object.entries(LINKS_LABEL_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])) as {
+      -readonly [K in keyof typeof LINKS_LABEL_SPECIFIC_CONFIG]:
+      ReturnType<(typeof LINKS_LABEL_SPECIFIC_CONFIG)[K]['type']>
+    }
 
   const nodeLabelValues = elements.length > 0
     ? getElementsNameLabelValues(nodes_elements, prefix, refreshParentComponent)
@@ -961,6 +964,29 @@ const LabelContentComponent = ({
               </OverloadedButton>
             </Box>
           </Box>
+          {prefix === 'name_label' && (
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Flux.labels.name_label_text_source')}
+              </Box>
+              <InputIndicatorWrapper
+                isOverloaded={isElementAttributeOverloaded(links_elements, `${prefix}_text_source` as keyof typeof LINKS_LABEL_SPECIFIC_CONFIG, LINKS_LABEL_SPECIFIC_CONFIG)}
+                isMultiValue={isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'text_source', prefix)}
+                t={t}
+              >
+                <OSTooltip label={t('Flux.labels.tooltips.name_label_text_source')}>
+                  <Select
+                    value={linkLabelValues.text_source as string}
+                    onChange={(evt) => { linkLabelValues.text_source = evt.target.value }}
+                  >
+                    {['custom', 'none', 'source', 'target', 'source_target'].map(opt => (
+                      <option key={'text_source_' + opt} value={opt}>{t('Flux.labels.text_source.' + opt)}</option>
+                    ))}
+                  </Select>
+                </OSTooltip>
+              </InputIndicatorWrapper>
+            </Box>
+          )}
           {/* </Box> */}
         </>
       ) : null}

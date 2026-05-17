@@ -2360,16 +2360,31 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
     if (this._label_values.is_value) {
       return this.link.data_label(this.prefix as 'name_label')
     }
-    return this.link.text_value
+    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
+    switch (text_source) {
+    case 'none': return ''
+    case 'source': return this.link.source?.name ?? ''
+    case 'target': return this.link.target?.name ?? ''
+    case 'source_target': {
+      const s = this.link.source?.name ?? ''
+      const t = this.link.target?.name ?? ''
+      return `${s} → ${t}`
+    }
+    case 'custom':
+    default:
+      return this.link.text_value
+    }
   }
 
   protected shouldDrawLabel(): boolean {
     const link_text = this.getLabelText()
     const link_val = this.link.valueCurrent
+    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
 
     return (
       this._label_values.is_visible &&
       !this._label_values.has_fo &&
+      text_source !== 'none' &&
       ((link_text ?? '') !== '') &&
       !(link_val !== undefined && link_val !== null && link_val <= this._element.drawing_area.filter_label)
     )
