@@ -2,6 +2,13 @@
 
 Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
+## [Unreleased] — Mai 2026
+
+### POC dual-output
+
+- **Action menu OSP `afmCompleteOnly`** ([client/src/components/ContextMenuConfigs.tsx](client/src/components/ContextMenuConfigs.tsx)) : « Compléter le diagramme » envoie désormais `{ with_reconciled: false, with_completed: true }` via `default_solver_options` au lieu du flag legacy `{ remove_redundancy: true }`. L'action reste single-pass (no-redundancy, mesures préservées).
+- **Bump du submodule OpenSankey** pour les checkboxes `Réconcilier` / `Compléter` dans l'onglet *Solveur* du dialog de réconciliation. Voir [submodules/OpenSankey/CHANGELOG.md → Unreleased](submodules/OpenSankey/CHANGELOG.md).
+
 ## [1.1.4] — 2026-05-11
 
 ### Bump du submodule OpenSankey — Viewer props complets + `diagrams_list` + `diagram` inline
