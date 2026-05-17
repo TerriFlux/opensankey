@@ -1344,12 +1344,16 @@ export const menuStyles = {
       margin: 'auto',
       border: '1px solid',
       borderColor: 'primaire.5',
-      height: '1.5rem',
-      width: '2rem',
+      borderRadius: '4px',
+      height: '2rem',
+      width: '2.75rem',
+      padding: '0 0.25rem',
       'span': {
         display: 'grid',
-        gridTemplateColumns: '4fr 1fr',
+        gridTemplateColumns: '1.6rem 0.75rem',
+        gridColumnGap: '0.15rem',
         alignItems: 'center',
+        justifyItems: 'center',
       }
     },
     item: {
@@ -2309,12 +2313,16 @@ export const tabsStyles = {
       margin: 'auto',
       border: '1px solid',
       borderColor: 'primaire.5',
-      height: '1.5rem',
-      width: '2rem',
+      borderRadius: '4px',
+      height: '2rem',
+      width: '2.75rem',
+      padding: '0 0.25rem',
       'span': {
         display: 'grid',
-        gridTemplateColumns: '4fr 1fr',
+        gridTemplateColumns: '1.6rem 0.75rem',
+        gridColumnGap: '0.15rem',
         alignItems: 'center',
+        justifyItems: 'center',
       }
     },
     item: {
