@@ -1,7 +1,7 @@
 [submodule "deps/OpenSankey"]
 	path = submodules/OpenSankey
 	url = git@gitlab.com:su-model/opensankey.git
-	branch = proto_classe
+	branch = main
 [submodule "TestData"]
 	path = TestData
 	url = git@gitlab.com:su-model/tests.git
