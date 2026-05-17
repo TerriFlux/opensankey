@@ -84,7 +84,7 @@ export const SankeyMenu = (
     output_config: FormatConfigStructure
   }
 ) => {
-  const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
+  const { t, icon_library, menu_configuration } = app_data
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
@@ -130,25 +130,8 @@ export const SankeyMenu = (
   />
 
 
-  const sankey_file_name = <Box style={{ top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin / 2, right: app_data.drawing_area.fit_margin / 2 }} className='toolbar_save_and_file_name' layerStyle='toolbar_save_and_file_name' >
-    <OpenSankeySaveButton new_data={app_data} />
-    <OSTooltip placement='left' label={t('Menu.tooltips.sankey_file_name') + app_data.file_name}>
-      <Box layerStyle='topbar_file_name' >
-        <Editable textAlign={'center'} justifyContent={'center'}
-          variant='name_file_editable'
-          defaultValue={app_data.file_name}
-          onSubmit={(evt) => {
-            if (evt) {
-              app_data.file_name = evt
-              setCount(a => a + 1)
-            }
-          }}>
-          <EditablePreview />
-          <EditableInput />
-        </Editable>
-      </Box>
-    </OSTooltip>
-  </Box>
+  // OpenSankeySaveButton moved to ToolBarBottom (next to the help button).
+  // file_name Editable removed entirely.
 
   return (
     <>
@@ -156,7 +139,9 @@ export const SankeyMenu = (
       {(!app_data.is_static || app_data.publish_options.topbar) ?
         <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
 
-      {/* Bottom Navbar with some more info */}
+      {/* Bottom Navbar — kept only for the data-tag sequence drawer (visible
+          when sequence groups exist). Footer with version/support/trial info
+          has been moved to the topbar (see MenuTopNavBar). */}
       {
         <Box
           className='BottomMenu'
@@ -166,51 +151,11 @@ export const SankeyMenu = (
           layerStyle='menubottom_layout_style'
         >
           <DrawerSequenceDataTagg new_data={app_data} />
-          {(!app_data.is_static || app_data.publish_options.footer) ? <Box
-            display='grid'
-            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-            margin='0.2rem'
-          >
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='start'
-            >
-              ©
-              <img
-                width={75}
-                src={logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
-              - {t('tdr')}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              {app_name}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-            </Box>
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='end'
-              paddingRight='1.5rem'
-              display='flex'
-              alignItems='center'
-              gap='0.5rem'
-            >
-              {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
-            </Box>
-          </Box> :
-            <></>
-          }
         </Box>
       }
 
       {
         app_data.is_editable ? <>
-          {sankey_file_name}
           <Drawer
             blockScrollOnMount={false}
             isOpen={show_nav}
@@ -257,16 +202,22 @@ export const SankeyMenu = (
           <Button
             id='toggle-check'
             className='openMenu sideToolBar'
-            variant='toolbar_main_button'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            bg='primaire.1'
+            borderColor='secondaire.1'
+            _hover={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
+            _active={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
             onClick={toggleShow}
             value='menuConfigButton'
             style={{
-              right: posBtnOpenConfig,
-              top: posTopMenuConfig,
+              right: app_data.drawing_area.fit_margin,
+              top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin,
             }}
           >
             {icon_open_close_config}
-          </Button></OSTooltip>
+          </Button>
+        </OSTooltip>
       ) : (<></>)}
 
 
