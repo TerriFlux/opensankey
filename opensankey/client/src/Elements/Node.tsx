@@ -610,7 +610,9 @@ export class Class_NodeElement extends Class_NodeBase {
   public drawAsSelected() {
     super.drawAsSelected()
     // Les poignées du label apparaissent au clic sur le <text> du label,
-    // pas à la sélection de la forme.
+    // pas à la sélection de la forme. Refresh quand même pour que unDraw()
+    // soit appelé en cas de désélection.
+    this._nodeDrawValueLabel?.refreshLabelResizeHandles()
     this.links_order_visible
       .forEach(link => {
         if (link.source === this) this._output_links_handle[link.id].draw()

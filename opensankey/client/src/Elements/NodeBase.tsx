@@ -175,7 +175,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     // dans tous les cas — l'utilisateur doit cliquer sur le <text> du label
     // pour faire (ré)apparaître les poignées.
     this.selected_label_prefix = null
-    this.d3_selection?.selectAll('.label_resize_handle').remove()
+    // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
+    // le label n'est plus sub-sélectionné.
+    this._nodeDrawNameLabel?.refreshLabelResizeHandles()
+    this._nodeDrawIcon?.refreshLabelResizeHandles()
     // this._nodeDrawShape.updateSelectedStroke(this.is_selected)
   }
 
