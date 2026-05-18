@@ -357,7 +357,10 @@ publish:python:
     #   /groups/su-model/-/packages/pypi/simple/
     # ----------------------------------------------------------------
     - echo "[publish:python] Upload vers GitLab PyPI Registry"
-    - pip install twine --quiet
+    # --break-system-packages : le python systeme du VPS (Debian 12, PEP 668)
+    # refuse les installs pip directs. On accepte ici puisque le runner est
+    # ephemere pour ce job (pas de risque de pollution durable).
+    - pip install twine --quiet --break-system-packages
     - |
       TWINE_USERNAME=gitlab-ci-token \
       TWINE_PASSWORD=${CI_JOB_TOKEN} \
