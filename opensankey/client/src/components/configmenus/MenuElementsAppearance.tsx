@@ -36,7 +36,6 @@ import {
   isElementAttributeOverloaded,
   InputIndicatorWrapper,
   CustomFaEyeCheckIcon,
-  OverloadIndicatorWrapper,
   WrapperBoxSubSectionMenu
 } from './MenuCommon'
 
@@ -424,7 +423,7 @@ const LabelContentComponent = ({
   elements,
   prefix,
   displayMode,
-  menu_style,
+  menu_style: _menu_style,
   refreshParentComponent
 }: {
   app_data: Class_ApplicationData

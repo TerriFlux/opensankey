@@ -37,7 +37,6 @@ import {
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
-import { Class_NodeElement } from '../Elements/Node'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },

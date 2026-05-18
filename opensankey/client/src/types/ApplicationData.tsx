@@ -1591,9 +1591,6 @@ export class Class_ApplicationData {
     // In free mode, use the current zoom scale
     const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
 
-    // Legend width (if present)
-    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
-
     // areaAutoFit may shift the canvas origin to negative coordinates when content
     // (e.g. value labels above flows) extends past y=0; counter-translate g_drawing
     // so the canvas top-left maps to (0,0) in the export SVG instead of clipping.

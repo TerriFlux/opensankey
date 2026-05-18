@@ -215,7 +215,7 @@ export const UnifiedElementSelection = ({
   config,
   enabledTypes,
   mode = 'full',
-  dropdownWidth
+  dropdownWidth: _dropdownWidth
 }: UnifiedSelectionProps) => {
   const { t, icon_library, menu_configuration, history } = app_data
   const [only_visible, setOnlyVisible] = useState(true)

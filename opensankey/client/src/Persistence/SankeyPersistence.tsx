@@ -1612,7 +1612,7 @@ export class SankeyPersistence {
 
       // Ensuite traiter les styles personnalisés qui ne sont pas dans elementStyleConfigs
       Object.entries(json_object['style'])
-        .filter(([style_id, style_json]) =>
+        .filter(([style_id, _style_json]) =>
           !skip.includes(style_id) &&
           !Object.keys(elementStyleConfigs).includes(style_id)
         )

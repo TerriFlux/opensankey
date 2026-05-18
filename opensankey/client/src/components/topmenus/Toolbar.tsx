@@ -7,7 +7,7 @@ import {
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
+import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 
@@ -563,7 +563,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             closeOnSelect={false} // Garde le menu ouvert
             placement="bottom-start"
           >
-            {({ isOpen, onClose }) => (
+            {({ isOpen: _isOpen, onClose }) => (
               <>
                 <MenuButton
                   width="100%"
@@ -607,7 +607,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                     }
                   }}
                 >
-                  {tagg.tags_list.map((tag, index) => (
+                  {tagg.tags_list.map((tag, _index) => (
                     <MenuItem
                       key={tag.id}
                       icon={tag.id === selected_value ? <CheckIcon /> : undefined}

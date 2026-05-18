@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import {
   BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,
-  getNameLabelValues, getNodeShapeSpecificValues, getShapeValue,
+  getNameLabelValues, getShapeValue,
   getValueLabelValues, LinkLabelSpecificValues,
   NameLabelAttributeTypes,
   ShapePrefix,
@@ -287,8 +287,11 @@ export abstract class DrawLabelBase {
     const handle_y = text_bbox_y + text_bbox_height / 2 - handleHeight / 2
 
     const widthAttr = `${this.prefix}_box_width`
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const element = this._element as any
+    const element = this._element as unknown as {
+      _suspend_actions?: boolean
+      drawNameLabel?: () => void
+      drawValueLabel?: () => void
+    }
 
     // Redraw complet de la moitié du label concernée — via la méthode de
     // l'élément pour que refreshStickLayout fire en mode stick.
@@ -808,7 +811,7 @@ export abstract class DrawLabelBase {
     const [final_x, final_y, final_width, final_height] = this.getImageDimensions(icon_pos_x, icon_pos_y, icon_width, icon_height)
 
     // Dessiner l'image
-    const imageElement = this.d3_selection.append('image')
+    const _imageElement = this.d3_selection.append('image')
       .attr('id', `image_${this.prefix}_${this.getElementId()}`)
       .attr('class', 'illustration image')
       .attr('xlink:href', this._label_values.image_src)
@@ -1691,19 +1694,6 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
 
     label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
     label_baseline = 'text-before-edge'
-
-    let margin_top = this.node.shape_margin_top
-    if (this.node.shape_type === 'capsule') {
-      margin_top = this.node.getShapeWidthToUse() / 2
-    }
-    let margin_bottom = this.node.shape_margin_top
-    if (this.node.shape_type === 'capsule') {
-      margin_bottom = this.node.getShapeWidthToUse() / 2
-    }
-    if (this.node.shape_type === 'capsule_h') {
-      margin_top = this.node.shape_margin_top
-      margin_bottom = this.node.shape_margin_bottom
-    }
 
     if (this._label_values.position_absolute) {
       label_pos_y = this._label_values.position_y

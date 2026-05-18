@@ -22,7 +22,7 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   if (center_nodes.length === 0) return
   const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
-  const sectorTag = node_type?.tags_dict['secteur']
+  const _sectorTag = node_type?.tags_dict['secteur']
 
   // Réinitialiser tous les styles unitaires d'abord
   drawing_area.sankey.nodes_list.forEach(node => {
