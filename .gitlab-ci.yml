@@ -339,6 +339,19 @@ publish:python:
     - bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp312-cp312
 
     # ----------------------------------------------------------------
+    # Ceinture-bretelles : les wheel builds tournent en root dans le
+    # container manylinux et laissent build/, dist/, *.egg-info,
+    # */tests/, */data/ owned by root. Sans ce chown, le job suivant
+    # (publish:npm) echoue au 'git submodule update' avec un cascade de
+    # "Permission denied". Les scripts build_wheel_linux.sh font deja un
+    # trap chown EXIT cote container, mais on garde ce filet ici pour
+    # couvrir les vieux SHA de submodules sans le fix.
+    - echo "[publish:python] Normalise l'ownership host sur tous les artefacts"
+    - |
+      docker run --rm -v "$(pwd):/io" --entrypoint sh quay.io/pypa/manylinux2014_x86_64 \
+        -c "chown -R $(id -u):$(id -g) /io"
+
+    # ----------------------------------------------------------------
     # Publication sur le GitLab PyPI Registry du projet
     # Les wheels sont accessibles au niveau groupe :
     #   /groups/su-model/-/packages/pypi/simple/
