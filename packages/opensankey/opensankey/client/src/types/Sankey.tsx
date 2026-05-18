@@ -1043,7 +1043,7 @@ export class Class_Sankey {
 
     if (close) {
       // Mode "close" pour les imports
-      import_nodes.forEach((n, i) => {
+      import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportCloseStyle],
@@ -1083,7 +1083,7 @@ export class Class_Sankey {
       })
     } else {
       // Mode "above/below" pour les imports
-      import_nodes.forEach((n, i) => {
+      import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportAboveBelowStyle],

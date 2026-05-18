@@ -952,9 +952,9 @@ export class Class_DrawingArea {
    * and swap label horiz↔vert positions. Calling twice restores original state.
    */
   public verticalizeDiagram = () => {
-    const hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
+    const _hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
       v === 'top' ? 'left' : v === 'bottom' ? 'right' : 'middle'
-    const vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
+    const _vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
       h === 'left' ? 'top' : h === 'right' ? 'bottom' : 'middle'
     const flipOrientation = (o: Type_Orientation): Type_Orientation => {
       if (o === 'hh') return 'vv'
@@ -1342,7 +1342,6 @@ export class Class_DrawingArea {
    * @param {*} drawing_area
    */
   protected drawBackground() {
-    const height = this.application_data.publish_options.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
     // Draw background (fill only — the editable-canvas border is drawn separately
@@ -1505,7 +1504,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     //if (event.ctrlKey) return
     //this.closeAllMenus()

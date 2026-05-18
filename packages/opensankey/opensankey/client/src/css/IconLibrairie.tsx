@@ -24,12 +24,12 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 import React from 'react'
-import { faAnchor, faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
+import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush
+  faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
