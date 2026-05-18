@@ -31,7 +31,6 @@ import { Class_LevelTagGroup } from '../types/TagGroup'
 import { getBooleanFromJSON, getJSONOrUndefinedFromJSON, getStringOrUndefinedFromJSON, Type_JSON } from '../types/Utils'
 import { Class_NodeElement } from './Node'
 import { NodeContainerStyle } from './ElementStyle'
-import { NodePositioning } from '../Algorithms/NodePositioning'
 
 /**
  * Container display mode for a dimension.

@@ -66,7 +66,7 @@ import { useTour } from '@reactour/tour'
 
 import { Type_JSON } from '../../types/Utils'
 
-import { clickSavePDF, clickSaveSVG } from './SankeyExports'
+import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
 import { ModalTuto } from './SankeyTutorials'
@@ -196,7 +196,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     ref_setter_show_modal_file_converter,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_pdf_saver,
-    ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
   const [show_tuto, set_show_tuto] = useState(false)

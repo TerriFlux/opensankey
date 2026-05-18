@@ -36,9 +36,6 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
-  Editable,
-  EditableInput,
-  EditablePreview,
   Text
 } from '@chakra-ui/react'
 
@@ -46,7 +43,7 @@ import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
 import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
-import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
+import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
 import { DrawingAreaConfig, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
@@ -59,7 +56,6 @@ import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
-import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export const menu_config_width = 20
 export const menu_config_min_width_px = 420

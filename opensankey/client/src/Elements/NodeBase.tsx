@@ -715,7 +715,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public get selected_elements_list(): Class_NodeBase[] {
     return []
   }
-  public set_contextualized_element(element: Class_NodeBase) {
+  public set_contextualized_element(_element: Class_NodeBase) {
 
   }
 }

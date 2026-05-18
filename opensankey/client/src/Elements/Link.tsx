@@ -35,7 +35,7 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_ElementValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
