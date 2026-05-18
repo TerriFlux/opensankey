@@ -398,7 +398,17 @@ publish:npm:
       @terriflux:registry=https://gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/
       //gitlab.com/api/v4/projects/${CI_PROJECT_ID}/packages/npm/:_authToken=${CI_JOB_TOKEN}
       EOF
-    - npm publish
+    # Idempotent : skip si la version est déjà sur le registry (cas typique
+    # d'un retag ou d'un re-trigger du pipeline). Sinon le job échoue avec
+    # "Package already exists" et pollue la liste des paquets en erreur.
+    - |
+      PKG_NAME="$(node -p "require('./package.json').name")"
+      PKG_VERSION="$(node -p "require('./package.json').version")"
+      if npm view "${PKG_NAME}@${PKG_VERSION}" version >/dev/null 2>&1; then
+        echo "[publish:npm] ${PKG_NAME}@${PKG_VERSION} déjà publié — skip"
+      else
+        npm publish
+      fi
 
 # Étape de build
 pages:
