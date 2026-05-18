@@ -127,7 +127,8 @@ dev_opensankey:
   environment:
     name: dev
   rules:
-    - when: manual
+    - if: $CI_COMMIT_REF_NAME == "main"
+      when: manual
       allow_failure: true
   needs:
     - build
@@ -183,8 +184,7 @@ test_opensankey:
     # Configurer safe.directory AVANT que les submodules soient clonés
     - git config --global safe.directory '*'
   rules:
-    - when: manual
-      allow_failure: true
+    - if: $CI_COMMIT_REF_NAME == $TAG_TEST
   needs:
     - build
     - job: test
