@@ -1512,9 +1512,12 @@ export class Class_ApplicationData {
    */
   protected _isDrawingAreaActive() {
     const inputs = ['input', 'textarea']
+    const ae = document.activeElement as HTMLElement | null
     if (
-      document.activeElement &&
-      inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
+      ae && (
+        inputs.indexOf(ae.tagName.toLowerCase()) !== -1 ||
+        ae.isContentEditable
+      )
     ) {
       return false
     }
