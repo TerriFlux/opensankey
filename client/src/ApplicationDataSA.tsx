@@ -39,7 +39,7 @@ export class Class_ApplicationDataSA extends Class_ApplicationDataOSP {
 
   // Overrride logo
   public get logo() {
-    if (this.is_static && this.publish_options.logo) {
+    if (this.is_static && this.publish_options.logo !== null) {
       return this.publish_options.logo
     }
     if (this.has_sankey_afm) {
