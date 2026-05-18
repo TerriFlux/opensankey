@@ -1009,31 +1009,46 @@ export const UniversalFileConverter = ({
     console.log('Options sortie:', output_options)
 
     set_show_terminal(true)
+    // Garde-fou : un échec HTTP non-JSON (413/502/504 nginx, etc.) ou un network
+    // error doit interrompre le polling check_process et afficher un message
+    // lisible. Le terminal ne rend que les lignes qui contiennent ERROR/WARNING
+    // /INFO/DEBUG — d'où le préfixe ERROR.
+    const fail = (msg: string) => {
+      setResult(msg)
+      setProcessing(false)
+      setFailure(true)
+    }
     fetch(url, { method: 'POST', body: form_data })
-    // .then(response => {
-    //   if (!response.ok) {
-    //     console.error('❌ Erreur lancement conversion:')
-
-    //     // Mettre à jour les états pour indiquer l'échec
-    //     setStarted(false)
-    //     setProcessing(false)
-    //     setFailure(true)
-    //     setResult('❌ Erreur lancement conversion:')
-    //   }
-    //   return response.json()
-    // })
-    // .then(data => {
-    //   console.log('✅ Conversion lancée avec succès:', data)
-    // })
-    // .catch(error => {
-    //   console.error('❌ Erreur lancement conversion:', error)
-
-    //   // Mettre à jour les états pour indiquer l'échec
-    //   setStarted(false)
-    //   setProcessing(false)
-    //   setFailure(true)
-    //   setResult('❌ Erreur lancement conversion:')
-    // })
+      .then(async response => {
+        const content_type = response.headers.get('content-type') || ''
+        const is_json = content_type.includes('application/json')
+        if (response.ok && is_json) {
+          // Succès — le Counter prend le relais via check_process.
+          return
+        }
+        if (response.status === 413) {
+          fail('ERROR Fichier trop volumineux pour le serveur. Contactez l\'administrateur.')
+          return
+        }
+        if (response.status === 502 || response.status === 504) {
+          fail(`ERROR Backend injoignable (HTTP ${response.status}). Réessayez dans un instant ou contactez l'administrateur.`)
+          return
+        }
+        if (response.status === 500 && is_json) {
+          try {
+            const data = await response.json()
+            const detail = (data && (data.error || data.message)) || JSON.stringify(data)
+            fail('ERROR Erreur backend : ' + detail)
+          } catch {
+            fail('ERROR Erreur backend (500), réponse illisible.')
+          }
+          return
+        }
+        fail(`ERROR Erreur inattendue (HTTP ${response.status}${is_json ? '' : ', réponse non-JSON'}).`)
+      })
+      .catch(error => {
+        fail('ERROR Connexion au serveur échouée : ' + (error?.message || String(error)))
+      })
   }
 
   if (launch_at_opening) {
