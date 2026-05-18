@@ -21,6 +21,7 @@ export interface SankeyGlobals {
   toolbar?: boolean      // default false
   embedded?: boolean     // default false (height = innerHeight) ; true => 100%
   recenter?: boolean     // default true : auto-recenter à l'ouverture en publish
+  edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
 
   // Branding
   logo?: string
@@ -51,6 +52,7 @@ export interface PublishOptions {
   toolbar: boolean
   embedded: boolean
   recenter: boolean
+  edit_button: boolean
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
@@ -95,6 +97,7 @@ export const getPublishOptions = (): PublishOptions => {
     toolbar: bool(s.toolbar, false),
     embedded: bool(s.embedded, false),
     recenter: bool(s.recenter, true),
+    edit_button: bool(s.edit_button, true),
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
@@ -126,6 +129,7 @@ export type ViewerSankeyOptions = {
   toolbar?: boolean
   embedded?: boolean
   recenter?: boolean
+  edit_button?: boolean
   logo?: string
   header?: string
   diagram?: string | Record<string, unknown>
@@ -152,6 +156,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
 
   const keys: Array<keyof ViewerSankeyOptions> = [
     'editable', 'topbar', 'footer', 'toolbar', 'embedded', 'recenter',
+    'edit_button',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',

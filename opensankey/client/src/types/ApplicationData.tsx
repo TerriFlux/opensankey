@@ -1661,7 +1661,7 @@ export class Class_ApplicationData {
   public get url_prefix(): string { return this._url_prefix }
 
   public get logo(): string {
-    if (this.is_static && this.publish_options.logo) {
+    if (this.is_static && this.publish_options.logo !== null) {
       return this.publish_options.logo
     }
     return this._logo_opensankey
