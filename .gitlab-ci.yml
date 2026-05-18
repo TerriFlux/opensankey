@@ -302,6 +302,59 @@ build:examples:
     expire_in: 1 week
 
 # =====================================================================
+# publish:python — Publie MFAProblem et SankeyExcelParser sur le GitLab
+#                  PyPI Package Registry du projet (accessible ensuite au
+#                  niveau groupe via /groups/su-model/-/packages/pypi/).
+#                  Auth via CI_JOB_TOKEN (intégré GitLab).
+# Déclenche uniquement sur tag git (CI_COMMIT_TAG), symétrique à publish:npm.
+#
+# Côté consommateur (ex: cartofob-sankey), ajouter dans requirements.txt :
+#   --extra-index-url https://__token__:<DEPLOY_TOKEN>@gitlab.com/api/v4/groups/su-model/-/packages/pypi/simple/
+#   MFAProblem>=1.1.4
+#   SankeyExcelParser>=1.1.4
+# =====================================================================
+publish:python:
+  stage: deploy
+  tags: [py312]
+  rules:
+    - if: $CI_COMMIT_TAG
+  dependencies: []
+  script:
+    # Version alignee sur le tag git (et donc sur la version npm publiee
+    # simultanement par publish:npm). Lue par chaque setup.py via
+    # os.environ.get("PKG_VERSION", "<fallback>").
+    - export PKG_VERSION="${CI_COMMIT_TAG#v}"
+    - echo "[publish:python] PKG_VERSION=${PKG_VERSION}"
+
+    # ----------------------------------------------------------------
+    # MFAProblem — build_wheel_linux.sh gère tout (manylinux + auditwheel)
+    # ----------------------------------------------------------------
+    - echo "[publish:python] Build MFAProblem wheel (manylinux, cp312)"
+    - bash submodules/MFAProblem/build_wheel_linux.sh cp312-cp312
+
+    # ----------------------------------------------------------------
+    # SankeyExcelParser — même recette manylinux pour cohérence
+    # ----------------------------------------------------------------
+    - echo "[publish:python] Build SankeyExcelParser wheel (manylinux, cp312)"
+    - bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp312-cp312
+
+    # ----------------------------------------------------------------
+    # Publication sur le GitLab PyPI Registry du projet
+    # Les wheels sont accessibles au niveau groupe :
+    #   /groups/su-model/-/packages/pypi/simple/
+    # ----------------------------------------------------------------
+    - echo "[publish:python] Upload vers GitLab PyPI Registry"
+    - pip install twine --quiet
+    - |
+      TWINE_USERNAME=gitlab-ci-token \
+      TWINE_PASSWORD=${CI_JOB_TOKEN} \
+      twine upload \
+        --repository-url "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi" \
+        --skip-existing \
+        submodules/MFAProblem/dist/*manylinux*.whl \
+        submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/*manylinux*.whl
+
+# =====================================================================
 # publish:npm — Publie @terriflux/sankeyapplication sur le GitLab Package
 #               Registry du projet. Auth via CI_JOB_TOKEN (intégré GitLab).
 # Déclenche uniquement sur tag git (CI_COMMIT_TAG).
