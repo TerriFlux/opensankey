@@ -361,7 +361,10 @@ publish:python:
     # --break-system-packages : le python systeme du VPS (Debian 12, PEP 668)
     # refuse les installs pip directs. On accepte ici puisque le runner est
     # ephemere pour ce job (pas de risque de pollution durable).
-    - pip install twine --quiet --break-system-packages
+    # twine>=6 + packaging>=24 nécessaires pour reconnaître le champ
+    # 'License-File' (PEP 639) émis par setuptools>=77 dans les METADATA
+    # des wheels — sinon InvalidDistribution à l'upload.
+    - pip install --upgrade --quiet --break-system-packages 'twine>=6' 'packaging>=24'
     - |
       TWINE_USERNAME=gitlab-ci-token \
       TWINE_PASSWORD=${CI_JOB_TOKEN} \
