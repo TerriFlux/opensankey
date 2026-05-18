@@ -94,6 +94,25 @@ function getTransformedBBox(
 }
 
 /**
+ * Class_Handler pour les poignées de redimensionnement de label.
+ *
+ * Diffère du Class_Handler standard : la visibilité ne dépend PAS de
+ * `_ref_element.is_selected`. La sub-sélection du label (clic sur son <text>)
+ * suffit à afficher les poignées ; sinon, cliquer sur le label seul (qui
+ * stopPropagation pour ne pas toggler la sélection de la forme) laisserait
+ * `is_selected = false` et `draw()` resterait no-op.
+ *
+ * Le filtrage selected_label_prefix === this.prefix est fait en amont par
+ * `_shouldShowResizeHandles` (qui appelle unDraw si non remplie), donc ici
+ * on garde juste `_is_visible && ref_element.is_visible`.
+ */
+class Class_LabelResizeHandler extends Class_Handler {
+  public override get is_visible(): boolean {
+    return this._is_visible && this.ref_element.is_visible
+  }
+}
+
+/**
  * Classe de base abstraite pour tous les labels (nodes et links)
  */
 export abstract class DrawLabelBase {
@@ -105,6 +124,19 @@ export abstract class DrawLabelBase {
   protected enableEditing: boolean = false
 
   public d3_selection: d3_selection_type | null = null
+
+  // Poignées de redimensionnement de la "boîte" du label (label.box_width).
+  // Implémentées avec Class_Handler (mêmes infrastructure / parent / drag que
+  // les poignées de redimensionnement des nœuds : `g_handlers` au top-level,
+  // coords absolues dans le repère `g_drawing`, taille divisée par le zoom).
+  // Créées paresseusement à la première sub-sélection du label.
+  private _resize_handle_left: Class_Handler | null = null
+  private _resize_handle_right: Class_Handler | null = null
+  private _resize_drag_state: {
+    initial_width: number
+    prev_suspend: boolean
+    accumulated_dx: number
+  } = { initial_width: 0, prev_suspend: false, accumulated_dx: 0 }
 
   protected abstract createLabelGroup(): d3_selection_type | null
 
@@ -236,71 +268,79 @@ export abstract class DrawLabelBase {
   }
 
   /**
-   * Poignées horizontales sur le label permettant de redimensionner
-   * `label.box_width` à la souris. Le fond (qui peut suivre la largeur du
-   * label ou être verrouillé sur sa propre valeur) est rendu cohérent au
-   * redraw qui suit le drag.
-   */
-  /**
-   * Ré-attache les poignées sur le label déjà dessiné, sans redessiner le
-   * texte ni le fond. Lit la bbox actuelle du <text> du label et calcule les
-   * positions des poignées à partir d'elle.
+   * Poignées de redimensionnement de la "boîte" du label (label.box_width).
    *
-   * Appelé par drawAsSelected pour faire apparaître les poignées quand
-   * l'élément est (re-)sélectionné, sans recréer le <text> (ce qui casserait
-   * le double-clic d'édition).
+   * Architecture (calquée sur les poignées de redimensionnement des nœuds
+   * `_drag_handler.{left,right,top,bottom}`) :
+   *   - les poignées sont des `Class_Handler` instanciés dans le top-level
+   *     `g_handlers` du drawing area, repère absolu = repère `g_drawing` ;
+   *   - leur position est calculée en transformant le point d'ancrage du
+   *     label (label_pos_x en repère local du <g> label) vers ce repère
+   *     absolu via la matrice CTM relative — fonctionne uniformément pour
+   *     nœuds (dont le <g> a un translate) et liens (dont le <g> n'en a pas) ;
+   *   - le drag utilise `event.dx` directement (déjà en repère `g_drawing`),
+   *     même unité que `box_width`. La poignée tirée suit toujours le
+   *     curseur 1:1, l'autre poignée bouge selon le facteur (2 pour ancre
+   *     'middle' qui est symétrique, 1 pour 'start'/'end' où seul le bord
+   *     libre bouge — l'autre étant ancré, ne sera pas dessinée).
+   *   - taille du carré compensée par `1/zoomScale` (héritée de Class_Handler).
+   *
+   * Visibilité : tied à la sub-sélection du label (`selected_label_prefix`).
+   * À chaque appel, refreshLabelResizeHandles re-positionne et re-dessine
+   * (ou cache) les poignées en fonction de l'état courant.
    */
   public refreshLabelResizeHandles(): void {
-    if (!this.d3_selection) return
-    this.d3_selection.selectAll('.label_resize_handle').remove()
-    const text_node = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
-    if (!text_node) return
-    const text_bbox = text_node.getBBox()
-    const anchor = (text_node as SVGTextElement).getAttribute('text-anchor') ?? 'middle'
-    const [label_pos_x] = this.getLabelPos()
-    this.drawLabelResizeHandles(
-      this.d3_selection,
-      anchor,
-      label_pos_x,
-      text_bbox.y,
-      text_bbox.height
-    )
-  }
-
-  protected drawLabelResizeHandles(
-    parent: d3_selection_type,
-    anchor: string,
-    label_pos_x: number,
-    text_bbox_y: number,
-    text_bbox_height: number
-  ) {
-    if (!this._element.drawing_area?.editable) return
-    // Affichage uniquement si CE label est sub-sélectionné (clic sur son <text>),
-    // pas juste si la forme est sélectionnée.
-    if ((this._element as Class_BaseShape).selected_label_prefix !== this.prefix) return
-    if (this._label_values == null) return
-    const box_width = (this._label_values as { box_width?: number }).box_width ?? 0
-    if (!Number.isFinite(box_width) || box_width <= 0) return
-
-    // Bords gauche/droit de la "boîte" du label, calculés à partir de la
-    // position d'ancrage et de box_width — indépendant de la bbox réelle du
-    // texte (qui peut être plus étroite si le texte ne remplit pas la boîte).
-    let box_left: number
-    let box_right: number
-    if (anchor === 'start') {
-      box_left = label_pos_x
-      box_right = label_pos_x + box_width
-    } else if (anchor === 'end') {
-      box_left = label_pos_x - box_width
-      box_right = label_pos_x
-    } else {
-      box_left = label_pos_x - box_width / 2
-      box_right = label_pos_x + box_width / 2
+    if (!this._shouldShowResizeHandles()) {
+      this._resize_handle_left?.unDraw()
+      this._resize_handle_right?.unDraw()
+      return
     }
 
-    const handleWidth = 6
-    const handleHeight = Math.max(text_bbox_height, 12)
-    const handle_y = text_bbox_y + text_bbox_height / 2 - handleHeight / 2
+    this._ensureResizeHandlesCreated()
+
+    const positions = this._computeResizeHandlesAbsolutePos()
+    if (!positions) {
+      this._resize_handle_left?.unDraw()
+      this._resize_handle_right?.unDraw()
+      return
+    }
+
+    // Bord ancré (start → gauche, end → droite) : on ne dessine que le bord
+    // libre, sinon la poignée ancrée ne suivrait pas le curseur (elle reste
+    // sur label_pos_x) et c'est l'autre bord du label qui "fuit".
+    const anchor = positions.anchor
+    if (anchor === 'start') {
+      this._resize_handle_left?.unDraw()
+    } else {
+      this._resize_handle_left!.setPosXY(positions.left[0], positions.left[1])
+      this._resize_handle_left!.draw()
+    }
+    if (anchor === 'end') {
+      this._resize_handle_right?.unDraw()
+    } else {
+      this._resize_handle_right!.setPosXY(positions.right[0], positions.right[1])
+      this._resize_handle_right!.draw()
+    }
+    // Curseur ew-resize une fois le <g> draw() (chaque draw recrée le DOM).
+    this._resize_handle_left?.d3_selection?.style('cursor', 'ew-resize')
+    this._resize_handle_right?.d3_selection?.style('cursor', 'ew-resize')
+  }
+
+  private _shouldShowResizeHandles(): boolean {
+    if (!this.d3_selection) return false
+    if (!this._element.drawing_area?.editable) return false
+    if ((this._element as Class_BaseShape).selected_label_prefix !== this.prefix) return false
+    if (this._label_values == null) return false
+    const box_width = (this._label_values as { box_width?: number }).box_width ?? 0
+    return Number.isFinite(box_width) && box_width > 0
+  }
+
+  /**
+   * Crée paresseusement les deux Class_Handler avec leurs callbacks de drag.
+   * Les callbacks accèdent à `this.prefix`, `this._element`, etc. via closure.
+   */
+  private _ensureResizeHandlesCreated(): void {
+    if (this._resize_handle_left && this._resize_handle_right) return
 
     const widthAttr = `${this.prefix}_box_width`
     const element = this._element as unknown as {
@@ -309,8 +349,6 @@ export abstract class DrawLabelBase {
       drawValueLabel?: () => void
     }
 
-    // Redraw complet de la moitié du label concernée — via la méthode de
-    // l'élément pour que refreshStickLayout fire en mode stick.
     const fullRedraw = () => {
       if (this.prefix === 'name_label' && typeof element.drawNameLabel === 'function') {
         element.drawNameLabel()
@@ -321,97 +359,138 @@ export abstract class DrawLabelBase {
       }
     }
 
-    const dragState = { initial_width: 0, total_dx: 0, prev_suspend: false }
+    const state = this._resize_drag_state
 
-    const attachDrag = (handle: d3_selection_type, side: 'left' | 'right') => {
-      handle.call(
-        d3.drag<SVGGElement, unknown>()
-          .filter(evt => evt.which === 1 && !evt.altKey)
-          .on('start', (event) => {
-            event.sourceEvent?.stopPropagation?.()
-            this._element.drawing_area.bypass_redraws = true
-            dragState.prev_suspend = Boolean(element._suspend_actions)
-            element._suspend_actions = true
-            dragState.initial_width = Number(Reflect.get(element, widthAttr) ?? box_width)
-            dragState.total_dx = 0
-          })
-          .on('drag', (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
-            // En 'middle', le label est centré sur son ancre : un dx de
-            // poignée fait varier la moitié de la largeur de chaque côté →
-            // box_width varie de 2*dx. En 'start'/'end', un seul bord bouge,
-            // donc box_width varie de 1*dx.
-            dragState.total_dx += event.dx
-            const factor = anchor === 'middle' ? 2 : 1
-            const bw_sign = side === 'right' ? 1 : -1
-            const new_box_width = Math.max(
-              10,
-              dragState.initial_width + bw_sign * dragState.total_dx * factor
-            )
-            Reflect.set(element, widthAttr, new_box_width)
-
-            // Live update visuel des poignées (le fond et le texte seront
-            // recalés au redraw final ; tenter une mise à jour live ici
-            // recréerait le <g> portant le drag).
-            let new_left: number, new_right: number
-            if (anchor === 'start') {
-              new_left = label_pos_x
-              new_right = label_pos_x + new_box_width
-            } else if (anchor === 'end') {
-              new_left = label_pos_x - new_box_width
-              new_right = label_pos_x
-            } else {
-              new_left = label_pos_x - new_box_width / 2
-              new_right = label_pos_x + new_box_width / 2
-            }
-            parent.select('.label_resize_handle_left rect')
-              .attr('x', new_left - handleWidth / 2)
-            parent.select('.label_resize_handle_right rect')
-              .attr('x', new_right - handleWidth / 2)
-          })
-          .on('end', () => {
-            element._suspend_actions = dragState.prev_suspend
-            this._element.drawing_area.bypass_redraws = false
-            const final_width = Number(Reflect.get(element, widthAttr))
-            const initial_width = dragState.initial_width
-            if (Math.abs(final_width - initial_width) > 0.5) {
-              const inv = () => {
-                Reflect.set(element, widthAttr, initial_width)
-                fullRedraw()
-              }
-              const redo = () => {
-                Reflect.set(element, widthAttr, final_width)
-                fullRedraw()
-              }
-              this._element.drawing_area.application_data.history.saveUndo(inv)
-              this._element.drawing_area.application_data.history.saveRedo(redo)
-            }
-            fullRedraw()
-          })
-      )
+    const dragStart = () => () => {
+      this._element.drawing_area.bypass_redraws = true
+      state.prev_suspend = Boolean(element._suspend_actions)
+      element._suspend_actions = true
+      state.initial_width = Number(Reflect.get(element, widthAttr) ?? 0)
+      state.accumulated_dx = 0
     }
 
-    const makeHandle = (cx: number, side: 'left' | 'right') => {
-      const g = parent.append('g')
-        .classed('label_resize_handle', true)
-        .classed(`label_resize_handle_${side}`, true)
-        .attr('id', `label_resize_handle_${side}_${this.prefix}_${this.getElementId()}`)
-        .style('cursor', 'ew-resize')
-      g.append('rect')
-        .attr('x', cx - handleWidth / 2)
-        .attr('y', handle_y)
-        .attr('width', handleWidth)
-        .attr('height', handleHeight)
-        .attr('fill', '#1f77b4')
-        .attr('fill-opacity', 0.85)
-        .attr('stroke', '#ffffff')
-        .attr('stroke-width', 1)
-        .attr('rx', 1)
-      attachDrag(g, side)
-      g.raise()
+    const dragMove = (side: 'left' | 'right') =>
+      (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+        // event.dx est dans le repère `g_handlers` = repère `g_drawing` (le
+        // zoom est sur `g_drawing` lui-même, donc ses descendants partagent
+        // ce repère "drawing-area zoomed"). C'est exactement l'unité de
+        // box_width → addition directe, pas de conversion.
+        state.accumulated_dx += event.dx
+        const anchor = this._currentTextAnchor()
+        const factor = anchor === 'middle' ? 2 : 1
+        const bw_sign = side === 'right' ? 1 : -1
+        const new_box_width = Math.max(
+          10,
+          state.initial_width + bw_sign * state.accumulated_dx * factor
+        )
+        Reflect.set(element, widthAttr, new_box_width)
+        // Repositionner les poignées sans redessiner le label (bypass_redraws
+        // est ON). Le texte sera reflowed au redraw final dans 'end'.
+        const positions = this._computeResizeHandlesAbsolutePos()
+        if (positions) {
+          if (anchor !== 'start')
+            this._resize_handle_left?.setPosXY(positions.left[0], positions.left[1])
+          if (anchor !== 'end')
+            this._resize_handle_right?.setPosXY(positions.right[0], positions.right[1])
+        }
+      }
+
+    const dragEnd = () => () => {
+      element._suspend_actions = state.prev_suspend
+      this._element.drawing_area.bypass_redraws = false
+      const final_width = Number(Reflect.get(element, widthAttr))
+      const initial_width = state.initial_width
+      if (Math.abs(final_width - initial_width) > 0.5) {
+        const inv = () => {
+          Reflect.set(element, widthAttr, initial_width)
+          fullRedraw()
+        }
+        const redo = () => {
+          Reflect.set(element, widthAttr, final_width)
+          fullRedraw()
+        }
+        this._element.drawing_area.application_data.history.saveUndo(inv)
+        this._element.drawing_area.application_data.history.saveRedo(redo)
+      }
+      fullRedraw()
     }
 
-    makeHandle(box_left, 'left')
-    makeHandle(box_right, 'right')
+    this._resize_handle_left = new Class_LabelResizeHandler(
+      `label_resize_${this.prefix}_left_${this.getElementId()}`,
+      this._element.drawing_area,
+      this._element,
+      dragStart(),
+      dragMove('left'),
+      dragEnd(),
+      { class: 'label_resize_handle label_resize_handle_left' }
+    )
+    this._resize_handle_right = new Class_LabelResizeHandler(
+      `label_resize_${this.prefix}_right_${this.getElementId()}`,
+      this._element.drawing_area,
+      this._element,
+      dragStart(),
+      dragMove('right'),
+      dragEnd(),
+      { class: 'label_resize_handle label_resize_handle_right' }
+    )
+  }
+
+  private _currentTextAnchor(): string {
+    const text_node = this.d3_selection?.select(this.getTextSelector()).node() as SVGTextElement | null
+    return text_node?.getAttribute('text-anchor') ?? 'middle'
+  }
+
+  /**
+   * Calcule la position absolue (repère `g_handlers` = `g_drawing`) des
+   * deux poignées à partir de la position d'ancrage du label en repère
+   * local et de la box_width courante. Utilise la matrice CTM relative
+   * `g_handlers` ← `label_g` pour traverser uniformément les transforms
+   * intermédiaires (translate du nœud, identité pour les liens).
+   */
+  private _computeResizeHandlesAbsolutePos(): {
+    left: [number, number]
+    right: [number, number]
+    anchor: string
+  } | null {
+    if (!this.d3_selection) return null
+    const label_g = this.d3_selection.node() as SVGGraphicsElement | null
+    const handlers_grp = this._element.drawing_area.d3_selection_handlers?.node() as SVGGraphicsElement | null
+    if (!label_g || !handlers_grp) return null
+    const label_ctm = label_g.getCTM()
+    const handlers_ctm = handlers_grp.getCTM()
+    if (!label_ctm || !handlers_ctm) return null
+    const rel = handlers_ctm.inverse().multiply(label_ctm)
+
+    const text_node = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
+    if (!text_node) return null
+    const text_bbox = text_node.getBBox()
+    const handle_y_local = text_bbox.y + text_bbox.height / 2
+
+    const [label_pos_x] = this.getLabelPos()
+    const anchor = (text_node as SVGTextElement).getAttribute('text-anchor') ?? 'middle'
+    const box_width = Number((this._label_values as { box_width?: number })?.box_width ?? 0)
+
+    let bl_local: number, br_local: number
+    if (anchor === 'start') {
+      bl_local = label_pos_x
+      br_local = label_pos_x + box_width
+    } else if (anchor === 'end') {
+      bl_local = label_pos_x - box_width
+      br_local = label_pos_x
+    } else {
+      bl_local = label_pos_x - box_width / 2
+      br_local = label_pos_x + box_width / 2
+    }
+
+    const transformPoint = (x: number, y: number): [number, number] => [
+      rel.a * x + rel.c * y + rel.e,
+      rel.b * x + rel.d * y + rel.f,
+    ]
+    return {
+      left: transformPoint(bl_local, handle_y_local),
+      right: transformPoint(br_local, handle_y_local),
+      anchor,
+    }
   }
 
   /**
@@ -1235,11 +1314,21 @@ export abstract class DrawLabelBase {
     if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
       .on('click', (evt: MouseEvent) => {
-        // Clic sur le label : sous-sélectionne ce label sur l'élément (les
-        // poignées de redimensionnement n'apparaîtront que pour ce label).
-        // stopPropagation pour que le clic ne désélectionne pas l'élément.
+        // Clic sur le label : sélectionne l'élément + sous-sélectionne ce
+        // label (les poignées n'apparaîtront que pour ce label).
+        // stopPropagation pour éviter le double-trigger via le <g> du nœud
+        // (qui purge + ré-ajoute → flicker visuel).
         evt.stopPropagation()
         const el = this._element as Class_BaseShape
+        const drawing_area = el.drawing_area
+        // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
+        // n'itère pas dessus et la sub-sélection reste collée (poignées qui
+        // ne disparaissent pas en clic ailleurs / Escape).
+        if (!el.is_selected) {
+          drawing_area.addElementToSelection(el)
+        }
+        // Set APRÈS addElementToSelection (qui passe par drawAsSelected →
+        // clear de selected_label_prefix).
         el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
         this.refreshLabelResizeHandles()
       })
@@ -1407,22 +1496,11 @@ export abstract class DrawLabelBase {
     this.applyTextDragHandlers(textElement)
     this.finalizeLabelCreation(textElement)
 
-    // Poignées de redimensionnement du label (modifient label.box_width).
-    // Rendues sur le <g> du label → seront naturellement nettoyées au prochain
-    // drawGenericLabel via cleanupPreviousLabel.
-    if (this.d3_selection) {
-      const [label_pos_x] = this.getLabelPos()
-      const anchor = textElement.attr('text-anchor') ?? 'middle'
-      const text_node = textElement.node() as SVGGraphicsElement | null
-      const text_bbox = text_node?.getBBox() ?? { x: 0, y: 0, width: 0, height: 0 }
-      this.drawLabelResizeHandles(
-        this.d3_selection,
-        anchor,
-        label_pos_x,
-        text_bbox.y,
-        text_bbox.height
-      )
-    }
+    // Poignées de redimensionnement (label.box_width) — Class_Handler dans
+    // `g_handlers`, en coords absolues `g_drawing` (cf. doc de la méthode).
+    // Re-positionne les poignées après chaque redraw du label si elles
+    // étaient affichées (sub-sélection active), sinon ne fait rien.
+    this.refreshLabelResizeHandles()
   }
 
   protected verticalText(_tspanWidths: number[], _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {

@@ -463,7 +463,11 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // clear la sub-sélection du label — l'utilisateur doit cliquer sur
     // le <text> d'un label pour faire (ré)apparaître les poignées.
     this.selected_label_prefix = null
-    this.d3_selection?.selectAll('.label_resize_handle').remove()
+    // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
+    // le label n'est plus sub-sélectionné.
+    this._link_draw_label?.refreshLabelResizeHandles()
+    this._link_draw_value?.refreshLabelResizeHandles()
+    this._link_draw_icon?.refreshLabelResizeHandles()
   }
 
   /**
@@ -1891,7 +1895,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.valueCurrent == null) return true
     }
     if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.result_min !== null) return true
+      if (this.value?.has_intervals) return true
     }
     return this.shape_is_structure
   }
