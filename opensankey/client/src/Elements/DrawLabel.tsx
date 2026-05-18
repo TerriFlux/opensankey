@@ -1081,22 +1081,24 @@ export abstract class DrawLabelBase {
     const inputId = `${this.prefix}_input_${this.getElementId()}`
     const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
-    if (initialValue !== undefined) {
-      input.textContent = initialValue
-    }
     input.focus()
-    // Sélectionne tout le contenu (équivalent input.select()), puis si une
-    // valeur initiale a été fournie, recale le caret en fin.
     const sel = window.getSelection()
     const range = document.createRange()
-    range.selectNodeContents(input)
-    sel?.removeAllRanges()
-    sel?.addRange(range)
     if (initialValue !== undefined) {
+      // Ultra-shortcut "tape directement sur un élément sélectionné" :
+      // on conserve le nom existant et on insère la touche tapée en fin,
+      // comme si l'utilisateur avait double-cliqué puis tapé la touche.
+      input.textContent = (input.textContent ?? '') + initialValue
+      range.selectNodeContents(input)
       range.collapse(false)
       sel?.removeAllRanges()
       sel?.addRange(range)
       input.dispatchEvent(new Event('input', { bubbles: true }))
+    } else {
+      // Double-clic : sélectionne tout le contenu (équivalent input.select()).
+      range.selectNodeContents(input)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
   }
 
