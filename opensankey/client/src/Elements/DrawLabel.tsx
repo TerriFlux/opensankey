@@ -1904,13 +1904,15 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     if (this.enableEditing) {
       const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
 
-      const labelText = String(this.getLabelText())
-      // Issue #165 : box d'édition alignée sur la police effective.
+      // La zone d'édition doit avoir la même largeur que la "boîte" du label
+      // (label.box_width = la limite de wrap, donc l'enveloppe des poignées
+      // de redimensionnement). Le <foreignObject> créé par drawLabelInput
+      // utilise déjà cette largeur ; il faut que le positionnement (box_pos_x
+      // en fonction de l'ancre) parte de la même valeur, sinon le FO se
+      // retrouve décalé latéralement par rapport au label (visible quand le
+      // texte naturel est plus court que box_width).
       const eff_font_size = this.getEffectiveFontSize()
-      const box_width = Math.min(
-        labelText.length * eff_font_size,
-        this._label_values.box_width
-      )
+      const box_width = this._label_values.box_width
 
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
@@ -2585,14 +2587,12 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (!this.enableEditing || this._label_values.has_fo) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
-    const initial = this.getInputInitialValue()
     // Issue #165 : édition link cale sur la police effective rendue.
     const eff_font_size = this.getEffectiveFontSize()
-    const minBoxWidth = eff_font_size * 4
-    const box_width = Math.max(
-      Math.min((initial.length + 2) * eff_font_size * 0.6, this._label_values.box_width || 120),
-      minBoxWidth
-    )
+    // Largeur cohérente avec le <foreignObject> (label.box_width = limite de
+    // wrap, enveloppe des poignées). Évite le décalage latéral du FO par
+    // rapport au label quand le texte naturel est plus court.
+    const box_width = this._label_values.box_width || 120
 
     let box_pos_x = label_pos_x
     if (label_anchor === 'end') box_pos_x -= box_width
