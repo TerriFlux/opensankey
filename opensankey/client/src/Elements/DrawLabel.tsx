@@ -161,24 +161,20 @@ export abstract class DrawLabelBase {
 
   // =================== MÉTHODES COMMUNES ===================
 
-  protected getTextSelector(): string {
-    return `.${this.prefix}_text`
-  }
-
   /**
-   * Returns the label's font-size pre-compensated for the drawing area's
-   * fit-zoom (issue #165). Labels live in the local coordinate system that
-   * d3-zoom scales by k_fit; without compensation, a requested 20px font
-   * renders as 20*k_fit screen px — invisible when k_fit ≈ 1e-4 (large
-   * Sankey scale). Dividing by k_fit cancels the SVG scale so the on-screen
-   * size stays equal to _label_values.font_size. All positioning logic that
-   * derives from font_size (line height, multi-line offsets, edit box) must
-   * use this getter so layout scales coherently with the rendered glyphs.
+   * Retourne la taille de police logique du label. Passthrough actuellement
+   * (= `_label_values.font_size`). Introduit lors d'un essai de compensation
+   * fit-zoom (#165) puis revert : la feature est suivie sur la branche
+   * `feat/165-font-size-compensation`. Les commits `94ca4eef` et `ec66e920`
+   * (refonte poignées + alignement édition) appellent cette méthode, donc on
+   * la conserve comme passthrough pour ne pas casser leur logique.
    */
   protected getEffectiveFontSize(): number {
-    const raw = this._label_values.font_size
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
-    return k_fit > 0 ? raw / k_fit : raw
+    return this._label_values.font_size
+  }
+
+  protected getTextSelector(): string {
+    return `.${this.prefix}_text`
   }
 
   // =================== STICK TO LABEL (valeur collée au libellé) ===================
@@ -1223,12 +1219,8 @@ export abstract class DrawLabelBase {
     const lbl = this._label_values as { box_width?: number, wrap_long_words?: boolean, font_size?: number } | undefined
     const target_width = lbl?.box_width ?? box_width
     const wrap_long = lbl?.wrap_long_words ?? false
-    // Compensation fit-zoom (issue #165) : le foreignObject vit dans le repère
-    // local zoomé, donc la CSS font-size en px y est aussi multipliée par k_fit.
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
-    const raw_font_size = lbl?.font_size ?? 12
-    const font_size = k_fit > 0 ? raw_font_size / k_fit : raw_font_size
-    const line_height = Math.max(font_size * 1.3, 14 / (k_fit > 0 ? k_fit : 1))
+    const font_size = lbl?.font_size ?? 12
+    const line_height = Math.max(font_size * 1.3, 14)
     // Hauteur généreuse pour ne pas clipper plusieurs lignes ; overflow visible.
     const fo_height = Math.max(box_height, line_height * 10)
 
@@ -1409,38 +1401,15 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
-      // Issue #165 — box_width est défini par l'utilisateur en px écran. Avec
-      // la compensation fit-zoom (font-size grossi en coords locales), il faut
-      // grossir aussi box_width dans le même rapport, sinon le texte wrappe
-      // caractère par caractère (boîte locale trop étroite vs glyphes énormes).
-      const k_fit_local = this._element.drawing_area?.k_fit ?? 1
-      const k_inv_local = k_fit_local > 0 ? 1 / k_fit_local : 1
-      const compensation_active = k_fit_local < 1
-      // Pour les box_width historiques (en coords locales pré-compensation),
-      // une boîte de 30 fonctionnait parce que la font était devenue invisible
-      // (rien à faire tenir). Avec la compensation, la font est lisible donc
-      // une boîte de 30 ne tient quasi rien et le texte wrappe agressivement
-      // (soft hyphens "1 336 790.-9" et splits sur espaces "1 336" / "790.9").
-      // Solution : en compensation active, garantir que la boîte est au moins
-      // assez large pour le texte complet (≈ chars * font_size * 0.6) — évite
-      // la fragmentation intempestive sur les valeurs numériques. Hors compen-
-      // sation, on respecte strictement le box_width utilisateur pour conserver
-      // le wrap volontaire (libellés multi-mots).
-      const eff_box_width_base = this._label_values.box_width * k_inv_local
-      let eff_box_width = eff_box_width_base
-      if (compensation_active) {
-        const text_natural_width = String(labelText).length * this.getEffectiveFontSize() * 0.6
-        eff_box_width = Math.max(eff_box_width_base, text_natural_width)
-      }
       let processedText = labelText
-      if (this._label_values.wrap_long_words && !compensation_active) {
-        processedText = breakLongWords(labelText, eff_box_width, getCanvasFontString(textElement))
+      if (this._label_values.wrap_long_words) {
+        processedText = breakLongWords(labelText, this._label_values.box_width, getCanvasFontString(textElement))
       }
       const hasSpaces = processedText.includes(' ')
 
       if (hasSpaces) {
         const wrapper = textwrap()
-          .bounds({ height: 100 * k_inv_local, width: eff_box_width })
+          .bounds({ height: 100, width: this._label_values.box_width })
           .method('tspans')
 
         textElement
@@ -1528,9 +1497,7 @@ export abstract class DrawLabelBase {
 
     const vert = this._label_values.vert
     const lineCount = Math.max(0, tspanWidths.length - 1)
-    // Issue #165 : décalages multi-ligne en coords locales doivent suivre la
-    // taille de police effectivement rendue (compensée du fit-zoom).
-    const font_size = this.getEffectiveFontSize()
+    const font_size = this._label_values.font_size
     const inside_vert = this._label_values.inside_vert  // ✅ AJOUTÉ
 
     // ✅ MODIFIÉ : Ne pas décaler vers le haut si inside_vert et vert === 'top'
@@ -1623,8 +1590,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     // Texte horizontal pré-rotation : box (0, 0)-(textWidth, colWidth) avec colWidth = lineCount * lineHeight.
     // Après rotate(-90, 0, 0)   : box (0, -textWidth)-(colWidth, 0).
     // Translate (tx, ty + textWidth) → box finale (tx, ty)-(tx + colWidth, ty + textWidth).
-    // Issue #165 : lineHeight aligné sur la police effective (compensée fit-zoom).
-    const lineHeight = this.getEffectiveFontSize()
+    const lineHeight = this._label_values.font_size
     const textWidth = tspanWidths.length ? Math.max(...tspanWidths) : 0
     const numLines = Math.max(1, tspanWidths.length)
     const colWidth = numLines * lineHeight
@@ -1873,7 +1839,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       ?.attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
-      .attr('font-size', String(this.getEffectiveFontSize()) + 'px')
+      .attr('font-size', String(this._label_values.font_size) + 'px')
       .attr('font-family', this._label_values.font_family)
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
@@ -1920,9 +1886,9 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       const vert = this._label_values.vert
       if (vert === 'top') {
         const lineCount = (textElement.selectAll('tspan').nodes().length ?? 1) - 1
-        box_pos_y -= lineCount * eff_font_size
+        box_pos_y -= lineCount * this._label_values.font_size
       } else if (vert === 'middle') {
-        box_pos_y -= eff_font_size / 2
+        box_pos_y -= this._label_values.font_size / 2
       }
 
       if (label_anchor === 'end') {
@@ -2053,8 +2019,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     if (!this._label_values.vertical_text) return undefined
 
     const [label_pos_x, label_pos_y] = this.getLabelPos()
-    // Issue #165 : décalage proportionnel à la police effective.
-    const dx = this.getEffectiveFontSize() / 2
+    const dx = this._label_values.font_size / 2
 
     // For vertical links, use +90° so text reads top→bottom (natural flow direction).
     // For horizontal links, keep -90° so text reads bottom→top (left-to-right flow convention).
@@ -2095,15 +2060,11 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   protected getFontSize(): number {
-    // Comparaison vs link.thickness en coords locales : on raisonne en taille
-    // logique puis on compense le fit-zoom à la fin pour garder une police
-    // constante à l'écran (issue #165).
     let font_size = this._label_values.font_size
     if (font_size > this.link.thickness && this.link.is_multi_link) {
       font_size = this.link.thickness
     }
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
-    return k_fit > 0 ? font_size / k_fit : font_size
+    return font_size
   }
 
   /**
@@ -2587,18 +2548,17 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (!this.enableEditing || this._label_values.has_fo) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
-    // Issue #165 : édition link cale sur la police effective rendue.
-    const eff_font_size = this.getEffectiveFontSize()
     // Largeur cohérente avec le <foreignObject> (label.box_width = limite de
     // wrap, enveloppe des poignées). Évite le décalage latéral du FO par
     // rapport au label quand le texte naturel est plus court.
+    const eff_font_size = this.getEffectiveFontSize()
     const box_width = this._label_values.box_width || 120
 
     let box_pos_x = label_pos_x
     if (label_anchor === 'end') box_pos_x -= box_width
     else if (label_anchor === 'middle') box_pos_x -= box_width / 2
 
-    const box_pos_y = label_pos_y - eff_font_size / 2
+    const box_pos_y = label_pos_y - this._label_values.font_size / 2
 
     this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width)
     this.attachDoubleClickEdit(textElement)
