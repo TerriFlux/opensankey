@@ -763,6 +763,29 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
       ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    allow_flux_to_descendant: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Allow fluxes from a node to its descendants',
+        fr: 'Autoriser les flux d\'un nœud vers ses descendants',
+        es: 'Permitir flujos de un nodo hacia sus descendientes',
+        de: 'Flüsse von einem Knoten zu seinen Nachfahren erlauben',
+        it: 'Consentire flussi da un nodo verso i suoi discendenti'
+      },
+      tooltips: {
+        en: 'If checked: fluxes that connect a node to one of its own hierarchical descendants (or vice-versa) are kept as-is and highlighted in red on the corrected output. Otherwise: load fails, naming the offending flux.',
+        fr: 'Si coché : les flux qui relient un nœud à un de ses descendants hiérarchiques (ou inversement) sont conservés tels quels et surlignés en rouge sur la sortie corrigée. Sinon : le chargement échoue en nommant le flux fautif.',
+        es: 'Si está marcado: los flujos que conectan un nodo con uno de sus descendientes jerárquicos (o viceversa) se conservan tal cual y se resaltan en rojo en la salida corregida. De lo contrario: la carga falla, nombrando el flujo problemático.',
+        de: 'Wenn aktiviert: Flüsse, die einen Knoten mit einem seiner hierarchischen Nachfahren verbinden (oder umgekehrt), werden unverändert beibehalten und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: das Laden schlägt fehl und nennt den problematischen Fluss.',
+        it: 'Se selezionato: i flussi che collegano un nodo a uno dei suoi discendenti gerarchici (o viceversa) vengono mantenuti così come sono ed evidenziati in rosso nell\'output corretto. Altrimenti: il caricamento fallisce, indicando il flusso problematico.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
