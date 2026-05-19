@@ -142,14 +142,6 @@ export class Class_DrawingArea {
   private starting_x_point = 0
   private starting_y_point = 0
 
-  // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
-  // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
-  // regardless of how aggressively the auto-fit shrinks the view (e.g. when
-  // _scale is large like 1e6 and the fit zoom collapses to ~1e-4). Stays at 1
-  // until areaAutoFit runs. Updated only by areaAutoFit (not by manual zoom).
-  protected _k_fit: number = 1
-  public get k_fit(): number { return this._k_fit }
-
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
     return sankey
@@ -835,8 +827,6 @@ export class Class_DrawingArea {
 
   public areaAutoFit(horiz?: boolean) {
 
-    const prev_k_fit = this._k_fit
-
     // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
     if (this.is_paper_mode) {
       if (this.d3_selection_zoom_area) {
@@ -847,7 +837,6 @@ export class Class_DrawingArea {
         const new_k = Math.min(k_w, k_h)
         this._k_horiz = k_w
         this._k_vert = k_h
-        this._k_fit = new_k
         this._zoom_width = this._width
         this._zoom_height = this._height
         this._background_d3_groups_shift_x = 0
@@ -861,34 +850,15 @@ export class Class_DrawingArea {
           [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
         this.drawBackground()
         this.drawGrid()
-        if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       }
       return
     }
 
-    // Issue #165 — Anti-divergence : quand la compensation fit-zoom est active
-    // (_k_fit < 1, donc labels grossis en coords locales pour rester à N px
-    // écran), les labels peuvent dominer le getBBox et faire diverger les fits
-    // successifs en cascade (bbox grandit → k_fit chute → labels encore plus
-    // gros). On masque temporairement les <text> pour fitter sur les formes
-    // uniquement. Au tout premier autoFit (_k_fit=1, pas encore de
-    // compensation), on garde le comportement historique qui inclut les labels.
-    const skip_text_in_bbox = this._k_fit !== 1
-    const hidden_texts = skip_text_in_bbox
-      ? this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
-      : undefined
-    hidden_texts?.style('display', 'none')
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-    hidden_texts?.style('display', null)
 
     if (bbox == undefined)
       return
-    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
-    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
-    // bbox locale est donc démultipliée par le même facteur, et l'inclure
-    // ici ferait diverger les fits successifs comme pour les <text>. On
-    // l'exclut quand la compensation est active.
-    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
+    if (this.legend.is_visible && this.legend.stick_to_drawing) {
       const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
         // Calculer la bounding box englobante
@@ -920,7 +890,6 @@ export class Class_DrawingArea {
       this._background_d3_groups_shift_y = 0
       this._k_horiz = 1
       this._k_vert = 1
-      this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
         this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
@@ -930,7 +899,6 @@ export class Class_DrawingArea {
       }
       this.drawBackground()
       this.drawGrid()
-      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       return
     }
 
@@ -963,7 +931,6 @@ export class Class_DrawingArea {
       this._k_vert = new_k_height
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
-      this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
@@ -976,38 +943,7 @@ export class Class_DrawingArea {
         [this._fit_margin / 2 - this._background_d3_groups_shift_x * new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
       this.drawBackground()
       this.drawGrid()
-      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
     }
-  }
-
-  /**
-   * Re-render all node/link labels so the fit-zoom compensation applied to
-   * font-size (see DrawLabelBase.getEffectiveFontSize) takes effect. Triggered
-   * by areaAutoFit when k_fit changes — the labels themselves were already
-   * drawn at the old multiplier, so a fresh draw is required to update the
-   * font-size attribute and the dependent positioning offsets.
-   */
-  private _refreshLabelsForFitZoom() {
-    this._sankey.nodes_list.forEach(n => {
-      n.drawNameLabel()
-      n.drawValueLabel()
-      n.drawStockBox()
-    })
-    this._sankey.links_list.forEach(l => {
-      l.drawNameLabel()
-      l.drawValueLabel()
-    })
-    // ZDT (zones de texte / containers OS+) héritent de NodeBase mais n'ont
-    // qu'un name_label (pas de value_label). Le name_label utilise la même
-    // chaîne DrawLabel donc bénéficie aussi de la compensation.
-    this._sankey.containers_list.forEach(c => {
-      c.drawNameLabel()
-    })
-    // Legend : pas de compensation par-attribut (font-size hardcodée à
-    // _legend_police partout). À la place, on contre-scale son groupe racine
-    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
-    // pose du transform.
-    this._legend.applyPosition()
   }
 
   /**
