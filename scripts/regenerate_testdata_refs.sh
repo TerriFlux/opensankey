@@ -47,8 +47,12 @@ python -c "import SankeyExcelParser, mfa_problem" 2>/dev/null || {
 
 run_step() {
   local label="$1" repo="$2" rel_test="$3"
-  echo "==> [$label] python $rel_test --generate_results"
-  ( cd "$repo" && python "$rel_test" --generate_results )
+  # rel_test = chemin .py relatif au repo. On lance via `python -m` pour que
+  # les imports relatifs (`from .test_mfa_problem import ...`) resolvent.
+  local mod="${rel_test%.py}"
+  mod="${mod//\//.}"
+  echo "==> [$label] python -m $mod --generate_results"
+  ( cd "$repo" && python -m "$mod" --generate_results )
   echo
 }
 
