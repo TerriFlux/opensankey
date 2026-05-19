@@ -190,7 +190,7 @@ export const SankeyMenu = (
               className='drawer_menu_config'
               style={{
                 width: drawer_width_css,
-                height: 50 + '%',
+                height: 'fit-content',
                 right: app_data.drawing_area.fit_margin / 2,
                 marginTop: posTopMenuConfig
               }}
