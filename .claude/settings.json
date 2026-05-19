@@ -141,11 +141,46 @@
       "Bash(grep -rn:*)",
       "Bash(grep -rln:*)",
       "Bash(git diff:*)",
-      "Bash(git diff --stat:*)"
+      "Bash(git diff --stat:*)",
+      "Bash(/c/Users/JulienAlapetite/.conda/envs/dev/python.exe -m flake8 poc_redundancy_test.py)",
+      "Bash(/c/Users/JulienAlapetite/.conda/envs/dev/python.exe -m flake8 .)",
+      "Bash(cp opensankey/client/src/types/ApplicationData.tsx /tmp/AppData.bak)",
+      "Bash(cp opensankey/client/src/Elements/DrawLabel.tsx /tmp/DrawLabel.bak)",
+      "Bash(cp /tmp/AppData.bak opensankey/client/src/types/ApplicationData.tsx)",
+      "Bash(cp /tmp/DrawLabel.bak opensankey/client/src/Elements/DrawLabel.tsx)",
+      "Bash(ssh -p 5378 -o BatchMode=yes -o ConnectTimeout=10 ubuntu@51.75.204.192 \"sudo ls -la /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem/ 2>&1 | head -25\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo rm -rf /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem/{build,dist,MFAProblem.egg-info,tmp} /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem/mfa_problem/tests && sudo ls -la /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem/ | grep -E 'root|build|dist|egg-info|tmp'\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem -user root 2>/dev/null\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem -user root -exec chown gitlab-runner:gitlab-runner {} \\\\; && sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication/submodules/MFAProblem -user root 2>/dev/null | wc -l\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root 2>/dev/null | head -5 && echo '---' && sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root -exec chown gitlab-runner:gitlab-runner {} \\\\; 2>/dev/null && sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root 2>/dev/null | wc -l\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root 2>/dev/null | wc -l && sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root -exec chown gitlab-runner:gitlab-runner {} \\\\; 2>/dev/null && echo '--- apres chown ---' && sudo find /home/gitlab-runner/builds/ojYaU8JwW/0/su-model/sankeyapplication -user root 2>/dev/null | wc -l\")",
+      "Bash(docker --version)",
+      "Bash(docker info *)",
+      "Bash(PKG_VERSION=1.1.4 bash submodules/MFAProblem/build_wheel_linux.sh cp312-cp312)",
+      "Bash(PKG_VERSION=1.1.4 bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp312-cp312)",
+      "Bash(MSYS_NO_PATHCONV=1 docker run --rm -v \"$\\(pwd\\):/io\" --entrypoint sh quay.io/pypa/manylinux2014_x86_64 -c \"ls /io | head -5\")",
+      "Bash(ssh -p 5378 -o ConnectTimeout=10 ubuntu@51.75.204.192 \"echo OK; uname -a; cd ~/dev_opensankey/sankeyapplication && cat sankeyapp.ini\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"ls -lat /tmp/tmp* 2>/dev/null | head -20; echo '---'; find /tmp -name rollover.log 2>/dev/null | head -10\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"sudo journalctl -u dev_opensankey --since '1 hour ago' --no-pager | tail -60\")",
+      "Bash(ls -la /d/Dev/cartofob-sankey/packages/ 2>&1 | head -20)",
+      "Read(//d/Dev/cartofob-sankey/packages//**)",
+      "Bash(cp submodules/MFAProblem/dist/mfaproblem-1.1.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl /d/Dev/cartofob-sankey/packages/)",
+      "Bash(cp submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/dist/sankeyexcelparser-1.1.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl /d/Dev/cartofob-sankey/packages/)",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 \"grep -E 'SECRET|FLASK' ~/dev_opensankey/sankeyapplication/env 2>/dev/null | sed 's/=.*/=***/' ; echo '---SHOULD BE EMPTY IF NO SECRET KEY---'\")",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 'cd ~/dev_opensankey/sankeyapplication && cp env env.bak.$\\(date +%Y%m%d-%H%M%S\\) && echo \"FLASK_SECRET_KEY=3MMBj4LXWyv9M4X_dvgUO6v47l0seOUcXngyl_nJyLYNGhraUHFjVEesLx5RAzHE3rb0VWOyv52ubMeo321qkA\" >> env && echo \"--- env tail ---\" && tail -3 env | sed \"s/=.*/=***/\"')",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 'cd ~/dev_opensankey/sankeyapplication && git pull --ff-only 2>&1 | tail -20 && echo \"---\" && grep -n FLASK_SECRET app.py')",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 'cd ~/dev_opensankey/sankeyapplication && git log --oneline -3 && echo \"---\" && grep -n FLASK_SECRET app.py')",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 'cd ~/dev_opensankey/sankeyapplication && git pull --ff-only --no-recurse-submodules 2>&1 | tail -10 && echo \"---HEAD---\" && git log --oneline -3 && echo \"---app.py---\" && grep -n FLASK_SECRET app.py')",
+      "Bash(ssh -p 5378 ubuntu@51.75.204.192 'sudo systemctl restart dev_opensankey && sleep 2 && sudo systemctl status dev_opensankey --no-pager | head -15')",
+      "Bash(cp \"C:/Users/JulienAlapetite/Downloads/Sankey flux détaillé.xlsx\" \"d:/tmp/sankey_flux_detaille.xlsx\" && ls -la \"d:/tmp/sankey_flux_detaille.xlsx\")",
+      "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe d:/tmp/repro_sankey.py)",
+      "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe -c \"import SankeyExcelParser; print\\(SankeyExcelParser.__file__\\); import os; print\\(os.listdir\\(os.path.dirname\\(SankeyExcelParser.__file__\\)\\)[:20]\\)\")",
+      "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe -c ' *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\JulienAlapetite\\.claude",
-      "C:\\Users\\JulienAlapetite\\Documents"
+      "C:\\Users\\JulienAlapetite\\Documents",
+      "C:\\Users\\JulienAlapetite\\Downloads"
     ]
   }
 }
