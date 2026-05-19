@@ -11,6 +11,17 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [Unreleased] — Mai 2026
+
+### Parser : plusieurs flux entre deux mêmes nœuds (issue [#148](https://gitlab.com/su-model/sankeyapplication/-/issues/148))
+
+- **Multi-Flux par (origine, destination) via FluxTag**. Les fichiers Excel contenant plusieurs lignes avec la même `Origine` et la même `Destination` mais des fluxTags différents (typiquement un produit / une matière / une catégorie par flèche) ne sont plus écrasés silencieusement par le parser. Chaque combinaison de fluxTags crée désormais son propre flux, ce qui s'aligne sur la convention du JSON OpenSankey (un Link par combo) et permet la visualisation en flèches colorées par catégorie côté front. Ferme [opensankey#885](https://gitlab.com/su-model/opensankey/-/issues/885) (back) et [opensankey#880](https://gitlab.com/su-model/opensankey/-/issues/880) (front).
+- **Garde-fou anti-mélange** : si un Excel mélange des lignes sans fluxTag *et* des lignes avec fluxTag pour le même couple (origine, destination), le parser refuse explicitement plutôt que de partager silencieusement les données. Encourage l'utilisateur à choisir une convention pour chaque couple de nœuds.
+- **Fix conversion JSON → Excel** (`TypeError: got multiple values for argument 'do_coherence_checks'`) sur la route Flask de conversion : `IOJson.load_sankey` propageait deux fois `do_coherence_checks` à `load_sankey_from_json`. Bug pré-existant déclenché par le chargement direct d'un JSON depuis le serveur.
+- La typologie résiduelle `Simple` / `Cumul` / `Séparés` pour les collisions sur exactement le même couple `(orig, dest, fluxTag-combo, dataTag-combo)` est trackée séparément dans [sankeyexcelparser#111](https://gitlab.com/su-model/sankeyexcelparser/-/issues/111) ; cas dégénéré beaucoup plus rare maintenant que le multi-flux structurel est résolu.
+
+Voir : [submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md).
+
 ## [Unreleased] — POC dual-output : colonne « Valeur complétée » dans la feuille Analyse
 
 ### Ajouté
