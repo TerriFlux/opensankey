@@ -150,15 +150,6 @@ export class Class_DrawingArea {
   protected _k_fit: number = 1
   public get k_fit(): number { return this._k_fit }
 
-  // Migration legacy (#165) — fichiers persisted pre-1.1.4 ont des font_size
-  // pré-scalés manuellement par l'utilisateur pour compenser le rendu sans
-  // compensation (ex : 60 pour cibler ~20px écran à k_fit≈0.33). En 1.1.4
-  // font_size = px écran cible, donc ces valeurs apparaissent trop grosses.
-  // Flag posé par SankeyPersistence.fromJSON quand version < 1.1.4 ; consommé
-  // au premier areaAutoFit qui multiplie tous les font_size par k_fit puis le
-  // clear. Une fois le fichier ré-enregistré, les valeurs sont normalisées.
-  public _pending_legacy_font_migration: boolean = false
-
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
     return sankey
@@ -995,17 +986,8 @@ export class Class_DrawingArea {
    * by areaAutoFit when k_fit changes — the labels themselves were already
    * drawn at the old multiplier, so a fresh draw is required to update the
    * font-size attribute and the dependent positioning offsets.
-   *
-   * Also drives the one-shot legacy migration (#165) : si _pending_legacy_font
-   * _migration est posé (fichier < 1.1.4), on multiplie tous les *_font_size
-   * par le k_fit qui vient d'être capturé, puis on clear le flag — exactement
-   * l'inverse de la sur-compensation que la nouvelle sémantique introduirait.
    */
   private _refreshLabelsForFitZoom() {
-    if (this._pending_legacy_font_migration) {
-      this._applyLegacyFontMigration()
-      this._pending_legacy_font_migration = false
-    }
     this._sankey.nodes_list.forEach(n => {
       n.drawNameLabel()
       n.drawValueLabel()
@@ -1026,47 +1008,6 @@ export class Class_DrawingArea {
     // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
     // pose du transform.
     this._legend.applyPosition()
-  }
-
-  /**
-   * Issue #165 — Migration legacy des font_size pour fichiers persisted pre-1.1.4.
-   * Multiplie tous les *_font_size par le k_fit qui vient d'être capturé.
-   * Justification : avant 1.1.4, l'utilisateur pré-scalait manuellement (ex.
-   * font_size=60) pour obtenir ~20px écran à k_fit≈0.33. En 1.1.4, font_size
-   * est la cible écran, donc 60 devient 60px écran. Multiplier par k_fit_old
-   * (le k_fit du tout premier autoFit après load) reproduit l'ancien rendu :
-   * 60 × 0.33 = 20 → 20px écran, identique à l'ancien comportement.
-   * Mutation persistée : une fois le fichier ré-enregistré en 1.1.4, les
-   * valeurs sont normalisées et la migration ne se redéclenche plus.
-   */
-  private _applyLegacyFontMigration() {
-    const factor = this._k_fit
-    if (!(factor > 0) || factor === 1) return
-    const scaleAttr = (el: { name_label_font_size?: number, value_label_font_size?: number, stock_label_font_size?: number }) => {
-      if (typeof el.name_label_font_size === 'number') {
-        el.name_label_font_size = el.name_label_font_size * factor
-      }
-      if (typeof el.value_label_font_size === 'number') {
-        el.value_label_font_size = el.value_label_font_size * factor
-      }
-      if (typeof el.stock_label_font_size === 'number') {
-        el.stock_label_font_size = el.stock_label_font_size * factor
-      }
-    }
-    this._sankey.nodes_list.forEach(scaleAttr)
-    this._sankey.links_list.forEach(scaleAttr)
-    this._sankey.containers_list.forEach(scaleAttr)
-    // Legend : _legend_police est l'équivalent. Pas d'API publique pour le
-    // muter sans déclencher draw() (et donc une boucle), on passe par l'accès
-    // direct au champ privé via cast.
-    const legend = this._legend as unknown as { _legend_police: number }
-    if (typeof legend._legend_police === 'number') {
-      legend._legend_police = legend._legend_police * factor
-    }
-    console.info(
-      `[migration 1.1.4] font_size legacy × ${factor.toFixed(4)} ` +
-      '(rétablissement du rendu écran historique pour fichier pre-1.1.4).'
-    )
   }
 
   /**
