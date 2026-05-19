@@ -20,7 +20,6 @@ variables:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_PROGRESS_BAR: "off"
   PIP_ROOT_USER_ACTION: "ignore"
-  TESTS_DIR: $CI_PROJECT_DIR/TestData
   PUBLIC_URL: "/"
 build:
   stage: build
@@ -44,10 +43,7 @@ test:
   tags: [py312]
   script:
     # Env
-    - export TESTS_DIR="$CI_PROJECT_DIR/TestData"
     - echo $CI_PROJECT_DIR
-    - echo $EIGEN_INCLUDE
-    - echo $TESTS_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     # Test
     - bash test.sh
