@@ -960,9 +960,10 @@ export const UniversalFileConverter = ({
     }
     form_data.append('output_options', JSON.stringify(output_options))
     const input_options = getCurrentInputOptions() as Record<string, unknown>
-    // The six input options (create_new_nodes, create_new_flux,
+    // The eight input options (create_new_nodes, create_new_flux,
     // propagate_flux_to_children, propagate_flux_to_parent,
-    // autofix_parenthood_mat_balance, autofix_constraint_redundancies) are
+    // autofix_parenthood_mat_balance, autofix_constraint_redundancies,
+    // allow_flux_to_descendant, autonormalize_ratio_constraints) are
     // passed through verbatim — load_sankey consumes those literal names.
     // No inversion: false = abort with a message naming the option,
     // true = fix + populate _auto_corrected_* for the red highlight.
