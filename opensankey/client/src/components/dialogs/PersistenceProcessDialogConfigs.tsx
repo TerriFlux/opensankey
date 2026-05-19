@@ -964,7 +964,7 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
 
   record_simulations: {
     group: 'solver',
-    default: true,
+    default: false,
     type: (() => true) as (() => boolean),
     labels: {
       en: 'Record simulations in output',
@@ -974,11 +974,11 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
       it: 'Registrare le simulazioni nel file di output'
     },
     tooltips: {
-      en: 'Persist every Monte-Carlo realisation in the output file (one row per draw). Disable to keep only the aggregated bounds.',
-      fr: 'Persister chaque réalisation Monte-Carlo dans le fichier de sortie (une ligne par tirage). Désactiver pour ne garder que les bornes agrégées.',
-      es: 'Persistir cada realización Monte-Carlo en el archivo de salida (una fila por tirada). Desactivar para conservar solo los límites agregados.',
-      de: 'Jede Monte-Carlo-Realisierung in der Ausgabedatei speichern (eine Zeile pro Ziehung). Deaktivieren, um nur die aggregierten Grenzen zu behalten.',
-      it: 'Persistere ogni realizzazione Monte-Carlo nel file di output (una riga per estrazione). Disattivare per mantenere solo i limiti aggregati.'
+      en: 'Persist every Monte-Carlo realisation in the output file (one column per draw, one row per flow). Off by default — the sheet can blow up to 1000+ columns.',
+      fr: 'Persister chaque réalisation Monte-Carlo dans le fichier de sortie (une colonne par tirage, une ligne par flux). Désactivé par défaut — l\'onglet peut faire 1000+ colonnes.',
+      es: 'Persistir cada realización Monte-Carlo en el archivo de salida (una columna por tirada, una fila por flujo). Desactivado por defecto — la hoja puede tener más de 1000 columnas.',
+      de: 'Jede Monte-Carlo-Realisierung in der Ausgabedatei speichern (eine Spalte pro Ziehung, eine Zeile pro Fluss). Standardmäßig deaktiviert — das Blatt kann 1000+ Spalten haben.',
+      it: 'Persistere ogni realizzazione Monte-Carlo nel file di output (una colonna per estrazione, una riga per flusso). Disattivato per impostazione predefinita — il foglio può avere 1000+ colonne.'
     },
     visibilityConditions: [
       { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true },
