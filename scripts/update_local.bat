@@ -34,6 +34,13 @@ echo ^>^>^> submodules : checkout main + git pull (sauf eigen)
 git submodule foreach --recursive "case $sm_path in */eigen) echo skip eigen ;; *) git checkout main && git pull --ff-only ;; esac"
 if errorlevel 1 ( echo ERREUR : checkout main / pull submodules a echoue & exit /b 1 )
 
+REM === eigen : re-pin (HEAD detachee) sur le SHA epingle par MFAProblem ===
+REM --force est requis : sans lui, submodule update est un no-op quand le
+REM commit correspond deja, et eigen reste sur sa branche locale 'main'.
+echo ^>^>^> eigen : version epinglee par MFAProblem (HEAD detachee)
+git -C submodules\MFAProblem submodule update --init --force submodules/eigen
+if errorlevel 1 ( echo ERREUR : update eigen a echoue & exit /b 1 )
+
 REM === Build client ===
 echo SankeyApp Client --------------------------------------------------
 call scripts\build_client.bat -B

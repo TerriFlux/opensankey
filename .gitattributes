@@ -1,0 +1,7 @@
+# Line-ending normalization
+# Windows batch files MUST be CRLF or cmd.exe drops the first char(s) of each line.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Shell scripts MUST stay LF (run on the Linux CI runner / VPS).
+*.sh text eol=lf
