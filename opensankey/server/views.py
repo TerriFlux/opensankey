@@ -108,6 +108,53 @@ def set_process_state(**kwargs):  # ← Plus de paramètre session_id
     session.modified = True  # ← IMPORTANT !
 
 
+# --- Statut de traitement piloté par fichier (canal cross-thread) -----------
+# Les traitements lourds (conversion, optimisation) tournent dans un Thread
+# détaché qui n'a PAS de contexte requête Flask : il ne peut donc pas écrire
+# dans la session (cf. set_process_state). Le seul canal partagé fiable depuis
+# ce thread est le système de fichiers — déjà utilisé pour le log. On écrit un
+# petit fichier de statut frère du log (<logname>.status) que le thread met à
+# jour à chaque sortie, et que check_process (en contexte requête) relit pour
+# piloter l'arrêt du polling côté client. Cela remplace le grep de prose
+# localisée (FINISHED/TERMINÉ/ÉCHOUÉ…) qui était fragile et couplé à la langue.
+PROCESS_STATUS_RUNNING = "running"
+PROCESS_STATUS_FINISHED = "finished"
+PROCESS_STATUS_FAILED = "failed"
+
+
+def _process_status_path(log_filename):
+    """Chemin du fichier de statut associé à un fichier log."""
+    if not log_filename:
+        return None
+    return log_filename + ".status"
+
+
+def write_process_status(log_filename, status):
+    """Écrit le statut de traitement. Appelable depuis le thread (best-effort)."""
+    path = _process_status_path(log_filename)
+    if not path:
+        return
+    try:
+        with open(path, "w") as f:
+            f.write(status)
+    except OSError:
+        # Canal best-effort : en cas d'échec d'écriture, le client retombe sur
+        # l'absence de statut (le polling continue) plutôt que de casser le run.
+        pass
+
+
+def read_process_status(log_filename):
+    """Relit le statut écrit par le thread. None si absent/illisible (= en cours)."""
+    path = _process_status_path(log_filename)
+    if not path or not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r") as f:
+            return f.read().strip() or None
+    except OSError:
+        return None
+
+
 @opensankey.route("/")
 def start():
     return render_template("index.html", filename="", static_site="false")
@@ -133,7 +180,11 @@ def check_process():
             f.close()
             results_dict = {
                 "log_name": logname,
-                "output": results
+                "output": results,
+                # Statut machine-lisible piloté par le thread via <logname>.status.
+                # None tant que le thread n'a rien écrit (= traitement en cours) ;
+                # le client s'arrête sur 'finished'/'failed', plus sur le texte.
+                "status": read_process_status(logname),
             }
             json_data = json.dumps(results_dict)
             # trace.logger.debug('dumps')
@@ -350,6 +401,10 @@ def launch_conversion():
 
         input_format = request.form.get("input_format", "excel")
         output_format = request.form.get("output_format", "json")
+        # Libellé localisé fourni par le dialogue appelant (Chargement / Édition /
+        # Création d'index…) pour contextualiser le bandeau ; None => libellé
+        # technique générique.
+        process_label = request.form.get("process_label") or None
 
         # Keep input/output options separate: they share key names (e.g.
         # `activate_data_table`) but mean opposite things on each side.
@@ -382,7 +437,10 @@ def launch_conversion():
                     output_format=output_format,
                     logname=log_filename
                 )
-                trace.logger.info("{:->{w}}".format(" CHARGEMENT TERMINÉE", w=50))
+                trace.logger.info("{:->{w}}".format(" " + (process_label or "CHARGEMENT TERMINÉE"), w=50))
+                # Pas de thread ici (chargement direct d'un exemple JSON) : on
+                # marque le statut terminé tout de suite pour arrêter le polling.
+                write_process_status(log_filename, PROCESS_STATUS_FINISHED)
                 return Response(response="{}", status=200, mimetype="application/json")
                 # return handle_json_or_compressed(data_folder, exemple, input_file_name)
 
@@ -433,6 +491,7 @@ def launch_conversion():
                 output_options,
                 log_filename,
                 sankey_as_data,
+                process_label,
             ),
         )
         thread.daemon = True
@@ -460,6 +519,7 @@ def conversion_thread(
     output_options,
     log_filename,
     sankey_as_data,
+    process_label=None,
 ):
     """
     Thread de conversion universel.
@@ -482,11 +542,22 @@ def conversion_thread(
         Fichier de trace utilisateur
     log_filename : str
         Fichier de logs debug
+    process_label : str, optional
+        Libellé localisé de l'opération, fourni par le dialogue appelant
+        (« Chargement du fichier Excel », « Édition »…). Sert d'en-tête de
+        bandeau à la place du générique « CONVERSION: EXCEL → JSON ». Si absent,
+        on retombe sur le libellé technique.
     """
     trace.logger_init(log_filename, "a")
+    write_process_status(log_filename, PROCESS_STATUS_RUNNING)
+
+    # Le contrôle d'arrêt côté client repose désormais sur le fichier de statut,
+    # plus sur ce texte : le bandeau peut donc être librement localisé/contextuel.
+    banner_title = process_label or f"CONVERSION: {input_format.upper()} → {output_format.upper()}"
+    op_label = process_label or "CONVERSION"
 
     trace.logger.info("=" * 80)
-    trace.logger.info(f"CONVERSION: {input_format.upper()} → {output_format.upper()}")
+    trace.logger.info(banner_title)
     trace.logger.info(f"Input:  {Path(input_file_name).name}")
     trace.logger.info(f"Output: {Path(output_file_name).name}")
     trace.logger.debug(f"input_options: {input_options}")
@@ -521,12 +592,14 @@ def conversion_thread(
             trace.logger.info("=" * 80)
             if ok:
                 trace.logger.info(
-                    f"✓ CONVERSION TERMINÉE en {t_total:.3f}s — Index créé"
+                    f"✓ {op_label} en {t_total:.3f}s — Index créé"
                 )
+                write_process_status(log_filename, PROCESS_STATUS_FINISHED)
             else:
                 trace.logger.error(
-                    f"✗ CRÉATION INDEX ÉCHOUÉE après {t_total:.3f}s: {msg}"
+                    f"✗ {op_label} — échec après {t_total:.3f}s: {msg}"
                 )
+                write_process_status(log_filename, PROCESS_STATUS_FAILED)
             trace.logger.info("=" * 80)
             return
 
@@ -593,11 +666,12 @@ def conversion_thread(
         if not ok:
             t_total = perf_counter() - t_total_start
             trace.logger.error("=" * 80)
-            trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
+            trace.logger.error(f"✗ {op_label} — échec après {t_total:.3f}s")
             for line in msg.split("\n"):
                 if line.strip():
                     trace.logger.error(f"  {line}")
             trace.logger.error("=" * 80)
+            write_process_status(log_filename, PROCESS_STATUS_FAILED)
             return
 
         # Load succeeded — inspect the autocorrect accumulators populated when
@@ -699,7 +773,7 @@ def conversion_thread(
 
         trace.logger.info("=" * 80)
         trace.logger.info(
-            f"✓ CONVERSION TERMINÉE en {t_total:.3f}s "
+            f"✓ {op_label} en {t_total:.3f}s "
             f"(lecture: {t_read:.3f}s, écriture: {t_write:.3f}s)"
         )
         trace.logger.info(
@@ -707,12 +781,14 @@ def conversion_thread(
             f"(ratio: {output_size/input_size:.2f}x)" if input_size > 0 else ""
         )
         trace.logger.info("=" * 80)
+        write_process_status(log_filename, PROCESS_STATUS_FINISHED)
 
     except Exception as e:
         t_total = perf_counter() - t_total_start
         trace.logger.error("=" * 80)
-        trace.logger.error(f"✗ CONVERSION ÉCHOUÉE après {t_total:.3f}s")
+        trace.logger.error(f"✗ {op_label} — échec après {t_total:.3f}s")
         trace.logger.error(f"Erreur: {str(e)}")
+        write_process_status(log_filename, PROCESS_STATUS_FAILED)
         trace.logger.error("=" * 80)
         raise
 
