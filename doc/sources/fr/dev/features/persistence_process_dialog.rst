@@ -106,15 +106,57 @@ Options actuellement supportées
 Entrée — ``base`` (communes à tous les formats d'entrée)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-- ``error_on_new_nodes`` — bloque la création de nœuds depuis les
-  flux quand l'onglet nodes est présent (sinon ignoré
-  automatiquement).
-- ``error_on_new_flux`` — équivalent pour les flux référencés dans
-  des onglets secondaires.
-- ``propagate_flux_to_children`` — créer les flux enfants quand ils
-  n'existent que sur les nœuds parents.
-- ``propagate_flux_to_parent`` — créer les flux parents quand ils
-  n'existent que sur les nœuds enfants (défaut : ``false``).
+Les huit options d'auto-correction suivent toutes le **même contrat
+symétrique** (cf. ``SankeyExcelParser/classes/sankey_base.py`` →
+``_symmetric_check_mat_balance`` et ``_symmetric_check_structure``) :
+
+- ``<option>=false`` (défaut) + problème détecté → le chargement
+  **abandonne** avec un message d'erreur nommant l'option à cocher.
+- ``<option>=true`` + problème détecté → l'**autofix** est appliqué,
+  l'accumulateur ``_auto_corrected_*`` correspondant est peuplé, et
+  les cellules concernées sont surlignées en rouge dans le fichier
+  corrigé écrit via ``IOExcel.write_sankey(highlight_autocorrect=
+  True)``.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 10 30 60
+
+   * - ID
+     - Option
+     - Description
+   * - E1
+     - ``create_new_nodes``
+     - Nœud référencé dans les flux mais absent de l'onglet Noeuds.
+   * - E2
+     - ``create_new_flux``
+     - Flux référencé dans un onglet secondaire (Données, Contraintes,
+       Min-Max) mais absent des onglets de base (IO/TER, Résultats).
+   * - E3
+     - ``propagate_flux_to_children``
+     - Flux existant sur un nœud parent mais sur aucun de ses enfants.
+   * - E4
+     - ``propagate_flux_to_parent``
+     - Flux existant sur un nœud enfant mais pas sur son parent.
+   * - E5
+     - ``autofix_parenthood_mat_balance``
+     - Parent ``mat_balance=1`` mais enfant à une autre valeur — les
+       enfants sont alignés à 1 (stratégie *lift*).
+   * - E6
+     - ``autofix_constraint_redundancies``
+     - Id de contrainte référençant plusieurs fois le même flux/data —
+       seule la première occurrence est conservée.
+   * - E7
+     - ``allow_flux_to_descendant``
+     - Flux reliant un nœud à un de ses descendants hiérarchiques
+       (ou inversement) — autorisé et flaggé sur la sortie corrigée.
+   * - E8
+     - ``autonormalize_ratio_constraints``
+     - Σα des contraintes ``ratio_flux`` de répartition d'un nœud
+       proche de 1 (à ±1e-3 près) mais non égale — chaque ratio est
+       rééchelonné par ``1/Σα``. Les sommes plus éloignées de 1
+       déclenchent toujours un *warning* mais ne sont jamais
+       auto-corrigées (cf. MFAProblem #220).
 
 Entrée — ``excel`` (skipping de catégories d'onglets)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

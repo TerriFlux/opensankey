@@ -1,5 +1,5 @@
 import React, { useState, useRef, CSSProperties, Fragment, MutableRefObject, ChangeEvent, FC } from 'react'
-import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter } from '@chakra-ui/react'
+import { Box, TabList, TabPanels, TabPanel, Select, Editable, EditablePreview, EditableInput, Tabs, Text, Button, IconButton, Tab, ModalCloseButton, ModalContent, ModalOverlay, ModalHeader, ModalBody, Modal, Card, CardBody, Divider, CardHeader, Input, CardFooter } from '@chakra-ui/react'
 import { SketchPicker } from 'react-color'
 import { FaMinus, FaPlus } from 'react-icons/fa'
 import * as d3 from 'd3'
@@ -718,11 +718,37 @@ const PaletteCreator: FC<{ data_palette: TypeDataPalette, t: TFunction, deletePa
   </Box>
 }
 
-export const ButtonOpenUSerPreference: FC<{ new_data: Class_ApplicationDataOSP }> = ({ new_data }) => {
+export const ButtonOpenUSerPreference: FC<{ new_data: Class_ApplicationDataOSP, compact?: boolean }> = ({ new_data, compact }) => {
   const [, setUpdate] = useState(0)
   new_data.menu_configuration_osp.ref_to_btn_top_pref_updater.current = () => setUpdate(a => a + 1)
   const { t, menu_configuration } = new_data
   const { ref_setter_show_modal_preference } = menu_configuration.dict_setter_show_dialog
+
+  // Compact variant for the topbar right cluster: a grey gear icon matching the
+  // info / undo-redo-save buttons (no "Préférences" label), since Préférences
+  // now lives among the meta icons (language / account / info) instead of the
+  // menu block.
+  if (compact) {
+    return <OSTooltip placement='bottom' label={t('Menu.tooltips.preference')}>
+      <IconButton
+        aria-label={t('Menu.preference')}
+        className='settings_button'
+        icon={new_data.icon_library.icon_setting}
+        onClick={() => ref_setter_show_modal_preference.current(true)}
+        size='sm'
+        boxSize='2rem'
+        minWidth='2rem'
+        fontSize='1.1rem'
+        bg='transparent'
+        bgColor='transparent'
+        borderColor='transparent'
+        color='gray.700'
+        _hover={{ bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' }}
+        _active={{ bg: 'gray.200', bgColor: 'gray.200' }}
+      />
+    </OSTooltip>
+  }
+
   return <OSTooltip
     placement='bottom'
     label={t('Menu.tooltips.preference')}
