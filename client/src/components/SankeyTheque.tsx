@@ -27,7 +27,7 @@ import { Type_JSON } from '../deps/OpenSankey+/deps/OpenSankey/types/Utils'
 import { CONVERTER_CONFIGS } from '../deps/OpenSankey+/deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
 import { OSTooltip } from '../deps/OpenSankey+/deps/OpenSankey/components/configmenus/MenuCommon'
 
-const logo_sankeytheque = <svg
+export const logo_sankeytheque = <svg
   xmlns='http://www.w3.org/2000/svg'
   viewBox='0 0 1000 1000'
   height='2.05rem'
