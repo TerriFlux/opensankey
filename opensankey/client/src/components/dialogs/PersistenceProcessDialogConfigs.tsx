@@ -233,6 +233,13 @@ export const translations = {
       de: 'Abstimmung',
       it: 'Riconciliazione'
     },
+    completion: {
+      en: 'Completion',
+      fr: 'Complétion',
+      es: 'Compleción',
+      de: 'Vervollständigung',
+      it: 'Completamento'
+    },
     open_excel_file: {
       en: 'Open an excel file',
       fr: 'Ouvrir fichier excel',

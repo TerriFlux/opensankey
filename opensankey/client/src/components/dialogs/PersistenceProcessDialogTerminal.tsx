@@ -283,6 +283,10 @@ const Counter = ({
   result: string,
   set_result: (_: string) => void
 }) => {
+  // Garde-fou : ne déclencher finishProcess qu'une seule fois (l'intervalle
+  // peut encore tirer une requête avant que le démontage du Counter ne soit
+  // effectif côté React).
+  const finished_ref = useRef(false)
   useEffect(() => {
     const interval = setInterval(() => {
       const root = window.location.origin
@@ -296,7 +300,19 @@ const Counter = ({
           if (response.ok) {
             response.json().then(
               function (data) {
-                set_result(data.output)
+                if (data.output !== undefined) set_result(data.output)
+                // Arrêt piloté par le statut machine renvoyé par le serveur
+                // (fichier <logname>.status), et non plus par le grep du texte
+                // localisé du log (FINISHED/TERMINÉ/ÉCHOUÉ…) qui était fragile.
+                if (!finished_ref.current) {
+                  if (data.status === 'finished') {
+                    finished_ref.current = true
+                    finishProcess(false)
+                  } else if (data.status === 'failed') {
+                    finished_ref.current = true
+                    finishProcess(true)
+                  }
+                }
               }
             )
           }
@@ -304,14 +320,6 @@ const Counter = ({
     }, 5000)
     return () => clearInterval(interval)
   })
-
-  if (result) {
-    if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('TERMINÉ')) {
-      finishProcess(false)
-    } else if (result.includes('FAILED') ||  result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR') || result.includes('ÉCHOUÉE') || result.includes('ÉCHOUÉ')) {
-      finishProcess(true)
-    }
-  }
 
   const scroll_ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
