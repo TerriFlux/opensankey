@@ -8,7 +8,6 @@ import { faArrowsUpDown, faLocationDot } from '@fortawesome/free-solid-svg-icons
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
-import { OpenSankeySaveButton } from './MenuTop'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -37,10 +36,9 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
     layerStyle={new_data.is_static ? 'toolbar_right' : 'toolbar_bottom'} // Changement du layerStyle
     bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
   >
-    {/* Save (cache) + Help — moved here from the topbar/floating area so all
-        canvas-level shortcuts sit in the same toolbar. */}
+    {/* Help — the save-in-cache button moved back to the topbar (document-state
+        block, see TopBarStateButtons), since it reflects application state. */}
     {!new_data.is_static ? <ButtonGroup spacing='0.5rem'>
-      <OpenSankeySaveButton new_data={new_data} />
       <OSTooltip
         placement='top'
         label={t('Banner.tooltipHelp')}

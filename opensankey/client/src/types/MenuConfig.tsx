@@ -133,10 +133,11 @@ export class Class_MenuConfig {
       'edit_style',
     ],
     [
-      // 'welcome',
-      'tour',
-      'tutoriel',
-      // 'documentation',
+      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and,
+      // via extra_help_menu_items, upper-layer entries like SA's Sankeythèque).
+      // Legacy split keys ('tour', 'tutoriel') stay registered in
+      // dict_components_menu_top for backwards-compatible custom menu_top_order.
+      'aide',
     ],
   //   [
   //     'contact',
@@ -298,6 +299,18 @@ export class Class_MenuConfig {
           tooltip?: () => string
         }>
       }
+  > = undefined
+  /** Optional extra menu items appended to the top "Aide" dropdown (after Visite guidée / Tutoriels). Injected by SA (e.g. Sankeythèque) or other extensions. */
+  public extra_help_menu_items?: Array<
+    {
+      key: string
+      label: string
+      icon?: React.ReactNode
+      onClick: () => void
+      disabled?: () => boolean
+      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+      tooltip?: () => string
+    }
   > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
