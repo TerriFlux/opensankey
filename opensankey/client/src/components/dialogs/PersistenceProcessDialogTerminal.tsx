@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button } from '@chakra-ui/react'
+import { WarningIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
 
@@ -255,7 +256,7 @@ const LogDisplay = ({ infos, value }: LogDisplayProps) => {
           {value.includes(2) && info.includes('ERROR') ? (
             <div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>
           ) : value.includes(1) && info.includes('WARNING') ? (
-            <div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>
+            <div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>
           ) : value.includes(1) && info.includes('INFO') && !info.includes('POST') ? (
             <div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>
           ) : value.includes(3) && info.includes('DEBUG') ? (
@@ -283,6 +284,10 @@ const Counter = ({
   result: string,
   set_result: (_: string) => void
 }) => {
+  // Garde-fou : ne déclencher finishProcess qu'une seule fois (l'intervalle
+  // peut encore tirer une requête avant que le démontage du Counter ne soit
+  // effectif côté React).
+  const finished_ref = useRef(false)
   useEffect(() => {
     const interval = setInterval(() => {
       const root = window.location.origin
@@ -296,7 +301,19 @@ const Counter = ({
           if (response.ok) {
             response.json().then(
               function (data) {
-                set_result(data.output)
+                if (data.output !== undefined) set_result(data.output)
+                // Arrêt piloté par le statut machine renvoyé par le serveur
+                // (fichier <logname>.status), et non plus par le grep du texte
+                // localisé du log (FINISHED/TERMINÉ/ÉCHOUÉ…) qui était fragile.
+                if (!finished_ref.current) {
+                  if (data.status === 'finished') {
+                    finished_ref.current = true
+                    finishProcess(false)
+                  } else if (data.status === 'failed') {
+                    finished_ref.current = true
+                    finishProcess(true)
+                  }
+                }
               }
             )
           }
@@ -304,14 +321,6 @@ const Counter = ({
     }, 5000)
     return () => clearInterval(interval)
   })
-
-  if (result) {
-    if (result.includes('FINISHED') || result.includes('COMPLETED') || result.includes('TERMINÉ')) {
-      finishProcess(false)
-    } else if (result.includes('FAILED') ||  result.includes('ÉCHEC') || result.includes('UNEXPECTED ERROR') || result.includes('ÉCHOUÉE') || result.includes('ÉCHOUÉ')) {
-      finishProcess(true)
-    }
-  }
 
   const scroll_ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -329,7 +338,7 @@ const Counter = ({
             {value.includes(2) && info.includes('ERROR') ?
               (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
               : value.includes(1) && info.includes('WARNING') ?
-                (<div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>)
+                (<div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>)
                 : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
                   (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
                   : value.includes(3) && (info.includes('DEBUG')) ?
