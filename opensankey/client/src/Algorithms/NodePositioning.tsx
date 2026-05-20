@@ -1902,14 +1902,27 @@ export class NodePositioning {
     }
 
     const process_nodes = this.drawingArea.sankey.nodes_list
-    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud'].tags_dict['echange']
-    const import_nodes = process_nodes.filter(n =>
+    const type_tagg = this.drawingArea.sankey.node_taggs_dict['type de noeud']
+    const echangeTag = type_tagg.tags_dict['echange']
+    const sectorTag = type_tagg.tags_dict['secteur']
+    const all_import_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.output_links_list.length > 0
     )
-    const export_nodes = process_nodes.filter(n =>
+    const all_export_nodes = process_nodes.filter(n =>
       n.hasGivenTag(echangeTag) && n.input_links_list.length > 0
     )
     const other_nodes = process_nodes.filter(n => !n.hasGivenTag(echangeTag))
+
+    // mfa_problem#222 : les échanges-secteur (tag `secteur` cumulé) se rattachent
+    // à des produits et doivent être placés horizontalement (import à gauche /
+    // export à droite du produit connecté), en miroir du placement vertical
+    // (haut/bas) des échanges-produit qui, lui, fonctionne déjà. On sépare donc
+    // les deux familles ; le bloc vertical historique ne traite que les produits.
+    const is_sector = (n: Class_NodeElement) => (sectorTag !== undefined) && n.hasGivenTag(sectorTag)
+    const import_nodes = all_import_nodes.filter(n => !is_sector(n))
+    const export_nodes = all_export_nodes.filter(n => !is_sector(n))
+    const import_nodes_sector = all_import_nodes.filter(is_sector)
+    const export_nodes_sector = all_export_nodes.filter(is_sector)
 
     let max_vertical_y = 0
     let min_vertical_y = 5000
@@ -1919,6 +1932,29 @@ export class NodePositioning {
     })
     max_vertical_y = max_vertical_y + 200
     min_vertical_y = min_vertical_y - 200
+
+    // Échanges-secteur : positionnés en DELTA par rapport au produit connecté
+    // (import vs son target, export vs son source) — décalage X/Y = shape_position_dx
+    // / shape_position_dy du nœud, exactement comme le placement X des produits.
+    // (et non une position absolue, qui les envoyait au bord du diagramme).
+    import_nodes_sector.forEach(node => {
+      const target_node = node.output_links_list[0].target
+      node.position_u = target_node.position_u
+      node.position_v = target_node.position_v
+      if (compute_xy) {
+        node.position_x = target_node.position_x + node.shape_position_dx
+        node.position_y = target_node.position_y + node.shape_position_dy
+      }
+    })
+    export_nodes_sector.forEach(node => {
+      const source_node = node.input_links_list[0].source
+      node.position_u = source_node.position_u
+      node.position_v = source_node.position_v
+      if (compute_xy) {
+        node.position_x = source_node.position_x + node.shape_position_dx
+        node.position_y = source_node.position_y + node.shape_position_dy
+      }
+    })
 
     import_nodes.forEach(node => {
       const output_link = node.output_links_list[0]
