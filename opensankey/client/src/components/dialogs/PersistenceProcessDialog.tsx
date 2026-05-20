@@ -1003,6 +1003,16 @@ export const UniversalFileConverter = ({
       setFailure(false)
       return
     }
+    // Libellé localisé contextuel imprimé dans le bandeau serveur (cf.
+    // conversion_thread / launch_optim). Dérivé du titre du dialogue —
+    // « Ouvrir fichier excel », « Édition de fichier », « Réconciliation »… ;
+    // pour la complétion sans redondance, on distingue « Complétion ».
+    let process_label = t(config.title)
+    if (is_reconciliation && solver_options['with_completed'] && !solver_options['with_reconciled']) {
+      process_label = t('ProcessDialog.completion')
+    }
+    form_data.append('process_label', process_label)
+
     const url = window.location.origin + config.server_endpoint
 
     console.log(`🔄 Lancement conversion ${input_format} → ${output_format}`)
