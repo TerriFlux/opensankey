@@ -624,6 +624,10 @@ export interface FormatAttributeConfig<T> {
   // Force a row break in the auto-generated options renderer before rendering
   // this option's unit (parent + visibility-conditioned children).
   breakBefore?: boolean
+  // For string-typed options rendered as a ComboBox/Select (mutually exclusive
+  // choices). Each entry maps a stored value to its localized label. When set,
+  // the renderer draws a <Select> instead of a checkbox/number input.
+  selectOptions?: { value: string; labels: { en: string; fr: string; es?: string; de?: string; it?: string } }[]
 }
 export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object>
 // ==================================================================================================
@@ -1279,6 +1283,71 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         it: 'Attivare la scrittura dei fogli relativi ai nodi'
       }
     } satisfies FormatAttributeConfig<boolean>,
+
+    nodes_sheet_format: {
+      group: 'sheets',
+      default: 'auto',
+      type: (() => 'auto') as (() => string),
+      labels: {
+        en: 'Nodes sheet format',
+        fr: 'Format des feuilles de nœuds',
+        es: 'Formato de las hojas de nodos',
+        de: 'Format der Knotenblätter',
+        it: 'Formato dei fogli nodi'
+      },
+      tooltips: {
+        en: 'Layout of the node-definition sheet(s). "Automatic" keeps the historical behavior (single nodes sheet, split into Products/Sectors/Exchanges when the node-type tag is present). The other choices force a specific layout.',
+        fr: 'Disposition de la (des) feuille(s) de définition des nœuds. « Automatique » conserve le comportement historique (feuille nœuds unique, séparée en Produits/Secteurs/Échanges si le tag de type de nœud est présent). Les autres choix forcent une disposition précise.',
+        es: 'Disposición de la(s) hoja(s) de definición de nodos. «Automático» mantiene el comportamiento histórico (hoja única de nodos, dividida en Productos/Sectores/Intercambios si está presente la etiqueta de tipo de nodo). Las demás opciones fuerzan una disposición concreta.',
+        de: 'Layout der Knotendefinitionsblätter. „Automatisch" behält das bisherige Verhalten bei (einzelnes Knotenblatt, aufgeteilt in Produkte/Sektoren/Austausch, wenn das Knotentyp-Tag vorhanden ist). Die anderen Optionen erzwingen ein bestimmtes Layout.',
+        it: 'Disposizione del(i) foglio(i) di definizione dei nodi. «Automatico» mantiene il comportamento storico (foglio nodi unico, suddiviso in Prodotti/Settori/Scambi se è presente il tag tipo di nodo). Le altre scelte forzano una disposizione specifica.'
+      },
+      selectOptions: [
+        {
+          value: 'auto',
+          labels: {
+            en: 'Automatic (by node-type tag)',
+            fr: 'Automatique (selon le tag type de nœud)',
+            es: 'Automático (según la etiqueta de tipo de nodo)',
+            de: 'Automatisch (nach Knotentyp-Tag)',
+            it: 'Automatico (in base al tag tipo di nodo)'
+          }
+        },
+        {
+          value: 'nodes',
+          labels: {
+            en: 'Single nodes sheet',
+            fr: 'Feuille nœuds unique',
+            es: 'Hoja única de nodos',
+            de: 'Einzelnes Knotenblatt',
+            it: 'Foglio nodi unico'
+          }
+        },
+        {
+          value: 'products_sectors',
+          labels: {
+            en: 'Products / Sectors / Exchanges',
+            fr: 'Produits / Secteurs / Échanges',
+            es: 'Productos / Sectores / Intercambios',
+            de: 'Produkte / Sektoren / Austausch',
+            it: 'Prodotti / Settori / Scambi'
+          }
+        },
+        {
+          value: 'nodes_agg',
+          labels: {
+            en: 'Aggregated nodes (nodes agg)',
+            fr: 'Nœuds agrégés (nodes agg)',
+            es: 'Nodos agregados (nodes agg)',
+            de: 'Aggregierte Knoten (nodes agg)',
+            it: 'Nodi aggregati (nodes agg)'
+          }
+        }
+      ],
+      visibilityConditions: [
+        { type: 'optionProperty', property: 'with_nodes_sheets', operator: '==', value: true }
+      ]
+    } satisfies FormatAttributeConfig<string>,
 
     layout: {
       group: 'sheets',
