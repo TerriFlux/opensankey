@@ -745,7 +745,14 @@ export class Class_LinkValue extends Class_ElementValue {
   }
 
   public get has_intervals() {
-    return this._result_max[Class_LinkValue.SRC] !== null || this._result_min[Class_LinkValue.SRC] !== null
+    // #208 — un flux libre dont les contraintes figent min == max est déterminé,
+    // pas un intervalle : il ne doit donc pas être traité comme indéterminé
+    // (sinon linkIsStructure le force en "structure" et il apparaît comme flux
+    // nul/indéterminé au lieu d'afficher sa valeur réconciliée result_value).
+    const mn = this._result_min[Class_LinkValue.SRC]
+    const mx = this._result_max[Class_LinkValue.SRC]
+    if (mn === null || mx === null) return false
+    return mn !== mx
   }
 
   public get has_data() {
