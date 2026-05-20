@@ -1168,10 +1168,13 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
           <TopBarStateButtons new_data={new_data} />
           <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
         </> : <></>}
+        {constent_additional_nav_item}
+        <AppInfoPopover />
+        {/* Language selector kept as the right-most control of the topbar. */}
         {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
-            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.85rem', width: '1.2rem', margin: 'auto' }} title={flag} />
-            <ChevronDownIcon />
+            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.7rem', width: '1rem', margin: 'auto' }} title={flag} />
+            <ChevronDownIcon boxSize='0.8rem' />
           </MenuButton>
           <Portal>
             <MenuList>
@@ -1183,9 +1186,6 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             </MenuList>
           </Portal>
         </Menu> : <></>}
-
-        {constent_additional_nav_item}
-        <AppInfoPopover />
       </Box>
     </Box>
   </Box>
