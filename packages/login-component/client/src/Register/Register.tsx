@@ -332,7 +332,7 @@ const Register = ({
 
   let header = '404 not found'
   let content = [<></>]
-  let width = '33vw'
+  let width = { base: '92vw', sm: '32rem' }
   // if (registerStep === 0) {
   //   header = t('Register.presentation.title')
   //   content = osplus_presentation
@@ -347,8 +347,6 @@ const Register = ({
   //   content = [log]
   // }
 
-  let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-
   return (
     <ChakraProvider
       theme={theme}
@@ -362,7 +360,13 @@ const Register = ({
       >
         <Box
           layerStyle='menutop_layout_style'
-          gridTemplateColumns={template}
+          display='flex'
+          flexWrap='wrap'
+          alignItems='center'
+          justifyContent='space-between'
+          height='auto'
+          minHeight='2.5rem'
+          rowGap='0.25rem'
         >
           <Box
             margin='0.25rem'
@@ -376,17 +380,23 @@ const Register = ({
               onClick={() => returnToApp(navigate)}
             />
           </Box>
-          <Box></Box>
-          <Button
-            variant='btn_lone_navigation'
-            onClick={() => { returnToApp(navigate) }}>
-            {t('UserNav.to_app')}
-          </Button>
-          <Button
-            variant='btn_lone_navigation_secondary'
-            onClick={() => navigate('/login')}>
-            {t('UserNav.to_con')}
-          </Button>
+          <Box
+            display='flex'
+            flexWrap='wrap'
+            justifyContent='flex-end'
+            gap='0.25rem'
+          >
+            <Button
+              variant='btn_lone_navigation'
+              onClick={() => { returnToApp(navigate) }}>
+              {t('UserNav.to_app')}
+            </Button>
+            <Button
+              variant='btn_lone_navigation_secondary'
+              onClick={() => navigate('/login')}>
+              {t('UserNav.to_con')}
+            </Button>
+          </Box>
         </Box>
       </Box>
 
