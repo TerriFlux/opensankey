@@ -406,9 +406,16 @@ export const retrieveJSONResults = (
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
     app_data.updateFromJSON(current_json)
+    // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
+    // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
+    // replacés. setTrade(true) réapplique les styles import/export à TOUS les
+    // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
+    // secteurs en horizontal). Sinon les import/export secteur restent "collés".
+    app_data.drawing_area.sankey.setTrade(true)
   } else if (JSON_data['layout']) {
     app_data.drawing_area.nodePositioning.computeScale()
     app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+    app_data.drawing_area.sankey.setTrade(true)
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)

@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react'
 import { Box, Button } from '@chakra-ui/react'
+import { WarningIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { TFunction } from 'i18next'
 
@@ -255,7 +256,7 @@ const LogDisplay = ({ infos, value }: LogDisplayProps) => {
           {value.includes(2) && info.includes('ERROR') ? (
             <div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>
           ) : value.includes(1) && info.includes('WARNING') ? (
-            <div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>
+            <div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>
           ) : value.includes(1) && info.includes('INFO') && !info.includes('POST') ? (
             <div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>
           ) : value.includes(3) && info.includes('DEBUG') ? (
@@ -337,7 +338,7 @@ const Counter = ({
             {value.includes(2) && info.includes('ERROR') ?
               (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
               : value.includes(1) && info.includes('WARNING') ?
-                (<div style={{ color: '#b7791f' }}>{info.replace('WARNING', '')}</div>)
+                (<div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>)
                 : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
                   (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
                   : value.includes(3) && (info.includes('DEBUG')) ?

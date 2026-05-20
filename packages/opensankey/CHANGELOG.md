@@ -4,6 +4,13 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased]
 
+### Échanges produit/secteur — rendu Import/Export ([mfa_problem#222](https://gitlab.com/su-model/mfa_problem/-/work_items/222))
+
+- **`splitTrade` re-déclenché correctement** ([DrawingArea.tsx](opensankey/client/src/types/DrawingArea.tsx) `afterFromJSON`) : la condition d'appel ne testait que le 1ᵉʳ nœud d'échange avec un seuil `> 1` lien, ratant les échanges mono-flux ou typés. Remplacée par `exchanges_nodes.some(n => !n.sibling && liens > 0)` — le marqueur « déjà splitté » est `node.sibling`, pas le nombre de liens.
+- **Placement des échanges-secteur** ([NodePositioning.tsx](opensankey/client/src/Algorithms/NodePositioning.tsx) `arrangeTrade`) : les Import/Export des nœuds d'échange tagués `secteur` sont placés en delta (X/Y) par rapport au produit connecté, distinct du placement vertical (haut/bas) des échanges-produit.
+- **Réconciliation « garder le layout »** ([PersistenceProcessDialog.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialog.tsx)) : le chemin `updateFromJSON` rejoue désormais `setTrade(true)` (styles import/export + `arrangeTrade`) après le merge, sinon les nœuds Import/Export d'échange restaient sans style (« collés ») et mal placés.
+- **Avertissements de chargement** ([PersistenceProcessDialogTerminal.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialogTerminal.tsx)) : les lignes `WARNING` s'affichent en marron avec une icône d'alerte (au lieu du rouge réservé aux erreurs).
+
 ### Changed (statut de traitement + bandeau contextuel)
 
 - **Détection fin/échec fiabilisée par un fichier de statut** ([opensankey/server/views.py](opensankey/server/views.py), [PersistenceProcessDialogTerminal.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialogTerminal.tsx)) : les dialogues *Ouvrir / Éditer / Réconcilier* arrêtaient le polling en grepant la prose du log (`FINISHED`/`TERMINÉ`/`ÉCHOUÉ`…), fragile et couplé à la langue, avec deux listes divergentes côté front. Le thread écrit désormais `<logname>.status` (`running`/`finished`/`failed`) — seul canal cross-thread possible puisqu'un thread Flask détaché n'a pas de session — et `check_process` renvoie un champ `status` machine-lisible sur lequel le `Counter` s'arrête. Helpers `write_process_status` / `read_process_status` + constantes `PROCESS_STATUS_*`.
