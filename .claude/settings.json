@@ -1,6 +1,20 @@
 {
   "permissions": {
     "allow": [
+      "Bash(git:*)",
+      "Bash(netstat:*)",
+      "Bash(powershell:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git status:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git remote:*)",
+      "Bash(git branch:*)",
+      "Bash(git submodule status:*)",
       "Bash(grep -rn \"connectez\\\\|Connectez\\\\|nav_item\\\\|login\\\\|account\" d:/Dev/sankeyapp/dev/sankeyapplication/opensankey/client/src/ --include=*.tsx)",
       "Bash(grep -rn \"connectez\\\\|Connectez\\\\|nav_item\\\\|login.*button\\\\|account.*button\" d:/Dev/sankeyapp/dev/sankeyapplication/client/src/ --include=*.tsx)",
       "Read(//c/Users/JulienAlapetite/Downloads/**)",
@@ -58,6 +72,13 @@
       "Bash(git ls-tree:*)",
       "Bash(git -C submodules/OpenSankey+ log --oneline -3)",
       "Bash(*glab*)",
+      "Bash(glab mr view:*)",
+      "Bash(glab ci status:*)",
+      "Bash(glab issue view:*)",
+      "Bash(glab mr list:*)",
+      "Bash(glab issue list:*)",
+      "Bash(sleep:*)",
+      "Bash(seq:*)",
       "Bash(git fetch)",
       "Bash(git fetch *)",
       "Bash(git check-ignore *)",
@@ -176,6 +197,15 @@
       "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe d:/tmp/repro_sankey.py)",
       "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe -c \"import SankeyExcelParser; print\\(SankeyExcelParser.__file__\\); import os; print\\(os.listdir\\(os.path.dirname\\(SankeyExcelParser.__file__\\)\\)[:20]\\)\")",
       "Bash(C:/Users/JulienAlapetite/.conda/envs/dev/python.exe -c ' *)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git -C * push:*)",
+      "Bash(git commit:*)",
+      "Bash(git -C * commit:*)",
+      "Bash(glab mr merge:*)",
+      "Bash(glab mr create:*)",
+      "Bash(glab issue create:*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\JulienAlapetite\\.claude",
