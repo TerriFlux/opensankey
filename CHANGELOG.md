@@ -13,6 +13,12 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased] — Mai 2026
 
+### Échanges produit/secteur dans les territoires ([su-model/sankeyapplication#149](https://gitlab.com/su-model/sankeyapplication/-/issues/149) / [mfa_problem#222](https://gitlab.com/su-model/mfa_problem/-/work_items/222))
+
+- **Un nœud d'échange peut être typé produit OU secteur** selon son rôle dans la matrice emplois/ressources, et apparaître de façon asymétrique (présent dans une seule des deux matrices) sans erreur de chargement. À la réconciliation depuis Excel, les flux d'import/export d'échange sont correctement reconstruits et le diagramme se complète automatiquement (split Import/Export, placement des échanges-secteur, restylage). Voir détails parser ([SankeyExcelParser](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md)) et rendu ([OpenSankey](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)).
+- **Avertissement de saisie** : une valeur placée dans une colonne/ligne sans en-tête (par ex. un en-tête d'échange oublié dans la 2ᵉ matrice TER) est désormais signalée explicitement (warning marron + icône) au lieu d'être ignorée silencieusement.
+- Nouveau cas de test `TestData/WithError/ImportExportProduits_OrphanHeader.xlsx`.
+
 ### Réconciliation : les bornes « non bornées » s'affichent comme telles ([mfa_problem#228](https://gitlab.com/su-model/mfa_problem/-/work_items/228) & [#232](https://gitlab.com/su-model/mfa_problem/-/work_items/232))
 
 - **Plus de cap fantôme à 500 000 000 sur les flux libres.** Pour un fichier Excel sans contrainte de borne max sur un flux, l'ancienne valeur de cap par défaut `500 000 000` était (i) utilisée comme « pas de borne » par le solveur en interne mais (ii) silencieusement propagée comme une vraie contrainte par certaines règles d'inégalité (par exemple « flux A ≤ 80 % du flux B »), donnant des résultats du type *flux A plafonné à 395 000 000* alors qu'aucune borne n'était souhaitée. Le sentinel interne est désormais à `1e15` (jamais atteignable par une donnée réaliste), et toute borne dont l'amplitude dépasse `1e13` est interprétée comme `∞` à l'affichage : les cellules Excel sortantes et la colonne *min/max* de l'analyse résultat sont vides au lieu de contenir un grand nombre.
