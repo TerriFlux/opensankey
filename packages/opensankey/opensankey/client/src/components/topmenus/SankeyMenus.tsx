@@ -140,8 +140,8 @@ export const SankeyMenu = (
   />
 
 
-  // OpenSankeySaveButton moved to ToolBarBottom (next to the help button).
-  // file_name Editable removed entirely.
+  // Save-in-cache button lives in the topbar document-state block
+  // (TopBarStateButtons in MenuTop). file_name Editable removed entirely.
 
   return (
     <>
