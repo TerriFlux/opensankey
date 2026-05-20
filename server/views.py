@@ -24,7 +24,13 @@ from flask import send_from_directory
 from flask import Response
 from flask import jsonify
 from threading import Lock
-from opensankey.server.views import set_process_state
+from opensankey.server.views import (
+    set_process_state,
+    write_process_status,
+    PROCESS_STATUS_RUNNING,
+    PROCESS_STATUS_FINISHED,
+    PROCESS_STATUS_FAILED,
+)
 from SankeyExcelParser.io_base import IOExcel, IOJson
 import SankeyExcelParser.su_trace as trace
 
@@ -97,6 +103,7 @@ def solve_optimisation_problem_unified(
     t_start: float,
     solver_options: dict = None,
     zip_bundle_path: str = None,
+    process_label: str = None,
 ):
     """
     Fonction unifiée pour l'optimisation.
@@ -107,9 +114,14 @@ def solve_optimisation_problem_unified(
         Dictionnaire contenant soit:
         - {'type': 'json_string', 'data': sankey_json_str}
         - {'type': 'file', 'path': input_filename, 'format': 'excel'|'json'}
+    process_label : str, optional
+        Libellé localisé de l'opération (« Réconciliation », « Complétion »)
+        fourni par le dialogue, utilisé pour l'en-tête de log. Le statut machine
+        (<logname>.status) pilote l'arrêt du polling côté client.
     """
     trace.logger_init(logname, "a")
-    trace.logger.info("-- Start optimisation")
+    write_process_status(logname, PROCESS_STATUS_RUNNING)
+    trace.logger.info("-- " + (process_label or "Start optimisation"))
     t_prev = time.time()
     solver_options = solver_options or {}
 
@@ -126,6 +138,7 @@ def solve_optimisation_problem_unified(
         if not ok:
             trace.logger.error(f"-- ERROR loading sankey from JSON: {msg}")
             trace.logger.info("{:-<{w}}".format(" [FAILED] Could not load sankey", w=MAX_LINE_LENGTH))
+            write_process_status(logname, PROCESS_STATUS_FAILED)
             return
         io_input.sankey.autocompute_mat_balance()
         model_name = sankey_json.get("model_name", "model")
@@ -143,6 +156,7 @@ def solve_optimisation_problem_unified(
         else:
             trace.logger.error(f"-- Unknown input format: {input_format}")
             trace.logger.info("{:-<{w}}".format(" [FAILED] Unknown format", w=MAX_LINE_LENGTH))
+            write_process_status(logname, PROCESS_STATUS_FAILED)
             return
         input_options['do_coherence_checks'] = True
         # preserve_extra_columns est exposé dans l'onglet "Options de sortie"
@@ -161,11 +175,13 @@ def solve_optimisation_problem_unified(
                 trace.logger.error(f"ERROR {line}")
             trace.logger.info(
                 "{:-<{w}}".format("[FAILED] Could not extract datas from input file", w=MAX_LINE_LENGTH))
+            write_process_status(logname, PROCESS_STATUS_FAILED)
             return
 
         model_name = os.path.splitext(os.path.basename(input_filename))[0]
     else:
         trace.logger.error(f"-- Unknown input source type: {input_source['type']}")
+        write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
     # except Exception as e:
@@ -202,6 +218,7 @@ def solve_optimisation_problem_unified(
     if not with_reconciled and not with_completed:
         trace.logger.error("-- both with_reconciled and with_completed are False, nothing to do")
         trace.logger.info("{:-<{w}}".format(" [FAILED] no solver pass requested", w=MAX_LINE_LENGTH))
+        write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
     # Monte-Carlo (uncertainty) — driven from the dialog's Solveur group.
@@ -255,11 +272,13 @@ def solve_optimisation_problem_unified(
         trace.logger.debug(f"-- UNEXPECTED ERROR {e}")
         trace.logger.debug(traceback.format_exc())
         trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
+        write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
     if not ok:
         trace.logger.error("-- ERROR in optimisation process.")
         trace.logger.info("{:-<{w}}".format(" [FAILED] Optimization was not successful", w=MAX_LINE_LENGTH))
+        write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
     t = time.time()
@@ -302,6 +321,7 @@ def solve_optimisation_problem_unified(
                 w=MAX_LINE_LENGTH,
             )
         )
+        write_process_status(logname, PROCESS_STATUS_FAILED)
         return
 
     t = time.time()
@@ -313,6 +333,7 @@ def solve_optimisation_problem_unified(
             w=MAX_LINE_LENGTH,
         )
     )
+    write_process_status(logname, PROCESS_STATUS_FINISHED)
     return
 
 
@@ -422,6 +443,9 @@ def launch_optim():
         input_options = json.loads(request.form.get('input_options', '{}'))
         output_options = json.loads(request.form.get('output_options', '{}'))
         solver_options = json.loads(request.form.get('solver_options', '{}'))
+        # Libellé localisé fourni par le dialogue (Réconciliation / Complétion)
+        # pour contextualiser le bandeau de log ; None => libellé technique.
+        process_label = request.form.get('process_label') or None
 
         # Debug mode: pre-compute the zip bundle path now (request context).
         # The optimisation thread cannot mutate the Flask session, so the path
@@ -455,7 +479,7 @@ def launch_optim():
 
     # ========== LANCEMENT DU THREAD ==========
     t_start = time.time()
-    trace.logger.info("{:-<{w}}".format("[STARTING] Optimisation process ", w=MAX_LINE_LENGTH))
+    trace.logger.info("{:-<{w}}".format((process_label or "[STARTING] Optimisation process") + " ", w=MAX_LINE_LENGTH))
     trace.logger.debug(f"Temporary datas are in {tmp_dir}")
 
     thread = Thread(
@@ -469,6 +493,7 @@ def launch_optim():
             t_start,
             solver_options,
             zip_bundle_path,
+            process_label,
         ),
     )
     thread.daemon = True
