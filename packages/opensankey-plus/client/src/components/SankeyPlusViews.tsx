@@ -1265,20 +1265,18 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
     const form_data = new FormData()
     form_data.append('file', file)
     form_data.append('output_format', 'json')
+    form_data.append('process_label', t('ProcessDialog.open_excel_file'))
     await fetch(root + '/opensankey/convert/launch', { method: 'POST', body: form_data })
 
-    // 2. Poll jusqu'à la fin
+    // 2. Poll jusqu'à la fin — arrêt piloté par le statut machine renvoyé par
+    // le serveur (data.status), et non plus par le grep du texte localisé du log.
     await new Promise<void>(resolve => {
       const url_check = root + app_data.url_prefix + 'upload/check_process'
       const interval = setInterval(() => {
         fetch(url_check, { method: 'POST', body: '' }).then(r => {
           if (!r.ok) return
           r.json().then(data => {
-            const out: string = data.output ?? ''
-            if (out.includes('FINISHED') || out.includes('COMPLETED') || out.includes('TERMINÉE')) {
-              clearInterval(interval)
-              resolve()
-            } else if (out.includes('FAILED') || out.includes('ÉCHOUÉE') || out.includes('ÉCHOUÉ')) {
+            if (data.status === 'finished' || data.status === 'failed') {
               clearInterval(interval)
               resolve()
             }

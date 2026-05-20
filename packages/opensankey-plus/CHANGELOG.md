@@ -4,6 +4,11 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased] — Mai 2026
 
+### Statut de traitement structuré (fin/échec)
+
+- **Poll de l'import Excel multi-fichiers piloté par `data.status`** ([client/src/components/SankeyPlusViews.tsx](client/src/components/SankeyPlusViews.tsx) `TabImportExcelDataForUnitary`) : le `processOneFile` arrêtait le polling en grepant le texte du log (`FINISHED`/`TERMINÉE`/`ÉCHOUÉ`…). Il s'arrête désormais sur le champ `status` (`finished`/`failed`) renvoyé par `check_process`, et envoie un `process_label` localisé pour contextualiser le bandeau serveur. S'appuie sur le fichier de statut `<logname>.status` introduit côté OpenSankey. Voir [submodules/OpenSankey/CHANGELOG.md → Unreleased](submodules/OpenSankey/CHANGELOG.md).
+- **Bump du submodule OpenSankey** (statut de traitement + bandeau contextuel des dialogues Ouvrir/Éditer/Réconcilier).
+
 ### Refonte UI du dialogue *Générer des vues unitaires*
 
 - **Dialogue draggable au lieu d'un Modal bloquant** ([client/src/components/SankeyPlusViews.tsx](client/src/components/SankeyPlusViews.tsx) `ModalCreateUnitaryViewOSP`) : passage du `Modal` + `ModalOverlay` à un `Draggable` (même pattern que `ModalTransparentViewAttrOSP`), avec barre de titre `.title_menu` comme handle. L'utilisateur peut désormais déplacer le panneau et interagir avec le canvas en parallèle.
