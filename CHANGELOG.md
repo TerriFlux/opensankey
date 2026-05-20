@@ -13,6 +13,12 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased] — Mai 2026
 
+### Échanges produit/secteur dans les territoires ([su-model/sankeyapplication#149](https://gitlab.com/su-model/sankeyapplication/-/issues/149) / [mfa_problem#222](https://gitlab.com/su-model/mfa_problem/-/work_items/222))
+
+- **Un nœud d'échange peut être typé produit OU secteur** selon son rôle dans la matrice emplois/ressources, et apparaître de façon asymétrique (présent dans une seule des deux matrices) sans erreur de chargement. À la réconciliation depuis Excel, les flux d'import/export d'échange sont correctement reconstruits et le diagramme se complète automatiquement (split Import/Export, placement des échanges-secteur, restylage). Voir détails parser ([SankeyExcelParser](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md)) et rendu ([OpenSankey](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)).
+- **Avertissement de saisie** : une valeur placée dans une colonne/ligne sans en-tête (par ex. un en-tête d'échange oublié dans la 2ᵉ matrice TER) est désormais signalée explicitement (warning marron + icône) au lieu d'être ignorée silencieusement.
+- Nouveau cas de test `TestData/WithError/ImportExportProduits_OrphanHeader.xlsx`.
+
 ### Dialogues de traitement : bandeau contextuel + arrêt fiabilisé ([opensankey#1228](https://gitlab.com/su-model/opensankey/-/work_items/1228))
 
 - **Le bandeau de log reflète l'opération en cours, dans la langue de l'utilisateur.** Ouvrir un fichier Excel affichait `CONVERSION: EXCEL → JSON` / `CONVERSION ÉCHOUÉE` quel que soit le dialogue ; il affiche désormais « Ouvrir fichier excel », « Édition de fichier », « Réconciliation » ou « Complétion » selon le dialogue et les options cochées.
