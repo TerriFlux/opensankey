@@ -1137,11 +1137,13 @@ export class Class_ApplicationData {
         content: this.t('guide.menutop_edition'),
       },
       {
-        selector: '.menutop_button_save_in_cache',
+        // Save-in-cache moved to the topbar document-state block (undo/redo/save).
+        selector: '.topbar_button_save_in_cache',
         content: this.t('guide.save_in_cache'),
       },
       {
-        selector: '.tutorials_button',
+        // Visite guidée + Tutoriels (+ Sankeythèque) now live in the "Aide" dropdown.
+        selector: '.menutop_button_aide',
         content: this.t('guide.tutorials_button'),
       },
       ...(has_filter_toolbar ? [

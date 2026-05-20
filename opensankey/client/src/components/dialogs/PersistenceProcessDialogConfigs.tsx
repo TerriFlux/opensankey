@@ -233,6 +233,13 @@ export const translations = {
       de: 'Abstimmung',
       it: 'Riconciliazione'
     },
+    completion: {
+      en: 'Completion',
+      fr: 'Complétion',
+      es: 'Compleción',
+      de: 'Vervollständigung',
+      it: 'Completamento'
+    },
     open_excel_file: {
       en: 'Open an excel file',
       fr: 'Ouvrir fichier excel',
@@ -782,6 +789,29 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: los flujos que conectan un nodo con uno de sus descendientes jerárquicos (o viceversa) se conservan tal cual y se resaltan en rojo en la salida corregida. De lo contrario: la carga falla, nombrando el flujo problemático.',
         de: 'Wenn aktiviert: Flüsse, die einen Knoten mit einem seiner hierarchischen Nachfahren verbinden (oder umgekehrt), werden unverändert beibehalten und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: das Laden schlägt fehl und nennt den problematischen Fluss.',
         it: 'Se selezionato: i flussi che collegano un nodo a uno dei suoi discendenti gerarchici (o viceversa) vengono mantenuti così come sono ed evidenziati in rosso nell\'output corretto. Altrimenti: il caricamento fallisce, indicando il flusso problematico.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autonormalize_ratio_constraints: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Renormalize ratio constraints whose sum is close to 1',
+        fr: 'Renormaliser les contraintes ratio dont la somme est proche de 1',
+        es: 'Renormalizar las restricciones ratio cuya suma es cercana a 1',
+        de: 'Verhältnis-Constraints renormalisieren, deren Summe nahe 1 liegt',
+        it: 'Rinormalizzare i vincoli ratio la cui somma è vicina a 1'
+      },
+      tooltips: {
+        en: 'If checked: when share-of-input ratio_flux constraints on a node sum to a value close to 1 (within ±1e-3) but not exactly 1, each ratio is rescaled by 1/sum so they sum to 1 exactly; otherwise the reference flux would be forced to 0 by mass balance. Sums farther than ±1e-3 from 1 always trigger a warning and are never auto-corrected. If unchecked: load aborts on the near-1 case.',
+        fr: 'Si coché : lorsque les contraintes ratio_flux de répartition d\'un nœud somment à une valeur proche de 1 (à ±1e-3 près) mais non exactement 1, chaque ratio est rééchelonné par 1/somme pour sommer exactement à 1 ; sinon le flux de référence serait forcé à 0 par la conservation de masse. Les sommes plus éloignées que ±1e-3 de 1 déclenchent toujours un avertissement et ne sont jamais auto-corrigées. Si décoché : le chargement échoue sur le cas proche de 1.',
+        es: 'Si está marcado: cuando las restricciones ratio_flux de reparto de un nodo suman un valor cercano a 1 (dentro de ±1e-3) pero no exactamente 1, cada ratio se reescala por 1/suma para sumar exactamente a 1; de lo contrario el flujo de referencia se forzaría a 0 por el balance de masa. Las sumas más lejanas que ±1e-3 de 1 siempre generan una advertencia y nunca se autocorrigen. Si no está marcado: la carga falla en el caso cercano a 1.',
+        de: 'Wenn aktiviert: wenn ratio_flux-Aufteilungs-Constraints an einem Knoten zu einem Wert nahe 1 (innerhalb ±1e-3) aber nicht genau 1 summieren, wird jeder Quotient mit 1/Summe skaliert, sodass die Summe genau 1 ergibt; andernfalls würde der Referenzfluss durch die Massenbilanz auf 0 gezwungen. Summen weiter als ±1e-3 von 1 entfernt lösen immer eine Warnung aus und werden nie autokorrigiert. Wenn deaktiviert: das Laden schlägt im Nahe-1-Fall fehl.',
+        it: 'Se selezionato: quando i vincoli ratio_flux di ripartizione di un nodo sommano a un valore vicino a 1 (entro ±1e-3) ma non esattamente 1, ogni ratio viene riscalato per 1/somma per sommare esattamente a 1; altrimenti il flusso di riferimento sarebbe forzato a 0 dal bilancio di massa. Le somme più lontane di ±1e-3 da 1 generano sempre un avviso e non vengono mai autocorrette. Se non selezionato: il caricamento fallisce sul caso vicino a 1.'
       },
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
