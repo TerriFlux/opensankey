@@ -406,9 +406,16 @@ export const retrieveJSONResults = (
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
     app_data.updateFromJSON(current_json)
+    // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
+    // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
+    // replacés. setTrade(true) réapplique les styles import/export à TOUS les
+    // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
+    // secteurs en horizontal). Sinon les import/export secteur restent "collés".
+    app_data.drawing_area.sankey.setTrade(true)
   } else if (JSON_data['layout']) {
     app_data.drawing_area.nodePositioning.computeScale()
     app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+    app_data.drawing_area.sankey.setTrade(true)
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
@@ -960,9 +967,10 @@ export const UniversalFileConverter = ({
     }
     form_data.append('output_options', JSON.stringify(output_options))
     const input_options = getCurrentInputOptions() as Record<string, unknown>
-    // The six input options (create_new_nodes, create_new_flux,
+    // The eight input options (create_new_nodes, create_new_flux,
     // propagate_flux_to_children, propagate_flux_to_parent,
-    // autofix_parenthood_mat_balance, autofix_constraint_redundancies) are
+    // autofix_parenthood_mat_balance, autofix_constraint_redundancies,
+    // allow_flux_to_descendant, autonormalize_ratio_constraints) are
     // passed through verbatim — load_sankey consumes those literal names.
     // No inversion: false = abort with a message naming the option,
     // true = fix + populate _auto_corrected_* for the red highlight.
@@ -1002,6 +1010,16 @@ export const UniversalFileConverter = ({
       setFailure(false)
       return
     }
+    // Libellé localisé contextuel imprimé dans le bandeau serveur (cf.
+    // conversion_thread / launch_optim). Dérivé du titre du dialogue —
+    // « Ouvrir fichier excel », « Édition de fichier », « Réconciliation »… ;
+    // pour la complétion sans redondance, on distingue « Complétion ».
+    let process_label = t(config.title)
+    if (is_reconciliation && solver_options['with_completed'] && !solver_options['with_reconciled']) {
+      process_label = t('ProcessDialog.completion')
+    }
+    form_data.append('process_label', process_label)
+
     const url = window.location.origin + config.server_endpoint
 
     console.log(`🔄 Lancement conversion ${input_format} → ${output_format}`)
