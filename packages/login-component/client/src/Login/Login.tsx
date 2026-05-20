@@ -75,8 +75,6 @@ export const Login = ({
     }
   }
 
-  let template = 'minmax(7vw, 150px) auto 11rem 11rem'
-
   // React output
   return (
     <div>
@@ -88,7 +86,13 @@ export const Login = ({
       >
         <Box
           layerStyle='menutop_layout_style'
-          gridTemplateColumns={template}
+          display='flex'
+          flexWrap='wrap'
+          alignItems='center'
+          justifyContent='space-between'
+          height='auto'
+          minHeight='2.5rem'
+          rowGap='0.25rem'
         >
           <Box
             alignSelf='center'
@@ -101,24 +105,30 @@ export const Login = ({
               onClick={() => returnToApp(navigate)}
             />
           </Box>
-          <Box></Box>
-          <Button
-            variant='btn_lone_navigation'
-            onClick={() => returnToApp(navigate)}
+          <Box
+            display='flex'
+            flexWrap='wrap'
+            justifyContent='flex-end'
+            gap='0.25rem'
           >
-            {t('UserNav.to_app')}
-          </Button>
-          <Button
-            variant='btn_lone_navigation_secondary'
-            onClick={() => navigate('/register')}
-          >
-            {t('UserNav.to_reg')}
-          </Button>
+            <Button
+              variant='btn_lone_navigation'
+              onClick={() => returnToApp(navigate)}
+            >
+              {t('UserNav.to_app')}
+            </Button>
+            <Button
+              variant='btn_lone_navigation_secondary'
+              onClick={() => navigate('/register')}
+            >
+              {t('UserNav.to_reg')}
+            </Button>
+          </Box>
         </Box>
       </Box>
 
       <div className="login-wrapper">
-        <Card variant='card_register' width='33vw'>
+        <Card variant='card_register' width={{ base: '92vw', sm: '32rem' }}>
           <CardHeader style={{ 'textAlign': 'center' }}>{t('Login.title')}</CardHeader>
           <CardBody>
             {/* User id */}
