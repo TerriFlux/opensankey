@@ -359,7 +359,12 @@ export class Class_DrawingArea {
   public afterFromJSON() {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
-    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length > 1 || exchanges_nodes[0].output_links_list.length > 1)) {
+    // Split dès qu'un nœud échange non encore splitté porte au moins un lien.
+    // `node.sibling` (et non le nombre de liens) marque un nœud déjà issu d'un
+    // split : les siblings import/export portent aussi le tag `echange` et ont
+    // exactement 1 lien, donc l'ancien seuil `> 1` ratait les échanges
+    // mono-flux (mfa_problem#222 : échanges produit/secteur asymétriques).
+    if (exchanges_nodes.some(n => !n.sibling && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)
