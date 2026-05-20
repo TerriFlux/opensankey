@@ -118,17 +118,13 @@ export class Class_MenuConfig {
    */
   protected _menu_top_order = [
     [
-      // Consolidated Fichier dropdown (Nouveau / Ouvrir / Enregistrer collapsed
-      // under MenuGroup sections). Exporter stays standalone next to it because
-      // it is reached often enough to warrant a top-level button. Legacy split
-      // keys (resetDA, open_sankey, save_sankey, export_sankey) remain
-      // registered for backwards-compatible custom menu_top_order arrays.
+      // Document operations grouped together (no internal divider): Fichier
+      // (Nouveau/Ouvrir/Enregistrer dropdown), Exporter, and Édition (MEP,
+      // spreadsheet editor, Index/TER/TES shortcuts). Legacy split keys
+      // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
+      // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
       'export_sankey',
-    ],
-    [
-      // Édition dropdown carries MEP, the spreadsheet editor (ex format
-      // converter) and the Index/TER/TES shortcuts. Legacy 'mep' key kept.
       'edition',
       'edit_style',
     ],
