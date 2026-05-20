@@ -13,6 +13,12 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased] — Mai 2026
 
+### Dialogues de traitement : bandeau contextuel + arrêt fiabilisé ([opensankey#1228](https://gitlab.com/su-model/opensankey/-/work_items/1228))
+
+- **Le bandeau de log reflète l'opération en cours, dans la langue de l'utilisateur.** Ouvrir un fichier Excel affichait `CONVERSION: EXCEL → JSON` / `CONVERSION ÉCHOUÉE` quel que soit le dialogue ; il affiche désormais « Ouvrir fichier excel », « Édition de fichier », « Réconciliation » ou « Complétion » selon le dialogue et les options cochées.
+- **Détection fin/échec fiabilisée.** L'arrêt du terminal de traitement (Ouvrir / Éditer / Réconcilier) ne dépend plus du grep de la prose du log (fragile, dépendant de la langue) mais d'un statut machine-lisible renvoyé par le serveur. Côté SA, la réconciliation (`server/views.py` `launch_optim` / `solve_optimisation_problem_unified`) écrit ce statut à chaque issue et reçoit le libellé localisé du dialogue.
+- **Bump des submodules OpenSankey+ → OpenSankey** portant la mécanique (fichier de statut `<logname>.status`, `process_label`). Détails : [submodules/OpenSankey+/CHANGELOG.md](submodules/OpenSankey+/CHANGELOG.md) et [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
+
 ### Réconciliation : les bornes « non bornées » s'affichent comme telles ([mfa_problem#228](https://gitlab.com/su-model/mfa_problem/-/work_items/228) & [#232](https://gitlab.com/su-model/mfa_problem/-/work_items/232))
 
 - **Plus de cap fantôme à 500 000 000 sur les flux libres.** Pour un fichier Excel sans contrainte de borne max sur un flux, l'ancienne valeur de cap par défaut `500 000 000` était (i) utilisée comme « pas de borne » par le solveur en interne mais (ii) silencieusement propagée comme une vraie contrainte par certaines règles d'inégalité (par exemple « flux A ≤ 80 % du flux B »), donnant des résultats du type *flux A plafonné à 395 000 000* alors qu'aucune borne n'était souhaitée. Le sentinel interne est désormais à `1e15` (jamais atteignable par une donnée réaliste), et toute borne dont l'amplitude dépasse `1e13` est interprétée comme `∞` à l'affichage : les cellules Excel sortantes et la colonne *min/max* de l'analyse résultat sont vides au lieu de contenir un grand nombre.
