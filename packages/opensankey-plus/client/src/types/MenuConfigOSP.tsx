@@ -5,7 +5,15 @@ import { OSPShowMenuComponentsVarType } from './LegacyTypes'
 export type keyTypeConfigOSP = keyTypeConfig | 'presentation'
 export type keyTypeElementsOSP = keyTypeElements | 'data_tag' | 'tag_flow' | 'tag_node' | 'view'
 export class Class_MenuConfigOSP extends Class_MenuConfig {
-  protected override _menu_top_order = [...super.menu_top_order, ['diagrams', 'views', 'afm', 'edit']]
+  // OSP inserts the Vues/AFM group after the OS document group, and pushes the
+  // "Aide" dropdown to the very end (after AFM) rather than keeping it where OS
+  // places it. Filtering it out of the inherited order then re-appending keeps
+  // a single 'aide' group at the right edge of the menu block.
+  protected override _menu_top_order = [
+    ...super.menu_top_order.filter(group => !group.includes('aide')),
+    ['diagrams', 'views', 'afm', 'edit'],
+    ['aide'],
+  ]
   private _dict_setter_show_dialog_plus: OSPShowMenuComponentsVarType
 
   private _ref_to_node_hyperlink_updater: MutableRefObject<(() => void)>
