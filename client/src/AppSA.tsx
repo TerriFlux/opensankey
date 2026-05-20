@@ -104,17 +104,20 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
   // initializeAdditionalMenusOSP above. It is state-aware (offer trial / N days left /
   // expired → unlock) and hidden for real licence holders.
 
-  // Préférences (setting) stays a standalone top-bar button. Sankeythèque is no
-  // longer a standalone button: it is injected into the OS "Aide" dropdown via
-  // extra_help_menu_items (next to Visite guidée / Tutoriels), which frees
-  // horizontal space in the topbar on small screens.
+  // Sankeythèque -> injected into the OS "Aide" dropdown (extra_help_menu_items).
+  // Préférences -> moved out of the menu block into the right-cluster meta icons
+  // (additional_nav_item, rendered next to language/account/info) as a compact
+  // gear button. Both free horizontal space in the topbar on small screens.
   const idx_st = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('sankeytheque'))
   const idx_reg = new_data_app.menu_configuration.menu_top_order.findIndex(el => el.includes('setting'))
-  // Defensive: drop any legacy standalone 'sankeytheque' group from the order.
+  // Defensive: drop any legacy standalone 'sankeytheque' / 'setting' groups.
   if (idx_st !== -1) new_data_app.menu_configuration.menu_top_order.splice(idx_st, 1)
+  if (idx_reg !== -1) new_data_app.menu_configuration.menu_top_order.splice(idx_reg, 1)
   if (new_data_app.has_sankey_plus) {
-    if (idx_reg == -1) new_data_app.menu_configuration.menu_top_order.push(['setting'])
-    additionalMenus.current.external_top_buttons_item['setting'] = (<ButtonOpenUSerPreference new_data={new_data_app} />)
+    // Compact (gear-only) Préférences, prepended so it sits right after the flag.
+    additionalMenus.current.additional_nav_item.unshift(
+      <ButtonOpenUSerPreference compact new_data={new_data_app} />
+    )
 
     new_data_app.menu_configuration.extra_help_menu_items = [
       {
@@ -125,9 +128,6 @@ export const initializeAdditionalMenusSA: FType_InitializeAdditionalMenusSA = (
       },
     ]
   } else {
-    if (idx_reg !== -1) {
-      new_data_app.menu_configuration.menu_top_order.splice(idx_reg, 1)
-    }
     new_data_app.menu_configuration.extra_help_menu_items = undefined
   }
 }
