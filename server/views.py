@@ -288,6 +288,13 @@ def solve_optimisation_problem_unified(
     )
     t_prev = t
 
+    # Bridge MC simulations recording flag : the frontend packs it into
+    # ``solver_options`` (SOLVER_OPTION_KEYS, cf. opensankey#1227) but the
+    # writer reads it from ``output_options`` — forward it explicitly.
+    # Default False : the Simulations sheet can blow up to 1000+ columns,
+    # users opt in via the checkbox in the dialog Solveur group.
+    output_options["record_simulations"] = bool(solver_options.get("record_simulations", False))
+
     try:
         if output_filename.split('.')[1] == 'xlsx':
             io_excel = IOExcel(io_input.sankey)
