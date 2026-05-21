@@ -4,7 +4,7 @@
 // Copyright (c) 2025 TerriFlux
 // ==================================================================================================
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { Box, Button } from '@chakra-ui/react'
 import { WarningIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -24,6 +24,8 @@ interface ProcessTerminalProps {
   started: boolean,
   result: string,
   setResult: (_:string)=>void,
+  value: number[],
+  setValue: (_:number[])=>void,
 }
 
 export const ProcessTerminal = ({
@@ -37,17 +39,18 @@ export const ProcessTerminal = ({
   started,
   result,
   setResult,
+  value,
+  setValue,
 }: ProcessTerminalProps) => {
   const { t } = app_data
-  const [value, setValue] = useState([1, 2])
 
-  const handleChange = (evt: MouseEvent) => {
-    if (value.includes(+(evt.target as HTMLFormElement).value)) {
-      value.splice(value.indexOf((evt.target as HTMLFormElement).value))
-    } else {
-      value.push(+(evt.target as HTMLFormElement).value)
-    }
-    setValue([...value])
+  // Bascule un filtre de log (1=Infos, 2=Erreurs, 3=Debug, 4=Warnings).
+  const handleChange = (filter_id: number) => {
+    setValue(
+      value.includes(filter_id)
+        ? value.filter(v => v !== filter_id)
+        : [...value, filter_id]
+    )
   }
 
   const infos = result !== undefined ? result.split('\n') : []
@@ -204,31 +207,35 @@ export const ActionButtons = ({
 interface LogFiltersProps {
   t: TFunction,
   value: number[]
-  handleChange: (evt: MouseEvent) => void
+  handleChange: (filter_id: number) => void
 }
 
 const LogFilters = ({ t, value, handleChange }: LogFiltersProps) => {
   return (
-    <Box layerStyle='options_3cols'>
+    <Box layerStyle='options_4cols'>
       <Button
-        onClick={evt => handleChange(evt as unknown as MouseEvent)}
-        value={1}
+        onClick={() => handleChange(1)}
         variant={value.includes(1) ? 'menuconfigpanel_option_button_primary_activated' : 'menuconfigpanel_option_button_primary'}
         size='sizeButtonDialog'
       >
         {t('ProcessDialog.log_infos')}
       </Button>
       <Button
-        onClick={evt => handleChange(evt as unknown as MouseEvent)}
-        value={2}
+        onClick={() => handleChange(4)}
+        variant={value.includes(4) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'}
+        size='sizeButtonDialog'
+      >
+        {t('ProcessDialog.log_warnings')}
+      </Button>
+      <Button
+        onClick={() => handleChange(2)}
         variant={value.includes(2) ? 'menuconfigpanel_option_button_secondary_activated' : 'menuconfigpanel_option_button_secondary'}
         size='sizeButtonDialog'
       >
         {t('ProcessDialog.log_errors')}
       </Button>
       <Button
-        onClick={evt => handleChange(evt as unknown as MouseEvent)}
-        value={3}
+        onClick={() => handleChange(3)}
         variant={value.includes(3) ? 'menuconfigpanel_option_button_tertiary_activated' : 'menuconfigpanel_option_button_tertiary'}
         size='sizeButtonDialog'
       >
@@ -236,6 +243,36 @@ const LogFilters = ({ t, value, handleChange }: LogFiltersProps) => {
       </Button>
     </Box>
   )
+}
+
+// Classe une ligne de log par priorité ERROR > WARNING > INFO > DEBUG.
+// Important : une ligne warning est aussi loggée au niveau « info » côté backend
+// (elle contient le mot INFO) ; on la classe donc en 'warning' AVANT 'info' pour
+// qu'elle ne réapparaisse pas sous le filtre Infos quand Warnings est décoché.
+const classifyLog = (info: string): 'error' | 'warning' | 'info' | 'debug' | null => {
+  if (info.includes('ERROR')) return 'error'
+  if (info.includes('WARNING')) return 'warning'
+  if (info.includes('INFO') && !info.includes('POST')) return 'info'
+  if (info.includes('DEBUG')) return 'debug'
+  return null
+}
+
+// Filtre actif requis pour afficher chaque type (1=Infos, 2=Erreurs, 3=Debug, 4=Warnings).
+const FILTER_BY_KIND = { info: 1, error: 2, debug: 3, warning: 4 } as const
+
+const LogLine = ({ info, value }: { info: string, value: number[] }) => {
+  const kind = classifyLog(info)
+  if (!kind || !value.includes(FILTER_BY_KIND[kind])) return null
+  switch (kind) {
+  case 'error':
+    return <div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>
+  case 'warning':
+    return <div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>
+  case 'info':
+    return <div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>
+  case 'debug':
+    return <div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>
+  }
 }
 
 interface LogDisplayProps {
@@ -253,15 +290,7 @@ const LogDisplay = ({ infos, value }: LogDisplayProps) => {
     <Box ref={scroll_ref} overflowY='auto' maxHeight='25vh'>
       {infos.map((info, index) => (
         <div key={index}>
-          {value.includes(2) && info.includes('ERROR') ? (
-            <div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>
-          ) : value.includes(1) && info.includes('WARNING') ? (
-            <div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>
-          ) : value.includes(1) && info.includes('INFO') && !info.includes('POST') ? (
-            <div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>
-          ) : value.includes(3) && info.includes('DEBUG') ? (
-            <div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>
-          ) : null}
+          <LogLine info={info} value={value} />
         </div>
       ))}
     </Box>
@@ -335,15 +364,7 @@ const Counter = ({
       {result.split('\n').map(
         (info, index) => (
           <div key={index}>
-            {value.includes(2) && info.includes('ERROR') ?
-              (<div style={{ color: 'red' }}>{info.replace('ERROR', '')}</div>)
-              : value.includes(1) && info.includes('WARNING') ?
-                (<div style={{ color: '#b7791f' }}><WarningIcon mr={1} />{info.replace('WARNING', '')}</div>)
-                : value.includes(1) && info.includes('INFO') && !info.includes('POST') ?
-                  (<div style={{ color: 'blue' }}>{info.replace('INFO', '')}</div>)
-                  : value.includes(3) && (info.includes('DEBUG')) ?
-                    (<div style={{ color: 'orange' }}>{info.replace('DEBUG', '')}</div>) : (null)
-            }
+            <LogLine info={info} value={value} />
           </div>
         )
       )

@@ -651,6 +651,10 @@ export const UniversalFileConverter = ({
   const [processing, setProcessing] = useState(false)
   const [started, setStarted] = useState(false)
   const [result, setResult] = useState('')
+  // Filtres de log actifs du terminal (1=Infos, 2=Erreurs, 3=Debug, 4=Warnings).
+  // Remonté ici (et non dans ProcessTerminal) pour que le badge récap puisse
+  // basculer le terminal en mode « warnings uniquement ».
+  const [log_filter, setLogFilter] = useState([1, 2, 4])
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
@@ -1417,19 +1421,27 @@ export const UniversalFileConverter = ({
                   ? result.split('\n').filter((l: string) => l.includes('WARNING')).length
                   : 0
                 if (warning_count === 0) return null
+                // Badge cliquable : bascule le terminal en « warnings uniquement »,
+                // re-clic restaure les filtres par défaut.
+                const only_warnings = log_filter.length === 1 && log_filter[0] === 4
                 return (
                   <Box
+                    as='button'
+                    type='button'
+                    onClick={() => setLogFilter(only_warnings ? [1, 2, 4] : [4])}
                     display='inline-flex'
                     alignItems='center'
                     gap='4px'
                     px='8px'
                     py='2px'
                     borderRadius='full'
-                    bg='#fef3c7'
-                    color='#b7791f'
+                    bg={only_warnings ? '#b7791f' : '#fef3c7'}
+                    color={only_warnings ? '#fef3c7' : '#b7791f'}
                     fontSize='sm'
                     fontWeight='bold'
-                    title={t('ProcessDialog.warnings_to_read') || `${warning_count} warning(s) à lire`}
+                    cursor='pointer'
+                    _hover={{ filter: 'brightness(0.95)' }}
+                    title={t('ProcessDialog.warnings_to_read') || `${warning_count} warning(s) — cliquer pour n'afficher que les warnings`}
                   >
                     <WarningIcon />
                     {warning_count}
@@ -1452,6 +1464,8 @@ export const UniversalFileConverter = ({
             started={started}
             result={result}
             setResult={setResult}
+            value={log_filter}
+            setValue={setLogFilter}
           />
         </>
       )}
