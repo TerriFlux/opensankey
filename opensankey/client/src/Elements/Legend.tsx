@@ -201,17 +201,22 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   public applyPosition() {
     if (this.d3_selection !== null) {
       const position_y = this.position_y //+ this.drawing_area.getNavBarHeight()
-      if (this.stick_to_drawing) {
-        this.d3_selection.attr(
-          'transform',
-          'translate(' + this.position_x + ', ' + position_y + ')'
-        )
-      } else {
-        this.d3_selection.attr(
-          'transform',
-          'translate(' + this.position_x + ', ' + position_y + ')'
-        )
+      let transform = 'translate(' + this.position_x + ', ' + position_y + ')'
+      // Issue #165 — Quand la legend est stick_to_drawing, elle vit dans le
+      // groupe SVG zoomé par d3 (facteur k). À grand _scale (k ≈ 1e-4) ou en
+      // zoom, le contenu varierait/serait invisible. En mode verrouillé, on
+      // contre-scale par font_compensation (= 1/k live) pour que les dimensions
+      // internes (police, espacements, rects) rendent à taille constante à
+      // l'écran. La position (position_x/y) reste en coords locales, donc la
+      // legend reste « attachée » à son ancrage dans le dessin. En mode
+      // déverrouillé (ou hors stick_to_drawing) : pas de compensation.
+      if (this.stick_to_drawing && this.drawing_area.font_size_locked) {
+        const comp = this.drawing_area.font_compensation
+        if (comp > 0 && comp !== 1) {
+          transform += ' scale(' + comp + ')'
+        }
       }
+      this.d3_selection.attr('transform', transform)
     }
     this.drawDragHandlers()
   }
