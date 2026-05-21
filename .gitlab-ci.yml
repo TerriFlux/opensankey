@@ -353,6 +353,20 @@ publish:python:
         -c "chown -R $(id -u):$(id -g) /io"
 
     # ----------------------------------------------------------------
+    # Republication : la registry PyPI GitLab refuse d'ecraser un fichier
+    # deja publie (HTTP 400 Bad Request). Un re-tag reutilise le meme
+    # numero de version (ex: republication de v1.1.4 sur un nouveau
+    # commit), donc on supprime d'abord les packages PyPI de cette version
+    # avant de reuploader les wheels reconstruites.
+    # Token : GITLAB_PACKAGES_TOKEN (PAT/Project token, scope api) en
+    # priorite ; sinon CI_JOB_TOKEN — qui peut manquer du droit de
+    # suppression selon la version GitLab : definir la variable CI dans ce
+    # cas (le job echouera proprement avec un HTTP 401/403 sinon).
+    # ----------------------------------------------------------------
+    - echo "[publish:python] Supprime les packages PyPI ${PKG_VERSION} deja publies (republication)"
+    - python3 scripts/gitlab_delete_pypi_version.py "${PKG_VERSION}"
+
+    # ----------------------------------------------------------------
     # Publication sur le GitLab PyPI Registry du projet
     # Les wheels sont accessibles au niveau groupe :
     #   /groups/su-model/-/packages/pypi/simple/
