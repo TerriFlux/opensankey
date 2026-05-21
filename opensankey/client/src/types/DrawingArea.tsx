@@ -521,6 +521,17 @@ export class Class_DrawingArea {
     //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
+    // #665 — maintien des flux marqués « à garder droit » (droiture dure, écarts
+    // absorbants). Doit tourner APRÈS un premier draw : le cache d'accroche
+    // (getOutputLinkStartingPoint/…) reflète alors les épaisseurs courantes
+    // (utile au changement de data tag/région). Si des nœuds bougent, on
+    // redessine une seule fois — appel direct à _sankey.draw() (pas drawElements)
+    // pour éviter toute récursion.
+    if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
+      if (this.nodePositioning.enforceStraightLinks()) {
+        this._sankey.draw()
+      }
+    }
     // Draw legend
     //this._legend.draw()
     this.drawBgImage()
