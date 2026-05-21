@@ -635,7 +635,11 @@ def conversion_thread(
         t_read_start = perf_counter()
         ok, msg = io_input.load_sankey(input_file_name, **input_options)
         max_line_length = 50
-        if input_format == 'excel':
+        # input_options['layout'] (case « Onglet mise en page » du dialogue
+        # d'ouverture) pilote la lecture de l'onglet caché « layout ». Décoché =>
+        # on ignore la mise en page sauvegardée (positions/styles) pour laisser
+        # le front recalculer une mise en page automatique. Défaut = True.
+        if input_format == 'excel' and input_options.get('layout', True):
             try:
                 # Vérifier que la sheet layout existe
                 with pd.ExcelFile(input_file_name) as excel_file:
