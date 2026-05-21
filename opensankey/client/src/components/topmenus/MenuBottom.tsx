@@ -196,6 +196,22 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
 
     <OSTooltip
       placement={app_data.is_static ? 'left' : 'top'}
+      label={app_data.drawing_area.font_size_locked ? t('Banner.tooltipFontLocked') : t('Banner.tooltipFontUnlocked')}
+    >
+      <Button variant='toolbar_button_6'
+        size={size}
+        onClick={() => {
+          app_data.drawing_area.font_size_locked = !app_data.drawing_area.font_size_locked
+          updateParentComponent()
+        }}>
+        {app_data.drawing_area.font_size_locked
+          ? app_data.icon_library.icon_font_size_locked
+          : app_data.icon_library.icon_font_size_unlocked}
+      </Button>
+    </OSTooltip>
+
+    <OSTooltip
+      placement={app_data.is_static ? 'left' : 'top'}
       label={document.fullscreenElement ? t('Banner.quit_fullscreen') : t('Banner.fullscreen')}
     >
       <Button

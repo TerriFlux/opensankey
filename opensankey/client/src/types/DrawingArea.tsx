@@ -142,6 +142,42 @@ export class Class_DrawingArea {
   private starting_x_point = 0
   private starting_y_point = 0
 
+  // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
+  // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
+  // regardless of how aggressively the auto-fit shrinks the view (e.g. when
+  // _scale is large like 1e6 and the fit zoom collapses to ~1e-4). Stays at 1
+  // until areaAutoFit runs. Updated only by areaAutoFit (not by manual zoom).
+  protected _k_fit: number = 1
+  public get k_fit(): number { return this._k_fit }
+
+  // Issue #165 — Mode « police verrouillée ». Quand true (défaut), la taille de
+  // police des labels reste CONSTANTE à l'écran quel que soit le niveau de zoom
+  // (molette ET fit) : getEffectiveFontSize divise font_size par le zoom live
+  // (cf. font_compensation) et un re-render des labels est déclenché à chaque
+  // zoom. Quand false, la police vit dans le repère zoomé et grandit/rétrécit
+  // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
+  // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
+  // d'origine ; un nouveau diagramme démarre en true.
+  protected _font_size_locked: boolean = true
+  public get font_size_locked(): boolean { return this._font_size_locked }
+  public set font_size_locked(v: boolean) {
+    if (this._font_size_locked === v) return
+    this._font_size_locked = v
+    this._refreshLabelsForFitZoom()
+  }
+
+  /**
+   * Multiplicateur appliqué à la font-size d'un label pour compenser le zoom.
+   * Mode verrouillé : 1 / zoom_live → la taille écran (font_size px) reste
+   * constante quel que soit le zoom. Mode déverrouillé : 1 → police native qui
+   * scale avec le repère zoomé. Source unique pour tous les calculs de label.
+   */
+  public get font_compensation(): number {
+    if (!this._font_size_locked) return 1
+    const k = this.getZoomScale()
+    return k > 0 ? 1 / k : 1
+  }
+
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
     return sankey
@@ -832,6 +868,8 @@ export class Class_DrawingArea {
 
   public areaAutoFit(horiz?: boolean) {
 
+    const prev_k_fit = this._k_fit
+
     // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
     if (this.is_paper_mode) {
       if (this.d3_selection_zoom_area) {
@@ -842,6 +880,7 @@ export class Class_DrawingArea {
         const new_k = Math.min(k_w, k_h)
         this._k_horiz = k_w
         this._k_vert = k_h
+        this._k_fit = new_k
         this._zoom_width = this._width
         this._zoom_height = this._height
         this._background_d3_groups_shift_x = 0
@@ -855,15 +894,36 @@ export class Class_DrawingArea {
           [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
         this.drawBackground()
         this.drawGrid()
+        if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       }
       return
     }
 
+    // Issue #165 — Anti-divergence : quand la compensation fit-zoom est active
+    // (_k_fit < 1, donc labels grossis en coords locales pour rester à N px
+    // écran), les labels peuvent dominer le getBBox et faire diverger les fits
+    // successifs en cascade (bbox grandit → k_fit chute → labels encore plus
+    // gros). On masque temporairement les <text> pour fitter sur les formes
+    // uniquement. Au tout premier autoFit (_k_fit=1, pas encore de
+    // compensation), on garde le comportement historique qui inclut les labels.
+    // En mode déverrouillé (police native), aucune compensation : on inclut
+    // toujours les labels comme avant #165 (pas de divergence possible).
+    const skip_text_in_bbox = this._font_size_locked && this._k_fit !== 1
+    const hidden_texts = skip_text_in_bbox
+      ? this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
+      : undefined
+    hidden_texts?.style('display', 'none')
     let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    hidden_texts?.style('display', null)
 
     if (bbox == undefined)
       return
-    if (this.legend.is_visible && this.legend.stick_to_drawing) {
+    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
+    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
+    // bbox locale est donc démultipliée par le même facteur, et l'inclure
+    // ici ferait diverger les fits successifs comme pour les <text>. On
+    // l'exclut quand la compensation est active.
+    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
       const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
         // Calculer la bounding box englobante
@@ -895,6 +955,7 @@ export class Class_DrawingArea {
       this._background_d3_groups_shift_y = 0
       this._k_horiz = 1
       this._k_vert = 1
+      this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
         this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
@@ -904,6 +965,7 @@ export class Class_DrawingArea {
       }
       this.drawBackground()
       this.drawGrid()
+      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       return
     }
 
@@ -936,6 +998,7 @@ export class Class_DrawingArea {
       this._k_vert = new_k_height
       // }
       const new_k = is_horiz ? new_k_horiz : new_k_height
+      this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
@@ -948,7 +1011,39 @@ export class Class_DrawingArea {
         [this._fit_margin / 2 - this._background_d3_groups_shift_x * new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
       this.drawBackground()
       this.drawGrid()
+      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
     }
+  }
+
+  /**
+   * Re-render all node/link labels so the zoom compensation applied to
+   * font-size (see DrawLabelBase.getEffectiveFontSize) takes effect. En mode
+   * verrouillé (#165), déclenché à la fois par areaAutoFit (changement de k_fit)
+   * ET par le zoom molette (eventZoom, débouncé) : les labels ont été dessinés à
+   * l'ancien multiplicateur, un fresh draw est requis pour mettre à jour la
+   * font-size et les offsets de positionnement dépendants.
+   */
+  private _refreshLabelsForFitZoom() {
+    this._sankey.nodes_list.forEach(n => {
+      n.drawNameLabel()
+      n.drawValueLabel()
+      n.drawStockBox()
+    })
+    this._sankey.links_list.forEach(l => {
+      l.drawNameLabel()
+      l.drawValueLabel()
+    })
+    // ZDT (zones de texte / containers OS+) héritent de NodeBase mais n'ont
+    // qu'un name_label (pas de value_label). Le name_label utilise la même
+    // chaîne DrawLabel donc bénéficie aussi de la compensation.
+    this._sankey.containers_list.forEach(c => {
+      c.drawNameLabel()
+    })
+    // Legend : pas de compensation par-attribut (font-size hardcodée à
+    // _legend_police partout). À la place, on contre-scale son groupe racine
+    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
+    // pose du transform.
+    this._legend.applyPosition()
   }
 
   /**
@@ -2207,6 +2302,18 @@ export class Class_DrawingArea {
       this.application_data._add_waiting_process('update_scrollbars', () => {
         this._updateScrollbars()
       }, 100)
+
+      // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
+      // pendant le zoom molette. Le zoom change le repère local (donc la taille
+      // apparente du texte) ; on re-render les labels avec le nouveau facteur de
+      // compensation (font_compensation lit le zoom live). Débouncé pour ne pas
+      // re-dessiner à chaque tick. En mode déverrouillé, le texte scale nativement
+      // avec le repère : aucun re-render nécessaire.
+      if (this._font_size_locked) {
+        this.application_data._add_waiting_process('refresh_labels_zoom', () => {
+          this._refreshLabelsForFitZoom()
+        }, 120)
+      }
     }
   }
 
