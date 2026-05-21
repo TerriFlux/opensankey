@@ -2479,6 +2479,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  must_stay_straight: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Keep straight',
+      fr: 'Garder droit',
+      es: 'Mantener recto',
+      de: 'Gerade halten',
+      it: 'Mantieni dritto'
+    },
+    tooltips: {
+      en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Set via right-click "Straighten flow".',
+      fr: 'Garder ce flux exactement horizontal pour tous les tags de données (seuls les écarts verticaux s\'adaptent). Activé via clic droit « Rendre droit ».',
+      es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Activado con clic derecho «Enderezar flujo».',
+      de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Über Rechtsklick „Fluss begradigen" aktiviert.',
+      it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Attivato con clic destro «Raddrizza flusso».'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   orientation: {
     default: 'hh' as Type_Orientation,
     type: (() => 'hh') as (() => Type_Orientation),
