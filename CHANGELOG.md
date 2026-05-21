@@ -13,6 +13,10 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased] — Mai 2026
 
+### Ouverture Excel : case « Onglet mise en page »
+
+- **Possibilité d'ignorer la mise en page sauvegardée à l'ouverture d'un fichier Excel.** Le dialogue *Ouvrir fichier excel* gagne une case « Onglet mise en page » (cochée par défaut) dans la section *Onglets lus*. Décochée, l'onglet caché `layout` (positions et styles du diagramme enregistrés dans le fichier) est ignoré et une mise en page automatique est recalculée — utile pour repartir d'une disposition propre. Détails : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md → 1.1.5](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
+
 ### Échanges produit/secteur dans les territoires ([su-model/sankeyapplication#149](https://gitlab.com/su-model/sankeyapplication/-/issues/149) / [mfa_problem#222](https://gitlab.com/su-model/mfa_problem/-/work_items/222))
 
 - **Un nœud d'échange peut être typé produit OU secteur** selon son rôle dans la matrice emplois/ressources, et apparaître de façon asymétrique (présent dans une seule des deux matrices) sans erreur de chargement. À la réconciliation depuis Excel, les flux d'import/export d'échange sont correctement reconstruits et le diagramme se complète automatiquement (split Import/Export, placement des échanges-secteur, restylage). Voir détails parser ([SankeyExcelParser](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md)) et rendu ([OpenSankey](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md)).

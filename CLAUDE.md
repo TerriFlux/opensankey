@@ -31,6 +31,9 @@ Publiés sur le PyPI Registry du projet, accessibles au niveau groupe :
 Semver, tag git = version npm = version des wheels Python.
 Le tag déclenche `publish:npm` et `publish:python` simultanément.
 
+**Ne JAMAIS changer de version sans demande explicite.** Bumper = modifier les 4 `package.json` (OS/OSP/LC/SA), `ApplicationData.version`, les CHANGELOG datés, figer `examples/<X.Y.Z>/`. Ne le faire que si l'utilisateur le demande clairement avec un mot dédié (« bump », « release », « monte la version », « release.sh »).
+« Commit + push + cascade » ne signifie PAS bumper : « cascade » = propager les commits de pointeurs de submodules vers le haut (OS → OS+ → SA, et MFAProblem/SEP si concernés) puis pousser, en gardant la version inchangée. En cas de doute, demander avant de toucher à la version.
+
 ## Consommateur principal
 `cartofob-sankey` (https://github.com/IGNF/cartofob-sankey) utilise :
 - le paquet npm `@terriflux/sankeyapplication` dans `viewer/`
