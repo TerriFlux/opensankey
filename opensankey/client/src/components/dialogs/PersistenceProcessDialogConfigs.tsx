@@ -897,6 +897,26 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
         it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
       }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    layout: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet layout',
+        fr: 'Onglet mise en page',
+        es: 'Hoja de diseño',
+        de: 'Layout-Blatt',
+        it: 'Foglio layout'
+      },
+      tooltips: {
+        en: 'Load the hidden "layout" sheet (saved diagram positions and styles) from the Excel file. Uncheck to ignore the saved layout and recompute an automatic one.',
+        fr: 'Charger l\'onglet caché « layout » (positions et styles du diagramme sauvegardés) depuis le fichier Excel. Décocher pour ignorer la mise en page sauvegardée et en recalculer une automatiquement.',
+        es: 'Cargar la hoja oculta «layout» (posiciones y estilos del diagrama guardados) desde el archivo Excel. Desmarcar para ignorar el diseño guardado y recalcular uno automático.',
+        de: 'Das versteckte „layout"-Blatt (gespeicherte Diagrammpositionen und -stile) aus der Excel-Datei laden. Deaktivieren, um das gespeicherte Layout zu ignorieren und ein automatisches neu zu berechnen.',
+        it: 'Caricare il foglio nascosto «layout» (posizioni e stili del diagramma salvati) dal file Excel. Deselezionare per ignorare il layout salvato e ricalcolarne uno automatico.'
+      }
     } satisfies FormatAttributeConfig<boolean>
   },
 
