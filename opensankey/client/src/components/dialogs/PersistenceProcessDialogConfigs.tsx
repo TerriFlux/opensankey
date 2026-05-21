@@ -536,6 +536,13 @@ export const translations = {
       de: 'Infos',
       it: 'Info'
     },
+    log_warnings: {
+      fr: 'Warnings',
+      en: 'Warnings',
+      es: 'Advertencias',
+      de: 'Warnungen',
+      it: 'Avvisi'
+    },
     log_errors: {
       fr: 'Erreurs',
       en: 'Errors',
@@ -549,6 +556,13 @@ export const translations = {
       es: 'Depuración',
       de: 'Debug',
       it: 'Debug'
+    },
+    warnings_to_read: {
+      fr: 'Cliquer pour n\'afficher que les warnings',
+      en: 'Click to show only warnings',
+      es: 'Haga clic para mostrar solo las advertencias',
+      de: 'Klicken, um nur Warnungen anzuzeigen',
+      it: 'Clicca per mostrare solo gli avvisi'
     }
   }
 }
