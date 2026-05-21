@@ -30,6 +30,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
+      actionName: 'straightenLink'
+    },
+    {
+      type: 'button',
       actionName: 'splitLink'
     },
     {
@@ -55,6 +59,34 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         de: 'Quelle und Ziel des/der ausgewählten Flusses/Flüsse umkehren',
         it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i'
       }
+    },
+
+    straightenLink: {
+      type: 'toggle',
+      labels: {
+        en: 'Straighten flow',
+        fr: 'Rendre droit',
+        es: 'Enderezar flujo',
+        de: 'Fluss begradigen',
+        it: 'Raddrizza flusso'
+      },
+      labelsToggle: {
+        en: { true: 'Release (kept straight)', false: 'Straighten flow' },
+        fr: { true: 'Libérer (gardé droit)', false: 'Rendre droit' },
+        es: { true: 'Liberar (mantenido recto)', false: 'Enderezar flujo' },
+        de: { true: 'Lösen (gerade gehalten)', false: 'Fluss begradigen' },
+        it: { true: 'Libera (mantenuto dritto)', false: 'Raddrizza flusso' }
+      },
+      tooltips: {
+        en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Click again to release.',
+        fr: 'Garder ce flux exactement horizontal pour tous les tags de données (seuls les écarts verticaux s\'adaptent). Recliquer pour libérer.',
+        es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Vuelva a hacer clic para liberar.',
+        de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Erneut klicken zum Lösen.',
+        it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Clicca di nuovo per liberare.'
+      },
+      getToggleValue: 'straightenLinkValue',
+      closeMenuAfter: true,
+      undoable: true
     },
 
     splitLink: {
@@ -300,6 +332,49 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     // Actions simples
     inverseIO: () => {
       drawing_area.inverseSelectedLinks()
+    },
+
+    // Rendre droit / Libérer (su-model/opensankey#665) : marque le flux cliqué
+    // comme « à garder droit » (shape_must_stay_straight) et le redresse tout de
+    // suite ; recliquer le libère. Le maintien est ensuite ré-appliqué
+    // automatiquement à chaque draw (donc à chaque changement de data tag) par
+    // NodePositioning.enforceStraightLinks via drawElements.
+    straightenLink: () => {
+      const link = contextualised_link
+      if (!link) return
+      const will_mark = !link.shape_must_stay_straight
+      // Snapshot du flag + des position_y/shape_position_dy de tous les nœuds
+      // visibles (le back-calc réécrit les écarts) pour un undo fidèle.
+      const old_flag = link.shape_must_stay_straight
+      const saved = drawing_area.sankey.visible_nodes_list.map(n => ({
+        n, y: n.position_y, dy: n.shape_position_dy
+      }))
+
+      const doToggle = () => {
+        link.shape_must_stay_straight = will_mark
+        if (will_mark) {
+          // Aligne immédiatement ; les futurs draws le maintiendront.
+          drawing_area.nodePositioning.straightenLink(link)
+        } else {
+          // Libéré : on ne le maintient plus, il reste où il est.
+          drawing_area.drawElements()
+        }
+        refreshThisAndToggleSaving()
+      }
+
+      const undoToggle = () => {
+        link.shape_must_stay_straight = old_flag
+        saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+
+      executeWithUndo(doToggle, undoToggle)
+    },
+
+    // Valeur courante du toggle « Rendre droit » (coche/état du libellé).
+    straightenLinkValue: () => {
+      return contextualised_link?.shape_must_stay_straight ?? false
     },
 
     // Style actions
