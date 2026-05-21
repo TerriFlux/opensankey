@@ -48,24 +48,6 @@ import { node_exchanges_style, elementStyleConfigs, product_sector_styles, Eleme
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
-/**
- * Compare un numéro de version sémantique (ex. "1.1.4") à une cible.
- * Tolère version === undefined (traité comme strictement antérieur).
- * Number(version) ne suffit pas dès qu'il y a un patch number ("1.1.4" → NaN).
- */
-function versionLessThan(version: string | undefined, target: string): boolean {
-  if (version === undefined || version === '') return true
-  const parse = (s: string) => String(s).split('.').map(n => parseInt(n, 10) || 0)
-  const a = parse(version)
-  const b = parse(target)
-  const len = Math.max(a.length, b.length)
-  for (let i = 0; i < len; i++) {
-    const ai = a[i] ?? 0
-    const bi = b[i] ?? 0
-    if (ai !== bi) return ai < bi
-  }
-  return false
-}
 
 export class BaseElementPersistence {
   public static fromJSON_pre_0_9(
@@ -1817,6 +1799,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
+    // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
+    // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
+    json_object['font_size_locked'] = drawing_area.font_size_locked
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2102,17 +2087,13 @@ export class DrawingAreaPersistence {
       // le user devra réeffectuer ses expansions sur les fichiers legacy.
       this.fromJSON_pre_0_94(json_object)
     }
-    if (versionLessThan(version, '1.1.4')) {
-      // Issue #165 — feature font-size compensation introduite en 1.1.4.
-      // Les fichiers persisted antérieurs ont leurs font_size pré-scalés
-      // manuellement par l'utilisateur (ex : font_size=60 pour cibler 20px
-      // écran à k_fit≈0.33). Avec la nouvelle sémantique (font_size = px
-      // écran cible), ces valeurs sortiraient trop grosses. Le flag déclenche
-      // un facteur correctif × k_fit appliqué à tous les *_font_size lors du
-      // premier areaAutoFit (cf. DrawingArea._applyLegacyFontMigration).
-      // Mutation persistée → après un save en 1.1.4 le fichier est normalisé.
-      drawing_area._pending_legacy_font_migration = true
-    }
+    // Issue #165 — Mode « police verrouillée » (taille écran constante quel que
+    // soit le zoom). Les fichiers sans ce flag sont antérieurs à la feature :
+    // on les charge en déverrouillé pour préserver exactement leur rendu
+    // d'origine (police native qui grandit/rétrécit avec le zoom). Les fichiers
+    // récents sérialisent toujours le flag (cf. toJSON), donc présence ⇒ valeur
+    // explicite. Un nouveau diagramme (non chargé) démarre verrouillé.
+    drawing_area['_font_size_locked'] = getBooleanFromJSON(json_object, 'font_size_locked', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)

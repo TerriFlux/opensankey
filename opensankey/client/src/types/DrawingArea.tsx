@@ -150,14 +150,33 @@ export class Class_DrawingArea {
   protected _k_fit: number = 1
   public get k_fit(): number { return this._k_fit }
 
-  // Migration legacy (#165) — fichiers persisted pre-1.1.4 ont des font_size
-  // pré-scalés manuellement par l'utilisateur pour compenser le rendu sans
-  // compensation (ex : 60 pour cibler ~20px écran à k_fit≈0.33). En 1.1.4
-  // font_size = px écran cible, donc ces valeurs apparaissent trop grosses.
-  // Flag posé par SankeyPersistence.fromJSON quand version < 1.1.4 ; consommé
-  // au premier areaAutoFit qui multiplie tous les font_size par k_fit puis le
-  // clear. Une fois le fichier ré-enregistré, les valeurs sont normalisées.
-  public _pending_legacy_font_migration: boolean = false
+  // Issue #165 — Mode « police verrouillée ». Quand true (défaut), la taille de
+  // police des labels reste CONSTANTE à l'écran quel que soit le niveau de zoom
+  // (molette ET fit) : getEffectiveFontSize divise font_size par le zoom live
+  // (cf. font_compensation) et un re-render des labels est déclenché à chaque
+  // zoom. Quand false, la police vit dans le repère zoomé et grandit/rétrécit
+  // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
+  // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
+  // d'origine ; un nouveau diagramme démarre en true.
+  protected _font_size_locked: boolean = true
+  public get font_size_locked(): boolean { return this._font_size_locked }
+  public set font_size_locked(v: boolean) {
+    if (this._font_size_locked === v) return
+    this._font_size_locked = v
+    this._refreshLabelsForFitZoom()
+  }
+
+  /**
+   * Multiplicateur appliqué à la font-size d'un label pour compenser le zoom.
+   * Mode verrouillé : 1 / zoom_live → la taille écran (font_size px) reste
+   * constante quel que soit le zoom. Mode déverrouillé : 1 → police native qui
+   * scale avec le repère zoomé. Source unique pour tous les calculs de label.
+   */
+  public get font_compensation(): number {
+    if (!this._font_size_locked) return 1
+    const k = this.getZoomScale()
+    return k > 0 ? 1 / k : 1
+  }
 
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
@@ -882,7 +901,9 @@ export class Class_DrawingArea {
     // gros). On masque temporairement les <text> pour fitter sur les formes
     // uniquement. Au tout premier autoFit (_k_fit=1, pas encore de
     // compensation), on garde le comportement historique qui inclut les labels.
-    const skip_text_in_bbox = this._k_fit !== 1
+    // En mode déverrouillé (police native), aucune compensation : on inclut
+    // toujours les labels comme avant #165 (pas de divergence possible).
+    const skip_text_in_bbox = this._font_size_locked && this._k_fit !== 1
     const hidden_texts = skip_text_in_bbox
       ? this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
       : undefined
@@ -990,22 +1011,14 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Re-render all node/link labels so the fit-zoom compensation applied to
-   * font-size (see DrawLabelBase.getEffectiveFontSize) takes effect. Triggered
-   * by areaAutoFit when k_fit changes — the labels themselves were already
-   * drawn at the old multiplier, so a fresh draw is required to update the
-   * font-size attribute and the dependent positioning offsets.
-   *
-   * Also drives the one-shot legacy migration (#165) : si _pending_legacy_font
-   * _migration est posé (fichier < 1.1.4), on multiplie tous les *_font_size
-   * par le k_fit qui vient d'être capturé, puis on clear le flag — exactement
-   * l'inverse de la sur-compensation que la nouvelle sémantique introduirait.
+   * Re-render all node/link labels so the zoom compensation applied to
+   * font-size (see DrawLabelBase.getEffectiveFontSize) takes effect. En mode
+   * verrouillé (#165), déclenché à la fois par areaAutoFit (changement de k_fit)
+   * ET par le zoom molette (eventZoom, débouncé) : les labels ont été dessinés à
+   * l'ancien multiplicateur, un fresh draw est requis pour mettre à jour la
+   * font-size et les offsets de positionnement dépendants.
    */
   private _refreshLabelsForFitZoom() {
-    if (this._pending_legacy_font_migration) {
-      this._applyLegacyFontMigration()
-      this._pending_legacy_font_migration = false
-    }
     this._sankey.nodes_list.forEach(n => {
       n.drawNameLabel()
       n.drawValueLabel()
@@ -1026,47 +1039,6 @@ export class Class_DrawingArea {
     // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
     // pose du transform.
     this._legend.applyPosition()
-  }
-
-  /**
-   * Issue #165 — Migration legacy des font_size pour fichiers persisted pre-1.1.4.
-   * Multiplie tous les *_font_size par le k_fit qui vient d'être capturé.
-   * Justification : avant 1.1.4, l'utilisateur pré-scalait manuellement (ex.
-   * font_size=60) pour obtenir ~20px écran à k_fit≈0.33. En 1.1.4, font_size
-   * est la cible écran, donc 60 devient 60px écran. Multiplier par k_fit_old
-   * (le k_fit du tout premier autoFit après load) reproduit l'ancien rendu :
-   * 60 × 0.33 = 20 → 20px écran, identique à l'ancien comportement.
-   * Mutation persistée : une fois le fichier ré-enregistré en 1.1.4, les
-   * valeurs sont normalisées et la migration ne se redéclenche plus.
-   */
-  private _applyLegacyFontMigration() {
-    const factor = this._k_fit
-    if (!(factor > 0) || factor === 1) return
-    const scaleAttr = (el: { name_label_font_size?: number, value_label_font_size?: number, stock_label_font_size?: number }) => {
-      if (typeof el.name_label_font_size === 'number') {
-        el.name_label_font_size = el.name_label_font_size * factor
-      }
-      if (typeof el.value_label_font_size === 'number') {
-        el.value_label_font_size = el.value_label_font_size * factor
-      }
-      if (typeof el.stock_label_font_size === 'number') {
-        el.stock_label_font_size = el.stock_label_font_size * factor
-      }
-    }
-    this._sankey.nodes_list.forEach(scaleAttr)
-    this._sankey.links_list.forEach(scaleAttr)
-    this._sankey.containers_list.forEach(scaleAttr)
-    // Legend : _legend_police est l'équivalent. Pas d'API publique pour le
-    // muter sans déclencher draw() (et donc une boucle), on passe par l'accès
-    // direct au champ privé via cast.
-    const legend = this._legend as unknown as { _legend_police: number }
-    if (typeof legend._legend_police === 'number') {
-      legend._legend_police = legend._legend_police * factor
-    }
-    console.info(
-      `[migration 1.1.4] font_size legacy × ${factor.toFixed(4)} ` +
-      '(rétablissement du rendu écran historique pour fichier pre-1.1.4).'
-    )
   }
 
   /**
@@ -2325,6 +2297,18 @@ export class Class_DrawingArea {
       this.application_data._add_waiting_process('update_scrollbars', () => {
         this._updateScrollbars()
       }, 100)
+
+      // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
+      // pendant le zoom molette. Le zoom change le repère local (donc la taille
+      // apparente du texte) ; on re-render les labels avec le nouveau facteur de
+      // compensation (font_compensation lit le zoom live). Débouncé pour ne pas
+      // re-dessiner à chaque tick. En mode déverrouillé, le texte scale nativement
+      // avec le repère : aucun re-render nécessaire.
+      if (this._font_size_locked) {
+        this.application_data._add_waiting_process('refresh_labels_zoom', () => {
+          this._refreshLabelsForFitZoom()
+        }, 120)
+      }
     }
   }
 

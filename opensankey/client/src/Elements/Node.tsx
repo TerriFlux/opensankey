@@ -386,12 +386,12 @@ export class Class_NodeElement extends Class_NodeBase {
 
     const padding = 4
     const margin = 4
-    // Issue #165 : la police demand\u00e9e est en px \u00e9cran. On pr\u00e9compense par
-    // 1/k_fit pour annuler l'\u00e9chelle SVG appliqu\u00e9e par d3-zoom au rep\u00e8re local.
-    // L'auto-shrink (cas inside) reste calcul\u00e9 dans le rep\u00e8re local : si la
-    // bo\u00eete est trop \u00e9troite, on retombe sur MIN_FONT_SIZE \u00e9galement compens\u00e9.
-    const k_fit = this.drawing_area?.k_fit ?? 1
-    const k_inv = k_fit > 0 ? 1 / k_fit : 1
+    // Issue #165 : en mode verrouill\u00e9 la police demand\u00e9e est en px \u00e9cran. On
+    // pr\u00e9compense par font_compensation (= 1/k live) pour annuler l'\u00e9chelle SVG
+    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1
+    // (police native). L'auto-shrink (cas inside) reste calcul\u00e9 dans le rep\u00e8re
+    // local : si la bo\u00eete est trop \u00e9troite, on retombe sur MIN_FONT_SIZE compens\u00e9.
+    const k_inv = this.drawing_area?.font_compensation ?? 1
     const MIN_FONT_SIZE = 6 * k_inv
 
     // Build text lines (SF redundant with SI + delta)

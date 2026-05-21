@@ -134,19 +134,21 @@ export abstract class DrawLabelBase {
   }
 
   /**
-   * Returns the label's font-size pre-compensated for the drawing area's
-   * fit-zoom (issue #165). Labels live in the local coordinate system that
-   * d3-zoom scales by k_fit; without compensation, a requested 20px font
-   * renders as 20*k_fit screen px — invisible when k_fit ≈ 1e-4 (large
-   * Sankey scale). Dividing by k_fit cancels the SVG scale so the on-screen
-   * size stays equal to _label_values.font_size. All positioning logic that
-   * derives from font_size (line height, multi-line offsets, edit box) must
-   * use this getter so layout scales coherently with the rendered glyphs.
+   * Returns the label's font-size compensated for the drawing area's live zoom
+   * (issue #165, mode « police verrouillée »). Labels live in the local
+   * coordinate system that d3-zoom scales by k ; without compensation a 20px
+   * font renders as 20*k screen px — invisible when k ≈ 1e-4 (large Sankey
+   * scale) or varying with every wheel zoom. En mode verrouillé, on multiplie
+   * par font_compensation (= 1/k live) pour annuler le scale SVG : la taille
+   * écran reste égale à _label_values.font_size quel que soit le zoom. En mode
+   * déverrouillé, font_compensation vaut 1 (police native qui scale avec le
+   * zoom). Toute la logique de positionnement dérivée de font_size (line height,
+   * offsets multi-ligne, boîte d'édition) doit passer par ce getter.
    */
   protected getEffectiveFontSize(): number {
     const raw = this._label_values.font_size
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
-    return k_fit > 0 ? raw / k_fit : raw
+    const comp = this._element.drawing_area?.font_compensation ?? 1
+    return raw * comp
   }
 
   // =================== STICK TO LABEL (valeur collée au libellé) ===================
@@ -1144,12 +1146,12 @@ export abstract class DrawLabelBase {
     const lbl = this._label_values as { box_width?: number, wrap_long_words?: boolean, font_size?: number } | undefined
     const target_width = lbl?.box_width ?? box_width
     const wrap_long = lbl?.wrap_long_words ?? false
-    // Compensation fit-zoom (issue #165) : le foreignObject vit dans le repère
-    // local zoomé, donc la CSS font-size en px y est aussi multipliée par k_fit.
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
+    // Compensation zoom (issue #165) : le foreignObject vit dans le repère
+    // local zoomé, donc la CSS font-size en px y est aussi multipliée par k.
+    const comp = this._element.drawing_area?.font_compensation ?? 1
     const raw_font_size = lbl?.font_size ?? 12
-    const font_size = k_fit > 0 ? raw_font_size / k_fit : raw_font_size
-    const line_height = Math.max(font_size * 1.3, 14 / (k_fit > 0 ? k_fit : 1))
+    const font_size = raw_font_size * comp
+    const line_height = Math.max(font_size * 1.3, 14 * comp)
     // Hauteur généreuse pour ne pas clipper plusieurs lignes ; overflow visible.
     const fo_height = Math.max(box_height, line_height * 10)
 
@@ -1324,9 +1326,8 @@ export abstract class DrawLabelBase {
       // la compensation fit-zoom (font-size grossi en coords locales), il faut
       // grossir aussi box_width dans le même rapport, sinon le texte wrappe
       // caractère par caractère (boîte locale trop étroite vs glyphes énormes).
-      const k_fit_local = this._element.drawing_area?.k_fit ?? 1
-      const k_inv_local = k_fit_local > 0 ? 1 / k_fit_local : 1
-      const compensation_active = k_fit_local < 1
+      const k_inv_local = this._element.drawing_area?.font_compensation ?? 1
+      const compensation_active = k_inv_local > 1
       // Pour les box_width historiques (en coords locales pré-compensation),
       // une boîte de 30 fonctionnait parce que la font était devenue invisible
       // (rien à faire tenir). Avec la compensation, la font est lisible donc
@@ -2022,8 +2023,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     if (font_size > this.link.thickness && this.link.is_multi_link) {
       font_size = this.link.thickness
     }
-    const k_fit = this._element.drawing_area?.k_fit ?? 1
-    return k_fit > 0 ? font_size / k_fit : font_size
+    const comp = this._element.drawing_area?.font_compensation ?? 1
+    return font_size * comp
   }
 
   /**
