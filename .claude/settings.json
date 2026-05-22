@@ -2,6 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(git:*)",
+      "Bash(glab:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(taskkill:*)",
+      "Bash(sed:*)",
+      "Bash(cat:*)",
       "Bash(netstat:*)",
       "Bash(powershell:*)",
       "Bash(git fetch:*)",
