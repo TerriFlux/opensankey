@@ -34,11 +34,21 @@ function getMeasureContext(): CanvasRenderingContext2D | null {
   return _measureCanvasCtx
 }
 
-function getCanvasFontString(textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): string {
+// Construit la chaîne `font` canvas (style/poids/famille du <text>) avec une
+// taille de police imposée (px). Sert à mesurer la césure en espace écran
+// (issue #165) : la font effectivement rendue est compensée du zoom
+// (font_size / zoom), valeur qui peut dépasser la limite de taille de
+// canvas.measureText et fausser la mesure. On mesure donc avec la font_size
+// brute (écran) ; le ratio glyphe/boîte étant identique à l'espace local, les
+// points de césure sont les mêmes.
+function getCanvasFontStringAtSize(
+  textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
+  fontSizePx: number
+): string {
   const node = textElement.node()
-  if (!node || typeof window === 'undefined') return '12px sans-serif'
+  if (!node || typeof window === 'undefined') return `${fontSizePx}px sans-serif`
   const computed = window.getComputedStyle(node)
-  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${computed.fontSize || '12px'} ${computed.fontFamily || 'sans-serif'}`
+  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${fontSizePx}px ${computed.fontFamily || 'sans-serif'}`
 }
 
 // Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
@@ -1411,31 +1421,25 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
-      // Issue #165 — box_width est défini par l'utilisateur en px écran. Avec
-      // la compensation fit-zoom (font-size grossi en coords locales), il faut
-      // grossir aussi box_width dans le même rapport, sinon le texte wrappe
-      // caractère par caractère (boîte locale trop étroite vs glyphes énormes).
       const k_inv_local = this._element.drawing_area?.font_compensation ?? 1
-      const compensation_active = k_inv_local > 1
-      // Pour les box_width historiques (en coords locales pré-compensation),
-      // une boîte de 30 fonctionnait parce que la font était devenue invisible
-      // (rien à faire tenir). Avec la compensation, la font est lisible donc
-      // une boîte de 30 ne tient quasi rien et le texte wrappe agressivement
-      // (soft hyphens "1 336 790.-9" et splits sur espaces "1 336" / "790.9").
-      // Solution : en compensation active, garantir que la boîte est au moins
-      // assez large pour le texte complet (≈ chars * font_size * 0.6) — évite
-      // la fragmentation intempestive sur les valeurs numériques. Hors compen-
-      // sation, on respecte strictement le box_width utilisateur pour conserver
-      // le wrap volontaire (libellés multi-mots).
-      const eff_box_width_base = this._label_values.box_width * k_inv_local
-      let eff_box_width = eff_box_width_base
-      if (compensation_active) {
-        const text_natural_width = String(labelText).length * this.getEffectiveFontSize() * 0.6
-        eff_box_width = Math.max(eff_box_width_base, text_natural_width)
-      }
+      // Issue #165 — box_width est défini par l'utilisateur en px écran. En mode
+      // police verrouillée la font est grossie de k_inv en coords locales pour
+      // rester constante à l'écran ; on grossit box_width du MÊME facteur, donc
+      // le ratio glyphe/boîte reste identique au mode natif et le wrap volontaire
+      // (libellés multi-mots) se déclenche exactement comme avant à box_width px
+      // écran. Pas d'override sur la largeur naturelle du texte : ça désactivait
+      // tout retour à la ligne dès que la compensation était active.
+      const eff_box_width = this._label_values.box_width * k_inv_local
       let processedText = labelText
-      if (this._label_values.wrap_long_words && !compensation_active) {
-        processedText = breakLongWords(labelText, eff_box_width, getCanvasFontString(textElement))
+      if (this._label_values.wrap_long_words) {
+        // Césure mesurée en px écran (font_size + box_width bruts) : canvas.measureText
+        // n'est pas fiable à la taille compensée. textwrap re-placera ensuite les
+        // sous-mots sur les bonnes lignes en coords locales via eff_box_width.
+        processedText = breakLongWords(
+          labelText,
+          this._label_values.box_width,
+          getCanvasFontStringAtSize(textElement, this._label_values.font_size)
+        )
       }
       const hasSpaces = processedText.includes(' ')
 
