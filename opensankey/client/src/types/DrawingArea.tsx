@@ -373,6 +373,8 @@ export class Class_DrawingArea {
     this._data_source = drawing_area_to_copy._data_source
     this._interval_display = drawing_area_to_copy._interval_display
     this._width = drawing_area_to_copy._width
+    // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
+    this._font_size_locked = drawing_area_to_copy._font_size_locked
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
