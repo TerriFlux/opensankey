@@ -790,12 +790,24 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
           }
           {(() => {
             const unit_text = firstNode.stock_label_unit_visible ? firstNode.stock_label_unit : undefined
+            // Mirror Node.drawStockBox: in reconciled/calculated mode show the
+            // result (cumulative for the initial stock) with a fallback to the
+            // input; in 'data' mode show the raw input. Editing always writes
+            // the input value (stock*Data), so a later reconciliation refreshes
+            // the result.
+            const use_result = firstNode.drawing_area.type_data !== 'data'
+            const stock_initial_shown = use_result
+              ? (sv?.stockInitialResult ?? sv?.stockInitialData ?? null)
+              : (sv?.stockInitialData ?? null)
+            const stock_variation_shown = use_result
+              ? (sv?.stockVariationResult ?? sv?.stockVariationData ?? null)
+              : (sv?.stockVariationData ?? null)
             return <>
               <Box layerStyle='options_2cols'>
                 <Box as='span' fontSize='xs'>Stock initial</Box>
                 <ConfigMenuNumberInput
                   t={app_data.t}
-                  default_value={sv?.stockInitialData ?? null}
+                  default_value={stock_initial_shown}
                   function_on_blur={(v) => {
                     nodes.forEach(n => { const s = n.stock_value; if (s) s.stockInitialData = v })
                     refreshStock()
@@ -809,7 +821,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                 <Box as='span' fontSize='xs'>{'\u0394 Stock'}</Box>
                 <ConfigMenuNumberInput
                   t={app_data.t}
-                  default_value={sv?.stockVariationData ?? null}
+                  default_value={stock_variation_shown}
                   function_on_blur={(v) => {
                     nodes.forEach(n => { const s = n.stock_value; if (s) s.stockVariationData = v })
                     refreshStock()
