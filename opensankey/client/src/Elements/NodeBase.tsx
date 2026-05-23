@@ -81,6 +81,16 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _attached_node: Class_NodeBase[] = []
   protected _attached_container: Class_NodeBase[] = []
 
+  // #1230 — Mode coordonnées absolues : ancrage par le centre. `_center_anchor_{w,h}`
+  // mémorise la taille de rendu à laquelle le coin haut-gauche (position_x/y) a été
+  // « posé ». Quand la taille change pour une raison automatique (échelle des flux,
+  // valeur, bascule de vue/datatag) sans que la position ait été touchée
+  // explicitement, `anchorByCenterIfResized()` décale le coin d'une demi-variation
+  // pour garder le centre fixe. Transitoire (jamais persisté). undefined = pas
+  // encore initialisé (1er draw / chargement) → on ne décale pas, on ne fait que poser.
+  protected _center_anchor_w: number | undefined = undefined
+  protected _center_anchor_h: number | undefined = undefined
+
   protected class_name = 'gg_nodes'
   constructor(
     id: string,
@@ -252,6 +262,43 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
   public getShapeHeightToUse() {
     return Math.max(this.shape_min_height, this._envelopeSize().h)
+  }
+
+  /**
+   * #1230 — Mode coordonnées absolues : garde le CENTRE du nœud fixe quand sa
+   * taille de rendu change pour une raison automatique (échelle globale des flux,
+   * valeur, bascule de vue/datatag). À appeler une fois par cycle de dessin, avant
+   * que le nœud ne soit dessiné (cf. `Class_NodePositioning.anchorAbsoluteNodesByCenter`).
+   *
+   * Compare la taille courante à l'ancrage mémorisé : si elle a changé, décale le
+   * coin haut-gauche (position_x/y) d'une demi-variation pour que le centre ne
+   * bouge pas, puis ré-ancre. Idempotent : sans changement de taille, no-op. Au
+   * tout premier appel (ancrage undefined) on ne fait que mémoriser — la position
+   * chargée/initiale est donc préservée telle quelle.
+   */
+  public anchorByCenterIfResized() {
+    const w = this.getShapeWidthToUse()
+    const h = this.getShapeHeightToUse()
+    if (this._center_anchor_w !== undefined && w !== this._center_anchor_w) {
+      this.position_x -= (w - this._center_anchor_w) / 2
+    }
+    if (this._center_anchor_h !== undefined && h !== this._center_anchor_h) {
+      this.position_y -= (h - this._center_anchor_h) / 2
+    }
+    this._center_anchor_w = w
+    this._center_anchor_h = h
+  }
+
+  /**
+   * #1230 — Re-cale l'ancrage du centre sur la taille de rendu courante. À appeler
+   * après tout redimensionnement EXPLICITE par l'utilisateur (poignées de resize,
+   * qui gardent volontairement le bord opposé fixe et déplacent donc le centre) et
+   * au passage en mode absolu, pour que `anchorByCenterIfResized()` ne « re-centre »
+   * pas par-dessus l'action voulue au prochain dessin complet.
+   */
+  public settleCenterAnchor() {
+    this._center_anchor_w = this.getShapeWidthToUse()
+    this._center_anchor_h = this.getShapeHeightToUse()
   }
 
   /**
@@ -470,6 +517,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         this.shape_min_height = old_val.h
         this._position.x = old_val.x
         this._position.y = old_val.y
+        this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
         this.draw()
       })
     }
@@ -496,6 +544,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
         this.shape_min_height = old_val.h
         this._position.x = old_val.x
         this._position.y = old_val.y
+        this.settleCenterAnchor() // #1230 restauration taille+position : ré-ancre le centre
         this.draw()
       })
     }
@@ -516,6 +565,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_height -= event.dy
       this.position_y = this.position_y + event.dy
+      this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -537,6 +587,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       //   return
 
       this.shape_min_height += event.dy
+      this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -559,6 +610,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
 
       this.shape_min_width -= event.dx
       this.setPosXY(this.position_x + event.dx, this.position_y)
+      this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
@@ -580,6 +632,7 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       //   return
 
       this.shape_min_width += event.dx
+      this.settleCenterAnchor() // #1230 resize manuel : bord opposé fixe, on ré-ancre
       this.draw()
 
       // Reposition drag handler with updated with & pos of the free label
