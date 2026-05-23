@@ -550,6 +550,11 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else {
+      // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
+      // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
+      // avant _sankey.draw() pour que le coin recalculé soit utilisé dès cette frame.
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
     }
     // Draw grid
     this.drawBackground()
@@ -2871,6 +2876,10 @@ export class Class_DrawingArea {
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
     default_style.shape_position_type = 'absolute'
+    // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
+    // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
+    // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
+    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
   }
 
   public resetAllVerticalIntervals(v_spacing?: number) {
