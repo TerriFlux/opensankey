@@ -970,6 +970,12 @@ export class Class_ApplicationData {
     if (d3_select && convert_fo) {
       d3_select.selectAll('foreignObject').nodes().forEach((node: d3.BaseType) => {
         const foNode = node as SVGForeignObjectElement
+        // Skip the inline edit-input foreignObjects (contenteditable div created by
+        // drawLabelInput, kept display:none until a label is double-clicked). They hold
+        // the raw, unformatted value and would otherwise be baked into a duplicate
+        // <text> overlapping the real label in PNG/PDF/SVG exports. Genuine rich-text
+        // label FOs use a non-editable .ql-editor div, so this leaves them untouched.
+        if (foNode.querySelector('[contenteditable]')) return
         // Measure wrapping on the LIVE original (clone is detached → no client rects).
         const originalFO = foNode.id ? document.getElementById(foNode.id) as unknown as SVGForeignObjectElement | null : null
         const measureDiv = (originalFO || foNode).querySelector('div') as HTMLElement | null
