@@ -1,8 +1,10 @@
-import { Box, Button, ButtonGroup, Divider } from '@chakra-ui/react'
+import { Box, Button, ButtonGroup, Divider, Menu, MenuButton, MenuList } from '@chakra-ui/react'
+import { ChevronRightIcon } from '@chakra-ui/icons'
 import React, { useState } from 'react'
 import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { ButtonContainerContextAssignStyle } from '../deps/OpenSankey/components/dialogs/MenuContextWidgetFactory'
+import { NodeActions } from '../deps/OpenSankey/components/dialogs/NodeActions'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }
@@ -198,6 +200,65 @@ export const ContextZDT = (
     {t('Menu.editName')}
   </Button>
 
+  // Alignement : réutilise les actions de NodeActions, qui opèrent à la fois sur
+  // les nœuds et les zones de texte sélectionnés (parent commun Class_NodeBase).
+  // Mêmes glyphes/clés de traduction (namespace ContextMenuNodes) que le menu nœud.
+  const align_modifier = NodeActions.createModifier(app_data)
+  const nb_alignable =
+    drawing_area.selected_nodes_list.length + drawing_area.selected_containers_list.length
+
+  const alignButton = (action: string, glyph: string, fn: () => void) => <Button
+    key={action}
+    variant='contextmenu_button'
+    title={t('ContextMenuNodes.tooltips.' + action)}
+    onClick={() => { fn(); closeContextMenu() }}>
+    {glyph}
+  </Button>
+
+  const alignSubmenu = (
+    titleKey: string,
+    buttons: [string, string, () => void][]
+  ) => <Menu placement='end'>
+    <MenuButton
+      variant='contextmenu_button'
+      as={Button}
+      rightIcon={<ChevronRightIcon />}
+      className='dropdown-basic'>
+      {t('ContextMenuNodes.' + titleKey)}
+    </MenuButton>
+    <MenuList as={Box} layerStyle='context_menu'>
+      {buttons.map(([action, glyph, fn]) => alignButton(action, glyph, fn))}
+    </MenuList>
+  </Menu>
+
+  const btn_align = (nb_alignable > 1) ? <Menu placement='end'>
+    <MenuButton
+      variant='contextmenu_button'
+      as={Button}
+      rightIcon={<ChevronRightIcon />}
+      className='dropdown-basic'>
+      {t('ContextMenuNodes.align')}
+    </MenuButton>
+    <MenuList as={Box} layerStyle='context_menu'>
+      {alignSubmenu('alignHorizontal', [
+        ['alignHorizMinLeft', '←▌□', align_modifier.alignHorizMinLeft],
+        ['alignHorizMinCenter', '←▐□▌', align_modifier.alignHorizMinCenter],
+        ['alignHorizMinRight', '←□▐', align_modifier.alignHorizMinRight],
+        ['alignHorizMaxLeft', '▌□→', align_modifier.alignHorizMaxLeft],
+        ['alignHorizMaxCenter', '▐□▌→', align_modifier.alignHorizMaxCenter],
+        ['alignHorizMaxRight', '□▐→', align_modifier.alignHorizMaxRight],
+      ])}
+      {alignSubmenu('alignVertical', [
+        ['alignVertMinTop', '↑▀', align_modifier.alignVertMinTop],
+        ['alignVertMinCenter', '↑▄▀', align_modifier.alignVertMinCenter],
+        ['alignVertMinBottom', '↑▄', align_modifier.alignVertMinBottom],
+        ['alignVertMaxTop', '▀↓', align_modifier.alignVertMaxTop],
+        ['alignVertMaxCenter', '▄▀↓', align_modifier.alignVertMaxCenter],
+        ['alignVertMaxBottom', '▄↓', align_modifier.alignVertMaxBottom],
+      ])}
+    </MenuList>
+  </Menu> : <></>
+
   return zdt_to_contextualise ? <Box
     layerStyle='context_menu'
     id="context_zdd_pop_over"
@@ -210,6 +271,7 @@ export const ContextZDT = (
     <ButtonGroup orientation='vertical' isAttached>
       {btn_edit_name}
       {btn_copy}
+      {btn_align}
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}
       {zdt_to_contextualise.tied_to_nodes && zdt_to_contextualise.attached_node.length > 0 ? btn_fit_frame_to_attached : <></>}
       {btn_move_to_first_plan}
