@@ -771,4 +771,15 @@ export const updateFrom = (
   drawing_area.sankey.nodes_list.forEach(node => {
     if (node.shape_position_type === 'parametric') node.shape_position_type = 'absolute'
   })
+
+  // #1230 — Mode coordonnées absolues : après un re-chargement des positions
+  // (changement de vue), re-caler l'ancrage du centre sur la taille courante.
+  // La position importée (coin haut-gauche) doit être respectée telle quelle au
+  // prochain dessin, sans décalage parasite dû à un cache de taille hérité de la
+  // vue précédente. Fait après que positions ET valeurs aient été appliquées, donc
+  // getShape*ToUse() reflète déjà la nouvelle vue. Les changements de taille
+  // ULTÉRIEURS (échelle/datatag) re-centreront normalement.
+  if (sync_nodes_positions || all) {
+    drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
+  }
 }
