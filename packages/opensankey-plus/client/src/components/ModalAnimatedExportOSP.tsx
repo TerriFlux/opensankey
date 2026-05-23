@@ -3,6 +3,10 @@
 // Triggered from the export menu via menu_configuration_osp.ref_show_modal_animated_export.
 // Uses the OSP draggable pattern (Box + react-draggable) instead of Chakra Modal so the
 // dialog can be moved out of the way while editing options.
+//
+// Two sources are supported:
+//   - 'views'  : one frame per view (default, original behaviour).
+//   - <grp id> : one frame per tag of a 'sequence'-banner data-tag group.
 // ==================================================================================================
 
 import React, { FC, useEffect, useRef, useState } from 'react'
@@ -36,17 +40,27 @@ import {
 import { ChevronUpIcon, ChevronDownIcon } from '@chakra-ui/icons'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
+import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { default_main_sankey_id } from '../deps/OpenSankey/types/Utils'
 import { default_export_dpi, Type_ExportDPI } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
-import { exportAnimatedSequence, AnimExportFormat, AnimExportLoopMode } from './SankeyExportsOSP'
+import {
+  exportAnimatedSequence,
+  exportAnimatedDataTagSequence,
+  AnimExportFormat,
+  AnimExportLoopMode,
+} from './SankeyExportsOSP'
 
 interface Props {
   app_data: Class_ApplicationDataOSP
 }
 
+// Special source id => iterate the views. Anything else is a data-tag group id.
+const VIEWS_SOURCE = 'views'
+
 export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
   const [is_open, setIsOpen] = useState(false)
-  const [view_ids, setViewIds] = useState<string[]>([])
+  const [source, setSource] = useState<string>(VIEWS_SOURCE)
+  const [item_ids, setItemIds] = useState<string[]>([])
   const [included, setIncluded] = useState<Set<string>>(new Set())
   const [format, setFormat] = useState<AnimExportFormat>('gif')
   const [delay_ms, setDelayMs] = useState<number>(1500)
@@ -58,13 +72,28 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
   // Bind the open setter so the menu item can call ref.current(true).
   app_data.menu_configuration_osp.ref_show_modal_animated_export.current = setIsOpen
 
-  // Refresh the view list each time the modal opens (views may have changed since last use).
+  // Sequence-type data-tag groups available as an animation source.
+  const sequence_groups = app_data.drawing_area.sankey
+    .getTagGroupsAsList('data_taggs')
+    .filter((g) => (g as Class_DataTagGroup).banner === 'sequence') as Class_DataTagGroup[]
+
+  // Ordered item ids for a given source ('views' => views_order, else the group's tags).
+  const itemsForSource = (src: string): string[] => {
+    if (src === VIEWS_SOURCE) return [...app_data.views_order]
+    const grp = sequence_groups.find((g) => g.id === src)
+    return grp ? grp.tags_list.map((t) => t.id) : []
+  }
+
+  // Refresh source + item list each time the modal opens (views/sequences may have changed).
   useEffect(() => {
-    if (is_open) {
-      const current_views = [...app_data.views_order]
-      setViewIds(current_views)
-      setIncluded(new Set(current_views))
-    }
+    if (!is_open) return
+    const default_source = app_data.views_order.length > 0
+      ? VIEWS_SOURCE
+      : (sequence_groups[0]?.id ?? VIEWS_SOURCE)
+    const ids = itemsForSource(default_source)
+    setSource(default_source)
+    setItemIds(ids)
+    setIncluded(new Set(ids))
   }, [is_open])
 
   // Escape closes the modal.
@@ -77,40 +106,52 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
 
   if (!app_data.has_sankey_plus || !is_open) return <></>
 
-  const moveView = (idx: number, dir: -1 | 1) => {
-    const new_idx = idx + dir
-    if (new_idx < 0 || new_idx >= view_ids.length) return
-    const next = [...view_ids]
-    ;[next[idx], next[new_idx]] = [next[new_idx], next[idx]]
-    setViewIds(next)
+  const changeSource = (src: string) => {
+    const ids = itemsForSource(src)
+    setSource(src)
+    setItemIds(ids)
+    setIncluded(new Set(ids))
   }
 
-  const toggleIncluded = (view_id: string) => {
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const new_idx = idx + dir
+    if (new_idx < 0 || new_idx >= item_ids.length) return
+    const next = [...item_ids]
+    ;[next[idx], next[new_idx]] = [next[new_idx], next[idx]]
+    setItemIds(next)
+  }
+
+  const toggleIncluded = (id: string) => {
     const next = new Set(included)
-    if (next.has(view_id)) next.delete(view_id)
-    else next.add(view_id)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
     setIncluded(next)
   }
 
-  const getViewLabel = (view_id: string): string => {
-    if (view_id === default_main_sankey_id) return 'master'
-    const name = app_data.views_dict[view_id]?.name
-    return (name && name.length > 0) ? name : view_id
+  const getItemLabel = (id: string): string => {
+    if (source === VIEWS_SOURCE) {
+      if (id === default_main_sankey_id) return 'master'
+      const name = app_data.views_dict[id]?.name
+      return (name && name.length > 0) ? name : id
+    }
+    const grp = sequence_groups.find((g) => g.id === source)
+    const tag = grp?.tags_list.find((t) => t.id === id)
+    return (tag && tag.name.length > 0) ? tag.name : id
   }
 
-  const selected_view_ids = view_ids.filter((id) => included.has(id))
-  const can_run = selected_view_ids.length > 0 && !running
+  const is_views = source === VIEWS_SOURCE
+  const selected_ids = item_ids.filter((id) => included.has(id))
+  const can_run = selected_ids.length > 0 && !running
+  const items_label = is_views ? 'Vues à inclure' : 'Étiquettes à inclure'
 
   const handleGenerate = () => {
     setRunning(true)
+    const opts = { format, delay_ms, dpi, loop_mode }
+    const run = is_views
+      ? exportAnimatedSequence(app_data, selected_ids, opts)
+      : exportAnimatedDataTagSequence(app_data, source, selected_ids, opts)
     app_data.sendWaitingToast(
-      () => exportAnimatedSequence(app_data, {
-        format,
-        view_ids: selected_view_ids,
-        delay_ms,
-        dpi,
-        loop_mode,
-      }).finally(() => setRunning(false)),
+      () => run.finally(() => setRunning(false)),
       {
         success: { title: 'Animation générée' },
         loading: { title: 'Génération en cours...' },
@@ -152,6 +193,18 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
 
         <Box p={4}>
           <VStack align='stretch' spacing={4}>
+            {sequence_groups.length > 0 && (
+              <FormControl>
+                <FormLabel>Source de l'animation</FormLabel>
+                <Select value={source} onChange={(e) => changeSource(e.target.value)}>
+                  <option value={VIEWS_SOURCE}>Vues</option>
+                  {sequence_groups.map((g) => (
+                    <option key={g.id} value={g.id}>Séquence : {g.name}</option>
+                  ))}
+                </Select>
+              </FormControl>
+            )}
+
             <FormControl>
               <FormLabel>Format</FormLabel>
               <RadioGroup value={format} onChange={(v) => setFormat(v as AnimExportFormat)}>
@@ -164,7 +217,7 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
             </FormControl>
 
             <FormControl>
-              <FormLabel>Vues à inclure ({selected_view_ids.length}/{view_ids.length})</FormLabel>
+              <FormLabel>{items_label} ({selected_ids.length}/{item_ids.length})</FormLabel>
               <Box
                 maxH='220px'
                 overflowY='auto'
@@ -176,18 +229,17 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
               >
                 <Table size='sm' width='100%' style={{ tableLayout: 'auto' }}>
                   <Tbody>
-                    {view_ids.map((view_id, idx) => {
-                      const raw_name = app_data.views_dict[view_id]?.name
-                      const display_name = (raw_name && raw_name.length > 0) ? raw_name : view_id
+                    {item_ids.map((id, idx) => {
+                      const display_name = getItemLabel(id)
                       return (
-                        <Tr key={view_id}>
+                        <Tr key={id}>
                           <Td width='1%'>
                             <Checkbox
-                              isChecked={included.has(view_id)}
-                              onChange={() => toggleIncluded(view_id)}
+                              isChecked={included.has(id)}
+                              onChange={() => toggleIncluded(id)}
                             />
                           </Td>
-                          <Td title={view_id} wordBreak='break-word'>
+                          <Td title={id} wordBreak='break-word'>
                             {idx + 1}. {display_name}
                           </Td>
                           <Td width='1%' whiteSpace='nowrap'>
@@ -196,15 +248,15 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
                               size='xs'
                               icon={<ChevronUpIcon />}
                               isDisabled={idx === 0}
-                              onClick={() => moveView(idx, -1)}
+                              onClick={() => moveItem(idx, -1)}
                               mr={1}
                             />
                             <IconButton
                               aria-label='Descendre'
                               size='xs'
                               icon={<ChevronDownIcon />}
-                              isDisabled={idx === view_ids.length - 1}
-                              onClick={() => moveView(idx, 1)}
+                              isDisabled={idx === item_ids.length - 1}
+                              onClick={() => moveItem(idx, 1)}
                             />
                           </Td>
                         </Tr>
@@ -217,7 +269,7 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
 
             <HStack spacing={4} align='flex-start'>
               <FormControl>
-                <FormLabel>Durée par vue (ms)</FormLabel>
+                <FormLabel>Durée par image (ms)</FormLabel>
                 <NumberInput
                   value={delay_ms}
                   min={100}

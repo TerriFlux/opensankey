@@ -29,6 +29,7 @@ import { PDFDocument } from 'pdf-lib'
 
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
+import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { default_main_sankey_id } from '../deps/OpenSankey/types/Utils'
 import { default_export_dpi, Type_ExportDPI } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 
@@ -210,8 +211,7 @@ export type AnimExportLoopMode = 'once' | 'loop' | 'pingpong'
 
 export interface AnimExportOpts {
   format: AnimExportFormat
-  view_ids: string[]      // ordered & filtered list of views to include
-  delay_ms: number        // per-frame duration (1500 = 1.5s/view)
+  delay_ms: number        // per-frame duration (1500 = 1.5s/frame)
   dpi: Type_ExportDPI
   loop_mode: AnimExportLoopMode
 }
@@ -348,26 +348,21 @@ const packageSelectedViewsAsZip = async (
   return zip.generateAsync({ type: 'blob' })
 }
 
-/**
- * Unified entry point for the animated/sequence export modal. Captures each
- * selected view once via the server PNG endpoint, then expands and encodes
- * according to format & loop mode.
- *
- * Assumes all selected views share the same export dimensions. gifenc &
- * MediaRecorder both require constant frame size.
- */
-export const exportAnimatedSequence = async (
+// Shared tail for every animated export source: expand the captured frames per
+// loop mode, encode according to format, and save. `captures_by_id` maps each
+// unique id (view or tag) to its label + PNG blob; `ordered_ids` is the user's
+// ordered selection (repeats allowed — pingpong is handled by buildSequence).
+const finalizeAnimatedExport = async (
   app_data: Class_ApplicationDataOSP,
+  ordered_ids: string[],
+  captures_by_id: Map<string, { label: string; blob: Blob }>,
   opts: AnimExportOpts
 ): Promise<void> => {
-  if (opts.view_ids.length === 0) throw new Error('No views selected')
-
-  const captures_by_id = await captureSelectedViewsAsPNG(app_data, opts.view_ids, opts.dpi)
-  const sequence = buildSequence(opts.view_ids, opts.loop_mode)
-  const ordered_entries = sequence.map((view_id) => {
-    const entry = captures_by_id.get(view_id)
-    if (!entry) throw new Error('Missing capture for view ' + view_id)
-    return { view_id, label: entry.label, blob: entry.blob }
+  const sequence = buildSequence(ordered_ids, opts.loop_mode)
+  const ordered_entries = sequence.map((id) => {
+    const entry = captures_by_id.get(id)
+    if (!entry) throw new Error('Missing capture for ' + id)
+    return { view_id: id, label: entry.label, blob: entry.blob }
   })
   const ordered_blobs = ordered_entries.map((e) => e.blob)
 
@@ -391,6 +386,78 @@ export const exportAnimatedSequence = async (
   FileSaver.saveAs(blob, file_base + extension)
 }
 
+/**
+ * Animated export with the views as source. Captures each selected view once via
+ * the server PNG endpoint, then expands and encodes according to format & loop mode.
+ *
+ * Assumes all selected views share the same export dimensions. gifenc &
+ * MediaRecorder both require constant frame size.
+ */
+export const exportAnimatedSequence = async (
+  app_data: Class_ApplicationDataOSP,
+  view_ids: string[],
+  opts: AnimExportOpts
+): Promise<void> => {
+  if (view_ids.length === 0) throw new Error('No views selected')
+  const captures_by_id = await captureSelectedViewsAsPNG(app_data, view_ids, opts.dpi)
+  await finalizeAnimatedExport(app_data, view_ids, captures_by_id, opts)
+}
+
+// Capture each selected tag of a sequence data-tag group once. Selecting a tag
+// redraws the whole sankey (Class_DataTagGroup.selectTagsFromIds -> updateTagsReferences
+// -> drawing_area.draw()). We use selectTagsFromIds (not selectTagsFromId) on purpose:
+// it skips the undo/redo bookkeeping, so the capture loop leaves the history untouched.
+// The original selection is restored in the finally block.
+const captureSequenceTagsAsPNG = async (
+  app_data: Class_ApplicationDataOSP,
+  tagg: Class_DataTagGroup,
+  tag_ids: string[],
+  dpi: Type_ExportDPI
+): Promise<Map<string, { label: string; blob: Blob }>> => {
+  const endpoint = window.location.origin + '/opensankey/save/png'
+  const tags_by_id = new Map(tagg.tags_list.map((t) => [t.id, t]))
+  const original_selected_ids = tagg.selected_tags_list.map((t) => t.id)
+  const map = new Map<string, { label: string; blob: Blob }>()
+  try {
+    // Capture each unique tag once (pingpong repeats are expanded later by buildSequence).
+    for (const tag_id of [...new Set(tag_ids)]) {
+      const tag = tags_by_id.get(tag_id)
+      if (!tag) continue
+      tagg.selectTagsFromIds([tag_id])
+      await waitForNextFrame()
+      const form_data = buildPNGFormData(app_data, dpi)
+      const response = await fetch(endpoint, { method: 'POST', body: form_data })
+      const blob = await response.blob()
+      fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
+      map.set(tag_id, { label: tag.name, blob })
+    }
+  } finally {
+    if (original_selected_ids.length > 0) {
+      tagg.selectTagsFromIds(original_selected_ids)
+      await waitForNextFrame()
+    }
+  }
+  return map
+}
+
+/**
+ * Animated export with a sequence-type data-tag group as source: each frame is
+ * the sankey with one tag of the group selected. Mirrors exportAnimatedSequence
+ * but iterates the group's tags instead of the views.
+ */
+export const exportAnimatedDataTagSequence = async (
+  app_data: Class_ApplicationDataOSP,
+  group_id: string,
+  tag_ids: string[],
+  opts: AnimExportOpts
+): Promise<void> => {
+  if (tag_ids.length === 0) throw new Error('No tags selected')
+  const tagg = app_data.drawing_area.sankey.getTagGroupsAsDict('data_taggs')[group_id] as Class_DataTagGroup | undefined
+  if (!tagg) throw new Error('Sequence group not found: ' + group_id)
+  const captures_by_id = await captureSequenceTagsAsPNG(app_data, tagg, tag_ids, opts.dpi)
+  await finalizeAnimatedExport(app_data, tag_ids, captures_by_id, opts)
+}
+
 // ===========================================================================
 // Register extra menu items on the OS export dropdown
 // ===========================================================================
@@ -403,6 +470,19 @@ export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP)
   const tooltip_guard = () => {
     if (!app_data.has_sankey_plus) return app_data.t('Menu.sankeyOSPDisabled')
     if (!app_data.has_views || app_data.views_order.length === 0) return 'Aucune vue à exporter'
+    return ''
+  }
+  // Animation can also iterate a sequence data-tag group, so it stays enabled
+  // when there are no views but at least one 'sequence'-banner data-tag group.
+  const has_sequence_groups = () => app_data.drawing_area.sankey
+    .getTagGroupsAsList('data_taggs')
+    .some((g) => (g as Class_DataTagGroup).banner === 'sequence')
+  const no_animatable_source = () =>
+    (!app_data.has_views || app_data.views_order.length === 0) && !has_sequence_groups()
+  const animated_disabled = () => !app_data.has_sankey_plus || no_animatable_source()
+  const animated_tooltip = () => {
+    if (!app_data.has_sankey_plus) return app_data.t('Menu.sankeyOSPDisabled')
+    if (no_animatable_source()) return 'Aucune vue ni séquence à exporter'
     return ''
   }
   mc.extra_export_menu_items = [
@@ -446,8 +526,8 @@ export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP)
         {
           key: 'all_views_animated',
           label: 'Animation...',
-          disabled: disabled_guard,
-          tooltip: tooltip_guard,
+          disabled: animated_disabled,
+          tooltip: animated_tooltip,
           onClick: () => {
             app_data.menu_configuration_osp.ref_show_modal_animated_export.current(true)
           }

@@ -1007,7 +1007,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                               id='SequenceBaner'
                               value='sequence'
                             >
-                              {t('Tags.Sequence')}
+                              {t('Tags.sequence')}
                             </option> : <></>}
                           </Select>
                         </OSTooltip>
