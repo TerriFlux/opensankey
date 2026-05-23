@@ -847,6 +847,27 @@ export class NodePositioning {
   }
 
   /**
+   * #1230 — Mode coordonnées absolues : garde le centre des nœuds fixe quand leur
+   * taille de rendu change (échelle globale des flux, valeur, bascule de
+   * vue/datatag). Pendant du `recomputeParametricLayout` pour le mode absolu,
+   * appelé en tête de `drawElements` avant `_sankey.draw()` pour que le coin
+   * recalculé soit utilisé dès cette frame.
+   *
+   * N'agit que sur les nœuds « libres » en absolu : exclut les nœuds `relative`
+   * (collés à un voisin, position auto-calculée) et les cadres tied (taille pilotée
+   * par l'enveloppe de leurs enfants — re-centrer se battrait avec
+   * `expandToContainAttachedNodes`).
+   */
+  public anchorAbsoluteNodesByCenter() {
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      n.anchorByCenterIfResized()
+    })
+  }
+
+  /**
    * Version améliorée de computeHorizontalIndex qui évite les problèmes de positionnement.
    * Algorithme : DFS itératif pour tri topologique + détection de cycles,
    * puis relaxation en une passe (chemin le plus long). O(V+E).
