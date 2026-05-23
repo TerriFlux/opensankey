@@ -4,6 +4,7 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
+import { Class_NodeBase } from '../../Elements/NodeBase'
 import {
   aggregate,
   disaggregate,
@@ -520,11 +521,19 @@ export class NodeActions {
     attr: 'position_x' | 'position_y',
     pos: 'b' | 'm' | 'a'
   ) => {
+    // L'alignement opère sur les nœuds ET les zones de texte (containers)
+    // sélectionnés : tous héritent de Class_NodeBase et partagent
+    // position_x/y, getShapeWidthToUse/HeightToUse, shape_type et setPosXY.
+    const elements: Class_NodeBase[] = [
+      ...this.selected_nodes,
+      ...this.drawing_area.selected_containers_list,
+    ]
+
     const dict_old_pos: { [x: string]: [number, number] } = {}
-    this.selected_nodes.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
+    elements.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
 
     const doAlign = () => {
-      const node_ref = this.selected_nodes
+      const node_ref = elements
         .filter(nf => nf.shape_position_type != 'relative')
         .sort((n1, n2) => {
           return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
@@ -543,7 +552,7 @@ export class NodeActions {
         center_ref = pos_ref + (wORh_ref / 2)
       }
 
-      this.selected_nodes
+      elements
         .filter(n => n != node_ref && n.shape_position_type != 'relative')
         .forEach(n => {
           const is_circle_to_shift = (n.shape_type === 'ellipse')
@@ -567,7 +576,7 @@ export class NodeActions {
     }
 
     const undoAlign = () => {
-      this.selected_nodes.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
+      elements.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
     }
 
     this.executeWithUndo(doAlign, undoAlign)
