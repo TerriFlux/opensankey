@@ -45,6 +45,16 @@ import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftEx
 export class NodePositioning {
   private drawingArea: Class_DrawingArea
 
+  // #1231 — Mode proportionnel : cadre de référence capturé à l'entrée du mode
+  // (et après drag / changement de vue). Trois repères : médiane (centre de gravité),
+  // haut et bas. `_prop_ref_col_sums` = somme des hauteurs de nœuds par colonne au
+  // datatag de référence ; sert à calculer le facteur de compression f = plus petit
+  // ratio (somme courante / somme de référence) sur les colonnes. Transitoires.
+  private _prop_median_y: number | undefined = undefined
+  private _prop_top_y: number | undefined = undefined
+  private _prop_bottom_y: number | undefined = undefined
+  private _prop_ref_col_sums: Map<number, number> | undefined = undefined
+
   constructor(drawingArea: Class_DrawingArea) {
     this.drawingArea = drawingArea
   }
@@ -865,6 +875,108 @@ export class NodePositioning {
       if (n.tied_to_nodes && n.attached_node.length > 0) return
       n.anchorByCenterIfResized()
     })
+  }
+
+  /**
+   * #1231 — Nœuds « libres » éligibles au mode proportionnel : visibles, non-échange,
+   * non-relatifs, hors cadres tied. (Filtre commun capture/replacement.)
+   */
+  private proportionalEligibleNodes(): Class_NodeElement[] {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    return this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.shape_position_type === 'relative') return false
+      if (n.tied_to_nodes && n.attached_node.length > 0) return false
+      return true
+    })
+  }
+
+  /**
+   * #1231 — Mode proportionnel : somme des hauteurs de nœuds par colonne (`position_u`)
+   * au datatag courant. Proxy de la « somme des valeurs par colonne » (hauteur ∝ valeur
+   * à échelle constante). Sert à calculer le facteur de compression f.
+   */
+  private proportionalColumnSums(nodes: Class_NodeElement[]): Map<number, number> {
+    const sums = new Map<number, number>()
+    nodes.forEach(n => {
+      sums.set(n.position_u, (sums.get(n.position_u) ?? 0) + n.getShapeHeightToUse())
+    })
+    return sums
+  }
+
+  /**
+   * #1231 — Capture le cadre de référence du mode proportionnel sur l'état courant :
+   *  - médiane (centre de gravité) = moyenne, sur les colonnes, des moyennes des centres ;
+   *  - haut / bas = centres extrêmes (point le plus haut / le plus bas) ;
+   *  - sommes de hauteurs par colonne (référence pour le ratio de flux) ;
+   *  - centre de référence de chaque nœud.
+   * Appelé à l'entrée du mode, après un drag et au changement de vue. `position_u` doit
+   * être à jour (cf. `inferPositionUFromX`).
+   */
+  public captureProportionalReference() {
+    const nodes = this.proportionalEligibleNodes()
+    if (nodes.length === 0) {
+      this._prop_median_y = undefined
+      this._prop_top_y = undefined
+      this._prop_bottom_y = undefined
+      this._prop_ref_col_sums = undefined
+      return
+    }
+    // Médiane = moyenne des moyennes de centres par colonne.
+    const col_centers = new Map<number, number[]>()
+    let top_y = Infinity
+    let bottom_y = -Infinity
+    nodes.forEach(n => {
+      const center = n.position_y + n.getShapeHeightToUse() / 2
+      const arr = col_centers.get(n.position_u) ?? []
+      arr.push(center)
+      col_centers.set(n.position_u, arr)
+      if (center < top_y) top_y = center
+      if (center > bottom_y) bottom_y = center
+    })
+    const col_means: number[] = []
+    col_centers.forEach(arr => col_means.push(arr.reduce((s, v) => s + v, 0) / arr.length))
+    this._prop_median_y = col_means.reduce((s, v) => s + v, 0) / col_means.length
+    this._prop_top_y = top_y
+    this._prop_bottom_y = bottom_y
+    this._prop_ref_col_sums = this.proportionalColumnSums(nodes)
+    nodes.forEach(n => n.captureProportionalCenterRef())
+  }
+
+  /**
+   * #1231 — Facteur de compression/dilatation courant : plus GRAND ratio
+   * (somme de hauteurs par colonne au datatag courant) / (somme de référence), sur les
+   * colonnes communes. 1 si pas de référence. Voir spec : « on prend le plus grand ».
+   */
+  private proportionalFactor(nodes: Class_NodeElement[]): number {
+    if (!this._prop_ref_col_sums) return 1
+    const cur = this.proportionalColumnSums(nodes)
+    let f = 0
+    this._prop_ref_col_sums.forEach((ref_sum, u) => {
+      if (ref_sum <= 0) return
+      const cur_sum = cur.get(u) ?? 0
+      const ratio = cur_sum / ref_sum
+      if (ratio > f) f = ratio
+    })
+    if (!isFinite(f) || f <= 0) return 1
+    return f
+  }
+
+  /**
+   * #1231 — Mode proportionnel : comprime/dilate le diagramme verticalement autour de
+   * la médiane (centre de gravité fixe) par le facteur de flux. Appelé en tête de
+   * `drawElements` avant `_sankey.draw()`. Capture la référence au 1er appel si absente.
+   */
+  public anchorProportionalNodes() {
+    const nodes = this.proportionalEligibleNodes()
+    if (nodes.length === 0) return
+    if (this._prop_median_y === undefined || !this._prop_ref_col_sums) {
+      this.captureProportionalReference()
+      return
+    }
+    const f = this.proportionalFactor(nodes)
+    nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f))
   }
 
   /**
