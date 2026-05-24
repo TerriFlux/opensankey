@@ -234,24 +234,37 @@ const updateNodePositioning = (
       n2.position_u += expand_left ? -1 : 1
     })
 
-  // Positionnement symétrique des enfants autour du centre du parent. L'écart vertical
-  // entre chaque enfant et le précédent est lu depuis `shape_position_dy` (PR 2 — seule
-  // source de vérité pour l'espacement).
-  const total_height = NodePositioning.totalStackHeight(nodes)
-  const parent_center_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2
-  const anchor_y = parent_center_y - total_height / 2
+  // #1231 — Placement comme la désagrégation : les enfants étendus REMPLISSENT le slot
+  // vertical du parent [haut, bas] (écart calculé pour remplir, ≥ 0) dans la colonne
+  // adjacente. Alignés sur l'étendue du parent → liens d'expansion propres et pas de
+  // débordement sur les voisins (au lieu du centrage + position_dy qui débordait).
+  const parent_top = contextualised_node.position_y
+  const parent_h = contextualised_node.getShapeHeightToUse()
+  const sum_children_h = nodes.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
+  const fill_gap = nodes.length > 1
+    ? Math.max(0, (parent_h - sum_children_h) / (nodes.length - 1))
+    : 0
 
-  // Décalage horizontal : `shape_position_dx / 3` pour que les clones
-  // d'expansion latérale restent visuellement proches du parent — sinon
-  // ils prenaient l'espacement complet d'une colonne et débordaient
-  // largement, surtout en mode englobé où on veut que l'enveloppe reste
-  // compacte autour du master.
+  // #1231 — Bloc centré sur le point de départ : le parent AVANCE du côté opposé à
+  // l'expansion (±dx) et les enfants RECULENT du côté de l'expansion (∓dx), chacun à
+  // 1/3 de l'écart de colonne. Ainsi le centre de gravité horizontal du bloc
+  // {parent, enfants} reste à la position d'origine du parent (au lieu de ne décaler
+  // que les enfants, qui désaxait le bloc).
   const dx = contextualised_node.shape_position_dx / 3
-  nodes.forEach((n) => {
+  const x0 = contextualised_node.position_x
+  contextualised_node.position_x = x0 + (expand_left ? dx : -dx)
+
+  let cursor = parent_top
+  nodes.forEach((n, i) => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
-    n.position_x = contextualised_node.position_x + (expand_left ? -dx : dx)
+    n.position_x = x0 + (expand_left ? -dx : dx)
+    if (i > 0) {
+      cursor += fill_gap
+      n.shape_position_dy = fill_gap
+    }
+    n.position_y = cursor
+    cursor += n.getShapeHeightToUse()
   })
-  NodePositioning.stackNodesVertically(nodes, anchor_y)
 
   // Rééquilibrer les colonnes ancêtres pour que le sous-arbre du nœud expandé
   // n'empiète pas sur ses frères. Propage récursivement vers le parent visuel.
@@ -360,6 +373,10 @@ export const aggregate = (
     if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
       new_data.drawing_area.nodePositioning.inferPositionUFromX()
       new_data.drawing_area.nodePositioning.captureProportionalReference()
+    } else {
+      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230) sur le
+      // nouvel état pour que agg/désagg se comporte pareil qu'en proportionnel.
+      new_data.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
     }
   }
   const undo = () => {
@@ -411,6 +428,9 @@ export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
     if (sankey.default_style.shape_position_type === 'proportional') {
       new_data.drawing_area.nodePositioning.inferPositionUFromX()
       new_data.drawing_area.nodePositioning.captureProportionalReference()
+    } else {
+      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230).
+      sankey.nodes_list.forEach(n => n.settleCenterAnchor())
     }
     new_data.drawing_area.draw()
   }
@@ -557,6 +577,10 @@ export const disaggregate = (
     if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
       new_data.drawing_area.nodePositioning.inferPositionUFromX()
       new_data.drawing_area.nodePositioning.captureProportionalReference()
+    } else {
+      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230) sur le
+      // nouvel état pour que agg/désagg se comporte pareil qu'en proportionnel.
+      new_data.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
     }
   }
 
@@ -646,7 +670,23 @@ export const disaggregationExpansion = (
   // Positionnement
   updateNodePositioning(new_data, children, contextualised_node, expand_left)
 
-  finalizeOperation(new_data, children)
+  // #1231 — Finalisation LOCALE (au lieu de finalizeOperation/computeParametrization(true)
+  // qui réécrivait position_u/v et écrasait le placement manuel à dx/3 + slot). Reorg E/S
+  // sur enfants + parent + voisins, re-capture de la référence % (SANS inferPositionUFromX,
+  // car le décalage dx/3 des enfants les re-clusterait dans la colonne du parent), draw.
+  const to_reorg = new Set<Class_NodeElement>([contextualised_node, ...children])
+  children.forEach(c => {
+    c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+  })
+  to_reorg.forEach(n => n.reorganizeIOLinks())
+  if (sankey.default_style.shape_position_type === 'proportional') {
+    new_data.drawing_area.nodePositioning.captureProportionalReference()
+  } else {
+    // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230).
+    sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+  }
+  new_data.drawing_area.draw()
   new_data.drawing_area.to_recenter = true
   new_data.drawing_area.recenter()
   new_data.drawing_area.to_recenter = false

@@ -320,9 +320,30 @@ export class NodeActions {
       c.findExpandedAncestor() !== null
     const stackable = cs.filter(c => !isExpandedChild(c))
     const expanded = cs.filter(isExpandedChild)
+    // #1231 — exactement comme la DÉSAGRÉGATION : les enfants remplissent le SLOT du
+    // parent [haut, bas]. On lit la hauteur du slot AVANT de passer le parent en cadre
+    // (sinon getShapeHeightToUse renvoie l'enveloppe des enfants → circulaire). L'écart
+    // est calculé pour remplir le slot (≥ 0) → les enfants occupent exactement la place
+    // du parent, le cadre les entoure, et aucun voisin n'est poussé.
+    const parent_top = p.position_y
+    const parent_h = p.getShapeHeightToUse()
     p.tied_to_nodes = true
-    stackable.forEach(c => { c.position_x = p.position_x })
-    NodePositioning.stackNodesVertically(stackable, p.position_y)
+    const sum_children_h = stackable.reduce((s, c) => s + c.getShapeHeightToUse(), 0)
+    const fill_gap = stackable.length > 1
+      ? Math.max(0, (parent_h - sum_children_h) / (stackable.length - 1))
+      : 0
+    let cursor = parent_top
+    stackable.forEach((c, i) => {
+      c.position_x = p.position_x
+      if (i > 0) {
+        cursor += fill_gap
+        c.shape_position_dy = fill_gap
+      } else {
+        c.shape_position_dy = 0
+      }
+      c.position_y = cursor
+      cursor += c.getShapeHeightToUse()
+    })
     stackable.forEach(c => p.attachNodeToCont(c))
     expanded.forEach(c => p.attachNodeToCont(c))
     p.expandToContainAttachedNodes()
@@ -369,13 +390,33 @@ export class NodeActions {
     const prev_mode = dim.container_mode
     const parent = dim.parent
     const before = this._captureTiedFrameState([parent])
+    const is_prop = this.drawing_area.sankey.default_style.shape_position_type === 'proportional'
     const apply = () => {
+      // #1231 — opération STRUCTURELLE : suspendre la compression proportionnelle. Sinon
+      // un draw transitoire (déclenché par setContainerMode/attach, parent-cadre + enfants
+      // visibles dans la même colonne → somme de colonne doublée) ferait bondir f, dilatant
+      // tout le diagramme, et la re-capture finale figerait cet état dilaté.
+      this.drawing_area.nodePositioning.suppressProportionalCompression = is_prop
       if (target_mode === null) {
+        // #1231 — en mode englobant, expandToContainAttachedNodes a élargi le cadre pour
+        // inclure les LABELS des enfants (via le getBBox SVG). En sortant, le parent garde
+        // ce x/y label-inclus → il apparaît décalé. On le recale sur le x/y du nœud enfant
+        // LE PLUS HAUT (forme, sans label) = sa position logique d'origine. Le désenglobement
+        // RÉAGRÈGE (enfants cachés) → on lit les positions AVANT unsetContainerMode, et sur
+        // TOUS les enfants (leur position_x/y stockée survit au masquage).
+        const all_children = (dim.children as Class_NodeElement[])
+        const top_child = all_children.length > 0
+          ? all_children.reduce((a, b) => (b.position_y < a.position_y ? b : a))
+          : undefined
         dim.unsetContainerMode()
         // Mirror entering: detach this dim's children from the parent's
         // frame; preserve sibling/manual attaches.
         dim.children.forEach(child => parent.dettachNodeFromCont(child))
         if (parent.attached_node.length === 0) parent.tied_to_nodes = false
+        if (top_child) {
+          parent.position_x = top_child.position_x
+          parent.position_y = top_child.position_y
+        }
       } else {
         dim.setContainerMode(target_mode)
         parent.tied_to_nodes = true
@@ -390,12 +431,33 @@ export class NodeActions {
       // dans un parent en container_mode — sinon l'enveloppe visuelle de
       // l'ancêtre n'intègre pas les nouveaux enfants/petits-enfants.
       this._restackEnglobingChain(parent)
+      // #1231 — re-baser la référence du mode actif sur le nouvel état (enfants dans le
+      // cadre) : sinon en mode % la compression (center_ref périmé) ferait SORTIR les
+      // enfants du cadre englobant. Symétrie absolu via settleCenterAnchor.
+      if (is_prop) {
+        this.drawing_area.nodePositioning.captureProportionalReference()
+      } else {
+        this.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+      }
+      // Lever la suppression APRÈS la re-capture (référence = positions de l'opération).
+      this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
+      // #1231 — redessiner juste le nœud-cadre une fois les positions finales des
+      // enfants appliquées (sa taille = enveloppe des enfants), sinon le cadre n'apparaît
+      // qu'au prochain redraw manuel. Inutile de redessiner toute la zone.
+      parent.draw()
     }
     const undo = () => {
+      this.drawing_area.nodePositioning.suppressProportionalCompression = is_prop
       if (prev_mode === null) dim.unsetContainerMode()
       else dim.setContainerMode(prev_mode)
       this._restoreTiedFrameState(before)
+      if (is_prop) {
+        this.drawing_area.nodePositioning.captureProportionalReference()
+      } else {
+        this.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+      }
+      this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
     }
     this.executeWithUndo(apply, undo)

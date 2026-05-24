@@ -227,7 +227,7 @@ export const ButtonNodeContextAssignTag = ({ app_data }: { app_data: Class_Appli
 }
 
 export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { drawing_area } = app_data
+  const { drawing_area, t } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_node = drawing_area.node_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
@@ -261,7 +261,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
                   setUpdate(a => a + 1)
                 }}
               >
-                {_.name}
+                {t(_.name)}
                 {checked(has_style)}
               </MenuItem>
             })
@@ -272,7 +272,7 @@ export const ButtonNodeContextAssignStyle = ({ app_data }: { app_data: Class_App
 }
 
 export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { drawing_area } = app_data
+  const { drawing_area, t } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_container = drawing_area.contextualised_container
   const selected_containers = drawing_area.selected_containers_list
@@ -308,7 +308,7 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
                   setUpdate(a => a + 1)
                 }}
               >
-                {_.name}
+                {t(_.name)}
                 {checked(has_style)}
               </MenuItem>
             })
@@ -319,7 +319,7 @@ export const ButtonContainerContextAssignStyle = ({ app_data }: { app_data: Clas
 }
 
 export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_ApplicationData }) => {
-  const { drawing_area } = app_data
+  const { drawing_area, t } = app_data
   const [, setUpdate] = useState(0)
   const contextualised_link = drawing_area.link_contextualised
   const has_node_style = drawing_area.sankey.styles_list.length > 0
@@ -354,7 +354,7 @@ export const ButtonLinkContextAssignStyle = ({ app_data }: { app_data: Class_App
                     setUpdate(a => a + 1)
                   }}
                 >
-                  {_.name}
+                  {t(_.name)}
                   {checked(has_style)}
                 </MenuItem>
               })
