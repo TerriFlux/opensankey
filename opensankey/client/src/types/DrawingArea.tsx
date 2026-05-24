@@ -2874,6 +2874,12 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       if (n.shape_position_v_locked !== true) n.position_v = -1
     })
+    // #1231 — capturer la médiane (centre géométrique) par colonne sur l'état courant
+    // (cohérent), comme le mode proportionnel à son entrée. Le centre est ensuite gardé
+    // fixe au changement de datatag/dimension (pas de calage en haut). Fait après
+    // backCalculateShapePositionDyFromY et avant computeParametrization (l'ordre V ne
+    // change pas l'étendue géométrique des colonnes).
+    this.nodePositioning.captureParametricColumnMedians()
     this.nodePositioning.computeParametrization(false)
     this.bypass_redraws = false
   }

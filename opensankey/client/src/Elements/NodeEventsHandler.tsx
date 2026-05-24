@@ -413,6 +413,10 @@ export class NodeEventsHandler {
       this._node.drawing_area.nodePositioning.inferPositionUFromX()
       this._node.drawing_area.nodePositioning.computeParametrization(false)
       this._node.drawing_area.nodePositioning.backCalculateShapePositionDyFromY()
+      // #1231 — un drag est respecté littéralement : on (re)capture la médiane par
+      // colonne sur la position post-drag, qui devient la nouvelle référence. Les
+      // changements de datatag/dimension ultérieurs la garderont fixe.
+      this._node.drawing_area.nodePositioning.captureParametricColumnMedians()
       this._node.drawing_area.drawElements()
     }
 

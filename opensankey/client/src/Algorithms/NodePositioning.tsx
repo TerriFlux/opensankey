@@ -55,6 +55,16 @@ export class NodePositioning {
   private _prop_bottom_y: number | undefined = undefined
   private _prop_ref_col_sums: Map<number, number> | undefined = undefined
 
+  // #1231 — Mode paramétrique : CENTRE GÉOMÉTRIQUE (médiane verticale) mémorisé par
+  // colonne (`position_u`). C'est le repère gardé FIXE quand les épaisseurs changent
+  // (datatag/dimension) : nouveau haut = médiane − nouvelle_hauteur_pile/2 (au lieu
+  // d'ancrer par le nœud du haut). Capturé explicitement à l'entrée du mode et après un
+  // drag (état cohérent positions↔hauteurs), comme le mode proportionnel ; capture
+  // paresseuse au 1er empilement pour un diagramme chargé directement en paramétrique.
+  // Transitoire (jamais persisté). Même définition de médiane que le proportionnel
+  // (cf. columnGeometricExtents).
+  private _parametric_col_median: Map<number, number> = new Map()
+
   constructor(drawingArea: Class_DrawingArea) {
     this.drawingArea = drawingArea
   }
@@ -906,9 +916,58 @@ export class NodePositioning {
   }
 
   /**
+   * #1231 — Étendue géométrique verticale de chaque colonne (`position_u`) : haut = bord
+   * supérieur du nœud le plus haut, bas = bord inférieur du nœud le plus bas, centre =
+   * milieu géométrique de la pile. C'est la **définition unique de la « médiane » d'une
+   * colonne**, partagée par le mode paramétrique (ancre = centre géométrique gardé fixe)
+   * et le mode proportionnel (centre de gravité = moyenne des centres géométriques).
+   */
+  /**
+   * #1231 — (Re)capture la médiane (centre géométrique) de chaque colonne sur l'état
+   * courant, pour le mode paramétrique. À appeler à l'entrée du mode et en fin de drag
+   * (état cohérent positions↔hauteurs). La médiane est ensuite gardée FIXE par
+   * recomputeParametricLayout au changement de datatag/dimension. Même définition que
+   * le proportionnel (columnGeometricExtents). Reconstruit la map (vide les u périmés).
+   */
+  public captureParametricColumnMedians() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const nodes = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.dimensions_as_child.some(d => d.container_mode)) return false // enfants de container = phase C
+      return true
+    })
+    const extents = NodePositioning.columnGeometricExtents(nodes)
+    const medians = new Map<number, number>()
+    extents.forEach((e, u) => medians.set(u, e.center))
+    this._parametric_col_median = medians
+  }
+
+  public static columnGeometricExtents(
+    nodes: Class_NodeElement[]
+  ): Map<number, { top: number, bottom: number, center: number }> {
+    const tops = new Map<number, number>()
+    const bottoms = new Map<number, number>()
+    nodes.forEach(n => {
+      const u = n.position_u
+      const top = n.position_y
+      const bottom = n.position_y + n.getShapeHeightToUse()
+      tops.set(u, Math.min(tops.get(u) ?? Infinity, top))
+      bottoms.set(u, Math.max(bottoms.get(u) ?? -Infinity, bottom))
+    })
+    const out = new Map<number, { top: number, bottom: number, center: number }>()
+    tops.forEach((top, u) => {
+      const bottom = bottoms.get(u) ?? top
+      out.set(u, { top, bottom, center: (top + bottom) / 2 })
+    })
+    return out
+  }
+
+  /**
    * #1231 — Capture le cadre de référence du mode proportionnel sur l'état courant :
-   *  - médiane (centre de gravité) = moyenne, sur les colonnes, des moyennes des centres ;
-   *  - haut / bas = centres extrêmes (point le plus haut / le plus bas) ;
+   *  - médiane (centre de gravité) = moyenne, sur les colonnes, des **centres géométriques**
+   *    de pile (même définition que l'ancre du mode paramétrique) ;
+   *  - haut / bas = bords extrêmes du diagramme (point le plus haut / le plus bas) ;
    *  - sommes de hauteurs par colonne (référence pour le ratio de flux) ;
    *  - centre de référence de chaque nœud.
    * Appelé à l'entrée du mode, après un drag et au changement de vue. `position_u` doit
@@ -923,21 +982,17 @@ export class NodePositioning {
       this._prop_ref_col_sums = undefined
       return
     }
-    // Médiane = moyenne des moyennes de centres par colonne.
-    const col_centers = new Map<number, number[]>()
+    // Médiane = moyenne des centres géométriques de pile par colonne.
+    const extents = NodePositioning.columnGeometricExtents(nodes)
     let top_y = Infinity
     let bottom_y = -Infinity
-    nodes.forEach(n => {
-      const center = n.position_y + n.getShapeHeightToUse() / 2
-      const arr = col_centers.get(n.position_u) ?? []
-      arr.push(center)
-      col_centers.set(n.position_u, arr)
-      if (center < top_y) top_y = center
-      if (center > bottom_y) bottom_y = center
+    let center_sum = 0
+    extents.forEach(({ top, bottom, center }) => {
+      center_sum += center
+      if (top < top_y) top_y = top
+      if (bottom > bottom_y) bottom_y = bottom
     })
-    const col_means: number[] = []
-    col_centers.forEach(arr => col_means.push(arr.reduce((s, v) => s + v, 0) / arr.length))
-    this._prop_median_y = col_means.reduce((s, v) => s + v, 0) / col_means.length
+    this._prop_median_y = center_sum / extents.size
     this._prop_top_y = top_y
     this._prop_bottom_y = bottom_y
     this._prop_ref_col_sums = this.proportionalColumnSums(nodes)
@@ -2349,11 +2404,28 @@ export class NodePositioning {
       col.push(n)
       columns.set(n.position_u, col)
     })
-    columns.forEach(column => {
+    columns.forEach((column, u) => {
       if (column.length === 0) return
       const sorted = sortByV(column)
-      const anchor_y = sorted[0].position_y
-      NodePositioning.stackNodesVertically(sorted, anchor_y)
+      // #1231 — Ancrage par le CENTRE GÉOMÉTRIQUE (médiane) de la colonne, gardé FIXE :
+      // nouveau haut = médiane − nouvelle_hauteur_pile/2 (au lieu d'ancrer par le nœud
+      // du haut). La médiane est capturée à l'entrée du mode / en fin de drag
+      // (captureParametricColumnMedians). Capture paresseuse ici si absente (diagramme
+      // chargé directement en paramétrique) : centre géométrique courant.
+      const new_stack_h = NodePositioning.totalStackHeight(sorted)
+      let median = this._parametric_col_median.get(u)
+      if (median === undefined) {
+        let top = Infinity
+        let bottom = -Infinity
+        sorted.forEach(n => {
+          if (n.position_y < top) top = n.position_y
+          const b = n.position_y + n.getShapeHeightToUse()
+          if (b > bottom) bottom = b
+        })
+        median = (top + bottom) / 2
+        this._parametric_col_median.set(u, median)
+      }
+      NodePositioning.stackNodesVertically(sorted, median - new_stack_h / 2)
     })
 
     // --- Phase C : top-down positioning of container descendants ---
