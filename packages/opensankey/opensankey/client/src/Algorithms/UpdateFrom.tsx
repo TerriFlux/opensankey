@@ -780,6 +780,14 @@ export const updateFrom = (
   // getShape*ToUse() reflète déjà la nouvelle vue. Les changements de taille
   // ULTÉRIEURS (échelle/datatag) re-centreront normalement.
   if (sync_nodes_positions || all) {
-    drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
+    // #1231 — en mode proportionnel, re-capturer le cadre de référence (médiane,
+    // haut/bas, sommes par colonne) sur les positions importées pour qu'elles soient
+    // respectées telles quelles, puis comprimées/dilatées au prochain datatag.
+    if (drawing_area.sankey.default_style.shape_position_type === 'proportional') {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.captureProportionalReference()
+    } else {
+      drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
+    }
   }
 }

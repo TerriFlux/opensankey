@@ -550,6 +550,11 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'proportional') {
+      // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
+      // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
+      // changement d'épaisseur). Doit tourner avant _sankey.draw().
+      this.nodePositioning.anchorProportionalNodes()
     } else {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
@@ -2880,6 +2885,17 @@ export class Class_DrawingArea {
     // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
     // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
     this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+  }
+
+  public setProportionalMode() {
+    const default_style = this.sankey.styles_dict['default']
+    default_style.shape_position_type = 'proportional'
+    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
+    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
+    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
+    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
+    this.nodePositioning.inferPositionUFromX()
+    this.nodePositioning.captureProportionalReference()
   }
 
   public resetAllVerticalIntervals(v_spacing?: number) {
