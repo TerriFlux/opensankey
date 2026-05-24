@@ -55,6 +55,16 @@ export class NodePositioning {
   private _prop_bottom_y: number | undefined = undefined
   private _prop_ref_col_sums: Map<number, number> | undefined = undefined
 
+  // #1231 — Drapeau de suppression de la compression proportionnelle pendant une
+  // opération STRUCTURELLE (englobement, désagrégation, expansion…). Ces opérations
+  // créent des états transitoires où une colonne contient à la fois le parent ET ses
+  // enfants (ex. englobement : parent-cadre + enfants visibles) → la somme de colonne
+  // double brièvement → f bondit (max ratio) → tout le diagramme se dilate, et la
+  // re-capture en fin d'opération FIGE cet état dilaté. La compression ne doit réagir
+  // qu'aux changements de datatag/vue, pas aux changements de structure. Posé autour de
+  // l'opération, levé juste avant la re-capture finale (cf. NodeActions/Hierarchies).
+  public suppressProportionalCompression = false
+
   // #1231 — Mode « écart » (ex-paramétrique) : réutilise intégralement le cadre du mode
   // proportionnel (médiane globale `_prop_median_y`, facteur f via `_prop_ref_col_sums`,
   // centre de réf PAR NŒUD `_prop_center_ref` sur NodeBase). Seule l'application diffère :
@@ -894,6 +904,12 @@ export class NodePositioning {
       if (echangeTag && n.hasGivenTag(echangeTag)) return false
       if (n.shape_position_type === 'relative') return false
       if (n.tied_to_nodes && n.attached_node.length > 0) return false
+      // #1231 — un nœud DANS un cadre englobant (tied) suit le cadre : on l'exclut de la
+      // compression proportionnelle indépendante. Sinon l'englobement (qui ajoute des
+      // enfants éligibles et exclut le parent-cadre) faisait varier le facteur f et
+      // re-spreadait les autres nœuds (ex. bois mort) → l'opération n'était pas
+      // indépendante du mode (KO en %, OK en absolu).
+      if (n.attached_container && n.attached_container.length > 0) return false
       return true
     })
   }
@@ -1066,6 +1082,10 @@ export class NodePositioning {
    * `drawElements` avant `_sankey.draw()`. Capture la référence au 1er appel si absente.
    */
   public anchorProportionalNodes() {
+    // #1231 — Pendant une opération structurelle, ne pas comprimer : on laisse les
+    // positions calculées par l'opération (remplissage du slot, etc.) telles quelles ;
+    // la re-capture finale les fixera comme nouvelle référence (f=1).
+    if (this.suppressProportionalCompression) return
     const nodes = this.proportionalEligibleNodes()
     if (nodes.length === 0) return
     if (this._prop_median_y === undefined || !this._prop_ref_col_sums) {
