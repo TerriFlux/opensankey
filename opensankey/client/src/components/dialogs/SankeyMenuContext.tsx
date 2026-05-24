@@ -668,7 +668,11 @@ export const ContextMenu = <T extends Record<string, unknown>>({
   menu_configuration[attr_updater].current = () => setForceUpdate(a => a + 1)
   const isVisible = drawing_area[attr_is_contextualised] as boolean
 
-  // Mémoriser la position seulement quand le menu devient visible
+  // #1231 — Figer la position À L'OUVERTURE du menu : on dépend UNIQUEMENT de
+  // `isVisible`, pas de `pointer_pos`. Sinon, cliquer un item (qui garde le menu ouvert,
+  // closeOnSelect=false) recalculait la position sur la souris courante → le menu sautait.
+  // Tant que le menu reste ouvert (isVisible inchangé), la position reste celle du clic
+  // droit initial. Réouverture (isVisible false→true) → recalcul avec la nouvelle position.
   const position = useMemo<MenuPosition | null>(() => {
     if (!isVisible) return null
 
@@ -678,7 +682,8 @@ export const ContextMenu = <T extends Record<string, unknown>>({
       isTop: drawing_area.pointer_pos[1] + 330 <= window.innerHeight
     }
     return pos
-  }, [isVisible, drawing_area.pointer_pos])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible])
 
   if (!isVisible || !position) {
     return <React.Fragment />
