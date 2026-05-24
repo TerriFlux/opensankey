@@ -26,6 +26,7 @@
 
 import { Class_Tag } from '../types/Tag'
 import { Class_NodeElement } from '../Elements/Node'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { NodePositioning } from './NodePositioning'
@@ -372,6 +373,50 @@ export const aggregate = (
 }
 
 
+/**
+ * #1231 — Reset des désagrégations LOCALES (hybrides). Quand l'utilisateur a désagrégé
+ * des nœuds au clic droit (force_show_children sur certaines dims), le diagramme est en
+ * état HYBRIDE (niveaux mixtes) et le menu Hiérarchies global ne doit plus agir. Ce reset
+ * ramène à l'état uniforme montré par le menu : il repositionne chaque parent local sur
+ * le slot de ses enfants (plusieurs passes pour les désagrégations imbriquées), efface
+ * tous les force-flags (showAccordingToLevelTags), puis réorganise / re-base le mode %.
+ */
+export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
+  const sankey = new_data.drawing_area.sankey
+  const dims_with_children: Class_NodeDimension[] = []
+  sankey.nodes_list.forEach(n => {
+    n.dimensions_as_parent.forEach(d => {
+      if (d.force_show_children) dims_with_children.push(d as Class_NodeDimension)
+    })
+  })
+  if (dims_with_children.length === 0) return
+
+  const Do = () => {
+    // Repositionner chaque parent local sur le bord haut de ses enfants. Plusieurs
+    // passes pour propager des feuilles vers le haut en cas de désagrégations imbriquées.
+    for (let pass = 0; pass < 4; pass++) {
+      dims_with_children.forEach(d => {
+        const children = d.children as Class_NodeElement[]
+        if (children.length === 0) return
+        const top = Math.min(...children.map(c => c.position_y))
+        d.parent.position_u = children[0].position_u
+        d.parent.position_x = children[0].position_x
+        d.parent.position_y = top
+      })
+    }
+    // Effacer tous les force-flags → visibilité pilotée par les level-tags (état du menu).
+    sankey.showAccordingToLevelTags()
+    sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+    sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+    if (sankey.default_style.shape_position_type === 'proportional') {
+      new_data.drawing_area.nodePositioning.inferPositionUFromX()
+      new_data.drawing_area.nodePositioning.captureProportionalReference()
+    }
+    new_data.drawing_area.draw()
+  }
+  Do()
+}
+
 
 /**
  * Désagrégation simple - descend d'un niveau hiérarchique
@@ -422,11 +467,11 @@ export const disaggregate = (
     const new_nodes = parent_dim.children as Class_NodeElement[]
 
     // #1231 — Désagrégation locale : les enfants prennent EXACTEMENT la place du parent
-    // VISIBLE. Comme la hauteur du parent = somme des hauteurs des enfants (conservation),
-    // on les répartit dans le slot [haut_parent, bas_parent] avec un écart calculé pour
-    // remplir le slot (≈ 0). Ainsi ils n'occupent que la place du parent → AUCUN nœud
-    // voisin n'est poussé (ni vers le bas, ni vers le haut). Si la somme des enfants est
-    // < parent (enfants filtrés), l'écart répartit l'espace ; on clampe à ≥ 0.
+    // VISIBLE. La somme des hauteurs des enfants est ≤ hauteur du parent (elle peut être
+    // strictement inférieure — la valeur des enfants ne totalise pas toujours celle du
+    // parent), donc on répartit l'espace restant en écart ÉGAL entre enfants pour remplir
+    // le slot [haut, bas] du parent. Ainsi ils occupent exactement la place du parent →
+    // AUCUN voisin poussé. Écart clampé ≥ 0.
     const parent_top = aggregateNode.position_y
     const parent_h = aggregateNode.getShapeHeightToUse()
     const sum_children_h = new_nodes.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
