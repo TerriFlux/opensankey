@@ -91,6 +91,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _center_anchor_w: number | undefined = undefined
   protected _center_anchor_h: number | undefined = undefined
 
+  // #1231 — Mode proportionnel : centre vertical de référence (capturé à l'entrée du
+  // mode / après un drag, cf. NodePositioning.captureProportionalReference). À chaque
+  // dessin, le centre affiché = médiane + (center_ref − médiane) × f, où f est le
+  // facteur de compression/dilatation déduit du flux. Transitoire (jamais persisté).
+  // undefined = pas de référence capturée → on ne replace pas.
+  public _prop_center_ref: number | undefined = undefined
+
   protected class_name = 'gg_nodes'
   constructor(
     id: string,
@@ -299,6 +306,27 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public settleCenterAnchor() {
     this._center_anchor_w = this.getShapeWidthToUse()
     this._center_anchor_h = this.getShapeHeightToUse()
+  }
+
+  /**
+   * #1231 — Mode proportionnel : mémorise le centre vertical courant comme référence.
+   * Appelé par `captureProportionalReference` (entrée du mode, après un drag, changement
+   * de vue). Le replacement ultérieur scale ce centre autour de la médiane par le facteur f.
+   */
+  public captureProportionalCenterRef() {
+    this.settleCenterAnchor() // neutralise les variations d'épaisseur (#1230) pour les frames suivantes
+    this._prop_center_ref = this.position_y + this.getShapeHeightToUse() / 2
+  }
+
+  /**
+   * #1231 — Mode proportionnel : replace le centre vertical à
+   * `median + (center_ref − median) × f` (compression/dilatation autour de la médiane,
+   * centre de gravité fixe). No-op si aucune référence n'a été capturée.
+   */
+  public applyProportionalCompression(median_y: number, factor: number) {
+    if (this._prop_center_ref === undefined) return
+    const new_center_y = median_y + (this._prop_center_ref - median_y) * factor
+    this.position_y = new_center_y - this.getShapeHeightToUse() / 2
   }
 
   /**
