@@ -146,10 +146,12 @@ export const LabelDisplayModeSelector = ({
   }
 
   const setModeText = () => {
-    // Initialize fo_content from name_label if empty
+    // Initialize fo_content from the effective label if empty (= custom text in
+    // custom mode, otherwise the node name) so passer en rich text ne renomme
+    // pas le nœud.
     if (!labelValues.fo_content) {
       (elements as Class_NodeBase[]).forEach(node => {
-        node.name_label_fo_content = `<p>${node.name_label}</p>`
+        node.name_label_fo_content = `<p>${node.name_label_effective}</p>`
       })
     }
     labelValues.has_fo = true
@@ -989,6 +991,49 @@ const LabelContentComponent = ({
           {/* </Box> */}
         </>
       ) : null}
+      {/* Source du label de nom du nœud : 'name' (= le nom du nœud, historique)
+          ou 'custom' (= un texte de label indépendant, éditable sans renommer le
+          nœud — même principe que text_value du flux). */}
+      {selection.hasNodes && prefix === 'name_label' ? (
+        <Box layerStyle='menuconfigpanel_row_2cols'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            {t('Noeud.labels.name_label_text_source')}
+          </Box>
+          <OSTooltip label={t('Noeud.labels.tooltips.name_label_text_source')}>
+            <Select
+              value={(selection.nodes[0]?.name_label_custom ?? false) ? 'custom' : 'name'}
+              onChange={(evt) => {
+                const useCustom = evt.target.value === 'custom'
+                selection.nodes.forEach(n => {
+                  // À l'activation, amorcer le texte custom avec le nom courant
+                  // s'il est vide, pour ne pas afficher un label vide.
+                  if (useCustom && !n.name_label_text) n.name_label_text = n.name_label
+                  n.name_label_custom = useCustom
+                })
+                refreshParentComponent()
+              }}
+            >
+              <option value='name'>{t('Noeud.labels.text_source.name')}</option>
+              <option value='custom'>{t('Noeud.labels.text_source.custom')}</option>
+            </Select>
+          </OSTooltip>
+        </Box>
+      ) : null}
+      {selection.hasNodes && prefix === 'name_label' &&
+        (selection.nodes[0]?.name_label_custom ?? false) && displayMode === 'simple_text' ? (
+          <Box layerStyle='menuconfigpanel_row_2cols'>
+            <Box layerStyle='menuconfigpanel_option_name'>
+              {t('Noeud.labels.name_label_text')}
+            </Box>
+            <Input
+              defaultValue={selection.nodes[0]?.name_label_text ?? ''}
+              onBlur={(evt) => {
+                selection.nodes.forEach(n => { n.name_label_text = evt.target.value })
+                refreshParentComponent()
+              }}
+            />
+          </Box>
+        ) : null}
       <Divider />
       <MenuSectionCheckbox
         elements={elements}
