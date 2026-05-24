@@ -55,15 +55,11 @@ export class NodePositioning {
   private _prop_bottom_y: number | undefined = undefined
   private _prop_ref_col_sums: Map<number, number> | undefined = undefined
 
-  // #1231 — Mode paramétrique : CENTRE GÉOMÉTRIQUE (médiane verticale) mémorisé par
-  // colonne (`position_u`). C'est le repère gardé FIXE quand les épaisseurs changent
-  // (datatag/dimension) : nouveau haut = médiane − nouvelle_hauteur_pile/2 (au lieu
-  // d'ancrer par le nœud du haut). Capturé explicitement à l'entrée du mode et après un
-  // drag (état cohérent positions↔hauteurs), comme le mode proportionnel ; capture
-  // paresseuse au 1er empilement pour un diagramme chargé directement en paramétrique.
-  // Transitoire (jamais persisté). Même définition de médiane que le proportionnel
-  // (cf. columnGeometricExtents).
-  private _parametric_col_median: Map<number, number> = new Map()
+  // #1231 — Mode « écart » (ex-paramétrique) : réutilise intégralement le cadre du mode
+  // proportionnel (médiane globale `_prop_median_y`, facteur f via `_prop_ref_col_sums`,
+  // centre de réf PAR NŒUD `_prop_center_ref` sur NodeBase). Seule l'application diffère :
+  // le NŒUD DU HAUT de chaque colonne prend sa position % (comme le mode proportionnel),
+  // puis le reste s'empile dessous avec des écarts constants. Pas de champ dédié.
 
   constructor(drawingArea: Class_DrawingArea) {
     this.drawingArea = drawingArea
@@ -923,26 +919,12 @@ export class NodePositioning {
    * et le mode proportionnel (centre de gravité = moyenne des centres géométriques).
    */
   /**
-   * #1231 — (Re)capture la médiane (centre géométrique) de chaque colonne sur l'état
+   * #1231 — (Re)capture la médiane (centre géométrique) de CHAQUE colonne sur l'état
    * courant, pour le mode paramétrique. À appeler à l'entrée du mode et en fin de drag
    * (état cohérent positions↔hauteurs). La médiane est ensuite gardée FIXE par
    * recomputeParametricLayout au changement de datatag/dimension. Même définition que
    * le proportionnel (columnGeometricExtents). Reconstruit la map (vide les u périmés).
    */
-  public captureParametricColumnMedians() {
-    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
-    const nodes = this.drawingArea.sankey.visible_nodes_list.filter(n => {
-      if (!n.is_visible) return false
-      if (echangeTag && n.hasGivenTag(echangeTag)) return false
-      if (n.dimensions_as_child.some(d => d.container_mode)) return false // enfants de container = phase C
-      return true
-    })
-    const extents = NodePositioning.columnGeometricExtents(nodes)
-    const medians = new Map<number, number>()
-    extents.forEach((e, u) => medians.set(u, e.center))
-    this._parametric_col_median = medians
-  }
-
   public static columnGeometricExtents(
     nodes: Class_NodeElement[]
   ): Map<number, { top: number, bottom: number, center: number }> {
@@ -961,6 +943,66 @@ export class NodePositioning {
       out.set(u, { top, bottom, center: (top + bottom) / 2 })
     })
     return out
+  }
+
+  /**
+   * #1231 — Nœuds top-level groupés par colonne (`position_u`) : visibles, non-échange,
+   * hors enfants de container. Utilisé par la commande « écarts égaux ».
+   */
+  private columnNodesByU(): Map<number, Class_NodeElement[]> {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const map = new Map<number, Class_NodeElement[]>()
+    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (echangeTag && n.hasGivenTag(echangeTag)) return
+      if (n.dimensions_as_child.some(d => d.container_mode)) return
+      const arr = map.get(n.position_u) ?? []
+      arr.push(n)
+      map.set(n.position_u, arr)
+    })
+    return map
+  }
+
+  /**
+   * #1231 — COMMANDE « écarts égaux » : sur une colonne, garde le bord HAUT du 1er nœud
+   * et le bord BAS du dernier (trié par y), et répartit les nœuds avec des écarts
+   * verticaux ÉGAUX : `écart = (bas − haut − Σ hauteurs) / (n−1)`. Écrit aussi
+   * `shape_position_dy` = écart. One-shot (le mode actif gère ensuite l'évolution).
+   * @returns true si ≥ 2 nœuds (donc quelque chose à équilibrer).
+   */
+  public equalizeColumnGaps(column_nodes: Class_NodeElement[]): boolean {
+    const sorted = [...column_nodes].sort((a, b) => a.position_y - b.position_y)
+    if (sorted.length < 2) return false
+    const top = sorted[0].position_y
+    const last = sorted[sorted.length - 1]
+    const bottom = last.position_y + last.getShapeHeightToUse()
+    const sum_h = sorted.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
+    const gap = (bottom - top - sum_h) / (sorted.length - 1)
+    let cursor = top
+    sorted.forEach((n, i) => {
+      if (i > 0) {
+        cursor += gap
+        n.shape_position_dy = gap
+      }
+      n.position_y = cursor
+      cursor += n.getShapeHeightToUse()
+    })
+    return true
+  }
+
+  /** #1231 — « écarts égaux » sur la colonne du nœud donné. */
+  public equalizeColumnGapsOfNode(node: Class_NodeElement): boolean {
+    const col = this.columnNodesByU().get(node.position_u)
+    return col ? this.equalizeColumnGaps(col) : false
+  }
+
+  /** #1231 — « écarts égaux » sur toutes les colonnes (chacune indépendamment). */
+  public equalizeAllColumnsGaps(): boolean {
+    let moved = false
+    this.columnNodesByU().forEach(col => {
+      if (this.equalizeColumnGaps(col)) moved = true
+    })
+    return moved
   }
 
   /**
@@ -2397,6 +2439,17 @@ export class NodePositioning {
       .filter(isContainerParent)
       .forEach(c => sizeContainerRecursive(c))
 
+    // #1231 — Mode « écart » : le NŒUD DU HAUT de chaque colonne suit EXACTEMENT le mode
+    // pourcentage (même centre = médiane_globale + (centre_ref − médiane) × f), puis le
+    // reste de la colonne s'empile dessous avec des écarts CONSTANTS. Conséquence voulue :
+    // les nœuds du haut (et les colonnes à 1 nœud) sont placés à l'identique du mode %.
+    // Réutilise le cadre du mode proportionnel ; capture paresseuse si absente.
+    if (this._prop_median_y === undefined || !this._prop_ref_col_sums) {
+      this.captureProportionalReference()
+    }
+    const median = this._prop_median_y
+    const factor = this.proportionalFactor(this.proportionalEligibleNodes())
+
     const columns = new Map<number, Class_NodeElement[]>()
     top_level_nodes.forEach(n => {
       if (scope.type === 'column' && n.position_u !== scope.u) return
@@ -2404,28 +2457,20 @@ export class NodePositioning {
       col.push(n)
       columns.set(n.position_u, col)
     })
-    columns.forEach((column, u) => {
+    columns.forEach((column) => {
       if (column.length === 0) return
       const sorted = sortByV(column)
-      // #1231 — Ancrage par le CENTRE GÉOMÉTRIQUE (médiane) de la colonne, gardé FIXE :
-      // nouveau haut = médiane − nouvelle_hauteur_pile/2 (au lieu d'ancrer par le nœud
-      // du haut). La médiane est capturée à l'entrée du mode / en fin de drag
-      // (captureParametricColumnMedians). Capture paresseuse ici si absente (diagramme
-      // chargé directement en paramétrique) : centre géométrique courant.
-      const new_stack_h = NodePositioning.totalStackHeight(sorted)
-      let median = this._parametric_col_median.get(u)
-      if (median === undefined) {
-        let top = Infinity
-        let bottom = -Infinity
-        sorted.forEach(n => {
-          if (n.position_y < top) top = n.position_y
-          const b = n.position_y + n.getShapeHeightToUse()
-          if (b > bottom) bottom = b
-        })
-        median = (top + bottom) / 2
-        this._parametric_col_median.set(u, median)
+      const top = sorted[0]
+      const top_ref = top._prop_center_ref
+      let anchor_y: number
+      if (median !== undefined && top_ref !== undefined) {
+        // Centre du nœud du haut = sa position en mode % ; l'ancre (bord haut) en découle.
+        const top_center = median + (top_ref - median) * factor
+        anchor_y = top_center - top.getShapeHeightToUse() / 2
+      } else {
+        anchor_y = top.position_y // fallback : pas de référence (relative/échange/tied)
       }
-      NodePositioning.stackNodesVertically(sorted, median - new_stack_h / 2)
+      NodePositioning.stackNodesVertically(sorted, anchor_y)
     })
 
     // --- Phase C : top-down positioning of container descendants ---
@@ -2456,170 +2501,126 @@ export class NodePositioning {
   }
 
   /**
-   * Rend un flux **exactement droit** (horizontal) en une fois, sur demande
-   * explicite de l'utilisateur (clic droit → « Rendre droit ») — issue
-   * su-model/opensankey#665.
+   * Redresse immédiatement un flux marqué « à garder droit » (clic droit → « Rendre
+   * droit ») — issue su-model/opensankey#665, refonte #1231.
    *
-   * Déplace **uniquement le nœud cible** verticalement pour que son accroche
-   * coïncide avec celle de la source (le sens du flux : la source est la
-   * référence). Géométrie pure — l'undo est géré par l'appelant
-   * (`createLinkModifier`).
+   * Le marquage (`shape_must_stay_straight`) est posé par l'appelant ; ici on relance
+   * simplement un `drawElements`, dont le post-process `enforceStraightLinks` applique
+   * ET maintient la droiture à chaque dessin (dans les 3 modes). Plus de back-calc
+   * d'écarts : la droiture n'est plus figée dans la métadonnée paramétrique, elle est
+   * re-calculée à chaque frame.
    *
-   * - **Mode absolu** : on ajuste `position_y` du nœud cible, point.
-   * - **Mode paramétrique** : on ajuste `position_y` puis on back-calcule les
-   *   `shape_position_dy` (`backCalculateShapePositionDyFromY`) pour encoder le
-   *   déplacement dans les écarts de la colonne — donc seul ce nœud bouge, au
-   *   prix d'une rupture locale de la constance des écarts (choix utilisateur).
-   *   Limite : si le nœud doit monter mais que l'écart au-dessus est déjà nul,
-   *   le clamp anti-chevauchement (`raw_dy < 0 → 0`) borne le déplacement.
-   *
-   * Sans effet sur un flux de recyclage ou un self-loop. Utilise les points
-   * d'accroche mis en cache au dernier draw (valides au moment du clic).
-   *
-   * @returns `true` si un déplacement a été appliqué.
+   * @returns toujours `true` (le redraw a été déclenché).
    */
   public straightenLink(link: Class_LinkElement): boolean {
     if (link.shape_is_recycling || link.source === link.target) return false
-    const A = link.source as Class_NodeElement
-    const B = link.target as Class_NodeElement
-    const start = A.getOutputLinkStartingPoint(link)
-    const end = B.getInputLinkEndingPoint(link)
-    if (!start || !end) return false
-    const delta = start.y - end.y // y cible pour que l'accroche cible == accroche source
-    if (Math.abs(delta) < 0.5) return false
-    B.position_y += delta
-    if (this.drawingArea.sankey.styles_dict['default'].shape_position_type === 'parametric') {
-      // Même « settle » qu'en fin de drag (NodeEventsHandler) pour que seul ce
-      // nœud bouge et que le prochain recomputeParametricLayout le reproduise :
-      // reset des V non-verrouillés → recompute des V depuis le nouvel ordre
-      // spatial en y de chaque colonne → back-calc des écarts. On NE rappelle
-      // PAS inferPositionUFromX (le x n'a pas changé, les colonnes sont stables).
-      this.drawingArea.sankey.nodes_list.forEach(n => {
-        if (n.shape_position_v_locked !== true) n.position_v = -1
-      })
-      this.computeParametrization(false)
-      this.backCalculateShapePositionDyFromY()
-    }
     this.drawingArea.drawElements()
     return true
   }
 
   /**
-   * Maintien des flux marqués « à garder droit » (`shape_must_stay_straight`,
-   * issue su-model/opensankey#665) — **droiture dure, écarts absorbants**.
+   * #665 (refonte #1231) — Post-processing « flux droit » appliqué APRÈS placement,
+   * dans les **trois modes** (paramétrique, absolu, proportionnel). Modèle simple
+   * **par flux** : pour chaque flux marqué `shape_must_stay_straight`, on déplace le
+   * **nœud cible** verticalement pour que son accroche coïncide avec celle de la source
+   * (source = référence). Pas de groupes rigides, pas de back-calc d'écarts : la
+   * droiture est re-appliquée à chaque dessin (ce post-process tourne après
+   * `_sankey.draw()` à chaque `drawElements`), donc rien à « figer ».
    *
-   * Modèle voulu par l'utilisateur : la droiture n'est PAS négociable ; la seule
-   * variable libre est l'écart vertical entre nœuds. On traite donc les flux
-   * marqués comme des contraintes d'égalité et on les **propage** : les nœuds
-   * reliés par des flux marqués forment des **groupes rigides** dont les `y`
-   * relatifs sont fixés par `A.y + startOff == B.y + endOff`. Pour chaque
-   * composante connexe, on ancre sur le nœud le plus en amont (plus petit
-   * `position_u`) — il garde son `y` issu de l'empilement — et on propage la
-   * droiture aux autres par BFS. Les écarts encaissent (back-calc), aucune
-   * moyenne / compromis.
+   * Les flux sont traités triés par `position_u` de la source (amont → aval) pour que
+   * les chaînes A→B→C se propagent correctement (B déplacé avant de traiter B→C). Sur
+   * un nœud cible de deux flux marqués incompatibles, le dernier traité gagne.
    *
-   * À appeler **après** un draw (le cache d'accroche
-   * `getOutputLinkStartingPoint`/`getInputLinkEndingPoint` doit refléter les
-   * épaisseurs courantes ; l'offset relatif est ensuite invariant par
-   * translation). Géométrie pure : le caller redessine si `true` est renvoyé.
+   * Option par flux `shape_straight_include_children` : redresse aussi les flux
+   * « enfant-enfant » (source et cible descendantes des nœuds du flux marqué dans la
+   * hiérarchie de dimensions) → la droiture survit à la désagrégation.
    *
-   * Limites v1 : flux vers/depuis un enfant de container non traités ; en cas de
-   * cycle de contraintes incompatibles (un nœud avec deux flux marqués en
-   * conflit), le BFS applique la première atteinte et ignore l'autre (best
-   * effort — l'utilisateur a indiqué ne pas créer de tels conflits).
+   * À appeler après un draw (les accroches `getOutputLinkStartingPoint`/
+   * `getInputLinkEndingPoint` reflètent les épaisseurs courantes ; l'offset relatif est
+   * invariant par translation). Géométrie pure ; le caller redessine si `true`.
    *
-   * @returns `true` si au moins un nœud a bougé de façon significative (le
-   *   caller doit alors redessiner) ; `false` si rien à faire (régime stable).
+   * @returns `true` si au moins un nœud cible a bougé (le caller redessine).
    */
   public enforceStraightLinks(): boolean {
     const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
-    const isTopLevel = (n: Class_NodeElement): boolean => {
-      if (!n.is_visible) return false
-      if (echangeTag && n.hasGivenTag(echangeTag)) return false
-      if (n.dimensions_as_child.some(d => d.container_mode)) return false
-      return true
-    }
+    const isStraightenable = (L: Class_LinkElement): boolean =>
+      L.is_visible && !L.shape_is_recycling && L.source !== L.target &&
+      !(echangeTag && (L.source.hasGivenTag(echangeTag) || L.target.hasGivenTag(echangeTag)))
 
-    const marked = this.drawingArea.sankey.visible_links_list.filter(L =>
-      L.shape_must_stay_straight && L.is_visible && !L.shape_is_recycling &&
-      L.source !== L.target &&
-      isTopLevel(L.source as Class_NodeElement) && isTopLevel(L.target as Class_NodeElement)
-    )
-    if (marked.length === 0) return false
-
-    // Offsets d'accroche relatifs (invariants par translation), depuis le cache.
-    type ME = { A: Class_NodeElement, B: Class_NodeElement, startOff: number, endOff: number }
-    const edges: ME[] = []
-    const node_set = new Set<Class_NodeElement>()
-    marked.forEach(L => {
-      const A = L.source as Class_NodeElement
-      const B = L.target as Class_NodeElement
-      const s = A.getOutputLinkStartingPoint(L)
-      const e = B.getInputLinkEndingPoint(L)
-      if (!s || !e) return
-      edges.push({ A, B, startOff: s.y - A.position_y, endOff: e.y - B.position_y })
-      node_set.add(A); node_set.add(B)
-    })
-    if (edges.length === 0) return false
-
-    // Adjacence non orientée sur les nœuds via les flux marqués.
-    const adj = new Map<Class_NodeElement, { other: Class_NodeElement, edge: ME, dir: 'AB' | 'BA' }[]>()
-    const addAdj = (from: Class_NodeElement, to: Class_NodeElement, edge: ME, dir: 'AB' | 'BA') => {
-      const l = adj.get(from) ?? []
-      l.push({ other: to, edge, dir })
-      adj.set(from, l)
-    }
-    edges.forEach(e => { addAdj(e.A, e.B, e, 'AB'); addAdj(e.B, e.A, e, 'BA') })
-
-    // Sauvegarde des y pour mesurer le déplacement (régime stable → no-op).
-    const old_y = new Map<Class_NodeElement, number>()
-    node_set.forEach(n => old_y.set(n, n.position_y))
-
-    // Propagation par composante connexe, ancrée sur le nœud le plus en amont.
-    const visited = new Set<Class_NodeElement>()
-    const roots = [...node_set].sort(
-      (a, b) => (a.position_u - b.position_u) || (a.position_y - b.position_y)
-    )
-    roots.forEach(root => {
-      if (visited.has(root)) return
-      visited.add(root)
-      const queue: Class_NodeElement[] = [root]
-      while (queue.length > 0) {
-        const n = queue.shift()!
-        const nbrs = adj.get(n) ?? []
-        nbrs.forEach(({ other, edge, dir }) => {
-          if (visited.has(other)) return
-          // Contrainte droite : A.y + startOff == B.y + endOff
-          if (dir === 'AB') {
-            // n == A (placé), other == B → B.y = A.y + startOff - endOff
-            other.position_y = n.position_y + edge.startOff - edge.endOff
-          } else {
-            // n == B (placé), other == A → A.y = B.y + endOff - startOff
-            other.position_y = n.position_y + edge.endOff - edge.startOff
-          }
-          visited.add(other)
-          queue.push(other)
-        })
+    // Flux à redresser = marqués visibles + (si include_children) flux visibles dont
+    // source ET cible descendent des nœuds d'un flux marqué (même hidden).
+    const to_straighten = new Set<Class_LinkElement>()
+    this.drawingArea.sankey.links_list.forEach(L => {
+      if (!L.shape_must_stay_straight) return
+      if (isStraightenable(L)) to_straighten.add(L)
+      if (L.shape_straight_include_children) {
+        this.collectDescendantStraightLinks(L as Class_LinkElement, isStraightenable)
+          .forEach(c => to_straighten.add(c))
       }
     })
+    if (to_straighten.size === 0) return false
 
-    // Déplacement significatif ?
-    let moved = 0
-    node_set.forEach(n => {
-      moved = Math.max(moved, Math.abs(n.position_y - (old_y.get(n) ?? n.position_y)))
+    // Offsets d'accroche relatifs (invariants par translation), capturés depuis le
+    // cache AVANT tout déplacement.
+    type SItem = { L: Class_LinkElement, startOff: number, endOff: number }
+    const items: SItem[] = []
+    to_straighten.forEach(L => {
+      const s = (L.source as Class_NodeElement).getOutputLinkStartingPoint(L)
+      const e = (L.target as Class_NodeElement).getInputLinkEndingPoint(L)
+      if (!s || !e) return
+      items.push({ L, startOff: s.y - L.source.position_y, endOff: e.y - L.target.position_y })
     })
-    if (moved < 0.5) return false
+    // Amont → aval : un nœud déplacé comme cible doit l'être avant d'être source.
+    items.sort((a, b) => a.L.source.position_u - b.L.source.position_u)
 
-    // Settle : réassigner V depuis le nouvel ordre spatial en y de chaque
-    // colonne, puis back-calculer les écarts pour que le prochain
-    // recomputeParametricLayout reproduise ces positions (mêmes étapes que la
-    // fin de drag, sans inferPositionUFromX car le x n'a pas changé).
-    this.drawingArea.sankey.nodes_list.forEach(n => {
-      if (n.shape_position_v_locked !== true) n.position_v = -1
+    let moved = false
+    items.forEach(({ L, startOff, endOff }) => {
+      const delta = (L.source.position_y + startOff) - (L.target.position_y + endOff)
+      if (Math.abs(delta) > 0.5) {
+        L.target.position_y += delta
+        moved = true
+      }
     })
-    this.computeParametrization(false)
-    this.backCalculateShapePositionDyFromY()
-    return true
+    return moved
+  }
+
+  /**
+   * #1231 — Flux « enfant-enfant » d'un flux marqué avec `shape_straight_include_children` :
+   * flux visibles redressables dont la source descend (hiérarchie de dimensions) de la
+   * source du flux marqué ET la cible descend de sa cible. Calculé à la volée (rien à
+   * marquer sur les enfants) → la droiture survit à la désagrégation.
+   */
+  private collectDescendantStraightLinks(
+    parent_link: Class_LinkElement,
+    isStraightenable: (L: Class_LinkElement) => boolean
+  ): Class_LinkElement[] {
+    const src_desc = NodePositioning.collectNodeDescendants(parent_link.source as Class_NodeElement)
+    const tgt_desc = NodePositioning.collectNodeDescendants(parent_link.target as Class_NodeElement)
+    return this.drawingArea.sankey.links_list.filter(L =>
+      L !== parent_link && isStraightenable(L) &&
+      src_desc.has(L.source as Class_NodeElement) && tgt_desc.has(L.target as Class_NodeElement)
+    ) as Class_LinkElement[]
+  }
+
+  /**
+   * #1231 — Ensemble { nœud + tous ses descendants } via la hiérarchie de dimensions
+   * (`dimensions_as_parent.children`). Utilisé pour propager la droiture aux flux
+   * désagrégés.
+   */
+  public static collectNodeDescendants(node: Class_NodeElement): Set<Class_NodeElement> {
+    const out = new Set<Class_NodeElement>()
+    const stack: Class_NodeElement[] = [node]
+    while (stack.length > 0) {
+      const n = stack.pop()!
+      if (out.has(n)) continue
+      out.add(n)
+      n.dimensions_as_parent.forEach(dim => {
+        dim.children.forEach(c => {
+          if (!out.has(c as Class_NodeElement)) stack.push(c as Class_NodeElement)
+        })
+      })
+    }
+    return out
   }
 
   /**

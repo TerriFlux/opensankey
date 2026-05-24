@@ -588,6 +588,17 @@ export class NodeActions {
   alignVertMaxCenter = () => this.alignNode('max', 'position_y', 'm')
   alignVertMaxBottom = () => this.alignNode('max', 'position_y', 'a')
 
+  // #1231 — Commande « écarts égaux » : équilibre les écarts verticaux de la colonne du
+  // nœud cliqué (bord haut/bas conservés). Le DrawingArea gère undo + re-cale le mode.
+  equalizeColumnGaps = () => {
+    const node = (this.contextualised_node ?? this.selected_nodes[0]) as Class_NodeElement | undefined
+    if (node) this.drawing_area.equalizeColumnGaps(node)
+  }
+  // #1231 — « écarts égaux » sur toutes les colonnes.
+  equalizeAllColumnsGaps = () => {
+    this.drawing_area.equalizeColumnGaps()
+  }
+
   // ==================================================================================================
   // ACTIONS DE VISIBILITÉ
   // ==================================================================================================
@@ -895,6 +906,8 @@ export class NodeActions {
       alignVertMaxTop: nodeActions.alignVertMaxTop,
       alignVertMaxCenter: nodeActions.alignVertMaxCenter,
       alignVertMaxBottom: nodeActions.alignVertMaxBottom,
+      equalizeColumnGaps: nodeActions.equalizeColumnGaps,
+      equalizeAllColumnsGaps: nodeActions.equalizeAllColumnsGaps,
 
       // Actions de visibilité
       toggleShapeVisibility: nodeActions.toggleShapeVisibility,

@@ -2168,5 +2168,13 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
+    // #1231 — Migration : le mode « paramétrique » n'est plus un mode global (remplacé
+    // par le mode pourcentage). Les diagrammes sauvés en 'parametric' s'ouvrent désormais
+    // en 'proportional'. Le 1er dessin capturera les positions chargées comme référence
+    // proportionnelle (pas de saut). La valeur 'parametric' reste valide en interne pour
+    // les styles par-nœud d'échange import/export — on ne migre QUE le style global.
+    if (drawing_area.sankey.default_style.shape_position_type === 'parametric') {
+      drawing_area.sankey.default_style.shape_position_type = 'proportional'
+    }
   }
 }
