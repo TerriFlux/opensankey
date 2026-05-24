@@ -193,6 +193,17 @@ export abstract class DrawLabelBase {
     return raw * comp
   }
 
+  /**
+   * Issue #1232 — transform de placement d'un foreignObject rich text :
+   * translate au coin haut-gauche local + scale(comp) pour annuler le zoom en
+   * mode police verrouillée. comp === 1 (mode déverrouillé) → translate seul,
+   * rendu strictement identique au comportement historique. Partagé entre
+   * drawFO (pose initiale) et updateGenericPosition (drag) pour rester cohérent.
+   */
+  protected foScaleTransform(x: number, y: number, comp: number): string {
+    return comp !== 1 ? `translate(${x}, ${y}) scale(${comp})` : `translate(${x}, ${y})`
+  }
+
   // =================== STICK TO LABEL (valeur collée au libellé) ===================
   // Sélecteurs des <text> nom/valeur — surchargés côté liens (classes link_*).
   protected getStickNameTextSelector(): string {
@@ -780,11 +791,22 @@ export abstract class DrawLabelBase {
       const divNode = d3_div_selection.node() as HTMLDivElement
       const height = divNode.offsetHeight || divNode.scrollHeight
 
+      // Issue #1232 — police verrouillée : le foreignObject vit dans le repère
+      // zoomé (facteur k). En texte simple, font-size est compensée par
+      // font_compensation (=1/k) ; pour le rich text (tailles inline arbitraires
+      // venant de Quill) on contre-scale tout le FO à la place, comme la légende
+      // (cf. Legend.applyPosition). L'empreinte locale visible vaut donc
+      // width*comp × height*comp. En mode déverrouillé, comp = 1 (no-op).
+      const comp = this._element.drawing_area?.font_compensation ?? 1
+
       if (this._label_values.vertical_text) {
         // Colonne tournée : colWidth=height, colHeight=width (mêmes principes
         // que NodeDrawLabelBase.verticalText, mais pour foreignObject).
-        const colWidth = height
-        const colHeight = width
+        // Issue #1232 : dimensions VISIBLES en coords locales (compensées par
+        // comp), car le positionnement se fait dans le repère des dims du nœud
+        // (shape_*) qui, elles, vivent en coords locales.
+        const colWidth = height * comp
+        const colHeight = width * comp
         const shape_w = this._element.shape_min_width
         const shape_h = this._element.shape_min_height
         const margin_l = this._element.shape_margin_left
@@ -820,12 +842,19 @@ export abstract class DrawLabelBase {
           }
         }
 
+        // ty + colHeight : colHeight = width*comp = hauteur visible de la
+        // colonne (cf. dérivation issue #1232). rotate(-90) puis scale(comp) :
+        // le scale étant uniforme, il commute avec la rotation. Le FO est rendu
+        // à sa taille native (width×height) et placé/contre-scalé par le transform.
+        const v_transform = comp !== 1
+          ? `translate(${tx}, ${ty + colHeight}) rotate(-90) scale(${comp})`
+          : `translate(${tx}, ${ty + colHeight}) rotate(-90)`
         d3_selection_g_FO
           .attr('width', width)
           .attr('height', height)
           .attr('x', 0)
           .attr('y', 0)
-          .attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+          .attr('transform', v_transform)
 
         this.drawGenericBackground(
           this.d3_selection!,
@@ -837,37 +866,54 @@ export abstract class DrawLabelBase {
         )
         const bg = this.d3_selection?.select('.element_fo_background')
         if (bg && !bg.empty()) {
-          bg.attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+          bg.attr('transform', v_transform)
         }
       } else {
+        // Empreinte locale visible (compensée). Le coin haut-gauche est calculé
+        // avec ces dimensions pour que l'ancrage (middle/end, baseline) reste
+        // correct quel que soit le zoom.
+        const vis_width = width * comp
+        const vis_height = height * comp
+
         let adjusted_x = label_pos_x
         if (label_anchor === 'middle') {
-          adjusted_x = label_pos_x - width / 2
+          adjusted_x = label_pos_x - vis_width / 2
         } else if (label_anchor === 'end') {
-          adjusted_x = label_pos_x - width
+          adjusted_x = label_pos_x - vis_width
         }
 
         let adjusted_y = label_pos_y
         if (label_baseline === 'text-after-edge') {
-          adjusted_y = label_pos_y - height
+          adjusted_y = label_pos_y - vis_height
         } else if (label_baseline === 'middle') {
-          adjusted_y = label_pos_y - height / 2
+          adjusted_y = label_pos_y - vis_height / 2
         }
 
+        // FO rendu à sa taille CSS native (width×height), amené au coin
+        // haut-gauche local puis contre-scalé par comp (translate … scale).
+        const h_transform = this.foScaleTransform(adjusted_x, adjusted_y, comp)
         d3_selection_g_FO
           .attr('width', width)
           .attr('height', height)
-          .attr('x', adjusted_x)
-          .attr('y', adjusted_y)
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('transform', h_transform)
 
+        // Le fond est dessiné à la taille native (0,0,width,height) et reçoit le
+        // même transform : il reste ainsi aligné et à taille écran constante,
+        // exactement comme le texte.
         this.drawGenericBackground(
           this.d3_selection!,
-          adjusted_x,
-          adjusted_y,
+          0,
+          0,
           width,
           height,
           { className: 'element_fo_background' }
         )
+        const bg = this.d3_selection?.select('.element_fo_background')
+        if (bg && !bg.empty()) {
+          bg.attr('transform', h_transform)
+        }
       }
     }
 
@@ -1127,32 +1173,43 @@ export abstract class DrawLabelBase {
     // Pour FO
     const fo = this.d3_selection.select('.element_fo')
     if (!fo.empty()) {
-      const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+      // Le rich text vertical est positionné par un transform translate+rotate
+      // dérivé des dims du nœud (cf. drawFO) ; le recalculer ici dupliquerait
+      // toute cette géométrie. On laisse donc le drag-end (drawGenericLabel) le
+      // replacer correctement plutôt que d'écraser sa rotation pendant le drag.
+      if (this._label_values.vertical_text) return
 
-      // Récupérer les dimensions actuelles du FO
+      const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+      // Issue #1232 : même compensation qu'à la pose initiale (drawFO).
+      const comp = this._element.drawing_area?.font_compensation ?? 1
+
+      // Récupérer les dimensions natives du FO, puis l'empreinte locale visible.
       const foWidth = parseFloat(fo.attr('width')) || 0
       const foHeight = parseFloat(fo.attr('height')) || 0
+      const vis_width = foWidth * comp
+      const vis_height = foHeight * comp
 
-      // Appliquer les mêmes ajustements que dans measureAndResize
+      // Appliquer les mêmes ajustements que dans drawFO
       let adjusted_x = label_pos_x
       if (label_anchor === 'middle') {
-        adjusted_x = label_pos_x - foWidth / 2
+        adjusted_x = label_pos_x - vis_width / 2
       } else if (label_anchor === 'end') {
-        adjusted_x = label_pos_x - foWidth
+        adjusted_x = label_pos_x - vis_width
       }
 
       let adjusted_y = label_pos_y
       if (label_baseline === 'text-after-edge') {
-        adjusted_y = label_pos_y - foHeight
+        adjusted_y = label_pos_y - vis_height
       } else if (label_baseline === 'middle') {
-        adjusted_y = label_pos_y - foHeight / 2
+        adjusted_y = label_pos_y - vis_height / 2
       }
-      fo.attr('x', adjusted_x).attr('y', adjusted_y)
+      const transform = this.foScaleTransform(adjusted_x, adjusted_y, comp)
+      fo.attr('x', 0).attr('y', 0).attr('transform', transform)
 
-      // Mettre à jour le background aussi
+      // Mettre à jour le background aussi (même transform → reste aligné)
       const foBg = this.d3_selection.select('.element_fo_background')
       if (!foBg.empty()) {
-        foBg.attr('x', adjusted_x - 5).attr('y', adjusted_y - 5)
+        foBg.attr('x', 0).attr('y', 0).attr('transform', transform)
       }
 
       return
@@ -1969,7 +2026,7 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   protected getLabelText(): string {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
-    return this.node.name_label
+    return this.node.name_label_effective
   }
 
   protected shouldDrawLabel(): boolean {
@@ -1977,8 +2034,15 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   }
 
   protected onInputChange(value: string): void {
-    this.node.name = value
-    // Sync name_label → fo_content only when rich text mode is active
+    // En mode label personnalisé, l'édition inline écrit dans le champ de label
+    // indépendant (le nœud n'est PAS renommé) ; sinon elle renomme le nœud,
+    // comportement historique.
+    if (this.node.name_label_custom) {
+      this.node.name_label_text = value
+    } else {
+      this.node.name = value
+    }
+    // Sync texte → fo_content uniquement en mode rich text
     if (this._label_values.has_fo) {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
