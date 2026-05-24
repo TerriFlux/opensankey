@@ -286,12 +286,23 @@ export const aggregate = (
   }
   // const parent = child_dim.parent
   const Do = () => {
+    // #1231 — Symétrique de la désagrégation : le parent reprend EXACTEMENT le slot
+    // occupé par ses enfants (leur bord haut), avant de les masquer. Comme la hauteur
+    // du parent = somme des hauteurs des enfants, il remplit leur place → aucun voisin
+    // déplacé. On lit le haut des enfants avant de basculer la visibilité.
+    const children = child_dim.children as Class_NodeElement[]
+    const children_top = children.length
+      ? Math.min(...children.map(c => c.position_y))
+      : child_dim.parent.position_y
+
     child_dim.setForceToShowParent()
     const aggregateNode = child_dim.parent as Class_NodeElement
     aggregateNode.input_links_list.forEach(l => l.source.draw())
     aggregateNode.output_links_list.forEach(l => l.target.draw())
 
     aggregateNode.position_u = contextualised_node.position_u
+    aggregateNode.position_x = contextualised_node.position_x
+    aggregateNode.position_y = children_top
 
     // Issue #1225 — inverse de la transitivité d'expansion. Si aggregateNode
     // est lui-même enfant d'une dim P→{...,aggregateNode,...} en mode expand,
@@ -335,6 +346,19 @@ export const aggregate = (
       // Reorganize les I/O
       P.reorganizeIOLinks()
       aggregateNode.reorganizeIOLinks()
+    }
+
+    // #1231 — Réorganiser les liens E/S sur le parent ré-agrégé et ses voisins
+    // (sources/cibles) pour suivre la nouvelle position.
+    const to_reorg = new Set<Class_NodeElement>([aggregateNode])
+    aggregateNode.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    aggregateNode.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+    to_reorg.forEach(n => n.reorganizeIOLinks())
+
+    // #1231 — En mode pourcentage, re-baser la référence sur le nouvel état.
+    if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
+      new_data.drawing_area.nodePositioning.inferPositionUFromX()
+      new_data.drawing_area.nodePositioning.captureProportionalReference()
     }
   }
   const undo = () => {
@@ -397,17 +421,30 @@ export const disaggregate = (
     parent_dim.setForceToShowChildren()
     const new_nodes = parent_dim.children as Class_NodeElement[]
 
-    // Positionnement symétrique des enfants autour du centre du nœud agrégé.
-    // L'écart vertical entre enfants est lu depuis `shape_position_dy` (PR 2).
-    const total_stack_height = NodePositioning.totalStackHeight(new_nodes)
-    const aggregate_center_y = aggregateNode.position_y + aggregateNode.getShapeHeightToUse() / 2
-    const anchor_y = aggregate_center_y - total_stack_height / 2
+    // #1231 — Désagrégation locale : les enfants prennent EXACTEMENT la place du parent
+    // VISIBLE. Comme la hauteur du parent = somme des hauteurs des enfants (conservation),
+    // on les répartit dans le slot [haut_parent, bas_parent] avec un écart calculé pour
+    // remplir le slot (≈ 0). Ainsi ils n'occupent que la place du parent → AUCUN nœud
+    // voisin n'est poussé (ni vers le bas, ni vers le haut). Si la somme des enfants est
+    // < parent (enfants filtrés), l'écart répartit l'espace ; on clampe à ≥ 0.
+    const parent_top = aggregateNode.position_y
+    const parent_h = aggregateNode.getShapeHeightToUse()
+    const sum_children_h = new_nodes.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
+    const fill_gap = new_nodes.length > 1
+      ? Math.max(0, (parent_h - sum_children_h) / (new_nodes.length - 1))
+      : 0
 
-    new_nodes.forEach((n) => {
+    let cursor = parent_top
+    new_nodes.forEach((n, i) => {
       n.position_u = aggregateNode.position_u
       n.position_x = aggregateNode.position_x
+      if (i > 0) {
+        cursor += fill_gap
+        n.shape_position_dy = fill_gap
+      }
+      n.position_y = cursor
+      cursor += n.getShapeHeightToUse()
     })
-    NodePositioning.stackNodesVertically(new_nodes, anchor_y)
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
@@ -456,6 +493,25 @@ export const disaggregate = (
       // liens d'expansion soient correctement attachés et rendus.
       P.reorganizeIOLinks()
       new_nodes.forEach(c => c.reorganizeIOLinks())
+    }
+
+    // #1231 — Réorganiser les liens E/S après désagrégation : sur les enfants ET sur
+    // leurs voisins (chaque source → réordonne ses liens sortants ; chaque cible →
+    // réordonne ses liens entrants) pour que l'ordre/l'ancrage des liens suive les
+    // nouvelles positions des enfants.
+    const to_reorg = new Set<Class_NodeElement>(new_nodes)
+    new_nodes.forEach(c => {
+      c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+      c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+    })
+    to_reorg.forEach(n => n.reorganizeIOLinks())
+
+    // #1231 — En mode pourcentage, re-baser la référence sur le nouvel état (enfants
+    // visibles à leur place) pour que les positions tiennent et respirent ensuite
+    // correctement au changement de datatag.
+    if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
+      new_data.drawing_area.nodePositioning.inferPositionUFromX()
+      new_data.drawing_area.nodePositioning.captureProportionalReference()
     }
   }
 
