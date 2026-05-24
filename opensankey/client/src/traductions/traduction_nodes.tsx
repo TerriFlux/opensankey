@@ -142,9 +142,16 @@ export const resources_nodes = {
           vdv: 'Value',
           edit_node_label: 'Edit node label',
           anchor: 'Anchor position',
+          name_label_text_source: 'Label content',
+          name_label_text: 'Custom label',
+          text_source: {
+            name: 'Node name',
+            custom: 'Custom text',
+          },
 
           tooltips: {
             name_label_is_visible: 'Displays or not the label(s) attached to the selected node(s)',
+            name_label_text_source: 'Choose what the node label shows: the node name, or an independent custom text (edited without renaming the node)',
             lb: 'Displays the text of the label(s) in white or black (useful if label is positioned on node(s))',
             name_label_background: 'Add a background to the label for a better visibility in case the label is in front of a link',
             top: 'Displays the label(s) above the selected node(s)',
@@ -367,7 +374,14 @@ export const resources_nodes = {
           vdv: 'Valeur',
           edit_node_label: 'Éditer le nom',
           anchor: 'Position de l\'ancre',
+          name_label_text_source: 'Contenu du label',
+          name_label_text: 'Label personnalisé',
+          text_source: {
+            name: 'Nom du nœud',
+            custom: 'Texte personnalisé',
+          },
           tooltips: {
+            name_label_text_source: 'Choisir ce qu\'affiche le label du nœud : le nom du nœud, ou un texte personnalisé indépendant (éditable sans renommer le nœud)',
             lb: 'Permet d\'afficher le texte du label en blanc ou en noir (utile si label positionné sur noeud(s))',
             haut: 'Positionner le label au dessus du/des noeud(s) sélectionné(s)',
             Milieu_pv: 'Positionner le label au milieu (verticalement) du/des noeud(s) sélectionné(s)',
@@ -589,7 +603,14 @@ export const resources_nodes = {
           vdv: 'Valor',
           edit_node_label: 'Editar nombre del nodo',
           anchor: 'Posición del ancla',
+          name_label_text_source: 'Contenido de la etiqueta',
+          name_label_text: 'Etiqueta personalizada',
+          text_source: {
+            name: 'Nombre del nodo',
+            custom: 'Texto personalizado',
+          },
           tooltips: {
+            name_label_text_source: 'Elegir lo que muestra la etiqueta del nodo: el nombre del nodo, o un texto personalizado independiente (editable sin renombrar el nodo)',
             name_label_is_visible: 'Muestra u oculta la(s) etiqueta(s) asociada(s) al/a los nodo(s) seleccionado(s)',
             lb: 'Muestra el texto de la(s) etiqueta(s) en blanco o negro (útil si la etiqueta está sobre el/los nodo(s))',
             name_label_background: 'Añade un fondo a la etiqueta para mejor visibilidad cuando está delante de un flujo',
@@ -813,7 +834,14 @@ export const resources_nodes = {
           vdv: 'Wert',
           edit_node_label: 'Knotenbezeichnung bearbeiten',
           anchor: 'Ankerposition',
+          name_label_text_source: 'Beschriftungsinhalt',
+          name_label_text: 'Benutzerdefinierte Beschriftung',
+          text_source: {
+            name: 'Knotenname',
+            custom: 'Benutzerdefinierter Text',
+          },
           tooltips: {
+            name_label_text_source: 'Wählen, was die Knotenbeschriftung anzeigt: den Knotennamen oder einen unabhängigen benutzerdefinierten Text (bearbeitbar, ohne den Knoten umzubenennen)',
             name_label_is_visible: 'Zeigt oder verbirgt die Beschriftung(en) des/der ausgewählten Knoten(s)',
             lb: 'Zeigt den Text der Beschriftung(en) in Weiß oder Schwarz an (nützlich, wenn die Beschriftung auf dem/den Knoten positioniert ist)',
             name_label_background: 'Fügt einen Hintergrund zur Beschriftung hinzu für bessere Sichtbarkeit, wenn sie vor einem Fluss liegt',
@@ -1037,7 +1065,14 @@ export const resources_nodes = {
           vdv: 'Valore',
           edit_node_label: 'Modifica nome nodo',
           anchor: 'Posizione dell\'ancora',
+          name_label_text_source: 'Contenuto dell\'etichetta',
+          name_label_text: 'Etichetta personalizzata',
+          text_source: {
+            name: 'Nome del nodo',
+            custom: 'Testo personalizzato',
+          },
           tooltips: {
+            name_label_text_source: 'Scegli cosa mostra l\'etichetta del nodo: il nome del nodo, o un testo personalizzato indipendente (modificabile senza rinominare il nodo)',
             name_label_is_visible: 'Mostra o nasconde l\'etichetta/e associata/e al/ai nodo/i selezionato/i',
             lb: 'Mostra il testo dell\'etichetta/e in bianco o nero (utile se l\'etichetta è posizionata sul/sui nodo/i)',
             name_label_background: 'Aggiunge uno sfondo all\'etichetta per una migliore visibilità quando è davanti a un flusso',
