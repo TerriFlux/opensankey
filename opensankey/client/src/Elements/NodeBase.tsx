@@ -60,6 +60,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_v: number
 
   protected _name: string
+  // Label de nom indépendant du nom du nœud (même principe que text_value du
+  // flux). Quand _name_label_custom est true, le name_label affiche
+  // _name_label_text au lieu du nom, et l'édition (inline + rich text) écrit
+  // dans _name_label_text SANS renommer le nœud. Défaut false → comportement
+  // historique (le label EST le nom).
+  protected _name_label_custom: boolean = false
+  protected _name_label_text: string = ''
   protected _nodeDrawShape: NodeDrawShape
   protected _nodeDrawNameLabel: NodeDrawNameLabel
   protected _nodeDrawIcon: NodeDrawNameLabel
@@ -165,6 +172,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
     this._name = _.name
+    this._name_label_custom = _._name_label_custom
+    this._name_label_text = _._name_label_text
     this._position_u = _._position_u
     this._position_v = _._position_v
 
@@ -423,6 +432,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
       return (splitted_label.length > 1 && this.name_label_separator_part == 'after') ? splitted_label[splitted_label.length - 1] : splitted_label[0]
     }
     return this._name
+  }
+
+  // Label de nom indépendant (cf. _name_label_custom / _name_label_text).
+  public get name_label_custom() { return this._name_label_custom }
+  public set name_label_custom(_: boolean) { this._name_label_custom = _; this.drawNameLabel() }
+  public get name_label_text() { return this._name_label_text }
+  public set name_label_text(_: string) { this._name_label_text = _; this.drawNameLabel() }
+  // Texte effectivement affiché par le name_label : le texte custom indépendant
+  // quand il est activé, sinon le nom (avec le découpage par séparateur). Sert de
+  // source unique au rendu (getLabelText) et à l'init du rich text.
+  public get name_label_effective(): string {
+    return this._name_label_custom ? this._name_label_text : this.name_label
   }
 
   public get attached_container(): Class_NodeBase[] { return this._attached_container }

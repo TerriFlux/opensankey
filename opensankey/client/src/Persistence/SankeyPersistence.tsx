@@ -208,6 +208,15 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
     json_object['name'] = node_base.name
+    // Label de nom indépendant du nom du nœud. Écrit uniquement s'il est utilisé,
+    // pour ne pas alourdir les fichiers ni modifier les diagrammes existants
+    // (rétro-compatible : absence des clés ⇒ défauts false/'' au chargement).
+    if (node_base.name_label_custom) {
+      json_object['name_label_custom'] = true
+    }
+    if (node_base.name_label_text !== '') {
+      json_object['name_label_text'] = node_base.name_label_text
+    }
     if (node_base.sankey.default_style.shape_position_type == 'parametric') {
       json_object['u'] = node_base.position_u
       json_object['v'] = node_base.position_v
@@ -251,6 +260,8 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
+    node_base['_name_label_custom'] = getBooleanFromJSON(json_node_object, 'name_label_custom', node_base.name_label_custom)
+    node_base['_name_label_text'] = getStringFromJSON(json_node_object, 'name_label_text', node_base.name_label_text)
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
 
