@@ -633,6 +633,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           </Menu>
         )
       }
+      // #1231 — Hiérarchie pas-à-pas : en mode 'level', on ne peut changer que d'UN
+      // niveau à la fois (désactiver les options à plus de ±1 du niveau courant). Force
+      // à désagréger/agréger en se basant sur la position des parents/enfants immédiats.
+      const cur_idx = tagg.tags_list.findIndex(t => t.id === selected_value)
       return (
         <Select
           key={tagg.name}
@@ -641,8 +645,12 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             handleTagSelection(tagg, [evt.target.value])
           }}
         >
-          {tagg.tags_list.map(tag => (
-            <option key={tag.id} value={tag.id}>
+          {tagg.tags_list.map((tag, idx) => (
+            <option
+              key={tag.id}
+              value={tag.id}
+              disabled={mode === 'level' && cur_idx >= 0 && Math.abs(idx - cur_idx) > 1}
+            >
               {tag.name}
             </option>
           ))}
