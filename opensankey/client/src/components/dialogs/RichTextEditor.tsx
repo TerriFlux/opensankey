@@ -211,7 +211,13 @@ const syncFoContentToLabel = (
   const plainText = stripHtmlTags(foContent)
   elements.forEach(el => {
     if (el instanceof Class_NodeBase) {
-      el.name = plainText
+      // En mode label personnalisé, écrire dans le champ de label indépendant
+      // (le nœud n'est PAS renommé) ; sinon, comportement historique (= nom).
+      if (el.name_label_custom) {
+        el.name_label_text = plainText
+      } else {
+        el.name = plainText
+      }
     } else if (el instanceof Class_LinkElement) {
       el.text_value = plainText
     }
