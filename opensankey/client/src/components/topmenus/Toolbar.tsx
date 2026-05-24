@@ -10,6 +10,8 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
+import { disaggregate, aggregate, resetLocalHierarchy } from '../../Algorithms/Hierarchies'
+import { Class_NodeElement } from '../../Elements/Node'
 
 const width_fitler_drawer = 270
 
@@ -397,6 +399,13 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Component updater
   const [, setCount] = useState(0)
 
+  // #1231 — État HYBRIDE : des nœuds ont été désagrégés localement (clic droit →
+  // force_show_children). Tant que c'est le cas, le menu Hiérarchies global ne doit pas
+  // agir (dropdowns désactivés) ; l'utilisateur doit d'abord « Réinitialiser » pour
+  // revenir à l'état uniforme du menu.
+  const has_local_hierarchy = mode === 'level' &&
+    sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.force_show_children))
+
   // Configuration du updater selon le mode
   if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
     //@ts-expect-error xxx
@@ -467,6 +476,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Gestion des actions spécifiques selon le mode
   const handleTagSelection = (tagg: Class_TagGroup, values: string[]) => {
+    // #1231 — pour les level taggs, mémoriser le niveau AVANT de changer la sélection,
+    // afin de connaître le sens (descendre = désagréger / monter = agréger) et de
+    // récupérer les nœuds visibles du niveau courant.
+    const old_level_idx = (mode === 'level')
+      ? tagg.tags_list.findIndex(t => t.is_selected)
+      : -1
+    const nodes_before = (mode === 'level')
+      ? [...drawing_area.sankey.visible_nodes_list]
+      : []
+
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
@@ -476,14 +495,38 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-    case 'level':
+    case 'level': {
       app_data.drawing_area.bypass_redraws = true
-      if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
-        app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
+      // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
+      // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
+      // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
+      // (dropdown) garantit un seul cran. `showAccordingToLevelTags()` ci-dessous nettoie
+      // ensuite les force-flags (mode global = visibilité pilotée par les level-tags).
+      const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
+      if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
+        nodes_before.forEach(n => {
+          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id)
+          if (dim && dim.children.length > 0) {
+            disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
+          }
+        })
+      } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
+        nodes_before.forEach(n => {
+          const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
+          if (dim) {
+            aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
+          }
+        })
       }
       app_data.drawing_area.sankey.showAccordingToLevelTags()
       app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
       updateUnitaryStyles(app_data.drawing_area)
+      // #1231 — re-capture FINALE de la référence % sur l'ensemble visible définitif
+      // (les disaggregate/aggregate de la boucle l'ont capturée sur des états partiels).
+      if (app_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
+        app_data.drawing_area.nodePositioning.inferPositionUFromX()
+        app_data.drawing_area.nodePositioning.captureProportionalReference()
+      }
       app_data.drawing_area.draw()
       app_data.drawing_area.to_recenter = true
       app_data.drawing_area.recenter()
@@ -491,6 +534,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       app_data.drawing_area.orderElementOnDA()
 
       break
+    }
     case 'data':
       handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
       break
@@ -641,6 +685,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
         <Select
           key={tagg.name}
           value={selected_value}
+          isDisabled={has_local_hierarchy}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             handleTagSelection(tagg, [evt.target.value])
           }}
@@ -848,9 +893,29 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   let title_key = config.title_key
   if (mode === 'level' && taggs_in_banner.length > 0 && taggs_in_banner[0].name === 'Primaire') title_key = 'ndd_one'
 
+  // #1231 — Bouton « Réinitialiser » en haut du menu Hiérarchies, visible uniquement en
+  // état hybride (désagrégations locales). Il ré-agrège les désagrégations locales et
+  // revient à l'état uniforme du menu, ce qui réactive les dropdowns de niveau.
+  const ResetHierarchyButton = (mode === 'level' && has_local_hierarchy) ? (
+    <Box layerStyle='filter_grid_row'>
+      <OSTooltip label={t('Banner.resetHierarchyTooltip')}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_option_button'
+          onClick={() => {
+            resetLocalHierarchy(app_data)
+            updateComponents()
+          }}>
+          {t('Banner.resetHierarchy')}
+        </Button>
+      </OSTooltip>
+    </Box>
+  ) : null
+
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
+      {ResetHierarchyButton}
       {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}

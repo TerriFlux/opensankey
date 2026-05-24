@@ -213,7 +213,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
   path,
   refreshCallback
 }: ContextMenuRendererProps<T>) => {
-  const [, setForceUpdate] = useState(0)
+  const [forceUpdateCount, setForceUpdate] = useState(0)
   const { t } = app_data
 
   // Callback de refresh unifié
@@ -296,8 +296,17 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         // imprévisibles tant que ce mode est actif. Hypothèse : au plus une
         // dim en container_mode à la fois sur un même nœud.
         const englobed_parent_dim = parent_dims.find(dim => !!dim.container_mode)
-        const filtered_child_dims = englobed_parent_dim ? [] : child_dims
-        const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+        let filtered_child_dims = englobed_parent_dim ? [] : child_dims
+        let filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+
+        // #1231 — Un `force_show_children` actif sur une dimension (désagrégation locale)
+        // restreint le menu à CETTE seule dimension : on ne peut agréger/désagréger que
+        // le long d'elle, pas le long d'une autre dimension (sinon état incohérent).
+        const active_child_dim = child_dims.find(dim => dim.force_show_children)
+        if (active_child_dim && !englobed_parent_dim) {
+          filtered_child_dims = filtered_child_dims.filter(d => d.id === active_child_dim.id)
+          filtered_parent_dims = filtered_parent_dims.filter(d => d.id === active_child_dim.id)
+        }
 
         // Créer un sous-menu pour chaque dimension child.
         // Issue #1225 — quand une opération est active sur la dim (désagrégé,
@@ -589,7 +598,11 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
       })
     }
     return processItems(config.structure)
-  }, [config.structure, app_data])
+    // #1231 — recalculer la structure (items dynamiques basés sur le nœud contextualisé,
+    // ex. liste des enfants à désagréger) quand le nœud change OU à chaque refresh
+    // (force_show_children, désagrégation…). Sinon le menu reste périmé jusqu'à
+    // fermeture/réouverture (le useMemo ne dépendait que de refs stables).
+  }, [config.structure, app_data, forceUpdateCount, app_data.drawing_area.node_contextualised])
 
   if (!isVisible || !globalConditionsMet) return null
 

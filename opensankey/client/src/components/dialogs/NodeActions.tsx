@@ -45,6 +45,10 @@ export class NodeActions {
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     this.drawing_area.application_data.menu_configuration.ref_to_spreadsheet?.current()
     this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    // #1231 — rafraîchir le menu Hiérarchies (toolbar) pour qu'il reflète tout de suite
+    // l'état hybride après une (dés)agrégation locale : bouton « Réinitialiser » +
+    // dropdowns désactivés, sans avoir à recharger.
+    this.drawing_area.application_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater?.current?.()
   }
 
   private closeContextMenu = () => {
