@@ -857,6 +857,53 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
       ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    typo_strict: {
+      group: 'autocorrection',
+      breakBefore: true,
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Strict typo check on node names',
+        fr: 'Vérification stricte des typos de noms de nœuds',
+        es: 'Verificación estricta de erratas en los nombres de nodos',
+        de: 'Strenge Tippfehlerprüfung bei Knotennamen',
+        it: 'Verifica rigorosa dei refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked: two node labels that differ only by spaces, spacing around punctuation, case or accents make the load fail (the typo must be fixed in the file). If unchecked: the offending label is assimilated to the existing node and a warning is emitted.',
+        fr: 'Si coché : deux libellés de nœud qui ne diffèrent que par des espaces, de la ponctuation, la casse ou les accents font échouer le chargement (la typo doit être corrigée dans le fichier). Si décoché : le libellé fautif est assimilé au nœud existant et un avertissement est émis.',
+        es: 'Si está marcado: dos etiquetas de nodo que difieren solo por espacios, puntuación, mayúsculas o acentos hacen que la carga falle (la errata debe corregirse en el archivo). Si no está marcado: la etiqueta problemática se asimila al nodo existente y se emite una advertencia.',
+        de: 'Wenn aktiviert: zwei Knotenbezeichnungen, die sich nur durch Leerzeichen, Interpunktion, Groß-/Kleinschreibung oder Akzente unterscheiden, lassen das Laden fehlschlagen (der Tippfehler muss in der Datei korrigiert werden). Wenn deaktiviert: die betroffene Bezeichnung wird dem vorhandenen Knoten zugeordnet und eine Warnung ausgegeben.',
+        it: 'Se selezionato: due etichette di nodo che differiscono solo per spazi, punteggiatura, maiuscole/minuscole o accenti fanno fallire il caricamento (il refuso va corretto nel file). Se non selezionato: l\'etichetta problematica viene assimilata al nodo esistente e viene emesso un avviso.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autocorrect_typo: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Auto-correct node name typos',
+        fr: 'Auto-corriger les typos de noms de nœuds',
+        es: 'Autocorregir las erratas en los nombres de nodos',
+        de: 'Tippfehler in Knotennamen automatisch korrigieren',
+        it: 'Correggere automaticamente i refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked (and "strict typo check" unchecked): labels assimilated to an existing node are corrected to the canonical name and highlighted in red on the corrected output. Otherwise: warning only, no highlight.',
+        fr: 'Si coché (et « vérification stricte des typos » décochée) : les libellés assimilés à un nœud existant sont corrigés vers le nom canonique et surlignés en rouge sur la sortie corrigée. Sinon : simple avertissement sans surlignage.',
+        es: 'Si está marcado (y "verificación estricta de erratas" desmarcada): las etiquetas asimiladas a un nodo existente se corrigen al nombre canónico y se resaltan en rojo en la salida corregida. De lo contrario: solo advertencia, sin resaltado.',
+        de: 'Wenn aktiviert (und „strenge Tippfehlerprüfung“ deaktiviert): dem vorhandenen Knoten zugeordnete Bezeichnungen werden auf den kanonischen Namen korrigiert und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: nur Warnung, keine Hervorhebung.',
+        it: 'Se selezionato (e "verifica rigorosa dei refusi" deselezionata): le etichette assimilate a un nodo esistente vengono corrette al nome canonico ed evidenziate in rosso nell\'output corretto. Altrimenti: solo avviso, senza evidenziazione.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
