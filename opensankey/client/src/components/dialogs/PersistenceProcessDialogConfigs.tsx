@@ -577,10 +577,10 @@ export type OptionGroup =
 
 // Ordre d'affichage imposé des groupes dans la boîte de dialogue.
 export const OPTION_GROUP_ORDER: OptionGroup[] = [
+  'merge',
   'autocorrection',
   'sheets',
   'content',
-  'merge',
   'presentation',
   'solver',
 ]
@@ -1210,11 +1210,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         it: 'Riscrivere i fogli specifici di OpenSankey'
       },
       tooltips: {
-        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave them untouched (only meaningful when keeping other sheets from the input).',
-        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour les laisser intacts (utile uniquement si on conserve les autres onglets de l\'entrée).',
-        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejarlas intactas (útil solo si se conservan las otras hojas de la entrada).',
-        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um sie unverändert zu lassen (nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden).',
-        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciarli intatti (utile solo se si mantengono gli altri fogli dell\'input).'
+        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave the ones already present in the input file untouched; sheets not yet in the file (e.g. post-solver results) are still written. Has no effect on a fresh output — only meaningful when keeping other sheets from the input.',
+        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour laisser intacts ceux déjà présents dans le fichier d\'entrée ; les onglets nouveaux (pas encore dans le fichier, ex : résultats post-solveur) restent écrits. Sans effet sur une sortie vierge — utile uniquement si on conserve les autres onglets de l\'entrée.',
+        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejar intactas las que ya están presentes en el archivo de entrada; las hojas aún no presentes en el archivo (p. ej. resultados tras el solver) se siguen escribiendo. Sin efecto en una salida nueva — útil solo si se conservan las otras hojas de la entrada.',
+        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um die bereits in der Eingabedatei vorhandenen unverändert zu lassen; noch nicht in der Datei enthaltene Blätter (z. B. Ergebnisse nach dem Solver) werden weiterhin geschrieben. Ohne Wirkung bei einer neuen Ausgabe — nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden.',
+        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciare intatti quelli già presenti nel file di input; i fogli non ancora presenti nel file (es. risultati dopo il solver) vengono comunque scritti. Nessun effetto su un output nuovo — utile solo se si mantengono gli altri fogli dell\'input.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
@@ -1298,10 +1298,31 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    layout: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet layout',
+        fr: 'Onglet mise en page',
+        es: 'Hoja de diseño',
+        de: 'Layout-Blatt',
+        it: 'Foglio layout'
+      },
+      tooltips: {
+        en: 'Sheet containing diagram layout',
+        fr: 'Onglet qui contient la mise en page du diagramme',
+        es: 'Hoja que contiene el diseño del diagrama',
+        de: 'Blatt mit dem Diagramm-Layout',
+        it: 'Foglio contenente il layout del diagramma'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     with_nodes_sheets: {
       group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
+      breakBefore: true,
       labels: {
         en: 'Sheets nodes',
         fr: 'Onglets nœuds',
@@ -1324,7 +1345,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       type: (() => 'auto') as (() => string),
       labels: {
         en: 'Nodes sheet format',
-        fr: 'Format des feuilles de nœuds',
+        fr: 'Format',
         es: 'Formato de las hojas de nodos',
         de: 'Format der Knotenblätter',
         it: 'Formato dei fogli nodi'
@@ -1382,26 +1403,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         { type: 'optionProperty', property: 'with_nodes_sheets', operator: '==', value: true }
       ]
     } satisfies FormatAttributeConfig<string>,
-
-    layout: {
-      group: 'sheets',
-      default: true,
-      type: (() => true) as (() => boolean),
-      labels: {
-        en: 'Sheet layout',
-        fr: 'Onglet mise en page',
-        es: 'Hoja de diseño',
-        de: 'Layout-Blatt',
-        it: 'Foglio layout'
-      },
-      tooltips: {
-        en: 'Sheet containing diagram layout',
-        fr: 'Onglet qui contient la mise en page du diagramme',
-        es: 'Hoja que contiene el diseño del diagrama',
-        de: 'Blatt mit dem Diagramm-Layout',
-        it: 'Foglio contenente il layout del diagramma'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
 
     activate_data_table: {
       group: 'sheets',
