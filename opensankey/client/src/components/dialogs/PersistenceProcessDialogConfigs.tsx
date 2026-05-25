@@ -834,6 +834,29 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
       ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autofix_ter_duplicate_entries: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Merge (union) inconsistent duplicated TER entries',
+        fr: 'Fusionner (union) les doublons incohérents du TER',
+        es: 'Fusionar (unión) las entradas duplicadas incoherentes del TER',
+        de: 'Inkonsistente doppelte TER-Einträge zusammenführen (Vereinigung)',
+        it: 'Unire (unione) le voci duplicate incoerenti del TER'
+      },
+      tooltips: {
+        en: 'If checked: when a node that is a parent along several dimensions appears more than once in the TER (supply-use table) with copies whose crosses differ, the copies are merged by union (a flux is kept if present in at least one copy) and a warning lists the re-incorporated fluxes. If unchecked: load fails, listing the inconsistent fluxes (cross present in one copy only).',
+        fr: 'Si coché : quand un nœud parent selon plusieurs dimensions apparaît plusieurs fois dans le TER (table emplois-ressources) avec des copies dont les croix diffèrent, les copies sont fusionnées par union (un flux est conservé s\'il est présent dans au moins une copie) et un avertissement liste les flux ré-incorporés. Si décoché : le chargement échoue en listant les flux incohérents (croix présente dans une seule copie).',
+        es: 'Si está marcado: cuando un nodo padre según varias dimensiones aparece varias veces en el TER (tabla empleos-recursos) con copias cuyas cruces difieren, las copias se fusionan por unión (un flujo se conserva si está presente en al menos una copia) y una advertencia lista los flujos reincorporados. Si no está marcado: la carga falla, listando los flujos incoherentes (cruz presente en una sola copia).',
+        de: 'Wenn aktiviert: wenn ein Knoten, der entlang mehrerer Dimensionen ein Elternknoten ist, mehrfach in der TER (Aufkommens-Verwendungs-Tabelle) mit Kopien erscheint, deren Kreuze sich unterscheiden, werden die Kopien durch Vereinigung zusammengeführt (ein Fluss bleibt erhalten, wenn er in mindestens einer Kopie vorhanden ist) und eine Warnung listet die wieder aufgenommenen Flüsse auf. Wenn deaktiviert: das Laden schlägt fehl und listet die inkonsistenten Flüsse auf (Kreuz nur in einer Kopie vorhanden).',
+        it: 'Se selezionato: quando un nodo padre secondo più dimensioni appare più volte nel TER (tabella impieghi-risorse) con copie le cui croci differiscono, le copie vengono unite per unione (un flusso è mantenuto se presente in almeno una copia) e un avviso elenca i flussi reincorporati. Se non selezionato: il caricamento fallisce, elencando i flussi incoerenti (croce presente in una sola copia).'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
