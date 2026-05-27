@@ -488,6 +488,12 @@ export class Class_NodeElement extends Class_NodeBase {
   public drawValueLabel() {
     if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
+    // En mode stick, le <g> de la valeur est recréé sans transform : sans ce
+    // recalage il reste à sa position non-ancrée (drift au redraw suivant le
+    // toggle). Symétrique de drawNameLabel / drawElements / _draw.
+    if (this.value_label_stick_to_label) {
+      this._nodeDrawNameLabel?.refreshStickLayout()
+    }
     this._orderD3Elements()
   }
 
