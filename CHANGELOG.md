@@ -4,6 +4,14 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased]
 
+### Added (tooltip de flux — onglet « Données » des flux enfants par dimension)
+
+- **Onglet « Données » sur le tooltip de flux** ([TooltipsLink.tsx](opensankey/client/src/Elements/TooltipsLink.tsx)) : quand un flux relie des nœuds désagrégeables (dimensions de nœud = groupes de level tags), le tooltip gagne un onglet « Données » listant les flux enfants feuille→feuille. Les dimensions étant antagonistes (ex. par essences vs par propriétés), les flux sont regroupés **par axe** — un tableau par groupe de level tags, titré par son nom (`sankey.level_taggs_dict[dim.id].name`) — la descente jusqu'aux feuilles ne suivant que les dimensions du même axe (`dimension.id`), donc sans mélange ni double comptage. Chaque ligne : origine → destination, valeur (unité nommée) et ratio sur la valeur totale du flux parent. Un axe n'apparaît que s'il désagrège réellement la source ou la target et qu'au moins un flux enfant porte une donnée. Le tooltip de flux réutilise le système d'onglets du tooltip de nœud. Recalage du tooltip dans le viewport après rendu (hauteur/largeur réelles) pour ne plus déborder sous le bord de l'écran. Related: su-model/sankeyapplication#158.
+
+### Added (tooltips nœud + flux — épingle et déplacement)
+
+- **Tooltips épinglables et déplaçables** ([TooltipsCSS.tsx](opensankey/client/src/Elements/TooltipsCSS.tsx), [TooltipsConfig.tsx](opensankey/client/src/Elements/TooltipsConfig.tsx)) : tout tooltip (nœud comme flux) peut être déplacé en glissant son en-tête et épinglé via un bouton (punaise) dans l'en-tête. Épinglé, il n'est plus fermé automatiquement au départ de la souris ni au clic extérieur (fermeture par ✕ ou Échap uniquement) ; commencer un déplacement épingle automatiquement. Non épinglé, le comportement « peek » (auto-fermeture ~1 s après le départ de la souris) est conservé. Related: su-model/sankeyapplication#158.
+
 ### Added (verrou « forcer le tracé en trait » + critère géométrique trait/forme)
 
 - **Critère trait→forme pleine revu** ([LinkDrawShape.tsx](opensankey/client/src/Elements/LinkDrawShape.tsx)) : la bascule automatique entre rendu en trait (stroke le long de la bézier) et forme pleine fermée (anti-recouvrement des flux épais et courts) ne repose plus sur la distance euclidienne `dist/thickness > 2` mais sur un critère orienté + angle de virage : on garde le trait tant que le span le long de l'axe principal (dx pour un flux horizontal, dy pour un vertical) dépasse `thickness·tan(θ/2)`, où `θ` est estimé sur la pente max de la bézier (tangentes horizontales aux extrémités → sur-pente vs corde). Deux constantes de réglage en tête de fichier : `BEZIER_STEEPNESS` (1.5) et `SHOW_AS_PATH_SAFETY` (2). Corrige les flux très inclinés (dy grand, dx petit) qui se chevauchaient malgré une grande distance euclidienne, là où l'ancien critère ignorait l'orientation.
