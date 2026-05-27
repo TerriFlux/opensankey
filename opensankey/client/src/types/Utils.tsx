@@ -47,7 +47,7 @@ export type Type_BaseElementPosition = {
   y: number
 }
 
-export type Type_Position = 'absolute' | 'relative' | 'parametric'
+export type Type_Position = 'absolute' | 'relative' | 'parametric' | 'proportional' | 'scale_adapted'
 
 /**
  * Define type properties for Sankey structure

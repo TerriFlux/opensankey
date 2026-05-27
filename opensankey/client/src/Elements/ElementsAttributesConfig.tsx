@@ -2500,6 +2500,29 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  is_reference_flux: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    // Pas d'action au set : le redraw est piloté par le handler (setReferenceFlux) ; poser
+    // le marqueur ne doit pas déclencher de dessin (notamment pendant le nettoyage de l'ancien).
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Reference flow',
+      fr: 'Flux de référence',
+      es: 'Flujo de referencia',
+      de: 'Referenzfluss',
+      it: 'Flusso di riferimento'
+    },
+    tooltips: {
+      en: 'In proportional / adapted-scale mode, anchor the diagram on this flow. Set via right-click "Set as reference flow".',
+      fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur ce flux. Activé via clic droit « Définir comme flux de référence ».',
+      es: 'En modo proporcional / escala adaptada, anclar el diagrama en este flujo. Activado con clic derecho «Definir como flujo de referencia».',
+      de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm an diesem Fluss verankern. Über Rechtsklick „Als Referenzfluss festlegen" aktiviert.',
+      it: 'In modalità proporzionale / scala adattata, ancorare il diagramma a questo flusso. Attivato con clic destro «Imposta come flusso di riferimento».'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   show_as_path_locked: {
     default: false,
     type: (() => false) as (() => boolean),

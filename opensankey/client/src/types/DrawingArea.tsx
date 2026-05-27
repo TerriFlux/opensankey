@@ -560,6 +560,17 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'proportional') {
+      // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
+      // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
+      // changement d'épaisseur). Doit tourner avant _sankey.draw().
+      this.nodePositioning.anchorProportionalNodes()
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #1231 — Mode « échelle adaptée » : ajuster l'échelle (valeur→px) pour que le flux
+      // de référence garde la même épaisseur d'un datatag à l'autre, puis garder le centre
+      // des nœuds fixe pendant qu'ils se redimensionnent (comme l'absolu). Avant _sankey.draw().
+      this.nodePositioning.applyAdaptedScale()
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
     } else {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
@@ -576,14 +587,14 @@ export class Class_DrawingArea {
     this._sankey.draw()
     // #665 — maintien des flux marqués « à garder droit » (droiture dure, écarts
     // absorbants). Doit tourner APRÈS un premier draw : le cache d'accroche
-    // (getOutputLinkStartingPoint/…) reflète alors les épaisseurs courantes
-    // (utile au changement de data tag/région). Si des nœuds bougent, on
-    // redessine une seule fois — appel direct à _sankey.draw() (pas drawElements)
-    // pour éviter toute récursion.
-    if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
-      if (this.nodePositioning.enforceStraightLinks()) {
-        this._sankey.draw()
-      }
+    // (getOutputLinkStartingPoint/…) reflète alors les épaisseurs courantes.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : l'espacement par colonne
+    // (applyProportionalColumnSpacing) place les nœuds de façon déterministe, et
+    // déplacer une cible pour « garder droit » casse cet empilement. Actif en
+    // absolu / échelle adaptée / paramétrique.
+    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+        this.nodePositioning.enforceStraightLinks()) {
+      this._sankey.draw()
     }
     // Draw legend
     //this._legend.draw()
@@ -2897,11 +2908,38 @@ export class Class_DrawingArea {
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
+    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
     // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
     // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
     // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
     this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+  }
+
+  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
+  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
+  public setScaleAdaptedMode() {
+    const default_style = this.sankey.styles_dict['default']
+    default_style.shape_position_type = 'scale_adapted'
+    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    this.nodePositioning.captureScaleReference()
+  }
+
+  public setProportionalMode() {
+    const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    default_style.shape_position_type = 'proportional'
+    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
+    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
+    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
+    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
+    this.nodePositioning.inferPositionUFromX()
+    this.nodePositioning.captureProportionalReference()
   }
 
   public resetAllVerticalIntervals(v_spacing?: number) {

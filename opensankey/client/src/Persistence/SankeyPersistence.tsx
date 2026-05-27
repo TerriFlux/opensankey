@@ -1818,6 +1818,12 @@ export class DrawingAreaPersistence {
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
+    // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    {
+      const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
+      if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2185,5 +2191,24 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
+    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
+    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
+    // 'proportional' / 'scale_adapted' → 'absolute' (le mode 'parametric' reste géré tel quel).
+    if (drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
+        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    }
+
+    // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
+    // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
+    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
+    // réactive pas le mode % (qui réutilisera ce couple).
+    drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
+    {
+      const ref_dt = json_object['prop_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
+    }
   }
 }
