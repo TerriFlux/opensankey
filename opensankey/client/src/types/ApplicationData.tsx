@@ -678,7 +678,7 @@ export class Class_ApplicationData {
     this.drawing_area.bypass_redraws = true
     const json_data = this._toJSON(kwargs)
     this.drawing_area.draw()
-    if ((kwargs && kwargs['mode_compressed'])) {
+    if (kwargs && kwargs['compression'] === 'gzip') {
       const compressed = compressJSONToGzip(json_data)
       const blob = new Blob([compressed as BlobPart], { type: 'application/gzip' })
       const gzFilename = this._file_name.endsWith('.json')
