@@ -496,90 +496,87 @@ export class LinkTooltip {
   /**
    * Collecte les flux enfants groupés par dimension (axe d'agrégation).
    *
-   * Les dimensions d'un nœud sont antagonistes (ex. par essences vs par
-   * propriétés) : chacune est une partition différente du même nœud. On produit
-   * donc un groupe par axe présent comme parent sur la source OU la target. Pour
-   * chaque axe, on descend récursivement jusqu'aux feuilles EN NE SUIVANT QUE les
-   * dimensions de cet axe, puis on collecte les flux feuille→feuille (avec donnée).
-   * Un axe n'est gardé que s'il désagrège au moins un côté et a au moins un flux.
+   * Les données sont stockées à des granularités MIXTES : parfois feuille→feuille
+   * (ex. Bois sur pied - Chêne → Prélèvements - Bois d'œuvre - Chêne), parfois
+   * depuis le nœud AGRÉGÉ vers des feuilles (ex. Bois sur pied → Pertes de récolte
+   * - Pin maritime, donnée IFN). On considère donc, des deux côtés, le nœud
+   * lui-même ET tous ses descendants (toutes dimensions, cross-product) comme
+   * extrémités possibles — `descendAll` — en mémorisant le 1er axe emprunté
+   * depuis la racine (null pour la racine). Indispensable aussi pour les flux « à
+   * cheval » sur deux dimensions (source par essences, cible par type de bois ×
+   * essences) : une descente mono-axe les ratait.
+   *
+   * Chaque flux trouvé est rangé dans le groupe du 1er axe de son extrémité
+   * SOURCE (perspective source ; cible si la source est le nœud agrégé / ne se
+   * désagrège pas). Comme un flux a une seule extrémité source, il tombe dans un
+   * seul groupe.
+   *
+   * Filtre `valueData` : seuls les flux portant une donnée saisie apparaissent.
+   * C'est aussi ce qui évite le double comptage antagoniste (essences vs
+   * propriétés) : la donnée n'est saisie que sur UNE décomposition, alors que les
+   * valeurs réconciliées existeraient sur les deux.
    */
   private getChildLinkGroups(): { axisName: string, links: Class_LinkElement[] }[] {
     const source = this._link.source
     const target = this._link.target
 
-    // Ensemble des axes (id de groupe de level tags) présents comme parent.
-    const axis_ids: string[] = []
-    const add_axes = (node: Class_NodeElement) => {
-      node.dimensions_as_parent.forEach(dim => {
-        if (!axis_ids.includes(dim.id)) axis_ids.push(dim.id)
-      })
-    }
-    add_axes(source)
-    add_axes(target)
+    const source_ends = this.descendAll(source)
+    const target_ends = this.descendAll(target)
 
+    const source_disagg = source_ends.size > 1
+    const target_disagg = target_ends.size > 1
+    if (!source_disagg && !target_disagg) return []
+
+    const target_ids = new Set(target_ends.keys())
     const level_taggs = this._link.drawing_area.sankey.level_taggs_dict
-    const groups: { axisName: string, links: Class_LinkElement[] }[] = []
 
-    axis_ids.forEach(axis_id => {
-      const source_leaves = this.collectLeafNodesInAxis(source, axis_id, new Set<string>())
-      const target_leaves = this.collectLeafNodesInAxis(target, axis_id, new Set<string>())
-
-      const source_disagg = !(source_leaves.length === 1 && source_leaves[0] === source)
-      const target_disagg = !(target_leaves.length === 1 && target_leaves[0] === target)
-      if (!source_disagg && !target_disagg) return // cet axe ne désagrège pas ce flux
-
-      const links = this.collectLinksBetween(source_leaves, target_leaves)
-      if (links.length === 0) return
-
-      const axisName = level_taggs[axis_id]?.name ?? axis_id
-      groups.push({ axisName, links })
-    })
-
-    return groups
-  }
-
-  /**
-   * Descend récursivement jusqu'aux feuilles en ne suivant que les dimensions
-   * de l'axe donné (même id de groupe de level tags). Une feuille = nœud sans
-   * dimension parente sur cet axe.
-   */
-  private collectLeafNodesInAxis(node: Class_NodeElement, axis_id: string, visited: Set<string>): Class_NodeElement[] {
-    if (visited.has(node.id)) return []
-    visited.add(node.id)
-
-    const dim = node.dimensions_as_parent.find(d => d.id === axis_id)
-    const children = dim ? dim.children : []
-    if (children.length === 0) return [node]
-
-    const leaves: Class_NodeElement[] = []
-    children.forEach(c => {
-      this.collectLeafNodesInAxis(c, axis_id, visited).forEach(l => leaves.push(l))
-    })
-    return leaves.length > 0 ? leaves : [node]
-  }
-
-  /**
-   * Flux portant une donnée saisie, reliant les feuilles source aux feuilles
-   * target (hors flux courant). On filtre sur la présence d'un data_value
-   * (value.valueData) — même critère que l'onglet principal pour distinguer une
-   * donnée d'une valeur seulement calculée par le solveur : un flux purement
-   * réconcilié (sans donnée d'entrée) n'apparaît pas dans l'onglet Données.
-   */
-  private collectLinksBetween(source_leaves: Class_NodeElement[], target_leaves: Class_NodeElement[]): Class_LinkElement[] {
-    const target_ids = new Set(target_leaves.map(n => n.id))
+    const groups_map = new Map<string, Class_LinkElement[]>()
+    const order: string[] = []
     const seen = new Set<string>()
-    const links: Class_LinkElement[] = []
-    source_leaves.forEach(ls => {
-      ls.output_links_list.forEach(l => {
+    source_ends.forEach(s => {
+      s.node.output_links_list.forEach(l => {
         if (l === this._link) return
         if ((l.value as Class_LinkValue | undefined)?.valueData == null) return
-        if (target_ids.has(l.target.id) && !seen.has(l.id)) {
-          seen.add(l.id)
-          links.push(l)
-        }
+        if (!target_ids.has(l.target.id) || seen.has(l.id)) return
+        seen.add(l.id)
+        const t = target_ends.get(l.target.id)
+        const axis_id = source_disagg
+          ? (s.firstAxis ?? t?.firstAxis ?? null)
+          : (t?.firstAxis ?? s.firstAxis ?? null)
+        const key = axis_id ?? '__none__'
+        if (!groups_map.has(key)) { groups_map.set(key, []); order.push(key) }
+        groups_map.get(key)!.push(l)
       })
     })
-    return links
+
+    return order.map(key => ({
+      axisName: level_taggs[key]?.name ?? key,
+      links: groups_map.get(key) as Class_LinkElement[]
+    }))
+  }
+
+  /**
+   * Renvoie le nœud `root` ET tous ses descendants (en suivant TOUTES ses
+   * dimensions, cross-product), sous forme de map id → { nœud, firstAxis }, où
+   * firstAxis est le 1er axe (id de groupe de level tags) emprunté depuis root
+   * pour atteindre ce nœud (null pour root lui-même). Inclure root permet de
+   * capter les flux-données stockés au niveau agrégé.
+   */
+  private descendAll(root: Class_NodeElement): Map<string, { node: Class_NodeElement, firstAxis: string | null }> {
+    const out = new Map<string, { node: Class_NodeElement, firstAxis: string | null }>()
+    out.set(root.id, { node: root, firstAxis: null })
+    const walk = (n: Class_NodeElement, firstAxis: string | null) => {
+      n.dimensions_as_parent.forEach(dim => {
+        const fa = firstAxis ?? dim.id
+        dim.children.forEach(c => {
+          if (out.has(c.id)) return
+          out.set(c.id, { node: c, firstAxis: fa })
+          walk(c, fa)
+        })
+      })
+    }
+    walk(root, null)
+    return out
   }
 
   private getTabStyles(): string {
