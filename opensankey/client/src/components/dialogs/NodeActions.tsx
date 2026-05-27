@@ -16,7 +16,6 @@ import { Class_DrawingArea } from '../../types/DrawingArea'
 import { Class_ApplicationHistory } from '../../types/ApplicationHistory'
 import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
-import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
 
 // ==================================================================================================

@@ -29,7 +29,6 @@ import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
-import { NodePositioning } from './NodePositioning'
 
 /**
  * INVARIANT — expansion latérale (issue #1225)
@@ -64,19 +63,6 @@ import { NodePositioning } from './NodePositioning'
 // UTILITAIRES COMMUNS
 // ============================================================================
 
-
-const finalizeOperation = (
-  new_data: Class_ApplicationData,
-  nodes: Class_NodeElement[]
-) => {
-  new_data.drawing_area.nodePositioning.computeParametrization(true)
-  new_data.drawing_area.draw()
-  nodes.forEach(n => {
-    n.input_links_list.forEach(l => l.source.reorganizeIOLinks())
-    n.output_links_list.forEach(l => l.target.reorganizeIOLinks())
-    n.reorganizeIOLinks()
-  })
-}
 
 // ============================================================================
 // GESTION DES POSITIONNEMENTS

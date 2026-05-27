@@ -297,7 +297,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         // dim en container_mode à la fois sur un même nœud.
         const englobed_parent_dim = parent_dims.find(dim => !!dim.container_mode)
         let filtered_child_dims = englobed_parent_dim ? [] : child_dims
-        let filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+        const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
 
         // #1231 — Un `force_show_children` actif sur une dimension (désagrégation locale)
         // retire seulement les entrées d'AGRÉGATION des autres dimensions : on ne peut
