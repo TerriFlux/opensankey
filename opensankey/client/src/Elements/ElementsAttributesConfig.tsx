@@ -2500,6 +2500,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  straight_include_children: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Keep disaggregated flows straight',
+      fr: 'Garder droit les flux désagrégés',
+      es: 'Mantener rectos los flujos desagregados',
+      de: 'Disaggregierte Flüsse gerade halten',
+      it: 'Mantieni dritti i flussi disaggregati'
+    },
+    tooltips: {
+      en: 'Also keep the child flows straight (between the disaggregated children of the source and target), so straightness survives disaggregation.',
+      fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation.',
+      es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación.',
+      de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt.',
+      it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   show_as_path_locked: {
     default: false,
     type: (() => false) as (() => boolean),

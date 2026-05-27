@@ -34,6 +34,10 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
+      actionName: 'straightenChildren'
+    },
+    {
+      type: 'button',
       actionName: 'splitLink'
     },
     {
@@ -85,6 +89,34 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Clicca di nuovo per liberare.'
       },
       getToggleValue: 'straightenLinkValue',
+      closeMenuAfter: true,
+      undoable: true
+    },
+
+    straightenChildren: {
+      type: 'toggle',
+      labels: {
+        en: 'Straighten disaggregated flows',
+        fr: 'Droit aussi en désagrégeant',
+        es: 'Enderezar flujos desagregados',
+        de: 'Disaggregierte Flüsse begradigen',
+        it: 'Raddrizza flussi disaggregati'
+      },
+      labelsToggle: {
+        en: { true: 'Children kept straight', false: 'Straighten disaggregated flows' },
+        fr: { true: 'Enfants gardés droits', false: 'Droit aussi en désagrégeant' },
+        es: { true: 'Hijos mantenidos rectos', false: 'Enderezar flujos desagregados' },
+        de: { true: 'Kinder gerade gehalten', false: 'Disaggregierte Flüsse begradigen' },
+        it: { true: 'Figli mantenuti dritti', false: 'Raddrizza flussi disaggregati' }
+      },
+      tooltips: {
+        en: 'Also keep the child flows straight (between the disaggregated children of source and target), so straightness survives disaggregation. Requires "Straighten flow".',
+        fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation. Nécessite « Rendre droit ».',
+        es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación. Requiere «Enderezar flujo».',
+        de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt. Erfordert „Fluss begradigen".',
+        it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione. Richiede «Raddrizza flusso».'
+      },
+      getToggleValue: 'straightenChildrenValue',
       closeMenuAfter: true,
       undoable: true
     },
@@ -375,6 +407,37 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     // Valeur courante du toggle « Rendre droit » (coche/état du libellé).
     straightenLinkValue: () => {
       return contextualised_link?.shape_must_stay_straight ?? false
+    },
+
+    // #1231 — « Droit aussi en désagrégeant » : marque le flux pour que sa droiture
+    // se propage dynamiquement aux flux enfant-enfant (descendants désagrégés) via
+    // enforceStraightLinks. Marque aussi shape_must_stay_straight (prérequis) pour que
+    // l'option ait un effet seule.
+    straightenChildren: () => {
+      const link = contextualised_link
+      if (!link) return
+      const will_mark = !link.shape_straight_include_children
+      const old_include = link.shape_straight_include_children
+      const old_straight = link.shape_must_stay_straight
+
+      const doToggle = () => {
+        link.shape_straight_include_children = will_mark
+        if (will_mark) link.shape_must_stay_straight = true
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+      const undoToggle = () => {
+        link.shape_straight_include_children = old_include
+        link.shape_must_stay_straight = old_straight
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+      executeWithUndo(doToggle, undoToggle)
+    },
+
+    // Valeur courante du toggle « Droit aussi en désagrégeant ».
+    straightenChildrenValue: () => {
+      return contextualised_link?.shape_straight_include_children ?? false
     },
 
     // Style actions
