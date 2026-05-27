@@ -420,15 +420,6 @@ export class NodeEventsHandler {
       this._node.drawing_area.drawElements()
     }
 
-    // #1231 — En mode proportionnel, re-capturer le cadre de référence (médiane,
-    // haut/bas, sommes par colonne, centres de réf) sur l'état post-drag pour que le
-    // déplacement « tienne » sans saut. La médiane est invariante par compression
-    // autour d'elle-même → re-baser au datatag courant reste cohérent avec les autres.
-    if (this._node.sankey.default_style.shape_position_type == 'proportional') {
-      this._node.drawing_area.nodePositioning.inferPositionUFromX()
-      this._node.drawing_area.nodePositioning.captureProportionalReference()
-    }
-
     const drawing_area = this._node.drawing_area
     const nodes_selected = [...this._node.sankey.drawing_area.selected_containers_list, ...this._node.sankey.drawing_area.selected_nodes_list] as Class_NodeBase[]
     let max_x = 0
@@ -581,6 +572,16 @@ export class NodeEventsHandler {
 
       this._node.saveUndo(undo)
       this._node.saveRedo(redo)
+    }
+
+    // #1231 — Un drag est une COMMANDE de positionnement : en mode % / échelle adaptée, on
+    // bascule en mode ABSOLU (positions explicites posées par l'utilisateur). Le couple
+    // flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) → un futur
+    // retour en % le réutilise. On redessine en absolu.
+    if (this._node.sankey.default_style.shape_position_type === 'proportional' ||
+        this._node.sankey.default_style.shape_position_type === 'scale_adapted') {
+      this._node.drawing_area.setAbsoluteMode()
+      this._node.drawing_area.drawElements()
     }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined

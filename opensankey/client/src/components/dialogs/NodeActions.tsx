@@ -432,15 +432,11 @@ export class NodeActions {
       // dans un parent en container_mode — sinon l'enveloppe visuelle de
       // l'ancêtre n'intègre pas les nouveaux enfants/petits-enfants.
       this._restackEnglobingChain(parent)
-      // #1231 — re-baser la référence du mode actif sur le nouvel état (enfants dans le
-      // cadre) : sinon en mode % la compression (center_ref périmé) ferait SORTIR les
-      // enfants du cadre englobant. Symétrie absolu via settleCenterAnchor.
-      if (is_prop) {
-        this.drawing_area.nodePositioning.captureProportionalReference()
-      } else {
-        this.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-      }
-      // Lever la suppression APRÈS la re-capture (référence = positions de l'opération).
+      // #1231 — l'englobement est une commande de positionnement → bascule en mode ABSOLU
+      // (positions explicites des enfants dans le cadre). Le couple flux/datatag de réf reste
+      // persisté. setAbsoluteMode re-cale les ancres de centre (#1230).
+      this.drawing_area.setAbsoluteMode()
+      // Lever la suppression APRÈS (le mode est désormais absolu → pas de compression de toute façon).
       this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
       // #1231 — redessiner juste le nœud-cadre une fois les positions finales des
@@ -453,11 +449,8 @@ export class NodeActions {
       if (prev_mode === null) dim.unsetContainerMode()
       else dim.setContainerMode(prev_mode)
       this._restoreTiedFrameState(before)
-      if (is_prop) {
-        this.drawing_area.nodePositioning.captureProportionalReference()
-      } else {
-        this.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-      }
+      // #1231 — comme apply : on reste en mode absolu (réf persistée conservée).
+      this.drawing_area.setAbsoluteMode()
       this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
     }

@@ -44,7 +44,7 @@ import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
 
@@ -1601,10 +1601,12 @@ export class SankeyPersistence {
     // First read styles
     if (json_object['style'] !== undefined) {
       // Set node styles from json data
-      const skip = [
-        LinkExportCloseStyle, LinkImportCloseStyle,
-        'LinkImportAboveStyle', 'LinkExportBelowStyle'
-      ]
+      // #1231 — NE PLUS skipper LinkImportCloseStyle / LinkExportCloseStyle : ils étaient
+      // exclus du chargement, donc leurs valeurs sauvegardées (flux import/export collés)
+      // étaient perdues puis recréées par défaut (create_internal_style ne réécrit pas un
+      // style existant). On les charge maintenant comme les autres pour persister les réglages.
+      // ('LinkImportAboveStyle'/'LinkExportBelowStyle' n'existent pas comme styles → inoffensifs.)
+      const skip: string[] = []
 
       // D'abord traiter les styles dans l'ordre défini dans elementStyleConfigs
       const orderedStyleKeys = Object.keys(elementStyleConfigs) as ElementStyleKey[]
@@ -1813,6 +1815,15 @@ export class DrawingAreaPersistence {
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
+    // #1231 — Mode de représentation import/export (proche / haut-bas) : persisté car les
+    // nœuds import/export siblings sont régénérés au chargement (cf. SplitIOrE).
+    if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
+    // #1231 — Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    {
+      const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
+      if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2105,6 +2116,7 @@ export class DrawingAreaPersistence {
     // récents sérialisent toujours le flag (cf. toJSON), donc présence ⇒ valeur
     // explicite. Un nouveau diagramme (non chargé) démarre verrouillé.
     drawing_area['_font_size_locked'] = getBooleanFromJSON(json_object, 'font_size_locked', false)
+    drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
@@ -2179,13 +2191,26 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
-    // #1231 — Migration : le mode « paramétrique » n'est plus un mode global (remplacé
-    // par le mode pourcentage). Les diagrammes sauvés en 'parametric' s'ouvrent désormais
-    // en 'proportional'. Le 1er dessin capturera les positions chargées comme référence
-    // proportionnelle (pas de saut). La valeur 'parametric' reste valide en interne pour
-    // les styles par-nœud d'échange import/export — on ne migre QUE le style global.
-    if (drawing_area.sankey.default_style.shape_position_type === 'parametric') {
-      drawing_area.sankey.default_style.shape_position_type = 'proportional'
+    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
+    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
+    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
+    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
+        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
+        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    }
+
+    // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
+    // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
+    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
+    // réactive pas le mode % (qui réutilisera ce couple).
+    drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
+    {
+      const ref_dt = json_object['prop_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
     }
   }
 }

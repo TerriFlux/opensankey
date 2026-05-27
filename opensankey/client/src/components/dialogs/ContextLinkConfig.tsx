@@ -38,6 +38,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
+      actionName: 'setReferenceFlux',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const m = app_data.drawing_area.sankey.default_style.shape_position_type
+          return m === 'proportional' || m === 'scale_adapted'
+        }
+      }]
+    },
+    {
+      type: 'button',
       actionName: 'splitLink'
     },
     {
@@ -119,6 +130,33 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       getToggleValue: 'straightenChildrenValue',
       closeMenuAfter: true,
       undoable: true
+    },
+
+    setReferenceFlux: {
+      type: 'toggle',
+      labels: {
+        en: 'Reference flow (proportional)',
+        fr: 'Flux de référence (proportionnel)',
+        es: 'Flujo de referencia (proporcional)',
+        de: 'Referenzfluss (proportional)',
+        it: 'Flusso di riferimento (proporzionale)'
+      },
+      labelsToggle: {
+        en: { true: 'Unset reference flow', false: 'Set as reference flow' },
+        fr: { true: 'Retirer le flux de référence', false: 'Définir comme flux de référence' },
+        es: { true: 'Quitar flujo de referencia', false: 'Definir como flujo de referencia' },
+        de: { true: 'Referenzfluss entfernen', false: 'Als Referenzfluss festlegen' },
+        it: { true: 'Rimuovi flusso di riferimento', false: 'Imposta come flusso di riferimento' }
+      },
+      tooltips: {
+        en: 'In proportional mode, anchor the diagram center of gravity on this flow and scale everything by this flow\'s thickness ratio across data tags.',
+        fr: 'En mode proportionnel, ancrer le centre de gravité du diagramme sur ce flux et dimensionner tout le reste selon le ratio d\'épaisseur de ce flux entre les tags de données.',
+        es: 'En modo proporcional, anclar el centro de gravedad del diagrama en este flujo y escalar todo según la relación de grosor de este flujo entre las etiquetas de datos.',
+        de: 'Im proportionalen Modus den Schwerpunkt des Diagramms an diesem Fluss verankern und alles anhand des Dickenverhältnisses dieses Flusses über die Daten-Tags skalieren.',
+        it: 'In modalità proporzionale, ancorare il baricentro del diagramma a questo flusso e ridimensionare tutto in base al rapporto di spessore di questo flusso tra i tag di dati.'
+      },
+      getToggleValue: 'setReferenceFluxValue',
+      closeMenuAfter: true
     },
 
     splitLink: {
@@ -438,6 +476,33 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     // Valeur courante du toggle « Droit aussi en désagrégeant ».
     straightenChildrenValue: () => {
       return contextualised_link?.shape_straight_include_children ?? false
+    },
+
+    // #1231 — Mode proportionnel : désigner/retirer ce flux comme flux de référence. La
+    // médiane (centre de gravité) se cale sur le centre vertical du flux et le facteur de
+    // compression devient le ratio d'épaisseur de ce flux entre datatags. Transitoire :
+    // re-capture la référence puis redessine (f = 1 au moment de la sélection → pas de saut).
+    setReferenceFlux: () => {
+      const link = contextualised_link
+      if (!link) return
+      const np = drawing_area.nodePositioning
+      const is_ref = np.proportionalReferenceLink === link
+      np.setProportionalReferenceLink(is_ref ? undefined : link)
+      // Le même flux sert aux deux modes (proportionnel + échelle). On reste cohérent quel
+      // que soit le mode courant : à la sélection, re-capturer les deux références ; au
+      // retrait, restaurer l'échelle de base (échelle adaptée) en plus de la re-capture %.
+      if (is_ref) {
+        np.clearScaleAdaptation()
+      } else {
+        np.captureScaleReference()
+      }
+      np.captureProportionalReference()
+      drawing_area.drawElements()
+      refreshThisAndToggleSaving()
+    },
+
+    setReferenceFluxValue: () => {
+      return drawing_area.nodePositioning.proportionalReferenceLink === contextualised_link
     },
 
     // Style actions

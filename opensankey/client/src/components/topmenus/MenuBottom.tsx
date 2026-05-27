@@ -4,7 +4,7 @@ import {
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faLocationDot, faPercent } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -147,6 +147,16 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
           if (mode !== 'proportional') { drawing_area.setProportionalMode(); updateParentComponent() }
         }}>
         <FontAwesomeIcon icon={faPercent} />
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='top' label={t('Banner.posMode_scale_adapted')}>
+      <Button
+        variant={mode === 'scale_adapted' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        size={size}
+        onClick={() => {
+          if (mode !== 'scale_adapted') { drawing_area.setScaleAdaptedMode(); updateParentComponent() }
+        }}>
+        <FontAwesomeIcon icon={faRulerVertical} />
       </Button>
     </OSTooltip>
   </ButtonGroup>

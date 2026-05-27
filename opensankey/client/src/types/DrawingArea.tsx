@@ -158,6 +158,15 @@ export class Class_DrawingArea {
   // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
   // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
   // d'origine ; un nouveau diagramme démarre en true.
+  // #1231 — Mode de représentation des nœuds import/export : false = « proche » (collé au
+  // nœud), true = « haut/bas » (en haut/bas du diagramme). Les nœuds import/export siblings
+  // sont RÉGÉNÉRÉS à chaque chargement par splitTrade/SplitIOrE → leur style ne peut pas être
+  // persisté directement. On persiste donc ce drapeau, lu par SplitIOrE (auparavant déduit à
+  // tort de `shape_position_type === 'parametric'`, qui n'est plus un mode et est migré).
+  protected _import_export_above_below: boolean = false
+  public get import_export_above_below(): boolean { return this._import_export_above_below }
+  public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
+
   protected _font_size_locked: boolean = true
   public get font_size_locked(): boolean { return this._font_size_locked }
   public set font_size_locked(v: boolean) {
@@ -375,6 +384,7 @@ export class Class_DrawingArea {
     this._width = drawing_area_to_copy._width
     // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
     this._font_size_locked = drawing_area_to_copy._font_size_locked
+    this._import_export_above_below = drawing_area_to_copy._import_export_above_below
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
@@ -555,6 +565,12 @@ export class Class_DrawingArea {
       // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
       // changement d'épaisseur). Doit tourner avant _sankey.draw().
       this.nodePositioning.anchorProportionalNodes()
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #1231 — Mode « échelle adaptée » : ajuster l'échelle (valeur→px) pour que le flux
+      // de référence garde la même épaisseur d'un datatag à l'autre, puis garder le centre
+      // des nœuds fixe pendant qu'ils se redimensionnent (comme l'absolu). Avant _sankey.draw().
+      this.nodePositioning.applyAdaptedScale()
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
     } else {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
@@ -569,13 +585,15 @@ export class Class_DrawingArea {
     //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
-    // #665 (refonte #1231) — post-processing « flux droit » dans les TROIS modes
-    // (plus seulement paramétrique). Tourne APRÈS un premier draw : le cache d'accroche
-    // (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace les nœuds
-    // cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
-    // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la
-    // récursion. Re-appliqué à chaque dessin, donc rien à figer dans les écarts.
-    if (this.nodePositioning.enforceStraightLinks()) {
+    // #665 (refonte #1231) — post-processing « flux droit ». Tourne APRÈS un premier draw : le
+    // cache d'accroche (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace
+    // les nœuds cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
+    // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la récursion.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : l'espacement par colonne (applyProportionalColumnSpacing)
+    // place les nœuds de façon déterministe, et déplacer une cible pour « garder droit » casse cet
+    // empilement (résultat incohérent). Le flux droit reste actif en absolu / échelle adaptée.
+    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+        this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
     }
     // Draw legend
@@ -1044,6 +1062,18 @@ export class Class_DrawingArea {
    * l'ancien multiplicateur, un fresh draw est requis pour mettre à jour la
    * font-size et les offsets de positionnement dépendants.
    */
+  /**
+   * #1231 — Force le recalcul de la font-size des labels (compensation 1/k) sur le zoom
+   * COURANT, sans condition. À utiliser avant un export : `_pre_process_export_svg` cale le
+   * zoom sur le fit (areaAutoFit) mais areaAutoFit ne rafraîchit les labels que si k_fit a
+   * changé — or ils peuvent porter la compensation d'un zoom manuel (ou d'une frame précédente),
+   * d'où une police non réajustée à l'échelle d'export. Cet appel garantit la cohérence
+   * font_size/k au moment de la capture.
+   */
+  public refreshLabelsForExport() {
+    this._refreshLabelsForFitZoom()
+  }
+
   private _refreshLabelsForFitZoom() {
     this._sankey.nodes_list.forEach(n => {
       n.drawNameLabel()
@@ -2884,6 +2914,10 @@ export class Class_DrawingArea {
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
+    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
     // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
     // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
@@ -2891,8 +2925,20 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
   }
 
+  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
+  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
+  public setScaleAdaptedMode() {
+    const default_style = this.sankey.styles_dict['default']
+    default_style.shape_position_type = 'scale_adapted'
+    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    this.nodePositioning.captureScaleReference()
+  }
+
   public setProportionalMode() {
     const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
     default_style.shape_position_type = 'proportional'
     // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
     // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
@@ -2941,15 +2987,12 @@ export class Class_DrawingArea {
    */
   public equalizeColumnGaps(node?: Class_NodeElement) {
     const saved = this.sankey.visible_nodes_list.map(n => ({ n, y: n.position_y, dy: n.shape_position_dy }))
-    const rebase = () => {
-      if (this.sankey.default_style.shape_position_type === 'proportional') {
-        this.nodePositioning.inferPositionUFromX()
-        this.nodePositioning.captureProportionalReference()
-      } else {
-        this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-      }
-    }
+    // #1231 — une commande de positionnement bascule en mode ABSOLU (positions explicites).
+    // Le couple flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) :
+    // un futur retour en % le réutilisera.
+    const rebase = () => { this.sankey.nodes_list.forEach(n => n.settleCenterAnchor()) }
     const apply = () => {
+      this.setAbsoluteMode()
       if (node) this.nodePositioning.equalizeColumnGapsOfNode(node)
       else this.nodePositioning.equalizeAllColumnsGaps()
       rebase()

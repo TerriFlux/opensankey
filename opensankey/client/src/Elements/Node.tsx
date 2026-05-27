@@ -1620,16 +1620,17 @@ export class Class_NodeElement extends Class_NodeBase {
         new_node.addTag(tag)
       })
 
-      // Déterminer les styles en fonction du type de position
-      const isParametric = this.shape_position_type === 'parametric'
+      // #1231 — Déterminer les styles selon le MODE import/export persisté (drapeau dédié,
+      // anciennement déduit à tort de `shape_position_type === 'parametric'`).
+      const isAboveBelow = this.drawing_area.import_export_above_below
 
-      const node_importation_style = isParametric ? NodeImportAboveStyle : NodeImportCloseStyle
-      const node_exportation_style = isParametric ? NodeExportBelowStyle : NodeExportCloseStyle
-      const node_importexport_style = isParametric ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
+      const node_importation_style = isAboveBelow ? NodeImportAboveStyle : NodeImportCloseStyle
+      const node_exportation_style = isAboveBelow ? NodeExportBelowStyle : NodeExportCloseStyle
+      const node_importexport_style = isAboveBelow ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
 
-      const link_importation_style = isParametric ? '' : LinkImportCloseStyle
-      const link_exportation_style = isParametric ? '' : LinkExportCloseStyle
-      const link_importexport_style = isParametric ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
+      const link_importation_style = isAboveBelow ? '' : LinkImportCloseStyle
+      const link_exportation_style = isAboveBelow ? '' : LinkExportCloseStyle
+      const link_importexport_style = isAboveBelow ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
 
       // Appliquer les styles au nouveau noeud
       const styles_dict = new_node.sankey.styles_dict
@@ -1645,12 +1646,14 @@ export class Class_NodeElement extends Class_NodeBase {
         styles_dict[link_importexport_style]
       ])
 
-      // Ajouter le style spécifique d'importation/exportation en mode parametric
-      if (isParametric) {
-        const specific_link_style = importation ? link_importation_style : link_exportation_style
-        if (specific_link_style) {
-          input_or_output_link.addStyle(styles_dict[specific_link_style])
-        }
+      // #1231 — Ajouter le style DIRECTIONNEL du flux (Flux import/export collé) dès qu'il est
+      // défini (= mode proche ; vide en haut/bas). Auparavant conditionné au mode haut/bas, donc
+      // JAMAIS appliqué à la régénération → « Flux import/export collé » présent après setTrade
+      // (toggle) mais PERDU au rechargement (splitTrade régénère le flux sans ce style). On
+      // s'aligne ainsi sur setTrade qui pose bien [LinkStyle, LinkImportExportCloseStyle, Link(Import|Export)CloseStyle].
+      const specific_link_style = importation ? link_importation_style : link_exportation_style
+      if (specific_link_style) {
+        input_or_output_link.addStyle(styles_dict[specific_link_style])
       }
 
       input_or_output_link.shape_is_recycling = false
