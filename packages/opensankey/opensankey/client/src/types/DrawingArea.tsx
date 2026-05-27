@@ -1041,6 +1041,18 @@ export class Class_DrawingArea {
    * l'ancien multiplicateur, un fresh draw est requis pour mettre à jour la
    * font-size et les offsets de positionnement dépendants.
    */
+  /**
+   * Force le recalcul de la font-size des labels (compensation 1/k) sur le zoom
+   * COURANT, sans condition. À utiliser avant un export : `_pre_process_export_svg` cale le
+   * zoom sur le fit (areaAutoFit) mais areaAutoFit ne rafraîchit les labels que si k_fit a
+   * changé — or ils peuvent porter la compensation d'un zoom manuel (ou d'une frame précédente),
+   * d'où une police non réajustée à l'échelle d'export. Cet appel garantit la cohérence
+   * font_size/k au moment de la capture.
+   */
+  public refreshLabelsForExport() {
+    this._refreshLabelsForFitZoom()
+  }
+
   private _refreshLabelsForFitZoom() {
     this._sankey.nodes_list.forEach(n => {
       n.drawNameLabel()
