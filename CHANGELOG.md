@@ -13,6 +13,11 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased] — Mai 2026
 
+### Tooltips : détail des flux enfants par dimension, épingle et déplacement ([su-model/sankeyapplication#158](https://gitlab.com/su-model/sankeyapplication/-/issues/158))
+
+- **Le tooltip d'un flux agrégé liste ses flux enfants.** Quand un flux relie des nœuds regroupés (par essences, par propriétés…), un onglet « Données » détaille les flux sous-jacents jusqu'aux feuilles, **regroupés par dimension** (un tableau par axe d'agrégation, les dimensions étant antagonistes), avec pour chaque flux enfant son origine, sa destination, sa valeur et sa part (%) dans le flux parent.
+- **Tooltips épinglables et déplaçables.** Tout tooltip (nœud ou flux) peut être déplacé en glissant son en-tête et épinglé (bouton punaise) pour rester ouvert — pratique pour lire, comparer ou capturer — sinon il se ferme automatiquement comme avant. Détails : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
+
 ### Ouverture Excel : case « Onglet mise en page »
 
 - **Possibilité d'ignorer la mise en page sauvegardée à l'ouverture d'un fichier Excel.** Le dialogue *Ouvrir fichier excel* gagne une case « Onglet mise en page » (cochée par défaut) dans la section *Onglets lus*. Décochée, l'onglet caché `layout` (positions et styles du diagramme enregistrés dans le fichier) est ignoré et une mise en page automatique est recalculée — utile pour repartir d'une disposition propre. Détails : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md → 1.1.5](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
