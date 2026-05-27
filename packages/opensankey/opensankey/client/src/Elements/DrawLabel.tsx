@@ -2301,13 +2301,29 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       .attr('text-anchor', label_anchor)
   }
 
+  /**
+   * Le label (nom ou valeur) est-il auto-placé AU-DESSUS du flux faute de place,
+   * parce que sa police est plus grande que l'épaisseur du flux ? (Même condition que le
+   * placement « top » automatique, cf. getTextPathOffset / getLabelPos.) Dans ce cas le
+   * label déborde hors du flux : il n'a pas le corps du flux derrière lui pour le porter.
+   */
+  protected isAutoPlacedAboveFlux(): boolean {
+    return (this._specific_label_values.pos_auto ?? false) && this.getFontSize() > this.link.thickness
+  }
+
   protected applyTextStyle(
     selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
+    // Quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il prend la
+    // couleur du flux (association visuelle ; pas de corps de flux derrière lui pour le porter).
+    // Activé par défaut. Sinon, comportement habituel (couleur dédiée du label ou flux).
+    const fill = this.isAutoPlacedAboveFlux()
+      ? this._element.getShapeColorToUse()
+      : (this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
     selection
       ?.attr('font-size', String(this.getFontSize()) + 'px')
       .attr('font-family', this._label_values.font_family)
-      .attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
+      .attr('fill', fill)
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
@@ -2559,11 +2575,11 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
     const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
     switch (text_source) {
     case 'none': return ''
-    case 'source': return this.link.source?.name ?? ''
-    case 'target': return this.link.target?.name ?? ''
+    case 'source': return this.link.source?.name_label_effective ?? ''
+    case 'target': return this.link.target?.name_label_effective ?? ''
     case 'source_target': {
-      const s = this.link.source?.name ?? ''
-      const t = this.link.target?.name ?? ''
+      const s = this.link.source?.name_label_effective ?? ''
+      const t = this.link.target?.name_label_effective ?? ''
       return `${s} → ${t}`
     }
     case 'custom':
