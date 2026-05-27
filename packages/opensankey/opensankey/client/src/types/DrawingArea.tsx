@@ -158,6 +158,15 @@ export class Class_DrawingArea {
   // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
   // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
   // d'origine ; un nouveau diagramme démarre en true.
+  // Mode de représentation des nœuds import/export : false = « proche » (collé au
+  // nœud), true = « haut/bas » (en haut/bas du diagramme). Les nœuds import/export siblings
+  // sont RÉGÉNÉRÉS à chaque chargement par splitTrade/SplitIOrE → leur style ne peut pas être
+  // persisté directement. On persiste donc ce drapeau, lu par SplitIOrE (auparavant déduit à
+  // tort de `shape_position_type === 'parametric'`).
+  protected _import_export_above_below: boolean = false
+  public get import_export_above_below(): boolean { return this._import_export_above_below }
+  public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
+
   protected _font_size_locked: boolean = true
   public get font_size_locked(): boolean { return this._font_size_locked }
   public set font_size_locked(v: boolean) {
@@ -375,6 +384,7 @@ export class Class_DrawingArea {
     this._width = drawing_area_to_copy._width
     // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
     this._font_size_locked = drawing_area_to_copy._font_size_locked
+    this._import_export_above_below = drawing_area_to_copy._import_export_above_below
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
