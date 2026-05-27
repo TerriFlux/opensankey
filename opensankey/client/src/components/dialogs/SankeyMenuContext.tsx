@@ -682,7 +682,8 @@ export const ContextMenu = <T extends Record<string, unknown>>({
       isTop: drawing_area.pointer_pos[1] + 330 <= window.innerHeight
     }
     return pos
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // NB : on dépend volontairement de `isVisible` seul (figer la position à l'ouverture) ;
+    // le lint OS standalone n'a pas le plugin react-hooks, et le build tolère le warning (CI=).
   }, [isVisible])
 
   if (!isVisible || !position) {
