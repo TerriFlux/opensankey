@@ -210,7 +210,9 @@ def save_png():
         size_str = request.form["size"]
         size_int = []
         if len(size_str.split()) == 2:
-            size_int = list(map(lambda num: int(num), size_str.split()))
+            # La taille peut arriver en flottants (ex. "5601.52 2200.20") → int() direct
+            # plante. On arrondit via float() avant de caster (Pillow.resize veut des entiers).
+            size_int = list(map(lambda num: round(float(num)), size_str.split()))
         if len(size_int) == 2:
             im = Image.open(filename)
             im_resized = im.resize(size_int)
