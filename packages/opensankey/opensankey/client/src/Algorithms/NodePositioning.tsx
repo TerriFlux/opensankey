@@ -31,7 +31,7 @@ import {
 import {
   Class_LinkElement
 } from '../Elements/Link'
-import { Class_LevelTag, Class_Tag } from '../types/Tag'
+import { Class_DataTag, Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
@@ -54,6 +54,28 @@ export class NodePositioning {
   private _prop_top_y: number | undefined = undefined
   private _prop_bottom_y: number | undefined = undefined
   private _prop_ref_col_sums: Map<number, number> | undefined = undefined
+
+  // #1231 — Flux de référence (sélectionné au clic droit) du mode proportionnel. Si défini
+  // et visible :
+  //  - la médiane (centre de gravité, FIXE) = centre vertical du flux à mi-parcours,
+  //  - le facteur f = épaisseur courante du flux / épaisseur capturée (`_prop_ref_flux_thickness`).
+  // Sinon : fallback sur l'ancien calcul (moyenne des centres de colonnes / max ratio de sommes).
+  // Transitoires (jamais persistés).
+  private _prop_reference_link: Class_LinkElement | undefined = undefined
+
+  // #1231 — Datatag de RÉFÉRENCE (ids des tags datatag sélectionnés au moment où le flux de
+  // référence a été défini). Les pourcentages sont calculés pour le couple (flux, datatag) :
+  // f = valeur(flux, datatag courant) / valeur(flux, datatag de réf). PERSISTÉ (avec le flux
+  // de référence) ; le MODE proportionnel lui-même n'est pas persisté.
+  private _prop_reference_datatag_ids: string[] | undefined = undefined
+
+  // #1231 — Mode « échelle adaptée » : au lieu de bouger les nœuds, on ajuste l'échelle
+  // (valeur→px) pour que le flux de référence garde TOUJOURS la même épaisseur. Comme
+  // l'épaisseur ∝ valeur / échelle, on garde `échelle / valeur_flux` constant : à chaque
+  // datatag, échelle = échelle_ref × (valeur_flux_courante / valeur_flux_ref). On capture
+  // l'échelle et la valeur du flux à l'entrée du mode. Transitoires.
+  private _scale_adapted_ref_value: number | undefined = undefined
+  private _scale_adapted_ref_scale: number | undefined = undefined
 
   // #1231 — Drapeau de suppression de la compression proportionnelle pendant une
   // opération STRUCTURELLE (englobement, désagrégation, expansion…). Ces opérations
@@ -1022,12 +1044,165 @@ export class NodePositioning {
   }
 
   /**
-   * #1231 — Capture le cadre de référence du mode proportionnel sur l'état courant :
-   *  - médiane (centre de gravité) = moyenne, sur les colonnes, des **centres géométriques**
-   *    de pile (même définition que l'ancre du mode paramétrique) ;
-   *  - haut / bas = bords extrêmes du diagramme (point le plus haut / le plus bas) ;
-   *  - sommes de hauteurs par colonne (référence pour le ratio de flux) ;
-   *  - centre de référence de chaque nœud.
+   * #1231 — Flux de référence du mode proportionnel (sélectionné au clic droit).
+   * Invalidé automatiquement s'il n'est plus visible (désagrégation, suppression…).
+   */
+  public get proportionalReferenceLink(): Class_LinkElement | undefined {
+    if (this._prop_reference_link && !this._prop_reference_link.is_visible) return undefined
+    return this._prop_reference_link
+  }
+
+  public setProportionalReferenceLink(link: Class_LinkElement | undefined) {
+    // Persistance : un seul flux de référence. On nettoie le marqueur persisté
+    // `shape_is_reference_flux` sur tout autre lien et on le pose sur le nouveau (le set
+    // n'a pas d'action → pas de dessin parasite ; cf. ElementsAttributesConfig).
+    this.drawingArea.sankey.links_list.forEach(l => {
+      if (l.shape_is_reference_flux && l !== link) l.shape_is_reference_flux = false
+    })
+    this._prop_reference_link = link
+    if (link) {
+      link.shape_is_reference_flux = true
+      // Mémoriser le datatag courant comme datatag de référence (couple flux/datatag).
+      this._prop_reference_datatag_ids = this.drawingArea.sankey.selected_data_tags_list.map(t => t.id)
+    } else {
+      this._prop_reference_datatag_ids = undefined
+    }
+  }
+
+  /** #1231 — Datatag de référence (ids) — accesseurs pour la persistance (cf. DrawingArea toJSON/fromJSON). */
+  public get proportionalReferenceDatatagIds(): string[] | undefined { return this._prop_reference_datatag_ids }
+  public set proportionalReferenceDatatagIds(ids: string[] | undefined) {
+    this._prop_reference_datatag_ids = (ids && ids.length > 0) ? ids : undefined
+  }
+
+  /** #1231 — Résout les ids du datatag de référence en objets Class_DataTag (via les groupes du sankey). */
+  private resolveReferenceDataTags(): Class_DataTag[] {
+    const ids = this._prop_reference_datatag_ids
+    if (!ids || ids.length === 0) return []
+    const out: Class_DataTag[] = []
+    this.drawingArea.sankey.data_taggs_list.forEach(tagg => {
+      ids.forEach(id => { const t = tagg.tags_dict[id]; if (t) out.push(t) })
+    })
+    return out
+  }
+
+  /**
+   * #1231 — Valeur (absolue) du flux de référence AU DATATAG DE RÉFÉRENCE. Définit le
+   * dénominateur du facteur f. Fallback sur la valeur courante si aucun datatag de réf
+   * (rétrocompat). undefined si pas de flux de référence ou valeur indisponible.
+   */
+  private referenceFluxRefValue(): number | undefined {
+    const ref = this.proportionalReferenceLink
+    if (!ref) return undefined
+    const tags = this.resolveReferenceDataTags()
+    if (tags.length > 0) {
+      const v = ref.valueForDataTags(tags)
+      if (v != null && isFinite(v)) return Math.abs(v)
+    }
+    const vc = ref.valueCurrent
+    return (vc != null && isFinite(vc)) ? Math.abs(vc) : undefined
+  }
+
+  /**
+   * #1231 — Au chargement (persistance) : ré-attache le flux de référence depuis le marqueur
+   * persisté `shape_is_reference_flux`. La capture (médiane proportionnelle / échelle) se
+   * fait paresseusement au 1er dessin (anchorProportionalNodes / applyAdaptedScale).
+   */
+  public attachReferenceLinkFromAttributes() {
+    const flagged = this.drawingArea.sankey.links_list.find(l => l.shape_is_reference_flux)
+    this._prop_reference_link = flagged ?? undefined
+  }
+
+  /**
+   * #1231 — Réinitialise complètement l'état du mode proportionnel : retire le flux de
+   * référence (et son marqueur persisté) et oublie le cadre de référence capturé (médiane,
+   * sommes par colonne, épaisseur du flux). Les positions courantes des nœuds sont
+   * conservées (elles deviennent les positions absolues). Appelé au passage en mode absolu :
+   * on repart « propre », un futur retour en proportionnel re-capture tout.
+   */
+  public resetProportionalState() {
+    this.setProportionalReferenceLink(undefined)
+    this._prop_median_y = undefined
+    this._prop_top_y = undefined
+    this._prop_bottom_y = undefined
+    this._prop_ref_col_sums = undefined
+  }
+
+  /** #1231 — Centre vertical d'un flux à mi-parcours = moyenne des lignes centrales source/cible. */
+  private fluxCenterY(link: Class_LinkElement): number {
+    return (link.position_y_start + link.position_y_end) / 2
+  }
+
+  /** #1231 — Épaisseur représentative d'un flux = moyenne des épaisseurs source/cible (px). */
+  private fluxThickness(link: Class_LinkElement): number {
+    return (link.thicknessSource + link.thicknessTarget) / 2
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : capture l'échelle courante et la valeur du flux de
+   * référence. Sert de base au ratio appliqué ensuite (`applyAdaptedScale`). À l'entrée du
+   * mode, valeur_courante == valeur_ref → échelle inchangée → pas de saut.
+   */
+  public captureScaleReference() {
+    const ref = this.proportionalReferenceLink
+    const v = ref ? this.referenceFluxRefValue() : undefined
+    if (ref && v && v > 0) {
+      // Valeur au datatag de référence (couple flux/datatag) ; échelle de base = échelle courante.
+      this._scale_adapted_ref_value = v
+      this._scale_adapted_ref_scale = this.drawingArea.scale
+    } else {
+      this._scale_adapted_ref_value = undefined
+      this._scale_adapted_ref_scale = undefined
+    }
+  }
+
+  /**
+   * #1231 — Mode « échelle adaptée » : ajuste l'échelle (valeur→px) du diagramme pour que le
+   * flux de référence garde sa taille de référence à tous les datatags. Appelé en tête de
+   * `drawElements` avant `_sankey.draw()`. No-op sans flux de référence ou sans capture.
+   * Écrit directement `_scale` + le domaine de `_scaleValueToPx` (le setter `scale` redraw →
+   * récursion ; on l'évite).
+   */
+  public applyAdaptedScale() {
+    const ref = this.proportionalReferenceLink
+    if (!ref) return
+    // Capture paresseuse (1er dessin / après chargement) : base = échelle + valeur courantes
+    // → ratio 1 à cette frame, pas de saut.
+    if (this._scale_adapted_ref_value === undefined || this._scale_adapted_ref_scale === undefined) {
+      this.captureScaleReference()
+      return
+    }
+    const v = Math.abs(ref.valueCurrent ?? 0)
+    if (v <= 0) return
+    const new_scale = this._scale_adapted_ref_scale * v / this._scale_adapted_ref_value
+    if (isFinite(new_scale) && new_scale > 0) {
+      this.drawingArea._scale = new_scale
+      this.drawingArea._scaleValueToPx.domain([0, new_scale])
+    }
+  }
+
+  /**
+   * #1231 — Sortie du mode « échelle adaptée » : restaure l'échelle de base capturée (pour
+   * ne pas laisser le diagramme à une échelle adaptée d'un autre datatag) et oublie la
+   * capture. L'échelle restaurée s'affiche au prochain dessin.
+   */
+  public clearScaleAdaptation() {
+    if (this._scale_adapted_ref_scale !== undefined && this._scale_adapted_ref_scale > 0) {
+      this.drawingArea._scale = this._scale_adapted_ref_scale
+      this.drawingArea._scaleValueToPx.domain([0, this._scale_adapted_ref_scale])
+    }
+    this._scale_adapted_ref_value = undefined
+    this._scale_adapted_ref_scale = undefined
+  }
+
+  /**
+   * #1231 — Capture le cadre de référence du mode proportionnel sur l'état courant.
+   * Deux régimes selon qu'un flux de référence est sélectionné ou non :
+   *  - AVEC flux de référence : médiane (centre de gravité, FIXE) = centre vertical du flux
+   *    à mi-parcours ; l'épaisseur du flux est mémorisée comme référence du facteur f.
+   *  - SANS flux de référence (fallback) : médiane = moyenne, sur les colonnes, des **centres
+   *    géométriques** de pile ; sommes de hauteurs par colonne mémorisées pour f (max ratio).
+   * Dans les deux cas on capture le centre de référence de chaque nœud (pour le replacement).
    * Appelé à l'entrée du mode, après un drag et au changement de vue. `position_u` doit
    * être à jour (cf. `inferPositionUFromX`).
    */
@@ -1055,14 +1230,38 @@ export class NodePositioning {
     this._prop_bottom_y = bottom_y
     this._prop_ref_col_sums = this.proportionalColumnSums(nodes)
     nodes.forEach(n => n.captureProportionalCenterRef())
+
+    // #1231 — Avec flux de référence : la médiane (centre de gravité fixe) se cale sur le
+    // centre vertical du flux. Le facteur f est value-based (cf. proportionalFactor) : rien à
+    // capturer ici pour f (il dérive du couple flux/datatag de référence persisté).
+    const ref_link = this.proportionalReferenceLink
+    if (ref_link) {
+      this._prop_median_y = this.fluxCenterY(ref_link)
+    }
   }
 
   /**
-   * #1231 — Facteur de compression/dilatation courant : plus GRAND ratio
-   * (somme de hauteurs par colonne au datatag courant) / (somme de référence), sur les
-   * colonnes communes. 1 si pas de référence. Voir spec : « on prend le plus grand ».
+   * #1231 — Facteur de compression/dilatation courant.
+   *  - AVEC flux de référence : f = épaisseur courante du flux / épaisseur capturée. Tout le
+   *    diagramme se comprime/dilate autour de la médiane (centre du flux) selon ce ratio.
+   *  - SANS (fallback) : plus GRAND ratio (somme de hauteurs par colonne courante / référence)
+   *    sur les colonnes communes.
+   * 1 si pas de référence exploitable.
    */
   private proportionalFactor(nodes: Class_NodeElement[]): number {
+    // #1231 — Régime « flux de référence » : f = ratio de VALEUR du flux de référence entre le
+    // datatag courant et le datatag de référence (couple persisté flux/datatag). f=1 au datatag
+    // de réf ; indépendant du moment où l'on (r)entre en mode %.
+    const ref_link = this.proportionalReferenceLink
+    if (ref_link) {
+      const ref_val = this.referenceFluxRefValue()
+      const cur = Math.abs(ref_link.valueCurrent ?? 0)
+      if (ref_val && ref_val > 0 && cur > 0) {
+        const f = cur / ref_val
+        return (isFinite(f) && f > 0) ? f : 1
+      }
+      return 1
+    }
     if (!this._prop_ref_col_sums) return 1
     const cur = this.proportionalColumnSums(nodes)
     let f = 0
@@ -1094,6 +1293,56 @@ export class NodePositioning {
     }
     const f = this.proportionalFactor(nodes)
     nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f))
+    this.applyProportionalColumnSpacing(nodes, this._prop_median_y!, f)
+  }
+
+  /**
+   * #1231 — Espacement des colonnes en mode proportionnel (option « écarts × f avec plancher »).
+   * Raisonne en DISTANCES ENTRE CENTRES (et non en positions absolues) :
+   *  - distance de référence entre deux nœuds voisins = écart de leurs centres capturés ;
+   *  - distance voulue = max(distance_réf × f, ½h_haut + ½h_bas + écart_min) ;
+   *  - la pile est centrée sur le centre comprimé de la colonne
+   *    (médiane + (centre_réf_colonne − médiane) × f).
+   * Propriétés :
+   *  - à f = 1 et sans chevauchement de départ, reproduit EXACTEMENT le layout (centre de
+   *    colonne = (cref_premier+cref_dernier)/2, indépendant de la médiane) → sélectionner/retirer
+   *    le flux de référence ne bouge rien ;
+   *  - garantit un écart ≥ écart_min entre voisins (jamais de chevauchement) ;
+   *  - l'espacement suit le flux (× f) tant qu'il reste au-dessus du plancher.
+   * `écart_min` = `shape_position_dy` GLOBAL (petit, ~50px) : un dy par-nœud aberrant (ex. 434)
+   * forcerait un grand écart même quand le layout d'origine est plus serré → faux déplacements.
+   */
+  private applyProportionalColumnSpacing(nodes: Class_NodeElement[], median: number, f: number) {
+    const min_gap = this.drawingArea.sankey.styles_dict['default'].shape_position_dy ?? 50
+    const cols = new Map<number, Class_NodeElement[]>()
+    nodes.forEach(n => {
+      const arr = cols.get(n.position_u) ?? []
+      arr.push(n)
+      cols.set(n.position_u, arr)
+    })
+    cols.forEach(col => {
+      if (col.length < 2) return
+      const cref = (n: Class_NodeElement) => n._prop_center_ref ?? (n.position_y + n.getShapeHeightToUse() / 2)
+      col.sort((a, b) => cref(a) - cref(b))
+      const refs = col.map(cref)
+      const heights = col.map(n => n.getShapeHeightToUse())
+      // Distances voulues entre centres voisins : compression de l'écart de réf, plancher anti-chevauchement.
+      const dists: number[] = []
+      for (let i = 0; i < col.length - 1; i++) {
+        const compressed = (refs[i + 1] - refs[i]) * f
+        const min_dist = heights[i] / 2 + heights[i + 1] / 2 + min_gap
+        dists.push(Math.max(compressed, min_dist))
+      }
+      const span = dists.reduce((s, d) => s + d, 0)
+      // Centre comprimé de la colonne (= centre_réf à f=1, indépendant de la médiane).
+      const col_center_ref = (refs[0] + refs[col.length - 1]) / 2
+      const col_center = median + (col_center_ref - median) * f
+      let center = col_center - span / 2
+      col.forEach((n, i) => {
+        if (i > 0) center += dists[i - 1]
+        n.position_y = center - heights[i] / 2
+      })
+    })
   }
 
   /**

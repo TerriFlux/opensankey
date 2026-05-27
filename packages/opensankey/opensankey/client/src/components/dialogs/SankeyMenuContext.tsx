@@ -300,12 +300,12 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         let filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
 
         // #1231 — Un `force_show_children` actif sur une dimension (désagrégation locale)
-        // restreint le menu à CETTE seule dimension : on ne peut agréger/désagréger que
-        // le long d'elle, pas le long d'une autre dimension (sinon état incohérent).
+        // retire seulement les entrées d'AGRÉGATION des autres dimensions : on ne peut
+        // ré-agréger que le long de la dimension active. La DÉSAGRÉGATION des autres
+        // dimensions reste accessible (on ne cache pas tout leur sous-menu).
         const active_child_dim = child_dims.find(dim => dim.force_show_children)
         if (active_child_dim && !englobed_parent_dim) {
           filtered_child_dims = filtered_child_dims.filter(d => d.id === active_child_dim.id)
-          filtered_parent_dims = filtered_parent_dims.filter(d => d.id === active_child_dim.id)
         }
 
         // Créer un sous-menu pour chaque dimension child.
