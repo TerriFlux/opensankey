@@ -4,7 +4,7 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkValue } from './LinkValues'
 import { Class_DataTag } from '../types/Tag'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
-import { link_data_label } from '../types/Utils'
+import { link_data_label, format_value } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 
 export class LinkTooltip {
@@ -177,6 +177,9 @@ export class LinkTooltip {
     }
     this._link.value_label_is_visible = data_label_visible
 
+    // Source / URL de la donnée courante (colonnes "Source"/"URL" de l'onglet Données)
+    html += this.getDataSourceUrlRows()
+
     // Contexte dataTags courant (Année, région…)
     html += this.getDataTagContextRows()
 
@@ -204,15 +207,26 @@ export class LinkTooltip {
   private getDataTabHTML(groups: { axisName: string, links: Class_LinkElement[] }[]): string {
     const parent_total = this._link.valueCurrent
 
-    // Contexte dataTags courant en haut (valeur du flux parent + Année/région…)
+    // Contexte dataTags courant en haut (valeur du flux parent + Année/région… + source/URL du parent)
     let html = ''
     const context_rows = this.getDataTagContextRows()
-    if (context_rows) {
+    const parent_meta = this.getDataSourceUrlRows()
+    if (context_rows || parent_meta) {
       html += '<table class="tooltip-table" style="margin-bottom:10px;">'
       html += `<tr><th>Valeur</th><td class="value">${this.formatLinkValue(this._link)}</td></tr>`
       html += context_rows
+      html += parent_meta
       html += '</table>'
     }
+
+    // Colonnes Source/URL affichées seulement si au moins un flux enfant en porte une.
+    let show_source = false
+    let show_url = false
+    groups.forEach(g => g.links.forEach(l => {
+      const v = l.value as Class_LinkValue | undefined
+      if (v?.data_source) show_source = true
+      if (v?.data_url) show_url = true
+    }))
 
     groups.forEach((group, gi) => {
       html += `<div class="data-axis"${gi > 0 ? ' style="margin-top:14px;"' : ''}>`
@@ -222,22 +236,43 @@ export class LinkTooltip {
       html += '<th>Destination</th>'
       html += '<th class="value">Valeur</th>'
       html += '<th class="ratio">Ratio</th>'
+      if (show_source) html += '<th>Source</th>'
+      if (show_url) html += '<th>URL</th>'
       html += '</tr></thead><tbody>'
 
-      const sorted = [...group.links].sort(
-        (a, b) => (b.valueCurrent ?? 0) - (a.valueCurrent ?? 0)
-      )
+      // Données saisies des flux enfants (data_value) : tri, valeur affichée,
+      // ratio et total sont basés sur la donnée, pas sur la valeur réconciliée.
+      const childData = (l: Class_LinkElement) =>
+        (l.value as Class_LinkValue | undefined)?.valueData ?? 0
+      const sorted = [...group.links].sort((a, b) => childData(b) - childData(a))
       sorted.forEach(l => {
-        const ratio = (parent_total && parent_total > 0 && l.valueCurrent != null)
-          ? Math.round((l.valueCurrent / parent_total) * 100) + '%'
+        const dv = childData(l)
+        const ratio = (parent_total && parent_total > 0)
+          ? Math.round((dv / parent_total) * 100) + '%'
           : '-'
+        const v = l.value as Class_LinkValue | undefined
         html += '<tr>'
         html += `<td>${l.source.name.split('\\n').join(' ')}</td>`
         html += `<td>${l.target.name.split('\\n').join(' ')}</td>`
-        html += `<td class="value">${this.formatLinkValue(l)}</td>`
+        html += `<td class="value">${this.formatLinkDataValue(l)}</td>`
         html += `<td class="ratio">${ratio}</td>`
+        if (show_source) html += `<td>${v?.data_source ? this.escapeHtml(v.data_source) : '-'}</td>`
+        if (show_url) html += `<td>${v?.data_url ? this.urlAnchor(v.data_url) : '-'}</td>`
         html += '</tr>'
       })
+
+      // Ligne Total en bas : somme des données des flux enfants de l'axe + ratio cumulé.
+      const group_total = sorted.reduce((s, l) => s + childData(l), 0)
+      const total_ratio = (parent_total && parent_total > 0)
+        ? Math.round((group_total / parent_total) * 100) + '%'
+        : '-'
+      html += '<tr class="total-row" style="font-weight:600;border-top:1px solid #cbd5e0;">'
+      html += '<th colspan="2">Total</th>'
+      html += `<td class="value">${this.formatTotal(group_total)}</td>`
+      html += `<td class="ratio">${total_ratio}</td>`
+      if (show_source) html += '<td></td>'
+      if (show_url) html += '<td></td>'
+      html += '</tr>'
 
       html += '</tbody></table>'
       html += '</div>'
@@ -255,6 +290,86 @@ export class LinkTooltip {
     link.value_label_unit_type = tmp
     link.value_label_is_visible = data_label_visible
     return label
+  }
+
+  /**
+   * Formate la donnée saisie d'un lien (value.valueData), via le même chemin que
+   * la ligne « donnée » de l'onglet principal : link_data_label('data', …) qui
+   * renvoie '' s'il n'y a pas de data_value. Unité nommée comme formatLinkValue.
+   */
+  private formatLinkDataValue(link: Class_LinkElement): string {
+    const data_label_visible = link.value_label_is_visible
+    link.value_label_is_visible = true
+    const tmp = link.value_label_unit_type
+    link.value_label_unit_type = 'unit_name'
+    const label = link_data_label('data', link, 'value_label')
+    link.value_label_unit_type = tmp
+    link.value_label_is_visible = data_label_visible
+    return label
+  }
+
+  /**
+   * Formate un total brut (somme de valeurs enfants) avec la même unité/format
+   * que les cellules Valeur du tableau (unité nommée).
+   */
+  private formatTotal(total: number): string {
+    const data_label_visible = this._link.value_label_is_visible
+    this._link.value_label_is_visible = true
+    const tmp = this._link.value_label_unit_type
+    this._link.value_label_unit_type = 'unit_name'
+    const label = format_value('free_value', total, this._link, this._link.unit_name('value_label'), 'value_label')
+    this._link.value_label_unit_type = tmp
+    this._link.value_label_is_visible = data_label_visible
+    return label as string
+  }
+
+  /**
+   * Lignes <tr> "Source" et "URL" de la donnée courante du flux. Affichées
+   * seulement si renseignées ; l'URL est rendue cliquable (le tooltip étant
+   * épinglable, cf. #158). Aucun affichage si le flux n'a pas de valeur courante.
+   */
+  private getDataSourceUrlRows(): string {
+    const value = this._link.value as Class_LinkValue | undefined
+    if (!value) return ''
+    let html = ''
+    if (value.data_source) {
+      html += `<tr><th>Source</th><td>${this.escapeHtml(value.data_source)}</td></tr>`
+    }
+    if (value.data_url) {
+      html += `<tr><th>URL</th><td>${this.urlAnchor(value.data_url)}</td></tr>`
+    }
+    return html
+  }
+
+  /** Échappe le HTML pour injection sûre dans le tooltip (innerHTML). */
+  private escapeHtml(_: string): string {
+    return _
+      .split('&').join('&amp;')
+      .split('<').join('&lt;')
+      .split('>').join('&gt;')
+      .split('"').join('&quot;')
+  }
+
+  /**
+   * Rend une URL en lien cliquable (le tooltip étant épinglable, cf. #158).
+   * Le libellé affiché est le domaine (hostname sans "www."), court et lisible ;
+   * l'URL complète reste en href + en infobulle (title). Bleu souligné pour
+   * qu'on voie que c'est un hyperlien.
+   */
+  private urlAnchor(url: string): string {
+    const trimmed = url.trim()
+    // Garantit un href absolu navigable même si l'URL saisie n'a pas de schéma.
+    const href = /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed
+    let label: string
+    try {
+      label = new URL(href).hostname.replace(/^www\./, '')
+    } catch {
+      label = trimmed.length > 50 ? trimmed.slice(0, 50) + '…' : trimmed
+    }
+    return `<a href="${this.escapeHtml(href)}" target="_blank" rel="noopener noreferrer"`
+      + ` title="${this.escapeHtml(trimmed)}"`
+      + ' style="color:#3182ce;text-decoration:underline;">'
+      + `${this.escapeHtml(label)}</a>`
   }
 
   /** Lignes <tr> du contexte dataTags courant : un groupe par ligne (tag(s) sélectionné(s)). */
@@ -443,7 +558,13 @@ export class LinkTooltip {
     return leaves.length > 0 ? leaves : [node]
   }
 
-  /** Flux (avec donnée) reliant les feuilles source aux feuilles target, hors flux courant. */
+  /**
+   * Flux portant une donnée saisie, reliant les feuilles source aux feuilles
+   * target (hors flux courant). On filtre sur la présence d'un data_value
+   * (value.valueData) — même critère que l'onglet principal pour distinguer une
+   * donnée d'une valeur seulement calculée par le solveur : un flux purement
+   * réconcilié (sans donnée d'entrée) n'apparaît pas dans l'onglet Données.
+   */
   private collectLinksBetween(source_leaves: Class_NodeElement[], target_leaves: Class_NodeElement[]): Class_LinkElement[] {
     const target_ids = new Set(target_leaves.map(n => n.id))
     const seen = new Set<string>()
@@ -451,7 +572,7 @@ export class LinkTooltip {
     source_leaves.forEach(ls => {
       ls.output_links_list.forEach(l => {
         if (l === this._link) return
-        if (l.valueCurrent === null || l.valueCurrent === undefined) return
+        if ((l.value as Class_LinkValue | undefined)?.valueData == null) return
         if (target_ids.has(l.target.id) && !seen.has(l.id)) {
           seen.add(l.id)
           links.push(l)
