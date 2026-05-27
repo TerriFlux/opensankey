@@ -245,31 +245,45 @@ const captureSelectedViewsAsPNG = async (
   return map
 }
 
-// Decode a PNG blob to ImageData via canvas, flattening transparency on white.
-const decodePNGToImageData = async (blob: Blob): Promise<ImageData> => {
-  const bitmap = await createImageBitmap(blob)
+// Decode every PNG blob to ImageData on a SHARED canvas sized to the largest
+// frame, flattening transparency on white and padding smaller frames at the
+// top-left. Each captured view/tag is auto-fitted independently, so frames come
+// back with different pixel sizes; gifenc fixes the GIF logical-screen size on
+// the first frame (and MediaRecorder on the first canvas), which would clip any
+// taller/wider later frame at the bottom/right. Normalizing to a common size up
+// front guarantees the constant frame size both encoders require — no clipping.
+// Content origin is already aligned to the top-left across frames (see the
+// g_drawing counter-translate in _pre_process_export_svg), so top-left padding
+// keeps every diagram in register.
+const decodeFramesToCommonCanvas = async (ordered_blobs: Blob[]): Promise<ImageData[]> => {
+  const bitmaps = await Promise.all(ordered_blobs.map((b) => createImageBitmap(b)))
+  const max_w = Math.max(...bitmaps.map((b) => b.width))
+  const max_h = Math.max(...bitmaps.map((b) => b.height))
   const c = document.createElement('canvas')
-  c.width = bitmap.width
-  c.height = bitmap.height
+  c.width = max_w
+  c.height = max_h
   const ctx = c.getContext('2d')
   if (!ctx) throw new Error('No 2D context for frame decode')
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, bitmap.width, bitmap.height)
-  ctx.drawImage(bitmap, 0, 0)
-  const image_data = ctx.getImageData(0, 0, bitmap.width, bitmap.height)
-  bitmap.close?.()
-  return image_data
+  const frames: ImageData[] = []
+  for (const bitmap of bitmaps) {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, max_w, max_h)
+    ctx.drawImage(bitmap, 0, 0)
+    frames.push(ctx.getImageData(0, 0, max_w, max_h))
+    bitmap.close?.()
+  }
+  return frames
 }
 
 const encodeAnimatedGIF = async (
-  ordered_blobs: Blob[],
+  frames: ImageData[],
   opts: AnimExportOpts
 ): Promise<Blob> => {
   const gif = GIFEncoder()
   // gifenc: repeat=0 => infinite loop, repeat=-1 => play once. Set on first frame only.
   const repeat = opts.loop_mode === 'once' ? -1 : 0
-  for (let i = 0; i < ordered_blobs.length; i++) {
-    const image_data = await decodePNGToImageData(ordered_blobs[i])
+  for (let i = 0; i < frames.length; i++) {
+    const image_data = frames[i]
     const palette = quantize(image_data.data, 256)
     const indexed = applyPalette(image_data.data, palette)
     gif.writeFrame(indexed, image_data.width, image_data.height, {
@@ -287,21 +301,17 @@ const encodeAnimatedGIF = async (
 }
 
 const encodeAnimatedWebM = async (
-  ordered_blobs: Blob[],
+  frames: ImageData[],
   opts: AnimExportOpts
 ): Promise<Blob> => {
-  if (ordered_blobs.length === 0) throw new Error('No frames to encode')
-  // Decode first frame to size the canvas.
-  const first = await createImageBitmap(ordered_blobs[0])
+  if (frames.length === 0) throw new Error('No frames to encode')
+  // All frames already share the common canvas size (see decodeFramesToCommonCanvas).
   const canvas = document.createElement('canvas')
-  canvas.width = first.width
-  canvas.height = first.height
+  canvas.width = frames[0].width
+  canvas.height = frames[0].height
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('No 2D context for WebM canvas')
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
-  ctx.drawImage(first, 0, 0)
-  first.close?.()
+  ctx.putImageData(frames[0], 0, 0)
 
   // Real-time recording: capture the canvas at a sampling rate well above the frame rate.
   const fps = Math.max(1, Math.round(1000 / opts.delay_ms) * 4)
@@ -315,12 +325,8 @@ const encodeAnimatedWebM = async (
 
   // First frame already drawn; hold it for delay_ms before drawing the next.
   await new Promise((r) => setTimeout(r, opts.delay_ms))
-  for (let i = 1; i < ordered_blobs.length; i++) {
-    const bitmap = await createImageBitmap(ordered_blobs[i])
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-    ctx.drawImage(bitmap, 0, 0)
-    bitmap.close?.()
+  for (let i = 1; i < frames.length; i++) {
+    ctx.putImageData(frames[i], 0, 0)
     await new Promise((r) => setTimeout(r, opts.delay_ms))
   }
   recorder.stop()
@@ -370,18 +376,18 @@ const finalizeAnimatedExport = async (
   let blob: Blob
   let extension: string
   switch (opts.format) {
-    case 'gif':
-      blob = await encodeAnimatedGIF(ordered_blobs, opts)
-      extension = '.gif'
-      break
-    case 'webm':
-      blob = await encodeAnimatedWebM(ordered_blobs, opts)
-      extension = '.webm'
-      break
-    case 'png_zip':
-      blob = await packageSelectedViewsAsZip(ordered_entries)
-      extension = '.zip'
-      break
+  case 'gif':
+    blob = await encodeAnimatedGIF(await decodeFramesToCommonCanvas(ordered_blobs), opts)
+    extension = '.gif'
+    break
+  case 'webm':
+    blob = await encodeAnimatedWebM(await decodeFramesToCommonCanvas(ordered_blobs), opts)
+    extension = '.webm'
+    break
+  case 'png_zip':
+    blob = await packageSelectedViewsAsZip(ordered_entries)
+    extension = '.zip'
+    break
   }
   FileSaver.saveAs(blob, file_base + extension)
 }
