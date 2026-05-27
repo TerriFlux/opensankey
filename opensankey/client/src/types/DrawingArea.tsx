@@ -585,13 +585,13 @@ export class Class_DrawingArea {
     //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
-    // #665 — maintien des flux marqués « à garder droit » (droiture dure, écarts
-    // absorbants). Doit tourner APRÈS un premier draw : le cache d'accroche
-    // (getOutputLinkStartingPoint/…) reflète alors les épaisseurs courantes.
-    // #1231 — DÉSACTIVÉ en mode proportionnel : l'espacement par colonne
-    // (applyProportionalColumnSpacing) place les nœuds de façon déterministe, et
-    // déplacer une cible pour « garder droit » casse cet empilement. Actif en
-    // absolu / échelle adaptée / paramétrique.
+    // #665 (refonte #1231) — post-processing « flux droit ». Tourne APRÈS un premier draw : le
+    // cache d'accroche (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace
+    // les nœuds cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
+    // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la récursion.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : l'espacement par colonne (applyProportionalColumnSpacing)
+    // place les nœuds de façon déterministe, et déplacer une cible pour « garder droit » casse cet
+    // empilement (résultat incohérent). Le flux droit reste actif en absolu / échelle adaptée.
     if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
@@ -2902,6 +2902,12 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       if (n.shape_position_v_locked !== true) n.position_v = -1
     })
+    // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
+    // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
+    // proportionnel. Les centres de colonne suivront ensuite le % au changement de
+    // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
+    // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
+    this.nodePositioning.captureProportionalReference()
     this.nodePositioning.computeParametrization(false)
     this.bypass_redraws = false
   }
@@ -2967,6 +2973,36 @@ export class Class_DrawingArea {
       this.draw()
     }
 
+    this.application_data.history.saveUndo(revert)
+    this.application_data.history.saveRedo(apply)
+    apply()
+  }
+
+  /**
+   * #1231 — COMMANDE « écarts égaux ». Équilibre les écarts verticaux d'une colonne
+   * (bord haut du 1er nœud et bord bas du dernier conservés) — celle du nœud passé, ou
+   * toutes les colonnes si aucun nœud. One-shot avec undo. Re-cale ensuite la référence
+   * du mode actif (% → captureProportionalReference, absolu → settle) pour que le
+   * résultat tienne, puis le mode gère l'évolution au changement de datatag.
+   */
+  public equalizeColumnGaps(node?: Class_NodeElement) {
+    const saved = this.sankey.visible_nodes_list.map(n => ({ n, y: n.position_y, dy: n.shape_position_dy }))
+    // #1231 — une commande de positionnement bascule en mode ABSOLU (positions explicites).
+    // Le couple flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) :
+    // un futur retour en % le réutilisera.
+    const rebase = () => { this.sankey.nodes_list.forEach(n => n.settleCenterAnchor()) }
+    const apply = () => {
+      this.setAbsoluteMode()
+      if (node) this.nodePositioning.equalizeColumnGapsOfNode(node)
+      else this.nodePositioning.equalizeAllColumnsGaps()
+      rebase()
+      this.draw()
+    }
+    const revert = () => {
+      saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
+      rebase()
+      this.draw()
+    }
     this.application_data.history.saveUndo(revert)
     this.application_data.history.saveRedo(apply)
     apply()

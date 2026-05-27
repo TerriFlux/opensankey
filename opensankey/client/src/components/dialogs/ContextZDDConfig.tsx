@@ -569,8 +569,10 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     deleteAllViews: () => app_data.reinitialization(),
     transposeDA: () => { drawing_area.verticalizeDiagram(); saveToCache() },
     arrangeNodesToGrid: () => { nodePositioning.arrangeNodesToGrid(); saveToCache() },
-    toggleParametricMode: () => getNodeStyle().shape_position_type === 'parametric' ? drawing_area.setAbsoluteMode() : drawing_area.setParametricMode(),
-    toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'parametric',
+    // #1231 — le mode paramétrique n'est plus un mode utilisateur : ce toggle bascule
+    // désormais entre pourcentage et absolu.
+    toggleParametricMode: () => getNodeStyle().shape_position_type === 'proportional' ? drawing_area.setAbsoluteMode() : drawing_area.setProportionalMode(),
+    toggleParametricModeValue: () => getNodeStyle().shape_position_type === 'proportional',
     resetVerticalIntervals: () => { drawing_area.resetAllVerticalIntervals(); saveToCache() },
     // toggleAutoX: () => { },//getNodeStyle().position.auto_x = !getNodeStyle().position.auto_x },
     // toggleAutoXValue: () => null,//getNodeStyle().position.auto_x,

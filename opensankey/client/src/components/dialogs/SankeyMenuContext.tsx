@@ -213,7 +213,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
   path,
   refreshCallback
 }: ContextMenuRendererProps<T>) => {
-  const [, setForceUpdate] = useState(0)
+  const [forceUpdateCount, setForceUpdate] = useState(0)
   const { t } = app_data
 
   // Callback de refresh unifié
@@ -296,8 +296,17 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         // imprévisibles tant que ce mode est actif. Hypothèse : au plus une
         // dim en container_mode à la fois sur un même nœud.
         const englobed_parent_dim = parent_dims.find(dim => !!dim.container_mode)
-        const filtered_child_dims = englobed_parent_dim ? [] : child_dims
-        const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+        let filtered_child_dims = englobed_parent_dim ? [] : child_dims
+        let filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+
+        // #1231 — Un `force_show_children` actif sur une dimension (désagrégation locale)
+        // retire seulement les entrées d'AGRÉGATION des autres dimensions : on ne peut
+        // ré-agréger que le long de la dimension active. La DÉSAGRÉGATION des autres
+        // dimensions reste accessible (on ne cache pas tout leur sous-menu).
+        const active_child_dim = child_dims.find(dim => dim.force_show_children)
+        if (active_child_dim && !englobed_parent_dim) {
+          filtered_child_dims = filtered_child_dims.filter(d => d.id === active_child_dim.id)
+        }
 
         // Créer un sous-menu pour chaque dimension child.
         // Issue #1225 — quand une opération est active sur la dim (désagrégé,
@@ -589,7 +598,11 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
       })
     }
     return processItems(config.structure)
-  }, [config.structure, app_data])
+    // #1231 — recalculer la structure (items dynamiques basés sur le nœud contextualisé,
+    // ex. liste des enfants à désagréger) quand le nœud change OU à chaque refresh
+    // (force_show_children, désagrégation…). Sinon le menu reste périmé jusqu'à
+    // fermeture/réouverture (le useMemo ne dépendait que de refs stables).
+  }, [config.structure, app_data, forceUpdateCount, app_data.drawing_area.node_contextualised])
 
   if (!isVisible || !globalConditionsMet) return null
 
@@ -655,7 +668,11 @@ export const ContextMenu = <T extends Record<string, unknown>>({
   menu_configuration[attr_updater].current = () => setForceUpdate(a => a + 1)
   const isVisible = drawing_area[attr_is_contextualised] as boolean
 
-  // Mémoriser la position seulement quand le menu devient visible
+  // #1231 — Figer la position À L'OUVERTURE du menu : on dépend UNIQUEMENT de
+  // `isVisible`, pas de `pointer_pos`. Sinon, cliquer un item (qui garde le menu ouvert,
+  // closeOnSelect=false) recalculait la position sur la souris courante → le menu sautait.
+  // Tant que le menu reste ouvert (isVisible inchangé), la position reste celle du clic
+  // droit initial. Réouverture (isVisible false→true) → recalcul avec la nouvelle position.
   const position = useMemo<MenuPosition | null>(() => {
     if (!isVisible) return null
 
@@ -665,7 +682,8 @@ export const ContextMenu = <T extends Record<string, unknown>>({
       isTop: drawing_area.pointer_pos[1] + 330 <= window.innerHeight
     }
     return pos
-  }, [isVisible, drawing_area.pointer_pos])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible])
 
   if (!isVisible || !position) {
     return <React.Fragment />

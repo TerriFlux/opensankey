@@ -4,7 +4,7 @@ import {
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsUpDown, faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -124,19 +124,11 @@ const ComponentMouseMode = (
 const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   const { t, drawing_area } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  // #1231 — 4 modes : paramétrique (écart vertical), absolu, proportionnel (%), échelle adaptée.
   const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
+  // #1231 — Le mode « paramétrique » n'est plus un mode utilisateur : seuls Absolu et
+  // Pourcentage. L'« écart constant » est désormais une commande (clic droit nœud →
+  // « Écarts égaux »). Bouton paramétrique retiré.
   return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
-    <OSTooltip placement='top' label={t('Banner.posMode_parametric')}>
-      <Button
-        variant={mode === 'parametric' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
-        size={size}
-        onClick={() => {
-          if (mode !== 'parametric') { drawing_area.setParametricMode(); updateParentComponent() }
-        }}>
-        <FontAwesomeIcon icon={faArrowsUpDown} />
-      </Button>
-    </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
       <Button
         variant={mode === 'absolute' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}

@@ -2193,8 +2193,10 @@ export class DrawingAreaPersistence {
 
     // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
     // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
-    // 'proportional' / 'scale_adapted' → 'absolute' (le mode 'parametric' reste géré tel quel).
-    if (drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
+    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
+    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
+        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
         drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
       drawing_area.sankey.default_style.shape_position_type = 'absolute'
     }
