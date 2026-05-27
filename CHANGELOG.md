@@ -16,6 +16,7 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 ### Tooltips : détail des flux enfants par dimension, épingle et déplacement ([su-model/sankeyapplication#158](https://gitlab.com/su-model/sankeyapplication/-/issues/158))
 
 - **Le tooltip d'un flux agrégé liste ses flux enfants.** Quand un flux relie des nœuds regroupés (par essences, par propriétés…), un onglet « Données » détaille les flux sous-jacents jusqu'aux feuilles, **regroupés par dimension** (un tableau par axe d'agrégation, les dimensions étant antagonistes), avec pour chaque flux enfant son origine, sa destination, sa valeur et sa part (%) dans le flux parent.
+- **Contexte dataTags et séries dans le tooltip de flux.** Le tooltip affiche le contexte de dataTags courant (Année, région… une ligne par groupe) et, lorsqu'un flux a plusieurs combinaisons de dataTags, des onglets « Séries » donnant la valeur du flux et de ses flux enfants pour chaque combinaison (combinaisons en colonnes). Les valeurs reprennent le même formatage que la valeur affichée (chiffres significatifs), l'unité étant rappelée au-dessus du tableau.
 - **Tooltips épinglables et déplaçables.** Tout tooltip (nœud ou flux) peut être déplacé en glissant son en-tête et épinglé (bouton punaise) pour rester ouvert — pratique pour lire, comparer ou capturer — sinon il se ferme automatiquement comme avant. Détails : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
 
 ### Ouverture Excel : case « Onglet mise en page »
