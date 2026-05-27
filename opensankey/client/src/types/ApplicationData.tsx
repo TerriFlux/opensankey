@@ -1618,6 +1618,13 @@ export class Class_ApplicationData {
     svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
 
+    // Drop editor-only chrome from the export. The editable-area frame (#viewport_border)
+    // lives on the zoom layer OUTSIDE g_drawing, so it keeps its on-screen position
+    // (offset by the nav bar height) instead of following the re-anchored diagram —
+    // it would otherwise be baked into the SVG/PNG/PDF as a stray border cutting across
+    // the export, shifted down by the top menu height.
+    svg_clone?.select('#viewport_border').remove()
+
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We
     // convert non-default baselines to an equivalent y-offset (and drop the
