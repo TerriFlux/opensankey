@@ -54,7 +54,8 @@ import {
   Tooltip,
   Select,
   PlacementWithLogical,
-  Textarea
+  Textarea,
+  SystemStyleObject
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
@@ -747,6 +748,8 @@ interface OverloadedButtonProps {
   variant: string
   onClick: () => void
   children: React.ReactNode
+  // Styles additionnels fusionnés dans le sx du bouton (ex. forcer un bouton carré).
+  buttonSx?: SystemStyleObject
 }
 
 export const OverloadedButton = ({
@@ -757,7 +760,8 @@ export const OverloadedButton = ({
   attributeKey,
   variant,
   onClick,
-  children
+  children,
+  buttonSx
 }: React.PropsWithChildren<OverloadedButtonProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
@@ -772,7 +776,7 @@ export const OverloadedButton = ({
         <Button
           variant={variant}
           onClick={onClick}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto', ...buttonSx }}
         >
           {children}
         </Button>
