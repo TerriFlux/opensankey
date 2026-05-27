@@ -369,15 +369,10 @@ export const aggregate = (
     aggregateNode.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
     to_reorg.forEach(n => n.reorganizeIOLinks())
 
-    // #1231 — En mode pourcentage, re-baser la référence sur le nouvel état.
-    if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
-      new_data.drawing_area.nodePositioning.inferPositionUFromX()
-      new_data.drawing_area.nodePositioning.captureProportionalReference()
-    } else {
-      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230) sur le
-      // nouvel état pour que agg/désagg se comporte pareil qu'en proportionnel.
-      new_data.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-    }
+    // #1231 — Une commande de positionnement (désagrégation/agrégation) bascule en mode
+    // ABSOLU (positions explicites). Le couple flux/datatag de référence reste persisté ;
+    // setAbsoluteMode re-cale aussi les ancres de centre (#1230).
+    new_data.drawing_area.setAbsoluteMode()
   }
   const undo = () => {
     disaggregate(new_data, parent_node, contextualised_node.id, false)
@@ -425,13 +420,8 @@ export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
     sankey.showAccordingToLevelTags()
     sankey.nodes_list.forEach(n => n.dimensionsUpdated())
     sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
-    if (sankey.default_style.shape_position_type === 'proportional') {
-      new_data.drawing_area.nodePositioning.inferPositionUFromX()
-      new_data.drawing_area.nodePositioning.captureProportionalReference()
-    } else {
-      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230).
-      sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-    }
+    // #1231 — commande de positionnement → mode absolu (réf persistée conservée).
+    new_data.drawing_area.setAbsoluteMode()
     new_data.drawing_area.draw()
   }
   Do()
@@ -571,17 +561,8 @@ export const disaggregate = (
     })
     to_reorg.forEach(n => n.reorganizeIOLinks())
 
-    // #1231 — En mode pourcentage, re-baser la référence sur le nouvel état (enfants
-    // visibles à leur place) pour que les positions tiennent et respirent ensuite
-    // correctement au changement de datatag.
-    if (new_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
-      new_data.drawing_area.nodePositioning.inferPositionUFromX()
-      new_data.drawing_area.nodePositioning.captureProportionalReference()
-    } else {
-      // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230) sur le
-      // nouvel état pour que agg/désagg se comporte pareil qu'en proportionnel.
-      new_data.drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-    }
+    // #1231 — commande de positionnement (agrégation) → mode absolu (réf persistée conservée).
+    new_data.drawing_area.setAbsoluteMode()
   }
 
   const undo = () => {
@@ -680,12 +661,8 @@ export const disaggregationExpansion = (
     c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
   })
   to_reorg.forEach(n => n.reorganizeIOLinks())
-  if (sankey.default_style.shape_position_type === 'proportional') {
-    new_data.drawing_area.nodePositioning.captureProportionalReference()
-  } else {
-    // #1231 — symétrie mode absolu : re-caler les ancres de centre (#1230).
-    sankey.nodes_list.forEach(n => n.settleCenterAnchor())
-  }
+  // #1231 — commande de positionnement (expansion/contraction) → mode absolu (réf persistée conservée).
+  new_data.drawing_area.setAbsoluteMode()
   new_data.drawing_area.draw()
   new_data.drawing_area.to_recenter = true
   new_data.drawing_area.recenter()

@@ -1571,6 +1571,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return this._values.getValueForDataTags(_ as Class_DataTag[]) as Class_LinkValue | null
   }
 
+  /**
+   * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
+   * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
+   * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
+   */
+  public valueForDataTags(data_tags: Class_DataTag[]): number | null {
+    const v = this.valueForTags(data_tags)
+    if (!v) return null
+    if (this.drawing_area.type_data === 'data') return v.valueData ?? null
+    return v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null) ?? null
+  }
+
   public valueForTag(tag: Class_DataTag | undefined) {
     if (!tag) return this.value
     const data_tags: Class_DataTag[] = []

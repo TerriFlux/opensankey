@@ -521,12 +521,9 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       app_data.drawing_area.sankey.showAccordingToLevelTags()
       app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
       updateUnitaryStyles(app_data.drawing_area)
-      // #1231 — re-capture FINALE de la référence % sur l'ensemble visible définitif
-      // (les disaggregate/aggregate de la boucle l'ont capturée sur des états partiels).
-      if (app_data.drawing_area.sankey.default_style.shape_position_type === 'proportional') {
-        app_data.drawing_area.nodePositioning.inferPositionUFromX()
-        app_data.drawing_area.nodePositioning.captureProportionalReference()
-      }
+      // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
+      // de positionnement → mode absolu (réf flux/datatag persistée conservée).
+      app_data.drawing_area.setAbsoluteMode()
       app_data.drawing_area.draw()
       app_data.drawing_area.to_recenter = true
       app_data.drawing_area.recenter()
