@@ -4,6 +4,18 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased]
 
+### Added (verrou « forcer le tracé en trait » + critère géométrique trait/forme)
+
+- **Critère trait→forme pleine revu** ([LinkDrawShape.tsx](opensankey/client/src/Elements/LinkDrawShape.tsx)) : la bascule automatique entre rendu en trait (stroke le long de la bézier) et forme pleine fermée (anti-recouvrement des flux épais et courts) ne repose plus sur la distance euclidienne `dist/thickness > 2` mais sur un critère orienté + angle de virage : on garde le trait tant que le span le long de l'axe principal (dx pour un flux horizontal, dy pour un vertical) dépasse `thickness·tan(θ/2)`, où `θ` est estimé sur la pente max de la bézier (tangentes horizontales aux extrémités → sur-pente vs corde). Deux constantes de réglage en tête de fichier : `BEZIER_STEEPNESS` (1.5) et `SHOW_AS_PATH_SAFETY` (2). Corrige les flux très inclinés (dy grand, dx petit) qui se chevauchaient malgré une grande distance euclidienne, là où l'ancien critère ignorait l'orientation.
+- **Nouvel attribut de flux `shape_show_as_path_locked`** ([ElementsAttributesConfig.tsx](opensankey/client/src/Elements/ElementsAttributesConfig.tsx), [Element.tsx](opensankey/client/src/Elements/Element.tsx)) : cadenas (`FaLock`) dans le menu d'apparence des flux qui force le rendu en trait en ignorant la bascule géométrique automatique (`isTapered` reste prioritaire). Booléen dans `LINK_SHAPE_SPECIFIC_CONFIG`, default `false`, getter/setter/persistance/i18n auto-dérivés (clé absente ⇒ `false`, pas de migration). Traductions en/fr/es/de/it.
+
+### Changed (menu d'apparence des flux — boutons homogènes + logos)
+
+- **Réorganisation des boutons de forme** ([MenuElementsAppearance.tsx](opensankey/client/src/components/configmenus/MenuElementsAppearance.tsx)) : ligne 1 = recyclage (ramené à la taille d'un bouton d'orientation) + 4 orientations + Structure ; ligne 2 = Courbe + sélecteur de chemin bézier (élargi) + cadenas. Tailles homogénéisées (cases carrées 1.5rem, icônes 16px) ; chaque bouton-toggle enveloppé dans un flex item à largeur fixe pour neutraliser le `width:100%` du wrapper d'indicateur d'overload qui les étirait.
+- **Nouveaux logos `icon_link_curved` (bézier en S) et `icon_link_structure` (squelette nœud-pointillé-nœud)** ([css/IconLibrairie.tsx](opensankey/client/src/css/IconLibrairie.tsx)) pour les boutons Structure/Courbe.
+- **Prop optionnelle `buttonSx` sur `OverloadedButton`** ([MenuCommon.tsx](opensankey/client/src/components/configmenus/MenuCommon.tsx)) : styles fusionnés dans le `sx` du bouton (taille carrée, taille d'icône). Sans impact sur les usages existants.
+- **Taille d'icône fixée à 16px** sur les boutons isolés des rangées de position des libellés (`inside_horiz`/`inside_vert`/`stick_to_label`/`on_path`/`pos_auto` + bloc label de stock), qui étaient plus gros que les groupes d'alignement.
+
 ### Added (case « Onglet mise en page » à l'ouverture Excel)
 
 - **Nouvelle case `layout` dans « Onglets lus » du dialogue d'ouverture Excel** ([PersistenceProcessDialogConfigs.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialogConfigs.tsx), [views.py](opensankey/server/views.py)) : l'onglet caché `layout` (positions et styles du diagramme sauvegardés) était toujours relu à l'ouverture d'un fichier Excel. Ajout d'un toggle `layout` (défaut activé) à la section `excel` de `INPUT_ATTRIBUTES_CONFIG` ; côté serveur, la lecture de l'onglet `layout` dans `conversion_thread` est désormais conditionnée par `input_options.get('layout', True)`. Décoché ⇒ la mise en page sauvegardée est ignorée et une mise en page automatique est recalculée (comportement identique à un fichier sans onglet `layout`).

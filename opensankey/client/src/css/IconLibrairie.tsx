@@ -274,6 +274,41 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
 </svg>
 // Ajout après logo_hh dans la section "Hand made icon"
 
+// Logo "Courbe" : une bézier en S avec tangentes horizontales aux extrémités,
+// qui évoque exactement la forme d'un flux courbé.
+const logo_courbe = <svg xmlns="http://www.w3.org/2000/svg"
+  width="1em"
+  height="1em"
+  viewBox="0 0 24 24"
+  fill="none"
+>
+  <path
+    d="M2 18 C12 18 12 6 22 6"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+  />
+</svg>
+
+// Logo "Structure" : un flux réduit à son squelette (deux nœuds reliés par un
+// trait pointillé), pour le mode « comme s'il n'avait pas de valeur ».
+const logo_structure = <svg xmlns="http://www.w3.org/2000/svg"
+  width="1em"
+  height="1em"
+  viewBox="0 0 24 24"
+  fill="none"
+>
+  <path
+    d="M5 12 H19"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeDasharray="3 3.5"
+  />
+  <circle cx="4" cy="12" r="2.6" fill="currentColor" />
+  <circle cx="20" cy="12" r="2.6" fill="currentColor" />
+</svg>
+
 const logo_recycle = <svg xmlns="http://www.w3.org/2000/svg"
   width="1em"
   height="1em"
@@ -1515,6 +1550,9 @@ export class Class_IconLibrary {
   protected _icon_orientation_vh = logo_vh
   protected _icon_orientation_recycle = logo_recycle
 
+  protected _icon_link_curved = logo_courbe
+  protected _icon_link_structure = logo_structure
+
   protected _icon_order_up = <FaAngleUp />
   protected _icon_order_down = <FaAngleDown />
   protected _icon_order_top = <FaAngleDoubleUp />
@@ -1746,6 +1784,8 @@ export class Class_IconLibrary {
   public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }
   public get icon_orientation_vh() { return this.normalizeIcon(this._icon_orientation_vh) }
   public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
+  public get icon_link_curved() { return this.normalizeIcon(this._icon_link_curved) }
+  public get icon_link_structure() { return this.normalizeIcon(this._icon_link_structure) }
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }

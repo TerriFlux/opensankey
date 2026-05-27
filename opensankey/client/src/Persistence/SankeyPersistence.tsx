@@ -1601,10 +1601,10 @@ export class SankeyPersistence {
     // First read styles
     if (json_object['style'] !== undefined) {
       // Set node styles from json data
-      // #1231 — NE PLUS skipper LinkImportCloseStyle / LinkExportCloseStyle : ils étaient
-      // exclus du chargement, donc leurs valeurs sauvegardées (flux import/export collés)
-      // étaient perdues puis recréées par défaut (create_internal_style ne réécrit pas un
-      // style existant). On les charge maintenant comme les autres pour persister les réglages.
+      // NE PLUS skipper LinkImportCloseStyle / LinkExportCloseStyle : ils étaient exclus du
+      // chargement, donc leurs valeurs sauvegardées (flux import/export collés) étaient perdues
+      // puis recréées par défaut (create_internal_style ne réécrit pas un style existant). On
+      // les charge maintenant comme les autres pour persister les réglages.
       // ('LinkImportAboveStyle'/'LinkExportBelowStyle' n'existent pas comme styles → inoffensifs.)
       const skip: string[] = []
 
@@ -1815,10 +1815,10 @@ export class DrawingAreaPersistence {
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
-    // #1231 — Mode de représentation import/export (proche / haut-bas) : persisté car les
-    // nœuds import/export siblings sont régénérés au chargement (cf. SplitIOrE).
+    // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
+    // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
-    // #1231 — Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
+    // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
     // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
     {
       const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
