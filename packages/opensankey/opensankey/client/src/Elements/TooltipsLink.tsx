@@ -1,8 +1,11 @@
 import * as d3 from 'd3'
 import { Class_LinkElement } from './Link'
 import { Class_NodeElement } from './Node'
+import { Class_LinkValue } from './LinkValues'
+import { Class_DataTag } from '../types/Tag'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
 import { link_data_label } from '../types/Utils'
+import { getNameLabelValues } from './ElementsAttributesConfig'
 
 export class LinkTooltip {
 
@@ -106,6 +109,16 @@ export class LinkTooltip {
     // sont antagonistes : par essences, par propriétés… → un tableau par axe.
     const groups = this.getChildLinkGroups()
     const has_children = groups.length > 0
+    // Combinaisons de dataTags (séries) du flux parent.
+    const combos = this.getValueComboEntries(this._link)
+    const has_series = combos.length > 1
+
+    // Construction des onglets présents.
+    const tabs: { label: string, html: string }[] = []
+    tabs.push({ label: 'Flux', html: this.getMainTabHTML() })
+    if (has_series) tabs.push({ label: 'Séries flux', html: this.getSeriesFluxHTML(combos) })
+    if (has_children) tabs.push({ label: 'Données', html: this.getDataTabHTML(groups) })
+    if (has_children && has_series) tabs.push({ label: 'Séries données', html: this.getSeriesDataHTML(groups, combos) })
 
     let html = '<style>' + TOOLTIP_STYLES + this.getTabStyles() + '</style>'
 
@@ -118,28 +131,23 @@ export class LinkTooltip {
       html += `<p class="tooltip-subtitle">${this._link.tooltip_text.split('\n').join('<br>')}</p>`
     }
 
-    // Onglets (seulement si on a des flux enfants avec des données)
-    if (has_children) {
-      html += '<div class="tab-container">'
-      html += '<div class="tab-buttons">'
-      html += '<button class="tab-button active">Flux</button>'
-      html += '<button class="tab-button">Données</button>'
-      html += '</div>'
-      html += '</div>'
+    if (tabs.length > 1) {
+      html += '<div class="tab-container"><div class="tab-buttons">'
+      tabs.forEach((t, i) => {
+        html += `<button class="tab-button${i === 0 ? ' active' : ''}">${t.label}</button>`
+      })
+      html += '</div></div>'
     }
     html += '</div>'
 
     // Content
     html += '<div class="tooltip-content">'
-    if (has_children) {
-      html += '<div class="tab-content active">'
-      html += this.getMainTabHTML()
-      html += '</div>'
-      html += '<div class="tab-content">'
-      html += this.getDataTabHTML(groups)
-      html += '</div>'
+    if (tabs.length > 1) {
+      tabs.forEach((t, i) => {
+        html += `<div class="tab-content${i === 0 ? ' active' : ''}">${t.html}</div>`
+      })
     } else {
-      html += this.getMainTabHTML()
+      html += tabs[0].html
     }
     html += '</div>'
 
@@ -169,6 +177,9 @@ export class LinkTooltip {
     }
     this._link.value_label_is_visible = data_label_visible
 
+    // Contexte dataTags courant (Année, région…)
+    html += this.getDataTagContextRows()
+
     // Tags de flux
     this._link.flux_taggs_list.forEach(tagg => {
       const tagNames = this._link.flux_tags_list
@@ -193,7 +204,16 @@ export class LinkTooltip {
   private getDataTabHTML(groups: { axisName: string, links: Class_LinkElement[] }[]): string {
     const parent_total = this._link.valueCurrent
 
+    // Contexte dataTags courant en haut (valeur du flux parent + Année/région…)
     let html = ''
+    const context_rows = this.getDataTagContextRows()
+    if (context_rows) {
+      html += '<table class="tooltip-table" style="margin-bottom:10px;">'
+      html += `<tr><th>Valeur</th><td class="value">${this.formatLinkValue(this._link)}</td></tr>`
+      html += context_rows
+      html += '</table>'
+    }
+
     groups.forEach((group, gi) => {
       html += `<div class="data-axis"${gi > 0 ? ' style="margin-top:14px;"' : ''}>`
       html += `<div class="data-axis-title">${group.axisName}</div>`
@@ -235,6 +255,127 @@ export class LinkTooltip {
     link.value_label_unit_type = tmp
     link.value_label_is_visible = data_label_visible
     return label
+  }
+
+  /** Lignes <tr> du contexte dataTags courant : un groupe par ligne (tag(s) sélectionné(s)). */
+  private getDataTagContextRows(): string {
+    let html = ''
+    this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
+      const sel = tagg.selected_tags_list.map(t => t.name).join(', ')
+      html += `<tr><th>${tagg.name}</th><td>${sel || '-'}</td></tr>`
+    })
+    return html
+  }
+
+  /** Trie une combinaison de dataTags selon l'ordre des groupes du sankey. */
+  private orderTags(tags: Class_DataTag[]): Class_DataTag[] {
+    const order = this._link.drawing_area.sankey.data_taggs_list.map(g => g.id)
+    return [...tags].sort((a, b) => order.indexOf(a.group.id) - order.indexOf(b.group.id))
+  }
+
+  /**
+   * Combinaisons de dataTags d'un lien (séries) : pour chaque feuille de l'arbre
+   * de valeurs, une entrée { clé stable, libellé "tag / tag", valeur }.
+   * Vide si le lien n'a pas de dataTags (valeur unique).
+   */
+  private getValueComboEntries(link: Class_LinkElement): { key: string, label: string, value: Class_LinkValue }[] {
+    const all = link.getAllValues()
+    const entries: { key: string, label: string, value: Class_LinkValue }[] = []
+    Object.values(all).forEach(([val, tags]) => {
+      if (!tags || tags.length === 0) return
+      const ordered = this.orderTags(tags as Class_DataTag[])
+      entries.push({
+        key: ordered.map(t => t.group.id + ':' + t.id).join('|'),
+        label: ordered.map(t => t.name).join(' / '),
+        value: val as Class_LinkValue
+      })
+    })
+    return entries
+  }
+
+  /** Nombre affiché d'une valeur de lien selon le mode (data vs réconcilié). */
+  private linkValueNumber(v: Class_LinkValue | null): number | null {
+    if (!v) return null
+    if (this._link.drawing_area.type_data === 'data') return v.valueData ?? null
+    return v.valueResult ?? v.valueData ?? null
+  }
+
+  /**
+   * Formate un nombre avec le même nombre de chiffres significatifs que la
+   * valeur du flux (config value_label : significant_digits, scientific_notation,
+   * custom_digit, unit_factor) — réplique l'étape de formatage de format_value,
+   * SANS suffixe d'unité (l'unité est indiquée une fois au-dessus de la série).
+   */
+  private fmtNum(n: number | null): string {
+    if (n === null || n === undefined) return '-'
+    const lv = getNameLabelValues(this._link, 'value_label')
+    let v = n
+    if (lv.unit_factor && lv.unit_factor > 1) {
+      v = v / lv.unit_factor
+    }
+    let text: string
+    if (lv.scientific_notation) {
+      text = lv.significant_digits
+        ? v.toExponential((lv.nb_significant_digits ?? 1) - 1)
+        : v.toExponential()
+    } else if (lv.significant_digits) {
+      text = String(parseFloat(v.toPrecision(lv.nb_significant_digits ?? 3)))
+      if (lv.custom_digit) text = String(parseFloat(parseFloat(text).toFixed(lv.nb_digit ?? 0)))
+    } else if (lv.custom_digit) {
+      text = String(parseFloat(v.toFixed(lv.nb_digit ?? 0)))
+    } else {
+      text = String(v)
+    }
+    return text.replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+  }
+
+  /** Libellé « Unité : X » à afficher au-dessus des séries (vide si pas d'unité visible). */
+  private getSeriesUnitLabelHTML(): string {
+    const lv = getNameLabelValues(this._link, 'value_label')
+    if (!lv.unit_visible || !lv.unit) return ''
+    return `<div class="series-unit">Unité : ${lv.unit}</div>`
+  }
+
+  /** Onglet Séries flux : valeur du flux par combinaison de dataTags (combinaisons en colonnes). */
+  private getSeriesFluxHTML(combos: { key: string, label: string, value: Class_LinkValue }[]): string {
+    let html = this.getSeriesUnitLabelHTML()
+    html += '<table class="tooltip-table"><thead><tr>'
+    combos.forEach(c => html += `<th class="value">${c.label}</th>`)
+    html += '</tr></thead><tbody><tr>'
+    combos.forEach(c => html += `<td class="value">${this.fmtNum(this.linkValueNumber(c.value))}</td>`)
+    html += '</tr></tbody></table>'
+    return html
+  }
+
+  /**
+   * Onglet Séries données : un tableau par dimension ; flux enfants en lignes,
+   * combinaisons de dataTags du flux parent en colonnes.
+   */
+  private getSeriesDataHTML(
+    groups: { axisName: string, links: Class_LinkElement[] }[],
+    combos: { key: string, label: string, value: Class_LinkValue }[]
+  ): string {
+    let html = this.getSeriesUnitLabelHTML()
+    groups.forEach((group, gi) => {
+      html += `<div class="data-axis"${gi > 0 ? ' style="margin-top:14px;"' : ''}>`
+      html += `<div class="data-axis-title">${group.axisName}</div>`
+      html += '<table class="tooltip-table"><thead><tr><th>Origine</th><th>Destination</th>'
+      combos.forEach(c => html += `<th class="value">${c.label}</th>`)
+      html += '</tr></thead><tbody>'
+      group.links.forEach(l => {
+        const childMap: { [key: string]: Class_LinkValue } = {}
+        this.getValueComboEntries(l).forEach(e => { childMap[e.key] = e.value })
+        html += '<tr>'
+        html += `<td>${l.source.name.split('\\n').join(' ')}</td>`
+        html += `<td>${l.target.name.split('\\n').join(' ')}</td>`
+        combos.forEach(c => {
+          html += `<td class="value">${this.fmtNum(this.linkValueNumber(childMap[c.key] ?? null))}</td>`
+        })
+        html += '</tr>'
+      })
+      html += '</tbody></table></div>'
+    })
+    return html
   }
 
   /**
@@ -371,6 +512,12 @@ export class LinkTooltip {
         margin-bottom: 4px;
         background: linear-gradient(90deg, #f0f8ff 0%, #e6f3ff 100%);
         border-left: 3px solid #4a9eff;
+      }
+      .series-unit {
+        font-size: 11px;
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 6px;
       }
     `
   }
