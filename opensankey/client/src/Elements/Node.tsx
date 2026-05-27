@@ -1620,7 +1620,7 @@ export class Class_NodeElement extends Class_NodeBase {
         new_node.addTag(tag)
       })
 
-      // #1231 — Déterminer les styles selon le MODE import/export persisté (drapeau dédié,
+      // Déterminer les styles selon le MODE import/export persisté (drapeau dédié,
       // anciennement déduit à tort de `shape_position_type === 'parametric'`).
       const isAboveBelow = this.drawing_area.import_export_above_below
 
@@ -1646,7 +1646,7 @@ export class Class_NodeElement extends Class_NodeBase {
         styles_dict[link_importexport_style]
       ])
 
-      // #1231 — Ajouter le style DIRECTIONNEL du flux (Flux import/export collé) dès qu'il est
+      // Ajouter le style DIRECTIONNEL du flux (Flux import/export collé) dès qu'il est
       // défini (= mode proche ; vide en haut/bas). Auparavant conditionné au mode haut/bas, donc
       // JAMAIS appliqué à la régénération → « Flux import/export collé » présent après setTrade
       // (toggle) mais PERDU au rechargement (splitTrade régénère le flux sans ce style). On

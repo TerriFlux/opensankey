@@ -1594,7 +1594,7 @@ export class Class_ApplicationData {
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
     this.drawing_area.areaAutoFit()
-    // #1231 — areaAutoFit ne rafraîchit les labels que si k_fit a changé ; en export il faut
+    // areaAutoFit ne rafraîchit les labels que si k_fit a changé ; en export il faut
     // que la font-size (compensée par 1/k) corresponde TOUJOURS au zoom d'export (= k_fit),
     // sinon la police reste à la taille d'un zoom précédent → non réajustée dans le SVG capturé.
     this.drawing_area.refreshLabelsForExport()

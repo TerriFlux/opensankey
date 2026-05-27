@@ -158,11 +158,11 @@ export class Class_DrawingArea {
   // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
   // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
   // d'origine ; un nouveau diagramme démarre en true.
-  // #1231 — Mode de représentation des nœuds import/export : false = « proche » (collé au
+  // Mode de représentation des nœuds import/export : false = « proche » (collé au
   // nœud), true = « haut/bas » (en haut/bas du diagramme). Les nœuds import/export siblings
   // sont RÉGÉNÉRÉS à chaque chargement par splitTrade/SplitIOrE → leur style ne peut pas être
   // persisté directement. On persiste donc ce drapeau, lu par SplitIOrE (auparavant déduit à
-  // tort de `shape_position_type === 'parametric'`, qui n'est plus un mode et est migré).
+  // tort de `shape_position_type === 'parametric'`).
   protected _import_export_above_below: boolean = false
   public get import_export_above_below(): boolean { return this._import_export_above_below }
   public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
@@ -1063,7 +1063,7 @@ export class Class_DrawingArea {
    * font-size et les offsets de positionnement dépendants.
    */
   /**
-   * #1231 — Force le recalcul de la font-size des labels (compensation 1/k) sur le zoom
+   * Force le recalcul de la font-size des labels (compensation 1/k) sur le zoom
    * COURANT, sans condition. À utiliser avant un export : `_pre_process_export_svg` cale le
    * zoom sur le fit (areaAutoFit) mais areaAutoFit ne rafraîchit les labels que si k_fit a
    * changé — or ils peuvent porter la compensation d'un zoom manuel (ou d'une frame précédente),

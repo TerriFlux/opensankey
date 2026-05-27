@@ -28,6 +28,23 @@ import { Class_LinkElement } from './Link'
 import { LinkControlPoints } from './LinkControlPoints'
 import { Class_Handler } from './Handler'
 
+/**
+ * Sur-pente de la bézier par rapport à la corde (cf. drawShape).
+ * Les tangentes sont horizontales aux extrémités, donc la pente max de la courbe
+ * (au milieu) vaut ~1.5·(off/axis) pour des points de contrôle au tiers. L'angle de
+ * virage réel au coude est donc plus raide que l'angle de la corde : on multiplie le
+ * déport perpendiculaire par ce facteur pour ne pas sous-estimer le recouvrement.
+ */
+const BEZIER_STEEPNESS = 1.5
+
+/**
+ * Marge de sécurité sur le critère trait→forme pleine (cf. drawShape).
+ * 1 = bascule au seuil théorique de non-recouvrement d'un bord ; >1 = bascule plus
+ * tôt (un flux épais qui tourne possède deux coudes + une partie diagonale qui
+ * consomment chacun de la place dans l'axe, donc le seuil réel est plus contraignant).
+ */
+const SHOW_AS_PATH_SAFETY = 2
+
 export class LinkDrawShape {
 
   private _link: Class_LinkElement
@@ -87,8 +104,39 @@ export class LinkDrawShape {
       const y0 = this._link.position_y_start
       const xf = this._link.position_x_end
       const yf = this._link.position_y_end
-      const dist = Math.sqrt((xf - x0) * (xf - x0) + (yf - y0) * (yf - y0))
-      const show_as_path = (show_as_dash || /*Math.abs(yf - y0) < 50 ||*/ ((dist / thickness) > 2) || this._link.shape_is_recycling) && !this._link.isTapered
+
+      // Décision : tracer en simple trait (stroke le long de la bézier centrale) ou
+      // en forme pleine fermée (getLineShape/getBezierShape, deux bords explicites) ?
+      // Un trait épais se recouvre lui-même aux coudes quand la courbe tourne fort.
+      // Argument géométrique : au coude, l'avance nécessaire dans l'axe pour que les
+      // bords intérieurs se croisent vaut half_thickness·tan(θ/2) (cf. v_axe dans
+      // getLineShape), où θ est l'angle de virage. Le recouvrement apparaît donc quand
+      // le span le long de l'axe principal (dx pour un flux horizontal, dy pour un
+      // vertical) descend sous ~thickness·tan(θ/2). On garde le trait tant qu'il y a
+      // assez de place ; sinon on bascule en forme pleine.
+      // Remplace l'ancien critère dist/thickness>2, qui ignorait l'orientation et
+      // laissait passer en trait des flux très inclinés (dy grand, dx petit) qui se
+      // chevauchaient malgré une grande distance euclidienne.
+      const dx = Math.abs(xf - x0)
+      const dy = Math.abs(yf - y0)
+      const is_vertical_link = this._link.is_vertical
+      const axis_span = is_vertical_link ? dy : dx       // le long de l'axe d'entrée/sortie
+      const off_axis_span = is_vertical_link ? dx : dy   // déport perpendiculaire
+      // Angle de virage au coude, estimé sur la pente MAX de la bézier (sur-pente vs
+      // corde) et non sur la corde : 0 = aligné, →π/2 = coude serré.
+      const turn_angle = Math.atan2(BEZIER_STEEPNESS * off_axis_span, axis_span)
+      const min_axis_span = thickness * Math.tan(turn_angle / 2) * SHOW_AS_PATH_SAFETY
+      const geometry_allows_path = axis_span > min_axis_span
+
+      // Le cadenas (shape_show_as_path_locked) force le trait en ignorant la géométrie.
+      // isTapered reste un verrou dur : un stroke d'épaisseur uniforme ne peut pas
+      // représenter une épaisseur variable, donc un flux tapered est toujours en forme.
+      const show_as_path = !this._link.isTapered && (
+        this._link.shape_show_as_path_locked ||
+        show_as_dash ||
+        this._link.shape_is_recycling ||
+        geometry_allows_path
+      )
 
       // Show as full shape for specific shapes
       if (!show_as_path && this._link.shape_type !== 'bezier_outline' && this._link.shape_orientation != 'vh' && this._link.shape_orientation != 'hv') {

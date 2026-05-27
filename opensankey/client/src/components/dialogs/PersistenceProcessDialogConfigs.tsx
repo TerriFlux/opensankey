@@ -577,10 +577,10 @@ export type OptionGroup =
 
 // Ordre d'affichage imposé des groupes dans la boîte de dialogue.
 export const OPTION_GROUP_ORDER: OptionGroup[] = [
+  'merge',
   'autocorrection',
   'sheets',
   'content',
-  'merge',
   'presentation',
   'solver',
 ]
@@ -830,6 +830,76 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Si está marcado: cuando las restricciones ratio_flux de reparto de un nodo suman un valor cercano a 1 (dentro de ±1e-3) pero no exactamente 1, cada ratio se reescala por 1/suma para sumar exactamente a 1; de lo contrario el flujo de referencia se forzaría a 0 por el balance de masa. Las sumas más lejanas que ±1e-3 de 1 siempre generan una advertencia y nunca se autocorrigen. Si no está marcado: la carga falla en el caso cercano a 1.',
         de: 'Wenn aktiviert: wenn ratio_flux-Aufteilungs-Constraints an einem Knoten zu einem Wert nahe 1 (innerhalb ±1e-3) aber nicht genau 1 summieren, wird jeder Quotient mit 1/Summe skaliert, sodass die Summe genau 1 ergibt; andernfalls würde der Referenzfluss durch die Massenbilanz auf 0 gezwungen. Summen weiter als ±1e-3 von 1 entfernt lösen immer eine Warnung aus und werden nie autokorrigiert. Wenn deaktiviert: das Laden schlägt im Nahe-1-Fall fehl.',
         it: 'Se selezionato: quando i vincoli ratio_flux di ripartizione di un nodo sommano a un valore vicino a 1 (entro ±1e-3) ma non esattamente 1, ogni ratio viene riscalato per 1/somma per sommare esattamente a 1; altrimenti il flusso di riferimento sarebbe forzato a 0 dal bilancio di massa. Le somme più lontane di ±1e-3 da 1 generano sempre un avviso e non vengono mai autocorrette. Se non selezionato: il caricamento fallisce sul caso vicino a 1.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autofix_ter_duplicate_entries: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Merge (union) inconsistent duplicated TER entries',
+        fr: 'Fusionner (union) les doublons incohérents du TER',
+        es: 'Fusionar (unión) las entradas duplicadas incoherentes del TER',
+        de: 'Inkonsistente doppelte TER-Einträge zusammenführen (Vereinigung)',
+        it: 'Unire (unione) le voci duplicate incoerenti del TER'
+      },
+      tooltips: {
+        en: 'If checked: when a node that is a parent along several dimensions appears more than once in the TER (supply-use table) with copies whose crosses differ, the copies are merged by union (a flux is kept if present in at least one copy) and a warning lists the re-incorporated fluxes. If unchecked: load fails, listing the inconsistent fluxes (cross present in one copy only).',
+        fr: 'Si coché : quand un nœud parent selon plusieurs dimensions apparaît plusieurs fois dans le TER (table emplois-ressources) avec des copies dont les croix diffèrent, les copies sont fusionnées par union (un flux est conservé s\'il est présent dans au moins une copie) et un avertissement liste les flux ré-incorporés. Si décoché : le chargement échoue en listant les flux incohérents (croix présente dans une seule copie).',
+        es: 'Si está marcado: cuando un nodo padre según varias dimensiones aparece varias veces en el TER (tabla empleos-recursos) con copias cuyas cruces difieren, las copias se fusionan por unión (un flujo se conserva si está presente en al menos una copia) y una advertencia lista los flujos reincorporados. Si no está marcado: la carga falla, listando los flujos incoherentes (cruz presente en una sola copia).',
+        de: 'Wenn aktiviert: wenn ein Knoten, der entlang mehrerer Dimensionen ein Elternknoten ist, mehrfach in der TER (Aufkommens-Verwendungs-Tabelle) mit Kopien erscheint, deren Kreuze sich unterscheiden, werden die Kopien durch Vereinigung zusammengeführt (ein Fluss bleibt erhalten, wenn er in mindestens einer Kopie vorhanden ist) und eine Warnung listet die wieder aufgenommenen Flüsse auf. Wenn deaktiviert: das Laden schlägt fehl und listet die inkonsistenten Flüsse auf (Kreuz nur in einer Kopie vorhanden).',
+        it: 'Se selezionato: quando un nodo padre secondo più dimensioni appare più volte nel TER (tabella impieghi-risorse) con copie le cui croci differiscono, le copie vengono unite per unione (un flusso è mantenuto se presente in almeno una copia) e un avviso elenca i flussi reincorporati. Se non selezionato: il caricamento fallisce, elencando i flussi incoerenti (croce presente in una sola copia).'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    typo_strict: {
+      group: 'autocorrection',
+      breakBefore: true,
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Strict typo check on node names',
+        fr: 'Vérification stricte des typos de noms de nœuds',
+        es: 'Verificación estricta de erratas en los nombres de nodos',
+        de: 'Strenge Tippfehlerprüfung bei Knotennamen',
+        it: 'Verifica rigorosa dei refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked: two node labels that differ only by spaces, spacing around punctuation, case or accents make the load fail (the typo must be fixed in the file). If unchecked: the offending label is assimilated to the existing node and a warning is emitted.',
+        fr: 'Si coché : deux libellés de nœud qui ne diffèrent que par des espaces, de la ponctuation, la casse ou les accents font échouer le chargement (la typo doit être corrigée dans le fichier). Si décoché : le libellé fautif est assimilé au nœud existant et un avertissement est émis.',
+        es: 'Si está marcado: dos etiquetas de nodo que difieren solo por espacios, puntuación, mayúsculas o acentos hacen que la carga falle (la errata debe corregirse en el archivo). Si no está marcado: la etiqueta problemática se asimila al nodo existente y se emite una advertencia.',
+        de: 'Wenn aktiviert: zwei Knotenbezeichnungen, die sich nur durch Leerzeichen, Interpunktion, Groß-/Kleinschreibung oder Akzente unterscheiden, lassen das Laden fehlschlagen (der Tippfehler muss in der Datei korrigiert werden). Wenn deaktiviert: die betroffene Bezeichnung wird dem vorhandenen Knoten zugeordnet und eine Warnung ausgegeben.',
+        it: 'Se selezionato: due etichette di nodo che differiscono solo per spazi, punteggiatura, maiuscole/minuscole o accenti fanno fallire il caricamento (il refuso va corretto nel file). Se non selezionato: l\'etichetta problematica viene assimilata al nodo esistente e viene emesso un avviso.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autocorrect_typo: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Auto-correct node name typos',
+        fr: 'Auto-corriger les typos de noms de nœuds',
+        es: 'Autocorregir las erratas en los nombres de nodos',
+        de: 'Tippfehler in Knotennamen automatisch korrigieren',
+        it: 'Correggere automaticamente i refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked (and "strict typo check" unchecked): labels assimilated to an existing node are corrected to the canonical name and highlighted in red on the corrected output. Otherwise: warning only, no highlight.',
+        fr: 'Si coché (et « vérification stricte des typos » décochée) : les libellés assimilés à un nœud existant sont corrigés vers le nom canonique et surlignés en rouge sur la sortie corrigée. Sinon : simple avertissement sans surlignage.',
+        es: 'Si está marcado (y "verificación estricta de erratas" desmarcada): las etiquetas asimiladas a un nodo existente se corrigen al nombre canónico y se resaltan en rojo en la salida corregida. De lo contrario: solo advertencia, sin resaltado.',
+        de: 'Wenn aktiviert (und „strenge Tippfehlerprüfung“ deaktiviert): dem vorhandenen Knoten zugeordnete Bezeichnungen werden auf den kanonischen Namen korrigiert und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: nur Warnung, keine Hervorhebung.',
+        it: 'Se selezionato (e "verifica rigorosa dei refusi" deselezionata): le etichette assimilate a un nodo esistente vengono corrette al nome canonico ed evidenziate in rosso nell\'output corretto. Altrimenti: solo avviso, senza evidenziazione.'
       },
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
@@ -1210,11 +1280,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         it: 'Riscrivere i fogli specifici di OpenSankey'
       },
       tooltips: {
-        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave them untouched (only meaningful when keeping other sheets from the input).',
-        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour les laisser intacts (utile uniquement si on conserve les autres onglets de l\'entrée).',
-        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejarlas intactas (útil solo si se conservan las otras hojas de la entrada).',
-        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um sie unverändert zu lassen (nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden).',
-        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciarli intatti (utile solo se si mantengono gli altri fogli dell\'input).'
+        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave the ones already present in the input file untouched; sheets not yet in the file (e.g. post-solver results) are still written. Has no effect on a fresh output — only meaningful when keeping other sheets from the input.',
+        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour laisser intacts ceux déjà présents dans le fichier d\'entrée ; les onglets nouveaux (pas encore dans le fichier, ex : résultats post-solveur) restent écrits. Sans effet sur une sortie vierge — utile uniquement si on conserve les autres onglets de l\'entrée.',
+        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejar intactas las que ya están presentes en el archivo de entrada; las hojas aún no presentes en el archivo (p. ej. resultados tras el solver) se siguen escribiendo. Sin efecto en una salida nueva — útil solo si se conservan las otras hojas de la entrada.',
+        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um die bereits in der Eingabedatei vorhandenen unverändert zu lassen; noch nicht in der Datei enthaltene Blätter (z. B. Ergebnisse nach dem Solver) werden weiterhin geschrieben. Ohne Wirkung bei einer neuen Ausgabe — nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden.',
+        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciare intatti quelli già presenti nel file di input; i fogli non ancora presenti nel file (es. risultati dopo il solver) vengono comunque scritti. Nessun effetto su un output nuovo — utile solo se si mantengono gli altri fogli dell\'input.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
@@ -1298,10 +1368,31 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    layout: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet layout',
+        fr: 'Onglet mise en page',
+        es: 'Hoja de diseño',
+        de: 'Layout-Blatt',
+        it: 'Foglio layout'
+      },
+      tooltips: {
+        en: 'Sheet containing diagram layout',
+        fr: 'Onglet qui contient la mise en page du diagramme',
+        es: 'Hoja que contiene el diseño del diagrama',
+        de: 'Blatt mit dem Diagramm-Layout',
+        it: 'Foglio contenente il layout del diagramma'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
     with_nodes_sheets: {
       group: 'sheets',
       default: true,
       type: (() => true) as (() => boolean),
+      breakBefore: true,
       labels: {
         en: 'Sheets nodes',
         fr: 'Onglets nœuds',
@@ -1324,7 +1415,7 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       type: (() => 'auto') as (() => string),
       labels: {
         en: 'Nodes sheet format',
-        fr: 'Format des feuilles de nœuds',
+        fr: 'Format',
         es: 'Formato de las hojas de nodos',
         de: 'Format der Knotenblätter',
         it: 'Formato dei fogli nodi'
@@ -1382,26 +1473,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         { type: 'optionProperty', property: 'with_nodes_sheets', operator: '==', value: true }
       ]
     } satisfies FormatAttributeConfig<string>,
-
-    layout: {
-      group: 'sheets',
-      default: true,
-      type: (() => true) as (() => boolean),
-      labels: {
-        en: 'Sheet layout',
-        fr: 'Onglet mise en page',
-        es: 'Hoja de diseño',
-        de: 'Layout-Blatt',
-        it: 'Foglio layout'
-      },
-      tooltips: {
-        en: 'Sheet containing diagram layout',
-        fr: 'Onglet qui contient la mise en page du diagramme',
-        es: 'Hoja que contiene el diseño del diagrama',
-        de: 'Blatt mit dem Diagramm-Layout',
-        it: 'Foglio contenente il layout del diagramma'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
 
     activate_data_table: {
       group: 'sheets',

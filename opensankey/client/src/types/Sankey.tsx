@@ -1030,8 +1030,8 @@ export class Class_Sankey {
       return
     }
 
-    // #1231 — Persister le mode (les nœuds import/export siblings étant régénérés au
-    // chargement, leur style seul ne survit pas ; SplitIOrE lira ce drapeau).
+    // Persister le mode (les nœuds import/export siblings étant régénérés au chargement,
+    // leur style seul ne survit pas ; SplitIOrE lira ce drapeau).
     this.drawing_area.import_export_above_below = !close
 
     this.drawing_area.bypass_redraws = true

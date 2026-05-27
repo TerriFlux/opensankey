@@ -2302,7 +2302,7 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   /**
-   * #1231 — Le label (nom ou valeur) est-il auto-placé AU-DESSUS du flux faute de place,
+   * Le label (nom ou valeur) est-il auto-placé AU-DESSUS du flux faute de place,
    * parce que sa police est plus grande que l'épaisseur du flux ? (Même condition que le
    * placement « top » automatique, cf. getTextPathOffset / getLabelPos.) Dans ce cas le
    * label déborde hors du flux : il n'a pas le corps du flux derrière lui pour le porter.
@@ -2314,8 +2314,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   protected applyTextStyle(
     selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
-    // #1231 — Quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il
-    // prend la couleur du flux (association visuelle ; pas de corps de flux derrière lui).
+    // Quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il prend la
+    // couleur du flux (association visuelle ; pas de corps de flux derrière lui pour le porter).
     // Activé par défaut. Sinon, comportement habituel (couleur dédiée du label ou flux).
     const fill = this.isAutoPlacedAboveFlux()
       ? this._element.getShapeColorToUse()
