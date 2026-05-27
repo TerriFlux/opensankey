@@ -787,6 +787,7 @@ const LabelContentComponent = ({
             attributeKey="inside_horiz"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
             onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
+            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
           >
             {app_data.icon_library.icon_label_inside_horiz}
           </OverloadedButton>
@@ -821,6 +822,7 @@ const LabelContentComponent = ({
             attributeKey="inside_vert"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
             onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
+            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
           >
             {app_data.icon_library.icon_label_inside_vert}
           </OverloadedButton>
@@ -838,6 +840,7 @@ const LabelContentComponent = ({
                 attributeKey="stick_to_label"
                 variant={getButtonVariant('', isConfigValueIndeterminate(elements, VALUE_LABEL_CONFIG, 'stick_to_label', prefix), valueLabelValues.stick_to_label)}
                 onClick={() => { valueLabelValues.stick_to_label = !valueLabelValues.stick_to_label }}
+                buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
               >
                 {app_data.icon_library.icon_label_stick_to_label}
               </OverloadedButton>
@@ -948,6 +951,7 @@ const LabelContentComponent = ({
                 attributeKey="on_path"
                 variant={getButtonVariant('left', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'on_path', prefix), linkLabelValues.on_path)}
                 onClick={() => { linkLabelValues.on_path = !linkLabelValues.on_path }}
+                buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
               >
                 {app_data.icon_library.icon_label_on_path}
               </OverloadedButton>
@@ -960,6 +964,7 @@ const LabelContentComponent = ({
                 attributeKey="pos_auto"
                 variant={getButtonVariant('right', isConfigValueIndeterminate(links_elements, LINKS_LABEL_SPECIFIC_CONFIG, 'pos_auto', prefix), linkLabelValues.pos_auto)}
                 onClick={() => { linkLabelValues.pos_auto = !linkLabelValues.pos_auto }}
+                buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
               >
                 {app_data.icon_library.icon_label_auto_position}
               </OverloadedButton>
@@ -1600,65 +1605,68 @@ export const MenuConfigurationAppearance = ({
                             )}</Box>
                         </> : <></>}
 
-                      {/* Bouton recyclage tristate + 4 orientations sur une même ligne.
+                      {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
+                          + Structure, sur une même ligne.
                           Tristate (issue OpenSankey#711, retour Alexandre 13/05) :
                           - unlocked → auto (icône FaRecycle seule, opacité réduite)
                           - locked + recycling=true → forcé recyclage (variant activé + petit FaLock)
                           - locked + recycling=false → forcé non-recyclage (FaRecycle barré + petit FaLock)
                           Cycle au clic : auto → forcé on → forcé off → auto. */}
-                      <Box as='span' display='grid' gridTemplateColumns='2fr 4fr' gridColumnGap='0.12rem'>
-                        <OverloadedButton
-                          elements={links_elements}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          attributePath='Flux.apparence'
-                          prefix={'shape'}
-                          attributeKey="is_recycling"
-                          variant={getButtonVariant(
-                            '',
-                            isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling') || isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling_locked'),
-                            linkShapeValues.is_recycling_locked && linkShapeValues.is_recycling
-                          )}
-                          onClick={() => {
-                            const locked = linkShapeValues.is_recycling_locked
-                            const on = linkShapeValues.is_recycling
-                            if (!locked) {
-                              linkShapeValues.is_recycling = true
-                              linkShapeValues.is_recycling_locked = true
-                            } else if (on) {
-                              linkShapeValues.is_recycling = false
-                            } else {
-                              linkShapeValues.is_recycling_locked = false
-                            }
-                          }}
-                        >
-                          <Box position='relative' display='inline-flex' alignItems='center' justifyContent='center'>
-                            <Box
-                              as='span'
-                              display='inline-flex'
-                              opacity={linkShapeValues.is_recycling_locked ? 1 : 0.45}
-                              sx={
-                                linkShapeValues.is_recycling_locked && !linkShapeValues.is_recycling
-                                  ? { textDecoration: 'line-through', textDecorationThickness: '2px' }
-                                  : undefined
+                      <Box as='span' display='flex' alignItems='center' gap='0.12rem'>
+                        <Box display='inline-flex' flexShrink={0}>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="is_recycling"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling') || isLinkShapeSpecificValueIndeterminate(links_elements, 'is_recycling_locked'),
+                              linkShapeValues.is_recycling_locked && linkShapeValues.is_recycling
+                            )}
+                            onClick={() => {
+                              const locked = linkShapeValues.is_recycling_locked
+                              const on = linkShapeValues.is_recycling
+                              if (!locked) {
+                                linkShapeValues.is_recycling = true
+                                linkShapeValues.is_recycling_locked = true
+                              } else if (on) {
+                                linkShapeValues.is_recycling = false
+                              } else {
+                                linkShapeValues.is_recycling_locked = false
                               }
-                            >
-                              <FaRecycle />
-                            </Box>
-                            {linkShapeValues.is_recycling_locked && (
+                            }}
+                          >
+                            <Box position='relative' display='inline-flex' alignItems='center' justifyContent='center'>
                               <Box
                                 as='span'
-                                position='absolute'
-                                top='-3px'
-                                right='-5px'
-                                fontSize='0.55em'
-                                lineHeight='1'
-                                color='gray.700'
+                                display='inline-flex'
+                                opacity={linkShapeValues.is_recycling_locked ? 1 : 0.45}
+                                sx={
+                                  linkShapeValues.is_recycling_locked && !linkShapeValues.is_recycling
+                                    ? { textDecoration: 'line-through', textDecorationThickness: '2px' }
+                                    : undefined
+                                }
                               >
-                                <FaLock />
+                                <FaRecycle size={16} />
                               </Box>
-                            )}
-                          </Box>
-                        </OverloadedButton>
+                              {linkShapeValues.is_recycling_locked && (
+                                <Box
+                                  as='span'
+                                  position='absolute'
+                                  top='-3px'
+                                  right='-5px'
+                                  fontSize='0.55em'
+                                  lineHeight='1'
+                                  color='gray.700'
+                                >
+                                  <FaLock />
+                                </Box>
+                              )}
+                            </Box>
+                          </OverloadedButton>
+                        </Box>
                         <OverloadedButtonGroup
                           elements={links_elements}
                           config={LINK_SHAPE_SPECIFIC_CONFIG}
@@ -1674,39 +1682,53 @@ export const MenuConfigurationAppearance = ({
                           getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'orientation')}
                           t={t}
                         />
-                      </Box>
-
-                      {/* Structure | Courbe + sélecteur de chemin bézier au même niveau. */}
-                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                        <OverloadedCheckbox
-                          elements={links_elements}
-                          config={LINK_SHAPE_SPECIFIC_CONFIG}
-                          prefix={'shape'}
-                          attributeKey="is_structure"
-                          isChecked={linkShapeValues.is_structure}
-                          onChange={(checked) => { linkShapeValues.is_structure = checked }}
-                          getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure')}
-                          tooltipLabel={t('Flux.apparence.tooltips.structure')}
-                          t={t}
-                        >
-                          {t('Flux.apparence.shape_is_structure')}
-                        </OverloadedCheckbox>
-                        <Box display='flex' alignItems='center' gap={1}>
-                          <OverloadedCheckbox
+                        {/* Structure : bouton-icône, même style/taille que les orientations. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
                             elements={links_elements}
                             config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="is_structure"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'is_structure'),
+                              linkShapeValues.is_structure
+                            )}
+                            onClick={() => { linkShapeValues.is_structure = !linkShapeValues.is_structure }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            {app_data.icon_library.icon_link_structure}
+                          </OverloadedButton>
+                        </Box>
+                      </Box>
+
+                      {/* Courbe (icône) | sélecteur de chemin bézier (large, occupe l'espace
+                          restant) | cadenas (carré, à droite). Une ligne flex. */}
+                      <Box as='span' display='flex' alignItems='center' gap='0.25rem'>
+                        {/* Courbe : bouton-icône, même style/taille que les orientations. */}
+                        <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
                             prefix={'shape'}
                             attributeKey="is_curved"
-                            isChecked={linkShapeValues.is_curved}
-                            onChange={(checked) => { linkShapeValues.is_curved = checked }}
-                            getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved')}
-                            tooltipLabel={t('Flux.apparence.tooltips.shape_is_curved')}
-                            t={t}
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'is_curved'),
+                              linkShapeValues.is_curved
+                            )}
+                            onClick={() => { linkShapeValues.is_curved = !linkShapeValues.is_curved }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                           >
-                            {t('Flux.apparence.shape_is_curved')}
-                          </OverloadedCheckbox>
-                          {linkShapeValues.is_curved && (
+                            {app_data.icon_library.icon_link_curved}
+                          </OverloadedButton>
+                        </Box>
+                        {linkShapeValues.is_curved && (
+                          <Box flex='1' minW='0'>
                             <Select
+                              w='100%'
                               value={commonShapeValues.type}
                               onChange={(evt) => { commonShapeValues.type = evt.target.value as Type_Shape }}
                             >
@@ -1714,7 +1736,33 @@ export const MenuConfigurationAppearance = ({
                                 <option key={'value_' + el} value={el}>{t('Flux.apparence.' + el)}</option>
                               ))}
                             </Select>
-                          )}
+                          </Box>
+                        )}
+                        {/* Cadenas : forcer le rendu en trait (show_as_path) en ignorant la
+                            bascule géométrique auto trait→forme pleine (flux épais et court). */}
+                        <Box ml='auto' display='inline-flex' flexShrink={0}>
+                          <OverloadedButton
+                            elements={links_elements}
+                            config={LINK_SHAPE_SPECIFIC_CONFIG}
+                            attributePath='Flux.apparence'
+                            prefix={'shape'}
+                            attributeKey="show_as_path_locked"
+                            variant={getButtonVariant(
+                              '',
+                              isLinkShapeSpecificValueIndeterminate(links_elements, 'show_as_path_locked'),
+                              linkShapeValues.show_as_path_locked
+                            )}
+                            onClick={() => { linkShapeValues.show_as_path_locked = !linkShapeValues.show_as_path_locked }}
+                            buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                          >
+                            <Box
+                              as='span'
+                              display='inline-flex'
+                              opacity={linkShapeValues.show_as_path_locked ? 1 : 0.45}
+                            >
+                              <FaLock />
+                            </Box>
+                          </OverloadedButton>
                         </Box>
                       </Box>
                       {/* Value of link local scale to override scale from DA, can be undefined */}
@@ -2079,6 +2127,7 @@ const StockTabContent = ({
             attributeKey="inside_horiz"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
             onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
+            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
           >
             {app_data.icon_library.icon_label_inside_horiz}
           </OverloadedButton>
@@ -2109,6 +2158,7 @@ const StockTabContent = ({
             attributeKey="inside_vert"
             variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
             onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
+            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
           >
             {app_data.icon_library.icon_label_inside_vert}
           </OverloadedButton>

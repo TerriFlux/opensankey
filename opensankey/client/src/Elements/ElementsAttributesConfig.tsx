@@ -2500,6 +2500,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  show_as_path_locked: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Lock stroke rendering',
+      fr: 'Verrouiller le rendu en trait',
+      es: 'Bloquear renderizado en trazo',
+      de: 'Strich-Darstellung sperren',
+      it: 'Blocca il rendering a tratto'
+    },
+    tooltips: {
+      en: 'Force this flow to always render as a stroked path, even when thick and short. By default a thick, short flow auto-switches to a filled shape so the stroke does not overlap itself at sharp turns.',
+      fr: 'Force ce flux à toujours être tracé en trait (chemin), même épais et court. Par défaut un flux épais et court bascule automatiquement en forme pleine pour éviter que le trait ne se chevauche dans les coudes serrés.',
+      es: 'Obliga a este flujo a representarse siempre como trazo, incluso grueso y corto. Por defecto un flujo grueso y corto cambia automáticamente a forma rellena para que el trazo no se solape en las curvas cerradas.',
+      de: 'Erzwingt, dass dieser Fluss immer als Strich gezeichnet wird, auch wenn dick und kurz. Standardmäßig wechselt ein dicker, kurzer Fluss automatisch zu einer gefüllten Form, damit sich der Strich an engen Kurven nicht selbst überlappt.',
+      it: 'Forza questo flusso a essere sempre disegnato come tratto, anche se spesso e corto. Per impostazione predefinita un flusso spesso e corto passa automaticamente a forma piena affinché il tratto non si sovrapponga nelle curve strette.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   orientation: {
     default: 'hh' as Type_Orientation,
     type: (() => 'hh') as (() => Type_Orientation),
