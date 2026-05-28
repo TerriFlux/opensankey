@@ -751,6 +751,12 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.stock_shape_is_visible) {
       json_object['stock_shape_is_visible'] = true
     }
+    if (node.stock_si_caption !== 'Stock') {
+      json_object['stock_si_caption'] = node.stock_si_caption
+    }
+    if (node.stock_delta_caption !== 'Δ Stock') {
+      json_object['stock_delta_caption'] = node.stock_delta_caption
+    }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
@@ -958,6 +964,12 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
     if (json_node_object['stock_shape_is_visible'] !== undefined) {
       node.stock_shape_is_visible = json_node_object['stock_shape_is_visible'] as boolean
+    }
+    if (json_node_object['stock_si_caption'] !== undefined) {
+      node.stock_si_caption = json_node_object['stock_si_caption'] as string
+    }
+    if (json_node_object['stock_delta_caption'] !== undefined) {
+      node.stock_delta_caption = json_node_object['stock_delta_caption'] as string
     }
     if (json_node_object['stock_values']) {
       node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
