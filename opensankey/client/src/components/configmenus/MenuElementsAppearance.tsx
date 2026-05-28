@@ -2162,6 +2162,23 @@ const StockTabContent = ({
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
+      {/* SA#1229: editable captions replacing the hardcoded "SI:" / "ΔS:". */}
+      <Box layerStyle='options_2cols'>
+        <Box as='span'>{'Libellé stock'}</Box>
+        <Input
+          size='xs'
+          value={firstNode.stock_si_caption}
+          onChange={(e) => { nodes.forEach(n => { n.stock_si_caption = e.target.value }); refresh() }}
+        />
+      </Box>
+      <Box layerStyle='options_2cols'>
+        <Box as='span'>{'Libellé Δ stock'}</Box>
+        <Input
+          size='xs'
+          value={firstNode.stock_delta_caption}
+          onChange={(e) => { nodes.forEach(n => { n.stock_delta_caption = e.target.value }); refresh() }}
+        />
+      </Box>
       {/* ===== Position (same pattern as LabelContentComponent) ===== */}
       <Box layerStyle='options_3cols'>
         <Box layerStyle='options_4cols'>
