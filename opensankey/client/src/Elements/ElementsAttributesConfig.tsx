@@ -2394,6 +2394,26 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.'
     }
   } satisfies AttributeConfig<boolean>,
+  is_dashed: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Hatched',
+      fr: 'Hachuré',
+      es: 'Rayado',
+      de: 'Schraffiert',
+      it: 'Tratteggiato'
+    },
+    tooltips: {
+      en: 'Applies a hatch effect on the selected node(s)',
+      fr: 'Applique un effet de hachure sur le/les nœud(s) sélectionné(s)',
+      es: 'Aplica un efecto de rayado en el/los nodo(s) seleccionado(s)',
+      de: 'Wendet einen Schraffureffekt auf den/die ausgewählten Knoten an',
+      it: 'Applica un effetto tratteggiato sul/sui nodo/i selezionato/i'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {

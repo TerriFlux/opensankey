@@ -149,10 +149,16 @@ export class NodeDrawShape {
     // épaissie au mouseover pour faciliter sa préhension.
     const acts_as_frame = this._node.tied_to_nodes
     const base_thickness = this._node.shape_border_thickness
+    // Hachuré : motif de hachures diagonales appliqué au REMPLISSAGE du nœud
+    // (et non à la bordure). Le motif reprend la couleur du nœud sur fond
+    // transparent, façon flux hachuré.
+    const fill_to_use = this._node.shape_is_dashed
+      ? this.applyHatchPattern(color)
+      : color
     const sel = this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
       .attr('fill-opacity', this._node.shape_visible && this._node.shape_color_visible ? this._node.shape_opacity : '0')
-      .attr('fill', color)
+      .attr('fill', fill_to_use)
       .attr('stroke', this._node.shape_border_color_sustainable ? this._node.shape_border_color : this._node.getShapeColorToUse())
       .attr('stroke-width', base_thickness)
       .attr('stroke-dasharray', this._node.shape_border_dashed ? '10,3' : '')
@@ -168,6 +174,35 @@ export class NodeDrawShape {
           (event.currentTarget as SVGElement).setAttribute('stroke-width', String(base_thickness))
         })
     }
+  }
+
+  /**
+   * Crée (ou recrée) un motif SVG de hachures diagonales pour ce nœud dans le
+   * conteneur de defs partagé, et renvoie la référence `url(#...)` à utiliser
+   * comme remplissage. Les traits reprennent la couleur du nœud sur fond
+   * transparent (gaps), façon flux hachuré.
+   */
+  private applyHatchPattern(color: string): string {
+    const defs = this._node.drawing_area.d3_selection_def_gradient
+    if (!defs) return color
+    const pattern_id = 'hatch-' + this._node.id
+    defs.select('#def_' + pattern_id).remove()
+    const pattern = defs.append('defs')
+      .attr('id', 'def_' + pattern_id)
+      .append('pattern')
+      .attr('id', pattern_id)
+      .attr('patternUnits', 'userSpaceOnUse')
+      .attr('width', 8)
+      .attr('height', 8)
+      .attr('patternTransform', 'rotate(45)')
+    pattern.append('line')
+      .attr('x1', 0)
+      .attr('y1', 0)
+      .attr('x2', 0)
+      .attr('y2', 8)
+      .attr('stroke', color)
+      .attr('stroke-width', 2)
+    return 'url(#' + pattern_id + ')'
   }
 
   /**
