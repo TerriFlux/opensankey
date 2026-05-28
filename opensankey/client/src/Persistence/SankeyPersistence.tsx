@@ -748,6 +748,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
         json_object['stock_values'] = node._stock_values.toJSON()
       }
     }
+    if (node.stock_shape_is_visible) {
+      json_object['stock_shape_is_visible'] = true
+    }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
@@ -952,6 +955,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Stock & material balance
     if (json_node_object['has_stock'] !== undefined) {
       node.has_stock = json_node_object['has_stock'] as boolean
+    }
+    if (json_node_object['stock_shape_is_visible'] !== undefined) {
+      node.stock_shape_is_visible = json_node_object['stock_shape_is_visible'] as boolean
     }
     if (json_node_object['stock_values']) {
       node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
