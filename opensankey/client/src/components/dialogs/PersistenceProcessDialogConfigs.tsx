@@ -1697,25 +1697,47 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    mode_compressed: {
+    compression: {
       group: 'content',
-      default: false,
-      type: (() => false) as (() => boolean),
+      default: 'none',
+      type: (() => 'none') as (() => string),
       labels: {
-        en: 'ZIP file',
-        fr: 'Fichier ZIP',
-        es: 'Archivo ZIP',
-        de: 'ZIP-Datei',
-        it: 'File ZIP'
+        en: 'Compression',
+        fr: 'Compression',
+        es: 'Compresión',
+        de: 'Komprimierung',
+        it: 'Compressione'
       },
       tooltips: {
-        en: 'Compress the file as ZIP',
-        fr: 'Compresser le fichier en ZIP',
-        es: 'Comprimir el archivo como ZIP',
-        de: 'Datei als ZIP komprimieren',
-        it: 'Comprimi il file come ZIP'
-      }
-    } satisfies FormatAttributeConfig<boolean>
+        en: 'Output format: plain JSON (.json) or gzip-compressed JSON (.json.gz). The compressed file is smaller and can be reloaded directly.',
+        fr: 'Format de sortie : JSON brut (.json) ou JSON compressé en gzip (.json.gz). Le fichier compressé est plus léger et peut être rechargé directement.',
+        es: 'Formato de salida: JSON sin comprimir (.json) o JSON comprimido en gzip (.json.gz). El archivo comprimido es más ligero y puede recargarse directamente.',
+        de: 'Ausgabeformat: reines JSON (.json) oder gzip-komprimiertes JSON (.json.gz). Die komprimierte Datei ist kleiner und kann direkt neu geladen werden.',
+        it: 'Formato di output: JSON semplice (.json) o JSON compresso in gzip (.json.gz). Il file compresso è più leggero e può essere ricaricato direttamente.'
+      },
+      selectOptions: [
+        {
+          value: 'none',
+          labels: {
+            en: 'None (.json)',
+            fr: 'Aucune (.json)',
+            es: 'Ninguna (.json)',
+            de: 'Keine (.json)',
+            it: 'Nessuna (.json)'
+          }
+        },
+        {
+          value: 'gzip',
+          labels: {
+            en: 'gzip (.json.gz)',
+            fr: 'gzip (.json.gz)',
+            es: 'gzip (.json.gz)',
+            de: 'gzip (.json.gz)',
+            it: 'gzip (.json.gz)'
+          }
+        }
+      ]
+    } satisfies FormatAttributeConfig<string>
   },
 
   blob: {},

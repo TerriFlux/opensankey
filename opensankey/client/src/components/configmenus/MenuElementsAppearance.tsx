@@ -14,6 +14,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_ElementStyle } from '../../Elements/Element'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { Class_StockShape } from '../../Elements/StockShape'
 import { Type_Position } from '../../types/Utils'
 import { svg_label_upper } from '../../css/IconLibrairie'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
@@ -61,7 +62,6 @@ import {
   VALUE_LABEL_CONFIG,
   ICON_LABEL_BASE_CONFIG,
   STOCK_LABEL_CONFIG,
-  LabelPrefix,
   BASE_LABEL_CONFIG,
   LINKS_LABEL_SPECIFIC_CONFIG,
   ALL_ATTRIBUTES_CONFIG,
@@ -74,7 +74,9 @@ import {
   getNodeShapeAttributeKey,
   getLabelAttributeKey,
   getConfigValues,
-  getLinkShapeAttributeKey
+  getLinkShapeAttributeKey,
+  Type_AnchorAlignVertical,
+  Type_AnchorAlignHorizontal
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
@@ -100,6 +102,10 @@ const analyzeSelection = (
 
   elements.forEach(el => {
     if (el instanceof Class_NodeElement) nodes.push(el)
+    // Stock shapes (SA#1229) reuse the node appearance panels: bucket them with
+    // nodes. They extend Class_NodeBase (not Class_NodeElement); the panels only
+    // touch Class_BaseShape attributes + draw(), so this is safe.
+    else if (el instanceof Class_StockShape) nodes.push(el as unknown as Class_NodeElement)
     else if (el instanceof Class_LinkElement) links.push(el)
     else if (el instanceof Class_ContainerElement) containers.push(el)
   })
@@ -430,7 +436,7 @@ const LabelContentComponent = ({
 }: {
   app_data: Class_ApplicationData
   elements: ElementsType
-  prefix: 'name_label' | 'value_label' | 'icon'
+  prefix: 'name_label' | 'value_label' | 'icon' | 'stock_label'
   displayMode: 'simple_text' | 'rich_text' | 'icon' | 'image' | 'value'
   menu_style: boolean
   refreshParentComponent: () => void
@@ -451,14 +457,14 @@ const LabelContentComponent = ({
   const nodes_elements = elements as Class_NodeElement[] | Class_ElementStyle[]
 
   const linkLabelValues = elements.length > 0
-    ? getLinksLabelValues(links_elements, prefix, refreshParentComponent)
+    ? getLinksLabelValues(links_elements, prefix as 'name_label' | 'value_label' | 'icon', refreshParentComponent)
     : Object.fromEntries(Object.entries(LINKS_LABEL_SPECIFIC_CONFIG).map(([key, value]) => [key, value.default])) as {
       -readonly [K in keyof typeof LINKS_LABEL_SPECIFIC_CONFIG]:
       ReturnType<(typeof LINKS_LABEL_SPECIFIC_CONFIG)[K]['type']>
     }
 
   const nodeLabelValues = elements.length > 0
-    ? getElementsNameLabelValues(nodes_elements, prefix, refreshParentComponent)
+    ? getElementsNameLabelValues(nodes_elements, prefix as 'name_label' | 'value_label' | 'icon', refreshParentComponent)
     : Object.fromEntries(Object.entries(NAME_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
   const _load_image = useRef<HTMLInputElement>(null)
@@ -629,7 +635,7 @@ const LabelContentComponent = ({
             app_data={app_data}
             elements={elements}
             config={BASE_LABEL_CONFIG}
-            prefix={prefix}
+            prefix={prefix as 'name_label' | 'value_label' | 'icon'}
             attributePath={attributePath}
             colorAttributeKey="color"
             sustainableAttributeKey="color_sustainable"
@@ -672,7 +678,7 @@ const LabelContentComponent = ({
               variant='menuconfigpanel_option_button'
               onClick={() => {
                 app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_import_icons?.current?.(true)
-                app_data.menu_configuration.icon_selector_set_elements.current(base_elements, prefix)
+                app_data.menu_configuration.icon_selector_set_elements.current(base_elements, prefix as 'name_label' | 'value_label' | 'icon')
               }}
             >
               {app_data.icon_library.icon_open_modal_icon}
@@ -1105,6 +1111,10 @@ export const MenuConfigurationAppearance = ({
     const selectedContainers = drawing_area.selected_containers_list_sorted
     elements.push(...selectedContainers)
 
+    // Stock shapes (SA#1229): edited via the same node appearance panels.
+    const selectedStockShapes = drawing_area.selected_stock_shapes_list
+    elements.push(...(selectedStockShapes as unknown as Class_NodeElement[]))
+
     return elements
   }
 
@@ -1198,7 +1208,7 @@ export const MenuConfigurationAppearance = ({
     <Box layerStyle='box_content_config'>
       {/* ✅ SÉLECTEUR MULTI-TYPE */}
       {!menu_for_style && (
-        <SankeyMultiTypeSelectionSimple app_data={app_data} />
+        <SankeyMultiTypeSelectionSimple app_data={app_data} enabledTypes={['node', 'link', 'container', 'stock']} />
       )}
 
       {/* ✅ ConfigMenuStyleElement */}
@@ -1211,10 +1221,10 @@ export const MenuConfigurationAppearance = ({
         />
       )}
 
-      {/* ✅ 4 ONGLETS */}
+      {/* ✅ 5 ONGLETS */}
       {showContent && (
         <>
-          <Box layerStyle='options_4cols'>
+          <Box layerStyle='options_5cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
@@ -1258,6 +1268,18 @@ export const MenuConfigurationAppearance = ({
                 {t('Menu.tabs.icon')}
               </Button>
             </OSTooltip>
+            {app_data.has_sankey_dev && (
+              <Button
+                variant={activeTab === 'stock' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}
+                onClick={() => {
+                  app_data.menu_configuration.tab_selected = 'stock'
+                  setActiveTab('stock')
+                }}
+              >
+                {'Stock'}
+              </Button>
+            )}
           </Box>
 
           {/* ========== ONGLET FORME ========== */}
@@ -1375,6 +1397,44 @@ export const MenuConfigurationAppearance = ({
                               apply()
                             }}
                             getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'position_type')}
+                            t={t}
+                          />
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_vertical')}</Box>
+                          <OverloadedButtonGroup
+                            elements={nodes_elements}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            attributePath={'Noeud.apparence'}
+                            prefix={'shape'}
+                            attributeKey="anchor_align_vertical"
+                            currentValue={nodeShapeValues.anchor_align_vertical}
+                            items={[
+                              { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
+                              { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
+                              { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
+                            ]}
+                            onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
+                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
+                            t={t}
+                          />
+                        </Box>
+                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_horizontal')}</Box>
+                          <OverloadedButtonGroup
+                            elements={nodes_elements}
+                            config={NODE_SHAPE_SPECIFIC_CONFIG}
+                            attributePath={'Noeud.apparence'}
+                            prefix={'shape'}
+                            attributeKey="anchor_align_horizontal"
+                            currentValue={nodeShapeValues.anchor_align_horizontal}
+                            items={[
+                              { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
+                              { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
+                              { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
+                            ]}
+                            onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
+                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
                             t={t}
                           />
                         </Box>
@@ -1518,7 +1578,7 @@ export const MenuConfigurationAppearance = ({
                         </Box>
                       </> : <></>
                       }
-                      {selection.hasNodes && !menu_for_style ?
+                      {selection.hasNodes && !menu_for_style && !(nodes_elements[0] instanceof Class_StockShape) ?
                         <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
                           <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
                         </WrapperBoxSubSectionMenu> : <></>}
@@ -2006,9 +2066,24 @@ export const MenuConfigurationAppearance = ({
                 />
               )}
             </MenuSectionCheckbox>
+          </>)}
 
-            {/* Stock section under value, same level with eye checkbox */}
-            {app_data.has_sankey_dev && selection.hasNodes && selection.nodes.some(n => n.has_stock) && (
+          {/* ========== ONGLET STOCK (SA#1229) ========== */}
+          {activeTab === 'stock' && (<>
+            {selection.hasNodes && selection.nodes.some(n => n.has_stock) ? (<>
+              {/* Visibility of the node-like stock shape, independent of the
+                  legacy stock box label (stock_label_is_visible). */}
+              <Checkbox
+                isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
+                onChange={(e) => {
+                  selection.nodes.forEach(n => {
+                    if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
+                  })
+                  refreshAll()
+                }}
+              >
+                {'Afficher la forme de stock'}
+              </Checkbox>
               <MenuSectionCheckbox
                 elements={elements}
                 attributePath='Noeud.labels'
@@ -2025,6 +2100,8 @@ export const MenuConfigurationAppearance = ({
                   />
                 )}
               </MenuSectionCheckbox>
+            </>) : (
+              <Box as='span'>{'Sélectionnez un nœud portant un stock.'}</Box>
             )}
           </>)}
 
@@ -2080,147 +2157,46 @@ const StockTabContent = ({
   nodes: Class_NodeElement[]
   refreshAll: () => void
 }) => {
-  const [, setUpdate] = useState(0)
   const firstNode = nodes[0]
   if (!firstNode) return <></>
 
-  const elements = nodes as Class_NodeBase[]
-  const { t } = app_data
-  const prefix = 'stock_label' as LabelPrefix
-  const bgPrefix = 'stock_label_background' as ShapePrefix
-  const attributePath = 'Noeud.labels'
-
-  const labelValues = getElementsLabelValues(elements, prefix, refreshAll)
+  const elements = nodes as unknown as ElementsType
   const refresh = () => {
     nodes.forEach(n => n.draw())
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     refreshAll()
-    setUpdate(a => a + 1)
   }
 
   return (
     <Box layerStyle='menuconfigpanel_grid'>
-      {/* ===== Position (same pattern as LabelContentComponent) ===== */}
-      <Box layerStyle='options_3cols'>
-        <Box layerStyle='options_4cols'>
-          <OverloadedButtonGroup
-            elements={elements}
-            config={STOCK_LABEL_CONFIG}
-            attributePath={attributePath}
-            prefix={prefix}
-            attributeKey="horiz"
-            currentValue={labelValues.horiz}
-            items={[
-              { value: 'left', icon: app_data.icon_library.icon_text_align_left },
-              { value: 'middle', icon: app_data.icon_library.icon_text_align_center },
-              { value: 'right', icon: app_data.icon_library.icon_text_align_right }
-            ]}
-            onChange={(value) => { labelValues.horiz = value }}
-            getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'horiz', prefix)}
-            t={t}
-          />
-          <OverloadedButton
-            elements={elements}
-            config={STOCK_LABEL_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            attributeKey="inside_horiz"
-            variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_horiz', prefix), labelValues.inside_horiz)}
-            onClick={() => { labelValues.inside_horiz = !labelValues.inside_horiz }}
-            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
-          >
-            {app_data.icon_library.icon_label_inside_horiz}
-          </OverloadedButton>
-        </Box>
-
-        <Box layerStyle='options_4cols'>
-          <OverloadedButtonGroup
-            elements={elements}
-            config={STOCK_LABEL_CONFIG}
-            attributePath={attributePath}
-            prefix={prefix}
-            attributeKey="vert"
-            currentValue={labelValues.vert}
-            items={[
-              { value: 'bottom', icon: app_data.icon_library.icon_text_vert_pos_bottom },
-              { value: 'middle', icon: app_data.icon_library.icon_text_vert_pos_center },
-              { value: 'top', icon: app_data.icon_library.icon_text_vert_pos_top }
-            ]}
-            onChange={(value) => { labelValues.vert = value }}
-            getIsIndeterminate={() => isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'vert', prefix)}
-            t={t}
-          />
-          <OverloadedButton
-            elements={elements}
-            config={STOCK_LABEL_CONFIG}
-            prefix={prefix}
-            attributePath={attributePath}
-            attributeKey="inside_vert"
-            variant={getButtonVariant('', isConfigValueIndeterminate(elements, STOCK_LABEL_CONFIG, 'inside_vert', prefix), labelValues.inside_vert)}
-            onClick={() => { labelValues.inside_vert = !labelValues.inside_vert }}
-            buttonSx={{ '& svg': { width: '16px', height: '16px' } }}
-          >
-            {app_data.icon_library.icon_label_inside_vert}
-          </OverloadedButton>
-        </Box>
-      </Box>
-
-      {/* ===== Font size ===== */}
+      {/* SA#1229: editable captions replacing the hardcoded "SI:" / "ΔS:". */}
       <Box layerStyle='options_2cols'>
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          attributeKey={'font_size'}
-          config={STOCK_LABEL_CONFIG}
-          prefix={prefix}
-          refreshParentComponent={refresh}
-          unit_text='px'
-          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_font_size` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
-        />
-        <ElementAttrSetterNumberInput2Cols
-          app_data={app_data}
-          elements={elements}
-          attributePath={attributePath}
-          attributeKey={'box_width'}
-          config={STOCK_LABEL_CONFIG}
-          prefix={prefix}
-          refreshParentComponent={refresh}
-          isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_box_width` as keyof typeof STOCK_LABEL_CONFIG, STOCK_LABEL_CONFIG)}
+        <Box as='span'>{'Libellé stock'}</Box>
+        <Input
+          size='xs'
+          value={firstNode.stock_si_caption}
+          onChange={(e) => { nodes.forEach(n => { n.stock_si_caption = e.target.value }); refresh() }}
         />
       </Box>
-
-      {/* ===== Unit & number formatting (factorized) ===== */}
-      <Divider />
-      <NumberFormatComponent
+      <Box layerStyle='options_2cols'>
+        <Box as='span'>{'Libellé Δ stock'}</Box>
+        <Input
+          size='xs'
+          value={firstNode.stock_delta_caption}
+          onChange={(e) => { nodes.forEach(n => { n.stock_delta_caption = e.target.value }); refresh() }}
+        />
+      </Box>
+      {/* Full label formatting block, reused from node labels (SA#1229):
+          font / size / bold / italic / color / alignment / position /
+          number-format / background — all driven by stock_label_* attributes. */}
+      <LabelContentComponent
         app_data={app_data}
         elements={elements}
-        prefix={prefix}
-        config={STOCK_LABEL_CONFIG}
-        attributePath={attributePath}
+        prefix={'stock_label'}
+        displayMode='value'
+        menu_style={false}
         refreshParentComponent={refresh}
       />
-
-      {/* ===== Background (fond + bordure, same as label background) ===== */}
-      <Divider />
-      <MenuSectionCheckbox
-        elements={elements}
-        attributePath={attributePath}
-        attributeKey={'visible'}
-        config={BASE_SHAPE_CONFIG}
-        prefix={bgPrefix}
-        refreshParentComponent={refresh}
-      >
-        {getShapeValues(elements, bgPrefix, refresh).visible && (
-          <MenuShapeAttributes
-            app_data={app_data}
-            elements={elements}
-            attributePath={attributePath}
-            prefix={bgPrefix}
-            refreshUI={refresh}
-          />
-        )}
-      </MenuSectionCheckbox>
     </Box>
   )
 }

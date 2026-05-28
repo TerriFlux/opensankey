@@ -744,9 +744,20 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Stock & material balance
     if (node.has_stock) {
       json_object['has_stock'] = true
-      if (node._stock_values.has_data) {
+      // Save the stock values when there is input data OR a reconciled result
+      // (a reconciled-only stock has no input data but must still persist).
+      if (node._stock_values.has_data || node._stock_values.has_result) {
         json_object['stock_values'] = node._stock_values.toJSON()
       }
+    }
+    if (node.stock_shape_is_visible) {
+      json_object['stock_shape_is_visible'] = true
+    }
+    if (node.stock_si_caption !== 'Stock') {
+      json_object['stock_si_caption'] = node.stock_si_caption
+    }
+    if (node.stock_delta_caption !== 'Δ Stock') {
+      json_object['stock_delta_caption'] = node.stock_delta_caption
     }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
@@ -952,6 +963,15 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Stock & material balance
     if (json_node_object['has_stock'] !== undefined) {
       node.has_stock = json_node_object['has_stock'] as boolean
+    }
+    if (json_node_object['stock_shape_is_visible'] !== undefined) {
+      node.stock_shape_is_visible = json_node_object['stock_shape_is_visible'] as boolean
+    }
+    if (json_node_object['stock_si_caption'] !== undefined) {
+      node.stock_si_caption = json_node_object['stock_si_caption'] as string
+    }
+    if (json_node_object['stock_delta_caption'] !== undefined) {
+      node.stock_delta_caption = json_node_object['stock_delta_caption'] as string
     }
     if (json_node_object['stock_values']) {
       node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
@@ -1850,7 +1870,18 @@ export class DrawingAreaPersistence {
       ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
     }
 
-    out['order_g_elements'] = drawing_area.list_g_element // Order elements by id 
+    // Order elements by id — limité aux éléments réellement sérialisés en mode
+    // sauvegarde partielle (visibles seuls / tags), sinon tout l'ordre est conservé.
+    if (kwargs && (kwargs['save_only_visible_elements'] || kwargs['save_only_elements_with_tags'])) {
+      const saved_ids = new Set([
+        ...Object.keys((out['nodes'] as Type_JSON) ?? {}),
+        ...Object.keys((out['links'] as Type_JSON) ?? {}),
+        ...Object.keys((out['labels'] as Type_JSON) ?? {})
+      ])
+      out['order_g_elements'] = drawing_area.list_g_element.filter(id => saved_ids.has(id))
+    } else {
+      out['order_g_elements'] = drawing_area.list_g_element
+    }
     return out
   }
 

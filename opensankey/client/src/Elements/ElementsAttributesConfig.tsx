@@ -38,6 +38,12 @@ export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' |
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
+// Alignement de la pile d'ancres des flux le long d'un côté du nœud.
+// 'center' = comportement historique (pile centrée sur le côté).
+export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
+export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
+export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
+export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
 export type Type_VerticalAlignment = 'left' | 'right'
 export type Type_ExtremityPosition = 'top' | 'bottom' | 'left' | 'right'
 export const default_position_type = 'absolute'
@@ -171,6 +177,7 @@ export type BaseActionType =
   | 'drawFO'
   | 'drawImage'
   | 'drawIcon'
+  | 'applyPosition'
 
 export type NodeBaseActionType = BaseActionType
 export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'drawControlPoint' | 'drawWithNodes'
@@ -1883,23 +1890,23 @@ export const STOCK_LABEL_CONFIG = {
   ...STOCK_LABEL_BASE_CONFIG,
 
   box_width: {
-    default: 0.6,
-    type: (() => 0.6) as (() => number),
+    default: 150,
+    type: (() => 150) as (() => number),
     category: 'stock_label' as const,
     actions: ['drawStockBox'] as BaseActionType[],
     labels: {
-      en: 'Box width (ratio)',
-      fr: 'Largeur boite (ratio)',
-      es: 'Ancho de caja (ratio)',
-      de: 'Kastenbreite (Verhältnis)',
-      it: 'Larghezza riquadro (rapporto)'
+      en: 'Box width (px)',
+      fr: 'Largeur boite (px)',
+      es: 'Ancho de caja (px)',
+      de: 'Kastenbreite (px)',
+      it: 'Larghezza riquadro (px)'
     },
     tooltips: {
-      en: 'Box width as ratio of node width (0.1 to 1)',
-      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)',
-      es: 'Ancho de la caja como ratio del ancho del nodo (0.1 a 1)',
-      de: 'Kastenbreite als Verhältnis zur Knotenbreite (0.1 bis 1)',
-      it: 'Larghezza del riquadro come rapporto della larghezza del nodo (0.1 a 1)'
+      en: 'Wrap width of the stock label box, in screen px',
+      fr: 'Largeur de retour à la ligne de la boite de stock, en px écran',
+      es: 'Ancho de ajuste de la caja de stock, en px de pantalla',
+      de: 'Umbruchbreite des Stock-Kastens, in Bildschirm-px',
+      it: 'Larghezza di a capo del riquadro stock, in px schermo'
     }
   } satisfies AttributeConfig<number>,
 } as const
@@ -2285,6 +2292,47 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'x'
     }
   } satisfies AttributeConfig<number>,
+  // =================== ALIGNEMENT DES ANCRES DE FLUX ===================
+  anchor_align_vertical: {
+    default: default_anchor_align_vertical,
+    type: (() => default_anchor_align_vertical) as (() => Type_AnchorAlignVertical),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (vertical sides)',
+      fr: 'Ancres (côtés verticaux)',
+      es: 'Anclas (lados verticales)',
+      de: 'Anker (vertikale Seiten)',
+      it: 'Ancore (lati verticali)'
+    },
+    tooltips: {
+      en: 'Vertical alignment of link anchors on the left/right sides of the node (top / center / bottom).',
+      fr: 'Alignement vertical des ancres de flux sur les côtés gauche/droite du nœud (haut / centre / bas).',
+      es: 'Alineación vertical de las anclas de flujo en los lados izquierdo/derecho del nodo (arriba / centro / abajo).',
+      de: 'Vertikale Ausrichtung der Flussanker an den linken/rechten Seiten des Knotens (oben / Mitte / unten).',
+      it: 'Allineamento verticale delle ancore di flusso sui lati sinistro/destro del nodo (alto / centro / basso).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignVertical>,
+  anchor_align_horizontal: {
+    default: default_anchor_align_horizontal,
+    type: (() => default_anchor_align_horizontal) as (() => Type_AnchorAlignHorizontal),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (horizontal sides)',
+      fr: 'Ancres (côtés horizontaux)',
+      es: 'Anclas (lados horizontales)',
+      de: 'Anker (horizontale Seiten)',
+      it: 'Ancore (lati orizzontali)'
+    },
+    tooltips: {
+      en: 'Horizontal alignment of link anchors on the top/bottom sides of the node (left / center / right).',
+      fr: 'Alignement horizontal des ancres de flux sur les côtés haut/bas du nœud (gauche / centre / droite).',
+      es: 'Alineación horizontal de las anclas de flujo en los lados superior/inferior del nodo (izquierda / centro / derecha).',
+      de: 'Horizontale Ausrichtung der Flussanker an den oberen/unteren Seiten des Knotens (links / Mitte / rechts).',
+      it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
   // =================== AUTRES ATTRIBUTS ===================
   orphan_node_visible: {
     default: true as boolean,

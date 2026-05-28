@@ -798,6 +798,9 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   stock_label_font_family!: StockLabelAttributeTypes['font_family']
   stock_label_font_size!: StockLabelAttributeTypes['font_size']
   stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_bold!: StockLabelAttributeTypes['bold']
+  stock_label_italic!: StockLabelAttributeTypes['italic']
+  stock_label_uppercase!: StockLabelAttributeTypes['uppercase']
   stock_label_horiz!: StockLabelAttributeTypes['horiz']
   stock_label_vert!: StockLabelAttributeTypes['vert']
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
@@ -829,6 +832,8 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
+  shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -1175,6 +1180,9 @@ export class Class_ElementStyle {
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
   stock_label_font_size!: StockLabelAttributeTypes['font_size']
   stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_bold!: StockLabelAttributeTypes['bold']
+  stock_label_italic!: StockLabelAttributeTypes['italic']
+  stock_label_uppercase!: StockLabelAttributeTypes['uppercase']
   stock_label_horiz!: StockLabelAttributeTypes['horiz']
   stock_label_vert!: StockLabelAttributeTypes['vert']
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
@@ -1186,6 +1194,8 @@ export class Class_ElementStyle {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
+  shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
