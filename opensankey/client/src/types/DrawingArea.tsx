@@ -49,6 +49,7 @@ import {
 import {
   Class_NodeElement,
 } from '../Elements/Node'
+import { Class_StockShape } from '../Elements/StockShape'
 import {
   Class_LinkElement,
   sortLinksElementsByIds
@@ -2489,6 +2490,12 @@ export class Class_DrawingArea {
   public get selected_containers_list(): Class_ContainerElement[] {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_ContainerElement) as Class_ContainerElement[]
+  }
+  // Stock visual sub-elements currently selected (SA#1229). Edited via the node
+  // appearance panels, which treat them as Class_NodeBase.
+  public get selected_stock_shapes_list(): Class_StockShape[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_StockShape) as Class_StockShape[]
   }
   // selected sorted
   public get selected_nodes_list_sorted(): Class_NodeElement[] {
