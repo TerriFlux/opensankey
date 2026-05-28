@@ -1844,7 +1844,18 @@ export class DrawingAreaPersistence {
       ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
     }
 
-    out['order_g_elements'] = drawing_area.list_g_element // Order elements by id 
+    // Order elements by id — limité aux éléments réellement sérialisés en mode
+    // sauvegarde partielle (visibles seuls / tags), sinon tout l'ordre est conservé.
+    if (kwargs && (kwargs['save_only_visible_elements'] || kwargs['save_only_elements_with_tags'])) {
+      const saved_ids = new Set([
+        ...Object.keys((out['nodes'] as Type_JSON) ?? {}),
+        ...Object.keys((out['links'] as Type_JSON) ?? {}),
+        ...Object.keys((out['labels'] as Type_JSON) ?? {})
+      ])
+      out['order_g_elements'] = drawing_area.list_g_element.filter(id => saved_ids.has(id))
+    } else {
+      out['order_g_elements'] = drawing_area.list_g_element
+    }
     return out
   }
 
