@@ -744,7 +744,9 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Stock & material balance
     if (node.has_stock) {
       json_object['has_stock'] = true
-      if (node._stock_values.has_data) {
+      // Save the stock values when there is input data OR a reconciled result
+      // (a reconciled-only stock has no input data but must still persist).
+      if (node._stock_values.has_data || node._stock_values.has_result) {
         json_object['stock_values'] = node._stock_values.toJSON()
       }
     }
