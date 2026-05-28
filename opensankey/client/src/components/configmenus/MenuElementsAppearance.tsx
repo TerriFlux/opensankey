@@ -1221,10 +1221,10 @@ export const MenuConfigurationAppearance = ({
         />
       )}
 
-      {/* ✅ 4 ONGLETS */}
+      {/* ✅ 5 ONGLETS */}
       {showContent && (
         <>
-          <Box layerStyle='options_4cols'>
+          <Box layerStyle='options_5cols'>
             <Button
               variant={activeTab === 'shape' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
               sx={{ paddingInline: '0.25rem', minWidth: 'auto' }}

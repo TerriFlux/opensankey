@@ -407,7 +407,6 @@ export class Class_NodeElement extends Class_NodeBase {
     const vert = this.stock_label_vert
     const insideH = this.stock_label_inside_horiz
     const insideV = this.stock_label_inside_vert
-    const boxWidthRatio = this.stock_label_box_width ?? 0.6
     const bgColor = this.stock_label_background_color_sustainable
       ? this.stock_label_background_color : this.getShapeColorToUse()
     const bgVisible = this.stock_label_background_color_visible
@@ -424,11 +423,8 @@ export class Class_NodeElement extends Class_NodeBase {
     const margin = 4
     // Issue #165 : en mode verrouill\u00e9 la police demand\u00e9e est en px \u00e9cran. On
     // pr\u00e9compense par font_compensation (= 1/k live) pour annuler l'\u00e9chelle SVG
-    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1
-    // (police native). L'auto-shrink (cas inside) reste calcul\u00e9 dans le rep\u00e8re
-    // local : si la bo\u00eete est trop \u00e9troite, on retombe sur MIN_FONT_SIZE compens\u00e9.
+    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1.
     const k_inv = this.drawing_area?.font_compensation ?? 1
-    const MIN_FONT_SIZE = 6 * k_inv
 
     // Build text lines (SF redundant with SI + delta)
     // Use format_value to handle units, decimals, scientific notation, etc.
@@ -436,40 +432,49 @@ export class Class_NodeElement extends Class_NodeBase {
     const unitName = this.stock_label_unit ?? ''
     const formatStock = (v: number) =>
       format_value('free_value', v, this, unitName, 'stock_label')
+    // Stacked layout (SA#1229), no width management for now:
+    //   <stock caption> / <stock value> / (blank) / <delta caption> / <delta value>
     if (si !== null) {
-      const cap = this.stock_si_caption
-      lines.push((cap ? cap + ': ' : '') + formatStock(si))
+      if (this.stock_si_caption) lines.push(this.stock_si_caption)
+      lines.push(formatStock(si))
     }
+    // Blank line separating the stock group from the delta group.
+    if (si !== null && dv !== null) lines.push('')
     if (dv !== null) {
+      if (this.stock_delta_caption) lines.push(this.stock_delta_caption)
       const sign = dv >= 0 ? '+' : ''
-      const cap = this.stock_delta_caption
-      lines.push((cap ? cap + ': ' : '') + sign + formatStock(dv))
+      lines.push(sign + formatStock(dv))
     }
     if (lines.length === 0) return
 
-    // Box width = ratio of node width
-    const boxW = boxWidthRatio > 0 ? nodeW * boxWidthRatio : nodeW * 0.6
-
-    // Auto-shrink font size to fit inside node when stock label is inside
-    let fontSize = baseFontSize * k_inv
-    // Vertical fit: if inside vertically, lines must fit in node height
-    if (insideV) {
-      const availableH = nodeH - 2 * margin - 2 * padding
-      const maxFontFromH = Math.floor(availableH / lines.length) - 3
-      if (maxFontFromH < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromH)
-    }
-    // Horizontal fit: estimate text width (~0.6 * fontSize per char)
-    if (insideH) {
-      const longestLine = lines.reduce((m, l) => Math.max(m, l.length), 0)
-      const availableW = boxW - 2 * padding
-      const maxFontFromW = Math.floor(availableW / (longestLine * 0.6))
-      if (maxFontFromW < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromW)
-    }
-
+    // Font size honoured as set (no auto-shrink). Lines are simply stacked and
+    // the box auto-sizes to the content (no wrap / box_width for now).
+    const fontSize = baseFontSize * k_inv
     const lineH = fontSize + 3
     const boxH = lines.length * lineH + padding * 2
 
-    // Compute X position
+    const g = this.d3_selection?.append('g').classed('stock_box', true)
+    const content = g?.append('g')
+
+    let maxW = 0
+    lines.forEach((line, i) => {
+      const t = content?.append('text')
+        .attr('x', 0)
+        .attr('y', padding + (i + 1) * lineH - 2)
+        .attr('text-anchor', 'start')
+        .attr('font-size', fontSize)
+        .attr('font-family', this.stock_label_font_family)
+        .attr('font-weight', this.stock_label_bold ? 'bold' : 'normal')
+        .attr('font-style', this.stock_label_italic ? 'italic' : 'normal')
+        .style('text-transform', this.stock_label_uppercase ? 'uppercase' : 'none')
+        .attr('fill', textColor)
+        .text(line)
+      const w = t?.node()?.getBBox().width ?? 0
+      if (w > maxW) maxW = w
+    })
+    const boxW = maxW + 2 * padding
+
+    // Box placement relative to the node (horiz / vert), same rules as before.
     let boxX = 0
     if (horiz === 'left') {
       boxX = insideH ? margin : -boxW - margin
@@ -478,8 +483,6 @@ export class Class_NodeElement extends Class_NodeBase {
     } else {
       boxX = (nodeW - boxW) / 2
     }
-
-    // Compute Y position
     let boxY = 0
     if (vert === 'top') {
       boxY = insideV ? margin : -boxH - margin
@@ -489,12 +492,10 @@ export class Class_NodeElement extends Class_NodeBase {
       boxY = (nodeH - boxH) / 2
     }
 
-    const g = this.d3_selection?.append('g')
-      .classed('stock_box', true)
-
-    // Background rect
+    // Place the text content inside the box, then draw the background BEHIND it.
+    content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + boxY + ')')
     if (this.stock_label_background_visible) {
-      g?.append('rect')
+      g?.insert('rect', ':first-child')
         .attr('x', boxX)
         .attr('y', boxY)
         .attr('width', boxW)
@@ -506,23 +507,6 @@ export class Class_NodeElement extends Class_NodeBase {
         .attr('stroke-width', borderThickness)
         .attr('stroke-dasharray', borderDashed ? '4,2' : '')
     }
-
-    // Text
-    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
-    const textX = textAnchor === 'end' ? boxX + boxW - padding
-      : textAnchor === 'start' ? boxX + padding
-        : boxX + boxW / 2
-
-    lines.forEach((text, i) => {
-      g?.append('text')
-        .attr('x', textX)
-        .attr('y', boxY + padding + (i + 1) * lineH - 2)
-        .attr('text-anchor', textAnchor)
-        .attr('font-size', fontSize)
-        .attr('font-family', this.stock_label_font_family)
-        .attr('fill', textColor)
-        .text(text)
-    })
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
