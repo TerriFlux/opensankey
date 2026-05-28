@@ -38,6 +38,12 @@ export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' |
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
+// Alignement de la pile d'ancres des flux le long d'un côté du nœud.
+// 'center' = comportement historique (pile centrée sur le côté).
+export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
+export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
+export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
+export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
 export type Type_VerticalAlignment = 'left' | 'right'
 export type Type_ExtremityPosition = 'top' | 'bottom' | 'left' | 'right'
 export const default_position_type = 'absolute'
@@ -171,6 +177,7 @@ export type BaseActionType =
   | 'drawFO'
   | 'drawImage'
   | 'drawIcon'
+  | 'applyPosition'
 
 export type NodeBaseActionType = BaseActionType
 export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'drawControlPoint' | 'drawWithNodes'
@@ -2285,6 +2292,47 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'x'
     }
   } satisfies AttributeConfig<number>,
+  // =================== ALIGNEMENT DES ANCRES DE FLUX ===================
+  anchor_align_vertical: {
+    default: default_anchor_align_vertical,
+    type: (() => default_anchor_align_vertical) as (() => Type_AnchorAlignVertical),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (vertical sides)',
+      fr: 'Ancres (côtés verticaux)',
+      es: 'Anclas (lados verticales)',
+      de: 'Anker (vertikale Seiten)',
+      it: 'Ancore (lati verticali)'
+    },
+    tooltips: {
+      en: 'Vertical alignment of link anchors on the left/right sides of the node (top / center / bottom).',
+      fr: 'Alignement vertical des ancres de flux sur les côtés gauche/droite du nœud (haut / centre / bas).',
+      es: 'Alineación vertical de las anclas de flujo en los lados izquierdo/derecho del nodo (arriba / centro / abajo).',
+      de: 'Vertikale Ausrichtung der Flussanker an den linken/rechten Seiten des Knotens (oben / Mitte / unten).',
+      it: 'Allineamento verticale delle ancore di flusso sui lati sinistro/destro del nodo (alto / centro / basso).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignVertical>,
+  anchor_align_horizontal: {
+    default: default_anchor_align_horizontal,
+    type: (() => default_anchor_align_horizontal) as (() => Type_AnchorAlignHorizontal),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (horizontal sides)',
+      fr: 'Ancres (côtés horizontaux)',
+      es: 'Anclas (lados horizontales)',
+      de: 'Anker (horizontale Seiten)',
+      it: 'Ancore (lati orizzontali)'
+    },
+    tooltips: {
+      en: 'Horizontal alignment of link anchors on the top/bottom sides of the node (left / center / right).',
+      fr: 'Alignement horizontal des ancres de flux sur les côtés haut/bas du nœud (gauche / centre / droite).',
+      es: 'Alineación horizontal de las anclas de flujo en los lados superior/inferior del nodo (izquierda / centro / derecha).',
+      de: 'Horizontale Ausrichtung der Flussanker an den oberen/unteren Seiten des Knotens (links / Mitte / rechts).',
+      it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
   // =================== AUTRES ATTRIBUTS ===================
   orphan_node_visible: {
     default: true as boolean,
