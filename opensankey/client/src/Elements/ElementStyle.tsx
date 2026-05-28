@@ -81,7 +81,7 @@ elementStyleConfigs[LinkStyle] = {
     'value_label_is_visible': true,
     'value_label_vert': 'middle',
     'value_label_font_size': 20,
-    'value_label_box_width':300
+    'value_label_box_width': 300
   }
 }
 
@@ -227,9 +227,7 @@ elementStyleConfigs[NodeExportBelowStyle] = {
 elementStyleConfigs[LinkImportExportCloseStyle] = {
   name: 'ElementStyle.LinkImportExportCloseStyle',
   config: {
-    'shape_orientation': 'hv',
-    'value_label_is_visible': true,
-    'value_label_on_path': true,
+    "value_label_is_visible": false,
   }
 }
 
@@ -237,10 +235,8 @@ elementStyleConfigs[LinkImportCloseStyle] = {
   name: 'ElementStyle.LinkImportCloseStyle',
   config: {
     'shape_orientation': 'vh',
-    'value_label_is_visible': true,
-    'value_label_on_path': true,
-    'value_label_horiz': 'right',
-    'value_label_vert': 'middle'
+    "shape_ending_tangeant": 1,
+    "shape_is_arrow": false
   }
 }
 
@@ -248,10 +244,7 @@ elementStyleConfigs[LinkExportCloseStyle] = {
   name: 'ElementStyle.LinkExportCloseStyle',
   config: {
     'shape_orientation': 'hv',
-    'value_label_is_visible': true,
-    'value_label_on_path': true,
-    'value_label_horiz': 'left',
-    'value_label_vert': 'middle'
+    "shape_starting_tangeant": 1
   }
 }
 
