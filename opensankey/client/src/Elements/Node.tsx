@@ -76,6 +76,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // Stock values (parallel to link values but for nodes)
   public has_stock: boolean = false
+  // Visibility of the node-like stock shape (SA#1229). Independent of has_stock
+  // (whether a stock exists) and of stock_label_is_visible (the legacy stock
+  // box). Default false: the shape is only drawn when explicitly enabled.
+  public stock_shape_is_visible: boolean = false
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
@@ -345,7 +349,7 @@ export class Class_NodeElement extends Class_NodeBase {
    * create it when the node carries a stock, draw it, or remove it otherwise.
    */
   private _drawStockShape() {
-    if (this.has_stock) {
+    if (this.has_stock && this.stock_shape_is_visible) {
       if (!this._stock_shape) {
         this._stock_shape = new Class_StockShape(this, this.drawing_area)
       }
