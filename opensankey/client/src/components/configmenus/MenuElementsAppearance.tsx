@@ -76,7 +76,8 @@ import {
   getConfigValues,
   getLinkShapeAttributeKey,
   Type_AnchorAlignVertical,
-  Type_AnchorAlignHorizontal
+  Type_AnchorAlignHorizontal,
+  Type_HatchOrientation
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
@@ -147,6 +148,7 @@ export const LabelDisplayModeSelector = ({
 }) => {
   const setModeSimpleText = () => {
     labelValues.has_fo = false
+    labelValues.is_value = false
     display_mode_name_label.current = 'simple_text'
     refreshAll()
   }
@@ -161,6 +163,7 @@ export const LabelDisplayModeSelector = ({
       })
     }
     labelValues.has_fo = true
+    labelValues.is_value = false
     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
     //@ts-expect-error xxx
     app_data.menu_configuration.r_editor_content_set_elements.current(elements, 'name_label')
@@ -170,6 +173,7 @@ export const LabelDisplayModeSelector = ({
 
   const setModeValue = () => {
     labelValues.has_fo = false
+    labelValues.is_value = true
     display_mode_name_label.current = 'value'
     refreshAll()
   }
@@ -1171,6 +1175,15 @@ export const MenuConfigurationAppearance = ({
     ? getElementsNameLabelValues(nodes_elements, 'name_label', refreshAll)
     : Object.fromEntries(Object.entries(NAME_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
+  // Synchronise le bouton de mode actif (Texte / Rich Text / Value) avec l'état
+  // réel de l'élément sélectionné (nœud ou lien) : la ref est sinon figée à
+  // 'simple_text'. has_fo => rich text, is_value => value, sinon texte simple.
+  if (allElements.length > 0) {
+    display_mode_name_label.current = nameLabelValues.has_fo
+      ? 'rich_text'
+      : (nameLabelValues.is_value ? 'value' : 'simple_text')
+  }
+
   const valueLabelValues = allElements.length > 0
     ? getElementsLabelValues(elements, 'value_label', refreshAll)
     : Object.fromEntries(Object.entries(VALUE_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
@@ -1291,6 +1304,11 @@ export const MenuConfigurationAppearance = ({
                   app_data={app_data}
                   elements={elements}
                   prefix={'shape'}
+                  attributePath={'Noeud.apparence'}
+                  refreshUI={refreshAll} />
+                <HatchSelector
+                  app_data={app_data}
+                  elements={elements}
                   attributePath={'Noeud.apparence'}
                   refreshUI={refreshAll} />
               </Box>)}
@@ -1662,7 +1680,22 @@ export const MenuConfigurationAppearance = ({
                                   {t('Flux.apparence.shape_is_arrow_reversed')}
                                 </OverloadedCheckbox>
                               </Box>
-                            )}</Box>
+                            )}
+                            <Box layerStyle='menuconfigpanel_row_2cols'>
+                              <OverloadedCheckbox
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                attributeKey="is_dashed"
+                                isChecked={linkShapeValues.is_dashed}
+                                onChange={(checked) => { linkShapeValues.is_dashed = checked }}
+                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed')}
+                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_dashed')}`)}
+                                t={t}
+                              >
+                                {t('Flux.apparence.shape_is_dashed')}
+                              </OverloadedCheckbox>
+                            </Box></Box>
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -2446,6 +2479,57 @@ export const ShapeTypeSelector = ({
               shapeValues.type === value
             )}
             onClick={() => { shapeValues.type = value }}
+          >
+            {icon}
+          </Button>
+        ))}
+      </Box>
+    </OSTooltip>
+  )
+}
+
+
+// Sélecteur d'orientation de hachure du remplissage d'un nœud, en icônes-boutons
+// (verticale / horizontale / diagonale / anti-diagonale). Recliquer l'orientation
+// active retire la hachure ('none'). Placé à côté du sélecteur de formes.
+export const HatchSelector = ({
+  app_data,
+  elements,
+  attributePath,
+  refreshUI
+}: {
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  attributePath: string
+  refreshUI: () => void
+}) => {
+  const { t, icon_library } = app_data
+
+  const nodeShapeValues = elements.length > 0
+    ? getNodeShapeValues(elements, refreshUI)
+    : { hatch: 'none' as Type_HatchOrientation }
+
+  const options: Array<{ value: Type_HatchOrientation; position: 'left' | 'center' | 'right'; icon: JSX.Element }> = [
+    { value: 'vertical', position: 'left', icon: icon_library.icon_hatch_vertical },
+    { value: 'horizontal', position: 'center', icon: icon_library.icon_hatch_horizontal },
+    { value: 'diagonal', position: 'center', icon: icon_library.icon_hatch_diagonal },
+    { value: 'antidiagonal', position: 'right', icon: icon_library.icon_hatch_antidiagonal }
+  ]
+
+  return (
+    <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
+      <Box layerStyle='options_4cols'>
+        {options.map(({ value, position, icon }) => (
+          <Button
+            key={value}
+            variant={getButtonVariant(
+              position,
+              isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
+              nodeShapeValues.hatch === value
+            )}
+            onClick={() => {
+              nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
+            }}
           >
             {icon}
           </Button>

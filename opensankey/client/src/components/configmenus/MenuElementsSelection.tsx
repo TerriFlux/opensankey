@@ -874,6 +874,36 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                   unit_text={unit_text}
                 />
               </Box>
+              <Checkbox
+                size='sm'
+                isChecked={firstNode.use_stock_for_height}
+                onChange={(e) => {
+                  nodes.forEach(n => { n.use_stock_for_height = e.target.checked })
+                  refreshStock()
+                }}
+              >
+                <OSTooltip label={'Si actif, la hauteur du rectangle du n\u0153ud encode son niveau de stock au lieu de l\u2019\u00e9paisseur des flux'}>
+                  <Box as='span' fontSize='xs'>{'Hauteur selon le stock'}</Box>
+                </OSTooltip>
+              </Checkbox>
+              {firstNode.use_stock_for_height &&
+                <Box layerStyle='options_2cols'>
+                  <OSTooltip label={'Facteur d\u2019\u00e9chelle local appliqu\u00e9 \u00e0 la hauteur du stock (comme pour les flux) : plus il est grand, plus le n\u0153ud est court'}>
+                    <Box as='span' fontSize='xs'>{'Facteur d\u2019\u00e9chelle'}</Box>
+                  </OSTooltip>
+                  <ConfigMenuNumberInput
+                    t={app_data.t}
+                    default_value={firstNode.stock_height_scale_factor}
+                    function_on_blur={(v) => {
+                      nodes.forEach(n => { n.stock_height_scale_factor = (v && v > 0) ? v : 1 })
+                      refreshStock()
+                    }}
+                    stepper={true}
+                    step={1}
+                    minimum_value={0}
+                  />
+                </Box>
+              }
             </>
           })()}
         </>}

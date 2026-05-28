@@ -21,7 +21,11 @@ export const value_option_percent_constants = [...value_option_percent_constants
 export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio', 'intervals'] as const
 export type ValueOptionType = typeof value_option_constants[number]
 
-export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
+// Display-only unit options expressing the link value as a percent of a node
+// stock level (not MFA constraints). '%SS' = stock of source node ("en sortie"),
+// '%SD' = stock of destination node ("en entrée").
+export const unit_stock_percent_constants = ['%SS', '%SD'] as const
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, ...unit_stock_percent_constants, 'unit_ratio','normalized'] as const
 export type UnitType = typeof unit_constants[number]
 
 // CLASS ELEMENT VALUE TREE ************************************************************
