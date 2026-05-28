@@ -53,7 +53,7 @@ function getCanvasFontStringAtSize(
 
 // Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
 // break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
-function breakLongWords(text: string, maxWidth: number, font: string): string {
+export function breakLongWords(text: string, maxWidth: number, font: string): string {
   if (!text || maxWidth <= 0) return text
   const ctx = getMeasureContext()
   if (!ctx) return text

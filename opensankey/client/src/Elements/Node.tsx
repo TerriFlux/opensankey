@@ -43,7 +43,8 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
-import { NodeDrawValueLabel } from './DrawLabel'
+import { NodeDrawValueLabel, breakLongWords } from './DrawLabel'
+import { textwrap } from 'd3-textwrap'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
@@ -424,11 +425,8 @@ export class Class_NodeElement extends Class_NodeBase {
     const margin = 4
     // Issue #165 : en mode verrouill\u00e9 la police demand\u00e9e est en px \u00e9cran. On
     // pr\u00e9compense par font_compensation (= 1/k live) pour annuler l'\u00e9chelle SVG
-    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1
-    // (police native). L'auto-shrink (cas inside) reste calcul\u00e9 dans le rep\u00e8re
-    // local : si la bo\u00eete est trop \u00e9troite, on retombe sur MIN_FONT_SIZE compens\u00e9.
+    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1.
     const k_inv = this.drawing_area?.font_compensation ?? 1
-    const MIN_FONT_SIZE = 6 * k_inv
 
     // Build text lines (SF redundant with SI + delta)
     // Use format_value to handle units, decimals, scientific notation, etc.
@@ -447,29 +445,59 @@ export class Class_NodeElement extends Class_NodeBase {
     }
     if (lines.length === 0) return
 
-    // Box width = ratio of node width
-    const boxW = boxWidthRatio > 0 ? nodeW * boxWidthRatio : nodeW * 0.6
+    // box_width is the wrap limit in screen px (like every other label).
+    // k_inv (font_compensation) converts it to local coords in locked mode so
+    // the on-screen wrap width stays constant. Fallback to node width.
+    const boxWpx = boxWidthRatio > 0 ? boxWidthRatio : nodeW
+    const boxW = boxWpx * k_inv
+    // Font size is honoured as set — no auto-shrink. Overflow now WRAPS, exactly
+    // like the node / value labels (d3-textwrap), instead of being clipped.
+    const fontSize = baseFontSize * k_inv
+    const innerW = Math.max(boxW - 2 * padding, fontSize)
+    const fontStr = (this.stock_label_italic ? 'italic ' : '')
+      + (this.stock_label_bold ? 'bold ' : '')
+      + fontSize + 'px ' + this.stock_label_font_family
 
-    // Auto-shrink font size to fit inside node when stock label is inside
-    let fontSize = baseFontSize * k_inv
-    // Vertical fit: if inside vertically, lines must fit in node height
-    if (insideV) {
-      const availableH = nodeH - 2 * margin - 2 * padding
-      const maxFontFromH = Math.floor(availableH / lines.length) - 3
-      if (maxFontFromH < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromH)
-    }
-    // Horizontal fit: estimate text width (~0.6 * fontSize per char)
-    if (insideH) {
-      const longestLine = lines.reduce((m, l) => Math.max(m, l.length), 0)
-      const availableW = boxW - 2 * padding
-      const maxFontFromW = Math.floor(availableW / (longestLine * 0.6))
-      if (maxFontFromW < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromW)
-    }
+    const g = this.d3_selection?.append('g').classed('stock_box', true)
+    const content = g?.append('g')
 
-    const lineH = fontSize + 3
-    const boxH = lines.length * lineH + padding * 2
+    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
+    const anchorX = textAnchor === 'end' ? innerW : textAnchor === 'start' ? 0 : innerW / 2
 
-    // Compute X position
+    // Render each line; long content wraps onto several tspans within innerW.
+    let cursorY = 0
+    lines.forEach((line) => {
+      const processed = breakLongWords(line, boxWpx - 2 * padding, fontStr)
+      const t = content?.append('text')
+        .attr('x', anchorX)
+        .attr('y', cursorY + fontSize)
+        .attr('text-anchor', textAnchor)
+        .attr('font-size', fontSize)
+        .attr('font-family', this.stock_label_font_family)
+        .attr('font-weight', this.stock_label_bold ? 'bold' : 'normal')
+        .attr('font-style', this.stock_label_italic ? 'italic' : 'normal')
+        .style('text-transform', this.stock_label_uppercase ? 'uppercase' : 'none')
+        .attr('fill', textColor)
+        .text(processed)
+      if (t && processed.includes(' ')) {
+        t.call(textwrap().bounds({ height: 100000, width: innerW }).method('tspans'))
+        t.selectAll('tspan')
+          .filter(function () {
+            const txt = d3.select(this).text()
+            return !txt || txt.trim() === ''
+          })
+          .remove()
+        const first = t.select('tspan')
+        if (!first.empty()) first.attr('dy', 0)
+      }
+      const h = t?.node()?.getBBox().height ?? fontSize
+      cursorY += h + 3
+    })
+
+    const contentH = Math.max(cursorY - 3, fontSize)
+    const boxH = contentH + 2 * padding
+
+    // Compute box position (local coords), same anchoring rules as before.
     let boxX = 0
     if (horiz === 'left') {
       boxX = insideH ? margin : -boxW - margin
@@ -478,8 +506,6 @@ export class Class_NodeElement extends Class_NodeBase {
     } else {
       boxX = (nodeW - boxW) / 2
     }
-
-    // Compute Y position
     let boxY = 0
     if (vert === 'top') {
       boxY = insideV ? margin : -boxH - margin
@@ -489,12 +515,10 @@ export class Class_NodeElement extends Class_NodeBase {
       boxY = (nodeH - boxH) / 2
     }
 
-    const g = this.d3_selection?.append('g')
-      .classed('stock_box', true)
-
-    // Background rect
+    // Place the text content inside the box, then draw the background BEHIND it.
+    content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + (boxY + padding) + ')')
     if (this.stock_label_background_visible) {
-      g?.append('rect')
+      g?.insert('rect', ':first-child')
         .attr('x', boxX)
         .attr('y', boxY)
         .attr('width', boxW)
@@ -506,26 +530,6 @@ export class Class_NodeElement extends Class_NodeBase {
         .attr('stroke-width', borderThickness)
         .attr('stroke-dasharray', borderDashed ? '4,2' : '')
     }
-
-    // Text
-    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
-    const textX = textAnchor === 'end' ? boxX + boxW - padding
-      : textAnchor === 'start' ? boxX + padding
-        : boxX + boxW / 2
-
-    lines.forEach((text, i) => {
-      g?.append('text')
-        .attr('x', textX)
-        .attr('y', boxY + padding + (i + 1) * lineH - 2)
-        .attr('text-anchor', textAnchor)
-        .attr('font-size', fontSize)
-        .attr('font-family', this.stock_label_font_family)
-        .attr('font-weight', this.stock_label_bold ? 'bold' : 'normal')
-        .attr('font-style', this.stock_label_italic ? 'italic' : 'normal')
-        .style('text-transform', this.stock_label_uppercase ? 'uppercase' : 'none')
-        .attr('fill', textColor)
-        .text(text)
-    })
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
