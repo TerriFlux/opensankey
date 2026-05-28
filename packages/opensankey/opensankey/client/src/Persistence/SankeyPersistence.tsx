@@ -759,6 +759,12 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (node.stock_delta_caption !== 'Δ Stock') {
       json_object['stock_delta_caption'] = node.stock_delta_caption
     }
+    if (node.use_stock_for_height) {
+      json_object['use_stock_for_height'] = true
+    }
+    if (node.stock_height_scale_factor !== 1) {
+      json_object['stock_height_scale_factor'] = node.stock_height_scale_factor
+    }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
     }
@@ -975,6 +981,12 @@ export class NodeElementPersistence extends NodeBasePersistence {
     }
     if (json_node_object['stock_values']) {
       node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
+    }
+    if (json_node_object['use_stock_for_height'] !== undefined) {
+      node.use_stock_for_height = json_node_object['use_stock_for_height'] as boolean
+    }
+    if (json_node_object['stock_height_scale_factor'] !== undefined) {
+      node.stock_height_scale_factor = json_node_object['stock_height_scale_factor'] as number
     }
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean

@@ -473,6 +473,17 @@ export const format_value = (
     target.input_links_list.filter(l => l.is_visible).forEach(l => total_source += l.valueCurrent ?? 0)
     data_value = data_value && total_source ? data_value / total_source * 100 : null
     is_percent = true
+  } else if (label_values.unit_type == '%SS' || label_values.unit_type == '%SD') {
+    // Display-only: link value as a percent of a node's stock level.
+    // '%SS' = source node ("en sortie"), '%SD' = destination node ("en entrée").
+    const stock_node = label_values.unit_type == '%SS' ? source : target
+    const stock_val = (stock_node as Class_NodeElement).stock_value
+    const use_result = element.drawing_area.type_data !== 'data'
+    const stock_level = stock_val
+      ? (use_result ? (stock_val.stockInitialResult ?? stock_val.stockInitialData) : stock_val.stockInitialData)
+      : null
+    data_value = data_value && stock_level ? data_value / stock_level * 100 : null
+    is_percent = true
   } else if (label_values.unit_type == 'normalized') {
     data_value = data_value! / element.sankey.normalised_link!.value!.valueResult!
   }
@@ -529,6 +540,8 @@ export const format_value = (
     text_value = text_value + ' ' + label_unit
   } else if (value_option_percent_constants.filter(s => label_values.unit_type == s).length > 0 && label_values.is_visible) {
     text_value = formatValueWithOption(element,text_value, label_values.unit_type as ValueOptionType,prefix)
+  } else if ((label_values.unit_type == '%SS' || label_values.unit_type == '%SD') && label_values.is_visible) {
+    if (text_value) text_value = text_value + '%'
   } else if (label_values.unit_type == 'normalized') return text_value
 
   return text_value
