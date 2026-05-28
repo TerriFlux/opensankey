@@ -1157,13 +1157,23 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private getLinksStartingPositionOffSet(side: Type_Side) {
     // The cumulative packing also consumes the user-set anchor deltas, so the
-    // centering offset must account for them to keep the stack centered.
+    // alignment offset must account for them to keep the stack coherent.
     const occupied = this.getSumOfLinksThickness(side) + this.getSumOfAnchorDeltas(side)
     if (side === 'left' || side === 'right') {
-      return Math.max(0, (this.getShapeHeightToUse() - occupied) / 2)
+      const free = this.getShapeHeightToUse() - occupied
+      // 'top' = flush against the node top, 'center' = historical centering,
+      // 'bottom' = flush against the node bottom.
+      const align = this.shape_anchor_align_vertical
+      const offset = align === 'top' ? 0 : align === 'bottom' ? free : free / 2
+      return Math.max(0, offset)
     }
     else {
-      return Math.max(0, (this.getShapeWidthToUse() - occupied) / 2)
+      const free = this.getShapeWidthToUse() - occupied
+      // 'left' = flush against the node left, 'center' = historical centering,
+      // 'right' = flush against the node right.
+      const align = this.shape_anchor_align_horizontal
+      const offset = align === 'left' ? 0 : align === 'right' ? free : free / 2
+      return Math.max(0, offset)
     }
   }
 
