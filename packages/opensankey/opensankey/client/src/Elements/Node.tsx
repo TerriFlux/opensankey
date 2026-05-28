@@ -80,6 +80,11 @@ export class Class_NodeElement extends Class_NodeBase {
   // (whether a stock exists) and of stock_label_is_visible (the legacy stock
   // box). Default false: the shape is only drawn when explicitly enabled.
   public stock_shape_is_visible: boolean = false
+  // Editable captions for the legacy stock box labels (SA#1229): replace the
+  // former hardcoded "SI:" / "ΔS:" prefixes. Formatting (font/size/...) stays
+  // block-wide via stock_label_*; these only customize the caption TEXT.
+  public stock_si_caption: string = 'Stock'
+  public stock_delta_caption: string = 'Δ Stock'
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
@@ -431,10 +436,14 @@ export class Class_NodeElement extends Class_NodeBase {
     const unitName = this.stock_label_unit ?? ''
     const formatStock = (v: number) =>
       format_value('free_value', v, this, unitName, 'stock_label')
-    if (si !== null) lines.push('SI: ' + formatStock(si))
+    if (si !== null) {
+      const cap = this.stock_si_caption
+      lines.push((cap ? cap + ': ' : '') + formatStock(si))
+    }
     if (dv !== null) {
       const sign = dv >= 0 ? '+' : ''
-      lines.push('\u0394S: ' + sign + formatStock(dv))
+      const cap = this.stock_delta_caption
+      lines.push((cap ? cap + ': ' : '') + sign + formatStock(dv))
     }
     if (lines.length === 0) return
 
