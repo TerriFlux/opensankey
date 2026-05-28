@@ -44,6 +44,9 @@ export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
 export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
 export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
 export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
+// Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
+export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
+export const default_hatch_orientation: Type_HatchOrientation = 'none'
 export type Type_VerticalAlignment = 'left' | 'right'
 export type Type_ExtremityPosition = 'top' | 'bottom' | 'left' | 'right'
 export const default_position_type = 'absolute'
@@ -2394,26 +2397,26 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.'
     }
   } satisfies AttributeConfig<boolean>,
-  is_dashed: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
+  hatch: {
+    default: default_hatch_orientation,
+    type: (() => default_hatch_orientation) as (() => Type_HatchOrientation),
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
-      en: 'Hatched',
-      fr: 'Hachuré',
+      en: 'Hatching',
+      fr: 'Hachures',
       es: 'Rayado',
-      de: 'Schraffiert',
-      it: 'Tratteggiato'
+      de: 'Schraffur',
+      it: 'Tratteggio'
     },
     tooltips: {
-      en: 'Applies a hatch effect on the selected node(s)',
-      fr: 'Applique un effet de hachure sur le/les nœud(s) sélectionné(s)',
-      es: 'Aplica un efecto de rayado en el/los nodo(s) seleccionado(s)',
-      de: 'Wendet einen Schraffureffekt auf den/die ausgewählten Knoten an',
-      it: 'Applica un effetto tratteggiato sul/sui nodo/i selezionato/i'
+      en: 'Fill the selected node(s) with a hatch pattern (none / vertical / horizontal / diagonal / anti-diagonal)',
+      fr: 'Remplit le/les nœud(s) sélectionné(s) avec un motif de hachures (aucune / verticale / horizontale / diagonale / anti-diagonale)',
+      es: 'Rellena el/los nodo(s) seleccionado(s) con un patrón de rayado (ninguno / vertical / horizontal / diagonal / anti-diagonal)',
+      de: 'Füllt den/die ausgewählten Knoten mit einem Schraffurmuster (keine / vertikal / horizontal / diagonal / anti-diagonal)',
+      it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
     }
-  } satisfies AttributeConfig<boolean>,
+  } satisfies AttributeConfig<Type_HatchOrientation>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {

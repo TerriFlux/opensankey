@@ -85,6 +85,13 @@ export class Class_NodeElement extends Class_NodeBase {
   // block-wide via stock_label_*; these only customize the caption TEXT.
   public stock_si_caption: string = 'Stock'
   public stock_delta_caption: string = 'Δ Stock'
+  // When true, the node's own rectangle height encodes its stock level instead
+  // of the flux thickness. Independent of the stock shape (#1229).
+  public use_stock_for_height: boolean = false
+  // Per-node scale multiplier for stock-driven height, mirroring the flux
+  // local_link_scale ("Facteur d'échelle"): the base flux scale is multiplied
+  // by this factor (larger factor = shorter node). Default 1.
+  public stock_height_scale_factor: number = 1
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
 
@@ -688,7 +695,29 @@ export class Class_NodeElement extends Class_NodeBase {
     return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, super.getShapeWidthToUse())
   }
 
+  /**
+   * Current stock initial value used for stock-driven node sizing. Result in
+   * reconciled/calculated mode, raw data otherwise (mirrors drawStockBox).
+   */
+  public currentStockInitialForHeight(): number | null {
+    if (!this.has_stock) return null
+    const sv = this.stock_value
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
   public getShapeHeightToUse() {
+    if (this.use_stock_for_height) {
+      const si = this.currentStockInitialForHeight()
+      if (si !== null) {
+        // Mirror the flux local_link_scale: base flux scale divided by the
+        // per-node factor (larger factor = shorter node).
+        const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+        return Math.max(this.drawing_area.scaleValueToPx(Math.abs(si)) / factor, 1)
+      }
+    }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
     const clamped = this.drawing_area.is_structure_display
     const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
@@ -1819,6 +1848,19 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get data_label(): string {
+    return this._computeValueLabelText('value_label')
+  }
+
+  /**
+   * Valeur du nœud rendue dans le slot du libellé de nom quand celui-ci est en
+   * mode « value » (name_label_is_value). Même calcul que data_label, mais
+   * formaté avec les attributs name_label_* (unité, décimales…).
+   */
+  public get name_value_label(): string {
+    return this._computeValueLabelText('name_label')
+  }
+
+  private _computeValueLabelText(prefix: 'name_label' | 'value_label'): string {
     let input_val = 0
     let output_val = 0
 
@@ -1871,12 +1913,13 @@ export class Class_NodeElement extends Class_NodeBase {
     const has_in = link_in.length > 0
     const has_out = link_out.length > 0
 
+    const unit = prefix === 'value_label' ? this.value_label_unit : this.name_label_unit
     const fmt = (v: number) => format_value(
       this.sankey.drawing_area.type_data,
       v,
       this,
-      this.value_label_unit,
-      'value_label'
+      unit,
+      prefix
     )
 
     // No flux at all
@@ -1884,8 +1927,9 @@ export class Class_NodeElement extends Class_NodeBase {
     // Only one direction: show that value
     if (!has_in) return fmt(total_out)
     if (!has_out) return fmt(total_in)
-    // Both directions: apply display mode chosen by the user
-    const mode = this.value_label_in_out_display_mode
+    // Both directions: apply display mode chosen by the user. Le sélecteur
+    // in/out/both n'existe que pour value_label ; le name_label reste sur 'both'.
+    const mode = prefix === 'value_label' ? this.value_label_in_out_display_mode : 'both'
     if (mode === 'in') return fmt(total_in)
     if (mode === 'out') return fmt(total_out)
     // mode === 'both': if both values render identically (e.g. after significant
