@@ -938,12 +938,34 @@ export class Class_DrawingArea {
     // En mode déverrouillé (police native), aucune compensation : on inclut
     // toujours les labels comme avant #165 (pas de divergence possible).
     const skip_text_in_bbox = this._font_size_locked && this._k_fit !== 1
-    const hidden_texts = skip_text_in_bbox
-      ? this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
-      : undefined
-    hidden_texts?.style('display', 'none')
-    let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
-    hidden_texts?.style('display', null)
+    // Débordement des labels exclus de la bbox de fit (en px ÉCRAN), réservé plus
+    // bas pour que les labels en bord de diagramme ne touchent pas la bordure.
+    let label_overflow_left = 0
+    let label_overflow_right = 0
+    let label_overflow_top = 0
+    let label_overflow_bottom = 0
+    let bbox: DOMRect | undefined
+    if (skip_text_in_bbox) {
+      // Conversion monde→écran : les labels sont contre-scalés par
+      // font_compensation = 1/getZoomScale() (zoom LIVE), donc débordement monde
+      // × zoom live = px écran. NE PAS utiliser _k_fit : il peut différer du zoom
+      // live (molette depuis le dernier fit) et fausser la réserve — d'autant
+      // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
+      const k_live = this.getZoomScale()
+      const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
+      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
+      hidden_texts?.style('display', 'none')
+      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+      hidden_texts?.style('display', null)
+      if (full_bbox && bbox) {
+        label_overflow_left = Math.max(0, bbox.x - full_bbox.x) * k_live
+        label_overflow_right = Math.max(0, (full_bbox.x + full_bbox.width) - (bbox.x + bbox.width)) * k_live
+        label_overflow_top = Math.max(0, bbox.y - full_bbox.y) * k_live
+        label_overflow_bottom = Math.max(0, (full_bbox.y + full_bbox.height) - (bbox.y + bbox.height)) * k_live
+      }
+    } else {
+      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    }
 
     if (bbox == undefined)
       return
@@ -1026,7 +1048,14 @@ export class Class_DrawingArea {
       // } else {
       this._k_vert = new_k_height
       // }
-      const new_k = is_horiz ? new_k_horiz : new_k_height
+      // Le translateTo place le bord du monde à _fit_margin/2 px (marge fixe à
+      // gauche/haut). L'échelle doit donc étaler le monde sur (fenêtre - _fit_margin)
+      // et non sur toute la fenêtre, sinon le bord opposé déborde de _fit_margin/2
+      // et la marge symétrique disparaît de ce côté. On retranche en plus le
+      // débordement des labels (px écran), exclus de la bbox de fit (#165).
+      const new_k = is_horiz
+        ? (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / this.width
+        : (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / this.height
       this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
@@ -1037,7 +1066,8 @@ export class Class_DrawingArea {
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [this._fit_margin / 2 - this._background_d3_groups_shift_x * new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
+        [this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k,
+          this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k])
       this.drawBackground()
       this.drawGrid()
       if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
