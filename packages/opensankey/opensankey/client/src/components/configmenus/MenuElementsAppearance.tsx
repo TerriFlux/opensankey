@@ -76,7 +76,8 @@ import {
   getConfigValues,
   getLinkShapeAttributeKey,
   Type_AnchorAlignVertical,
-  Type_AnchorAlignHorizontal
+  Type_AnchorAlignHorizontal,
+  Type_HatchOrientation
 } from '../../Elements/ElementsAttributesConfig'
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
@@ -1305,6 +1306,11 @@ export const MenuConfigurationAppearance = ({
                   prefix={'shape'}
                   attributePath={'Noeud.apparence'}
                   refreshUI={refreshAll} />
+                <HatchSelector
+                  app_data={app_data}
+                  elements={elements}
+                  attributePath={'Noeud.apparence'}
+                  refreshUI={refreshAll} />
               </Box>)}
               <MenuShapeAttributes
                 app_data={app_data}
@@ -2253,11 +2259,6 @@ export const MenuShapeAttributes = ({
       -readonly [K in keyof typeof config]: ReturnType<(typeof config)[K]['type']>
     }
 
-  // Attributs spécifiques aux nœuds (corps du nœud uniquement, pas les fonds de label)
-  const nodeShapeValues = (prefix === 'shape' && elements.length > 0)
-    ? getNodeShapeValues(elements, refreshUI)
-    : null
-
   return (
     <>
       <Box layerStyle='menuconfigpanel_grid'>
@@ -2377,23 +2378,7 @@ export const MenuShapeAttributes = ({
               {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
             </OverloadedCheckbox>
           </Box>
-          {(prefix === 'shape' && nodeShapeValues) ? (
-            <Box as='span' layerStyle='options_2cols'>
-              <OverloadedCheckbox
-                elements={elements}
-                config={NODE_SHAPE_SPECIFIC_CONFIG}
-                prefix={prefix}
-                attributeKey="is_dashed"
-                isChecked={nodeShapeValues.is_dashed}
-                onChange={(checked) => { nodeShapeValues.is_dashed = checked }}
-                getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'is_dashed')}
-                tooltipLabel={t(`${attributePath}.tooltips.${getNodeShapeAttributeKey('shape', 'is_dashed')}`)}
-                t={t}
-              >
-                {t(`${attributePath}.${getNodeShapeAttributeKey('shape', 'is_dashed')}`)}
-              </OverloadedCheckbox>
-            </Box>
-          ) : <Box />}
+          <Box />
         </Box>
 
         {/* Largeur du fond :
@@ -2494,6 +2479,57 @@ export const ShapeTypeSelector = ({
               shapeValues.type === value
             )}
             onClick={() => { shapeValues.type = value }}
+          >
+            {icon}
+          </Button>
+        ))}
+      </Box>
+    </OSTooltip>
+  )
+}
+
+
+// Sélecteur d'orientation de hachure du remplissage d'un nœud, en icônes-boutons
+// (verticale / horizontale / diagonale / anti-diagonale). Recliquer l'orientation
+// active retire la hachure ('none'). Placé à côté du sélecteur de formes.
+export const HatchSelector = ({
+  app_data,
+  elements,
+  attributePath,
+  refreshUI
+}: {
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  attributePath: string
+  refreshUI: () => void
+}) => {
+  const { t, icon_library } = app_data
+
+  const nodeShapeValues = elements.length > 0
+    ? getNodeShapeValues(elements, refreshUI)
+    : { hatch: 'none' as Type_HatchOrientation }
+
+  const options: Array<{ value: Type_HatchOrientation; position: 'left' | 'center' | 'right'; icon: JSX.Element }> = [
+    { value: 'vertical', position: 'left', icon: icon_library.icon_hatch_vertical },
+    { value: 'horizontal', position: 'center', icon: icon_library.icon_hatch_horizontal },
+    { value: 'diagonal', position: 'center', icon: icon_library.icon_hatch_diagonal },
+    { value: 'antidiagonal', position: 'right', icon: icon_library.icon_hatch_antidiagonal }
+  ]
+
+  return (
+    <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
+      <Box layerStyle='options_4cols'>
+        {options.map(({ value, position, icon }) => (
+          <Button
+            key={value}
+            variant={getButtonVariant(
+              position,
+              isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
+              nodeShapeValues.hatch === value
+            )}
+            onClick={() => {
+              nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
+            }}
           >
             {icon}
           </Button>
