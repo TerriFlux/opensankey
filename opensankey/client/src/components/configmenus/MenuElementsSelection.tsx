@@ -5,6 +5,7 @@ import { ConfigMenuTextInput, ConfigMenuNumberInput, OSTooltip } from './MenuCom
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_ContainerElement } from '../../Elements/TextZone'
+import { Class_StockShape } from '../../Elements/StockShape'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeBase } from '../../Elements/NodeBase'
 
@@ -12,9 +13,9 @@ import { Class_NodeBase } from '../../Elements/NodeBase'
 // TYPES & CONFIGURATION
 // ==================================================================================
 
-type ElementType = 'node' | 'link' | 'container'
+type ElementType = 'node' | 'link' | 'container' | 'stock'
 
-type ElementInstance = Class_NodeElement | Class_LinkElement | Class_ContainerElement
+type ElementInstance = Class_NodeElement | Class_LinkElement | Class_ContainerElement | Class_StockShape
 
 interface ElementConfig<T extends ElementInstance> {
   type: ElementType
@@ -189,10 +190,35 @@ const CONTAINER_CONFIG: ElementConfig<Class_ContainerElement> = {
   hasDeleteButton: true
 }
 
+// Stock visual sub-elements (SA#1229): listed as their own selectable type.
+// They live on nodes (node._stock_shape), not in sankey.nodes, so we gather
+// them from nodes that carry a stock. No create/delete (tied to has_stock).
+const STOCK_CONFIG: ElementConfig<Class_StockShape> = {
+  type: 'stock',
+  getAllElements: (app_data) => app_data.drawing_area.sankey.nodes_list_sorted
+    .filter(n => n.has_stock && n._stock_shape).map(n => n._stock_shape as Class_StockShape),
+  getVisibleElements: (app_data) => app_data.drawing_area.sankey.visible_nodes_list_sorted
+    .filter(n => n.has_stock && n._stock_shape).map(n => n._stock_shape as Class_StockShape),
+  getSelectedElements: (app_data) => app_data.drawing_area.selected_stock_shapes_list,
+  getVisibleAndSelectedElements: (app_data) => app_data.drawing_area.selected_stock_shapes_list,
+
+  getUpdateRef: (app_data) => app_data.menu_configuration.ref_to_menu_config_nodes_selection_updater,
+  updateRelatedComponents: (app_data) => app_data.menu_configuration.updateAllComponentsRelatedToNodesConfig(),
+
+  translationKeys: {
+    labelSelect: 'Noeud.TS',
+    labelNoSelection: 'Noeud.NS',
+    tooltipSelect: 'Noeud.tooltips.slct',
+    tooltipRemove: 'Noeud.tooltips.rm',
+    tooltipVisibility: 'Noeud.tooltips.dns'
+  }
+}
+
 export const ALL_CONFIGS = {
   node: NODE_CONFIG,
   link: LINK_CONFIG,
-  container: CONTAINER_CONFIG
+  container: CONTAINER_CONFIG,
+  stock: STOCK_CONFIG
 }
 
 // ==================================================================================
@@ -246,7 +272,8 @@ export const UnifiedElementSelection = ({
   const typeIcons = {
     node: icon_node,
     link: icon_flow,
-    container: icon_object
+    container: icon_object,
+    stock: icon_node
   }
 
   // ==================================================================================
@@ -317,7 +344,7 @@ export const UnifiedElementSelection = ({
 
   const options = isMultiType
     ? getAllFilteredElements().map(({ element, type }) => ({
-      label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : 'C'}] ${element.name}`,
+      label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : type === 'stock' ? 'S' : 'C'}] ${type === 'stock' ? (element as Class_StockShape).host.name : element.name}`,
       value: `${type}:${element.id}`,
       type
     }))
@@ -328,7 +355,7 @@ export const UnifiedElementSelection = ({
 
   const selectedOptions = isMultiType
     ? getAllSelectedElements().map(({ element, type }) => ({
-      label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : 'C'}] ${element.name}`,
+      label: `[${type === 'node' ? 'N' : type === 'link' ? 'F' : type === 'stock' ? 'S' : 'C'}] ${type === 'stock' ? (element as Class_StockShape).host.name : element.name}`,
       value: `${type}:${element.id}`,
       type
     }))
@@ -615,6 +642,18 @@ export const UnifiedElementSelection = ({
             </Button>
           </OSTooltip>
         )}
+
+        {enabledTypes.includes('stock') && (
+          <OSTooltip label={'Filtrer les stocks'}>
+            <Button
+              variant={activeFilters.has('stock') ? 'button_config_element_activated' : 'button_config_element'}
+              onClick={() => toggleFilter('stock')}
+              sx={{ padding: '4px', minWidth: 'auto', height: 'auto', '& svg': { width: '10px', height: '10px' } }}
+            >
+              {typeIcons.stock}
+            </Button>
+          </OSTooltip>
+        )}
       </Box>
     )
   }
@@ -809,7 +848,11 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                   t={app_data.t}
                   default_value={stock_initial_shown}
                   function_on_blur={(v) => {
-                    nodes.forEach(n => { const s = n.stock_value; if (s) s.stockInitialData = v })
+                    // Mirror Link.valueCurrent setter: write data AND clear the
+                    // result, so in reconciled/calculated mode the displayed
+                    // value (and the stock shape height) updates immediately;
+                    // a later reconciliation recomputes the result.
+                    nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockInitialData = v; s.stockInitialResult = null } })
                     refreshStock()
                   }}
                   stepper={true}
@@ -823,7 +866,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                   t={app_data.t}
                   default_value={stock_variation_shown}
                   function_on_blur={(v) => {
-                    nodes.forEach(n => { const s = n.stock_value; if (s) s.stockVariationData = v })
+                    nodes.forEach(n => { const s = n.stock_value; if (s) { s.stockVariationData = v; s.stockVariationResult = null } })
                     refreshStock()
                   }}
                   stepper={true}
