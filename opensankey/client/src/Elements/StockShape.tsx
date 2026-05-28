@@ -164,7 +164,7 @@ export class Class_StockShape extends Class_NodeBase {
    * Stacked flush above the host node, horizontally centered on it. Coordinates
    * are node-local (the group is a child of the host's group).
    */
-  protected override applyPosition() {
+  public override applyPosition() {
     const host_w = this._host.getShapeWidthToUse()
     const w = this.getShapeWidthToUse()
     const h = this.getShapeHeightToUse()
