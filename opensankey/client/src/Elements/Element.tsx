@@ -834,6 +834,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -1196,6 +1197,7 @@ export class Class_ElementStyle {
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']

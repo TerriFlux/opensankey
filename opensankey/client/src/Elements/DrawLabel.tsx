@@ -1960,10 +1960,14 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return `${this.prefix}_text_${this._element.id}`
   }
 
+  protected editingEnabled(): boolean {
+    return this.enableEditing
+  }
+
   protected override finalizeLabelCreation(
     textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
-    if (this.enableEditing) {
+    if (this.editingEnabled()) {
       const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
 
       // La zone d'édition doit avoir la même largeur que la "boîte" du label
@@ -2026,11 +2030,20 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   protected getLabelText(): string {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
+    if (this.prefix === 'name_label' && this._label_values.is_value && this.node instanceof Class_NodeElement) {
+      return this.node.name_value_label
+    }
     return this.node.name_label_effective
   }
 
   protected shouldDrawLabel(): boolean {
     return this._label_values.is_visible
+  }
+
+  // En mode « value », le libellé affiche une valeur calculée : on désactive
+  // l'édition inline (sinon un double-clic renommerait le nœud).
+  protected override editingEnabled(): boolean {
+    return this.enableEditing && !(this.prefix === 'name_label' && this._label_values.is_value)
   }
 
   protected onInputChange(value: string): void {
