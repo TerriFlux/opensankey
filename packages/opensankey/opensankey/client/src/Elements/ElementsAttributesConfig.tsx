@@ -1890,23 +1890,23 @@ export const STOCK_LABEL_CONFIG = {
   ...STOCK_LABEL_BASE_CONFIG,
 
   box_width: {
-    default: 0.6,
-    type: (() => 0.6) as (() => number),
+    default: 150,
+    type: (() => 150) as (() => number),
     category: 'stock_label' as const,
     actions: ['drawStockBox'] as BaseActionType[],
     labels: {
-      en: 'Box width (ratio)',
-      fr: 'Largeur boite (ratio)',
-      es: 'Ancho de caja (ratio)',
-      de: 'Kastenbreite (Verhältnis)',
-      it: 'Larghezza riquadro (rapporto)'
+      en: 'Box width (px)',
+      fr: 'Largeur boite (px)',
+      es: 'Ancho de caja (px)',
+      de: 'Kastenbreite (px)',
+      it: 'Larghezza riquadro (px)'
     },
     tooltips: {
-      en: 'Box width as ratio of node width (0.1 to 1)',
-      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)',
-      es: 'Ancho de la caja como ratio del ancho del nodo (0.1 a 1)',
-      de: 'Kastenbreite als Verhältnis zur Knotenbreite (0.1 bis 1)',
-      it: 'Larghezza del riquadro come rapporto della larghezza del nodo (0.1 a 1)'
+      en: 'Wrap width of the stock label box, in screen px',
+      fr: 'Largeur de retour à la ligne de la boite de stock, en px écran',
+      es: 'Ancho de ajuste de la caja de stock, en px de pantalla',
+      de: 'Umbruchbreite des Stock-Kastens, in Bildschirm-px',
+      it: 'Larghezza di a capo del riquadro stock, in px schermo'
     }
   } satisfies AttributeConfig<number>,
 } as const
