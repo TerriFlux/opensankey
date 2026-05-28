@@ -45,6 +45,7 @@ import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagG
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
+import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
@@ -77,6 +78,11 @@ export class Class_NodeElement extends Class_NodeBase {
   public has_stock: boolean = false
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  // Stock visual sub-element (SA#1229): node-like shape stacked above the node
+  // that reuses the full node attribute machinery. Lazily created when the node
+  // has a stock. Not a graph node — owned and drawn by this host.
+  public _stock_shape: Class_StockShape | null = null
 
   /**
    * Get current stock value based on selected data tags.
@@ -194,6 +200,11 @@ export class Class_NodeElement extends Class_NodeBase {
   protected override cleanForDeletion() {
     this._nodeDimensionsManager.cleanForDeletion()
     this._nodeTagsManager.cleanForDeletion()
+    // Cleanup stock visual sub-element (SA#1229)
+    if (this._stock_shape) {
+      this._stock_shape.delete()
+      this._stock_shape = null
+    }
     // Cleanup links (lignes 282-297)
     this._links_order = []
     Object.values(this._input_links).forEach(link => {
@@ -326,6 +337,22 @@ export class Class_NodeElement extends Class_NodeBase {
     // forme et redessiner le fond du name_label pour qu'il les englobe.
     this._nodeDrawNameLabel.refreshStickLayout()
     this.drawStockBox()
+    this._drawStockShape()
+  }
+
+  /**
+   * Manage the lifecycle of the stock visual sub-element (SA#1229): lazily
+   * create it when the node carries a stock, draw it, or remove it otherwise.
+   */
+  private _drawStockShape() {
+    if (this.has_stock) {
+      if (!this._stock_shape) {
+        this._stock_shape = new Class_StockShape(this, this.drawing_area)
+      }
+      this._stock_shape.draw()
+    } else if (this._stock_shape) {
+      this._stock_shape.unDraw()
+    }
   }
 
   public override drawNameLabel() {

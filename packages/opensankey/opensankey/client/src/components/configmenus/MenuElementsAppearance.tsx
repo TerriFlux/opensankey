@@ -14,6 +14,7 @@ import { Class_LinkElement } from '../../Elements/Link'
 import { Class_ContainerElement } from '../../Elements/TextZone'
 import { Class_ElementStyle } from '../../Elements/Element'
 import { Class_NodeBase } from '../../Elements/NodeBase'
+import { Class_StockShape } from '../../Elements/StockShape'
 import { Type_Position } from '../../types/Utils'
 import { svg_label_upper } from '../../css/IconLibrairie'
 import { ConfigMenuStyleElement } from '../dialogs/SankeyStyle'
@@ -100,6 +101,10 @@ const analyzeSelection = (
 
   elements.forEach(el => {
     if (el instanceof Class_NodeElement) nodes.push(el)
+    // Stock shapes (SA#1229) reuse the node appearance panels: bucket them with
+    // nodes. They extend Class_NodeBase (not Class_NodeElement); the panels only
+    // touch Class_BaseShape attributes + draw(), so this is safe.
+    else if (el instanceof Class_StockShape) nodes.push(el as unknown as Class_NodeElement)
     else if (el instanceof Class_LinkElement) links.push(el)
     else if (el instanceof Class_ContainerElement) containers.push(el)
   })
@@ -1105,6 +1110,10 @@ export const MenuConfigurationAppearance = ({
     const selectedContainers = drawing_area.selected_containers_list_sorted
     elements.push(...selectedContainers)
 
+    // Stock shapes (SA#1229): edited via the same node appearance panels.
+    const selectedStockShapes = drawing_area.selected_stock_shapes_list
+    elements.push(...(selectedStockShapes as unknown as Class_NodeElement[]))
+
     return elements
   }
 
@@ -1198,7 +1207,7 @@ export const MenuConfigurationAppearance = ({
     <Box layerStyle='box_content_config'>
       {/* ✅ SÉLECTEUR MULTI-TYPE */}
       {!menu_for_style && (
-        <SankeyMultiTypeSelectionSimple app_data={app_data} />
+        <SankeyMultiTypeSelectionSimple app_data={app_data} enabledTypes={['node', 'link', 'container', 'stock']} />
       )}
 
       {/* ✅ ConfigMenuStyleElement */}
@@ -1518,7 +1527,7 @@ export const MenuConfigurationAppearance = ({
                         </Box>
                       </> : <></>
                       }
-                      {selection.hasNodes && !menu_for_style ?
+                      {selection.hasNodes && !menu_for_style && !(nodes_elements[0] instanceof Class_StockShape) ?
                         <WrapperBoxSubSectionMenu new_data={app_data} title={t('Noeud.Reorg_title')} is_open={false} >
                           <NodeIOReorganizer app_data={app_data} node={nodes_elements[0] as Class_NodeElement} />
                         </WrapperBoxSubSectionMenu> : <></>}
