@@ -228,7 +228,7 @@ export const ALL_CONFIGS = {
 interface UnifiedSelectionProps {
   app_data: Class_ApplicationData
   // Configuration
-  config?: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement>  // Pour single-type
+  config?: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement>  // Pour single-type (jamais un stock)
   enabledTypes?: ElementType[]  // Pour multi-type
   // Mode
   mode?: 'full' | 'simple'
@@ -283,7 +283,7 @@ export const UnifiedElementSelection = ({
   const getAllFilteredElements = () => {
     if (!isMultiType) return []
 
-    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement> }[] = []
+    const allElements: { element: ElementInstance; type: ElementType; config: ElementConfig<ElementInstance> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -304,7 +304,7 @@ export const UnifiedElementSelection = ({
   const getAllSelectedElements = () => {
     if (!isMultiType) return []
 
-    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<Class_ContainerElement | Class_NodeElement | Class_LinkElement> }[] = []
+    const selectedElements: { element: ElementInstance; type: ElementType; config: ElementConfig<ElementInstance> }[] = []
 
     enabledTypes!.forEach(type => {
       if (!activeFilters.has(type)) return
@@ -561,7 +561,7 @@ export const UnifiedElementSelection = ({
       ? (selected: MultiTypeOption[]) => {
         if (!selected.length) return t('Noeud.NS') || 'Aucune sélection'
 
-        const counts: Record<ElementType, number> = { node: 0, link: 0, container: 0 }
+        const counts: Record<ElementType, number> = { node: 0, link: 0, container: 0, stock: 0 }
         selected.forEach(s => {
           counts[s.type]++
         })
