@@ -43,8 +43,7 @@ import { Class_DrawingArea } from '../types/DrawingArea'
 import { Class_NodeDimension, NodeDimensionsManager } from './NodeDimension'
 import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 import { NodeTagsManager } from './NodeTagsManager'
-import { NodeDrawValueLabel, breakLongWords } from './DrawLabel'
-import { textwrap } from 'd3-textwrap'
+import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
 import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
@@ -408,7 +407,6 @@ export class Class_NodeElement extends Class_NodeBase {
     const vert = this.stock_label_vert
     const insideH = this.stock_label_inside_horiz
     const insideV = this.stock_label_inside_vert
-    const boxWidthRatio = this.stock_label_box_width ?? 0.6
     const bgColor = this.stock_label_background_color_sustainable
       ? this.stock_label_background_color : this.getShapeColorToUse()
     const bgVisible = this.stock_label_background_color_visible
@@ -434,70 +432,49 @@ export class Class_NodeElement extends Class_NodeBase {
     const unitName = this.stock_label_unit ?? ''
     const formatStock = (v: number) =>
       format_value('free_value', v, this, unitName, 'stock_label')
+    // Stacked layout (SA#1229), no width management for now:
+    //   <stock caption> / <stock value> / (blank) / <delta caption> / <delta value>
     if (si !== null) {
-      const cap = this.stock_si_caption
-      lines.push((cap ? cap + ': ' : '') + formatStock(si))
+      if (this.stock_si_caption) lines.push(this.stock_si_caption)
+      lines.push(formatStock(si))
     }
+    // Blank line separating the stock group from the delta group.
+    if (si !== null && dv !== null) lines.push('')
     if (dv !== null) {
+      if (this.stock_delta_caption) lines.push(this.stock_delta_caption)
       const sign = dv >= 0 ? '+' : ''
-      const cap = this.stock_delta_caption
-      lines.push((cap ? cap + ': ' : '') + sign + formatStock(dv))
+      lines.push(sign + formatStock(dv))
     }
     if (lines.length === 0) return
 
-    // box_width is the wrap limit in screen px (like every other label).
-    // k_inv (font_compensation) converts it to local coords in locked mode so
-    // the on-screen wrap width stays constant. Fallback to node width.
-    const boxWpx = boxWidthRatio > 0 ? boxWidthRatio : nodeW
-    const boxW = boxWpx * k_inv
-    // Font size is honoured as set — no auto-shrink. Overflow now WRAPS, exactly
-    // like the node / value labels (d3-textwrap), instead of being clipped.
+    // Font size honoured as set (no auto-shrink). Lines are simply stacked and
+    // the box auto-sizes to the content (no wrap / box_width for now).
     const fontSize = baseFontSize * k_inv
-    const innerW = Math.max(boxW - 2 * padding, fontSize)
-    const fontStr = (this.stock_label_italic ? 'italic ' : '')
-      + (this.stock_label_bold ? 'bold ' : '')
-      + fontSize + 'px ' + this.stock_label_font_family
+    const lineH = fontSize + 3
+    const boxH = lines.length * lineH + padding * 2
 
     const g = this.d3_selection?.append('g').classed('stock_box', true)
     const content = g?.append('g')
 
-    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
-    const anchorX = textAnchor === 'end' ? innerW : textAnchor === 'start' ? 0 : innerW / 2
-
-    // Render each line; long content wraps onto several tspans within innerW.
-    let cursorY = 0
-    lines.forEach((line) => {
-      const processed = breakLongWords(line, boxWpx - 2 * padding, fontStr)
+    let maxW = 0
+    lines.forEach((line, i) => {
       const t = content?.append('text')
-        .attr('x', anchorX)
-        .attr('y', cursorY + fontSize)
-        .attr('text-anchor', textAnchor)
+        .attr('x', 0)
+        .attr('y', padding + (i + 1) * lineH - 2)
+        .attr('text-anchor', 'start')
         .attr('font-size', fontSize)
         .attr('font-family', this.stock_label_font_family)
         .attr('font-weight', this.stock_label_bold ? 'bold' : 'normal')
         .attr('font-style', this.stock_label_italic ? 'italic' : 'normal')
         .style('text-transform', this.stock_label_uppercase ? 'uppercase' : 'none')
         .attr('fill', textColor)
-        .text(processed)
-      if (t && processed.includes(' ')) {
-        t.call(textwrap().bounds({ height: 100000, width: innerW }).method('tspans'))
-        t.selectAll('tspan')
-          .filter(function () {
-            const txt = d3.select(this).text()
-            return !txt || txt.trim() === ''
-          })
-          .remove()
-        const first = t.select('tspan')
-        if (!first.empty()) first.attr('dy', 0)
-      }
-      const h = t?.node()?.getBBox().height ?? fontSize
-      cursorY += h + 3
+        .text(line)
+      const w = t?.node()?.getBBox().width ?? 0
+      if (w > maxW) maxW = w
     })
+    const boxW = maxW + 2 * padding
 
-    const contentH = Math.max(cursorY - 3, fontSize)
-    const boxH = contentH + 2 * padding
-
-    // Compute box position (local coords), same anchoring rules as before.
+    // Box placement relative to the node (horiz / vert), same rules as before.
     let boxX = 0
     if (horiz === 'left') {
       boxX = insideH ? margin : -boxW - margin
@@ -516,7 +493,7 @@ export class Class_NodeElement extends Class_NodeBase {
     }
 
     // Place the text content inside the box, then draw the background BEHIND it.
-    content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + (boxY + padding) + ')')
+    content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + boxY + ')')
     if (this.stock_label_background_visible) {
       g?.insert('rect', ':first-child')
         .attr('x', boxX)
