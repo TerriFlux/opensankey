@@ -149,11 +149,12 @@ export class NodeDrawShape {
     // épaissie au mouseover pour faciliter sa préhension.
     const acts_as_frame = this._node.tied_to_nodes
     const base_thickness = this._node.shape_border_thickness
-    // Hachuré : motif de hachures diagonales appliqué au REMPLISSAGE du nœud
-    // (et non à la bordure). Le motif reprend la couleur du nœud sur fond
-    // transparent, façon flux hachuré.
-    const fill_to_use = this._node.shape_is_dashed
-      ? this.applyHatchPattern(color)
+    // Hachures : motif de traits parallèles appliqué au REMPLISSAGE du nœud
+    // (et non à la bordure), selon l'orientation choisie. Le motif reprend la
+    // couleur du nœud sur fond transparent, façon flux hachuré.
+    const hatch = this._node.shape_hatch
+    const fill_to_use = (hatch && hatch !== 'none')
+      ? this.applyHatchPattern(color, hatch)
       : color
     const sel = this._node.d3_selection_g_shape?.selectAll('.node_shape')
       .attr('id', this._node.id)
@@ -177,14 +178,22 @@ export class NodeDrawShape {
   }
 
   /**
-   * Crée (ou recrée) un motif SVG de hachures diagonales pour ce nœud dans le
-   * conteneur de defs partagé, et renvoie la référence `url(#...)` à utiliser
-   * comme remplissage. Les traits reprennent la couleur du nœud sur fond
-   * transparent (gaps), façon flux hachuré.
+   * Crée (ou recrée) un motif SVG de hachures pour ce nœud dans le conteneur de
+   * defs partagé, et renvoie la référence `url(#...)` à utiliser comme
+   * remplissage. Les traits reprennent la couleur du nœud sur fond transparent
+   * (gaps), façon flux hachuré. L'orientation est obtenue en pivotant un motif
+   * de traits verticaux (la rotation d'un motif périodique reste seamless).
    */
-  private applyHatchPattern(color: string): string {
+  private applyHatchPattern(color: string, orientation: string): string {
     const defs = this._node.drawing_area.d3_selection_def_gradient
     if (!defs) return color
+    const rotation: { [k: string]: number } = {
+      vertical: 0,
+      horizontal: 90,
+      diagonal: 45,
+      antidiagonal: -45
+    }
+    const angle = rotation[orientation] ?? 45
     const pattern_id = 'hatch-' + this._node.id
     defs.select('#def_' + pattern_id).remove()
     const pattern = defs.append('defs')
@@ -194,7 +203,7 @@ export class NodeDrawShape {
       .attr('patternUnits', 'userSpaceOnUse')
       .attr('width', 8)
       .attr('height', 8)
-      .attr('patternTransform', 'rotate(45)')
+      .attr('patternTransform', 'rotate(' + angle + ')')
     pattern.append('line')
       .attr('x1', 0)
       .attr('y1', 0)

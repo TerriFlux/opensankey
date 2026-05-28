@@ -635,6 +635,58 @@ const CapsuleHShapeIcon: React.FC<ShapeIconProps> = ({
   </svg>
 )
 
+// Icônes de hachure : carré contour + traits parallèles selon l'orientation.
+// Utilisées par le sélecteur d'orientation de hachure du nœud.
+interface HatchIconProps {
+  stroke?: string
+  width?: string
+  height?: string
+}
+const HatchVerticalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="5" y1="1.5" x2="5" y2="15.5" />
+    <line x1="8.5" y1="1.5" x2="8.5" y2="15.5" />
+    <line x1="12" y1="1.5" x2="12" y2="15.5" />
+  </svg>
+)
+const HatchHorizontalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="5" x2="15.5" y2="5" />
+    <line x1="1.5" y1="8.5" x2="15.5" y2="8.5" />
+    <line x1="1.5" y1="12" x2="15.5" y2="12" />
+  </svg>
+)
+const HatchDiagonalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="9" x2="9" y2="1.5" />
+    <line x1="1.5" y1="15.5" x2="15.5" y2="1.5" />
+    <line x1="8" y1="15.5" x2="15.5" y2="8" />
+  </svg>
+)
+const HatchAntidiagonalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="8" x2="9" y2="15.5" />
+    <line x1="1.5" y1="1.5" x2="15.5" y2="15.5" />
+    <line x1="8" y1="1.5" x2="15.5" y2="9" />
+  </svg>
+)
+
 // Dans la section "Hand made icon" (après les autres logos)
 
 // Label à l'intérieur horizontal (inside_horiz)
@@ -1456,6 +1508,10 @@ export class Class_IconLibrary {
   protected _icon_ellipse_shape = <EllipseShapeIcon />
   protected _icon_capsule_shape = <CapsuleShapeIcon />
   protected _icon_capsule_h_shape = <CapsuleHShapeIcon />
+  protected _icon_hatch_vertical = <HatchVerticalIcon />
+  protected _icon_hatch_horizontal = <HatchHorizontalIcon />
+  protected _icon_hatch_diagonal = <HatchDiagonalIcon />
+  protected _icon_hatch_antidiagonal = <HatchAntidiagonalIcon />
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
@@ -1789,6 +1845,10 @@ export class Class_IconLibrary {
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+  public get icon_hatch_vertical() { return this.normalizeIcon(this._icon_hatch_vertical) }
+  public get icon_hatch_horizontal() { return this.normalizeIcon(this._icon_hatch_horizontal) }
+  public get icon_hatch_diagonal() { return this.normalizeIcon(this._icon_hatch_diagonal) }
+  public get icon_hatch_antidiagonal() { return this.normalizeIcon(this._icon_hatch_antidiagonal) }
   public get icon_capsule_h_shape() { return this.normalizeIcon(this._icon_capsule_h_shape) }
   public get icon_verticalize_diagram() { return this.normalizeIcon(this._icon_verticalize_diagram) }
   public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }
