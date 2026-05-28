@@ -147,6 +147,7 @@ export const LabelDisplayModeSelector = ({
 }) => {
   const setModeSimpleText = () => {
     labelValues.has_fo = false
+    labelValues.is_value = false
     display_mode_name_label.current = 'simple_text'
     refreshAll()
   }
@@ -161,6 +162,7 @@ export const LabelDisplayModeSelector = ({
       })
     }
     labelValues.has_fo = true
+    labelValues.is_value = false
     app_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(true)
     //@ts-expect-error xxx
     app_data.menu_configuration.r_editor_content_set_elements.current(elements, 'name_label')
@@ -170,6 +172,7 @@ export const LabelDisplayModeSelector = ({
 
   const setModeValue = () => {
     labelValues.has_fo = false
+    labelValues.is_value = true
     display_mode_name_label.current = 'value'
     refreshAll()
   }
@@ -1171,6 +1174,15 @@ export const MenuConfigurationAppearance = ({
     ? getElementsNameLabelValues(nodes_elements, 'name_label', refreshAll)
     : Object.fromEntries(Object.entries(NAME_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
 
+  // Synchronise le bouton de mode actif (Texte / Rich Text / Value) avec l'état
+  // réel de l'élément sélectionné (nœud ou lien) : la ref est sinon figée à
+  // 'simple_text'. has_fo => rich text, is_value => value, sinon texte simple.
+  if (allElements.length > 0) {
+    display_mode_name_label.current = nameLabelValues.has_fo
+      ? 'rich_text'
+      : (nameLabelValues.is_value ? 'value' : 'simple_text')
+  }
+
   const valueLabelValues = allElements.length > 0
     ? getElementsLabelValues(elements, 'value_label', refreshAll)
     : Object.fromEntries(Object.entries(VALUE_LABEL_CONFIG).map(([key, value]) => [key, value.default]))
@@ -1662,7 +1674,22 @@ export const MenuConfigurationAppearance = ({
                                   {t('Flux.apparence.shape_is_arrow_reversed')}
                                 </OverloadedCheckbox>
                               </Box>
-                            )}</Box>
+                            )}
+                            <Box layerStyle='menuconfigpanel_row_2cols'>
+                              <OverloadedCheckbox
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                prefix={'shape'}
+                                attributeKey="is_dashed"
+                                isChecked={linkShapeValues.is_dashed}
+                                onChange={(checked) => { linkShapeValues.is_dashed = checked }}
+                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed')}
+                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_dashed')}`)}
+                                t={t}
+                              >
+                                {t('Flux.apparence.shape_is_dashed')}
+                              </OverloadedCheckbox>
+                            </Box></Box>
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations
@@ -2226,6 +2253,11 @@ export const MenuShapeAttributes = ({
       -readonly [K in keyof typeof config]: ReturnType<(typeof config)[K]['type']>
     }
 
+  // Attributs spécifiques aux nœuds (corps du nœud uniquement, pas les fonds de label)
+  const nodeShapeValues = (prefix === 'shape' && elements.length > 0)
+    ? getNodeShapeValues(elements, refreshUI)
+    : null
+
   return (
     <>
       <Box layerStyle='menuconfigpanel_grid'>
@@ -2345,7 +2377,23 @@ export const MenuShapeAttributes = ({
               {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
             </OverloadedCheckbox>
           </Box>
-          <Box />
+          {(prefix === 'shape' && nodeShapeValues) ? (
+            <Box as='span' layerStyle='options_2cols'>
+              <OverloadedCheckbox
+                elements={elements}
+                config={NODE_SHAPE_SPECIFIC_CONFIG}
+                prefix={prefix}
+                attributeKey="is_dashed"
+                isChecked={nodeShapeValues.is_dashed}
+                onChange={(checked) => { nodeShapeValues.is_dashed = checked }}
+                getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'is_dashed')}
+                tooltipLabel={t(`${attributePath}.tooltips.${getNodeShapeAttributeKey('shape', 'is_dashed')}`)}
+                t={t}
+              >
+                {t(`${attributePath}.${getNodeShapeAttributeKey('shape', 'is_dashed')}`)}
+              </OverloadedCheckbox>
+            </Box>
+          ) : <Box />}
         </Box>
 
         {/* Largeur du fond :
