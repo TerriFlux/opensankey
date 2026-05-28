@@ -2057,7 +2057,20 @@ export const MenuConfigurationAppearance = ({
             </MenuSectionCheckbox>
 
             {/* Stock section under value, same level with eye checkbox */}
-            {app_data.has_sankey_dev && selection.hasNodes && selection.nodes.some(n => n.has_stock) && (
+            {app_data.has_sankey_dev && selection.hasNodes && selection.nodes.some(n => n.has_stock) && (<>
+              {/* SA#1229: visibility of the node-like stock shape, independent
+                  of the legacy stock box label (stock_label_is_visible). */}
+              <Checkbox
+                isChecked={selection.nodes.find(n => n.has_stock)?.stock_shape_is_visible ?? false}
+                onChange={(e) => {
+                  selection.nodes.forEach(n => {
+                    if (n.has_stock) { n.stock_shape_is_visible = e.target.checked; n.draw() }
+                  })
+                  refreshAll()
+                }}
+              >
+                {'Afficher la forme de stock'}
+              </Checkbox>
               <MenuSectionCheckbox
                 elements={elements}
                 attributePath='Noeud.labels'
@@ -2074,7 +2087,7 @@ export const MenuConfigurationAppearance = ({
                   />
                 )}
               </MenuSectionCheckbox>
-            )}
+            </>)}
           </>)}
 
           {activeTab === 'icon' && app_data.has_sankey_plus && (
