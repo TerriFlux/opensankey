@@ -206,6 +206,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
     type typeDictTag = {
       id: string,
       name: string,
+      long_name: string,
       elementsRef: string[],
       grp: (Class_TagGroup | Class_LevelTagGroup | Class_DataTagGroup),
       color: string,
@@ -217,6 +218,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       = {
         id: tag.id,
         name: tag.name,
+        long_name: tag.long_name,
         elementsRef: dict_ref_element,
         grp: tag.group,
         color: tag.color,
@@ -260,6 +262,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       const clone_tag = grp.addTag(old_val.name, old_val.id)
       clone_tag.setReferenceFromIds(old_val.elementsRef)
       clone_tag.color = old_val.color
+      clone_tag.long_name = old_val.long_name
       updateThisAndRelatedComponents()
     }
 
@@ -289,7 +292,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
       name: string,
       activated: boolean,
       banner: tag_banner_type,
-      dict_tag: { [x: string]: [id: string, name: string, color: string, elementsRef: string[]] }
+      dict_tag: { [x: string]: [id: string, name: string, color: string, elementsRef: string[], long_name: string] }
       dict_link_value: { [_: string]: { [_: string]: [Class_ElementValue, Class_DataTag[] | undefined]; } }
     }
 
@@ -300,7 +303,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         name: tagg.name,
         activated: tagg.use_colors,
         banner: tagg.banner,
-        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id)]])),
+        dict_tag: Object.fromEntries(tagg.tags_list.map(tag => [tag.id, [tag.id, tag.name, tag.color, tag.references.map(el => el.id), tag.long_name]])),
         dict_link_value: {}
       }
 
@@ -343,6 +346,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
         const n_tag = clone_tagg.addTag(tag[1], tag[0])
         n_tag.setReferenceFromIds(tag[3])
         n_tag.color = tag[2]
+        n_tag.long_name = tag[4]
       })
       clone_tagg.banner = old_val.banner
       clone_tagg.use_colors = old_val.activated
@@ -680,9 +684,13 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                   </OSTooltip>
                 </Box>
               </Th>
-              {/* Nom de l'étqiuette  */}
+              {/* Nom de l'étqiuette (nom court = id) */}
               <Th>
                 {t('Tags.Nom')}
+              </Th>
+              {/* Nom long de l'étiquette (affiché sur le diagramme) */}
+              <Th>
+                {t('Tags.NomLong')}
               </Th>
               {showTagPositionMode ?
                 <Th>{t('Tags.Position')}</Th>
@@ -722,8 +730,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                           </Button>
                         </OSTooltip>
                       </Td>
-                      {/* Renommer l'étiquette  */}
-                      {/* Met une largeur de cellue plus petite quand c'est les étiquettes de noeud car le tableau contient une colonne de plsu (forme) */}
+                      {/* Renommer l'étiquette (nom court = id) */}
                       <Td >
                         <OSTooltip label={t('Tags.tooltips.nom')}>
                           <InputGroup variant='menuconfigpanel_option_input_table' >
@@ -743,6 +750,27 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                               } />
 
 
+                          </InputGroup>
+                        </OSTooltip>
+                      </Td>
+                      {/* Renommer le nom long de l'étiquette (affiché sur le diagramme) */}
+                      <Td >
+                        <OSTooltip label={t('Tags.tooltips.nomLong')}>
+                          <InputGroup variant='menuconfigpanel_option_input_table' >
+                            <Input
+                              variant='menuconfigpanel_option_input_table'
+                              id={tag.id + '_long'}
+                              type="text"
+                              value={tag.long_name}
+                              placeholder={tag.name}
+                              onChange={
+                                (evt: React.ChangeEvent) => {
+                                  // Change tag long name (display name on the diagram)
+                                  tag.long_name = (evt.target as HTMLInputElement).value
+                                  // Update all related menus
+                                  updateThisAndRelatedComponents()
+                                }
+                              } />
                           </InputGroup>
                         </OSTooltip>
                       </Td>
