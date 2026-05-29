@@ -134,7 +134,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
   return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
     <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
       <Button
-        variant={mode === 'absolute' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={mode === 'absolute' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
           if (mode !== 'absolute') { drawing_area.setAbsoluteMode(); updateParentComponent() }
@@ -144,7 +144,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
     </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.posMode_proportional')}>
       <Button
-        variant={mode === 'proportional' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={mode === 'proportional' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
           if (mode !== 'proportional') { drawing_area.setProportionalMode(); updateParentComponent() }
@@ -154,7 +154,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
     </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.posMode_scale_adapted')}>
       <Button
-        variant={mode === 'scale_adapted' ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={mode === 'scale_adapted' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
           if (mode !== 'scale_adapted') { drawing_area.setScaleAdaptedMode(); updateParentComponent() }

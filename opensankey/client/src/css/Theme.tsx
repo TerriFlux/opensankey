@@ -330,6 +330,29 @@ export const buttonStyles = {
     _active: { bgColor: 'secondaire.1', borderColor: 'secondaire.1', border: 'none' },
   }),
 
+  // Boutons de mode de POSITION (absolu / proportionnel / échelle) = navigation/vue.
+  // Vert (primaire.3) pour les distinguer des boutons de mode souris (édition, orange).
+  toolbar_button_position_mode: defineStyle({
+    bgColor: 'primaire.3',
+    border: 'none',
+    color: 'white',
+    zIndex: 0,
+    _hover: { bgColor: 'tertiaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', border: 'none' },
+  }),
+
+  toolbar_button_position_mode_activated: defineStyle({
+    bgColor: 'secondaire.3',
+    border: 'none',
+    outline: '2px solid',
+    outlineColor: 'secondaire.3',
+    outlineOffset: '-1px',
+    color: 'white',
+    zIndex: 1,
+    _hover: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+  }),
+
   // Menu top button
   menutop_button: defineStyle({
     textStyle: 'h4',
