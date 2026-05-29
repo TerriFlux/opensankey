@@ -378,7 +378,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
               .attr('x', this._legend_police + 5)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
-              .text(tag.name)
+              .text(tag.display_name)
               .call(this._wrapper)
 
             this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
@@ -394,7 +394,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
           .attr('transform', 'translate(0,' + this._dy + ' )')
           .attr('x', 0)
           .attr('y', 0)
-          .text((tag_group[1].name + ' : ' + tag_group[1].selected_tags_list.map(t => t.name).join(', ')))
+          .text((tag_group[1].name + ' : ' + tag_group[1].selected_tags_list.map(t => t.display_name).join(', ')))
           .attr('style', ('font-size:' + this._legend_police + 'px;'))
           .call(this._wrapper)
         this._dy += ((this.d3_selection?.select('#leg_dataTag_' + tag_group[0]).selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
