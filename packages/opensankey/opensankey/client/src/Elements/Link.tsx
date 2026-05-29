@@ -323,6 +323,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._values.delete()
   }
 
+  // Anchor deltas are plain instance fields (not _storage attributes), so the
+  // generic copyAttrFrom would drop them — carry them explicitly so view sync
+  // (UpdateFrom) and full copies keep the per-anchor gaps.
+  public copyAttrFrom(_: Class_LinkElement): void {
+    super.copyAttrFrom(_)
+    this.source_anchor_delta = _.source_anchor_delta
+    this.target_anchor_delta = _.target_anchor_delta
+  }
+
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
   public copyFrom(_: Class_LinkElement) {
     super.copyFrom(_)
