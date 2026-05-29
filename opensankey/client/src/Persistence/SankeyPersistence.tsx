@@ -32,11 +32,10 @@ import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
   default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure,
   default_paper_format, default_paper_orientation, default_margin_mm,
-  default_title_source,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
-import { Class_ContainerElement, Type_TitleSource } from '../Elements/TextZone'
+import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
@@ -295,8 +294,6 @@ export class ContainerPersistence extends NodeBasePersistence {
     // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
     if (container.is_title) {
       json_object['is_title'] = true
-      json_object['title_source'] = container.title_source
-      json_object['datatag_group_id'] = container.datatag_group_id
     }
 
     return json_object
@@ -387,8 +384,6 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.fromJSON(version, container, json_object, kwargs)
 
     container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
-    container['_title_source'] = getStringFromJSON(json_object, 'title_source', default_title_source) as Type_TitleSource
-    container['_datatag_group_id'] = getStringFromJSON(json_object, 'datatag_group_id', '')
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {

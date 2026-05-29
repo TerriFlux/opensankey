@@ -795,9 +795,10 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
   }
 
   const data_taggs = sankey.data_taggs_list
+  const [token_group_id, setTokenGroupId] = useState('')
 
-  // La visibilité du titre est pilotée ici. Le reste (texte, police, couleur,
-  // position) s'édite via l'interface normale des zones de texte.
+  // La visibilité du titre est pilotée ici. Le texte (statique + jetons) et le
+  // reste du style s'éditent via l'interface normale des zones de texte.
   const eventTitleShown = (evt: React.ChangeEvent<HTMLInputElement>) => {
     if (evt.target.checked) {
       sankey.getOrCreateTitleContainer().setVisible()
@@ -808,15 +809,15 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
     refreshThisAndUpdateRelatedComponents()
   }
 
-  const eventTitleSource = (source: 'custom' | 'datatag') => {
+  // Insère le jeton {NomDuGroupe} à la fin du texte du titre. Au rendu, il est
+  // remplacé par la valeur sélectionnée du data tag (combine statique + data tag).
+  const eventInsertToken = () => {
+    const grp = data_taggs.find(g => g.id === token_group_id)
+    if (!grp) return
     const c = sankey.getOrCreateTitleContainer()
-    c.title_source = source
-    refreshThisAndUpdateRelatedComponents()
-  }
-
-  const eventTitleDataTagGroup = (evt: React.ChangeEvent<HTMLSelectElement>) => {
-    const c = sankey.getOrCreateTitleContainer()
-    c.datatag_group_id = evt.target.value
+    const token = '{' + grp.name + '}'
+    c.name = c.name ? c.name + ' ' + token : token
+    app_data.drawing_area.draw()
     refreshThisAndUpdateRelatedComponents()
   }
 
@@ -836,39 +837,33 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
       layerStyle='menuconfigpanel_grid'
       style={{ display: (is_shown ? '' : 'none') }}
     >
-      {/* Source du titre : texte personnalisé ou data tag */}
-      <Box as='span' layerStyle='options_2cols'>
-        <Button
-          variant={title?.title_source !== 'datatag' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventTitleSource('custom')}
-        >
-          {t('Menu.TitleCustom')}
-        </Button>
-        <Button
-          variant={title?.title_source === 'datatag' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventTitleSource('datatag')}
-        >
-          {t('Menu.TitleFromDataTag')}
-        </Button>
+      {/* Édition du texte via l'interface ZDT */}
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.TitleEditHint')}
       </Box>
 
-      {/* En mode data tag : choix du groupe. En mode custom : édition via l'interface ZDT. */}
-      {title?.title_source === 'datatag' ?
-        <OSTooltip label={t('Menu.tooltips.TitleGroupSelect')}>
-          <Select
-            size='sm'
-            value={title?.datatag_group_id ?? ''}
-            onChange={eventTitleDataTagGroup}
+      {/* Insertion d'un jeton data tag (combine statique + data tag) */}
+      {data_taggs.length > 0 &&
+        <Box as='span' layerStyle='options_2cols'>
+          <OSTooltip label={t('Menu.tooltips.TitleGroupSelect')}>
+            <Select
+              size='sm'
+              value={token_group_id}
+              onChange={(evt) => setTokenGroupId(evt.target.value)}
+            >
+              <option value=''>{t('Menu.TitleSelectGroup')}</option>
+              {data_taggs.map(tagg => (
+                <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
+          <Button
+            variant='menuconfigpanel_option_button'
+            isDisabled={token_group_id === ''}
+            onClick={eventInsertToken}
           >
-            <option value=''>{t('Menu.TitleSelectGroup')}</option>
-            {data_taggs.map(tagg => (
-              <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
-            ))}
-          </Select>
-        </OSTooltip>
-        :
-        <Box layerStyle='menuconfigpanel_option_name'>
-          {t('Menu.TitleEditHint')}
+            {t('Menu.TitleInsertToken')}
+          </Button>
         </Box>
       }
     </Box>
