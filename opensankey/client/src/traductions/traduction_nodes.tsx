@@ -150,6 +150,7 @@ export const resources_nodes = {
           name_label_text: 'Custom label',
           text_source: {
             name: 'Node name',
+            name_container: 'Element name',
             custom: 'Custom text',
           },
 
@@ -386,6 +387,7 @@ export const resources_nodes = {
           name_label_text: 'Label personnalisé',
           text_source: {
             name: 'Nom du nœud',
+            name_container: 'Nom de l\'élément',
             custom: 'Texte personnalisé',
           },
           tooltips: {
@@ -619,6 +621,7 @@ export const resources_nodes = {
           name_label_text: 'Etiqueta personalizada',
           text_source: {
             name: 'Nombre del nodo',
+            name_container: 'Nombre del elemento',
             custom: 'Texto personalizado',
           },
           tooltips: {
@@ -854,6 +857,7 @@ export const resources_nodes = {
           name_label_text: 'Benutzerdefinierte Beschriftung',
           text_source: {
             name: 'Knotenname',
+            name_container: 'Elementname',
             custom: 'Benutzerdefinierter Text',
           },
           tooltips: {
@@ -1089,6 +1093,7 @@ export const resources_nodes = {
           name_label_text: 'Etichetta personalizzata',
           text_source: {
             name: 'Nome del nodo',
+            name_container: 'Nome dell\'elemento',
             custom: 'Testo personalizzato',
           },
           tooltips: {
