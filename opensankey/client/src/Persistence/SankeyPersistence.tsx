@@ -32,8 +32,6 @@ import {
   ALL_ATTRIBUTES_CONFIG, default_background_color, default_grid_color, default_grid_size, default_grid_visible, default_legend_bg_color,
   default_legend_bg_opacity, default_legend_police, default_scale, default_width, initial_show_structure,
   default_paper_format, default_paper_orientation, default_margin_mm,
-  default_title_masked, default_title_source, default_title_font_size, default_title_bold,
-  default_title_color, default_title_stick_to_drawing,
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
@@ -44,7 +42,6 @@ import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttri
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { ClassTemplate_DrawingTitle, Type_TitleSource } from '../Elements/Title'
 import { Class_Sankey } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
@@ -294,6 +291,10 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.toJSON(container, json_object, kwargs)
     json_object['tiedToNode'] = container.tied_to_nodes
     json_object['attachedNodes'] = container.attached_node.map(n => n.id)
+    // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
+    if (container.is_title) {
+      json_object['is_title'] = true
+    }
 
     return json_object
   }
@@ -381,6 +382,8 @@ export class ContainerPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ): void {
     super.fromJSON(version, container, json_object, kwargs)
+
+    container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {
@@ -1095,49 +1098,6 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (!legend.stick_to_drawing) {
       legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legacy_legend', legend.stick_to_drawing)
     }
-  }
-}
-
-export class TitlePersistence extends ProtoElementPersistence {
-
-  public static toJSON(
-    title: ClassTemplate_DrawingTitle,
-    json_object: Type_JSON
-  ) {
-    json_object['title'] = {}
-    const json_title = json_object['title'] as Type_JSON
-    ProtoElementPersistence.toJSON(title, json_title)
-    // Additif et rétrocompatible : on n'écrit que les valeurs non-défaut.
-    if (title.masked !== default_title_masked) json_title['masked'] = title.masked
-    if (title.title_source !== default_title_source) json_title['source'] = title.title_source
-    if (title.custom_text !== '') json_title['custom_text'] = title.custom_text
-    if (title.datatag_group_id !== '') json_title['datatag_group_id'] = title.datatag_group_id
-    if (title.title_font_size !== default_title_font_size) json_title['font_size'] = title.title_font_size
-    if (title.bold !== default_title_bold) json_title['bold'] = title.bold
-    if (title.title_color !== default_title_color) json_title['color'] = title.title_color
-    if (title.stick_to_drawing !== default_title_stick_to_drawing) json_title['stick_to_drawing'] = title.stick_to_drawing
-    if (!title.auto_center) json_title['auto_center'] = title.auto_center
-    return json_object
-  }
-
-  public static fromJSON(
-    version: number,
-    title: ClassTemplate_DrawingTitle,
-    json_object: Type_JSON,
-    kwargs?: Type_JSON
-  ): void {
-    const json_title = getJSONOrUndefinedFromJSON(json_object, 'title')
-    if (!json_title) return
-    ProtoElementPersistence.fromJSON(version, title, json_title, kwargs)
-    title['_masked'] = getBooleanFromJSON(json_title, 'masked', default_title_masked)
-    title['_title_source'] = getStringFromJSON(json_title, 'source', default_title_source) as Type_TitleSource
-    title['_custom_text'] = getStringFromJSON(json_title, 'custom_text', '')
-    title['_datatag_group_id'] = getStringFromJSON(json_title, 'datatag_group_id', '')
-    title['_font_size'] = getNumberFromJSON(json_title, 'font_size', default_title_font_size)
-    title['_bold'] = getBooleanFromJSON(json_title, 'bold', default_title_bold)
-    title['_color'] = getStringFromJSON(json_title, 'color', default_title_color)
-    title['_stick_to_drawing'] = getBooleanFromJSON(json_title, 'stick_to_drawing', default_title_stick_to_drawing)
-    title['_auto_center'] = getBooleanFromJSON(json_title, 'auto_center', true)
   }
 }
 
@@ -1925,7 +1885,6 @@ export class DrawingAreaPersistence {
     const out = {
       ...json_object,
       ...LegendPersistence.toJSON(drawing_area.legend, json_object),
-      ...TitlePersistence.toJSON(drawing_area.title, json_object),
       ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
     }
 
@@ -2253,7 +2212,6 @@ export class DrawingAreaPersistence {
     }
 
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
-    TitlePersistence.fromJSON(+version!, drawing_area.title, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
 
     //drawing_area['_list_g_element_id'] = getStringListFromJSON(json_object, 'order_g_elements', drawing_area.list_g_element)

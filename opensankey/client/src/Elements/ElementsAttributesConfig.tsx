@@ -135,13 +135,12 @@ export const default_width = 180
 export const default_info_link_value_void = false
 export const default_legend_position_x = 300
 export const default_legend_position_y = 50
-// Titre du diagramme (cf. ClassTemplate_DrawingTitle)
-export const default_title_masked = true
+// Titre du diagramme : zone de texte (Class_ContainerElement) marquée is_title.
 export const default_title_source = 'custom'
 export const default_title_font_size = 24
 export const default_title_bold = true
-export const default_title_color = '#000000'
-export const default_title_stick_to_drawing = true
+export const default_title_text = 'Titre'
+export const default_title_id = 'drawing_title'
 export const initial_show_structure = 'free_value'
 export const default_grid_size = 50
 export const default_grid_visible = true

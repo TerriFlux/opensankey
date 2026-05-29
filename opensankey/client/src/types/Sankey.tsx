@@ -41,7 +41,7 @@ import {
   default_style_name,
 } from '../types/Utils'
 import { sortNodesElements } from '../Elements/NodeBase'
-import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, default_title_id, default_title_text } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
@@ -426,6 +426,49 @@ export class Class_Sankey {
     const id = 'shape' + n
     const name = 'Forme ' + n
     return this.addNewContainer(id, name)
+  }
+
+  /**
+   * Retourne la zone de texte marquée comme titre du diagramme (ou undefined).
+   */
+  public getTitleContainer(): Class_ContainerElement | undefined {
+    return this.containers_list.find(c => c.is_title)
+  }
+
+  /**
+   * Retourne le container titre, en le créant s'il n'existe pas. À la création :
+   * gras, plus gros, centré, sans cadre, positionné en haut et centré sur le
+   * contenu. C'est une zone de texte normale, éditable via l'interface ZDT.
+   */
+  public getOrCreateTitleContainer(): Class_ContainerElement {
+    const existing = this.getTitleContainer()
+    if (existing) return existing
+    const title = this.addNewContainer(default_title_id, default_title_text)
+    title.is_title = true
+    title.name_label_bold = true
+    title.name_label_font_size = default_title_font_size
+    title.name_label_horiz = 'middle'
+    title.shape_border_visible = false
+    title.shape_color_visible = false
+    const pos = this._computeTitleTopCenter(title.getShapeWidthToUse())
+    title.setPosXY(pos.x, pos.y)
+    return title
+  }
+
+  /**
+   * Position par défaut du titre : centré horizontalement sur la bbox logique
+   * des nœuds visibles, juste au-dessus.
+   */
+  private _computeTitleTopCenter(title_width: number): { x: number, y: number } {
+    const nodes = this.visible_nodes_list
+    if (nodes.length === 0) return { x: 0, y: 0 }
+    let min_x = Infinity, max_x = -Infinity, min_y = Infinity
+    nodes.forEach(n => {
+      min_x = Math.min(min_x, n.position_x)
+      max_x = Math.max(max_x, n.position_x + n.getShapeWidthToUse())
+      min_y = Math.min(min_y, n.position_y)
+    })
+    return { x: (min_x + max_x) / 2 - title_width / 2, y: min_y - 60 }
   }
 
   public addNewNodeWithName(name: string): Class_NodeElement {
