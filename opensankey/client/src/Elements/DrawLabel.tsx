@@ -2168,10 +2168,13 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return '.link_value_text'
   }
 
-  // Côté liens, le name_label est positionné par rapport au flux : on ne le
-  // recale pas verticalement, la valeur se contente d'y coller.
+  // Côté liens, le name_label est positionné par rapport au flux (bord haut/bas
+  // de l'épaisseur) : on ne le recale pas verticalement en top/bottom, la valeur
+  // se contente d'y coller. En revanche, quand le nom est centré sur le flux
+  // (vert='middle'), on recale le bloc combiné nom+valeur pour qu'il soit centré
+  // sur le flux, pas seulement le nom.
   protected override stickRecentersVertically(): boolean {
-    return false
+    return this._label_values.vert === 'middle'
   }
 
   protected getTextPathSelector(): string {
