@@ -30,7 +30,7 @@ import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
   faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush,
-  faLock, faLockOpen
+  faLock, faLockOpen, faFont
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -1556,8 +1556,10 @@ export class Class_IconLibrary {
   protected _icon_area_fit_vert = <FontAwesomeIcon icon={faArrowsUpDown} />
   protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
 
-  protected _icon_font_size_locked = <FontAwesomeIcon icon={faLock} />
-  protected _icon_font_size_unlocked = <FontAwesomeIcon icon={faLockOpen} />
+  protected _icon_font_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
+  protected _icon_font_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
+  protected _icon_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faArrowsUpDown} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
+  protected _icon_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faArrowsUpDown} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
 
   protected _icon_config_spreadsheet = <FontAwesomeIcon icon={faTable} />
   protected _icon_config_menu = <FontAwesomeIcon icon={faSliders} />
@@ -1740,6 +1742,8 @@ export class Class_IconLibrary {
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
   public get icon_font_size_locked() { return this._icon_font_size_locked }
   public get icon_font_size_unlocked() { return this._icon_font_size_unlocked }
+  public get icon_size_locked() { return this._icon_size_locked }
+  public get icon_size_unlocked() { return this._icon_size_unlocked }
   public get icon_config_spreadsheet() { return this._icon_config_spreadsheet }
   public get icon_config_menu() { return this._icon_config_menu }
 
