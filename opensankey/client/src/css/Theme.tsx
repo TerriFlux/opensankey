@@ -3003,11 +3003,13 @@ const layerStyles = {
   box_sequence: {
     display: 'grid',
     gridTemplateColumns: '0.5fr 11fr',
-    margin: '0.2rem'
+    alignItems: 'center',
+    margin: '0.1rem 0.2rem'
   },
   box_stepper: {
     marginLeft: '16px',
     marginRight: '16px',
+    lineHeight: '1',
   },
   drawerFilterBox: {
     display: 'grid',
@@ -3216,7 +3218,9 @@ export const opensankey_theme = extendTheme({
           indicator: {
           },
           title: {
-            fontSize: '0.8rem'
+            fontSize: '0.7rem',
+            lineHeight: '1.1',
+            marginTop: '0.1rem'
           }
         })
       }
