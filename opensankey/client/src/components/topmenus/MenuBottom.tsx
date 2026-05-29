@@ -340,7 +340,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
 
 // Compoenent returing a stepper of a dataTagg where each step is a tag of the group with visual indication to which tag is selected
 const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationData, DataGroup: Class_DataTagGroup }) => {
-  const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.name, selected: tag.is_selected, id: idx } })
+  const stepper_sequence = DataGroup.tags_list.map((tag, idx) => { return { id_tag: tag.id, title: tag.display_name, selected: tag.is_selected, id: idx } })
   const selected_id = stepper_sequence.find(el => el.selected)?.id ?? -1
   const { activeStep, setActiveStep } = useSteps({
     index: selected_id,

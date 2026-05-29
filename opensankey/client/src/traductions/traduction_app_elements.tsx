@@ -359,6 +359,7 @@ export const resources_app_elements = {
 
       Tags: {
         Nom: 'Name',
+        NomLong: 'Long name',
         Leg: 'Legend',
         tags: 'Tags',
         Bannière: 'Type',
@@ -383,6 +384,7 @@ export const resources_app_elements = {
           rm: 'Delete the tag',
           rm_grp: 'Delete this tag group',
           nom: 'Rename the current tag',
+          nomLong: 'Long name displayed on the diagram (legend, banner). If empty, the short name is used.',
           nom_grp: 'Rename this tag group',
           leg_grp: 'Activate or not the legend on the filtering of this group of tags and therefore the colors associated with the tags of this group',
           visible: 'Choose to make visible or not the nodes associated with this tag',
@@ -871,6 +873,7 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nom',
+        NomLong: 'Nom long',
         Leg: 'Légende',
         tags: 'Étiquette',
         Bannière: 'Type',
@@ -899,6 +902,7 @@ export const resources_app_elements = {
           rm: 'Supprimer l\'étiquette',
           rm_grp: 'Supprimer ce groupe d\'étiquette',
           nom: 'Renommer l\'étiquette courante',
+          nomLong: 'Nom long affiché sur le diagramme (légende, bandeau). Si vide, le nom court est utilisé.',
           nom_grp: 'Renommer ce groupe d\'étiquette',
           leg_grp: ' Active ou non la légende sur le filtrage de ce groupe d\'étiquettes et donc les couleurs associées aux étiquettes de ce groupe',
           visible: 'Choisir de rendre visible ou non les noeuds associés à cette étiquette',
@@ -1382,6 +1386,7 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nombre',
+        NomLong: 'Nombre largo',
         Leg: 'Leyenda',
         tags: 'Etiqueta',
         Bannière: 'Tipo',
@@ -1409,6 +1414,7 @@ export const resources_app_elements = {
           rm: 'Eliminar la etiqueta',
           rm_grp: 'Eliminar este grupo de etiquetas',
           nom: 'Renombrar la etiqueta actual',
+          nomLong: 'Nombre largo mostrado en el diagrama (leyenda, banner). Si está vacío, se usa el nombre corto.',
           nom_grp: 'Renombrar este grupo de etiquetas',
           leg_grp: 'Activar o no la leyenda en el filtrado de este grupo de etiquetas y por tanto los colores asociados a las etiquetas de este grupo',
           visible: 'Elegir hacer visibles o no los nodos asociados a esta etiqueta',
@@ -1893,6 +1899,7 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Name',
+        NomLong: 'Langer Name',
         Leg: 'Legende',
         tags: 'Beschriftung',
         Bannière: 'Typ',
@@ -1920,6 +1927,7 @@ export const resources_app_elements = {
           rm: 'Beschriftung löschen',
           rm_grp: 'Diese Beschriftungsgruppe löschen',
           nom: 'Aktuelle Beschriftung umbenennen',
+          nomLong: 'Langer Name, der im Diagramm angezeigt wird (Legende, Banner). Wenn leer, wird der kurze Name verwendet.',
           nom_grp: 'Diese Beschriftungsgruppe umbenennen',
           leg_grp: 'Legende für die Filterung dieser Beschriftungsgruppe aktivieren/deaktivieren und damit die zugehörigen Farben',
           visible: 'Sichtbarkeit der mit dieser Beschriftung verknüpften Knoten wählen',
@@ -2404,6 +2412,7 @@ export const resources_app_elements = {
       },
       Tags: {
         Nom: 'Nome',
+        NomLong: 'Nome lungo',
         Leg: 'Legenda',
         tags: 'Etichetta',
         Bannière: 'Tipo',
@@ -2431,6 +2440,7 @@ export const resources_app_elements = {
           rm: 'Eliminare l\'etichetta',
           rm_grp: 'Eliminare questo gruppo di etichette',
           nom: 'Rinominare l\'etichetta corrente',
+          nomLong: 'Nome lungo visualizzato sul diagramma (legenda, banner). Se vuoto, viene usato il nome corto.',
           nom_grp: 'Rinominare questo gruppo di etichette',
           leg_grp: 'Attivare o meno la legenda sul filtraggio di questo gruppo di etichette e quindi i colori associati alle etichette di questo gruppo',
           visible: 'Scegliere di rendere visibili o meno i nodi associati a questa etichetta',
