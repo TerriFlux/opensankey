@@ -56,8 +56,11 @@ export abstract class Class_ProtoTag {
   // Unique ID
   private _id: string
 
-  // Name
+  // Name (short name - used as label in config menus & selectors)
   private _name: string
+
+  // Long name (used for display on the diagram - falls back to _name if empty)
+  private _long_name: string = ''
 
   // Color of tag
   private _color: string = default_grey_color
@@ -138,6 +141,7 @@ export abstract class Class_ProtoTag {
    */
   protected _copyFrom(tag_to_copy: Class_ProtoTag) {
     this._name = tag_to_copy._name
+    this._long_name = tag_to_copy._long_name
     this._color = tag_to_copy._color
     this._is_selected = tag_to_copy._is_selected
     // Groups are switched from related group class
@@ -172,6 +176,7 @@ export abstract class Class_ProtoTag {
     _kwargs?: Type_JSON
   ) {
     json_object['name'] = this._name
+    json_object['long_name'] = this._long_name
     json_object['selected'] = this._is_selected
     json_object['color'] = this._color
   }
@@ -203,6 +208,7 @@ export abstract class Class_ProtoTag {
     _kwargs?: Type_JSON
   ): void {
     this._name = getStringFromJSON(json_object, 'name', this._name)
+    this._long_name = getStringFromJSON(json_object, 'long_name', this._long_name)
     this._is_selected = getBooleanFromJSON(json_object, 'selected', true)
     this._color = getStringFromJSON(json_object, 'color', this._color)
   }
@@ -256,6 +262,20 @@ export abstract class Class_ProtoTag {
 
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
+
+  // Long name - used for display on the diagram, falls back to short name if empty
+  public get long_name() { return this._long_name }
+  public set long_name(value: string) {
+    // Avoid useless updates
+    if (this._long_name !== value) {
+      this._long_name = value
+      // Redraw all related elements (legend, banner, ...)
+      this.update()
+    }
+  }
+
+  // Name to display on the diagram : long name if defined, else short name
+  public get display_name() { return this._long_name !== '' ? this._long_name : this._name }
 
   public get color() { return this._color }
   public set color(value: string) {
