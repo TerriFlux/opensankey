@@ -45,7 +45,7 @@ import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
-import { DrawingAreaConfig, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
@@ -419,6 +419,7 @@ const ConfigContent = ({ app_data, additional_menus }:
       legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
           <LegendConfig app_data={app_data} />
+          <TitleConfig app_data={app_data} />
         </>
       </WrapperContentConfig>,
       element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
