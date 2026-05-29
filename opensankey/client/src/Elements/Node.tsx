@@ -247,6 +247,15 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeTagsManager.copyTagsFrom(_)
   }
 
+  // Stock-driven height fields are plain instance fields (not _storage
+  // attributes), so the generic copyAttrFrom would drop them — carry them
+  // explicitly so view sync (UpdateFrom) and full copies keep them.
+  public copyAttrFrom(_: Class_NodeElement): void {
+    super.copyAttrFrom(_)
+    this.use_stock_for_height = _.use_stock_for_height
+    this.stock_height_scale_factor = _.stock_height_scale_factor
+  }
+
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
     // Vraie copie : on efface d'abord les dimensions actuelles du nœud
     // (sans quoi getOrCreateLowerDimension matche sur (id, parent) et crée
