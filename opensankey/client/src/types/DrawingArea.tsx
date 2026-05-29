@@ -55,6 +55,7 @@ import {
   sortLinksElementsByIds
 } from '../Elements/Link'
 import { ClassTemplate_Legend } from '../Elements/Legend'
+import { ClassTemplate_DrawingTitle } from '../Elements/Title'
 import { Class_BaseElement, Class_ProtoElement } from '../Elements/Element'
 import { Class_ElementStyle } from '../Elements/Element'
 import { NodePositioning } from '../Algorithms/NodePositioning'
@@ -136,6 +137,7 @@ export class Class_DrawingArea {
 
   protected _sankey: Class_Sankey
   protected _legend: ClassTemplate_Legend
+  protected _title: ClassTemplate_DrawingTitle
 
 
   private _fit_margin: number = 10
@@ -317,6 +319,7 @@ export class Class_DrawingArea {
     this._zoom_width = this.window_fitting_width
     this._sankey = this.createNewSankey(id)
     this._legend = new ClassTemplate_Legend(this, this._sankey)
+    this._title = new ClassTemplate_DrawingTitle(this, this._sankey)
     this._selection_zone = this.createNewSelectionZone()
     this.nodePositioning = new NodePositioning(this)
 
@@ -337,6 +340,7 @@ export class Class_DrawingArea {
     // Clean Elements
     // this._sankey.delete() TODO Trop lourd + bug suppression vues
     this._legend.delete()
+    this._title.delete()
     this._selection_zone.unDraw()
 
     // Clean drawing area
@@ -357,6 +361,11 @@ export class Class_DrawingArea {
     this._legend = new ClassTemplate_Legend(this, this._sankey)
     // Copy Legend
     this._legend.copyFrom(drawing_area_to_copy._legend)
+
+    //create new ClassTemplate_DrawingTitle after deleting previous in 'this.delete()'
+    this._title = new ClassTemplate_DrawingTitle(this, this._sankey)
+    // Copy Title
+    this._title.copyFrom(drawing_area_to_copy._title)
 
     //create new selection zone after deleting previous in 'this.delete()'
     this._selection_zone = this.createNewSelectionZone()
@@ -437,6 +446,7 @@ export class Class_DrawingArea {
 
     this.areaAutoFit()
     this._legend.draw()
+    this._title.draw()
     // Added events listeners
     this.setEventsListeners()
 
@@ -491,6 +501,13 @@ export class Class_DrawingArea {
       this.d3_selection_legend = this.d3_selection.append('g').attr('id', 'grp_legend')
     } else {
       this.d3_selection_legend = this.d3_selection_zoom_area.append('g').attr('id', 'grp_legend')
+    }
+
+    // Groupe d'accueil du titre (cf. ClassTemplate_DrawingTitle)
+    if (this._title.stick_to_drawing) {
+      this.d3_selection.append('g').attr('id', 'grp_title')
+    } else {
+      this.d3_selection_zoom_area.append('g').attr('id', 'grp_title')
     }
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
@@ -2421,6 +2438,7 @@ export class Class_DrawingArea {
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
     this._legend.setEventsListeners()
+    this._title.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2431,6 +2449,7 @@ export class Class_DrawingArea {
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())
     this._legend.setEventsListeners()
+    this._title.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
   }
 
@@ -2475,6 +2494,7 @@ export class Class_DrawingArea {
     this.sankey.visible_links_list.forEach(n => n.setEventsListeners())
     this.sankey.visible_containers_list.forEach(n => n.setEventsListeners())  // drag event is disabled in edition mode so we have to reset eventListener when we switch mode
     this._legend.setEventsListeners()
+    this._title.setEventsListeners()
     this.application_data.menu_configuration.updateAllComponentsRelatedToToolbar()
     //this.containers_list.forEach(lab => lab.setEventsListeners())
   }
@@ -2503,6 +2523,9 @@ export class Class_DrawingArea {
   public get sankey() { return this._sankey }
   public get legend(): ClassTemplate_Legend { return this._legend }
   public set legend(value: ClassTemplate_Legend) { this._legend = value }
+
+  public get title(): ClassTemplate_DrawingTitle { return this._title }
+  public set title(value: ClassTemplate_DrawingTitle) { this._title = value }
   public get ghost_link() { return this._ghost_link }
   public set ghost_link(value) { this._ghost_link = value }
 
