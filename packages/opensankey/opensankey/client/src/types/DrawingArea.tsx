@@ -188,6 +188,20 @@ export class Class_DrawingArea {
     return k > 0 ? 1 / k : 1
   }
 
+  // Verrou de taille (#1240) : quand actif, le cadrage courant (hauteur, largeur,
+  // zoom) est figé tel quel — areaAutoFit devient inerte, donc plus de reflow d'un
+  // dataTag à l'autre. Aucun recalcul : l'utilisateur se place sur le dataTag voulu
+  // (le plus grand) puis verrouille. État de session (non persisté), défaut false.
+  protected _size_locked: boolean = false
+  public get size_locked(): boolean { return this._size_locked }
+  public set size_locked(v: boolean) {
+    if (this._size_locked === v) return
+    this._size_locked = v
+    // Verrouiller = on ne touche à rien (le cadrage courant reste).
+    // Déverrouiller = on réajuste sur le dataTag courant.
+    if (!v) this.areaAutoFit()
+  }
+
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
     return sankey
@@ -385,6 +399,8 @@ export class Class_DrawingArea {
     this._width = drawing_area_to_copy._width
     // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
     this._font_size_locked = drawing_area_to_copy._font_size_locked
+    // Idem : champ direct, le setter size_locked déclenche un re-fit.
+    this._size_locked = drawing_area_to_copy._size_locked
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
 
     this._show_background_image = drawing_area_to_copy._show_background_image
@@ -425,6 +441,13 @@ export class Class_DrawingArea {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
 
+    // #1240 — Verrou de taille : _initDraw recrée le SVG de zoom et perd le
+    // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
+    // capture la vue courante avant de redessiner pour la réappliquer à
+    // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
+    const zoom_node = this._size_locked ? this.d3_selection_zoom_area?.node() : null
+    const locked_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+
     // Clean drawing area
     this.unDraw()
 
@@ -436,6 +459,12 @@ export class Class_DrawingArea {
     // Fit area
 
     this.areaAutoFit()
+    if (locked_zoom_transform && this.d3_selection_zoom_area) {
+      this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+      this.drawBackground()
+      this.drawGrid()
+      this._updateScrollbars()
+    }
     this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
@@ -896,6 +925,10 @@ export class Class_DrawingArea {
   }
 
   public areaAutoFit(horiz?: boolean) {
+
+    // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
+    // aucun auto-fit au changement de dataTag.
+    if (this._size_locked) return
 
     const prev_k_fit = this._k_fit
 
