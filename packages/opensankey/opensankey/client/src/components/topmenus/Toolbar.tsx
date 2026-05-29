@@ -634,7 +634,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                     }
                   }}
                 >
-                  <span>{tagg.tags_list.find(t => t.id === selected_value)?.name ?? ''}</span>
+                  <span>{tagg.tags_list.find(t => t.id === selected_value)?.display_name ?? ''}</span>
                   <ChevronDownIcon color="gray.500" />
                 </MenuButton>
                 <MenuList
@@ -665,7 +665,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                         drawing_area.bypass_redraws = false
                       }}
                     >
-                      {tag.name}
+                      {tag.display_name}
                     </MenuItem>
                   ))}
                 </MenuList>
@@ -693,14 +693,14 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
               value={tag.id}
               disabled={mode === 'level' && cur_idx >= 0 && Math.abs(idx - cur_idx) > 1}
             >
-              {tag.name}
+              {tag.display_name}
             </option>
           ))}
         </Select>
       )
     } else if (tagg.banner === 'multi') {
       const options = tagg.tags_list.map(tag => ({
-        label: tag.name,
+        label: tag.display_name,
         value: tag.id,
         selected: tag.is_selected,
         disabled: mode === 'data' && tagg.selected_tags_list.length < 2 && tag.id === tagg.selected_tags_list[0]?.id
