@@ -18,7 +18,8 @@ export interface SankeyGlobals {
   // Layout / chrome
   topbar?: boolean       // default true
   footer?: boolean       // default false
-  toolbar?: boolean      // default false
+  toolbar?: boolean      // default false : barre du bas (modes souris/position, recadrage, plein écran)
+  filter_bar?: boolean   // default true : barre de filtres à gauche (drawer)
   embedded?: boolean     // default false (height = innerHeight) ; true => 100%
   recenter?: boolean     // default true : auto-recenter à l'ouverture en publish
   edit_button?: boolean  // default true : bouton "Éditer" (renvoi vers open-sankey.fr) dans la topbar en publish
@@ -50,6 +51,7 @@ export interface PublishOptions {
   topbar: boolean
   footer: boolean
   toolbar: boolean
+  filter_bar: boolean
   embedded: boolean
   recenter: boolean
   edit_button: boolean
@@ -95,6 +97,7 @@ export const getPublishOptions = (): PublishOptions => {
     topbar: bool(s.topbar, true),
     footer: bool(s.footer, false),
     toolbar: bool(s.toolbar, false),
+    filter_bar: bool(s.filter_bar, true),
     embedded: bool(s.embedded, false),
     recenter: bool(s.recenter, true),
     edit_button: bool(s.edit_button, true),
@@ -127,6 +130,7 @@ export type ViewerSankeyOptions = {
   topbar?: boolean
   footer?: boolean
   toolbar?: boolean
+  filter_bar?: boolean
   embedded?: boolean
   recenter?: boolean
   edit_button?: boolean
@@ -155,7 +159,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
   const next: SankeyGlobals = { ...current, publish: true }
 
   const keys: Array<keyof ViewerSankeyOptions> = [
-    'editable', 'topbar', 'footer', 'toolbar', 'embedded', 'recenter',
+    'editable', 'topbar', 'footer', 'toolbar', 'filter_bar', 'embedded', 'recenter',
     'edit_button',
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
