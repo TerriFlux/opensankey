@@ -29,7 +29,6 @@ import {
   Box,
   Button,
   Checkbox,
-  Input,
   Select
 } from '@chakra-ui/react'
 
@@ -786,62 +785,40 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
 
   const { t } = app_data
   const [, setCount] = useState(0)
-  const title = app_data.drawing_area.title
+  const sankey = app_data.drawing_area.sankey
+  const title = sankey.getTitleContainer()
+  const is_shown = !!title && title.is_visible
 
   const refreshThisAndUpdateRelatedComponents = () => {
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     setCount(a => a + 1)
   }
 
-  const data_taggs = app_data.drawing_area.sankey.data_taggs_list
+  const data_taggs = sankey.data_taggs_list
+  const [token_group_id, setTokenGroupId] = useState('')
 
-  const eventTitleMasked = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const f = (_: boolean) => { title.masked = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'masked', !evt.target.checked, f)
-  }
-
-  const eventTitleSource = (source: 'custom' | 'datatag') => {
-    const f = (_: 'custom' | 'datatag') => { title.title_source = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'title_source', source, f)
-  }
-
-  const eventTitleCustomText = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const value = evt.target.value
-    const f = (_: string) => { title.custom_text = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'custom_text', value, f)
-  }
-
-  const eventTitleDataTagGroup = (evt: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = evt.target.value
-    const f = (_: string) => { title.datatag_group_id = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'datatag_group_id', value, f)
-  }
-
-  const eventTitleFontSize = (evt: number | null | undefined) => {
-    if (evt) {
-      const f = (_: number) => { title.title_font_size = _; refreshThisAndUpdateRelatedComponents() }
-      app_data.setValueAndSaveHistory(title, 'title_font_size', evt, f)
+  // La visibilité du titre est pilotée ici. Le texte (statique + jetons) et le
+  // reste du style s'éditent via l'interface normale des zones de texte.
+  const eventTitleShown = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (evt.target.checked) {
+      sankey.getOrCreateTitleContainer().setVisible()
+    } else {
+      title?.setInvisible()
     }
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
   }
 
-  const eventTitleBold = (checked: boolean) => {
-    const f = (_: boolean) => { title.bold = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'bold', checked, f)
-  }
-
-  const eventTitleColor = (evt: string) => {
-    const f = (_: string) => { title.title_color = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'title_color', evt, f)
-  }
-
-  const eventTitleStickDrawing = (checked: boolean) => {
-    const f = (_: boolean) => { title.stick_to_drawing = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'stick_to_drawing', checked, f)
-  }
-
-  const eventTitleRecenter = () => {
-    const f = (_: boolean) => { title.auto_center = _; refreshThisAndUpdateRelatedComponents() }
-    app_data.setValueAndSaveHistory(title, 'auto_center', true, f)
+  // Insère le jeton {NomDuGroupe} à la fin du texte du titre. Au rendu, il est
+  // remplacé par la valeur sélectionnée du data tag (combine statique + data tag).
+  const eventInsertToken = () => {
+    const grp = data_taggs.find(g => g.id === token_group_id)
+    if (!grp) return
+    const c = sankey.getOrCreateTitleContainer()
+    const token = '{' + grp.name + '}'
+    c.name = c.name ? c.name + ' ' + token : token
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
   }
 
   return <Box layerStyle='menu_sub_section'>
@@ -849,8 +826,8 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
       <Checkbox
         variant='menuconfigpanel_part_title_1_checkbox'
         icon={<CustomFaEyeCheckIcon />}
-        isChecked={!title.masked}
-        onChange={eventTitleMasked}
+        isChecked={is_shown}
+        onChange={eventTitleShown}
       >
         {t('Menu.TitleSection')}
       </Checkbox>
@@ -858,92 +835,37 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
 
     <Box
       layerStyle='menuconfigpanel_grid'
-      style={{ display: (title.masked ? 'none' : '') }}
+      style={{ display: (is_shown ? '' : 'none') }}
     >
-      {/* Source du titre : texte personnalisé ou data tag */}
-      <Box as='span' layerStyle='options_2cols'>
-        <Button
-          variant={title.title_source === 'custom' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventTitleSource('custom')}
-        >
-          {t('Menu.TitleCustom')}
-        </Button>
-        <Button
-          variant={title.title_source === 'datatag' ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventTitleSource('datatag')}
-        >
-          {t('Menu.TitleFromDataTag')}
-        </Button>
+      {/* Édition du texte via l'interface ZDT */}
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.TitleEditHint')}
       </Box>
 
-      {/* Saisie selon la source */}
-      {title.title_source === 'custom' ?
-        <OSTooltip label={t('Menu.tooltips.TitleText')}>
-          <Input
-            size='sm'
-            value={title.custom_text}
-            placeholder={t('Menu.TitlePlaceholder')}
-            onChange={eventTitleCustomText}
-          />
-        </OSTooltip>
-        :
-        <OSTooltip label={t('Menu.tooltips.TitleGroupSelect')}>
-          <Select
-            size='sm'
-            value={title.datatag_group_id}
-            onChange={eventTitleDataTagGroup}
-          >
-            <option value=''>{t('Menu.TitleSelectGroup')}</option>
-            {data_taggs.map(tagg => (
-              <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
-            ))}
-          </Select>
-        </OSTooltip>
-      }
-
-      {/* Taille de police + Gras */}
-      <Box as='span' layerStyle='options_2cols'>
-        <OSTooltip label={t('Menu.tooltips.fontSize')}>
-          <ConfigMenuNumberInput
-            t={app_data.t}
-            default_value={title.title_font_size}
-            function_on_blur={eventTitleFontSize}
-            minimum_value={1}
-            stepper={true}
-            unit_text='px'
-          />
-        </OSTooltip>
-        <Button
-          variant={title.bold ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-          onClick={() => eventTitleBold(!title.bold)}
-        >
-          {t('Menu.TitleBold')}
-        </Button>
-      </Box>
-
-      {/* Couleur + Solidaire du diagramme */}
-      <Box as='span' layerStyle='options_2cols'>
-        <MenuColorPicker
-          initialColor={title.title_color}
-          onColorChange={eventTitleColor}
-        />
-        <OSTooltip label={t('Menu.tooltips.LegStickDrawing')}>
+      {/* Insertion d'un jeton data tag (combine statique + data tag) */}
+      {data_taggs.length > 0 &&
+        <Box as='span' layerStyle='options_2cols'>
+          <OSTooltip label={t('Menu.tooltips.TitleGroupSelect')}>
+            <Select
+              size='sm'
+              value={token_group_id}
+              onChange={(evt) => setTokenGroupId(evt.target.value)}
+            >
+              <option value=''>{t('Menu.TitleSelectGroup')}</option>
+              {data_taggs.map(tagg => (
+                <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
           <Button
-            variant={title.stick_to_drawing ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-            onClick={() => eventTitleStickDrawing(!title.stick_to_drawing)}
+            variant='menuconfigpanel_option_button'
+            isDisabled={token_group_id === ''}
+            onClick={eventInsertToken}
           >
-            {t('Menu.LegStickDrawing')}
+            {t('Menu.TitleInsertToken')}
           </Button>
-        </OSTooltip>
-      </Box>
-
-      {/* Recentrer en haut */}
-      <Button
-        variant='menuconfigpanel_option_button'
-        onClick={eventTitleRecenter}
-      >
-        {t('Menu.TitleRecenter')}
-      </Button>
+        </Box>
+      }
     </Box>
   </Box>
 }
