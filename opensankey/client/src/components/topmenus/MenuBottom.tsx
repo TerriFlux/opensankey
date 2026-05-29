@@ -55,17 +55,19 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       </OSTooltip>
     </ButtonGroup> : <></>}
     {btn_mouse_mode_edition}
-    {/* Le mode de position (absolu / proportionnel / échelle) agit sur le rendu, il a
-        donc du sens même en publish : on l'affiche aussi en mode statique (la toolbar
-        du bas n'apparaît alors que si publish_options.toolbar est activé). */}
-    <ComponentPositionMode
+    {/* Groupe des modes de position (absolu / proportionnel / échelle) : agit sur le
+        rendu, donc pertinent en publish. En mode statique il est piloté par l'option
+        publish `toolbar` (indépendamment du groupe ajustement ci-dessous). */}
+    {(!new_data.is_static || new_data.publish_options.toolbar) ? <ComponentPositionMode
       app_data={new_data}
       updateParentComponent={refreshThis}
-    />
-    <ComponetStretchButtons
+    /> : <></>}
+    {/* Groupe ajustement / verrous / plein écran : en mode statique, piloté par
+        l'option publish `fit_toolbar`. */}
+    {(!new_data.is_static || new_data.publish_options.fit_toolbar) ? <ComponetStretchButtons
       app_data={new_data}
       updateParentComponent={refreshThis}
-    />
+    /> : <></>}
   </Box>
 }
 
