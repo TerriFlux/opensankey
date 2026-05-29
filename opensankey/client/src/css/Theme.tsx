@@ -2851,7 +2851,7 @@ const layerStyles = {
     zIndex: 1,
     height: 'fit-content',
     right: '1rem',
-    top: '75%',
+    top: '70%',
     transform: 'translateY(-50%)'
   },
 
