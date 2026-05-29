@@ -55,10 +55,13 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       </OSTooltip>
     </ButtonGroup> : <></>}
     {btn_mouse_mode_edition}
-    {!new_data.is_static ? <ComponentPositionMode
+    {/* Le mode de position (absolu / proportionnel / échelle) agit sur le rendu, il a
+        donc du sens même en publish : on l'affiche aussi en mode statique (la toolbar
+        du bas n'apparaît alors que si publish_options.toolbar est activé). */}
+    <ComponentPositionMode
       app_data={new_data}
       updateParentComponent={refreshThis}
-    /> : <></>}
+    />
     <ComponetStretchButtons
       app_data={new_data}
       updateParentComponent={refreshThis}
