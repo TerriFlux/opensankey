@@ -304,6 +304,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
   const option_btn = <Menu>
     <MenuButton
       as={Button}
+      size='xs'
       isDisabled={new_data.menu_configuration.is_playing_sequence}
       variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
     >
@@ -319,7 +320,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
     <Box
       layerStyle='box_sequence'
     >
-      <ButtonGroup isAttached>
+      <ButtonGroup isAttached size='xs'>
         <Button
           variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
           onClick={() => {
@@ -375,7 +376,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
 
   return <Box layerStyle='box_stepper'>
     {/* First stepper that have progression bar of the sequence with steps */}
-    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+    <Stepper index={activeStep} size={'xs'} variant='sequenceStepper'>
       {stepper_sequence.map((step, index) => (
         <Step key={index} onClick={() => switchCurrTag(index)}>
           <>
@@ -423,7 +424,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
     </Stepper>
 
     {/* Second stepper just to have text well aligned with indicator */}
-    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+    <Stepper index={activeStep} size={'xs'} variant='sequenceStepper'>
       {stepper_sequence.map((step, index) => (
         <Step key={index} onClick={() => switchCurrTag(index)}>
           <>
