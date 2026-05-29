@@ -816,7 +816,9 @@ export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) =
     if (!grp) return
     const c = sankey.getOrCreateTitleContainer()
     const token = '{' + grp.name + '}'
-    c.name = c.name ? c.name + ' ' + token : token
+    // Le titre édite name_label_text (texte de label indépendant), pas le nom.
+    const current = c.name_label_text
+    c.name_label_text = current ? current + ' ' + token : token
     app_data.drawing_area.draw()
     refreshThisAndUpdateRelatedComponents()
   }

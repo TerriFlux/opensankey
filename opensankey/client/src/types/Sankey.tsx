@@ -445,6 +445,10 @@ export class Class_Sankey {
     if (existing) return existing
     const title = this.addNewContainer(default_title_id, default_title_text)
     title.is_title = true
+    // Le titre édite un texte de label indépendant (name_label_text), il ne
+    // renomme PAS la zone de texte (name reste l'identifiant interne).
+    title.name_label_custom = true
+    title.name_label_text = default_title_text
     title.name_label_bold = true
     title.name_label_font_size = default_title_font_size
     title.name_label_horiz = 'middle'
