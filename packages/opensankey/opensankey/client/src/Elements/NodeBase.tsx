@@ -382,6 +382,29 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public get center_y() { return this._center_y }
 
   /**
+   * #1231 (1.1.5) — Centre à PERSISTER (format 1.1.5 : x/y du JSON = centre). Si le centre
+   * n'a pas encore été initialisé (nœud jamais dessiné), on le dérive du coin courant.
+   */
+  public centerForPersistence(): { x: number, y: number } {
+    return {
+      x: this._center_x ?? (this.position_x + this.getShapeWidthToUse() / 2),
+      y: this._center_y ?? (this.position_y + this.getShapeHeightToUse() / 2),
+    }
+  }
+
+  /**
+   * #1231 (1.1.5) — Chargement d'un fichier ≥ 1.1.5 (x/y = centre) : pose le centre comme
+   * vérité. On dérive aussi un coin provisoire cohérent ; le 1er draw recalculera le coin
+   * exact depuis le centre (applyCenterToCorner via anchorByCenterIfResized).
+   */
+  public setStoredCenter(x: number, y: number) {
+    this._center_x = x
+    this._center_y = y
+    this.position_x = x - this.getShapeWidthToUse() / 2
+    this.position_y = y - this.getShapeHeightToUse() / 2
+  }
+
+  /**
    * #1231 — Mode proportionnel : mémorise le centre vertical courant comme référence.
    * Appelé par `captureProportionalReference` (entrée du mode, après un drag, changement
    * de vue). Le replacement ultérieur scale ce centre autour de la médiane par le facteur f.
