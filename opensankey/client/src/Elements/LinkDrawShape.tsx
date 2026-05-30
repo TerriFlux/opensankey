@@ -43,7 +43,7 @@ const BEZIER_STEEPNESS = 1.5
  * tôt (un flux épais qui tourne possède deux coudes + une partie diagonale qui
  * consomment chacun de la place dans l'axe, donc le seuil réel est plus contraignant).
  */
-const SHOW_AS_PATH_SAFETY = 2
+const SHOW_AS_PATH_SAFETY = 3
 
 export class LinkDrawShape {
 
