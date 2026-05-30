@@ -83,8 +83,16 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): Type_JSON {
-    json_object['x'] = base_element.position_x
-    json_object['y'] = base_element.position_y
+    // #1231 (1.1.5) — format courant : x/y = CENTRE du nœud (indépendant du datatag/échelle).
+    // Les autres éléments (conteneurs, liens, légende…) gardent le coin/position d'origine.
+    if (base_element instanceof Class_NodeElement) {
+      const c = base_element.centerForPersistence()
+      json_object['x'] = c.x
+      json_object['y'] = c.y
+    } else {
+      json_object['x'] = base_element.position_x
+      json_object['y'] = base_element.position_y
+    }
     return json_object
   }
   public static fromJSON(
@@ -93,8 +101,17 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): void {
-    base_element.position_x = getNumberFromJSON(json_object, 'x', base_element.position_x)
-    base_element.position_y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    const x = getNumberFromJSON(json_object, 'x', base_element.position_x)
+    const y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    // #1231 (1.1.5) — fichier ≥ 1.1.5 (drapeau `pos_is_center` propagé via kwargs) : x/y est le
+    // CENTRE → on le pose directement. Sinon (fichiers < 1.1.5 ou éléments non-nœuds) : x/y est
+    // le coin → on le pose tel quel, et pour un nœud le centre sera migré au 1er draw (coin+taille/2).
+    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center']) {
+      base_element.setStoredCenter(x, y)
+    } else {
+      base_element.position_x = x
+      base_element.position_y = y
+    }
   }
 }
 export class ProtoElementPersistence extends BaseElementPersistence {
@@ -1690,6 +1707,10 @@ export class SankeyPersistence {
         kwargs
       )
     )
+    // #1231 (1.1.5) — fichier au format « centre » (marqueur explicite node_pos_is_center) ⇒
+    // les x/y des nœuds sont des CENTRES. On propage le drapeau via kwargs jusqu'à
+    // BaseElementPersistence.fromJSON. Absent (anciens fichiers) ⇒ x/y = coin → migration au draw.
+    const pos_is_center = json_object['node_pos_is_center'] === true
     SankeyPersistence.load_nodes(
       sankey,
       json_object,
@@ -1698,7 +1719,8 @@ export class SankeyPersistence {
         node,
         node_json as Type_JSON,
         kwargs
-      )
+      ),
+      { pos_is_center }
     )
     if (json_object.version != 0.8)
       sankey.nodes_list.forEach(node => node.dimensions_as_parent.forEach(dim => dim.normalize()))
@@ -1837,6 +1859,10 @@ export class DrawingAreaPersistence {
     const json_object = {} as Type_JSON
     // Add current version of app
     json_object['version'] = drawing_area.application_data.version
+    // #1231 (1.1.5) — marqueur de format : les x/y des nœuds sont des CENTRES (indépendant
+    // du datatag/échelle). Drapeau explicite (et non comparaison de version) → robuste et
+    // découplé du numéro de version. Absent ⇒ ancien format (coin) → migration au 1er draw.
+    json_object['node_pos_is_center'] = true
     // Dump DA attributes
     json_object['height'] = drawing_area.height
     json_object['width'] = drawing_area.width
