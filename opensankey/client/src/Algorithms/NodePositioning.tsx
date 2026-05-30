@@ -1306,9 +1306,15 @@ export class NodePositioning {
       this.captureProportionalReference()
       return
     }
+    // #1231 (1.1.5) — anti-chevauchement GLOBAL : le facteur de compression effectif est
+    // borné par le bas par le facteur minimal qui empêche TOUTE colonne de chevaucher
+    // (proportionalMinFactor). Appliqué uniformément à tous les nœuds, c'est une
+    // transformation linéaire autour de la médiane → l'ordre vertical par pourcentage est
+    // préservé EXACTEMENT entre colonnes (un nœud plus haut le reste, gauche ou droite), et
+    // la colonne la plus dense « tire » tout le diagramme. Plus de plancher par colonne.
     const f = this.proportionalFactor(nodes)
-    nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f))
-    this.applyProportionalColumnSpacing(nodes, this._prop_median_y!, f)
+    const f_eff = Math.max(f, this.proportionalMinFactor(nodes))
+    nodes.forEach(n => n.applyProportionalCompression(this._prop_median_y!, f_eff))
   }
 
   /**
@@ -1327,37 +1333,32 @@ export class NodePositioning {
    * `écart_min` = `shape_position_dy` GLOBAL (petit, ~50px) : un dy par-nœud aberrant (ex. 434)
    * forcerait un grand écart même quand le layout d'origine est plus serré → faux déplacements.
    */
-  private applyProportionalColumnSpacing(nodes: Class_NodeElement[], median: number, f: number) {
+  private proportionalMinFactor(nodes: Class_NodeElement[]): number {
     const min_gap = this.drawingArea.sankey.styles_dict['default'].shape_position_dy ?? 50
+    // Paires de centres de réf quasi confondus : aucun facteur fini ne les sépare (déjà
+    // superposées en absolu) → ignorées, sinon f_min exploserait.
+    const EPS = 1
     const cols = new Map<number, Class_NodeElement[]>()
     nodes.forEach(n => {
       const arr = cols.get(n.position_u) ?? []
       arr.push(n)
       cols.set(n.position_u, arr)
     })
+    let f_min = 0
     cols.forEach(col => {
       if (col.length < 2) return
       const cref = (n: Class_NodeElement) => n.center_y ?? n._prop_center_ref ?? (n.position_y + n.getShapeHeightToUse() / 2)
       col.sort((a, b) => cref(a) - cref(b))
-      const refs = col.map(cref)
-      const heights = col.map(n => n.getShapeHeightToUse())
-      // Distances voulues entre centres voisins : compression de l'écart de réf, plancher anti-chevauchement.
-      const dists: number[] = []
       for (let i = 0; i < col.length - 1; i++) {
-        const compressed = (refs[i + 1] - refs[i]) * f
-        const min_dist = heights[i] / 2 + heights[i + 1] / 2 + min_gap
-        dists.push(Math.max(compressed, min_dist))
+        const gap_ref = cref(col[i + 1]) - cref(col[i])
+        if (gap_ref <= EPS) continue
+        // Facteur minimal pour que l'écart de centres comprimé reste ≥ ½h_haut+½h_bas+min_gap.
+        const min_dist = col[i].getShapeHeightToUse() / 2 + col[i + 1].getShapeHeightToUse() / 2 + min_gap
+        const need = min_dist / gap_ref
+        if (need > f_min) f_min = need
       }
-      const span = dists.reduce((s, d) => s + d, 0)
-      // Centre comprimé de la colonne (= centre_réf à f=1, indépendant de la médiane).
-      const col_center_ref = (refs[0] + refs[col.length - 1]) / 2
-      const col_center = median + (col_center_ref - median) * f
-      let center = col_center - span / 2
-      col.forEach((n, i) => {
-        if (i > 0) center += dists[i - 1]
-        n.position_y = center - heights[i] / 2
-      })
     })
+    return f_min
   }
 
   /**

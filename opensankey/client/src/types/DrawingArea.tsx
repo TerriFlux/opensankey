@@ -639,9 +639,10 @@ export class Class_DrawingArea {
     // cache d'accroche (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace
     // les nœuds cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
     // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la récursion.
-    // #1231 — DÉSACTIVÉ en mode proportionnel : l'espacement par colonne (applyProportionalColumnSpacing)
-    // place les nœuds de façon déterministe, et déplacer une cible pour « garder droit » casse cet
-    // empilement (résultat incohérent). Le flux droit reste actif en absolu / échelle adaptée.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : la compression (anchorProportionalNodes, facteur
+    // global f_eff) place les nœuds de façon déterministe, et déplacer une cible pour « garder
+    // droit » casse cet empilement (résultat incohérent). Le flux droit reste actif en absolu /
+    // échelle adaptée.
     if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
         this.nodePositioning.enforceStraightLinks()) {
       this._sankey.draw()
