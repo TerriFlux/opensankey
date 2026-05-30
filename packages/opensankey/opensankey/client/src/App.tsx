@@ -106,6 +106,11 @@ export const OpenSankeyApp = ({
         updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
         app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
         app_data.drawing_area.draw()
+        // Le layout fusionne des attributs de la drawing area (verrous taille/police,
+        // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
+        // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars
+        // (barre de séquence, verrous) gardent l'état d'avant-layout — visible en viewer publish.
+        app_data.menu_configuration.updateAllMenuComponents()
         applyPublishRecenter()
       }).catch(e => console.log(e))
     } else {
