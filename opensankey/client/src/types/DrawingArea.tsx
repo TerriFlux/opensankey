@@ -191,16 +191,25 @@ export class Class_DrawingArea {
   // Verrou de taille (#1240) : quand actif, le cadrage courant (hauteur, largeur,
   // zoom) est figé tel quel — areaAutoFit devient inerte, donc plus de reflow d'un
   // dataTag à l'autre. Aucun recalcul : l'utilisateur se place sur le dataTag voulu
-  // (le plus grand) puis verrouille. État de session (non persisté), défaut false.
+  // (le plus grand) puis verrouille. Persisté (cf. SankeyPersistence), défaut false.
   protected _size_locked: boolean = false
   public get size_locked(): boolean { return this._size_locked }
   public set size_locked(v: boolean) {
     if (this._size_locked === v) return
     this._size_locked = v
-    // Verrouiller = on ne touche à rien (le cadrage courant reste).
+    // Verrouiller = figer le cadrage courant tel quel (pas de recalcul).
     // Déverrouiller = on réajuste sur le dataTag courant.
-    if (!v) this.areaAutoFit()
+    if (v) this._locked_fit_dirty = false
+    else this.areaAutoFit()
   }
+
+  // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
+  // stabilisé (1er chargement, ou recenter ayant décalé les positions APRÈS le
+  // dernier fit). Le prochain draw verrouillé recalcule alors un fit vertical sur
+  // les positions finales puis repasse à false, ce qui fige le cadrage pour les
+  // changements de dataTag suivants. Évite de figer un transform périmé calculé
+  // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
+  protected _locked_fit_dirty: boolean = true
 
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
@@ -458,8 +467,19 @@ export class Class_DrawingArea {
     this.drawElements()
     // Fit area
 
-    this.areaAutoFit()
-    if (locked_zoom_transform && this.d3_selection_zoom_area) {
+    // Mode verrouillé : tant que le cadrage est « dirty » (1er rendu, ou recenter
+    // ayant décalé les positions après le dernier fit), on RECALCULE un fit unique
+    // sur les positions finales puis on fige (dirty=false). Sinon on réapplique à
+    // l'identique le transform capturé ci-dessus (cadrage figé d'un dataTag à
+    // l'autre). Ce fit verrouillé est VERTICAL (comme le mode static / le fit
+    // vertical manuel) : l'heuristique horiz/vert choisirait souvent l'horizontal
+    // et ferait déborder en hauteur ; le vertical garantit que le dataTag le plus
+    // grand tient dans la hauteur de la fenêtre.
+    const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+    if (recompute_locked) {
+      this._locked_fit_dirty = false
+    } else if (locked_zoom_transform && this.d3_selection_zoom_area) {
       this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
       this.drawBackground()
       this.drawGrid()
@@ -935,11 +955,14 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean) {
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
 
     // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
-    // aucun auto-fit au changement de dataTag.
-    if (this._size_locked) return
+    // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
+    // (chargement, ex. mode publish) aucun transform de zoom n'existe encore à
+    // réappliquer ; on autorise alors un fit unique pour établir le cadrage
+    // initial, qui restera ensuite figé (force_when_locked).
+    if (this._size_locked && !force_when_locked) return
 
     const prev_k_fit = this._k_fit
 
@@ -1548,7 +1571,13 @@ export class Class_DrawingArea {
       this.legend.draw()
     }
 
-    this.areaAutoFit()
+    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
+    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
+    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
+    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
+    // normal (heuristique horiz/vert).
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    if (this._size_locked) this._locked_fit_dirty = false
     this.orderElementOnDA()
   }
   /**
@@ -2984,15 +3013,26 @@ export class Class_DrawingArea {
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
+    const prev_mode = default_style.shape_position_type
     // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
     this.nodePositioning.clearScaleAdaptation()
     // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
     // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
-    // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
-    // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
-    // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
-    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    if (prev_mode === 'scale_adapted') {
+      // #1231 — sortie d'« échelle adaptée » : clearScaleAdaptation() vient de restaurer
+      // l'échelle globale, ce qui REDIMENSIONNE les nœuds (h_adaptée → h_globale). Il faut
+      // COMPENSER ce redimensionnement par le centre (et non settleCenterAnchor, qui figerait
+      // la position décalée du datatag courant) pour que chaque nœud retrouve exactement son
+      // centre absolu — y compris sur un datatag ≠ flux de référence (sinon décalage de
+      // (h_globale − h_adaptée)/2). anchorAbsoluteNodesByCenter ré-ancre aussi → 1er draw inerte.
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
+    } else {
+      // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
+      // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
+      // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
+      this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    }
   }
 
   // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
