@@ -187,7 +187,7 @@ export class LinkTooltip {
     this._link.flux_taggs_list.forEach(tagg => {
       const tagNames = this._link.flux_tags_list
         .filter(tag => tag.group === tagg)
-        .map(tag => tag.name)
+        .map(tag => tag.display_name)
         .join(', ')
 
       html += '<tr>'
@@ -376,7 +376,7 @@ export class LinkTooltip {
   private getDataTagContextRows(): string {
     let html = ''
     this._link.drawing_area.sankey.data_taggs_list.forEach(tagg => {
-      const sel = tagg.selected_tags_list.map(t => t.name).join(', ')
+      const sel = tagg.selected_tags_list.map(t => t.display_name).join(', ')
       html += `<tr><th>${tagg.name}</th><td>${sel || '-'}</td></tr>`
     })
     return html
@@ -401,7 +401,7 @@ export class LinkTooltip {
       const ordered = this.orderTags(tags as Class_DataTag[])
       entries.push({
         key: ordered.map(t => t.group.id + ':' + t.id).join('|'),
-        label: ordered.map(t => t.name).join(' / '),
+        label: ordered.map(t => t.display_name).join(' / '),
         value: val as Class_LinkValue
       })
     })
