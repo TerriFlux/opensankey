@@ -916,6 +916,21 @@ export class NodePositioning {
   }
 
   /**
+   * #1231 (1.1.5) — Force le retour des nœuds « libres » à leur vraie position absolue
+   * (coin = centre stocké − taille/2), en ignorant l'heuristique « taille inchangée » de
+   * `anchorByCenterIfResized` (qui recommiterait le coin d'affichage). Mêmes exclusions que
+   * `anchorAbsoluteNodesByCenter`. Appelé en sortie de proportionnel / échelle.
+   */
+  public deriveAbsoluteNodesFromCenter() {
+    this.drawingArea.sankey.nodes_list.forEach(n => {
+      if (!n.is_visible) return
+      if (n.shape_position_type === 'relative') return
+      if (n.tied_to_nodes && n.attached_node.length > 0) return
+      n.forceDeriveFromCenter()
+    })
+  }
+
+  /**
    * #1231 — Nœuds « libres » éligibles au mode proportionnel : visibles, non-échange,
    * non-relatifs, hors cadres tied. (Filtre commun capture/replacement.)
    */
@@ -1322,7 +1337,7 @@ export class NodePositioning {
     })
     cols.forEach(col => {
       if (col.length < 2) return
-      const cref = (n: Class_NodeElement) => n._prop_center_ref ?? (n.position_y + n.getShapeHeightToUse() / 2)
+      const cref = (n: Class_NodeElement) => n.center_y ?? n._prop_center_ref ?? (n.position_y + n.getShapeHeightToUse() / 2)
       col.sort((a, b) => cref(a) - cref(b))
       const refs = col.map(cref)
       const heights = col.map(n => n.getShapeHeightToUse())

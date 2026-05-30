@@ -3019,18 +3019,17 @@ export class Class_DrawingArea {
     // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
     // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
-    if (prev_mode === 'scale_adapted') {
-      // #1231 — sortie d'« échelle adaptée » : clearScaleAdaptation() vient de restaurer
-      // l'échelle globale, ce qui REDIMENSIONNE les nœuds (h_adaptée → h_globale). Il faut
-      // COMPENSER ce redimensionnement par le centre (et non settleCenterAnchor, qui figerait
-      // la position décalée du datatag courant) pour que chaque nœud retrouve exactement son
-      // centre absolu — y compris sur un datatag ≠ flux de référence (sinon décalage de
-      // (h_globale − h_adaptée)/2). anchorAbsoluteNodesByCenter ré-ancre aussi → 1er draw inerte.
-      this.nodePositioning.anchorAbsoluteNodesByCenter()
+    if (prev_mode === 'scale_adapted' || prev_mode === 'proportional') {
+      // #1231 (1.1.5) — sortie d'un mode d'AFFICHAGE (échelle / proportionnel) : le coin
+      // courant est du scratch (rescalé par l'échelle adaptée, ou comprimé par le %). On
+      // FORCE le retour aux vrais centres stockés, sinon les positions d'affichage
+      // deviendraient les positions absolues (le % « collait »). Centres invariants → on
+      // retrouve exactement la position absolue d'avant l'entrée du mode.
+      this.nodePositioning.deriveAbsoluteNodesFromCenter()
     } else {
-      // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
-      // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
-      // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
+      // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
+      // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
+      // aucun saut.
       this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
     }
   }
@@ -3040,15 +3039,26 @@ export class Class_DrawingArea {
   // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
   public setScaleAdaptedMode() {
     const default_style = this.sankey.styles_dict['default']
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
+    // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
+    // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
+    // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
     default_style.shape_position_type = 'scale_adapted'
-    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
     this.nodePositioning.captureScaleReference()
+    // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
+    // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
+    this.draw()
   }
 
   public setProportionalMode() {
     const default_style = this.sankey.styles_dict['default']
     // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
     this.nodePositioning.clearScaleAdaptation()
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (échelle), le coin courant est du
+    // scratch rescalé. On revient d'abord aux VRAIS centres pour que la capture de référence
+    // (médiane, centres de colonne) parte des positions absolues réelles, pas de l'affichage.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
     default_style.shape_position_type = 'proportional'
     // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
     // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
