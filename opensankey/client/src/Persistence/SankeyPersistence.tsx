@@ -1853,6 +1853,9 @@ export class DrawingAreaPersistence {
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
+    // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
+    // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
+    if (drawing_area.size_locked) json_object['size_locked'] = true
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
@@ -2165,6 +2168,9 @@ export class DrawingAreaPersistence {
     // récents sérialisent toujours le flag (cf. toJSON), donc présence ⇒ valeur
     // explicite. Un nouveau diagramme (non chargé) démarre verrouillé.
     drawing_area['_font_size_locked'] = getBooleanFromJSON(json_object, 'font_size_locked', false)
+    // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
+    // Absence du flag ⇒ déverrouillé (défaut de la classe).
+    drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
