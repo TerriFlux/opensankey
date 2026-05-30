@@ -98,6 +98,15 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _center_anchor_w: number | undefined = undefined
   protected _center_anchor_h: number | undefined = undefined
 
+  // #1231 (migration 1.1.5) — CENTRE géométrique du nœud = future vérité persistée
+  // (datatag/échelle-indépendant). Pour l'instant maintenu EN PARALLÈLE du coin
+  // (position_x/y) sans être encore autoritaire : `captureCenterFromCorner()` le
+  // dérive du coin courant, `applyCenterToCorner()` ferait l'inverse au dessin. Le
+  // « flip » (rendre le centre autoritaire + câbler tous les gestes pour qu'ils le
+  // committent) est l'étape suivante. undefined = pas encore initialisé.
+  protected _center_x: number | undefined = undefined
+  protected _center_y: number | undefined = undefined
+
   // #1231 — Mode proportionnel : centre vertical de référence (capturé à l'entrée du
   // mode / après un drag, cf. NodePositioning.captureProportionalReference). À chaque
   // dessin, le centre affiché = médiane + (center_ref − médiane) × f, où f est le
@@ -295,11 +304,25 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public anchorByCenterIfResized() {
     const w = this.getShapeWidthToUse()
     const h = this.getShapeHeightToUse()
-    if (this._center_anchor_w !== undefined && w !== this._center_anchor_w) {
-      this.position_x -= (w - this._center_anchor_w) / 2
+    // #1231 (1.1.5) — dérivation HYBRIDE coin <-> centre. Le centre stocké est la vérité.
+    // Lazy-init au 1er passage (chargement) = conversion coin->centre des fichiers < 1.1.5.
+    if (this._center_x === undefined || this._center_y === undefined) {
+      this.captureCenterFromCorner()
+      this._center_anchor_w = w
+      this._center_anchor_h = h
+      return
     }
-    if (this._center_anchor_h !== undefined && h !== this._center_anchor_h) {
-      this.position_y -= (h - this._center_anchor_h) / 2
+    const size_changed = (w !== this._center_anchor_w) || (h !== this._center_anchor_h)
+    if (size_changed) {
+      // Taille changée pour une raison AUTOMATIQUE (datatag / échelle / valeur) : on dérive
+      // le coin depuis le centre, qui reste FIXE. C'est ce qui supprime la dérive de position
+      // et la dépendance au chemin (navigation datatag, retour échelle->absolu, etc.).
+      this.applyCenterToCorner()
+    } else {
+      // Taille inchangée : si le coin a été déplacé explicitement (drag, flèches, op
+      // structurelle), on recommit le centre depuis le coin. Sinon c'est un no-op (le coin
+      // vaut déjà centre − taille/2).
+      this.captureCenterFromCorner()
     }
     this._center_anchor_w = w
     this._center_anchor_h = h
@@ -315,7 +338,48 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   public settleCenterAnchor() {
     this._center_anchor_w = this.getShapeWidthToUse()
     this._center_anchor_h = this.getShapeHeightToUse()
+    // #1231 (1.1.5) — maintien parallèle du centre : tout « settle » (geste explicite,
+    // resize, bascule de mode) commit le coin courant comme nouveau centre de vérité.
+    this.captureCenterFromCorner()
   }
+
+  /**
+   * #1231 (1.1.5) — Dérive le CENTRE depuis le coin courant (position_x/y) + la taille
+   * de rendu courante. C'est aussi la conversion coin→centre des fichiers < 1.1.5
+   * (appelée au 1er draw, datatag du save restauré → exact en mode absolu).
+   */
+  public captureCenterFromCorner() {
+    this._center_x = this.position_x + this.getShapeWidthToUse() / 2
+    this._center_y = this.position_y + this.getShapeHeightToUse() / 2
+  }
+
+  /**
+   * #1231 (1.1.5) — Dérive le COIN (position_x/y) depuis le centre stocké + la taille
+   * de rendu courante. No-op si le centre n'a pas encore été initialisé. Deviendra le
+   * calcul autoritaire au dessin une fois le flip effectué.
+   */
+  public applyCenterToCorner() {
+    if (this._center_x === undefined || this._center_y === undefined) return
+    this.position_x = this._center_x - this.getShapeWidthToUse() / 2
+    this.position_y = this._center_y - this.getShapeHeightToUse() / 2
+  }
+
+  /**
+   * #1231 (1.1.5) — Dérivation FORCÉE du coin depuis le centre, en resynchronisant l'ancre
+   * de taille. À appeler en SORTIE d'un mode d'affichage (proportionnel / échelle) pour
+   * ramener le nœud à sa vraie position absolue (centre stocké) au lieu de figer le coin
+   * d'affichage (comprimé / rescalé). No-op si le centre n'est pas encore initialisé.
+   */
+  public forceDeriveFromCenter() {
+    if (this._center_x === undefined || this._center_y === undefined) return
+    this.applyCenterToCorner()
+    this._center_anchor_w = this.getShapeWidthToUse()
+    this._center_anchor_h = this.getShapeHeightToUse()
+  }
+
+  /** #1231 (1.1.5) — Centre stocké (lecture), undefined si pas encore initialisé. */
+  public get center_x() { return this._center_x }
+  public get center_y() { return this._center_y }
 
   /**
    * #1231 — Mode proportionnel : mémorise le centre vertical courant comme référence.
@@ -333,8 +397,11 @@ export abstract class Class_NodeBase extends Class_BaseShape {
    * centre de gravité fixe). No-op si aucune référence n'a été capturée.
    */
   public applyProportionalCompression(median_y: number, factor: number) {
-    if (this._prop_center_ref === undefined) return
-    const new_center_y = median_y + (this._prop_center_ref - median_y) * factor
+    // #1231 (1.1.5) — la compression part du CENTRE stocké (vérité invariante), pas du
+    // coin courant. Fallback _prop_center_ref pour les nœuds jamais passés par la dérivation.
+    const ref = this._center_y ?? this._prop_center_ref
+    if (ref === undefined) return
+    const new_center_y = median_y + (ref - median_y) * factor
     this.position_y = new_center_y - this.getShapeHeightToUse() / 2
   }
 

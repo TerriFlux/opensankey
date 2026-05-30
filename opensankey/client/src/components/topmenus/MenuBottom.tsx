@@ -139,7 +139,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
         variant={mode === 'absolute' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
-          if (mode !== 'absolute') { drawing_area.setAbsoluteMode(); updateParentComponent() }
+          if (mode !== 'absolute') { drawing_area.setAbsoluteMode(); drawing_area.draw(); updateParentComponent() }
         }}>
         <FontAwesomeIcon icon={faLocationDot} />
       </Button>
@@ -149,7 +149,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
         variant={mode === 'proportional' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
-          if (mode !== 'proportional') { drawing_area.setProportionalMode(); updateParentComponent() }
+          if (mode !== 'proportional') { drawing_area.setProportionalMode(); drawing_area.draw(); updateParentComponent() }
         }}>
         <FontAwesomeIcon icon={faPercent} />
       </Button>
