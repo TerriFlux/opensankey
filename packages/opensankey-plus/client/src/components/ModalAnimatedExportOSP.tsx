@@ -10,7 +10,12 @@
 // ==================================================================================================
 
 import React, { FC, useEffect, useRef, useState } from 'react'
-import Draggable from 'react-draggable'
+import Draggable, { DraggableProps } from 'react-draggable'
+
+// react-draggable : les typings embarqués rendent les props optionnelles, mais
+// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
+// On relâche le type ici pour que le build passe quelle que soit la source des typings.
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 import {
   Box,
   Button,
@@ -161,7 +166,7 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
   }
 
   return (
-    <Draggable
+    <DraggableComponent
       nodeRef={node_ref}
       handle='.modal-anim-handle'
       defaultPosition={{ x: window.innerWidth / 3, y: window.innerHeight / 6 }}
@@ -316,6 +321,6 @@ export const ModalAnimatedExportOSP: FC<Props> = ({ app_data }) => {
           </ButtonGroup>
         </HStack>
       </Box>
-    </Draggable>
+    </DraggableComponent>
   )
 }

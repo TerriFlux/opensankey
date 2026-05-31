@@ -1,6 +1,11 @@
 // Standard libs
 import React, { ChangeEvent, FC, useRef, useState } from 'react'
-import Draggable from 'react-draggable'
+import Draggable, { DraggableProps } from 'react-draggable'
+
+// react-draggable : les typings embarqués rendent les props optionnelles, mais
+// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
+// On relâche le type ici pour que le build passe quelle que soit la source des typings.
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 import {
   Box,
   CloseButton,
@@ -1042,7 +1047,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
 
   </Box>
 
-  return <Draggable
+  return <DraggableComponent
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 4 }}
@@ -1067,7 +1072,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
         {content}
       </Box>
     </Box>
-  </Draggable>
+  </DraggableComponent>
 }
 
 /**
@@ -1097,7 +1102,7 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
   const has_sankey_plus = app_data.has_sankey_plus
   if (!has_sankey_plus) return <></>
 
-  return <Draggable
+  return <DraggableComponent
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={{ x: window.innerWidth / 3, y: window.innerHeight / 5 }}
@@ -1147,7 +1152,7 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
         </Box>
       </Box>
     </Box>
-  </Draggable>
+  </DraggableComponent>
 }
 
 /**
