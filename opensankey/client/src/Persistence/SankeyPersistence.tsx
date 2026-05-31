@@ -83,8 +83,16 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): Type_JSON {
-    json_object['x'] = base_element.position_x
-    json_object['y'] = base_element.position_y
+    // #1231 (1.1.5) — format courant : x/y = CENTRE du nœud (indépendant du datatag/échelle).
+    // Les autres éléments (conteneurs, liens, légende…) gardent le coin/position d'origine.
+    if (base_element instanceof Class_NodeElement) {
+      const c = base_element.centerForPersistence()
+      json_object['x'] = c.x
+      json_object['y'] = c.y
+    } else {
+      json_object['x'] = base_element.position_x
+      json_object['y'] = base_element.position_y
+    }
     return json_object
   }
   public static fromJSON(
@@ -93,8 +101,17 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): void {
-    base_element.position_x = getNumberFromJSON(json_object, 'x', base_element.position_x)
-    base_element.position_y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    const x = getNumberFromJSON(json_object, 'x', base_element.position_x)
+    const y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    // #1231 (1.1.5) — fichier ≥ 1.1.5 (drapeau `pos_is_center` propagé via kwargs) : x/y est le
+    // CENTRE → on le pose directement. Sinon (fichiers < 1.1.5 ou éléments non-nœuds) : x/y est
+    // le coin → on le pose tel quel, et pour un nœud le centre sera migré au 1er draw (coin+taille/2).
+    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center']) {
+      base_element.setStoredCenter(x, y)
+    } else {
+      base_element.position_x = x
+      base_element.position_y = y
+    }
   }
 }
 export class ProtoElementPersistence extends BaseElementPersistence {
@@ -1690,6 +1707,10 @@ export class SankeyPersistence {
         kwargs
       )
     )
+    // #1231 (1.1.5) — fichier au format « centre » (marqueur explicite node_pos_is_center) ⇒
+    // les x/y des nœuds sont des CENTRES. On propage le drapeau via kwargs jusqu'à
+    // BaseElementPersistence.fromJSON. Absent (anciens fichiers) ⇒ x/y = coin → migration au draw.
+    const pos_is_center = json_object['node_pos_is_center'] === true
     SankeyPersistence.load_nodes(
       sankey,
       json_object,
@@ -1698,7 +1719,8 @@ export class SankeyPersistence {
         node,
         node_json as Type_JSON,
         kwargs
-      )
+      ),
+      { pos_is_center }
     )
     if (json_object.version != 0.8)
       sankey.nodes_list.forEach(node => node.dimensions_as_parent.forEach(dim => dim.normalize()))
@@ -1837,6 +1859,10 @@ export class DrawingAreaPersistence {
     const json_object = {} as Type_JSON
     // Add current version of app
     json_object['version'] = drawing_area.application_data.version
+    // #1231 (1.1.5) — marqueur de format : les x/y des nœuds sont des CENTRES (indépendant
+    // du datatag/échelle). Drapeau explicite (et non comparaison de version) → robuste et
+    // découplé du numéro de version. Absent ⇒ ancien format (coin) → migration au 1er draw.
+    json_object['node_pos_is_center'] = true
     // Dump DA attributes
     json_object['height'] = drawing_area.height
     json_object['width'] = drawing_area.width
@@ -1853,9 +1879,18 @@ export class DrawingAreaPersistence {
     // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
     // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
     json_object['font_size_locked'] = drawing_area.font_size_locked
+    // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
+    // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
+    if (drawing_area.size_locked) json_object['size_locked'] = true
     // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
     // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
     if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
+    // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    {
+      const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
+      if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -2159,6 +2194,9 @@ export class DrawingAreaPersistence {
     // récents sérialisent toujours le flag (cf. toJSON), donc présence ⇒ valeur
     // explicite. Un nouveau diagramme (non chargé) démarre verrouillé.
     drawing_area['_font_size_locked'] = getBooleanFromJSON(json_object, 'font_size_locked', false)
+    // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
+    // Absence du flag ⇒ déverrouillé (défaut de la classe).
+    drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
     drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
@@ -2234,5 +2272,26 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
+    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
+    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
+    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
+    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
+        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
+        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    }
+
+    // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
+    // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
+    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
+    // réactive pas le mode % (qui réutilisera ce couple).
+    drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
+    {
+      const ref_dt = json_object['prop_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
+    }
   }
 }

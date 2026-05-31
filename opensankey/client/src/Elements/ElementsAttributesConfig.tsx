@@ -2577,6 +2577,50 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
     }
   } satisfies AttributeConfig<boolean>,
 
+  straight_include_children: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Keep disaggregated flows straight',
+      fr: 'Garder droit les flux désagrégés',
+      es: 'Mantener rectos los flujos desagregados',
+      de: 'Disaggregierte Flüsse gerade halten',
+      it: 'Mantieni dritti i flussi disaggregati'
+    },
+    tooltips: {
+      en: 'Also keep the child flows straight (between the disaggregated children of the source and target), so straightness survives disaggregation.',
+      fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation.',
+      es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación.',
+      de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt.',
+      it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  is_reference_flux: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    // Pas d'action au set : le redraw est piloté par le handler (setReferenceFlux) ; poser
+    // le marqueur ne doit pas déclencher de dessin (notamment pendant le nettoyage de l'ancien).
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Reference flow',
+      fr: 'Flux de référence',
+      es: 'Flujo de referencia',
+      de: 'Referenzfluss',
+      it: 'Flusso di riferimento'
+    },
+    tooltips: {
+      en: 'In proportional / adapted-scale mode, anchor the diagram on this flow. Set via right-click "Set as reference flow".',
+      fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur ce flux. Activé via clic droit « Définir comme flux de référence ».',
+      es: 'En modo proporcional / escala adaptada, anclar el diagrama en este flujo. Activado con clic derecho «Definir como flujo de referencia».',
+      de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm an diesem Fluss verankern. Über Rechtsklick „Als Referenzfluss festlegen" aktiviert.',
+      it: 'In modalità proporzionale / scala adattata, ancorare il diagramma a questo flusso. Attivato con clic destro «Imposta come flusso di riferimento».'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   show_as_path_locked: {
     default: false,
     type: (() => false) as (() => boolean),

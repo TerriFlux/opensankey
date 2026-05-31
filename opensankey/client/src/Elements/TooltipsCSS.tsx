@@ -206,12 +206,18 @@ export const TOOLTIP_STYLES = `
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: 12px;
+    display: flex;
+    flex-direction: column;
     width: max-content;
     min-width: 300px;
-    max-width: 800px;
-    max-height: 80vh;
+    max-width: 90vw;
+    min-height: 120px;
+    max-height: 90vh;
     z-index: 10000;
-    overflow: visible;
+    /* overflow != visible requis pour que res:both s'applique ; déplaçable par
+       l'en-tête + redimensionnable par la poignée du coin bas-droit. */
+    overflow: hidden;
+    resize: both;
     outline: none;
   }
   .sankey-tooltip:focus {
@@ -238,11 +244,14 @@ export const TOOLTIP_STYLES = `
     color: #666; 
     font-size: 11px; 
   }
-  .tooltip-content { 
-    max-height: 400px; 
-    overflow: auto !important; 
-    padding: 12px 0; 
-    position: relative; 
+  .tooltip-content {
+    /* flex:1 + min-height:0 => la zone scrollable occupe la place restante et
+       suit la hauteur du tooltip quand on le redimensionne. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto !important;
+    padding: 12px 0;
+    position: relative;
   }
   .tooltip-table {
     width: auto; 

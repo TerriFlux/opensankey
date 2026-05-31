@@ -4,7 +4,7 @@ import {
   useSteps, Stepper, Step, StepIndicator, StepStatus, StepSeparator, StepTitle
 } from '@chakra-ui/react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowsUpDown, faLocationDot } from '@fortawesome/free-solid-svg-icons'
+import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-solid-svg-icons'
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
@@ -55,14 +55,19 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
       </OSTooltip>
     </ButtonGroup> : <></>}
     {btn_mouse_mode_edition}
-    {!new_data.is_static ? <ComponentPositionMode
+    {/* Groupe des modes de position (absolu / proportionnel / échelle) : agit sur le
+        rendu, donc pertinent en publish. En mode statique il est piloté par l'option
+        publish `toolbar` (indépendamment du groupe ajustement ci-dessous). */}
+    {(!new_data.is_static || new_data.publish_options.toolbar) ? <ComponentPositionMode
       app_data={new_data}
       updateParentComponent={refreshThis}
     /> : <></>}
-    <ComponetStretchButtons
+    {/* Groupe ajustement / verrous / plein écran : en mode statique, piloté par
+        l'option publish `fit_toolbar`. */}
+    {(!new_data.is_static || new_data.publish_options.fit_toolbar) ? <ComponetStretchButtons
       app_data={new_data}
       updateParentComponent={refreshThis}
-    />
+    /> : <></>}
   </Box>
 }
 
@@ -124,26 +129,39 @@ const ComponentMouseMode = (
 const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: Class_ApplicationData, updateParentComponent: () => void }) => {
   const { t, drawing_area } = app_data
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
-  const isParametric = drawing_area.sankey.styles_dict['default'].shape_position_type === 'parametric'
+  const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
+  // #1231 — Le mode « paramétrique » n'est plus un mode utilisateur : seuls Absolu et
+  // Pourcentage. L'« écart constant » est désormais une commande (clic droit nœud →
+  // « Écarts égaux »). Bouton paramétrique retiré.
   return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
-    <OSTooltip placement='top' label={t('Banner.posMode_parametric')}>
-      <Button
-        variant={isParametric ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
-        size={size}
-        onClick={() => {
-          if (!isParametric) { drawing_area.setParametricMode(); updateParentComponent() }
-        }}>
-        <FontAwesomeIcon icon={faArrowsUpDown} />
-      </Button>
-    </OSTooltip>
     <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
       <Button
-        variant={!isParametric ? 'toolbar_button_mouse_mode_activated' : 'toolbar_button_mouse_mode'}
+        variant={mode === 'absolute' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
         size={size}
         onClick={() => {
-          if (isParametric) { drawing_area.setAbsoluteMode(); updateParentComponent() }
+          if (mode !== 'absolute') { drawing_area.setAbsoluteMode(); drawing_area.draw(); updateParentComponent() }
         }}>
         <FontAwesomeIcon icon={faLocationDot} />
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='top' label={t('Banner.posMode_proportional')}>
+      <Button
+        variant={mode === 'proportional' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
+        size={size}
+        onClick={() => {
+          if (mode !== 'proportional') { drawing_area.setProportionalMode(); drawing_area.draw(); updateParentComponent() }
+        }}>
+        <FontAwesomeIcon icon={faPercent} />
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='top' label={t('Banner.posMode_scale_adapted')}>
+      <Button
+        variant={mode === 'scale_adapted' ? 'toolbar_button_position_mode_activated' : 'toolbar_button_position_mode'}
+        size={size}
+        onClick={() => {
+          if (mode !== 'scale_adapted') { drawing_area.setScaleAdaptedMode(); updateParentComponent() }
+        }}>
+        <FontAwesomeIcon icon={faRulerVertical} />
       </Button>
     </OSTooltip>
   </ButtonGroup>
@@ -207,6 +225,22 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
         {app_data.drawing_area.font_size_locked
           ? app_data.icon_library.icon_font_size_locked
           : app_data.icon_library.icon_font_size_unlocked}
+      </Button>
+    </OSTooltip>
+
+    <OSTooltip
+      placement={app_data.is_static ? 'left' : 'top'}
+      label={app_data.drawing_area.size_locked ? t('Banner.tooltipSizeLocked') : t('Banner.tooltipSizeUnlocked')}
+    >
+      <Button variant='toolbar_button_6'
+        size={size}
+        onClick={() => {
+          app_data.drawing_area.size_locked = !app_data.drawing_area.size_locked
+          updateParentComponent()
+        }}>
+        {app_data.drawing_area.size_locked
+          ? app_data.icon_library.icon_size_locked
+          : app_data.icon_library.icon_size_unlocked}
       </Button>
     </OSTooltip>
 
@@ -288,6 +322,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
   const option_btn = <Menu>
     <MenuButton
       as={Button}
+      size='xs'
       isDisabled={new_data.menu_configuration.is_playing_sequence}
       variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_menu_play' : 'button_dataTagg_sequence_menu_pause'}
     >
@@ -303,7 +338,7 @@ export const DrawerSequenceDataTagg = ({ new_data }: { new_data: Class_Applicati
     <Box
       layerStyle='box_sequence'
     >
-      <ButtonGroup isAttached>
+      <ButtonGroup isAttached size='xs'>
         <Button
           variant={new_data.menu_configuration.is_playing_sequence ? 'button_dataTagg_sequence_play' : 'button_dataTagg_sequence_pause'}
           onClick={() => {
@@ -359,7 +394,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
 
   return <Box layerStyle='box_stepper'>
     {/* First stepper that have progression bar of the sequence with steps */}
-    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+    <Stepper index={activeStep} size={'xs'} variant='sequenceStepper'>
       {stepper_sequence.map((step, index) => (
         <Step key={index} onClick={() => switchCurrTag(index)}>
           <>
@@ -407,7 +442,7 @@ const StepperDataTagg = ({ new_data, DataGroup }: { new_data: Class_ApplicationD
     </Stepper>
 
     {/* Second stepper just to have text well aligned with indicator */}
-    <Stepper index={activeStep} size={'sm'} variant='sequenceStepper'>
+    <Stepper index={activeStep} size={'xs'} variant='sequenceStepper'>
       {stepper_sequence.map((step, index) => (
         <Step key={index} onClick={() => switchCurrTag(index)}>
           <>

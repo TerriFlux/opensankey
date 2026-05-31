@@ -47,7 +47,19 @@ export type Type_BaseElementPosition = {
   y: number
 }
 
-export type Type_Position = 'absolute' | 'relative' | 'parametric'
+export type Type_Position = 'absolute' | 'relative' | 'parametric' | 'proportional' | 'scale_adapted'
+
+/**
+ * Mode d'écart vertical des enfants lors d'une opération structurelle
+ * (désagrégation locale/globale, expansion latérale, englobement).
+ *  - 'fill'        : remplir exactement le slot [haut, bas] du parent, écart égal
+ *                    (comportement historique #1231 ; défaut, ne pousse aucun voisin).
+ *  - 'keep'        : garder le Y courant des enfants (le x suit toujours la colonne du parent).
+ *  - 'children_dy' : empiler depuis le haut du parent, écart = shape_position_dy de chaque enfant.
+ *  - 'constant'    : empiler depuis le haut du parent, écart constant donné par l'utilisateur
+ *                    (DrawingArea.disaggregation_gap_value, défaut = default_style.shape_position_dy).
+ */
+export type Type_DisaggregationGap = 'fill' | 'keep' | 'children_dy' | 'constant'
 
 /**
  * Define type properties for Sankey structure

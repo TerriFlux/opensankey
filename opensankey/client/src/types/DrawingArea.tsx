@@ -26,7 +26,7 @@
 
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
   default_black_color,
@@ -168,6 +168,30 @@ export class Class_DrawingArea {
   public get import_export_above_below(): boolean { return this._import_export_above_below }
   public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
 
+  // Mode d'écart vertical des enfants pour les opérations structurelles
+  // (désagrégation, expansion latérale, englobement). Persisté (défaut 'fill' =
+  // comportement historique #1231). cf. Type_DisaggregationGap.
+  protected _disaggregation_gap_mode: Type_DisaggregationGap = 'fill'
+  public get disaggregation_gap_mode(): Type_DisaggregationGap { return this._disaggregation_gap_mode }
+  public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
+
+  // Écart constant (px) utilisé par le mode 'constant'. null = utiliser
+  // default_style.shape_position_dy (le getter le résout). Persisté seulement si défini.
+  protected _disaggregation_gap_value: number | null = null
+  public get disaggregation_gap_value(): number {
+    if (this._disaggregation_gap_value != null) return this._disaggregation_gap_value
+    return this._sankey?.default_style?.shape_position_dy ?? 0
+  }
+  public set disaggregation_gap_value(v: number) { this._disaggregation_gap_value = v }
+
+  // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
+  // Non persistée, non copiée : posée juste avant l'op puis effacée. Le helper de
+  // positionnement lit `gap_mode_override ?? disaggregation_gap_mode`.
+  public gap_mode_override: Type_DisaggregationGap | undefined = undefined
+  public get effective_gap_mode(): Type_DisaggregationGap {
+    return this.gap_mode_override ?? this._disaggregation_gap_mode
+  }
+
   protected _font_size_locked: boolean = true
   public get font_size_locked(): boolean { return this._font_size_locked }
   public set font_size_locked(v: boolean) {
@@ -187,6 +211,29 @@ export class Class_DrawingArea {
     const k = this.getZoomScale()
     return k > 0 ? 1 / k : 1
   }
+
+  // Verrou de taille (#1240) : quand actif, le cadrage courant (hauteur, largeur,
+  // zoom) est figé tel quel — areaAutoFit devient inerte, donc plus de reflow d'un
+  // dataTag à l'autre. Aucun recalcul : l'utilisateur se place sur le dataTag voulu
+  // (le plus grand) puis verrouille. Persisté (cf. SankeyPersistence), défaut false.
+  protected _size_locked: boolean = false
+  public get size_locked(): boolean { return this._size_locked }
+  public set size_locked(v: boolean) {
+    if (this._size_locked === v) return
+    this._size_locked = v
+    // Verrouiller = figer le cadrage courant tel quel (pas de recalcul).
+    // Déverrouiller = on réajuste sur le dataTag courant.
+    if (v) this._locked_fit_dirty = false
+    else this.areaAutoFit()
+  }
+
+  // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
+  // stabilisé (1er chargement, ou recenter ayant décalé les positions APRÈS le
+  // dernier fit). Le prochain draw verrouillé recalcule alors un fit vertical sur
+  // les positions finales puis repasse à false, ce qui fige le cadrage pour les
+  // changements de dataTag suivants. Évite de figer un transform périmé calculé
+  // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
+  protected _locked_fit_dirty: boolean = true
 
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
@@ -385,7 +432,11 @@ export class Class_DrawingArea {
     this._width = drawing_area_to_copy._width
     // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
     this._font_size_locked = drawing_area_to_copy._font_size_locked
+    // Idem : champ direct, le setter size_locked déclenche un re-fit.
+    this._size_locked = drawing_area_to_copy._size_locked
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
+    this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
+    this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
@@ -425,6 +476,13 @@ export class Class_DrawingArea {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
 
+    // #1240 — Verrou de taille : _initDraw recrée le SVG de zoom et perd le
+    // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
+    // capture la vue courante avant de redessiner pour la réappliquer à
+    // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
+    const zoom_node = this._size_locked ? this.d3_selection_zoom_area?.node() : null
+    const locked_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+
     // Clean drawing area
     this.unDraw()
 
@@ -435,7 +493,24 @@ export class Class_DrawingArea {
     this.drawElements()
     // Fit area
 
-    this.areaAutoFit()
+    // Mode verrouillé : tant que le cadrage est « dirty » (1er rendu, ou recenter
+    // ayant décalé les positions après le dernier fit), on RECALCULE un fit unique
+    // sur les positions finales puis on fige (dirty=false). Sinon on réapplique à
+    // l'identique le transform capturé ci-dessus (cadrage figé d'un dataTag à
+    // l'autre). Ce fit verrouillé est VERTICAL (comme le mode static / le fit
+    // vertical manuel) : l'heuristique horiz/vert choisirait souvent l'horizontal
+    // et ferait déborder en hauteur ; le vertical garantit que le dataTag le plus
+    // grand tient dans la hauteur de la fenêtre.
+    const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+    if (recompute_locked) {
+      this._locked_fit_dirty = false
+    } else if (locked_zoom_transform && this.d3_selection_zoom_area) {
+      this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+      this.drawBackground()
+      this.drawGrid()
+      this._updateScrollbars()
+    }
     this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
@@ -561,6 +636,17 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'proportional') {
+      // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
+      // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
+      // changement d'épaisseur). Doit tourner avant _sankey.draw().
+      this.nodePositioning.anchorProportionalNodes()
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #1231 — Mode « échelle adaptée » : ajuster l'échelle (valeur→px) pour que le flux
+      // de référence garde la même épaisseur d'un datatag à l'autre, puis garder le centre
+      // des nœuds fixe pendant qu'ils se redimensionnent (comme l'absolu). Avant _sankey.draw().
+      this.nodePositioning.applyAdaptedScale()
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
     } else {
       // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
       // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
@@ -575,16 +661,17 @@ export class Class_DrawingArea {
     //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
-    // #665 — maintien des flux marqués « à garder droit » (droiture dure, écarts
-    // absorbants). Doit tourner APRÈS un premier draw : le cache d'accroche
-    // (getOutputLinkStartingPoint/…) reflète alors les épaisseurs courantes
-    // (utile au changement de data tag/région). Si des nœuds bougent, on
-    // redessine une seule fois — appel direct à _sankey.draw() (pas drawElements)
-    // pour éviter toute récursion.
-    if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
-      if (this.nodePositioning.enforceStraightLinks()) {
-        this._sankey.draw()
-      }
+    // #665 (refonte #1231) — post-processing « flux droit ». Tourne APRÈS un premier draw : le
+    // cache d'accroche (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace
+    // les nœuds cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
+    // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la récursion.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : la compression (anchorProportionalNodes, facteur
+    // global f_eff) place les nœuds de façon déterministe, et déplacer une cible pour « garder
+    // droit » casse cet empilement (résultat incohérent). Le flux droit reste actif en absolu /
+    // échelle adaptée.
+    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+        this.nodePositioning.enforceStraightLinks()) {
+      this._sankey.draw()
     }
     // Draw legend
     //this._legend.draw()
@@ -895,7 +982,14 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean) {
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
+
+    // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
+    // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
+    // (chargement, ex. mode publish) aucun transform de zoom n'existe encore à
+    // réappliquer ; on autorise alors un fit unique pour établir le cadrage
+    // initial, qui restera ensuite figé (force_when_locked).
+    if (this._size_locked && !force_when_locked) return
 
     const prev_k_fit = this._k_fit
 
@@ -1504,7 +1598,13 @@ export class Class_DrawingArea {
       this.legend.draw()
     }
 
-    this.areaAutoFit()
+    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
+    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
+    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
+    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
+    // normal (heuristique horiz/vert).
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    if (this._size_locked) this._locked_fit_dirty = false
     this.orderElementOnDA()
   }
   /**
@@ -2933,17 +3033,71 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       if (n.shape_position_v_locked !== true) n.position_v = -1
     })
+    // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
+    // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
+    // proportionnel. Les centres de colonne suivront ensuite le % au changement de
+    // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
+    // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
+    this.nodePositioning.captureProportionalReference()
     this.nodePositioning.computeParametrization(false)
     this.bypass_redraws = false
   }
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
+    const prev_mode = default_style.shape_position_type
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
+    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
-    // #1230 — re-caler l'ancrage du centre sur la taille courante pour que la
-    // bascule en absolu ne provoque aucun saut : le 1er draw ne décalera rien
-    // (le cache pouvait être périmé si la taille a changé pendant le mode parametric).
-    this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    if (prev_mode === 'scale_adapted' || prev_mode === 'proportional') {
+      // #1231 (1.1.5) — sortie d'un mode d'AFFICHAGE (échelle / proportionnel) : le coin
+      // courant est du scratch (rescalé par l'échelle adaptée, ou comprimé par le %). On
+      // FORCE le retour aux vrais centres stockés, sinon les positions d'affichage
+      // deviendraient les positions absolues (le % « collait »). Centres invariants → on
+      // retrouve exactement la position absolue d'avant l'entrée du mode.
+      this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    } else {
+      // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
+      // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
+      // aucun saut.
+      this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    }
+  }
+
+  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
+  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
+  public setScaleAdaptedMode() {
+    const default_style = this.sankey.styles_dict['default']
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
+    // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
+    // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
+    // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    default_style.shape_position_type = 'scale_adapted'
+    this.nodePositioning.captureScaleReference()
+    // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
+    // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
+    this.draw()
+  }
+
+  public setProportionalMode() {
+    const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (échelle), le coin courant est du
+    // scratch rescalé. On revient d'abord aux VRAIS centres pour que la capture de référence
+    // (médiane, centres de colonne) parte des positions absolues réelles, pas de l'affichage.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    default_style.shape_position_type = 'proportional'
+    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
+    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
+    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
+    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
+    this.nodePositioning.inferPositionUFromX()
+    this.nodePositioning.captureProportionalReference()
   }
 
   public resetAllVerticalIntervals(v_spacing?: number) {
@@ -2971,6 +3125,36 @@ export class Class_DrawingArea {
       this.draw()
     }
 
+    this.application_data.history.saveUndo(revert)
+    this.application_data.history.saveRedo(apply)
+    apply()
+  }
+
+  /**
+   * #1231 — COMMANDE « écarts égaux ». Équilibre les écarts verticaux d'une colonne
+   * (bord haut du 1er nœud et bord bas du dernier conservés) — celle du nœud passé, ou
+   * toutes les colonnes si aucun nœud. One-shot avec undo. Re-cale ensuite la référence
+   * du mode actif (% → captureProportionalReference, absolu → settle) pour que le
+   * résultat tienne, puis le mode gère l'évolution au changement de datatag.
+   */
+  public equalizeColumnGaps(node?: Class_NodeElement) {
+    const saved = this.sankey.visible_nodes_list.map(n => ({ n, y: n.position_y, dy: n.shape_position_dy }))
+    // #1231 — une commande de positionnement bascule en mode ABSOLU (positions explicites).
+    // Le couple flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) :
+    // un futur retour en % le réutilisera.
+    const rebase = () => { this.sankey.nodes_list.forEach(n => n.settleCenterAnchor()) }
+    const apply = () => {
+      this.setAbsoluteMode()
+      if (node) this.nodePositioning.equalizeColumnGapsOfNode(node)
+      else this.nodePositioning.equalizeAllColumnsGaps()
+      rebase()
+      this.draw()
+    }
+    const revert = () => {
+      saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
+      rebase()
+      this.draw()
+    }
     this.application_data.history.saveUndo(revert)
     this.application_data.history.saveRedo(apply)
     apply()
