@@ -111,14 +111,32 @@ def changelog():
         "pre{background:#f5f5f5;padding:12px;border-radius:4px;overflow-x:auto}"
         "code{background:#f0f0f0;padding:1px 4px;border-radius:3px}"
         "a{color:#2b6cb0}"
+        ".toc{margin:0 0 1.5rem;padding:.6rem .8rem;background:#f5f5f5;"
+        "border-radius:4px;line-height:1.9}.toc a{margin-right:.2rem}"
         "</style></head><body>"
         '<div id="content"></div>'
         '<pre id="raw">' + html.escape(md) + "</pre>"
         '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>'
-        "<script>(function(){var raw=document.getElementById('raw');"
-        "if(window.marked&&raw){"
-        "document.getElementById('content').innerHTML="
-        "window.marked.parse(raw.textContent);raw.style.display='none';}})();</script>"
+        # After rendering, build a version index from the h2 headings (each
+        # "## [X.Y.Z]" section) and prepend it as an anchor list at the top.
+        """<script>(function(){
+var raw=document.getElementById('raw');
+var content=document.getElementById('content');
+if(!window.marked||!raw){return;}
+content.innerHTML=window.marked.parse(raw.textContent);
+raw.style.display='none';
+var hs=content.querySelectorAll('h2');
+if(!hs.length){return;}
+var nav=document.createElement('div');
+nav.className='toc';
+var s='<strong>Versions :</strong> ';
+for(var i=0;i<hs.length;i++){
+var id='s'+i;hs[i].id=id;
+s+=(i?' · ':'')+'<a href="#'+id+'">'+hs[i].textContent.trim()+'</a>';
+}
+nav.innerHTML=s;
+content.insertBefore(nav,content.firstChild);
+})();</script>"""
         "</body></html>"
     )
     return Response(page, mimetype="text/html")
