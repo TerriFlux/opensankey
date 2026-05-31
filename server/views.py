@@ -9,6 +9,7 @@ import os
 import time
 import tempfile
 import json
+import html
 from datetime import datetime
 
 # External modules
@@ -78,6 +79,49 @@ def index():
 @sankeyapp.route("/fr")
 def index_fr():
     return render_template("index_fr.html", filename="", static_site="false")
+
+
+# Repo root holds CHANGELOG.md (one level above server/). Served by the app
+# itself so the info popover can link to it on the same host — always in sync
+# with the deployed commit, and without exposing the private GitLab repo. The
+# file lists every version, so a single page covers "what changed" + history.
+CHANGELOG_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "CHANGELOG.md"
+)
+
+
+@sankeyapp.route("/changelog")
+def changelog():
+    try:
+        with open(CHANGELOG_PATH, encoding="utf-8") as f:
+            md = f.read()
+    except Exception:
+        md = "# Changelog\n\nChangelog indisponible."
+    # The escaped <pre> is the no-JS / offline fallback (readable raw markdown);
+    # marked (CDN) upgrades it to rendered HTML when available.
+    page = (
+        "<!DOCTYPE html>\n"
+        '<html lang="fr"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width, initial-scale=1">'
+        "<title>Changelog — SankeyApplication</title>"
+        "<style>"
+        "body{font-family:Arial,sans-serif;margin:2rem auto;max-width:900px;"
+        "padding:0 1rem;color:#222;line-height:1.5}"
+        "h1,h2,h3{color:#333}h2{margin-top:2rem;border-bottom:1px solid #eee;padding-bottom:.2rem}"
+        "pre{background:#f5f5f5;padding:12px;border-radius:4px;overflow-x:auto}"
+        "code{background:#f0f0f0;padding:1px 4px;border-radius:3px}"
+        "a{color:#2b6cb0}"
+        "</style></head><body>"
+        '<div id="content"></div>'
+        '<pre id="raw">' + html.escape(md) + "</pre>"
+        '<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>'
+        "<script>(function(){var raw=document.getElementById('raw');"
+        "if(window.marked&&raw){"
+        "document.getElementById('content').innerHTML="
+        "window.marked.parse(raw.textContent);raw.style.display='none';}})();</script>"
+        "</body></html>"
+    )
+    return Response(page, mimetype="text/html")
 
 
 @sankeyapp.route("/<path:path>")

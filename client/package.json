@@ -137,6 +137,9 @@
       "@parcel/watcher",
       "core-js",
       "core-js-pure"
-    ]
+    ],
+    "overrides": {
+      "react-draggable": "4.4.6"
+    }
   }
 }
