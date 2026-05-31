@@ -965,10 +965,6 @@ export class Class_DrawingArea {
     // initial, qui restera ensuite figé (force_when_locked).
     if (this._size_locked && !force_when_locked) return
 
-    // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
-    // aucun auto-fit au changement de dataTag.
-    if (this._size_locked) return
-
     const prev_k_fit = this._k_fit
 
     // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
