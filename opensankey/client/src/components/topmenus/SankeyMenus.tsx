@@ -26,7 +26,12 @@
 
 import React, { MutableRefObject, useLayoutEffect, useRef, useState } from 'react'
 
-import Draggable from 'react-draggable'
+import Draggable, { DraggableProps } from 'react-draggable'
+
+// react-draggable : les typings embarqués rendent les props optionnelles, mais
+// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
+// On relâche le type ici pour que le build passe quelle que soit la source des typings.
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
 import {
   Box,
@@ -536,7 +541,7 @@ export const MenuDraggable = ({
   const [display_menu, set_display_menu] = useState(false)
   const nodeRef = useRef(null) // nodeRef as node from DOM (not Sankey node)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
-  return <Draggable
+  return <DraggableComponent
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={customPos !== undefined ? customPos : { x: window.innerWidth / 4, y: window.innerHeight / 4 }}
@@ -571,5 +576,5 @@ export const MenuDraggable = ({
         {content}
       </Box>
     </Box>
-  </Draggable>
+  </DraggableComponent>
 }
