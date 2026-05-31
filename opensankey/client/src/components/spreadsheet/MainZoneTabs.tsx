@@ -38,7 +38,6 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
   const [, force] = useReducer((x: number) => x + 1, 0)
   useEffect(() => {
     return app_data.menu_configuration.addMainZoneListener(force)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const mc = app_data.menu_configuration
   return {
@@ -76,7 +75,6 @@ export const MainZoneTabs = (
     drawing_area.main_zone_right_reserved = reserved
     drawing_area.areaAutoFit()
     app_data.draw()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showDiagram, showSpreadsheet, splitRatio])
 
   const onDividerDown = (e: React.MouseEvent) => {

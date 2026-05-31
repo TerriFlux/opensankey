@@ -98,7 +98,6 @@ export const UniverSpreadSheet = (
       bridge.dispose()
       univer.dispose()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active])
 
   // Boutons de hiérarchie (onglet Noeuds) : opèrent sur la sélection courante du tableur.

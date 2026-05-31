@@ -9,11 +9,12 @@
 // Couleurs alignées sur SankeyExcelParser/classes/excel_formatter.py (CATEGORY_COLORS, main colors).
 // ==================================================================================================
 
-import { IWorkbookData } from '@univerjs/presets'
-
 import { Class_ApplicationData } from '../../types/ApplicationData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Univer non typé par tsc (cf univer-modules.d.ts) -> structure de classeur typée souplement.
+type Type_WorkbookData = any
 
 // Identifiants stables des feuilles (utilisés aussi par le write-back).
 export const SHEET_ID_FLUX = 'sheet-flux'
@@ -99,7 +100,7 @@ const nodeTagsInGroup = (node: any, group: any): string => {
  */
 export const buildSankeyWorkbookData = (
   app_data: Class_ApplicationData
-): Partial<IWorkbookData> => {
+): Partial<Type_WorkbookData> => {
   const { sankey } = app_data.drawing_area
   const has_afm = app_data.has_sankey_afm
 
@@ -129,7 +130,7 @@ export const buildSankeyWorkbookData = (
   // --- Onglet Noeuds (colonnes Excel + node-tags + dégradé bleu par niveau) -----------------------
   const nodeTagGroups = sankey.node_taggs_list || []
   const coreHeaders = [
-    "Niveau d'agrégation",
+    'Niveau d\'agrégation',
     'Noeuds',
     'Equilibre entrée-sortie',
     'Affichage sur le diagramme de Sankey',
