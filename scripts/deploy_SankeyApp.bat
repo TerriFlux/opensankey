@@ -64,15 +64,37 @@ REM === Choix de compilation serveur ===
 set /p build_server=Souhaitez-vous construire le serveur ? (y/n)
 
 if /I "%create_env%"=="y" (
-    set CONDA_ENVS_PATH=USERPROFILE%\.conda\envs
+    set CONDA_ENVS_PATH=%USERPROFILE%\.conda\envs
     set MY_ENV_PATH=%USERPROFILE%\.conda\envs\!conda_env!
     echo !MY_ENV_PATH!
     set python_version=3.12
     echo Suppression ^(si existant^) de l'environnement conda : !conda_env!
     call conda deactivate
     call conda remove -y --name !conda_env! --all >nul 2>&1
+
     echo Création de l'environnement conda : !conda_env! avec Python !python_version!
     call conda create -y --prefix !MY_ENV_PATH! python=!python_version!
+
+    REM === Si la création échoue (ex: CondaVerificationError / cache corrompu),
+    REM === on nettoie le cache des paquets et on retente une fois.
+    if errorlevel 1 (
+        echo.
+        echo [ATTENTION] La creation de l'environnement a echoue.
+        echo Nettoyage du cache conda corrompu puis nouvelle tentative...
+        call conda remove -y --prefix !MY_ENV_PATH! --all >nul 2>&1
+        REM Purge les tarballs et paquets extraits potentiellement corrompus
+        call conda clean --all -y
+        echo Seconde tentative de creation de l'environnement : !conda_env!
+        call conda create -y --prefix !MY_ENV_PATH! python=!python_version!
+        if errorlevel 1 (
+            echo.
+            echo [ERREUR] Echec de la creation de l'environnement conda apres nettoyage du cache.
+            echo Pistes : ajouter %USERPROFILE%\.conda aux exclusions de l'antivirus,
+            echo verifier l'espace disque, ou mettre a jour conda ^(conda update -n base conda^).
+            pause
+            exit /b 1
+        )
+    )
 )
 
 REM === Activation de l'environnement conda ===
