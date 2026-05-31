@@ -2,7 +2,7 @@
 // The MIT License (MIT) - Copyright (c) 2025 TerriFlux
 // ==================================================================================================
 // Opérations unitaires de hiérarchie d'agrégation, pilotées par des boutons du tableur (et non plus
-// par l'édition de la colonne "Niveau d'agrégation", trop fragile). Agissent sur la sélection
+// par l'édition de la colonne 'Niveau d\'agrégation', trop fragile). Agissent sur la sélection
 // courante de l'onglet Noeuds. S'appuient sur l'API du modèle (Class_NodeDimension, addNodeAsChild,
 // setForceToShowParent/Children) -> opérations explicites qui mappent 1:1 sur le modèle.
 // ==================================================================================================
@@ -18,7 +18,7 @@ export const SPREADSHEET_DIM_ID = 'spreadsheet_levels'
 
 const ensureDimGroup = (sankey: any) => {
   if (!sankey.level_taggs_list.some((g: any) => g.id === SPREADSHEET_DIM_ID)) {
-    sankey.addLevelTagGroup(SPREADSHEET_DIM_ID, "Niveau d'agrégation")
+    sankey.addLevelTagGroup(SPREADSHEET_DIM_ID, 'Niveau d\'agrégation')
   }
 }
 
@@ -100,7 +100,7 @@ export const detachSelected = (app_data: Class_ApplicationData, univerAPI: any):
 }
 
 /**
- * "Parser" : construit la hiérarchie d'agrégation à partir de la colonne "Niveau d'agrégation"
+ * "Parser" : construit la hiérarchie d'agrégation à partir de la colonne 'Niveau d\'agrégation'
  * de l'onglet Noeuds (règle Excel : un nœud de niveau N a pour parent la ligne précédente la plus
  * proche de niveau N-1 ; les frères = même niveau sous le même parent). Idempotent : efface puis
  * recrée les dimensions du groupe géré par le tableur. Ne replie PAS (création seule).
@@ -125,7 +125,7 @@ export const parseHierarchyFromLevels = (app_data: Class_ApplicationData, univer
   if (existingGrp && typeof existingGrp.delete === 'function') {
     existingGrp.delete()
   }
-  const group = sankey.addLevelTagGroup(SPREADSHEET_DIM_ID, "Niveau d'agrégation")
+  const group = sankey.addLevelTagGroup(SPREADSHEET_DIM_ID, 'Niveau d\'agrégation')
 
   const nodesArr = sankey.nodes_list
   const readLevel = (rowIdx0: number): number => {
