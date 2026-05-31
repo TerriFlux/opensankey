@@ -164,7 +164,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
         response.text()
           .then(text => {
             if (text !== 'Not connected') {
-              const json_dump = JSON.parse(text)
+              // En dev sans backend, /user/get_preference peut renvoyer l'index.html
+              // du dev server (HTML) au lieu du JSON attendu : ne pas crasher.
+              let json_dump
+              try {
+                json_dump = JSON.parse(text)
+              } catch {
+                return
+              }
               if (json_dump['palette']) {
                 this._user_preferences.color = json_dump['palette']
               }
