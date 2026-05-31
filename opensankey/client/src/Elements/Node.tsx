@@ -247,6 +247,20 @@ export class Class_NodeElement extends Class_NodeBase {
     this._nodeTagsManager.copyTagsFrom(_)
   }
 
+  // Stock appearance fields are plain instance fields (not _storage
+  // attributes), so the generic copyAttrFrom would drop them — carry them
+  // explicitly so view sync (UpdateFrom) and full copies keep them. This
+  // includes the stock/delta label captions and the stock-shape visibility,
+  // which otherwise stay frozen on the old view after an updateFrom.
+  public copyAttrFrom(_: Class_NodeElement): void {
+    super.copyAttrFrom(_)
+    this.use_stock_for_height = _.use_stock_for_height
+    this.stock_height_scale_factor = _.stock_height_scale_factor
+    this.stock_shape_is_visible = _.stock_shape_is_visible
+    this.stock_si_caption = _.stock_si_caption
+    this.stock_delta_caption = _.stock_delta_caption
+  }
+
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
     // Vraie copie : on efface d'abord les dimensions actuelles du nœud
     // (sans quoi getOrCreateLowerDimension matche sur (id, parent) et crée

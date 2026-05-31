@@ -323,6 +323,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._values.delete()
   }
 
+  // Anchor deltas are plain instance fields (not _storage attributes), so the
+  // generic copyAttrFrom would drop them — carry them explicitly so view sync
+  // (UpdateFrom) and full copies keep the per-anchor gaps.
+  public copyAttrFrom(_: Class_LinkElement): void {
+    super.copyAttrFrom(_)
+    this.source_anchor_delta = _.source_anchor_delta
+    this.target_anchor_delta = _.target_anchor_delta
+  }
+
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
   public copyFrom(_: Class_LinkElement) {
     super.copyFrom(_)
@@ -1569,6 +1578,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return this._values
     else
       return this._values.getValueForDataTags(_ as Class_DataTag[]) as Class_LinkValue | null
+  }
+
+  /**
+   * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
+   * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
+   * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
+   */
+  public valueForDataTags(data_tags: Class_DataTag[]): number | null {
+    const v = this.valueForTags(data_tags)
+    if (!v) return null
+    if (this.drawing_area.type_data === 'data') return v.valueData ?? null
+    return v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null) ?? null
   }
 
   public valueForTag(tag: Class_DataTag | undefined) {

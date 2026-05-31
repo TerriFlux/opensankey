@@ -413,6 +413,10 @@ export class NodeEventsHandler {
       this._node.drawing_area.nodePositioning.inferPositionUFromX()
       this._node.drawing_area.nodePositioning.computeParametrization(false)
       this._node.drawing_area.nodePositioning.backCalculateShapePositionDyFromY()
+      // #1231 — un drag est respecté littéralement : on (re)capture le cadre de référence
+      // (médiane globale + centre par colonne) sur la position post-drag, qui devient la
+      // nouvelle référence. Les changements de datatag/dimension ultérieurs suivront le %.
+      this._node.drawing_area.nodePositioning.captureProportionalReference()
       this._node.drawing_area.drawElements()
     }
 
@@ -568,6 +572,16 @@ export class NodeEventsHandler {
 
       this._node.saveUndo(undo)
       this._node.saveRedo(redo)
+    }
+
+    // #1231 — Un drag est une COMMANDE de positionnement : en mode % / échelle adaptée, on
+    // bascule en mode ABSOLU (positions explicites posées par l'utilisateur). Le couple
+    // flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) → un futur
+    // retour en % le réutilise. On redessine en absolu.
+    if (this._node.sankey.default_style.shape_position_type === 'proportional' ||
+        this._node.sankey.default_style.shape_position_type === 'scale_adapted') {
+      this._node.drawing_area.setAbsoluteMode()
+      this._node.drawing_area.drawElements()
     }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined

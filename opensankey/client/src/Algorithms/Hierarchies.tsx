@@ -26,6 +26,7 @@
 
 import { Class_Tag } from '../types/Tag'
 import { Class_NodeElement } from '../Elements/Node'
+import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { NodePositioning } from './NodePositioning'
@@ -233,24 +234,30 @@ const updateNodePositioning = (
       n2.position_u += expand_left ? -1 : 1
     })
 
-  // Positionnement symétrique des enfants autour du centre du parent. L'écart vertical
-  // entre chaque enfant et le précédent est lu depuis `shape_position_dy` (PR 2 — seule
-  // source de vérité pour l'espacement).
-  const total_height = NodePositioning.totalStackHeight(nodes)
-  const parent_center_y = contextualised_node.position_y + contextualised_node.getShapeHeightToUse() / 2
-  const anchor_y = parent_center_y - total_height / 2
+  // #1231 — Placement comme la désagrégation : les enfants étendus prennent le slot
+  // vertical du parent [haut, bas] dans la colonne adjacente, avec un écart vertical
+  // défini par le mode configuré (cf. layoutChildrenInParentSlot). Défaut 'fill' =
+  // remplissage du slot → liens d'expansion propres et pas de débordement sur les voisins.
+  const parent_top = contextualised_node.position_y
+  const parent_h = contextualised_node.getShapeHeightToUse()
 
-  // Décalage horizontal : `shape_position_dx / 3` pour que les clones
-  // d'expansion latérale restent visuellement proches du parent — sinon
-  // ils prenaient l'espacement complet d'une colonne et débordaient
-  // largement, surtout en mode englobé où on veut que l'enveloppe reste
-  // compacte autour du master.
+  // #1231 — Bloc centré sur le point de départ : le parent AVANCE du côté opposé à
+  // l'expansion (±dx) et les enfants RECULENT du côté de l'expansion (∓dx), chacun à
+  // 1/3 de l'écart de colonne. Ainsi le centre de gravité horizontal du bloc
+  // {parent, enfants} reste à la position d'origine du parent (au lieu de ne décaler
+  // que les enfants, qui désaxait le bloc).
   const dx = contextualised_node.shape_position_dx / 3
-  nodes.forEach((n) => {
+  const x0 = contextualised_node.position_x
+  contextualised_node.position_x = x0 + (expand_left ? dx : -dx)
+
+  // Le déplacement HORIZONTAL (colonne adjacente + dx) est intrinsèque à l'expansion :
+  // il a toujours lieu, quel que soit le mode d'écart. Seul l'empilement VERTICAL suit
+  // le mode (en 'keep' les enfants gardent leur position_y).
+  nodes.forEach(n => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
-    n.position_x = contextualised_node.position_x + (expand_left ? -dx : dx)
+    n.position_x = x0 + (expand_left ? -dx : dx)
   })
-  NodePositioning.stackNodesVertically(nodes, anchor_y)
+  new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(nodes, parent_top, parent_h)
 
   // Rééquilibrer les colonnes ancêtres pour que le sous-arbre du nœud expandé
   // n'empiète pas sur ses frères. Propage récursivement vers le parent visuel.
@@ -286,12 +293,23 @@ export const aggregate = (
   }
   // const parent = child_dim.parent
   const Do = () => {
+    // #1231 — Symétrique de la désagrégation : le parent reprend EXACTEMENT le slot
+    // occupé par ses enfants (leur bord haut), avant de les masquer. Comme la hauteur
+    // du parent = somme des hauteurs des enfants, il remplit leur place → aucun voisin
+    // déplacé. On lit le haut des enfants avant de basculer la visibilité.
+    const children = child_dim.children as Class_NodeElement[]
+    const children_top = children.length
+      ? Math.min(...children.map(c => c.position_y))
+      : child_dim.parent.position_y
+
     child_dim.setForceToShowParent()
     const aggregateNode = child_dim.parent as Class_NodeElement
     aggregateNode.input_links_list.forEach(l => l.source.draw())
     aggregateNode.output_links_list.forEach(l => l.target.draw())
 
     aggregateNode.position_u = contextualised_node.position_u
+    aggregateNode.position_x = contextualised_node.position_x
+    aggregateNode.position_y = children_top
 
     // Issue #1225 — inverse de la transitivité d'expansion. Si aggregateNode
     // est lui-même enfant d'une dim P→{...,aggregateNode,...} en mode expand,
@@ -336,6 +354,18 @@ export const aggregate = (
       P.reorganizeIOLinks()
       aggregateNode.reorganizeIOLinks()
     }
+
+    // #1231 — Réorganiser les liens E/S sur le parent ré-agrégé et ses voisins
+    // (sources/cibles) pour suivre la nouvelle position.
+    const to_reorg = new Set<Class_NodeElement>([aggregateNode])
+    aggregateNode.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    aggregateNode.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+    to_reorg.forEach(n => n.reorganizeIOLinks())
+
+    // #1231 — Une commande de positionnement (désagrégation/agrégation) bascule en mode
+    // ABSOLU (positions explicites). Le couple flux/datatag de référence reste persisté ;
+    // setAbsoluteMode re-cale aussi les ancres de centre (#1230).
+    new_data.drawing_area.setAbsoluteMode()
   }
   const undo = () => {
     disaggregate(new_data, parent_node, contextualised_node.id, false)
@@ -347,6 +377,48 @@ export const aggregate = (
   Do()
 }
 
+
+/**
+ * #1231 — Reset des désagrégations LOCALES (hybrides). Quand l'utilisateur a désagrégé
+ * des nœuds au clic droit (force_show_children sur certaines dims), le diagramme est en
+ * état HYBRIDE (niveaux mixtes) et le menu Hiérarchies global ne doit plus agir. Ce reset
+ * ramène à l'état uniforme montré par le menu : il repositionne chaque parent local sur
+ * le slot de ses enfants (plusieurs passes pour les désagrégations imbriquées), efface
+ * tous les force-flags (showAccordingToLevelTags), puis réorganise / re-base le mode %.
+ */
+export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
+  const sankey = new_data.drawing_area.sankey
+  const dims_with_children: Class_NodeDimension[] = []
+  sankey.nodes_list.forEach(n => {
+    n.dimensions_as_parent.forEach(d => {
+      if (d.force_show_children) dims_with_children.push(d as Class_NodeDimension)
+    })
+  })
+  if (dims_with_children.length === 0) return
+
+  const Do = () => {
+    // Repositionner chaque parent local sur le bord haut de ses enfants. Plusieurs
+    // passes pour propager des feuilles vers le haut en cas de désagrégations imbriquées.
+    for (let pass = 0; pass < 4; pass++) {
+      dims_with_children.forEach(d => {
+        const children = d.children as Class_NodeElement[]
+        if (children.length === 0) return
+        const top = Math.min(...children.map(c => c.position_y))
+        d.parent.position_u = children[0].position_u
+        d.parent.position_x = children[0].position_x
+        d.parent.position_y = top
+      })
+    }
+    // Effacer tous les force-flags → visibilité pilotée par les level-tags (état du menu).
+    sankey.showAccordingToLevelTags()
+    sankey.nodes_list.forEach(n => n.dimensionsUpdated())
+    sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+    // #1231 — commande de positionnement → mode absolu (réf persistée conservée).
+    new_data.drawing_area.setAbsoluteMode()
+    new_data.drawing_area.draw()
+  }
+  Do()
+}
 
 
 /**
@@ -397,17 +469,29 @@ export const disaggregate = (
     parent_dim.setForceToShowChildren()
     const new_nodes = parent_dim.children as Class_NodeElement[]
 
-    // Positionnement symétrique des enfants autour du centre du nœud agrégé.
-    // L'écart vertical entre enfants est lu depuis `shape_position_dy` (PR 2).
-    const total_stack_height = NodePositioning.totalStackHeight(new_nodes)
-    const aggregate_center_y = aggregateNode.position_y + aggregateNode.getShapeHeightToUse() / 2
-    const anchor_y = aggregate_center_y - total_stack_height / 2
+    // #1231 — Représentation « stock » : si le parent est représenté en stock (hauteur ∝
+    // niveau de stock et/ou forme de stock visible), on DESCEND aux enfants le facteur
+    // d'échelle et les drapeaux d'affichage, pour qu'ils soient représentés de la même façon.
+    // Doit être fait AVANT le positionnement : getShapeHeightToUse() dépend de
+    // use_stock_for_height (la hauteur empilée par layoutChildrenInParentSlot en tient compte).
+    new_nodes.forEach(n => {
+      n.use_stock_for_height = aggregateNode.use_stock_for_height
+      n.stock_height_scale_factor = aggregateNode.stock_height_scale_factor
+      n.stock_shape_is_visible = aggregateNode.stock_shape_is_visible
+    })
 
-    new_nodes.forEach((n) => {
+    // #1231 — Désagrégation locale : les enfants prennent la place du parent VISIBLE, avec
+    // un écart vertical défini par le mode configuré (cf. Type_DisaggregationGap /
+    // layoutChildrenInParentSlot). Défaut 'fill' = ils remplissent exactement le slot
+    // [haut, bas] du parent (écart égal ≥ 0) → AUCUN voisin poussé. Le x/u du parent est
+    // TOUJOURS appliqué (même en 'keep' qui ne conserve que le Y des enfants).
+    const parent_top = aggregateNode.position_y
+    const parent_h = aggregateNode.getShapeHeightToUse()
+    new_nodes.forEach(n => {
       n.position_u = aggregateNode.position_u
       n.position_x = aggregateNode.position_x
     })
-    NodePositioning.stackNodesVertically(new_nodes, anchor_y)
+    new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(new_nodes, parent_top, parent_h)
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
@@ -457,6 +541,20 @@ export const disaggregate = (
       P.reorganizeIOLinks()
       new_nodes.forEach(c => c.reorganizeIOLinks())
     }
+
+    // #1231 — Réorganiser les liens E/S après désagrégation : sur les enfants ET sur
+    // leurs voisins (chaque source → réordonne ses liens sortants ; chaque cible →
+    // réordonne ses liens entrants) pour que l'ordre/l'ancrage des liens suive les
+    // nouvelles positions des enfants.
+    const to_reorg = new Set<Class_NodeElement>(new_nodes)
+    new_nodes.forEach(c => {
+      c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+      c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+    })
+    to_reorg.forEach(n => n.reorganizeIOLinks())
+
+    // #1231 — commande de positionnement (agrégation) → mode absolu (réf persistée conservée).
+    new_data.drawing_area.setAbsoluteMode()
   }
 
   const undo = () => {
@@ -545,7 +643,19 @@ export const disaggregationExpansion = (
   // Positionnement
   updateNodePositioning(new_data, children, contextualised_node, expand_left)
 
-  finalizeOperation(new_data, children)
+  // #1231 — Finalisation LOCALE (au lieu de finalizeOperation/computeParametrization(true)
+  // qui réécrivait position_u/v et écrasait le placement manuel à dx/3 + slot). Reorg E/S
+  // sur enfants + parent + voisins, re-capture de la référence % (SANS inferPositionUFromX,
+  // car le décalage dx/3 des enfants les re-clusterait dans la colonne du parent), draw.
+  const to_reorg = new Set<Class_NodeElement>([contextualised_node, ...children])
+  children.forEach(c => {
+    c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+  })
+  to_reorg.forEach(n => n.reorganizeIOLinks())
+  // #1231 — commande de positionnement (expansion/contraction) → mode absolu (réf persistée conservée).
+  new_data.drawing_area.setAbsoluteMode()
+  new_data.drawing_area.draw()
   new_data.drawing_area.to_recenter = true
   new_data.drawing_area.recenter()
   new_data.drawing_area.to_recenter = false
