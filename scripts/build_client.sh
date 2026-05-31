@@ -139,7 +139,7 @@ printf "OK ------------------------------------------------------------------\n"
 printf "\nBuild ---------------------------------------------------------------\n"
 cd client
 if [ "$install" = true ] ; then
-  printf ">>> Install deps\n\n" && pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
+  printf ">>> Install deps\n\n" && pnpm install --config.dangerouslyAllowAllBuilds=true || exit_if_error $?
   printf "\n"
 fi
 if [ "$linter" = true ] ; then
