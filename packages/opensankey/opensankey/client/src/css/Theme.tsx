@@ -330,6 +330,29 @@ export const buttonStyles = {
     _active: { bgColor: 'secondaire.1', borderColor: 'secondaire.1', border: 'none' },
   }),
 
+  // Boutons de mode de POSITION (absolu / proportionnel / échelle) = navigation/vue.
+  // Vert (primaire.3) pour les distinguer des boutons de mode souris (édition, orange).
+  toolbar_button_position_mode: defineStyle({
+    bgColor: 'primaire.3',
+    border: 'none',
+    color: 'white',
+    zIndex: 0,
+    _hover: { bgColor: 'tertiaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', border: 'none' },
+  }),
+
+  toolbar_button_position_mode_activated: defineStyle({
+    bgColor: 'secondaire.3',
+    border: 'none',
+    outline: '2px solid',
+    outlineColor: 'secondaire.3',
+    outlineOffset: '-1px',
+    color: 'white',
+    zIndex: 1,
+    _hover: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+  }),
+
   // Menu top button
   menutop_button: defineStyle({
     textStyle: 'h4',
@@ -2852,7 +2875,7 @@ const layerStyles = {
     zIndex: 1,
     height: 'fit-content',
     right: '1rem',
-    top: '75%',
+    top: '70%',
     transform: 'translateY(-50%)'
   },
 
@@ -3004,11 +3027,13 @@ const layerStyles = {
   box_sequence: {
     display: 'grid',
     gridTemplateColumns: '0.5fr 11fr',
-    margin: '0.2rem'
+    alignItems: 'center',
+    margin: '0.1rem 0.2rem'
   },
   box_stepper: {
     marginLeft: '16px',
     marginRight: '16px',
+    lineHeight: '1',
   },
   drawerFilterBox: {
     display: 'grid',
@@ -3217,7 +3242,9 @@ export const opensankey_theme = extendTheme({
           indicator: {
           },
           title: {
-            fontSize: '0.8rem'
+            fontSize: '0.7rem',
+            lineHeight: '1.1',
+            marginTop: '0.1rem'
           }
         })
       }
