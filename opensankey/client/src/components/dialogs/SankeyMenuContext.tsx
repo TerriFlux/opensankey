@@ -297,7 +297,7 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
         // dim en container_mode à la fois sur un même nœud.
         const englobed_parent_dim = parent_dims.find(dim => !!dim.container_mode)
         let filtered_child_dims = englobed_parent_dim ? [] : child_dims
-        let filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
+        const filtered_parent_dims = englobed_parent_dim ? [englobed_parent_dim] : parent_dims
 
         // #1231 — Un `force_show_children` actif sur une dimension (désagrégation locale)
         // retire seulement les entrées d'AGRÉGATION des autres dimensions : on ne peut
@@ -416,6 +416,8 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
       return (
         <Button
           variant='contextmenu_button'
+          maxW='260px'
+          title={label}
           onClick={() => {
             const modifierAction = modifier[actionName]
             if (modifierAction && typeof modifierAction === 'function') {
@@ -424,7 +426,9 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
             }
           }}
         >
-          {label}
+          <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap' display='block'>
+            {label}
+          </Box>
         </Button>
       )
     }
@@ -459,19 +463,22 @@ export const ContextMenuRenderer = <T extends Record<string, unknown>>({
     return (
       <Button
         variant='contextmenu_button'
+        maxW='260px'
         onClick={handleClick}
         title={tooltip}
       >
-        {label}
-        {(() => {
-          if (!actionConfig.showCheck || !actionConfig.getToggleValue) return null
+        <Box as='span' overflow='hidden' textOverflow='ellipsis' whiteSpace='nowrap' display='block'>
+          {label}
+          {(() => {
+            if (!actionConfig.showCheck || !actionConfig.getToggleValue) return null
 
-          const toggleValue = modifier[actionConfig.getToggleValue]
-          if (typeof toggleValue !== 'function') return null
+            const toggleValue = modifier[actionConfig.getToggleValue]
+            if (typeof toggleValue !== 'function') return null
 
-          const isChecked = (toggleValue as () => boolean)()
-          return isChecked ? ' ✓' : ''
-        })()}
+            const isChecked = (toggleValue as () => boolean)()
+            return isChecked ? ' ✓' : ''
+          })()}
+        </Box>
       </Button>
     )
   }
