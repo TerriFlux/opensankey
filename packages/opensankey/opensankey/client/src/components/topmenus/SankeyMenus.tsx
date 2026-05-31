@@ -41,7 +41,6 @@ import {
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
-import { SpreadSheet } from '../spreadsheet/SpreadSheet'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
@@ -220,6 +219,8 @@ export const SankeyMenu = (
             _active={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
             onClick={toggleShow}
             value='menuConfigButton'
+            // Au-dessus de l'overlay tableur (zIndex 20) pour rester accessible en mode split/tableur.
+            zIndex={30}
             style={{
               right: posBtnOpenConfig,
               top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin,
@@ -392,9 +393,8 @@ const ConfigContent = ({ app_data, additional_menus }:
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
-      data: <WrapperContentConfig title={t('Menu.Config.title_table')}>
-        <SpreadSheet app_data={app_data} />
-      </WrapperContentConfig>,
+      // Le tableur (ex-reactgrid) a migré dans la grande zone (onglet "Tableur" de MainZoneTabs) ;
+      // il n'est plus exposé dans le panneau de config.
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyNodeSelection app_data={app_data} />
       </WrapperContentConfig>,
