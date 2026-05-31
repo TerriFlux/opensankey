@@ -12,6 +12,7 @@ import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 import { disaggregate, aggregate, resetLocalHierarchy } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
+import { Type_DisaggregationGap } from '../../types/Utils'
 
 const width_fitler_drawer = 270
 
@@ -909,6 +910,60 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     </Box>
   ) : null
 
+  // #1231 — Réglage GLOBAL du mode d'écart vertical des enfants (désagrégation / expansion /
+  // englobement), placé sous Hiérarchies (mode 'level'). Persisté ; sert de défaut, le widget
+  // par-nœud (clic droit) peut le surcharger ponctuellement.
+  const GapModeControl = (mode === 'level') ? (
+    <Box layerStyle='menuconfig_grid'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        <OSTooltip label={t('MEP.tooltips.childGapMode')}>
+          <Box as='span'>{t('MEP.childGapMode')}</Box>
+        </OSTooltip>
+      </Box>
+      <Box layerStyle='filter_grid_row'>
+        <Select
+          size='xs'
+          value={drawing_area.disaggregation_gap_mode}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            const val = evt.target.value as Type_DisaggregationGap
+            const f = (_: Type_DisaggregationGap) => {
+              drawing_area.disaggregation_gap_mode = _
+              updateComponents()
+            }
+            app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_mode', val, f)
+          }}>
+          <option value='fill'>{t('MEP.childGapFill')}</option>
+          <option value='keep'>{t('MEP.childGapKeep')}</option>
+          <option value='children_dy'>{t('MEP.childGapDy')}</option>
+          <option value='constant'>{t('MEP.childGapConst')}</option>
+        </Select>
+      </Box>
+      {drawing_area.disaggregation_gap_mode === 'constant' && (
+        <Box layerStyle='filter_grid_row'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            <OSTooltip label={t('MEP.tooltips.childGapValue')}>
+              <Box as='span'>{t('MEP.childGapValue')}</Box>
+            </OSTooltip>
+          </Box>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={drawing_area.disaggregation_gap_value}
+            function_on_blur={(evt: number | null | undefined) => {
+              if (evt == null) return
+              const f = (_: number) => {
+                drawing_area.disaggregation_gap_value = _
+                updateComponents()
+              }
+              app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_value', evt, f)
+            }}
+            minimum_value={0}
+            stepper={true}
+          />
+        </Box>
+      )}
+    </Box>
+  ) : null
+
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
@@ -916,6 +971,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
+      {GapModeControl}
     </FilterWrapperBox>
   ) : <></>
 }
