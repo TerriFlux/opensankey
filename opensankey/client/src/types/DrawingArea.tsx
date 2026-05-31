@@ -26,7 +26,7 @@
 
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
   default_black_color,
@@ -167,6 +167,30 @@ export class Class_DrawingArea {
   protected _import_export_above_below: boolean = false
   public get import_export_above_below(): boolean { return this._import_export_above_below }
   public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
+
+  // Mode d'écart vertical des enfants pour les opérations structurelles
+  // (désagrégation, expansion latérale, englobement). Persisté (défaut 'fill' =
+  // comportement historique #1231). cf. Type_DisaggregationGap.
+  protected _disaggregation_gap_mode: Type_DisaggregationGap = 'fill'
+  public get disaggregation_gap_mode(): Type_DisaggregationGap { return this._disaggregation_gap_mode }
+  public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
+
+  // Écart constant (px) utilisé par le mode 'constant'. null = utiliser
+  // default_style.shape_position_dy (le getter le résout). Persisté seulement si défini.
+  protected _disaggregation_gap_value: number | null = null
+  public get disaggregation_gap_value(): number {
+    if (this._disaggregation_gap_value != null) return this._disaggregation_gap_value
+    return this._sankey?.default_style?.shape_position_dy ?? 0
+  }
+  public set disaggregation_gap_value(v: number) { this._disaggregation_gap_value = v }
+
+  // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
+  // Non persistée, non copiée : posée juste avant l'op puis effacée. Le helper de
+  // positionnement lit `gap_mode_override ?? disaggregation_gap_mode`.
+  public gap_mode_override: Type_DisaggregationGap | undefined = undefined
+  public get effective_gap_mode(): Type_DisaggregationGap {
+    return this.gap_mode_override ?? this._disaggregation_gap_mode
+  }
 
   protected _font_size_locked: boolean = true
   public get font_size_locked(): boolean { return this._font_size_locked }
@@ -411,6 +435,8 @@ export class Class_DrawingArea {
     // Idem : champ direct, le setter size_locked déclenche un re-fit.
     this._size_locked = drawing_area_to_copy._size_locked
     this._import_export_above_below = drawing_area_to_copy._import_export_above_below
+    this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
+    this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
