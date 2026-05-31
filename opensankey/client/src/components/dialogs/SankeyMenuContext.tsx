@@ -682,7 +682,6 @@ export const ContextMenu = <T extends Record<string, unknown>>({
       isTop: drawing_area.pointer_pos[1] + 330 <= window.innerHeight
     }
     return pos
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVisible])
 
   if (!isVisible || !position) {
