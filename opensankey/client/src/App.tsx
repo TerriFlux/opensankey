@@ -32,6 +32,7 @@ import { TourProvider } from '@reactour/tour'
 /*************************************************************************************************/
 
 import { SankeyMenu } from './components/topmenus/SankeyMenus'
+import { MainZoneTabs } from './components/spreadsheet/MainZoneTabs'
 
 import { MenuConfigurationAppearance } from './components/configmenus/MenuElementsAppearance'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
@@ -235,6 +236,7 @@ export const OpenSankeyApp = ({
           app_data={app_data}
         />
       </React.Fragment>
+      <MainZoneTabs app_data={app_data} />
     </div>
 
   </TourProvider>

@@ -161,7 +161,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
-    'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'flow', 'node', 'object'] },
+    'data': { 'theme': '#78a7c2', elements_configurable: ['flow', 'node', 'object'] },
     'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
     'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
   }
@@ -176,6 +176,25 @@ export class Class_MenuConfig {
   public get elements_configurable_selected() { return this._elements_configurable_selected }
   public get tab_selected() { return this._tab_selected }
   public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
+
+  // Grande zone : diagramme et/ou tableur affichables simultanément (split view avec séparateur
+  // déplaçable). Deux booléens indépendants + ratio du séparateur (0..1 = part gauche/diagramme).
+  // Pub/sub pour partager l'état entre la barre du haut et l'overlay MainZoneTabs.
+  protected _main_zone_show_diagram: boolean = true
+  protected _main_zone_show_spreadsheet: boolean = false
+  protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
+  protected _main_zone_listeners: Array<() => void> = []
+  protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
+  public get main_zone_show_diagram() { return this._main_zone_show_diagram }
+  public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
+  public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
+  public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
+  public get main_zone_split_ratio() { return this._main_zone_split_ratio }
+  public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
+  public addMainZoneListener(l: () => void): () => void {
+    this._main_zone_listeners.push(l)
+    return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
+  }
   /* ========================================
     Timeout dict
   =========================================== */
