@@ -4,6 +4,10 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased] — Mai 2026
 
+### Bump du submodule OpenSankey — verrou de taille (#1240), fixes & styles toolbar
+
+- **Bump du submodule OpenSankey** : verrou de taille (cadrage figé entre dataTags, su-model/sankeyapplication#1240), fixes stock/vues (`updateFrom`/`copyAttrFrom`), tooltips (noms longs + fenêtres redimensionnables), rafraîchissement des menus après application du layout, seuil trait→forme relevé, et styles de la barre du bas (séquence dataTag plus discrète, toolbar verticale relevée). Voir [submodules/OpenSankey/CHANGELOG.md → Unreleased](submodules/OpenSankey/CHANGELOG.md).
+
 ### Statut de traitement structuré (fin/échec)
 
 - **Poll de l'import Excel multi-fichiers piloté par `data.status`** ([client/src/components/SankeyPlusViews.tsx](client/src/components/SankeyPlusViews.tsx) `TabImportExcelDataForUnitary`) : le `processOneFile` arrêtait le polling en grepant le texte du log (`FINISHED`/`TERMINÉE`/`ÉCHOUÉ`…). Il s'arrête désormais sur le champ `status` (`finished`/`failed`) renvoyé par `check_process`, et envoie un `process_label` localisé pour contextualiser le bandeau serveur. S'appuie sur le fichier de statut `<logname>.status` introduit côté OpenSankey. Voir [submodules/OpenSankey/CHANGELOG.md → Unreleased](submodules/OpenSankey/CHANGELOG.md).
