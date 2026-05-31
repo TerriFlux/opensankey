@@ -321,30 +321,17 @@ export class NodeActions {
       c.findExpandedAncestor() !== null
     const stackable = cs.filter(c => !isExpandedChild(c))
     const expanded = cs.filter(isExpandedChild)
-    // #1231 — exactement comme la DÉSAGRÉGATION : les enfants remplissent le SLOT du
-    // parent [haut, bas]. On lit la hauteur du slot AVANT de passer le parent en cadre
-    // (sinon getShapeHeightToUse renvoie l'enveloppe des enfants → circulaire). L'écart
-    // est calculé pour remplir le slot (≥ 0) → les enfants occupent exactement la place
-    // du parent, le cadre les entoure, et aucun voisin n'est poussé.
+    // #1231 — exactement comme la DÉSAGRÉGATION : les enfants suivent le mode d'écart
+    // vertical configuré (cf. Type_DisaggregationGap / layoutChildrenInParentSlot). On lit
+    // la hauteur du slot AVANT de passer le parent en cadre (sinon getShapeHeightToUse
+    // renvoie l'enveloppe des enfants → circulaire). Défaut 'fill' = remplissage du slot
+    // [haut, bas] → le cadre les entoure et aucun voisin n'est poussé. Le x du parent est
+    // TOUJOURS appliqué (même en 'keep' qui ne conserve que le Y des enfants).
     const parent_top = p.position_y
     const parent_h = p.getShapeHeightToUse()
     p.tied_to_nodes = true
-    const sum_children_h = stackable.reduce((s, c) => s + c.getShapeHeightToUse(), 0)
-    const fill_gap = stackable.length > 1
-      ? Math.max(0, (parent_h - sum_children_h) / (stackable.length - 1))
-      : 0
-    let cursor = parent_top
-    stackable.forEach((c, i) => {
-      c.position_x = p.position_x
-      if (i > 0) {
-        cursor += fill_gap
-        c.shape_position_dy = fill_gap
-      } else {
-        c.shape_position_dy = 0
-      }
-      c.position_y = cursor
-      cursor += c.getShapeHeightToUse()
-    })
+    stackable.forEach(c => { c.position_x = p.position_x })
+    this.drawing_area.nodePositioning.layoutChildrenInParentSlot(stackable, parent_top, parent_h)
     stackable.forEach(c => p.attachNodeToCont(c))
     expanded.forEach(c => p.attachNodeToCont(c))
     p.expandToContainAttachedNodes()

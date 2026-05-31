@@ -37,6 +37,7 @@ import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Class_NodeDimension, Type_ContainerMode } from '../../Elements/NodeDimension'
 import { NodeActions } from './NodeActions'
+import { Type_DisaggregationGap } from '../../types/Utils'
 
 /*************************************************************************************************/
 
@@ -691,6 +692,9 @@ export const DimensionActionSelector = ({
   const [ui_type, setUiType] = useState<DimActionType>(detected_type)
   const [exp_variant, setExpVariant] = useState<ExpansionVariant>('left')
   const [container_variant, setContainerVariant] = useState<Exclude<Type_ContainerMode, null>>(detected_container)
+  // #1231 — Mode d'écart vertical des enfants pour CETTE opération (surcharge ponctuelle du
+  // réglage global, cf. drawing_area.gap_mode_override). Défaut = le réglage global courant.
+  const [gap_mode, setGapMode] = useState<Type_DisaggregationGap>(app_data.drawing_area.disaggregation_gap_mode)
   if (!found) return null
   const { side } = found
   const has_dev = app_data.has_sankey_dev
@@ -709,26 +713,49 @@ export const DimensionActionSelector = ({
       : ui_type === 'expansion' ? `Appliquer expansion ${exp_dir_label}`
         : `Appliquer englobement (${container_label_map[container_variant]})`
 
+  // #1231 — L'écart vertical des enfants n'a de sens que pour les opérations qui (re)placent
+  // des enfants : désagrégation, expansion latérale, englobement. Pas pour l'agrégation
+  // (les enfants sont masqués).
+  const gap_relevant =
+    (ui_type === 'normal' && side === 'as_parent') ||
+    (ui_type === 'expansion' && side === 'as_parent') ||
+    (ui_type === 'container')
+
+  const gap_label_map: Record<Type_DisaggregationGap, string> = {
+    fill: 'Remplir le slot',
+    keep: 'Garder positions',
+    children_dy: 'Écart par enfant',
+    constant: 'Écart constant',
+  }
+
   const onApply = () => {
     const actions = new NodeActions(app_data)
-    if (ui_type === 'normal') {
-      if (side === 'as_child') actions.aggregate(other_id)
-      else actions.disaggregate(other_id)
-    } else if (ui_type === 'expansion') {
-      if (side === 'as_child') {
-        if (exp_variant === 'left') actions.aggregateLeft(other_id)
-        else actions.aggregateRight(other_id)
+    const da = app_data.drawing_area
+    // Surcharge ponctuelle du mode d'écart le temps de l'opération (synchrone), puis restore.
+    const prev_override = da.gap_mode_override
+    if (gap_relevant) da.gap_mode_override = gap_mode
+    try {
+      if (ui_type === 'normal') {
+        if (side === 'as_child') actions.aggregate(other_id)
+        else actions.disaggregate(other_id)
+      } else if (ui_type === 'expansion') {
+        if (side === 'as_child') {
+          if (exp_variant === 'left') actions.aggregateLeft(other_id)
+          else actions.aggregateRight(other_id)
+        } else {
+          if (exp_variant === 'left') actions.expandLeft(other_id)
+          else actions.expandRight(other_id)
+        }
       } else {
-        if (exp_variant === 'left') actions.expandLeft(other_id)
-        else actions.expandRight(other_id)
+        switch (container_variant) {
+        case 'in_children_out_parent': actions.containerInChildrenOutParent(other_id); break
+        case 'in_parent_out_children': actions.containerInParentOutChildren(other_id); break
+        case 'in_children_out_children': actions.containerInChildrenOutChildren(other_id); break
+        case 'in_parent_out_parent': actions.containerInParentOutParent(other_id); break
+        }
       }
-    } else {
-      switch (container_variant) {
-      case 'in_children_out_parent': actions.containerInChildrenOutParent(other_id); break
-      case 'in_parent_out_children': actions.containerInParentOutChildren(other_id); break
-      case 'in_children_out_children': actions.containerInChildrenOutChildren(other_id); break
-      case 'in_parent_out_parent': actions.containerInParentOutParent(other_id); break
-      }
+    } finally {
+      da.gap_mode_override = prev_override
     }
   }
 
@@ -772,6 +799,24 @@ export const DimensionActionSelector = ({
         </Select>
       )}
     </Box>
+    {/* #1231 — Écart vertical des enfants pour cette opération (désagrégation / expansion /
+        englobement). Défaut = réglage global (menu Hiérarchies). */}
+    {gap_relevant && (
+      <Box display='flex' flexDirection='row' gap='4px' alignItems='center'>
+        <Box fontSize='xs' color='gray.600' whiteSpace='nowrap'>Écart enfants</Box>
+        <Select
+          size='xs'
+          value={gap_mode}
+          onChange={(e) => setGapMode(e.target.value as Type_DisaggregationGap)}
+          width='160px'
+        >
+          <option value='fill'>{gap_label_map.fill}</option>
+          <option value='keep'>{gap_label_map.keep}</option>
+          <option value='children_dy'>{gap_label_map.children_dy}</option>
+          <option value='constant'>{gap_label_map.constant}</option>
+        </Select>
+      </Box>
+    )}
     <Button
       variant='menuconfigpanel_option_button'
       size='xs'

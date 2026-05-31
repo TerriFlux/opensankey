@@ -1059,6 +1059,62 @@ export class NodePositioning {
   }
 
   /**
+   * Place verticalement les enfants d'une opération STRUCTURELLE (désagrégation,
+   * expansion latérale, englobement) dans le slot vertical du parent `[parent_top,
+   * parent_top + parent_h]`, selon le mode d'écart configuré sur la DrawingArea
+   * (`effective_gap_mode` = surcharge transitoire ?? réglage global), cf.
+   * Type_DisaggregationGap :
+   *  - 'fill'        : écart égal pour remplir exactement le slot (≥ 0). Historique #1231.
+   *  - 'keep'        : aucun repositionnement VERTICAL (les enfants gardent leur position_y).
+   *  - 'children_dy' : empile depuis `parent_top`, écart = shape_position_dy de chaque enfant.
+   *  - 'constant'    : empile depuis `parent_top`, écart = disaggregation_gap_value, réécrit dans dy.
+   *
+   * N.B. : ne touche QUE position_y (+ shape_position_dy selon le mode). L'appelant gère
+   * position_u / position_x (qui diffèrent selon l'opération : colonne du parent pour la
+   * désagrégation, colonne adjacente décalée pour l'expansion) et les applique TOUJOURS,
+   * même en 'keep' (qui ne conserve que le Y des enfants).
+   * L'ordre du tableau `children` détermine l'empilement (haut → bas).
+   */
+  public layoutChildrenInParentSlot(
+    children: Class_NodeElement[],
+    parent_top: number,
+    parent_h: number
+  ): void {
+    const mode = this.drawingArea.effective_gap_mode
+    if (children.length === 0) return
+    // 'keep' ne touche pas au Y (les enfants gardent leur position_y) ; les autres modes
+    // empilent depuis parent_top. Dans TOUS les cas, le x a déjà été posé par l'appelant.
+    if (mode !== 'keep') {
+      const default_dy = this.drawingArea.sankey.default_style.shape_position_dy
+      const const_gap = this.drawingArea.disaggregation_gap_value
+      const sum_h = children.reduce((s, c) => s + c.getShapeHeightToUse(), 0)
+      const fill_gap = children.length > 1
+        ? Math.max(0, (parent_h - sum_h) / (children.length - 1))
+        : 0
+      let cursor = parent_top
+      children.forEach((c, i) => {
+        if (i > 0) {
+          const gap = mode === 'fill'
+            ? fill_gap
+            : mode === 'children_dy'
+              ? (c.shape_position_dy ?? default_dy)
+              : const_gap
+          cursor += gap
+          // 'fill' et 'constant' fixent un écart explicite → on le matérialise dans dy.
+          if (mode !== 'children_dy') c.shape_position_dy = gap
+        }
+        c.position_y = cursor
+        cursor += c.getShapeHeightToUse()
+      })
+    }
+    // #1230/#1231 — CAPITAL : ré-ancrer le centre (#1230) sur la position FINALE des enfants.
+    // Sinon le setAbsoluteMode() de fin d'opération, s'il vient du mode proportionnel/échelle,
+    // appelle deriveAbsoluteNodesFromCenter() qui restaurerait le centre PÉRIMÉ des enfants
+    // (capturé avant qu'ils soient masqués/déplacés) et écraserait le x/y qu'on vient de poser.
+    children.forEach(c => c.captureCenterFromCorner())
+  }
+
+  /**
    * #1231 — Flux de référence du mode proportionnel (sélectionné au clic droit).
    * Invalidé automatiquement s'il n'est plus visible (désagrégation, suppression…).
    */

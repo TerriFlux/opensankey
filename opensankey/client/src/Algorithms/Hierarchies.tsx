@@ -234,16 +234,12 @@ const updateNodePositioning = (
       n2.position_u += expand_left ? -1 : 1
     })
 
-  // #1231 — Placement comme la désagrégation : les enfants étendus REMPLISSENT le slot
-  // vertical du parent [haut, bas] (écart calculé pour remplir, ≥ 0) dans la colonne
-  // adjacente. Alignés sur l'étendue du parent → liens d'expansion propres et pas de
-  // débordement sur les voisins (au lieu du centrage + position_dy qui débordait).
+  // #1231 — Placement comme la désagrégation : les enfants étendus prennent le slot
+  // vertical du parent [haut, bas] dans la colonne adjacente, avec un écart vertical
+  // défini par le mode configuré (cf. layoutChildrenInParentSlot). Défaut 'fill' =
+  // remplissage du slot → liens d'expansion propres et pas de débordement sur les voisins.
   const parent_top = contextualised_node.position_y
   const parent_h = contextualised_node.getShapeHeightToUse()
-  const sum_children_h = nodes.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
-  const fill_gap = nodes.length > 1
-    ? Math.max(0, (parent_h - sum_children_h) / (nodes.length - 1))
-    : 0
 
   // #1231 — Bloc centré sur le point de départ : le parent AVANCE du côté opposé à
   // l'expansion (±dx) et les enfants RECULENT du côté de l'expansion (∓dx), chacun à
@@ -254,17 +250,14 @@ const updateNodePositioning = (
   const x0 = contextualised_node.position_x
   contextualised_node.position_x = x0 + (expand_left ? dx : -dx)
 
-  let cursor = parent_top
-  nodes.forEach((n, i) => {
+  // Le déplacement HORIZONTAL (colonne adjacente + dx) est intrinsèque à l'expansion :
+  // il a toujours lieu, quel que soit le mode d'écart. Seul l'empilement VERTICAL suit
+  // le mode (en 'keep' les enfants gardent leur position_y).
+  nodes.forEach(n => {
     n.position_u = contextualised_node.position_u + (expand_left ? -1 : 1)
     n.position_x = x0 + (expand_left ? -dx : dx)
-    if (i > 0) {
-      cursor += fill_gap
-      n.shape_position_dy = fill_gap
-    }
-    n.position_y = cursor
-    cursor += n.getShapeHeightToUse()
   })
+  new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(nodes, parent_top, parent_h)
 
   // Rééquilibrer les colonnes ancêtres pour que le sous-arbre du nœud expandé
   // n'empiète pas sur ses frères. Propage récursivement vers le parent visuel.
@@ -476,30 +469,29 @@ export const disaggregate = (
     parent_dim.setForceToShowChildren()
     const new_nodes = parent_dim.children as Class_NodeElement[]
 
-    // #1231 — Désagrégation locale : les enfants prennent EXACTEMENT la place du parent
-    // VISIBLE. La somme des hauteurs des enfants est ≤ hauteur du parent (elle peut être
-    // strictement inférieure — la valeur des enfants ne totalise pas toujours celle du
-    // parent), donc on répartit l'espace restant en écart ÉGAL entre enfants pour remplir
-    // le slot [haut, bas] du parent. Ainsi ils occupent exactement la place du parent →
-    // AUCUN voisin poussé. Écart clampé ≥ 0.
+    // #1231 — Représentation « stock » : si le parent est représenté en stock (hauteur ∝
+    // niveau de stock et/ou forme de stock visible), on DESCEND aux enfants le facteur
+    // d'échelle et les drapeaux d'affichage, pour qu'ils soient représentés de la même façon.
+    // Doit être fait AVANT le positionnement : getShapeHeightToUse() dépend de
+    // use_stock_for_height (la hauteur empilée par layoutChildrenInParentSlot en tient compte).
+    new_nodes.forEach(n => {
+      n.use_stock_for_height = aggregateNode.use_stock_for_height
+      n.stock_height_scale_factor = aggregateNode.stock_height_scale_factor
+      n.stock_shape_is_visible = aggregateNode.stock_shape_is_visible
+    })
+
+    // #1231 — Désagrégation locale : les enfants prennent la place du parent VISIBLE, avec
+    // un écart vertical défini par le mode configuré (cf. Type_DisaggregationGap /
+    // layoutChildrenInParentSlot). Défaut 'fill' = ils remplissent exactement le slot
+    // [haut, bas] du parent (écart égal ≥ 0) → AUCUN voisin poussé. Le x/u du parent est
+    // TOUJOURS appliqué (même en 'keep' qui ne conserve que le Y des enfants).
     const parent_top = aggregateNode.position_y
     const parent_h = aggregateNode.getShapeHeightToUse()
-    const sum_children_h = new_nodes.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
-    const fill_gap = new_nodes.length > 1
-      ? Math.max(0, (parent_h - sum_children_h) / (new_nodes.length - 1))
-      : 0
-
-    let cursor = parent_top
-    new_nodes.forEach((n, i) => {
+    new_nodes.forEach(n => {
       n.position_u = aggregateNode.position_u
       n.position_x = aggregateNode.position_x
-      if (i > 0) {
-        cursor += fill_gap
-        n.shape_position_dy = fill_gap
-      }
-      n.position_y = cursor
-      cursor += n.getShapeHeightToUse()
     })
+    new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(new_nodes, parent_top, parent_h)
     const echangeTag = aggregateNode.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange'] as Class_Tag
     if (echangeTag) {
       parent_dim.children.forEach(child => {
