@@ -53,7 +53,9 @@ import {
   PopoverBody,
   IconButton,
   Link,
-  VStack
+  VStack,
+  HStack,
+  Badge
 } from '@chakra-ui/react'
 import {
   faCheck,
@@ -1192,13 +1194,25 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
 }
 
 /**
- * Topbar info popover: shows app version, build date and a support mailto.
- * Replaces the legacy bottom footer. Version/date are inlined at build time
- * by the consumer's bundler from REACT_APP_VERSION / REACT_APP_RELEASE_DATE.
+ * Topbar info popover: shows app version, release channel, build/commit info,
+ * a support mailto and a link to the changelog. All values are inlined at build
+ * time by the consumer's bundler from REACT_APP_* (see the consumer's
+ * craco/webpack config); this component stays generic and only renders a
+ * field/link when its variable is provided.
+ *   - REACT_APP_VERSION         display version, channel suffix already applied
+ *   - REACT_APP_RELEASE_CHANNEL 'alpha' | 'beta' | 'stable'
+ *   - REACT_APP_RELEASE_DATE    build date (YYYY-MM-DD)
+ *   - REACT_APP_GIT_COMMIT      short commit hash
+ *   - REACT_APP_GIT_COMMIT_DATE commit date (YYYY-MM-DD)
+ *   - REACT_APP_CHANGELOG_URL   link to the changelog (lists current + previous versions)
  */
 const AppInfoPopover = () => {
   const version = process.env.REACT_APP_VERSION ?? ''
+  const channel = process.env.REACT_APP_RELEASE_CHANNEL ?? ''
   const release_date = process.env.REACT_APP_RELEASE_DATE ?? ''
+  const git_commit = process.env.REACT_APP_GIT_COMMIT ?? ''
+  const git_commit_date = process.env.REACT_APP_GIT_COMMIT_DATE ?? ''
+  const changelog_url = process.env.REACT_APP_CHANGELOG_URL ?? ''
   return <Popover placement='bottom-end' trigger='hover' openDelay={150}>
     <PopoverTrigger>
       <IconButton
@@ -1216,12 +1230,23 @@ const AppInfoPopover = () => {
       />
     </PopoverTrigger>
     <Portal>
-      <PopoverContent width='auto' minWidth='12rem'>
+      <PopoverContent width='auto' minWidth='13rem'>
         <PopoverArrow />
         <PopoverBody>
           <VStack align='start' spacing='0.25rem' fontSize='sm'>
-            {version && <Text>Version {version}</Text>}
+            {version && <HStack spacing='0.4rem'>
+              <Text>Version {version}</Text>
+              {channel === 'alpha' && <Badge colorScheme='orange'>alpha</Badge>}
+              {channel === 'beta' && <Badge colorScheme='purple'>beta</Badge>}
+            </HStack>}
             {release_date && <Text color='gray.500'>Build {release_date}</Text>}
+            {git_commit && <Text color='gray.500'>
+              Commit {git_commit}{git_commit_date && ` · ${git_commit_date}`}
+            </Text>}
+            {changelog_url && <Divider my='0.25rem' />}
+            {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
+              Changelog
+            </Link>}
             <Link href='mailto:support@terriflux.fr' color='blue.500'>
               support@terriflux.fr
             </Link>
