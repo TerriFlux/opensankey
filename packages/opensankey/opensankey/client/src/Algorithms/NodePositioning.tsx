@@ -999,66 +999,6 @@ export class NodePositioning {
   }
 
   /**
-   * #1231 — Nœuds top-level groupés par colonne (`position_u`) : visibles, non-échange,
-   * hors enfants de container. Utilisé par la commande « écarts égaux ».
-   */
-  private columnNodesByU(): Map<number, Class_NodeElement[]> {
-    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
-    const map = new Map<number, Class_NodeElement[]>()
-    this.drawingArea.sankey.visible_nodes_list.forEach(n => {
-      if (!n.is_visible) return
-      if (echangeTag && n.hasGivenTag(echangeTag)) return
-      if (n.dimensions_as_child.some(d => d.container_mode)) return
-      const arr = map.get(n.position_u) ?? []
-      arr.push(n)
-      map.set(n.position_u, arr)
-    })
-    return map
-  }
-
-  /**
-   * #1231 — COMMANDE « écarts égaux » : sur une colonne, garde le bord HAUT du 1er nœud
-   * et le bord BAS du dernier (trié par y), et répartit les nœuds avec des écarts
-   * verticaux ÉGAUX : `écart = (bas − haut − Σ hauteurs) / (n−1)`. Écrit aussi
-   * `shape_position_dy` = écart. One-shot (le mode actif gère ensuite l'évolution).
-   * @returns true si ≥ 2 nœuds (donc quelque chose à équilibrer).
-   */
-  public equalizeColumnGaps(column_nodes: Class_NodeElement[]): boolean {
-    const sorted = [...column_nodes].sort((a, b) => a.position_y - b.position_y)
-    if (sorted.length < 2) return false
-    const top = sorted[0].position_y
-    const last = sorted[sorted.length - 1]
-    const bottom = last.position_y + last.getShapeHeightToUse()
-    const sum_h = sorted.reduce((s, n) => s + n.getShapeHeightToUse(), 0)
-    const gap = (bottom - top - sum_h) / (sorted.length - 1)
-    let cursor = top
-    sorted.forEach((n, i) => {
-      if (i > 0) {
-        cursor += gap
-        n.shape_position_dy = gap
-      }
-      n.position_y = cursor
-      cursor += n.getShapeHeightToUse()
-    })
-    return true
-  }
-
-  /** #1231 — « écarts égaux » sur la colonne du nœud donné. */
-  public equalizeColumnGapsOfNode(node: Class_NodeElement): boolean {
-    const col = this.columnNodesByU().get(node.position_u)
-    return col ? this.equalizeColumnGaps(col) : false
-  }
-
-  /** #1231 — « écarts égaux » sur toutes les colonnes (chacune indépendamment). */
-  public equalizeAllColumnsGaps(): boolean {
-    let moved = false
-    this.columnNodesByU().forEach(col => {
-      if (this.equalizeColumnGaps(col)) moved = true
-    })
-    return moved
-  }
-
-  /**
    * Place verticalement les enfants d'une opération STRUCTURELLE (désagrégation,
    * expansion latérale, englobement) dans le slot vertical du parent `[parent_top,
    * parent_top + parent_h]`, selon le mode d'écart configuré sur la DrawingArea

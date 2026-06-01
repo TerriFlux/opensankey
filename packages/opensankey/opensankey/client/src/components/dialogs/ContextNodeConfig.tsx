@@ -315,11 +315,7 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       ]
     },
     { type: 'button', actionName: 'startAnimation' },
-    { type: 'button', actionName: 'copyElement' },
-    // #1231 — Commande « écarts égaux » (placée en fin de structure pour ne pas décaler
-    // les index codés en dur dans OSP ContextMenuConfigs.tsx, ex. new_structure[5]).
-    { type: 'button', actionName: 'equalizeColumnGaps' },
-    { type: 'button', actionName: 'equalizeAllColumnsGaps' }
+    { type: 'button', actionName: 'copyElement' }
   ],
 
   actions: {
@@ -606,20 +602,6 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: '▄↓', fr: '▄↓', es: '▄↓', de: '▄↓', it: '▄↓' },
       tooltips: { en: 'Align to bottom edge of bottommost node', fr: 'Aligner sur le bord bas du nœud le plus bas', es: 'Alinear al borde inferior del nodo más abajo', de: 'Am unteren Rand des untersten Knotens ausrichten', it: 'Allinea al bordo inferiore del nodo più in basso' },
-      undoable: true,
-      closeMenuAfter: true
-    },
-    equalizeColumnGaps: {
-      type: 'action',
-      labels: { en: 'Equal gaps (column)', fr: 'Écarts égaux (colonne)', es: 'Espacios iguales (columna)', de: 'Gleiche Abstände (Spalte)', it: 'Spazi uguali (colonna)' },
-      tooltips: { en: 'Distribute this node\'s column with equal vertical gaps (top and bottom kept).', fr: 'Répartir la colonne de ce nœud avec des écarts verticaux égaux (haut et bas conservés).', es: 'Distribuir la columna de este nodo con espacios verticales iguales (se mantienen arriba y abajo).', de: 'Die Spalte dieses Knotens mit gleichen vertikalen Abständen verteilen (oben und unten beibehalten).', it: 'Distribuire la colonna di questo nodo con spazi verticali uguali (alto e basso mantenuti).' },
-      undoable: true,
-      closeMenuAfter: true
-    },
-    equalizeAllColumnsGaps: {
-      type: 'action',
-      labels: { en: 'Equal gaps (all columns)', fr: 'Écarts égaux (toutes colonnes)', es: 'Espacios iguales (todas las columnas)', de: 'Gleiche Abstände (alle Spalten)', it: 'Spazi uguali (tutte le colonne)' },
-      tooltips: { en: 'Distribute every column with equal vertical gaps (each column\'s top and bottom kept).', fr: 'Répartir chaque colonne avec des écarts verticaux égaux (haut et bas de chaque colonne conservés).', es: 'Distribuir cada columna con espacios verticales iguales (se mantienen arriba y abajo de cada columna).', de: 'Jede Spalte mit gleichen vertikalen Abständen verteilen (oben und unten jeder Spalte beibehalten).', it: 'Distribuire ogni colonna con spazi verticali uguali (alto e basso di ogni colonna mantenuti).' },
       undoable: true,
       closeMenuAfter: true
     },
