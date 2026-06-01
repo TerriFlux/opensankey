@@ -3125,36 +3125,6 @@ export class Class_DrawingArea {
     apply()
   }
 
-  /**
-   * #1231 — COMMANDE « écarts égaux ». Équilibre les écarts verticaux d'une colonne
-   * (bord haut du 1er nœud et bord bas du dernier conservés) — celle du nœud passé, ou
-   * toutes les colonnes si aucun nœud. One-shot avec undo. Re-cale ensuite la référence
-   * du mode actif (% → captureProportionalReference, absolu → settle) pour que le
-   * résultat tienne, puis le mode gère l'évolution au changement de datatag.
-   */
-  public equalizeColumnGaps(node?: Class_NodeElement) {
-    const saved = this.sankey.visible_nodes_list.map(n => ({ n, y: n.position_y, dy: n.shape_position_dy }))
-    // #1231 — une commande de positionnement bascule en mode ABSOLU (positions explicites).
-    // Le couple flux/datatag de référence reste persisté (setAbsoluteMode ne l'efface plus) :
-    // un futur retour en % le réutilisera.
-    const rebase = () => { this.sankey.nodes_list.forEach(n => n.settleCenterAnchor()) }
-    const apply = () => {
-      this.setAbsoluteMode()
-      if (node) this.nodePositioning.equalizeColumnGapsOfNode(node)
-      else this.nodePositioning.equalizeAllColumnsGaps()
-      rebase()
-      this.draw()
-    }
-    const revert = () => {
-      saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
-      rebase()
-      this.draw()
-    }
-    this.application_data.history.saveUndo(revert)
-    this.application_data.history.saveRedo(apply)
-    apply()
-  }
-
   public get id() { return this._sankey.id }
   public get name() { return this._sankey.name }
   public set name(name: string) { this._sankey.name = name }
