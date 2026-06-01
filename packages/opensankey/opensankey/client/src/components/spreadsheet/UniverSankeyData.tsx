@@ -429,7 +429,7 @@ export const buildSankeyWorkbookData = (
       },
       [SHEET_ID_STOCK]: {
         id: SHEET_ID_STOCK,
-        name: 'Stock',
+        name: 'Stocks',
         cellData: stockCells,
         columnHeader: noColHeader,
         rowCount: Math.max(50, stockRow + 20),
