@@ -23,6 +23,7 @@ export const SHEET_ID_NOEUDS = 'sheet-noeuds'
 export const SHEET_ID_TAGS = 'sheet-tags'
 export const SHEET_ID_DATA = 'sheet-data'
 export const SHEET_ID_STOCK = 'sheet-stock'
+export const SHEET_ID_RATIO = 'sheet-ratio'
 
 // Indices de colonnes de l'onglet Noeuds (ordre = NODES_SHEET_COLS du parser). Les colonnes de
 // node-tags sont ajoutées APRÈS (index >= NOEUDS_CORE_COLS).
@@ -55,6 +56,18 @@ const FLUX_MANDATORY = new Set([0, 1, 2])
 const NOEUDS_MANDATORY = new Set([1])
 const TAGS_MANDATORY = new Set([0, 2])
 const STOCK_MANDATORY = new Set([0])
+const RATIO_MANDATORY = new Set([0, 1])
+
+// Libellés FR des value_option de ratio (référence = entrée/sortie/parent du nœud source/destination).
+const RATIO_REF_LABEL: { [k: string]: string } = {
+  '%IS': '% entrée (source)',
+  '%OS': '% sortie (source)',
+  '%PS': '% parent (source)',
+  '%ID': '% entrée (destination)',
+  '%OD': '% sortie (destination)',
+  '%PD': '% parent (destination)',
+  'unit_ratio': 'ratio unitaire'
+}
 
 // Valeurs PAR DÉFAUT par colonne (phase 2) : une colonne optionnelle est masquée par défaut si
 // vide OU si toutes ses valeurs valent ce défaut. (Noeuds : niveau=1, couleur auto #a9a9a9, u/v=0.)
@@ -378,6 +391,27 @@ export const buildSankeyWorkbookData = (
       stockRow++
     })
 
+  // --- Onglet Ratio flux (liens contraints en ratio : value_option %IS/%OS/.../unit_ratio) ---------
+  // Coef = data_value du lien (la part en %, ou le ratio unitaire). Référence = libellé du value_option
+  // (entrée/sortie/parent du nœud source/destination). Vide pour les liens "value"/"intervals".
+  const ratioHeaders = ['Origine', 'Destination', 'Coef', 'Référence']
+  const ratioCells: Type_CellData = { 0: {} }
+  ratioHeaders.forEach((h, c) => { ratioCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  let ratioRow = 1
+  links.forEach((l: any) => {
+    const v = l.value
+    const opt = v && v.value_option
+    if (opt && opt !== 'value' && opt !== 'intervals') {
+      ratioCells[ratioRow] = {
+        0: { v: l.source.name },
+        1: { v: l.target.name },
+        2: { v: v.valueData != null ? num5(v.valueData) : '' },
+        3: { v: RATIO_REF_LABEL[opt] || opt }
+      }
+      ratioRow++
+    }
+  })
+
   const noeudsHeaders = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
 
   // Colonnes à en-tête vertical (Niveau d'agrégation + étiquettes de niveau) : largeur réduite.
@@ -393,7 +427,7 @@ export const buildSankeyWorkbookData = (
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_STOCK],
+    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_STOCK],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
@@ -424,6 +458,13 @@ export const buildSankeyWorkbookData = (
         cellData: stockCells,
         rowCount: Math.max(50, stockRow + 20),
         columnCount: stockHeaders.length
+      },
+      [SHEET_ID_RATIO]: {
+        id: SHEET_ID_RATIO,
+        name: 'Ratio flux',
+        cellData: ratioCells,
+        rowCount: Math.max(50, ratioRow + 20),
+        columnCount: ratioHeaders.length
       }
     }
   }
@@ -432,7 +473,8 @@ export const buildSankeyWorkbookData = (
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
     [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
-    [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY)
+    [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY),
+    [SHEET_ID_RATIO]: colMeta(ratioHeaders, ratioCells, RATIO_MANDATORY)
   }
 
   return { data, columns }
