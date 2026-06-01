@@ -12,11 +12,9 @@
 // ==================================================================================================
 
 // External imports
+// NB : Univer (@univerjs/presets) est chargé en DYNAMIC IMPORT dans l'effet (webpack le place dans
+// un chunk séparé, hors bundle initial), récupéré seulement à l'ouverture de l'onglet Tableur.
 import React, { useEffect, useRef } from 'react'
-import { createUniver, defaultTheme, LocaleType, merge } from '@univerjs/presets'
-import { UniverSheetsCorePreset } from '@univerjs/presets/preset-sheets-core'
-import sheetsCoreFrFR from '@univerjs/presets/preset-sheets-core/locales/fr-FR'
-import '@univerjs/presets/lib/styles/preset-sheets-core.css'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { buildSankeyWorkbookData } from './UniverSankeyData'
@@ -41,62 +39,87 @@ export const UniverSpreadSheet = (
     }
 
     let disposed = false
+    let univerInstance: { dispose: () => void } | null = null
+    let bridgeInstance: { dispose: () => void } | null = null
     const isSyncing = { current: false }
 
-    const { univer, univerAPI } = createUniver({
-      locale: LocaleType.FR_FR,
-      locales: { [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR) },
-      theme: defaultTheme,
-      presets: [
-        // toolbar:false -> masque le ruban Univer (Démarrer/Formules/Données).
-        UniverSheetsCorePreset({ container, toolbar: false })
-      ]
-    })
-
-    // Construit le classeur (Flux + Noeuds) depuis le Sankey courant.
-    isSyncing.current = true
-    try {
-      univerAPI.createWorkbook(buildSankeyWorkbookData(app_data))
-    } finally {
-      isSyncing.current = false
-    }
-
-    apiRef.current = univerAPI
-
-    // Write-back édition -> Sankey.
-    const bridge = attachSankeyBridge(univerAPI, app_data, isSyncing)
-
-    // Resynchro externe (ex : après import / réconciliation MFA) tant que le tableur est ouvert.
-    app_data.menu_configuration.ref_to_spreadsheet.current = () => {
-      if (disposed) {
+    const init = async () => {
+      // Chargement à la demande d'Univer (chunks séparés).
+      const [presets, sheetsCore, localeMod] = await Promise.all([
+        import('@univerjs/presets'),
+        import('@univerjs/presets/preset-sheets-core'),
+        import('@univerjs/presets/preset-sheets-core/locales/fr-FR')
+      ])
+      await import('@univerjs/presets/lib/styles/preset-sheets-core.css')
+      // L'onglet a pu être refermé / le composant démonté pendant le chargement.
+      const liveContainer = containerRef.current
+      if (disposed || !liveContainer) {
         return
       }
+      const { createUniver, defaultTheme, LocaleType, merge } = presets
+      const { UniverSheetsCorePreset } = sheetsCore
+      const sheetsCoreFrFR = localeMod.default
+
+      const { univer, univerAPI } = createUniver({
+        locale: LocaleType.FR_FR,
+        locales: { [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR) },
+        theme: defaultTheme,
+        presets: [
+          // toolbar:false -> masque le ruban Univer (Démarrer/Formules/Données).
+          UniverSheetsCorePreset({ container: liveContainer, toolbar: false })
+        ]
+      })
+      univerInstance = univer
+      apiRef.current = univerAPI
+
+      // Construit le classeur (Flux + Noeuds) depuis le Sankey courant.
       isSyncing.current = true
       try {
-        const existing = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
-        // Préserve la feuille active (sinon le rebuild réactive Flux, 1re du sheetOrder).
-        let activeSheetId: string | null = null
-        if (existing) {
-          const as = existing.getActiveSheet && existing.getActiveSheet()
-          activeSheetId = as && as.getSheetId ? as.getSheetId() : null
-          if (univerAPI.disposeUnit) {
-            univerAPI.disposeUnit(existing.getId())
-          }
-        }
-        const wb: any = univerAPI.createWorkbook(buildSankeyWorkbookData(app_data))
-        if (activeSheetId && wb && typeof wb.setActiveSheet === 'function') {
-          try { wb.setActiveSheet(activeSheetId) } catch (e) { /* feuille absente : on ignore */ }
-        }
+        univerAPI.createWorkbook(buildSankeyWorkbookData(app_data))
       } finally {
         isSyncing.current = false
       }
+
+      // Write-back édition -> Sankey.
+      bridgeInstance = attachSankeyBridge(univerAPI, app_data, isSyncing)
+
+      // Resynchro externe (ex : après import / réconciliation MFA) tant que le tableur est ouvert.
+      app_data.menu_configuration.ref_to_spreadsheet.current = () => {
+        if (disposed) {
+          return
+        }
+        isSyncing.current = true
+        try {
+          const existing = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
+          // Préserve la feuille active (sinon le rebuild réactive Flux, 1re du sheetOrder).
+          let activeSheetId: string | null = null
+          if (existing) {
+            const as = existing.getActiveSheet && existing.getActiveSheet()
+            activeSheetId = as && as.getSheetId ? as.getSheetId() : null
+            if (univerAPI.disposeUnit) {
+              univerAPI.disposeUnit(existing.getId())
+            }
+          }
+          const wb: any = univerAPI.createWorkbook(buildSankeyWorkbookData(app_data))
+          if (activeSheetId && wb && typeof wb.setActiveSheet === 'function') {
+            try { wb.setActiveSheet(activeSheetId) } catch (e) { /* feuille absente : on ignore */ }
+          }
+        } finally {
+          isSyncing.current = false
+        }
+      }
     }
+    init()
 
     return () => {
       disposed = true
       apiRef.current = null
-      bridge.dispose()
-      univer.dispose()
+      if (bridgeInstance) {
+        bridgeInstance.dispose()
+      }
+      if (univerInstance) {
+        univerInstance.dispose()
+      }
     }
   }, [active])
 
