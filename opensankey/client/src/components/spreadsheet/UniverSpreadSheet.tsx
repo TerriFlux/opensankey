@@ -142,6 +142,16 @@ export const UniverSpreadSheet = (
     }
   }
 
+  // Fige la ligne d'en-tête (row 0) d'un onglet pour qu'elle reste visible au scroll.
+  const freezeHeaderRow = (sheetId: string) => {
+    const api = apiRef.current
+    const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+    const ws = wb && wb.getSheetBySheetId ? wb.getSheetBySheetId(sheetId) : null
+    if (ws && typeof ws.setFrozenRows === 'function') {
+      try { ws.setFrozenRows(1) } catch (e) { /* ignore */ }
+    }
+  }
+
   useEffect(() => {
     if (!active) {
       return
@@ -211,6 +221,8 @@ export const UniverSpreadSheet = (
                 hidden[sheetId].push(c.index)
               }
             })
+            // Fige la ligne d'en-tête de chaque onglet.
+            freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
           const wbA = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
