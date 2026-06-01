@@ -1875,7 +1875,8 @@ export const drawerStyles = {
     dialogContainer: {
       width: 'inherit',
       background: 'none',
-      zIndex: 1
+      // Au-dessus de l'overlay tableur (zIndex 20) pour que le panneau config passe par-dessus.
+      zIndex: 30
     },
     body: {
       padding: '0',

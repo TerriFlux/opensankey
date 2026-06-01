@@ -59,7 +59,9 @@ import {
 } from '@chakra-ui/react'
 import {
   faCheck,
-  faExclamation
+  faExclamation,
+  faDiagramProject,
+  faTable
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -79,6 +81,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 /*************************************************************************************************/
@@ -145,8 +148,33 @@ const topbar_state_btn_style = {
   _disabled: { color: 'gray.300', bg: 'transparent', bgColor: 'transparent', cursor: 'not-allowed' },
 }
 
+// Boutons bascule de la grande zone (Diagramme / Tableur) : icône + petit texte, neutres (gris),
+// surlignés en gris quand actifs (pas de vert).
+const main_zone_btn_style = (active: boolean) => ({
+  size: 'sm' as const,
+  display: 'flex',
+  flexDirection: 'column' as const,
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.05rem',
+  height: 'auto',
+  minWidth: '2.7rem',
+  padding: '0.15rem 0.3rem',
+  fontSize: '1rem',
+  borderColor: 'transparent',
+  color: active ? 'gray.900' : 'gray.700',
+  bg: active ? 'gray.200' : 'transparent',
+  bgColor: active ? 'gray.200' : 'transparent',
+  _hover: { bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' },
+  _active: { bg: 'gray.200', bgColor: 'gray.200' },
+})
+
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
+  const { showDiagram, showSpreadsheet, setShowDiagram, setShowSpreadsheet } = useMainZone(new_data)
+  // Bascule en gardant toujours au moins un panneau affiché.
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !showSpreadsheet) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !showDiagram) return; setShowSpreadsheet(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
@@ -207,6 +235,28 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
             {indicator_saved_data}
           </Box>
         </Box>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Diagramme'>
+      <Button
+        aria-label='Diagramme'
+        className='topbar_button_main_zone_diagram'
+        onClick={toggleDiagram}
+        {...main_zone_btn_style(showDiagram)}
+      >
+        <FontAwesomeIcon icon={faDiagramProject} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Diagramme</Box>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Tableur'>
+      <Button
+        aria-label='Tableur'
+        className='topbar_button_main_zone_spreadsheet'
+        onClick={toggleSpreadsheet}
+        {...main_zone_btn_style(showSpreadsheet)}
+      >
+        <FontAwesomeIcon icon={faTable} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Tableur</Box>
       </Button>
     </OSTooltip>
   </ButtonGroup>
