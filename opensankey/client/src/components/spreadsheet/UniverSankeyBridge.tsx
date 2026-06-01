@@ -14,18 +14,25 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
-import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, NOEUDS_COL } from './UniverSankeyData'
+import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, NOEUDS_COL, fluxRowLinks, noeudsRowEntries } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 export const attachSankeyBridge = (
   univerAPI: any,
   app_data: Class_ApplicationData,
-  isSyncing: { current: boolean }
+  isSyncing: { current: boolean },
+  onlyVisibleRef: { current: boolean }
 ): { dispose: () => void } => {
   const { drawing_area } = app_data
   const { sankey } = drawing_area
   const menu_configuration = app_data.menu_configuration
+
+  // Mapping ligne -> élément : MÊME ordre/filtrage que le builder (onlyVisible + fusion siblings +
+  // hiérarchie parents/enfants). rowNodes()[r-1] = le nœud de la ligne r (peut se répéter si
+  // multi-parent ; renommer/supprimer agit sur le nœud sous-jacent unique).
+  const rowLinks = (): any[] => fluxRowLinks(app_data, onlyVisibleRef.current)
+  const rowNodes = (): any[] => noeudsRowEntries(app_data, onlyVisibleRef.current).map((e: any) => e.node)
 
   const redraw = () => {
     if (!menu_configuration.spreadsheet_freeze) {
@@ -78,7 +85,7 @@ export const attachSankeyBridge = (
 
     if (idx < originalLinkCount) {
       // Ligne d'un flux existant : on applique uniquement les écarts.
-      const link = sankey.links_list[idx]
+      const link = rowLinks()[idx]
       if (!link) {
         return { structural, value }
       }
@@ -123,7 +130,7 @@ export const attachSankeyBridge = (
     const idx = r - 1
     const name = cellText(ws, r, NOEUDS_COL.node)
     if (idx < originalNodeCount) {
-      const node = sankey.nodes_list[idx]
+      const node = rowNodes()[idx]
       if (node && name && name !== node.name) {
         node.name = name
         return true
@@ -151,8 +158,8 @@ export const attachSankeyBridge = (
     drawing_area.setToModeEdition(false)
     const hasAfm = app_data.has_sankey_afm
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
-    const originalLinkCount = sankey.links_list.length
-    const originalNodeCount = sankey.nodes_list.length
+    const originalLinkCount = rowLinks().length
+    const originalNodeCount = rowNodes().length
 
     // Regroupe les lignes affectées par feuille (paste = plage multi-lignes).
     const rowsBySheet: { [sheetId: string]: Set<number> } = {}
@@ -226,7 +233,7 @@ export const attachSankeyBridge = (
     if (sheetId === SHEET_ID_NOEUDS) {
       const toDelete: any[] = []
       for (let r = range.startRow; r <= range.endRow; r++) {
-        const node = r >= 1 ? sankey.nodes_list[r - 1] : null
+        const node = r >= 1 ? rowNodes()[r - 1] : null
         if (node) {
           toDelete.push(node)
         }
@@ -235,7 +242,7 @@ export const attachSankeyBridge = (
     } else if (sheetId === SHEET_ID_FLUX) {
       const toDelete: any[] = []
       for (let r = range.startRow; r <= range.endRow; r++) {
-        const link = r >= 1 ? sankey.links_list[r - 1] : null
+        const link = r >= 1 ? rowLinks()[r - 1] : null
         if (link) {
           toDelete.push(link)
         }
