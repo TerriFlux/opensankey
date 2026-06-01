@@ -131,8 +131,7 @@ const ComponentPositionMode = ({ app_data, updateParentComponent }: { app_data: 
   const size = app_data.is_static ? 'sizeToolbarButtonStatic' : 'sizeToolbarButton'
   const mode = drawing_area.sankey.styles_dict['default'].shape_position_type
   // #1231 — Le mode « paramétrique » n'est plus un mode utilisateur : seuls Absolu et
-  // Pourcentage. L'« écart constant » est désormais une commande (clic droit nœud →
-  // « Écarts égaux »). Bouton paramétrique retiré.
+  // Pourcentage. Bouton paramétrique retiré.
   return <ButtonGroup className='toolbar_bottom_position_mode' isAttached orientation={app_data.is_static ? 'vertical' : 'horizontal'}>
     <OSTooltip placement='top' label={t('Banner.posMode_absolute')}>
       <Button
