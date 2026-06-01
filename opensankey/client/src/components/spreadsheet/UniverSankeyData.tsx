@@ -222,7 +222,7 @@ export const buildSankeyWorkbookData = (
   return {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_DATA, SHEET_ID_TAGS],
+    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_DATA],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
