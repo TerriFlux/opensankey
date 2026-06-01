@@ -10,6 +10,7 @@
 // ==================================================================================================
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { default_element_color } from '../../Elements/ElementsAttributesConfig'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -51,6 +52,15 @@ const NOEUDS_MANDATORY = new Set([1])
 const DATA_MANDATORY = new Set([0, 1])
 const TAGS_MANDATORY = new Set([0, 2])
 
+// Valeurs PAR DÉFAUT par colonne (phase 2) : une colonne optionnelle est masquée par défaut si
+// vide OU si toutes ses valeurs valent ce défaut. (Noeuds : niveau=1, couleur auto #a9a9a9, u/v=0.)
+const NOEUDS_DEFAULTS: { [col: number]: any } = {
+  [NOEUDS_COL.level]: 1,
+  [NOEUDS_COL.color]: default_element_color,
+  [NOEUDS_COL.position_u]: 0,
+  [NOEUDS_COL.position_v]: 0
+}
+
 // Couleurs de référence (excel_formatter.py CATEGORY_COLORS / main colors).
 const COLOR_NODE_MAIN = [0x4F, 0x81, 0xBD]  // #4F81BD (core / nodes header, bleu)
 const COLOR_WHITE = [0xFF, 0xFF, 0xFF]
@@ -74,28 +84,38 @@ const blendBlue = (t: number): string => {
 const headerStyle = (hex: string) => ({ bg: { rgb: hex }, bl: 1, ht: 2, vt: 2 })
 const levelStyle = (t: number) => ({ bg: { rgb: blendBlue(t) } })
 
-/** True si la colonne `col` a au moins une valeur non vide (hors ligne d'en-tête). */
-const columnHasData = (cells: Type_CellData, col: number): boolean => {
+/**
+ * True si la colonne a au moins une valeur "significative" : non vide ET (si un défaut est fourni)
+ * différente de ce défaut. Sert au masquage par défaut (colonnes vides ou tout-à-défaut).
+ */
+const columnHasMeaningfulData = (cells: Type_CellData, col: number, defaultVal?: any): boolean => {
   for (const rowKey in cells) {
     const r = Number(rowKey)
     if (r === 0) {
       continue
     }
     const v = cells[r][col] ? cells[r][col].v : undefined
-    if (v !== undefined && v !== null && v !== '') {
-      return true
+    if (v === undefined || v === null || v === '') {
+      continue
     }
+    if (defaultVal !== undefined && v === defaultVal) {
+      continue
+    }
+    return true
   }
   return false
 }
 
-/** Métadonnées de colonnes d'un onglet (label + obligatoire + hasData). */
-const colMeta = (headers: string[], cells: Type_CellData, mandatory: Set<number>): Type_ColMeta[] =>
+/** Métadonnées de colonnes d'un onglet (label + obligatoire + hasData hors valeurs par défaut). */
+const colMeta = (
+  headers: string[], cells: Type_CellData, mandatory: Set<number>,
+  defaults: { [col: number]: any } = {}
+): Type_ColMeta[] =>
   headers.map((label, index) => ({
     index,
     label,
     mandatory: mandatory.has(index),
-    hasData: columnHasData(cells, index)
+    hasData: columnHasMeaningfulData(cells, index, defaults[index])
   }))
 
 /**
@@ -126,6 +146,28 @@ const computeNodeLevels = (nodes: any[]): { levels: Map<string, number>, max: nu
   let max = 1
   nodes.forEach((n) => { max = Math.max(max, levelOf(n)) })
   return { levels, max }
+}
+
+/**
+ * Valeur effective d'un lien (ce que le diagramme afficherait), pour remplir AUSSI les flux des
+ * nœuds repliés/agrégés dont la valeur collectée est au niveau parent : `valueCurrent` (respecte
+ * le mode data/réconcilié + calcule les liens d'expansion), sinon `valueData`, sinon `valueResult`.
+ */
+const effectiveLinkValue = (l: any): number | '' => {
+  const vc = l.valueCurrent
+  if (vc !== null && vc !== undefined) {
+    return vc
+  }
+  const v = l.value
+  if (v) {
+    if (v.valueData != null) {
+      return v.valueData
+    }
+    if (v.valueResult != null) {
+      return v.valueResult
+    }
+  }
+  return ''
 }
 
 /** Noms des tags d'un nœud appartenant à un groupe donné, joints. */
@@ -159,7 +201,7 @@ export const buildSankeyWorkbookData = (
     fluxCells[r] = {
       0: { v: l.source.name },
       1: { v: l.target.name },
-      2: { v: l.value && l.value.valueData != null ? l.value.valueData : '' }
+      2: { v: effectiveLinkValue(l) }
     }
     if (has_afm) {
       fluxCells[r][3] = { v: l.value && l.value.valueResult != null ? l.value.valueResult : '' }
@@ -249,7 +291,7 @@ export const buildSankeyWorkbookData = (
     dataCells[i + 1] = {
       0: { v: l.source.name },
       1: { v: l.target.name },
-      2: { v: v && v.valueData != null ? v.valueData : '' },
+      2: { v: effectiveLinkValue(l) },
       3: { v: v && v.valueDataTarget != null ? v.valueDataTarget : '' },
       4: { v: '' },
       5: { v: v && v.data_uncertainty != null ? v.data_uncertainty : '' },
@@ -298,7 +340,7 @@ export const buildSankeyWorkbookData = (
 
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
-    [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY),
+    [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
     [SHEET_ID_DATA]: colMeta(dataHeaders, dataCells, DATA_MANDATORY),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY)
   }
