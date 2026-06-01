@@ -22,12 +22,24 @@ const MIN_SPREADSHEET_PX = 320
 const MIN_DIAGRAM_PX = 160
 
 // Largeur effective (px) du tableur pour un ratio diagramme donné, bornée par les minimums.
-const spreadsheetWidthPx = (diagramRatio: number): number => {
+export const spreadsheetWidthPx = (diagramRatio: number): number => {
   const W = window.innerWidth
   let w = (1 - diagramRatio) * W
   w = Math.max(MIN_SPREADSHEET_PX, w)
   w = Math.min(w, Math.max(MIN_SPREADSHEET_PX, W - MIN_DIAGRAM_PX))
   return w
+}
+
+/**
+ * Largeur (px) réservée à droite par le tableur en mode split (0 sinon). Le chrome du diagramme
+ * (bouton/panneau config, barre du bas) y soustrait cette valeur pour se décaler vers la gauche,
+ * comme si l'écran rétrécissait. Fonction pure de l'état (pas du `drawing_area` mis à jour en effet).
+ */
+export const mainZoneRightReservedPx = (app_data: Class_ApplicationData): number => {
+  const mc = app_data.menu_configuration
+  return (mc.main_zone_show_diagram && mc.main_zone_show_spreadsheet)
+    ? spreadsheetWidthPx(mc.main_zone_split_ratio)
+    : 0
 }
 
 /**
@@ -95,10 +107,12 @@ export const MainZoneTabs = (
 
   return (
     <>
-      {/* Overlay tableur : pleine zone, ou moitié droite en split. */}
+      {/* Overlay tableur : pleine zone, ou moitié droite en split. `position: fixed` -> top/bottom
+          relatifs au VIEWPORT (et non à un ancêtre positionné pouvant dépasser l'écran, ce qui
+          rognait le footer/scrollbars d'Univer ou poussait le tableur trop bas). */}
       <div
         style={{
-          position: 'absolute',
+          position: 'fixed',
           top: navH,
           left: overlayLeft,
           right: 0,
@@ -116,7 +130,7 @@ export const MainZoneTabs = (
         <div
           onMouseDown={onDividerDown}
           style={{
-            position: 'absolute',
+            position: 'fixed',
             top: navH,
             bottom: bottomH,
             left: leftPx - 3,
