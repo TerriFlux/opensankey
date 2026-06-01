@@ -25,6 +25,10 @@ sed -i -e 's/\/static\//\/static\/sankeyapp\//g' ./build/index.html || exit_if_e
 sed -i -e 's/..\/static\//..\/..\/static\/sankeyapp\//g' ./build/static/css/*.css || exit_if_error $?
 sed -i -e 's/static\/sankeyanimation/\static\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
 sed -i -e 's/static\/opensankey/\/static\/sankeyapp\//g' ./build/static/*/* || exit_if_error $?
+# Chunks async (lazy-load, ex. Univer) : le runtime webpack dans les .js construit l'URL des
+# chunks avec "static/js/" (et "static/css/" pour le CSS async), non couvert par les sed ci-dessus.
+# Flask sert /static/sankeyapp/ -> réécrire ces chemins pour que les chunks soient trouvés.
+sed -i -e 's/static\/js\//static\/sankeyapp\/js\//g' -e 's/static\/css\//static\/sankeyapp\/css\//g' ./build/static/js/*.js || exit_if_error $?
 
 # Then build server side and documentation for submodules
 printf "SankeyApp Server --------------------------------------------------\n"
