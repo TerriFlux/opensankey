@@ -342,7 +342,15 @@ export const buildSankeyWorkbookData = (
 
   // --- Onglet Stock (un nœud par ligne, valeur de stock courante selon les data tags sélectionnés) -
   // Comme l'onglet Flux : pas de colonnes data tag, on prend la valeur résolue (node.stock_value).
-  const stockHeaders = ['Nœud', 'Stock', 'Δ Stock', 'Δ calculée']
+  // Valeurs EFFECTIVES : en mode réconcilié (type_data != 'data') on montre le résultat avec repli
+  // sur la donnée (sinon les nœuds agrégés, dont le stock est un RÉSULTAT et non une donnée d'entrée,
+  // n'afficheraient rien). Aligné sur MenuElementsSelection / Node.drawStockBox.
+  const stockUseResult = app_data.drawing_area.type_data !== 'data'
+  const effStockInitial = (sv: any): number | null =>
+    sv ? (stockUseResult ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData) : null
+  const effStockVariation = (sv: any): number | null =>
+    sv ? (stockUseResult ? (sv.stockVariationResult ?? sv.stockVariationData) : sv.stockVariationData) : null
+  const stockHeaders = ['Nœud', 'Stock', 'Stock calculé', 'Δ Stock', 'Δ calculée']
   const stockCells: Type_CellData = { 0: {} }
   stockHeaders.forEach((h, c) => { stockCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
   let stockRow = 1
@@ -351,11 +359,14 @@ export const buildSankeyWorkbookData = (
     .filter((n: any) => n.has_stock && !n.sibling)
     .forEach((n: any) => {
       const sv = n.stock_value
+      const ini = effStockInitial(sv)
+      const variation = effStockVariation(sv)
       stockCells[stockRow] = {
         0: { v: n.name },
-        1: { v: sv && sv.stockInitialData != null ? num5(sv.stockInitialData) : '' },
-        2: { v: sv && sv.stockVariationData != null ? num5(sv.stockVariationData) : '' },
-        3: { v: sv && sv.stockVariationResult != null ? num5(sv.stockVariationResult) : '' }
+        1: { v: ini != null ? num5(ini) : '' },
+        2: { v: sv && sv.stockInitialResult != null ? num5(sv.stockInitialResult) : '' },
+        3: { v: variation != null ? num5(variation) : '' },
+        4: { v: sv && sv.stockVariationResult != null ? num5(sv.stockVariationResult) : '' }
       }
       stockRow++
     })
