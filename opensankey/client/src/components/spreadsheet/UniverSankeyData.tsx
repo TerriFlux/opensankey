@@ -36,6 +36,21 @@ export const NOEUDS_COL = {
 }
 export const NOEUDS_CORE_COLS = 8
 
+// Métadonnées de colonne pour le sélecteur "Colonnes" (par onglet) : obligatoire = toujours visible
+// (pas dans le sélecteur) ; optionnelle = togglable ; hasData = au moins une valeur non vide.
+export type Type_ColMeta = { index: number, label: string, mandatory: boolean, hasData: boolean }
+export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
+
+// Colonnes OBLIGATOIRES par onglet (d'après SankeyExcelParser ; les autres sont optionnelles).
+//  - Flux : Origine, Destination, Valeur
+//  - Noeuds : Noeuds (nom)
+//  - Données : Origine, Destination (DATA_SHEET_COLS_1)
+//  - Etiquettes : Nom du groupe, Etiquettes
+const FLUX_MANDATORY = new Set([0, 1, 2])
+const NOEUDS_MANDATORY = new Set([1])
+const DATA_MANDATORY = new Set([0, 1])
+const TAGS_MANDATORY = new Set([0, 2])
+
 // Couleurs de référence (excel_formatter.py CATEGORY_COLORS / main colors).
 const COLOR_NODE_MAIN = [0x4F, 0x81, 0xBD]  // #4F81BD (core / nodes header, bleu)
 const COLOR_WHITE = [0xFF, 0xFF, 0xFF]
@@ -58,6 +73,30 @@ const blendBlue = (t: number): string => {
 
 const headerStyle = (hex: string) => ({ bg: { rgb: hex }, bl: 1, ht: 2, vt: 2 })
 const levelStyle = (t: number) => ({ bg: { rgb: blendBlue(t) } })
+
+/** True si la colonne `col` a au moins une valeur non vide (hors ligne d'en-tête). */
+const columnHasData = (cells: Type_CellData, col: number): boolean => {
+  for (const rowKey in cells) {
+    const r = Number(rowKey)
+    if (r === 0) {
+      continue
+    }
+    const v = cells[r][col] ? cells[r][col].v : undefined
+    if (v !== undefined && v !== null && v !== '') {
+      return true
+    }
+  }
+  return false
+}
+
+/** Métadonnées de colonnes d'un onglet (label + obligatoire + hasData). */
+const colMeta = (headers: string[], cells: Type_CellData, mandatory: Set<number>): Type_ColMeta[] =>
+  headers.map((label, index) => ({
+    index,
+    label,
+    mandatory: mandatory.has(index),
+    hasData: columnHasData(cells, index)
+  }))
 
 /**
  * Niveau d'agrégation best-effort depuis la hiérarchie de dimensions du front :
@@ -100,7 +139,7 @@ const nodeTagsInGroup = (node: any, group: any): string => {
  */
 export const buildSankeyWorkbookData = (
   app_data: Class_ApplicationData
-): Partial<Type_WorkbookData> => {
+): { data: Partial<Type_WorkbookData>, columns: Type_SheetColumns } => {
   const { sankey } = app_data.drawing_area
   const has_afm = app_data.has_sankey_afm
 
@@ -219,7 +258,9 @@ export const buildSankeyWorkbookData = (
     }
   })
 
-  return {
+  const noeudsHeaders = [...coreHeaders, ...nodeTagGroups.map((g: any) => g.name)]
+
+  const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
     sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_DATA],
@@ -254,4 +295,13 @@ export const buildSankeyWorkbookData = (
       }
     }
   }
+
+  const columns: Type_SheetColumns = {
+    [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
+    [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY),
+    [SHEET_ID_DATA]: colMeta(dataHeaders, dataCells, DATA_MANDATORY),
+    [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY)
+  }
+
+  return { data, columns }
 }
