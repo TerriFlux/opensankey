@@ -129,6 +129,8 @@ export const UniverSpreadSheet = (
   // "Visibles uniquement" : ne lister que les éléments visibles (exclut repliés/agrégés).
   const onlyVisibleRef = useRef(false)
   const [onlyVisible, setOnlyVisible] = useState(false)
+  // Mode filtre (autofilter Excel) actif sur l'onglet courant.
+  const [filterOn, setFilterOn] = useState(false)
 
   // Masque/affiche une colonne d'un onglet dans Univer.
   const setColHidden = (sheetId: string, col: number, hidden: boolean) => {
@@ -155,6 +157,43 @@ export const UniverSpreadSheet = (
     }
   }
 
+  // Worksheet active (helper).
+  const getActiveWs = () => {
+    const api = apiRef.current
+    const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+    return (wb && wb.getActiveSheet) ? wb.getActiveSheet() : null
+  }
+
+  // Active/désactive l'autofilter Excel (flèche par colonne) sur l'onglet courant.
+  const toggleFilter = (on: boolean) => {
+    const ws = getActiveWs()
+    if (!ws) {
+      return
+    }
+    try {
+      const existing = typeof ws.getFilter === 'function' ? ws.getFilter() : null
+      if (on) {
+        if (!existing && typeof ws.getDataRange === 'function') {
+          const range = ws.getDataRange()
+          if (range && typeof range.createFilter === 'function') {
+            range.createFilter()
+          }
+        }
+      } else if (existing && typeof existing.remove === 'function') {
+        existing.remove()
+      }
+    } catch (e) { /* ignore */ }
+    setFilterOn(on)
+  }
+
+  // Reflète l'état de filtre de l'onglet courant (au changement d'onglet).
+  const syncFilterState = () => {
+    const ws = getActiveWs()
+    let has = false
+    try { has = !!(ws && typeof ws.getFilter === 'function' && ws.getFilter()) } catch (e) { /* ignore */ }
+    setFilterOn(has)
+  }
+
   useEffect(() => {
     if (!active) {
       return
@@ -171,23 +210,38 @@ export const UniverSpreadSheet = (
     const isSyncing = { current: false }
 
     const init = async () => {
-      const [presets, sheetsCore, localeMod] = await Promise.all([
+      const [
+        presets, sheetsCore, localeMod,
+        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod
+      ] = await Promise.all([
         import('@univerjs/presets'),
         import('@univerjs/presets/preset-sheets-core'),
-        import('@univerjs/presets/preset-sheets-core/locales/fr-FR')
+        import('@univerjs/presets/preset-sheets-core/locales/fr-FR'),
+        import('@univerjs/presets/preset-sheets-filter'),
+        import('@univerjs/presets/preset-sheets-filter/locales/fr-FR'),
+        import('@univerjs/presets/preset-sheets-sort'),
+        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR')
       ])
-      await import('@univerjs/presets/lib/styles/preset-sheets-core.css')
+      await Promise.all([
+        import('@univerjs/presets/lib/styles/preset-sheets-core.css'),
+        import('@univerjs/presets/lib/styles/preset-sheets-filter.css'),
+        import('@univerjs/presets/lib/styles/preset-sheets-sort.css')
+      ])
       const liveContainer = containerRef.current
       if (disposed || !liveContainer) {
         return
       }
       const { createUniver, defaultTheme, LocaleType, merge } = presets
       const { UniverSheetsCorePreset } = sheetsCore
+      const { UniverSheetsFilterPreset } = sheetsFilter
+      const { UniverSheetsSortPreset } = sheetsSort
       const sheetsCoreFrFR = localeMod.default
 
       const { univer, univerAPI } = createUniver({
         locale: LocaleType.FR_FR,
-        locales: { [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR) },
+        locales: {
+          [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default)
+        },
         theme: defaultTheme,
         presets: [
           // footer.statisticBar: false -> retire les stats du pied (Max/Min/Somme…) qui, en vue
@@ -197,7 +251,10 @@ export const UniverSpreadSheet = (
             container: liveContainer,
             toolbar: false,
             footer: { statisticBar: false }
-          })
+          }),
+          // Filtre (autofilter Excel : flèche par colonne, tri, recherche, valeurs) + tri par colonne.
+          UniverSheetsFilterPreset(),
+          UniverSheetsSortPreset()
         ]
       })
       univerInstance = univer
@@ -231,7 +288,7 @@ export const UniverSpreadSheet = (
                 hidden[sheetId].push(c.index)
               }
             })
-            // Fige la ligne d'en-tête de chaque onglet.
+            // Fige la ligne d'en-tête de chaque onglet (le filtre s'active via le bouton).
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
@@ -240,6 +297,7 @@ export const UniverSpreadSheet = (
           if (asNow && asNow.getSheetId) {
             setActiveSheetId(asNow.getSheetId())
           }
+          syncFilterState()
         } finally {
           isSyncing.current = false
         }
@@ -260,6 +318,7 @@ export const UniverSpreadSheet = (
         if (as && as.getSheetId) {
           setActiveSheetId(as.getSheetId())
         }
+        syncFilterState()
       })
     }
     init()
@@ -336,6 +395,19 @@ export const UniverSpreadSheet = (
         )}
 
         <ColumnSelector columns={optionalCols} hiddenSet={hiddenSet} onSet={handleColSet} />
+
+        <Button
+          size='xs'
+          width='auto'
+          maxW='90px'
+          flexShrink={0}
+          colorScheme={filterOn ? 'blue' : 'gray'}
+          variant={filterOn ? 'solid' : 'outline'}
+          title='Active/désactive les filtres de colonne (style Excel) sur cet onglet'
+          onClick={() => toggleFilter(!filterOn)}
+        >
+          Filtrer
+        </Button>
 
         <Checkbox
           size='sm'
