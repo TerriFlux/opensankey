@@ -136,28 +136,6 @@ const colMeta = (
  */
 export type Type_NodeRow = { node: any, level: number }
 
-/**
- * Valeur effective d'un lien (ce que le diagramme afficherait), pour remplir AUSSI les flux des
- * nœuds repliés/agrégés dont la valeur collectée est au niveau parent : `valueCurrent` (respecte
- * le mode data/réconcilié + calcule les liens d'expansion), sinon `valueData`, sinon `valueResult`.
- */
-const effectiveLinkValue = (l: any): number | '' => {
-  const vc = l.valueCurrent
-  if (vc !== null && vc !== undefined) {
-    return vc
-  }
-  const v = l.value
-  if (v) {
-    if (v.valueData != null) {
-      return v.valueData
-    }
-    if (v.valueResult != null) {
-      return v.valueResult
-    }
-  }
-  return ''
-}
-
 /** Noms des tags d'un nœud appartenant à un groupe donné, joints. */
 const nodeTagsInGroup = (node: any, group: any): string => {
   const tags = (group.tags_list || []).filter((t: any) => node.hasGivenTag && node.hasGivenTag(t))
@@ -276,7 +254,9 @@ export const buildSankeyWorkbookData = (
     fluxCells[i + 1] = {
       0: { v: l.source.name },
       1: { v: l.target.name },
-      2: { v: num5(effectiveLinkValue(l)) },
+      // "Valeur" = donnée d'entrée uniquement (vide si seul un résultat existe -> il est dans
+      // "Valeur calculée"). Pas de repli sur le résultat.
+      2: { v: v && v.valueData != null ? num5(v.valueData) : '' },
       3: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
       4: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
       5: { v: '' },
@@ -410,10 +390,6 @@ export const buildSankeyWorkbookData = (
   // Ligne d'en-tête plus haute pour accueillir les libellés verticaux.
   const noeudsRowData = { 0: { h: 90 } }
 
-  // Masque la barre de lettres de colonnes (A,B,C…) : nos vrais en-têtes sont la ligne 0.
-  // (hidden: 1 = BooleanNumber.TRUE) ; on garde les numéros de ligne (clic droit -> supprimer).
-  const noColHeader = { height: 0, hidden: 1 }
-
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
@@ -423,7 +399,6 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_FLUX,
         name: 'Flux',
         cellData: fluxCells,
-        columnHeader: noColHeader,
         rowCount: Math.max(100, links.length + 20),
         columnCount: 9
       },
@@ -431,7 +406,6 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_NOEUDS,
         name: 'Noeuds',
         cellData: nodeCells,
-        columnHeader: noColHeader,
         columnData: noeudsColumnData,
         rowData: noeudsRowData,
         rowCount: Math.max(100, noeudsRows.length + 20),
@@ -441,7 +415,6 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_TAGS,
         name: 'Etiquettes',
         cellData: tagCells,
-        columnHeader: noColHeader,
         rowCount: Math.max(50, tagRow + 20),
         columnCount: 6
       },
@@ -449,7 +422,6 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_STOCK,
         name: 'Stocks',
         cellData: stockCells,
-        columnHeader: noColHeader,
         rowCount: Math.max(50, stockRow + 20),
         columnCount: stockHeaders.length
       }
