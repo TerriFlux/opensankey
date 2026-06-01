@@ -468,7 +468,7 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
             refreshThisAndUpdateRelatedComponents()
           }}
         >
-          {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+          {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.display_name}</option>)}
         </Select>
       </BOX2COLSTITLEH4>
     })}

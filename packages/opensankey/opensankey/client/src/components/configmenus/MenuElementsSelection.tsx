@@ -820,7 +820,7 @@ export const SankeyNodeSelection = ({ app_data }: { app_data: Class_ApplicationD
                     }}
                   >
                     {data_tagg.tags_list.map(tag =>
-                      <option key={tag.id} value={tag.id}>{tag.name}</option>
+                      <option key={tag.id} value={tag.id}>{tag.display_name}</option>
                     )}
                   </Select>
                 </React.Fragment>
