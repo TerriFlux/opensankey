@@ -49,7 +49,6 @@ export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
 //  - Etiquettes : Nom du groupe, Etiquettes
 const FLUX_MANDATORY = new Set([0, 1, 2])
 const NOEUDS_MANDATORY = new Set([1])
-const DATA_MANDATORY = new Set([0, 1])
 const TAGS_MANDATORY = new Set([0, 2])
 
 // Valeurs PAR DÉFAUT par colonne (phase 2) : une colonne optionnelle est masquée par défaut si
@@ -67,7 +66,6 @@ const COLOR_WHITE = [0xFF, 0xFF, 0xFF]
 const HEX_CORE = '#4F81BD'      // bleu
 const HEX_NODETAG = '#9BBB59'   // vert
 const HEX_TAG_SHEET = '#9BBB59' // vert (onglet Etiquettes)
-const HEX_DATA = '#8064A2'      // violet (onglet Données)
 
 type Type_Cell = { v?: string | number, s?: any }
 type Type_CellData = { [row: number]: { [col: number]: Type_Cell } }
@@ -180,31 +178,34 @@ const nodeTagsInGroup = (node: any, group: any): string => {
  * Construit le classeur Univer (Flux + Noeuds + Etiquettes) reflétant le Sankey courant.
  */
 export const buildSankeyWorkbookData = (
-  app_data: Class_ApplicationData
+  app_data: Class_ApplicationData,
+  onlyVisible = false
 ): { data: Partial<Type_WorkbookData>, columns: Type_SheetColumns } => {
   const { sankey } = app_data.drawing_area
-  const has_afm = app_data.has_sankey_afm
+  // onlyVisible : ne garder que les éléments visibles (exclut les flux/nœuds repliés/agrégés).
+  const links = onlyVisible ? sankey.visible_links_list : sankey.links_list
+  const nodes = onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list
 
-  // --- Onglet Flux -------------------------------------------------------------------------------
+  // --- Onglet Flux (fusion Flux + Données : un flux par ligne, toutes les colonnes de valeur) -----
+  // Origine/Destination/Valeur obligatoires ; le reste optionnel (masqué si vide via le sélecteur).
   const fluxHeaders = [
-    app_data.t('Flux.src'),
-    app_data.t('Flux.trgt'),
-    app_data.t('Flux.value')
+    'Origine', 'Destination', 'Valeur', 'Valeur calculée', 'Valeur destination',
+    'Quantité naturelle', 'Incertitude relative', 'Source', 'Hypothèse'
   ]
-  if (has_afm) {
-    fluxHeaders.push(app_data.t('Flux.calculated_value'))
-  }
   const fluxCells: Type_CellData = { 0: {} }
   fluxHeaders.forEach((h, c) => { fluxCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
-  sankey.links_list.forEach((l: any, i: number) => {
-    const r = i + 1
-    fluxCells[r] = {
+  links.forEach((l: any, i: number) => {
+    const v = l.value
+    fluxCells[i + 1] = {
       0: { v: l.source.name },
       1: { v: l.target.name },
-      2: { v: effectiveLinkValue(l) }
-    }
-    if (has_afm) {
-      fluxCells[r][3] = { v: l.value && l.value.valueResult != null ? l.value.valueResult : '' }
+      2: { v: effectiveLinkValue(l) },
+      3: { v: v && v.valueResult != null ? v.valueResult : '' },
+      4: { v: v && v.valueDataTarget != null ? v.valueDataTarget : '' },
+      5: { v: '' },
+      6: { v: v && v.data_uncertainty != null ? v.data_uncertainty : '' },
+      7: { v: (v && v.data_source) || '' },
+      8: { v: '' }
     }
   })
 
@@ -226,7 +227,6 @@ export const buildSankeyWorkbookData = (
     nodeCells[0][NOEUDS_CORE_COLS + j] = { v: g.name, s: headerStyle(HEX_NODETAG) }
   })
 
-  const nodes = sankey.nodes_list
   const { levels, max } = computeNodeLevels(nodes)
   nodes.forEach((n: any, i: number) => {
     const r = i + 1
@@ -273,46 +273,19 @@ export const buildSankeyWorkbookData = (
     })
   })
 
-  // --- Onglet Données (un flux par ligne ; valeurs collectées détaillées) ------------------------
-  const dataHeaders = [
-    'Origine',
-    'Destination',
-    'Valeur',
-    'Valeur destination',
-    'Quantité naturelle',
-    'Incertitude relative',
-    'Source',
-    'Hypothèse'
-  ]
-  const dataCells: Type_CellData = { 0: {} }
-  dataHeaders.forEach((h, c) => { dataCells[0][c] = { v: h, s: headerStyle(HEX_DATA) } })
-  sankey.links_list.forEach((l: any, i: number) => {
-    const v = l.value
-    dataCells[i + 1] = {
-      0: { v: l.source.name },
-      1: { v: l.target.name },
-      2: { v: effectiveLinkValue(l) },
-      3: { v: v && v.valueDataTarget != null ? v.valueDataTarget : '' },
-      4: { v: '' },
-      5: { v: v && v.data_uncertainty != null ? v.data_uncertainty : '' },
-      6: { v: (v && v.data_source) || '' },
-      7: { v: '' }
-    }
-  })
-
   const noeudsHeaders = [...coreHeaders, ...nodeTagGroups.map((g: any) => g.name)]
 
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_DATA],
+    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
         name: 'Flux',
         cellData: fluxCells,
-        rowCount: Math.max(100, sankey.links_list.length + 20),
-        columnCount: 8
+        rowCount: Math.max(100, links.length + 20),
+        columnCount: 9
       },
       [SHEET_ID_NOEUDS]: {
         id: SHEET_ID_NOEUDS,
@@ -320,13 +293,6 @@ export const buildSankeyWorkbookData = (
         cellData: nodeCells,
         rowCount: Math.max(100, nodes.length + 20),
         columnCount: NOEUDS_CORE_COLS + nodeTagGroups.length + 2
-      },
-      [SHEET_ID_DATA]: {
-        id: SHEET_ID_DATA,
-        name: 'Données',
-        cellData: dataCells,
-        rowCount: Math.max(100, sankey.links_list.length + 20),
-        columnCount: 8
       },
       [SHEET_ID_TAGS]: {
         id: SHEET_ID_TAGS,
@@ -341,7 +307,6 @@ export const buildSankeyWorkbookData = (
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
     [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
-    [SHEET_ID_DATA]: colMeta(dataHeaders, dataCells, DATA_MANDATORY),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY)
   }
 

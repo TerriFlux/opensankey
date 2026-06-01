@@ -126,6 +126,9 @@ export const UniverSpreadSheet = (
   const [activeSheetId, setActiveSheetId] = useState<string>('')
   // Colonnes masquées par onglet (indices).
   const [hiddenCols, setHiddenCols] = useState<{ [sheetId: string]: number[] }>({})
+  // "Visibles uniquement" : ne lister que les éléments visibles (exclut repliés/agrégés).
+  const onlyVisibleRef = useRef(false)
+  const [onlyVisible, setOnlyVisible] = useState(false)
 
   // Masque/affiche une colonne d'un onglet dans Univer.
   const setColHidden = (sheetId: string, col: number, hidden: boolean) => {
@@ -206,7 +209,7 @@ export const UniverSpreadSheet = (
               univerAPI.disposeUnit(existing.getId())
             }
           }
-          const built = buildSankeyWorkbookData(app_data)
+          const built = buildSankeyWorkbookData(app_data, onlyVisibleRef.current)
           columnsRef.current = built.columns
           const wb: any = univerAPI.createWorkbook(built.data)
           if (keepActive && wb && typeof wb.setActiveSheet === 'function') {
@@ -290,6 +293,16 @@ export const UniverSpreadSheet = (
     })
   }
 
+  // Bascule "Visibles uniquement" : met à jour le ref + reconstruit le classeur.
+  const toggleOnlyVisible = (v: boolean) => {
+    onlyVisibleRef.current = v
+    setOnlyVisible(v)
+    const ref = app_data.menu_configuration.ref_to_spreadsheet
+    if (ref && ref.current) {
+      ref.current()
+    }
+  }
+
   const optionalCols = (columnsRef.current[activeSheetId] || []).filter((c) => !c.mandatory)
   const hiddenSet = new Set(hiddenCols[activeSheetId] || [])
   const isNoeuds = activeSheetId === SHEET_ID_NOEUDS
@@ -316,6 +329,15 @@ export const UniverSpreadSheet = (
         )}
 
         <ColumnSelector columns={optionalCols} hiddenSet={hiddenSet} onSet={handleColSet} />
+
+        <Checkbox
+          size='sm'
+          isChecked={onlyVisible}
+          onChange={(e) => toggleOnlyVisible(e.target.checked)}
+          flexShrink={0}
+        >
+          <Text fontSize='xs'>Visibles uniquement</Text>
+        </Checkbox>
 
         <span style={{ fontSize: 11, color: '#718096' }}>
           colonnes optionnelles (vides masquées par défaut){isNoeuds ? ' · Parser → hiérarchie' : ''}
