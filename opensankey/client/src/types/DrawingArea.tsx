@@ -2662,7 +2662,12 @@ export class Class_DrawingArea {
     this._height = _; this.drawBackground(); this.drawGrid()
   }
   public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
-  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
+  // Largeur réservée à droite de la grande zone pour le tableur (split view). Le diagramme se
+  // recadre dans la largeur restante via areaAutoFit() quand cette valeur change (cf MainZoneTabs).
+  protected _main_zone_right_reserved: number = 0
+  public get main_zone_right_reserved() { return this._main_zone_right_reserved }
+  public set main_zone_right_reserved(v: number) { this._main_zone_right_reserved = Math.max(0, v) }
+  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this._main_zone_right_reserved }
 
   // Paper format getters/setters
 
