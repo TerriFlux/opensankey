@@ -211,14 +211,12 @@ const syncFoContentToLabel = (
   const plainText = stripHtmlTags(foContent)
   elements.forEach(el => {
     if (el instanceof Class_NodeBase) {
-      // En mode label personnalisé, écrire dans le champ de label indépendant
-      // (le nœud n'est PAS renommé) ; sinon, comportement historique (= nom).
-      if (el.name_label_custom) {
-        el.name_label_text = plainText
-      } else {
-        el.name = plainText
-      }
+      // L'édition rich text écrit toujours dans le label personnalisé
+      // indépendant (name_label_text), SANS jamais renommer le nœud / la forme.
+      el.name_label_custom = true
+      el.name_label_text = plainText
     } else if (el instanceof Class_LinkElement) {
+      // text_value est déjà le champ de label custom du flux.
       el.text_value = plainText
     }
   })
