@@ -207,6 +207,7 @@ export const UniverSpreadSheet = (
     let univerInstance: { dispose: () => void } | null = null
     let bridgeInstance: { dispose: () => void } | null = null
     let activeSheetDisposable: { dispose: () => void } | null = null
+    let resizeObserver: ResizeObserver | null = null
     const isSyncing = { current: false }
 
     const init = async () => {
@@ -260,6 +261,21 @@ export const UniverSpreadSheet = (
       univerInstance = univer
       apiRef.current = univerAPI
 
+      // Univer ne se re-mesure pas seul quand la zone change de largeur (ouverture/fermeture du
+      // diagramme, déplacement du séparateur) -> canvas plus étroit que le conteneur = espace vide à
+      // droite + scrollbar mal placée. On observe le conteneur et on déclenche un `resize` (écouté
+      // par le moteur de rendu Univer) pour qu'il remplisse toute la largeur.
+      if (typeof ResizeObserver !== 'undefined') {
+        let raf = 0
+        resizeObserver = new ResizeObserver(() => {
+          if (raf) {
+            cancelAnimationFrame(raf)
+          }
+          raf = requestAnimationFrame(() => { window.dispatchEvent(new Event('resize')) })
+        })
+        resizeObserver.observe(liveContainer)
+      }
+
       // (Re)construit le classeur + applique la visibilité initiale (optionnelles vides masquées).
       const buildAndApply = () => {
         isSyncing.current = true
@@ -276,9 +292,6 @@ export const UniverSpreadSheet = (
           const built = buildSankeyWorkbookData(app_data, onlyVisibleRef.current)
           columnsRef.current = built.columns
           const wb: any = univerAPI.createWorkbook(built.data)
-          if (keepActive && wb && typeof wb.setActiveSheet === 'function') {
-            try { wb.setActiveSheet(keepActive) } catch (e) { /* feuille absente */ }
-          }
           const hidden: { [sheetId: string]: number[] } = {}
           Object.keys(built.columns).forEach((sheetId) => {
             hidden[sheetId] = []
@@ -292,6 +305,12 @@ export const UniverSpreadSheet = (
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
+          // Restaure l'onglet actif APRÈS les opérations par-feuille (hide/freeze) qui, sinon,
+          // laissent active la dernière feuille traitée -> l'onglet changeait au moindre rebuild
+          // (Visibles uniquement, changement de data tag…).
+          if (keepActive && wb && typeof wb.setActiveSheet === 'function') {
+            try { wb.setActiveSheet(keepActive) } catch (e) { /* feuille absente */ }
+          }
           const wbA = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           const asNow = wbA && wbA.getActiveSheet && wbA.getActiveSheet()
           if (asNow && asNow.getSheetId) {
@@ -326,6 +345,9 @@ export const UniverSpreadSheet = (
     return () => {
       disposed = true
       apiRef.current = null
+      if (resizeObserver) {
+        resizeObserver.disconnect()
+      }
       if (activeSheetDisposable && typeof activeSheetDisposable.dispose === 'function') {
         activeSheetDisposable.dispose()
       }

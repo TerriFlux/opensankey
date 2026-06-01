@@ -46,6 +46,7 @@ import {
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
+import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
 import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
@@ -104,8 +105,14 @@ export const SankeyMenu = (
     ro.observe(navbar)
     return () => ro.disconnect()
   }, [])
+  // Largeur réservée à droite par le tableur (split) : on décale tout le chrome droite vers la
+  // gauche d'autant, comme si l'écran rétrécissait. useMainZone -> re-render au toggle/redimension.
+  useMainZone(app_data)
+  const rightReserve = mainZoneRightReservedPx(app_data)
   const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
-  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin
+  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0]
+    ? 'calc(' + drawer_width_css + ' + ' + (app_data.drawing_area.fit_margin + rightReserve) + 'px)'
+    : (app_data.drawing_area.fit_margin + rightReserve)
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
@@ -195,7 +202,7 @@ export const SankeyMenu = (
               style={{
                 width: drawer_width_css,
                 height: 'fit-content',
-                right: app_data.drawing_area.fit_margin / 2,
+                right: app_data.drawing_area.fit_margin / 2 + rightReserve,
                 marginTop: posTopMenuConfig
               }}
             >
