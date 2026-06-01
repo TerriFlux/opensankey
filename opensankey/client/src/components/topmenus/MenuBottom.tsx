@@ -8,6 +8,7 @@ import { faLocationDot, faPercent, faRulerVertical } from '@fortawesome/free-sol
 import { ConfigMenuNumberInput, OSTooltip } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_DataTagGroup } from '../../types/TagGroup'
+import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 
 /**
  * Right toolbar for some simple functionnality on the DA (Draw flow, recenter DA,...)
@@ -32,9 +33,14 @@ export const ToolBarBottom = ({ new_data }: { new_data: Class_ApplicationData })
     btn_mouse_mode_edition = <ComponentMouseMode app_data={new_data} updateParentComponent={refreshThis} />
   }
   const sizeBottomMenu = document.getElementsByClassName('BottomMenu')[0]?.getBoundingClientRect().height ?? 0
+  // Décale la barre du bas (centrée) vers la gauche de la moitié de la largeur réservée par le
+  // tableur, pour rester centrée dans la région diagramme. useMainZone -> re-render au toggle.
+  useMainZone(new_data)
+  const rightReserve = mainZoneRightReservedPx(new_data)
   return <Box
     layerStyle={new_data.is_static ? 'toolbar_right' : 'toolbar_bottom'} // Changement du layerStyle
     bottom={new_data.is_static ? '' : 'calc(' + String(sizeBottomMenu + (new_data.drawing_area.fit_margin / 2)) + 'px + 1rem)'}
+    left={(new_data.is_static || rightReserve === 0) ? undefined : 'calc(50% - ' + (rightReserve / 2) + 'px)'}
   >
     {/* Help — the save-in-cache button moved back to the topbar (document-state
         block, see TopBarStateButtons), since it reflects application state. */}

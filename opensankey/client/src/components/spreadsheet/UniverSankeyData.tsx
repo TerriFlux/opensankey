@@ -68,6 +68,7 @@ const COLOR_WHITE = [0xFF, 0xFF, 0xFF]
 const HEX_CORE = '#4F81BD'      // bleu
 const HEX_NODETAG = '#9BBB59'   // vert
 const HEX_LEVELTAG = '#4BACC6'  // turquoise (étiquettes de niveau)
+const HEX_RESULT = '#8064A2'    // violet (colonnes de résultats calculés / réconciliés)
 const HEX_TAG_SHEET = '#9BBB59' // vert (onglet Etiquettes)
 
 type Type_Cell = { v?: string | number, s?: any }
@@ -247,7 +248,11 @@ export const buildSankeyWorkbookData = (
     'Quantité naturelle', 'Incertitude relative', 'Source', 'Hypothèse'
   ]
   const fluxCells: Type_CellData = { 0: {} }
-  fluxHeaders.forEach((h, c) => { fluxCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet.
+  const FLUX_RESULT_COLS = new Set([3])
+  fluxHeaders.forEach((h, c) => {
+    fluxCells[0][c] = { v: h, s: headerStyle(FLUX_RESULT_COLS.has(c) ? HEX_RESULT : HEX_CORE) }
+  })
   links.forEach((l: any, i: number) => {
     const v = l.value
     fluxCells[i + 1] = {
@@ -351,8 +356,12 @@ export const buildSankeyWorkbookData = (
   const effStockVariation = (sv: any): number | null =>
     sv ? (stockUseResult ? (sv.stockVariationResult ?? sv.stockVariationData) : sv.stockVariationData) : null
   const stockHeaders = ['Nœud', 'Stock', 'Stock calculé', 'Δ Stock', 'Δ calculée']
+  // 'Stock calculé' (col 2) et 'Δ calculée' (col 4) = résultats -> en-tête violet.
+  const STOCK_RESULT_COLS = new Set([2, 4])
   const stockCells: Type_CellData = { 0: {} }
-  stockHeaders.forEach((h, c) => { stockCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  stockHeaders.forEach((h, c) => {
+    stockCells[0][c] = { v: h, s: headerStyle(STOCK_RESULT_COLS.has(c) ? HEX_RESULT : HEX_CORE) }
+  })
   let stockRow = 1
   const stockBaseNodes = (onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list)
   stockBaseNodes
