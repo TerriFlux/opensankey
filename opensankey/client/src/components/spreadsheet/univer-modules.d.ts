@@ -12,3 +12,7 @@
 declare module '@univerjs/presets'
 declare module '@univerjs/presets/preset-sheets-core'
 declare module '@univerjs/presets/preset-sheets-core/locales/fr-FR'
+declare module '@univerjs/presets/preset-sheets-filter'
+declare module '@univerjs/presets/preset-sheets-filter/locales/fr-FR'
+declare module '@univerjs/presets/preset-sheets-sort'
+declare module '@univerjs/presets/preset-sheets-sort/locales/fr-FR'
