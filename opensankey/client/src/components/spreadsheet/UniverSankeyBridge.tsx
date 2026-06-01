@@ -14,7 +14,7 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
-import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, NOEUDS_COL, fluxRowLinks, noeudsRowEntries } from './UniverSankeyData'
+import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, NOEUDS_COL, TAGS_COL, fluxRowLinks, noeudsRowEntries, tagsRowGroups } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -142,6 +142,39 @@ export const attachSankeyBridge = (
     return false
   }
 
+  // Réconcilie une ligne de l'onglet Etiquettes : renomme le groupe (col 0), les étiquettes
+  // (col 2, séparées par des virgules, appariées par position) et leurs couleurs (col 3).
+  const reconcileTagRow = (ws: any, r: number): boolean => {
+    const group = tagsRowGroups(app_data)[r - 1]
+    if (!group) {
+      return false
+    }
+    let changed = false
+    const gName = cellText(ws, r, TAGS_COL.group)
+    if (gName && gName !== group.name) {
+      group.name = gName
+      changed = true
+    }
+    const tags = group.tags_list || []
+    const tagsText = cellText(ws, r, TAGS_COL.tags)
+    if (tagsText) {
+      const names = tagsText.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+      // Renommage uniquement si le nombre d'étiquettes correspond (pas d'ajout/suppression ici).
+      if (names.length === tags.length) {
+        names.forEach((nm: string, i: number) => {
+          if (nm !== tags[i].name) { tags[i].name = nm; changed = true }
+        })
+      }
+    }
+    const colorsText = cellText(ws, r, TAGS_COL.colors)
+    if (colorsText) {
+      colorsText.split(',').map((s: string) => s.trim()).forEach((col: string, i: number) => {
+        if (i < tags.length && col && col !== tags[i].color) { tags[i].color = col; changed = true }
+      })
+    }
+    return changed
+  }
+
   const disposable = univerAPI.addEvent(univerAPI.Event.SheetValueChanged, (params: any) => {
     if (isSyncing.current) {
       return
@@ -176,6 +209,7 @@ export const attachSankeyBridge = (
 
     let structural = false
     let value = false
+    let tagChanged = false
     Object.keys(rowsBySheet).forEach((sheetId) => {
       const ws = wb.getSheetBySheetId(sheetId)
       if (!ws) {
@@ -200,6 +234,15 @@ export const attachSankeyBridge = (
             structural = true
           }
         })
+      } else if (sheetId === SHEET_ID_TAGS) {
+        rows.forEach((r) => {
+          if (r === 0) {
+            return
+          }
+          if (reconcileTagRow(ws, r)) {
+            tagChanged = true
+          }
+        })
       }
     })
 
@@ -208,6 +251,16 @@ export const attachSankeyBridge = (
     } else if (value) {
       drawing_area.updateScaleAtLinkValueSetting()
       app_data.draw()
+    } else if (tagChanged) {
+      // Renommage de groupe/étiquettes/couleurs : redessin (légende + couleurs) + reconstruction du
+      // classeur pour répercuter les nouveaux noms dans les colonnes node-tags de l'onglet Noeuds.
+      // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait
+      // l'unit Univer en plein vol (crash "univerInstanceService is null").
+      app_data.draw()
+      const ref = app_data.menu_configuration.ref_to_spreadsheet
+      if (ref && ref.current) {
+        setTimeout(() => { if (ref.current) { ref.current() } }, 0)
+      }
     }
   })
 
