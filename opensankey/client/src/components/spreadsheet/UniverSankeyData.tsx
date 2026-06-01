@@ -372,6 +372,10 @@ export const buildSankeyWorkbookData = (
   // Ligne d'en-tête plus haute pour accueillir les libellés verticaux.
   const noeudsRowData = { 0: { h: 90 } }
 
+  // Masque la barre de lettres de colonnes (A,B,C…) : nos vrais en-têtes sont la ligne 0.
+  // (hidden: 1 = BooleanNumber.TRUE) ; on garde les numéros de ligne (clic droit -> supprimer).
+  const noColHeader = { height: 0, hidden: 1 }
+
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
@@ -381,6 +385,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_FLUX,
         name: 'Flux',
         cellData: fluxCells,
+        columnHeader: noColHeader,
         rowCount: Math.max(100, links.length + 20),
         columnCount: 9
       },
@@ -388,6 +393,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_NOEUDS,
         name: 'Noeuds',
         cellData: nodeCells,
+        columnHeader: noColHeader,
         columnData: noeudsColumnData,
         rowData: noeudsRowData,
         rowCount: Math.max(100, noeudsRows.length + 20),
@@ -397,6 +403,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_TAGS,
         name: 'Etiquettes',
         cellData: tagCells,
+        columnHeader: noColHeader,
         rowCount: Math.max(50, tagRow + 20),
         columnCount: 6
       },
@@ -404,6 +411,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_STOCK,
         name: 'Stock',
         cellData: stockCells,
+        columnHeader: noColHeader,
         rowCount: Math.max(50, stockRow + 20),
         columnCount: stockHeaders.length
       }
