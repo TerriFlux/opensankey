@@ -22,6 +22,7 @@ export const SHEET_ID_FLUX = 'sheet-flux'
 export const SHEET_ID_NOEUDS = 'sheet-noeuds'
 export const SHEET_ID_TAGS = 'sheet-tags'
 export const SHEET_ID_DATA = 'sheet-data'
+export const SHEET_ID_STOCK = 'sheet-stock'
 
 // Indices de colonnes de l'onglet Noeuds (ordre = NODES_SHEET_COLS du parser). Les colonnes de
 // node-tags sont ajoutées APRÈS (index >= NOEUDS_CORE_COLS).
@@ -50,6 +51,7 @@ export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
 const FLUX_MANDATORY = new Set([0, 1, 2])
 const NOEUDS_MANDATORY = new Set([1])
 const TAGS_MANDATORY = new Set([0, 2])
+const STOCK_MANDATORY = new Set([0])
 
 // Valeurs PAR DÉFAUT par colonne (phase 2) : une colonne optionnelle est masquée par défaut si
 // vide OU si toutes ses valeurs valent ce défaut. (Noeuds : niveau=1, couleur auto #a9a9a9, u/v=0.)
@@ -86,6 +88,9 @@ const headerStyle = (hex: string, vertical = false) => ({
   ...(vertical ? { tr: { a: 90, v: 0 } } : {})
 })
 const levelStyle = (t: number) => ({ bg: { rgb: blendBlue(t) } })
+
+/** Affichage : limite un nombre à 5 chiffres significatifs ; '' et non-nombres inchangés. */
+const num5 = (x: any): any => (typeof x === 'number' && isFinite(x)) ? Number(x.toPrecision(5)) : x
 
 /**
  * True si la colonne a au moins une valeur "significative" : non vide ET (si un défaut est fourni)
@@ -248,11 +253,11 @@ export const buildSankeyWorkbookData = (
     fluxCells[i + 1] = {
       0: { v: l.source.name },
       1: { v: l.target.name },
-      2: { v: effectiveLinkValue(l) },
-      3: { v: v && v.valueResult != null ? v.valueResult : '' },
-      4: { v: v && v.valueDataTarget != null ? v.valueDataTarget : '' },
+      2: { v: num5(effectiveLinkValue(l)) },
+      3: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
+      4: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
       5: { v: '' },
-      6: { v: v && v.data_uncertainty != null ? v.data_uncertainty : '' },
+      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '' },
       7: { v: (v && v.data_source) || '' },
       8: { v: '' }
     }
@@ -302,8 +307,8 @@ export const buildSankeyWorkbookData = (
       [NOEUDS_COL.sankey]: { v: '', s: rowStyle },
       [NOEUDS_COL.color]: { v: color, s: rowStyle },
       [NOEUDS_COL.definitions]: { v: n.tooltip_text || '', s: rowStyle },
-      [NOEUDS_COL.position_u]: { v: n.position_u != null ? n.position_u : '', s: rowStyle },
-      [NOEUDS_COL.position_v]: { v: n.position_v != null ? n.position_v : '', s: rowStyle }
+      [NOEUDS_COL.position_u]: { v: n.position_u != null ? num5(n.position_u) : '', s: rowStyle },
+      [NOEUDS_COL.position_v]: { v: n.position_v != null ? num5(n.position_v) : '', s: rowStyle }
     }
     tagCols.forEach((tc, j: number) => {
       cells[NOEUDS_CORE_COLS + j] = { v: nodeTagsInGroup(n, tc.group), s: rowStyle }
@@ -335,6 +340,26 @@ export const buildSankeyWorkbookData = (
     })
   })
 
+  // --- Onglet Stock (un nœud par ligne, valeur de stock courante selon les data tags sélectionnés) -
+  // Comme l'onglet Flux : pas de colonnes data tag, on prend la valeur résolue (node.stock_value).
+  const stockHeaders = ['Nœud', 'Stock', 'Δ Stock', 'Δ calculée']
+  const stockCells: Type_CellData = { 0: {} }
+  stockHeaders.forEach((h, c) => { stockCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  let stockRow = 1
+  const stockBaseNodes = (onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list)
+  stockBaseNodes
+    .filter((n: any) => n.has_stock && !n.sibling)
+    .forEach((n: any) => {
+      const sv = n.stock_value
+      stockCells[stockRow] = {
+        0: { v: n.name },
+        1: { v: sv && sv.stockInitialData != null ? num5(sv.stockInitialData) : '' },
+        2: { v: sv && sv.stockVariationData != null ? num5(sv.stockVariationData) : '' },
+        3: { v: sv && sv.stockVariationResult != null ? num5(sv.stockVariationResult) : '' }
+      }
+      stockRow++
+    })
+
   const noeudsHeaders = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
 
   // Colonnes à en-tête vertical (Niveau d'agrégation + étiquettes de niveau) : largeur réduite.
@@ -350,7 +375,7 @@ export const buildSankeyWorkbookData = (
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX],
+    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_STOCK],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
@@ -374,6 +399,13 @@ export const buildSankeyWorkbookData = (
         cellData: tagCells,
         rowCount: Math.max(50, tagRow + 20),
         columnCount: 6
+      },
+      [SHEET_ID_STOCK]: {
+        id: SHEET_ID_STOCK,
+        name: 'Stock',
+        cellData: stockCells,
+        rowCount: Math.max(50, stockRow + 20),
+        columnCount: stockHeaders.length
       }
     }
   }
@@ -381,7 +413,8 @@ export const buildSankeyWorkbookData = (
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
     [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
-    [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY)
+    [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
+    [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY)
   }
 
   return { data, columns }
