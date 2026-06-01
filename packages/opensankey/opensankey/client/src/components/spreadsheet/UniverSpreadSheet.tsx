@@ -190,7 +190,14 @@ export const UniverSpreadSheet = (
         locales: { [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR) },
         theme: defaultTheme,
         presets: [
-          UniverSheetsCorePreset({ container: liveContainer, toolbar: false })
+          // footer.statisticBar: false -> retire les stats du pied (Max/Min/Somme…) qui, en vue
+          // étroite, recouvrent les onglets de feuilles. (statusBarStatistic est déprécié ET non
+          // forwardé par le preset ; seul `footer` l'est.) On garde sheetBar/zoom/menus.
+          UniverSheetsCorePreset({
+            container: liveContainer,
+            toolbar: false,
+            footer: { statisticBar: false }
+          })
         ]
       })
       univerInstance = univer
@@ -239,7 +246,7 @@ export const UniverSpreadSheet = (
       }
 
       buildAndApply()
-      bridgeInstance = attachSankeyBridge(univerAPI, app_data, isSyncing)
+      bridgeInstance = attachSankeyBridge(univerAPI, app_data, isSyncing, onlyVisibleRef)
       app_data.menu_configuration.ref_to_spreadsheet.current = () => {
         if (!disposed) {
           buildAndApply()
@@ -311,7 +318,7 @@ export const UniverSpreadSheet = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
       <div style={{
         display: 'flex', gap: 8, alignItems: 'center',
-        padding: '4px 6px', borderBottom: '1px solid #e2e8f0', background: '#f7fafc'
+        padding: '1px 6px', borderBottom: '1px solid #e2e8f0', background: '#f7fafc'
       }}>
         {/* Parser : contextuel à l'onglet Noeuds (construit la hiérarchie depuis la colonne niveau). */}
         {isNoeuds && (
@@ -338,10 +345,6 @@ export const UniverSpreadSheet = (
         >
           <Text fontSize='xs'>Visibles uniquement</Text>
         </Checkbox>
-
-        <span style={{ fontSize: 11, color: '#718096' }}>
-          colonnes optionnelles (vides masquées par défaut){isNoeuds ? ' · Parser → hiérarchie' : ''}
-        </span>
       </div>
       <div ref={containerRef} style={{ flex: 1, minHeight: 0 }} />
     </div>
