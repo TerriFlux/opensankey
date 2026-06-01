@@ -623,7 +623,7 @@ export const DataTagSelector = ({ data_tagg, value, onChange }: {
         value={value}
         onChange={onChange}
       >
-        {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+        {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.display_name}</option>)}
       </Select>
     </Box>
   )
