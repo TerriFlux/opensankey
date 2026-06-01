@@ -38,6 +38,9 @@ export const NOEUDS_COL = {
 }
 export const NOEUDS_CORE_COLS = 8
 
+// Indices de colonnes de l'onglet Etiquettes.
+export const TAGS_COL = { group: 0, type: 1, tags: 2, colors: 3 }
+
 // Métadonnées de colonne pour le sélecteur "Colonnes" (par onglet) : obligatoire = toujours visible
 // (pas dans le sélecteur) ; optionnelle = togglable ; hasData = au moins une valeur non vide.
 export type Type_ColMeta = { index: number, label: string, mandatory: boolean, hasData: boolean }
@@ -228,6 +231,21 @@ export const noeudsRowEntries = (
   })
 
   return lineages.flat()
+}
+
+/**
+ * Groupes d'étiquettes dans l'ordre des lignes de l'onglet Etiquettes (ligne r -> [r-1]) :
+ * node-tags, puis level-tags, puis flux-tags, puis data-tags. Source de vérité partagée
+ * builder/bridge pour le write-back (renommage de groupe / d'étiquettes / couleurs).
+ */
+export const tagsRowGroups = (app_data: Class_ApplicationData): any[] => {
+  const { sankey } = app_data.drawing_area
+  return [
+    ...(sankey.node_taggs_list || []),
+    ...(sankey.level_taggs_list || []),
+    ...(sankey.flux_taggs_list || []),
+    ...(sankey.data_taggs_list || [])
+  ]
 }
 
 /**
