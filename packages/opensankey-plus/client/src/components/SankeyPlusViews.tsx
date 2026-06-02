@@ -1,11 +1,34 @@
 // Standard libs
-import React, { ChangeEvent, FC, useRef, useState } from 'react'
+import React, { ChangeEvent, FC, useEffect, useRef, useState } from 'react'
 import Draggable, { DraggableProps } from 'react-draggable'
 
 // react-draggable : les typings embarqués rendent les props optionnelles, mais
 // @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
 // On relâche le type ici pour que le build passe quelle que soit la source des typings.
 const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
+
+/**
+ * Bornes draggable contraintes à la zone de dessin gauche. Quand le tableur/doc occupe la droite
+ * (menu_configuration.main_zone_right_reserved), empêche de glisser une modale de vue sous le
+ * panneau de droite. `right`/`bottom` sont des offsets de position (react-draggable n'y soustrait
+ * pas la taille du noeud), d'où le retrait de offsetWidth/Height. Re-calculé à chaque rendu : les
+ * modales concernées s'abonnent à addMainZoneListener pour se re-rendre au toggle du tableur.
+ */
+const drawingZoneDraggableBounds = (
+  app_data: Class_ApplicationDataOSP,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  nodeRef: React.MutableRefObject<any>
+): { left: number; top: number; right: number; bottom: number } => {
+  const reserved = mainZoneRightReservedPx(app_data)
+  const node_w = nodeRef.current?.offsetWidth ?? 0
+  const node_h = nodeRef.current?.offsetHeight ?? 0
+  return {
+    left: 0,
+    top: 0,
+    right: Math.max(0, window.innerWidth - reserved - node_w),
+    bottom: Math.max(0, window.innerHeight - node_h)
+  }
+}
 import {
   Box,
   CloseButton,
@@ -48,6 +71,7 @@ import { Class_DrawingAreaOSP, DrawingAreaPersistenceOSP } from '../types/Drawin
 import { Class_NodeElement } from '../deps/OpenSankey/Elements/Node'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { OSTooltip } from '../deps/OpenSankey/components/configmenus/MenuCommon'
+import { mainZoneRightReservedPx } from '../deps/OpenSankey/components/spreadsheet/MainZoneTabs'
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
@@ -144,6 +168,11 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
   menu_configuration_osp.ref_to_banner_views_opened.current = isOpen
   menu_configuration_osp.ref_to_banner_views_updater.current = refreshThis
+
+  // Re-centrer la bannière dans la zone de dessin gauche quand le tableur/doc s'ouvre ou se ferme.
+  useEffect(() => {
+    return app_data.menu_configuration.addMainZoneListener(refreshThis)
+  }, [])
 
   // Ref to trigger other components ----------------------------------------------------
 
@@ -525,7 +554,8 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
     border: '1px solid',
     borderRadius: '4px',
     width: 'fit-content',
-    left: '50%',
+    // Centre dans la zone de dessin gauche (et non sur tout l'écran) pour rester hors du tableur.
+    left: (window.innerWidth - mainZoneRightReservedPx(app_data)) / 2,
     transform: 'translate(-50%)'
   } : {}
 
@@ -945,6 +975,11 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
   const [selected_source, set_selected_source] = useState(default_main_sankey_id)
   const nodeRef = useRef(null)
 
+  // Re-rendre (donc recalculer les bornes draggable) au toggle du tableur/doc.
+  useEffect(() => {
+    return app_data.menu_configuration.addMainZoneListener(() => setUpdater(a => a + 1))
+  }, [])
+
   const drawing_area_plus = app_data.drawing_area as Class_DrawingAreaOSP
   app_data.menu_configuration_osp.ref_to_modal_view_attributes_switcher.current = set_display_menu
   app_data.menu_configuration_osp.ref_to_modal_view_attr_updater.current = () => setUpdater((a: number) => a + 1)
@@ -1051,7 +1086,7 @@ export const ModalTransparentViewAttrOSP: FC<BaseComponentPropsPlus> = (
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 4 }}
-    bounds={{ left: 0, top: 0 }}
+    bounds={drawingZoneDraggableBounds(app_data, nodeRef)}
   >
     <Box
       ref={nodeRef}
@@ -1092,6 +1127,11 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
   const [source_mode, set_source_mode] = useState<'local' | 'excel'>('local')
   const nodeRef = useRef(null)
 
+  // Re-rendre (donc recalculer les bornes draggable) au toggle du tableur/doc.
+  useEffect(() => {
+    return app_data.menu_configuration.addMainZoneListener(() => setUpdater(a => a + 1))
+  }, [])
+
   app_data.menu_configuration_osp.ref_show_modal_unitary_view.current = set_display_menu
 
   const updateComponent = () => {
@@ -1106,7 +1146,7 @@ export const ModalCreateUnitaryViewOSP: FC<BaseComponentPropsPlus> = (
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={{ x: window.innerWidth / 3, y: window.innerHeight / 5 }}
-    bounds={{ left: 0, top: 0 }}
+    bounds={drawingZoneDraggableBounds(app_data, nodeRef)}
   >
     <Box
       ref={nodeRef}
