@@ -54,9 +54,12 @@ export const attachSankeyBridge = (
     return isNaN(n) ? null : n
   }
 
+  // Clé sur le nom TRIMMÉ : les cellules saisies sont trimmées par cellText(), mais un nom de nœud
+  // existant peut porter une espace résiduelle (import Excel) ; sans trim ici, "Farine " ne serait
+  // pas retrouvé sous "Farine" -> addNewNodeWithName recrée un id en collision -> nœud "Farine_0".
   const nameToNode = (): { [name: string]: any } => {
     const m: { [name: string]: any } = {}
-    sankey.nodes_list.forEach((n: any) => { m[n.name] = n })
+    sankey.nodes_list.forEach((n: any) => { m[String(n.name).trim()] = n })
     return m
   }
 
