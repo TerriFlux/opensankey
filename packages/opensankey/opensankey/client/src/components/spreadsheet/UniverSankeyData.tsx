@@ -49,6 +49,10 @@ export const TAGS_COL = { group: 0, type: 1, tags: 2, colors: 3 }
 export type Type_ColMeta = { index: number, label: string, mandatory: boolean, hasData: boolean }
 export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
 
+// Métadonnées d'onglet pour le sélecteur "Onglets" : id stable, nom affiché, hasData = au moins une
+// ligne de données (hors en-tête). Les onglets vides sont masqués par défaut (sauf Flux).
+export type Type_SheetMeta = { id: string, name: string, hasData: boolean }
+
 // Colonnes OBLIGATOIRES par onglet (d'après SankeyExcelParser ; les autres sont optionnelles).
 //  - Flux : Origine, Destination, Valeur
 //  - Noeuds : Noeuds (nom)
@@ -240,7 +244,7 @@ export const tagsRowGroups = (app_data: Class_ApplicationData): any[] => {
 export const buildSankeyWorkbookData = (
   app_data: Class_ApplicationData,
   onlyVisible = false
-): { data: Partial<Type_WorkbookData>, columns: Type_SheetColumns } => {
+): { data: Partial<Type_WorkbookData>, columns: Type_SheetColumns, sheets: Type_SheetMeta[] } => {
   const { sankey } = app_data.drawing_area
   // onlyVisible : ne garder que les éléments visibles (exclut les flux/nœuds repliés/agrégés).
   const links = fluxRowLinks(app_data, onlyVisible)
@@ -536,5 +540,17 @@ export const buildSankeyWorkbookData = (
     [SHEET_ID_STOCK_CHAINING]: colMeta(stockChainHeaders, stockChainCells, STOCK_CHAINING_MANDATORY)
   }
 
-  return { data, columns }
+  // Métadonnées d'onglets (dans l'ordre d'affichage `sheetOrder`) : hasData = au moins une ligne de
+  // données. Les compteurs *Row pointent sur la prochaine ligne libre (1 = aucune donnée).
+  const sheets: Type_SheetMeta[] = [
+    { id: SHEET_ID_TAGS, name: 'Etiquettes', hasData: tagRow > 1 },
+    { id: SHEET_ID_NOEUDS, name: 'Noeuds', hasData: noeudsRows.length > 0 },
+    { id: SHEET_ID_FLUX, name: 'Flux', hasData: links.length > 0 },
+    { id: SHEET_ID_RATIO, name: 'Ratio flux', hasData: ratioRow > 1 },
+    { id: SHEET_ID_RATIO_STOCK, name: 'Ratio stock flux', hasData: ratioStockRow > 1 },
+    { id: SHEET_ID_STOCK_CHAINING, name: 'Chaînage stock', hasData: stockChainRow > 1 },
+    { id: SHEET_ID_STOCK, name: 'Stocks', hasData: stockRow > 1 }
+  ]
+
+  return { data, columns, sheets }
 }
