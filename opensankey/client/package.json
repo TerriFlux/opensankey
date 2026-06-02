@@ -50,6 +50,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@reactour/tour": "^3.7.0",
     "@silevis/reactgrid": "^4.1.15",
+    "@univerjs/presets": "^0.25.0",
     "@types/d3": "^7.4.3",
     "@types/webpack-env": "^1.18.8",
     "@types/pako": "^2.0.3",
