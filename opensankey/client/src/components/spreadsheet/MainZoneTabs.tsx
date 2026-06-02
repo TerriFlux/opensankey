@@ -13,6 +13,7 @@ import React, { useEffect, useReducer, useState } from 'react'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { UniverSpreadSheet } from './UniverSpreadSheet'
+import { DocPanel } from './DocPanel'
 
 const MIN_RATIO = 0.15
 const MAX_RATIO = 0.85
@@ -37,7 +38,8 @@ export const spreadsheetWidthPx = (diagramRatio: number): number => {
  */
 export const mainZoneRightReservedPx = (app_data: Class_ApplicationData): number => {
   const mc = app_data.menu_configuration
-  return (mc.main_zone_show_diagram && mc.main_zone_show_spreadsheet)
+  const anyRight = mc.main_zone_show_spreadsheet || mc.main_zone_show_doc
+  return (mc.main_zone_show_diagram && anyRight)
     ? spreadsheetWidthPx(mc.main_zone_split_ratio)
     : 0
 }
@@ -55,9 +57,11 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
   return {
     showDiagram: mc.main_zone_show_diagram,
     showSpreadsheet: mc.main_zone_show_spreadsheet,
+    showDoc: mc.main_zone_show_doc,
     splitRatio: mc.main_zone_split_ratio,
     setShowDiagram: (v: boolean) => { mc.main_zone_show_diagram = v },
     setShowSpreadsheet: (v: boolean) => { mc.main_zone_show_spreadsheet = v },
+    setShowDoc: (v: boolean) => { mc.main_zone_show_doc = v },
     setSplitRatio: (v: number) => { mc.main_zone_split_ratio = v }
   }
 }
@@ -67,27 +71,29 @@ const clampRatio = (r: number) => Math.min(MAX_RATIO, Math.max(MIN_RATIO, r))
 export const MainZoneTabs = (
   { app_data }: { app_data: Class_ApplicationData }
 ) => {
-  const { showDiagram, showSpreadsheet, splitRatio } = useMainZone(app_data)
+  const { showDiagram, showSpreadsheet, showDoc, splitRatio } = useMainZone(app_data)
 
   const drawing_area = app_data.drawing_area
   const navH = drawing_area.getNavBarHeight ? drawing_area.getNavBarHeight() : 56
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0
 
-  const both = showDiagram && showSpreadsheet
+  // Le slot droit héberge le tableur et/ou la doc (pile verticale si les deux).
+  const anyRight = showSpreadsheet || showDoc
+  const both = showDiagram && anyRight
   // Ratio "live" pendant le drag du séparateur (visuel seulement) ; null = pas de drag.
   const [dragRatio, setDragRatio] = useState<number | null>(null)
   const effRatio = dragRatio != null ? dragRatio : splitRatio
 
-  // Réserve la largeur à droite pour le tableur et recadre le diagramme dans la gauche.
+  // Réserve la largeur à droite pour le slot et recadre le diagramme dans la gauche.
   // Ne tourne qu'au "commit" (toggle ou fin de drag), pas pendant le drag (perf).
   useEffect(() => {
-    const reserved = (showDiagram && showSpreadsheet)
+    const reserved = (showDiagram && anyRight)
       ? spreadsheetWidthPx(splitRatio)
       : 0
     drawing_area.main_zone_right_reserved = reserved
     drawing_area.areaAutoFit()
     app_data.draw()
-  }, [showDiagram, showSpreadsheet, splitRatio])
+  }, [showDiagram, showSpreadsheet, showDoc, splitRatio])
 
   const onDividerDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -119,10 +125,20 @@ export const MainZoneTabs = (
           bottom: bottomH,
           zIndex: 20,
           background: 'white',
-          display: showSpreadsheet ? 'block' : 'none'
+          display: anyRight ? 'flex' : 'none',
+          flexDirection: 'column'
         }}
       >
-        <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
+        {showSpreadsheet && (
+          <div style={{ flex: '1 1 0', minHeight: 0, borderBottom: showDoc ? '1px solid #e2e8f0' : undefined }}>
+            <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
+          </div>
+        )}
+        {showDoc && (
+          <div style={{ flex: '1 1 0', minHeight: 0 }}>
+            <DocPanel app_data={app_data} active={showDoc} />
+          </div>
+        )}
       </div>
 
       {/* Séparateur déplaçable (uniquement quand les deux panneaux sont affichés). */}

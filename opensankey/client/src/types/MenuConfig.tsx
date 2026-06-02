@@ -182,6 +182,8 @@ export class Class_MenuConfig {
   // Pub/sub pour partager l'état entre la barre du haut et l'overlay MainZoneTabs.
   protected _main_zone_show_diagram: boolean = true
   protected _main_zone_show_spreadsheet: boolean = false
+  // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
+  protected _main_zone_show_doc: boolean = false
   protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
@@ -189,6 +191,8 @@ export class Class_MenuConfig {
   public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
   public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
   public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
+  public get main_zone_show_doc() { return this._main_zone_show_doc }
+  public set main_zone_show_doc(v: boolean) { this._main_zone_show_doc = v; this._notifyMainZone() }
   public get main_zone_split_ratio() { return this._main_zone_split_ratio }
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
