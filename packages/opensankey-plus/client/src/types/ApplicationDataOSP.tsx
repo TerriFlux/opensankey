@@ -278,6 +278,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     if (Object.keys(this._documentation_images).length > 0) json_entry['documentation_images'] = this._documentation_images
     // État d'affichage de la grande zone (panneaux visibles + layout) : même raison, sérialisé ici.
     json_entry['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
+    // Vue active au moment de la sauvegarde : relue par viewsFromJSON pour la rouvrir/sélectionner
+    // au chargement (sinon retombe toujours sur le master). id du master => default_main_sankey_id.
+    json_entry['current_view'] = this.drawing_area.id
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
@@ -354,7 +357,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       })
     let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
     if (this.is_static && active_view_id == default_main_sankey_id) active_view_id = Object.keys(views_json)[0]
-    if (active_view_id == default_main_sankey_id) {
+    // current_view peut pointer vers une vue absente (vieux fichier, vue supprimée) => master.
+    if (active_view_id == default_main_sankey_id || !this._views[active_view_id]) {
       this._drawing_area.sankey.setVisible()
       return
     }
