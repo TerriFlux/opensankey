@@ -50,7 +50,10 @@ const NodeSelect = (
         </Button>
       </PopoverTrigger>
       <Portal>
-        <PopoverContent width='240px' zIndex={2100}>
+        {/* zIndex doit être posé sur le POSITIONNEUR (.chakra-popover__popper) via rootProps :
+            le positionneur garde sinon le token de thème `popover` (1500) et crée un contexte
+            d'empilement qui piège le contenu sous la modale (zIndex 2000). */}
+        <PopoverContent width='240px' rootProps={{ style: { zIndex: 2100 } }}>
           <PopoverArrow />
           <PopoverBody>
             <Input
