@@ -27,7 +27,10 @@
 // External imports
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
-import { Type_MacroTagGroup } from '../types/Utils'
+import {
+  Type_MacroTagGroup, Type_JSON,
+  getBooleanFromJSON, getNumberFromJSON, getStringFromJSON
+} from '../types/Utils'
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
@@ -257,6 +260,37 @@ export class Class_MenuConfig {
     h = Math.min(h, Math.max(MIN_DOC_PX, H - MIN_DIAGRAM_PX))
     return h
   }
+  /**
+   * Sérialise l'état d'affichage de la grande zone (panneaux diagramme / tableur / doc visibles,
+   * position de la doc, ratios) pour le persister dans le JSON du diagramme. Restauré par
+   * mainZoneStateFromJSON au chargement.
+   */
+  public mainZoneStateToJSON(): Type_JSON {
+    return {
+      show_diagram: this._main_zone_show_diagram,
+      show_spreadsheet: this._main_zone_show_spreadsheet,
+      show_doc: this._main_zone_show_doc,
+      doc_layout: this._main_zone_doc_layout,
+      doc_bottom_px: this._main_zone_doc_bottom_px,
+      split_ratio: this._main_zone_split_ratio
+    }
+  }
+
+  /**
+   * Restaure l'état d'affichage de la grande zone depuis le JSON (clé `main_zone`). Les champs
+   * absents conservent la valeur courante. Notifie les abonnés (barre du haut + MainZoneTabs).
+   */
+  public mainZoneStateFromJSON(json: Type_JSON) {
+    this._main_zone_show_diagram = getBooleanFromJSON(json, 'show_diagram', this._main_zone_show_diagram)
+    this._main_zone_show_spreadsheet = getBooleanFromJSON(json, 'show_spreadsheet', this._main_zone_show_spreadsheet)
+    this._main_zone_show_doc = getBooleanFromJSON(json, 'show_doc', this._main_zone_show_doc)
+    const layout = getStringFromJSON(json, 'doc_layout', this._main_zone_doc_layout) as Type_MainZoneDocLayout
+    if ([...DOC_LAYOUTS_WITH_SHEET, ...DOC_LAYOUTS_BOTTOM].includes(layout)) this._main_zone_doc_layout = layout
+    this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
+    this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
+    this._notifyMainZone()
+  }
+
   /* ========================================
     Timeout dict
   =========================================== */
