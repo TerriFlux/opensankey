@@ -24,6 +24,8 @@ export const SHEET_ID_TAGS = 'sheet-tags'
 export const SHEET_ID_DATA = 'sheet-data'
 export const SHEET_ID_STOCK = 'sheet-stock'
 export const SHEET_ID_RATIO = 'sheet-ratio'
+export const SHEET_ID_RATIO_STOCK = 'sheet-ratio-stock'
+export const SHEET_ID_STOCK_CHAINING = 'sheet-stock-chaining'
 
 // Indices de colonnes de l'onglet Noeuds (ordre = NODES_SHEET_COLS du parser). Les colonnes de
 // node-tags sont ajoutées APRÈS (index >= NOEUDS_CORE_COLS).
@@ -57,17 +59,10 @@ const NOEUDS_MANDATORY = new Set([1])
 const TAGS_MANDATORY = new Set([0, 2])
 const STOCK_MANDATORY = new Set([0])
 const RATIO_MANDATORY = new Set([0, 1])
-
-// Libellés FR des value_option de ratio (référence = entrée/sortie/parent du nœud source/destination).
-const RATIO_REF_LABEL: { [k: string]: string } = {
-  '%IS': '% entrée (source)',
-  '%OS': '% sortie (source)',
-  '%PS': '% parent (source)',
-  '%ID': '% entrée (destination)',
-  '%OD': '% sortie (destination)',
-  '%PD': '% parent (destination)',
-  'unit_ratio': 'ratio unitaire'
-}
+//  - Ratio Stock Flux : Origine, Destination, Stock
+//  - Chaînage Stock : Stock
+const RATIO_STOCK_MANDATORY = new Set([0, 1, 5])
+const STOCK_CHAINING_MANDATORY = new Set([0])
 
 // Valeurs PAR DÉFAUT par colonne (phase 2) : une colonne optionnelle est masquée par défaut si
 // vide OU si toutes ses valeurs valent ce défaut. (Noeuds : niveau=1, couleur auto #a9a9a9, u/v=0.)
@@ -391,25 +386,73 @@ export const buildSankeyWorkbookData = (
       stockRow++
     })
 
-  // --- Onglet Ratio flux (liens contraints en ratio : value_option %IS/%OS/.../unit_ratio) ---------
-  // Coef = data_value du lien (la part en %, ou le ratio unitaire). Référence = libellé du value_option
-  // (entrée/sortie/parent du nœud source/destination). Vide pour les liens "value"/"intervals".
-  const ratioHeaders = ['Origine', 'Destination', 'Coef', 'Référence']
+  // --- Onglet Ratio flux (contraintes niveau-diagramme, sankeyexcelparser#116) -----------------
+  // Source = sankey.ratio_flux_constraints (format canonique, inclut les %IS/%OS/... désormais).
+  // Sémantique : Σ(main) = Coef · Σ(réf) et/ou Min·Σ(réf) ≤ Σ(main) ≤ Max·Σ(réf). "*" sur un côté
+  // = agrégat de tous les flux entrants (origine="*") / sortants (destination="*") du nœud opposé.
+  const ratioHeaders = [
+    'Origine', 'Destination', 'Coef', 'Min', 'Max',
+    'Origine réf', 'Destination réf', 'Étiquette', 'Étiquette réf', 'Traduction'
+  ]
   const ratioCells: Type_CellData = { 0: {} }
   ratioHeaders.forEach((h, c) => { ratioCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
   let ratioRow = 1
-  links.forEach((l: any) => {
-    const v = l.value
-    const opt = v && v.value_option
-    if (opt && opt !== 'value' && opt !== 'intervals') {
-      ratioCells[ratioRow] = {
-        0: { v: l.source.name },
-        1: { v: l.target.name },
-        2: { v: v.valueData != null ? num5(v.valueData) : '' },
-        3: { v: RATIO_REF_LABEL[opt] || opt }
-      }
-      ratioRow++
+  sankey.ratio_flux_constraints.forEach((rc) => {
+    ratioCells[ratioRow] = {
+      0: { v: rc.origin ?? '' },
+      1: { v: rc.destination ?? '' },
+      2: { v: rc.coef != null ? num5(rc.coef) : '' },
+      3: { v: rc.min != null ? num5(rc.min) : '' },
+      4: { v: rc.max != null ? num5(rc.max) : '' },
+      5: { v: rc.origin_ref ?? '' },
+      6: { v: rc.destination_ref ?? '' },
+      7: { v: rc.data_tag ?? '' },
+      8: { v: rc.data_tag_ref ?? '' },
+      9: { v: rc.traduction ?? '' }
     }
+    ratioRow++
+  })
+
+  // --- Onglet Ratio Stock Flux (#156) : flux[O->D, période] = Coef · S[Stock, période réf] -------
+  const ratioStockHeaders = [
+    'Origine', 'Destination', 'Coef', 'Min', 'Max',
+    'Stock', 'Étiquette', 'Étiquette réf', 'Traduction'
+  ]
+  const ratioStockCells: Type_CellData = { 0: {} }
+  ratioStockHeaders.forEach((h, c) => { ratioStockCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  let ratioStockRow = 1
+  sankey.ratio_stock_flux_constraints.forEach((rc) => {
+    ratioStockCells[ratioStockRow] = {
+      0: { v: rc.origin ?? '' },
+      1: { v: rc.destination ?? '' },
+      2: { v: rc.coef != null ? num5(rc.coef) : '' },
+      3: { v: rc.min != null ? num5(rc.min) : '' },
+      4: { v: rc.max != null ? num5(rc.max) : '' },
+      5: { v: rc.stock ?? '' },
+      6: { v: rc.data_tag ?? '' },
+      7: { v: rc.data_tag_ref ?? '' },
+      8: { v: rc.traduction ?? '' }
+    }
+    ratioStockRow++
+  })
+
+  // --- Onglet Chaînage Stock (#156) : S[Stock, Année] = Coef · S[Stock, Année réf] + Δstock ------
+  const stockChainHeaders = [
+    'Stock', 'Coef', 'Delta stock', 'Étiquette', 'Étiquette réf', 'Traduction'
+  ]
+  const stockChainCells: Type_CellData = { 0: {} }
+  stockChainHeaders.forEach((h, c) => { stockChainCells[0][c] = { v: h, s: headerStyle(HEX_CORE) } })
+  let stockChainRow = 1
+  sankey.stock_chaining_constraints.forEach((sc) => {
+    stockChainCells[stockChainRow] = {
+      0: { v: sc.stock ?? '' },
+      1: { v: sc.coef != null ? num5(sc.coef) : '' },
+      2: { v: sc.delta_stock ?? '' },
+      3: { v: sc.data_tag ?? '' },
+      4: { v: sc.data_tag_ref ?? '' },
+      5: { v: sc.traduction ?? '' }
+    }
+    stockChainRow++
   })
 
   const noeudsHeaders = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
@@ -427,7 +470,7 @@ export const buildSankeyWorkbookData = (
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_STOCK],
+    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING, SHEET_ID_STOCK],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
@@ -465,6 +508,20 @@ export const buildSankeyWorkbookData = (
         cellData: ratioCells,
         rowCount: Math.max(50, ratioRow + 20),
         columnCount: ratioHeaders.length
+      },
+      [SHEET_ID_RATIO_STOCK]: {
+        id: SHEET_ID_RATIO_STOCK,
+        name: 'Ratio stock flux',
+        cellData: ratioStockCells,
+        rowCount: Math.max(50, ratioStockRow + 20),
+        columnCount: ratioStockHeaders.length
+      },
+      [SHEET_ID_STOCK_CHAINING]: {
+        id: SHEET_ID_STOCK_CHAINING,
+        name: 'Chaînage stock',
+        cellData: stockChainCells,
+        rowCount: Math.max(50, stockChainRow + 20),
+        columnCount: stockChainHeaders.length
       }
     }
   }
@@ -474,7 +531,9 @@ export const buildSankeyWorkbookData = (
     [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
     [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY),
-    [SHEET_ID_RATIO]: colMeta(ratioHeaders, ratioCells, RATIO_MANDATORY)
+    [SHEET_ID_RATIO]: colMeta(ratioHeaders, ratioCells, RATIO_MANDATORY),
+    [SHEET_ID_RATIO_STOCK]: colMeta(ratioStockHeaders, ratioStockCells, RATIO_STOCK_MANDATORY),
+    [SHEET_ID_STOCK_CHAINING]: colMeta(stockChainHeaders, stockChainCells, STOCK_CHAINING_MANDATORY)
   }
 
   return { data, columns }

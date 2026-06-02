@@ -14,7 +14,7 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
-import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, NOEUDS_COL, TAGS_COL, fluxRowLinks, noeudsRowEntries, tagsRowGroups } from './UniverSankeyData'
+import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING, NOEUDS_COL, TAGS_COL, fluxRowLinks, noeudsRowEntries, tagsRowGroups } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -175,6 +175,114 @@ export const attachSankeyBridge = (
     return changed
   }
 
+  // Réconcilie une ligne de l'onglet Ratio flux -> sankey.ratio_flux_constraints (sankeyexcelparser#116).
+  // Colonnes : 0 Origine, 1 Destination, 2 Coef, 3 Min, 4 Max, 5 Origine réf, 6 Destination réf,
+  // 7 Étiquette, 8 Étiquette réf, 9 Traduction. Pas d'impact visuel sur le diagramme (contrainte
+  // solveur) : on met juste à jour le modèle, persisté tel quel.
+  const reconcileRatioRow = (ws: any, r: number, originalRatioCount: number): boolean => {
+    const idx = r - 1
+    const origin = cellText(ws, r, 0)
+    const destination = cellText(ws, r, 1)
+    const coef = parseNum(cellText(ws, r, 2))
+    const min = parseNum(cellText(ws, r, 3))
+    const max = parseNum(cellText(ws, r, 4))
+    const origin_ref = cellText(ws, r, 5)
+    const destination_ref = cellText(ws, r, 6)
+    const data_tag = cellText(ws, r, 7) || null
+    const data_tag_ref = cellText(ws, r, 8) || null
+    const traduction = cellText(ws, r, 9) || null
+
+    if (idx < originalRatioCount) {
+      // Ligne existante : édition in-place (l'édition d'une seule cellule réécrit la ligne entière
+      // avec les valeurs courantes des autres cellules, qui sont inchangées).
+      const rc = sankey.ratio_flux_constraints[idx]
+      if (!rc) {
+        return false
+      }
+      rc.origin = origin
+      rc.destination = destination
+      rc.coef = coef
+      rc.min = min
+      rc.max = max
+      rc.origin_ref = origin_ref
+      rc.destination_ref = destination_ref
+      rc.data_tag = data_tag
+      rc.data_tag_ref = data_tag_ref
+      rc.traduction = traduction
+      return true
+    }
+    // Ligne nouvelle : création quand les deux côtés sont complets et au moins un Coef/Min/Max.
+    if (origin && destination && origin_ref && destination_ref && (coef != null || min != null || max != null)) {
+      sankey.ratio_flux_constraints.push({
+        origin, destination, origin_ref, destination_ref,
+        coef, min, max, data_tag, data_tag_ref, traduction
+      })
+      return true
+    }
+    return false
+  }
+
+  // Réconcilie une ligne de l'onglet Ratio stock flux -> sankey.ratio_stock_flux_constraints (#156).
+  // Colonnes : 0 Origine, 1 Destination, 2 Coef, 3 Min, 4 Max, 5 Stock, 6 Étiquette, 7 Étiquette réf,
+  // 8 Traduction. flux[O->D, période] = Coef · S[Stock, période réf].
+  const reconcileRatioStockRow = (ws: any, r: number, originalCount: number): boolean => {
+    const idx = r - 1
+    const origin = cellText(ws, r, 0)
+    const destination = cellText(ws, r, 1)
+    const coef = parseNum(cellText(ws, r, 2))
+    const min = parseNum(cellText(ws, r, 3))
+    const max = parseNum(cellText(ws, r, 4))
+    const stock = cellText(ws, r, 5)
+    const data_tag = cellText(ws, r, 6) || null
+    const data_tag_ref = cellText(ws, r, 7) || null
+    const traduction = cellText(ws, r, 8) || null
+    if (idx < originalCount) {
+      const rc = sankey.ratio_stock_flux_constraints[idx]
+      if (!rc) { return false }
+      rc.origin = origin; rc.destination = destination
+      rc.coef = coef; rc.min = min; rc.max = max
+      rc.stock = stock; rc.data_tag = data_tag; rc.data_tag_ref = data_tag_ref
+      rc.traduction = traduction
+      return true
+    }
+    // Nouvelle ligne : flux complet + nœud stock + au moins un Coef/Min/Max.
+    if (origin && destination && stock && (coef != null || min != null || max != null)) {
+      sankey.ratio_stock_flux_constraints.push({
+        origin, destination, coef, min, max, stock, data_tag, data_tag_ref, traduction
+      })
+      return true
+    }
+    return false
+  }
+
+  // Réconcilie une ligne de l'onglet Chaînage stock -> sankey.stock_chaining_constraints (#156).
+  // Colonnes : 0 Stock, 1 Coef, 2 Delta stock, 3 Étiquette, 4 Étiquette réf, 5 Traduction.
+  // S[Stock, Année] = Coef · S[Stock, Année réf] + Δstock[Delta stock, Année].
+  const reconcileStockChainRow = (ws: any, r: number, originalCount: number): boolean => {
+    const idx = r - 1
+    const stock = cellText(ws, r, 0)
+    const coef = parseNum(cellText(ws, r, 1))
+    const delta_stock = cellText(ws, r, 2)
+    const data_tag = cellText(ws, r, 3) || null
+    const data_tag_ref = cellText(ws, r, 4) || null
+    const traduction = cellText(ws, r, 5) || null
+    if (idx < originalCount) {
+      const sc = sankey.stock_chaining_constraints[idx]
+      if (!sc) { return false }
+      sc.stock = stock; sc.coef = coef; sc.delta_stock = delta_stock
+      sc.data_tag = data_tag; sc.data_tag_ref = data_tag_ref; sc.traduction = traduction
+      return true
+    }
+    // Nouvelle ligne : un nœud de stock et une période de référence (l'année précédente).
+    if (stock && data_tag_ref) {
+      sankey.stock_chaining_constraints.push({
+        stock, coef, delta_stock: delta_stock || stock, data_tag, data_tag_ref, traduction
+      })
+      return true
+    }
+    return false
+  }
+
   const disposable = univerAPI.addEvent(univerAPI.Event.SheetValueChanged, (params: any) => {
     if (isSyncing.current) {
       return
@@ -193,6 +301,9 @@ export const attachSankeyBridge = (
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
     const originalLinkCount = rowLinks().length
     const originalNodeCount = rowNodes().length
+    const originalRatioCount = sankey.ratio_flux_constraints.length
+    const originalRatioStockCount = sankey.ratio_stock_flux_constraints.length
+    const originalStockChainCount = sankey.stock_chaining_constraints.length
 
     // Regroupe les lignes affectées par feuille (paste = plage multi-lignes).
     const rowsBySheet: { [sheetId: string]: Set<number> } = {}
@@ -242,6 +353,27 @@ export const attachSankeyBridge = (
           if (reconcileTagRow(ws, r)) {
             tagChanged = true
           }
+        })
+      } else if (sheetId === SHEET_ID_RATIO) {
+        rows.forEach((r) => {
+          if (r === 0) {
+            return // en-tête
+          }
+          reconcileRatioRow(ws, r, originalRatioCount)
+        })
+      } else if (sheetId === SHEET_ID_RATIO_STOCK) {
+        rows.forEach((r) => {
+          if (r === 0) {
+            return // en-tête
+          }
+          reconcileRatioStockRow(ws, r, originalRatioStockCount)
+        })
+      } else if (sheetId === SHEET_ID_STOCK_CHAINING) {
+        rows.forEach((r) => {
+          if (r === 0) {
+            return // en-tête
+          }
+          reconcileStockChainRow(ws, r, originalStockChainCount)
         })
       }
     })
@@ -301,6 +433,44 @@ export const attachSankeyBridge = (
         }
       }
       toDelete.forEach((l) => { drawing_area.deleteLink(l); structural = true })
+    } else if (sheetId === SHEET_ID_RATIO) {
+      // Suppression de contraintes ratio : retrait du modèle (aucun impact visuel sur le
+      // diagramme). Splice en ordre décroissant pour garder les index valides.
+      const idxs: number[] = []
+      for (let r = range.startRow; r <= range.endRow; r++) {
+        if (r >= 1) {
+          idxs.push(r - 1)
+        }
+      }
+      idxs.sort((a, b) => b - a).forEach((i) => {
+        if (i < sankey.ratio_flux_constraints.length) {
+          sankey.ratio_flux_constraints.splice(i, 1)
+        }
+      })
+    } else if (sheetId === SHEET_ID_RATIO_STOCK) {
+      const idxs: number[] = []
+      for (let r = range.startRow; r <= range.endRow; r++) {
+        if (r >= 1) {
+          idxs.push(r - 1)
+        }
+      }
+      idxs.sort((a, b) => b - a).forEach((i) => {
+        if (i < sankey.ratio_stock_flux_constraints.length) {
+          sankey.ratio_stock_flux_constraints.splice(i, 1)
+        }
+      })
+    } else if (sheetId === SHEET_ID_STOCK_CHAINING) {
+      const idxs: number[] = []
+      for (let r = range.startRow; r <= range.endRow; r++) {
+        if (r >= 1) {
+          idxs.push(r - 1)
+        }
+      }
+      idxs.sort((a, b) => b - a).forEach((i) => {
+        if (i < sankey.stock_chaining_constraints.length) {
+          sankey.stock_chaining_constraints.splice(i, 1)
+        }
+      })
     }
 
     if (structural) {

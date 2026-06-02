@@ -19,10 +19,12 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import {
-  buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, SHEET_ID_NOEUDS
+  buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, SHEET_ID_NOEUDS,
+  SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING
 } from './UniverSankeyData'
 import { attachSankeyBridge } from './UniverSankeyBridge'
 import { parseHierarchyFromLevels, refreshAfterHierarchyChange } from './UniverHierarchyOps'
+import { AddConstraintModal } from './AddConstraintModal'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -131,6 +133,8 @@ export const UniverSpreadSheet = (
   const [onlyVisible, setOnlyVisible] = useState(false)
   // Mode filtre (autofilter Excel) actif sur l'onglet courant.
   const [filterOn, setFilterOn] = useState(false)
+  // Modale « Ajouter une contrainte » (onglets Ratio flux / Ratio stock flux / Chaînage stock).
+  const [isAddConstraintOpen, setIsAddConstraintOpen] = useState(false)
 
   // Masque/affiche une colonne d'un onglet dans Univer.
   const setColHidden = (sheetId: string, col: number, hidden: boolean) => {
@@ -394,13 +398,47 @@ export const UniverSpreadSheet = (
   const optionalCols = (columnsRef.current[activeSheetId] || []).filter((c) => !c.mandatory)
   const hiddenSet = new Set(hiddenCols[activeSheetId] || [])
   const isNoeuds = activeSheetId === SHEET_ID_NOEUDS
+  const isConstraintSheet = activeSheetId === SHEET_ID_RATIO ||
+    activeSheetId === SHEET_ID_RATIO_STOCK || activeSheetId === SHEET_ID_STOCK_CHAINING
+
+  // Après ajout d'une contrainte depuis la modale : bascule sur l'onglet de la famille concernée
+  // (l'onglet actif est mis avant le rebuild -> buildAndApply le restaure via keepActive).
+  const handleConstraintAdded = (family: 'ratio_flux' | 'ratio_stock_flux' | 'stock_chaining') => {
+    const sheetId = family === 'ratio_flux' ? SHEET_ID_RATIO
+      : family === 'ratio_stock_flux' ? SHEET_ID_RATIO_STOCK
+        : SHEET_ID_STOCK_CHAINING
+    const api = apiRef.current
+    const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+    if (wb && typeof wb.setActiveSheet === 'function') {
+      try { wb.setActiveSheet(sheetId) } catch (e) { /* feuille absente */ }
+    }
+    if (app_data.menu_configuration.ref_to_spreadsheet.current) {
+      app_data.menu_configuration.ref_to_spreadsheet.current()
+    }
+    setActiveSheetId(sheetId)
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
       <div style={{
-        display: 'flex', gap: 8, alignItems: 'center',
+        display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto',
         padding: '1px 6px', borderBottom: '1px solid #e2e8f0', background: '#f7fafc'
       }}>
+        {/* Création assistée de contrainte (placée en 1er pour rester visible même si le toolbar
+            déborde). Onglets Ratio flux / Ratio stock flux / Chaînage stock. */}
+        {isConstraintSheet && (
+          <Button
+            size='xs'
+            colorScheme='blue'
+            width='auto'
+            flexShrink={0}
+            title='Créer une contrainte (flux, stock, total de nœud…) via un formulaire guidé'
+            onClick={() => setIsAddConstraintOpen(true)}
+          >
+            + Contrainte
+          </Button>
+        )}
+
         {/* Parser : contextuel à l'onglet Noeuds (construit la hiérarchie depuis la colonne niveau). */}
         {isNoeuds && (
           <Button
@@ -441,6 +479,12 @@ export const UniverSpreadSheet = (
         </Checkbox>
       </div>
       <div ref={containerRef} style={{ flex: 1, minHeight: 0 }} />
+      <AddConstraintModal
+        app_data={app_data}
+        isOpen={isAddConstraintOpen}
+        onClose={() => setIsAddConstraintOpen(false)}
+        onAdded={handleConstraintAdded}
+      />
     </div>
   )
 }
