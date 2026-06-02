@@ -276,6 +276,8 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // super._toJSON, donc on le sérialise explicitement au niveau racine/master.
     if (this._documentation_markdown !== '') json_entry['documentation_markdown'] = this._documentation_markdown
     if (Object.keys(this._documentation_images).length > 0) json_entry['documentation_images'] = this._documentation_images
+    // État d'affichage de la grande zone (panneaux visibles + layout) : même raison, sérialisé ici.
+    json_entry['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     // If application_data has views then we save them in the JSON
     json_entry['views'] = {}
     const json_entry_views = json_entry['views']
@@ -312,6 +314,10 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', this._documentation_markdown)
     const imgs = json_object['documentation_images']
     if (imgs && typeof imgs === 'object') this._documentation_images = imgs as { [id: string]: string }
+    // Restaure l'état d'affichage de la grande zone (absent => valeur courante préservée, ex. switch
+    // de vue only_current_view qui ne porte pas les métadonnées master).
+    const mz = json_object['main_zone']
+    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
 
     if (kwargs && kwargs['only_current_view']) {
       return
@@ -926,6 +932,13 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       }
     })
     return sources
+  }
+
+  /** Doc markdown `view://<id>` links : activer la vue ciblée (no-op si l'id n'existe plus). */
+  public navigateToView(id: string): void {
+    if (id === default_main_sankey_id || this._views[id]) {
+      this.setCurrentView(id)
+    }
   }
 
   public getDrawingAreaFromViewId(id: string): Class_DrawingArea | undefined {
