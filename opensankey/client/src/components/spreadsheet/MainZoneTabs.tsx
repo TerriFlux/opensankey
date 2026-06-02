@@ -5,13 +5,15 @@
 // - Deux booléens indépendants (menu_configuration.main_zone_show_diagram / _spreadsheet), pilotés
 //   par les boutons de la barre du haut (MenuTop) et reflétés ici.
 // - Quand les deux sont affichés : séparateur vertical déplaçable ; le tableur occupe la droite et
-//   le DIAGRAMME SE RECADRE dans la gauche (drawing_area.main_zone_right_reserved + areaAutoFit()).
+//   le DIAGRAMME SE RECADRE dans la gauche (menu_configuration.getMainZoneRightReservedPx, lu par
+//   window_fitting_width de toute drawing area, + areaAutoFit()).
 // - Le diagramme D3 (#draw_zoom) reste toujours monté ; on ne fait que réserver de la largeur.
 // ==================================================================================================
 
 import React, { useEffect, useReducer, useState } from 'react'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_MainZoneDocLayout, DOC_LAYOUTS_WITH_SHEET, DOC_LAYOUTS_BOTTOM } from '../../types/MenuConfig'
 import { UniverSpreadSheet } from './UniverSpreadSheet'
 import { DocPanel } from './DocPanel'
 
@@ -36,13 +38,8 @@ export const spreadsheetWidthPx = (diagramRatio: number): number => {
  * (bouton/panneau config, barre du bas) y soustrait cette valeur pour se décaler vers la gauche,
  * comme si l'écran rétrécissait. Fonction pure de l'état (pas du `drawing_area` mis à jour en effet).
  */
-export const mainZoneRightReservedPx = (app_data: Class_ApplicationData): number => {
-  const mc = app_data.menu_configuration
-  const anyRight = mc.main_zone_show_spreadsheet || mc.main_zone_show_doc
-  return (mc.main_zone_show_diagram && anyRight)
-    ? spreadsheetWidthPx(mc.main_zone_split_ratio)
-    : 0
-}
+export const mainZoneRightReservedPx = (app_data: Class_ApplicationData): number =>
+  app_data.menu_configuration.getMainZoneRightReservedPx()
 
 /**
  * Hook partagé : état de la grande zone (diagramme/tableur + ratio du séparateur), re-render à
@@ -58,44 +55,89 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
     showDiagram: mc.main_zone_show_diagram,
     showSpreadsheet: mc.main_zone_show_spreadsheet,
     showDoc: mc.main_zone_show_doc,
+    docLayout: mc.main_zone_doc_layout,
+    docBottomPx: mc.main_zone_doc_bottom_px,
     splitRatio: mc.main_zone_split_ratio,
     setShowDiagram: (v: boolean) => { mc.main_zone_show_diagram = v },
     setShowSpreadsheet: (v: boolean) => { mc.main_zone_show_spreadsheet = v },
     setShowDoc: (v: boolean) => { mc.main_zone_show_doc = v },
+    setDocLayout: (v: Type_MainZoneDocLayout) => { mc.main_zone_doc_layout = v },
+    setDocBottomPx: (v: number) => { mc.main_zone_doc_bottom_px = v },
     setSplitRatio: (v: number) => { mc.main_zone_split_ratio = v }
   }
 }
 
 const clampRatio = (r: number) => Math.min(MAX_RATIO, Math.max(MIN_RATIO, r))
+const MIN_DOC_PX = 120
+const MIN_ABOVE_PX = 120
+const SEP = '1px solid #e2e8f0'
+
+// Direction du flex du slot droit selon où la doc est accolée au tableur (modes sheet-*).
+const sheetSlotFlexDir = (layout: Type_MainZoneDocLayout): React.CSSProperties['flexDirection'] =>
+  layout === 'sheet-top' ? 'column-reverse'
+    : layout === 'sheet-bottom' ? 'column'
+      : layout === 'sheet-left' ? 'row-reverse'
+        : 'row' // sheet-right
+// Bordure posée sur le tableur, du côté qui touche la doc.
+const sheetBorder = (layout: Type_MainZoneDocLayout): React.CSSProperties =>
+  layout === 'sheet-top' ? { borderTop: SEP }
+    : layout === 'sheet-bottom' ? { borderBottom: SEP }
+      : layout === 'sheet-left' ? { borderLeft: SEP }
+        : { borderRight: SEP } // sheet-right
 
 export const MainZoneTabs = (
   { app_data }: { app_data: Class_ApplicationData }
 ) => {
-  const { showDiagram, showSpreadsheet, showDoc, splitRatio } = useMainZone(app_data)
+  const {
+    showDiagram, showSpreadsheet, showDoc, docLayout, docBottomPx, splitRatio,
+    setDocLayout, setDocBottomPx
+  } = useMainZone(app_data)
 
   const drawing_area = app_data.drawing_area
   const navH = drawing_area.getNavBarHeight ? drawing_area.getNavBarHeight() : 56
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0
 
-  // Le slot droit héberge le tableur et/ou la doc (pile verticale si les deux).
-  const anyRight = showSpreadsheet || showDoc
-  const both = showDiagram && anyRight
-  // Ratio "live" pendant le drag du séparateur (visuel seulement) ; null = pas de drag.
+  const W = window.innerWidth
+  const contentTop = navH
+  const contentBottom = window.innerHeight - bottomH
+  const contentH = Math.max(0, contentBottom - contentTop)
+
+  // Familles de disposition de la doc.
+  const docWithSheet = showDoc && DOC_LAYOUTS_WITH_SHEET.includes(docLayout)
+  const docBottomMode = showDoc && DOC_LAYOUTS_BOTTOM.includes(docLayout)
+  // Doc seule (ni diagramme ni tableur) -> elle remplit toute la zone, peu importe le mode.
+  const docAlone = showDoc && !showDiagram && !showSpreadsheet
+  // Bandeau pleine largeur : window-bottom, ou diagram-bottom sans diagramme (repli).
+  const docFullWidthBand = !docAlone && docBottomMode &&
+    (docLayout === 'window-bottom' || !showDiagram)
+
+  // Colonne de droite (tableur ± doc accolée).
+  const rightColumnShown = !docAlone && (showSpreadsheet || docWithSheet)
+
+  // Ratio "live" du séparateur vertical (diagramme / colonne droite).
   const [dragRatio, setDragRatio] = useState<number | null>(null)
   const effRatio = dragRatio != null ? dragRatio : splitRatio
+  const rightSlotW = spreadsheetWidthPx(effRatio)
+  const rightReserveW = (showDiagram && rightColumnShown) ? rightSlotW : 0
 
-  // Réserve la largeur à droite pour le slot et recadre le diagramme dans la gauche.
-  // Ne tourne qu'au "commit" (toggle ou fin de drag), pas pendant le drag (perf).
+  // Hauteur "live" de la poignée horizontale (hauteur de la doc en mode bas).
+  const [dragDocPx, setDragDocPx] = useState<number | null>(null)
+  const effDocPx = dragDocPx != null ? dragDocPx : docBottomPx
+  const docH = (docBottomMode && !docAlone)
+    ? Math.min(Math.max(MIN_DOC_PX, effDocPx), Math.max(MIN_DOC_PX, contentH - MIN_ABOVE_PX))
+    : 0
+
+  // Le diagramme se recadre dans la largeur/hauteur restantes via les réserves globales
+  // (menu_configuration.getMainZoneRight/BottomReservedPx, lues par window_fitting_width/height de
+  // toute drawing area) : on déclenche juste le re-fit au commit (toggle, changement de mode/ratio,
+  // fin de drag).
   useEffect(() => {
-    const reserved = (showDiagram && anyRight)
-      ? spreadsheetWidthPx(splitRatio)
-      : 0
-    drawing_area.main_zone_right_reserved = reserved
     drawing_area.areaAutoFit()
     app_data.draw()
-  }, [showDiagram, showSpreadsheet, showDoc, splitRatio])
+  }, [showDiagram, showSpreadsheet, showDoc, docLayout, splitRatio, docBottomPx])
 
-  const onDividerDown = (e: React.MouseEvent) => {
+  // --- Séparateur vertical : largeur de la colonne droite ---
+  const onVDividerDown = (e: React.MouseEvent) => {
     e.preventDefault()
     const move = (ev: MouseEvent) => { setDragRatio(clampRatio(ev.clientX / window.innerWidth)) }
     const up = (ev: MouseEvent) => {
@@ -108,51 +150,135 @@ export const MainZoneTabs = (
     window.addEventListener('mouseup', up)
   }
 
-  const leftPx = window.innerWidth - spreadsheetWidthPx(effRatio)
-  const overlayLeft = both ? leftPx : 0
+  // --- Poignée horizontale : hauteur de la doc en mode bas ---
+  const docPxFromMouse = (clientY: number) => Math.min(
+    Math.max(MIN_DOC_PX, contentBottom - clientY),
+    Math.max(MIN_DOC_PX, contentH - MIN_ABOVE_PX)
+  )
+  const onHDividerDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const move = (ev: MouseEvent) => { setDragDocPx(docPxFromMouse(ev.clientY)) }
+    const up = (ev: MouseEvent) => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      setDragDocPx(null)
+      setDocBottomPx(docPxFromMouse(ev.clientY))
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+
+  // Géométrie.
+  const rightLeft = showDiagram ? (W - rightSlotW) : 0
+  // La colonne droite est raccourcie par le bas seulement par un bandeau pleine largeur.
+  const rightBottom = docFullWidthBand ? (bottomH + docH) : bottomH
+  // Bandeau doc (mode bas) : pleine largeur, ou seulement sous le diagramme (largeur restante).
+  const docBandWidth = docFullWidthBand ? W : (W - rightReserveW)
+
+  const showVDivider = showDiagram && rightColumnShown
+  const vDividerX = W - rightSlotW
+  const showHDivider = docBottomMode && !docAlone
+
+  const docPanelEl = (
+    <DocPanel
+      app_data={app_data}
+      active={showDoc}
+      docLayout={docLayout}
+      setDocLayout={setDocLayout}
+      showDiagram={showDiagram}
+      showSpreadsheet={showSpreadsheet}
+    />
+  )
 
   return (
     <>
-      {/* Overlay tableur : pleine zone, ou moitié droite en split. `position: fixed` -> top/bottom
-          relatifs au VIEWPORT (et non à un ancêtre positionné pouvant dépasser l'écran, ce qui
-          rognait le footer/scrollbars d'Univer ou poussait le tableur trop bas). */}
-      <div
-        style={{
-          position: 'fixed',
-          top: navH,
-          left: overlayLeft,
-          right: 0,
-          bottom: bottomH,
-          zIndex: 20,
-          background: 'white',
-          display: anyRight ? 'flex' : 'none',
-          flexDirection: 'column'
-        }}
-      >
-        {showSpreadsheet && (
-          <div style={{ flex: '1 1 0', minHeight: 0, borderBottom: showDoc ? '1px solid #e2e8f0' : undefined }}>
-            <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
-          </div>
-        )}
-        {showDoc && (
-          <div style={{ flex: '1 1 0', minHeight: 0 }}>
-            <DocPanel app_data={app_data} active={showDoc} />
-          </div>
-        )}
-      </div>
+      {/* Doc seule : remplit toute la grande zone. */}
+      {docAlone && (
+        <div style={{
+          position: 'fixed', top: contentTop, left: 0, right: 0, bottom: bottomH,
+          zIndex: 20, background: 'white'
+        }}>
+          {docPanelEl}
+        </div>
+      )}
 
-      {/* Séparateur déplaçable (uniquement quand les deux panneaux sont affichés). */}
-      {both && (
+      {/* Colonne de droite : tableur ± doc accolée (modes sheet-*). `position: fixed` -> top/bottom
+          relatifs au VIEWPORT (et non à un ancêtre positionné). */}
+      {rightColumnShown && (
         <div
-          onMouseDown={onDividerDown}
           style={{
             position: 'fixed',
-            top: navH,
-            bottom: bottomH,
-            left: leftPx - 3,
+            top: contentTop,
+            left: rightLeft,
+            right: 0,
+            bottom: rightBottom,
+            zIndex: 20,
+            background: 'white',
+            display: 'flex',
+            flexDirection: docWithSheet ? sheetSlotFlexDir(docLayout) : 'column'
+          }}
+        >
+          {showSpreadsheet && (
+            <div style={{
+              flex: '1 1 0', minHeight: 0, minWidth: 0,
+              ...(docWithSheet ? sheetBorder(docLayout) : {})
+            }}>
+              <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
+            </div>
+          )}
+          {docWithSheet && (
+            <div style={{ flex: '1 1 0', minHeight: 0, minWidth: 0 }}>
+              {docPanelEl}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bandeau doc en bas (modes diagram-bottom / window-bottom). */}
+      {docBottomMode && !docAlone && (
+        <div style={{
+          position: 'fixed',
+          top: contentBottom - docH,
+          left: 0,
+          width: docBandWidth,
+          height: docH,
+          zIndex: 20,
+          background: 'white',
+          borderTop: SEP
+        }}>
+          {docPanelEl}
+        </div>
+      )}
+
+      {/* Séparateur vertical déplaçable (diagramme / colonne droite). */}
+      {showVDivider && (
+        <div
+          onMouseDown={onVDividerDown}
+          style={{
+            position: 'fixed',
+            top: contentTop,
+            bottom: docFullWidthBand ? rightBottom : bottomH,
+            left: vDividerX - 3,
             width: 6,
             zIndex: 25,
             cursor: 'col-resize',
+            background: '#cbd5e0'
+          }}
+        />
+      )}
+
+      {/* Poignée horizontale déplaçable (hauteur de la doc en mode bas). */}
+      {showHDivider && (
+        <div
+          onMouseDown={onHDividerDown}
+          style={{
+            position: 'fixed',
+            top: contentBottom - docH - 3,
+            left: 0,
+            width: docBandWidth,
+            height: 6,
+            zIndex: 25,
+            cursor: 'row-resize',
             background: '#cbd5e0'
           }}
         />

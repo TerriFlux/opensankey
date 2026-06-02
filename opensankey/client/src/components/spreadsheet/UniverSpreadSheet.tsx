@@ -19,8 +19,8 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import {
-  buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, SHEET_ID_NOEUDS,
-  SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING
+  buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, Type_SheetMeta, SHEET_ID_NOEUDS,
+  SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING
 } from './UniverSankeyData'
 import { attachSankeyBridge } from './UniverSankeyBridge'
 import { parseHierarchyFromLevels, refreshAfterHierarchyChange } from './UniverHierarchyOps'
@@ -117,6 +117,96 @@ const ColumnSelector = (
   )
 }
 
+/**
+ * Sélecteur d'onglets à afficher, même UX que le sélecteur de colonnes (Popover + recherche +
+ * "Tout sélectionner" tri-state + cases). Les onglets vides sont masqués par défaut au build ;
+ * ce sélecteur permet de les ré-afficher (ou de masquer ceux qu'on ne veut pas voir).
+ */
+const SheetSelector = (
+  { sheets, hiddenSet, onSet }:
+  { sheets: Type_SheetMeta[], hiddenSet: Set<string>, onSet: (sheetId: string, hidden: boolean) => void }
+) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [search, setSearch] = useState('')
+
+  const lc = search.trim().toLowerCase()
+  const rows = sheets.filter((s) => !lc || s.name.toLowerCase().includes(lc))
+  const checkedCount = rows.filter((s) => !hiddenSet.has(s.id)).length
+  const allChecked = rows.length > 0 && checkedCount === rows.length
+  const noneChecked = checkedCount === 0
+
+  const toggleAll = (next: boolean) => {
+    rows.forEach((s) => {
+      const visible = !hiddenSet.has(s.id)
+      if (visible !== next) {
+        onSet(s.id, !next)
+      }
+    })
+  }
+
+  const triggerLabel = sheets.length === 0
+    ? 'Onglets'
+    : `Onglets (${sheets.length - hiddenSet.size}/${sheets.length})`
+
+  return (
+    <Popover isOpen={isOpen} onClose={() => setIsOpen(false)} placement='bottom-start' isLazy>
+      <PopoverTrigger>
+        <Button
+          size='xs'
+          variant='outline'
+          rightIcon={<ChevronDownIcon />}
+          onClick={() => { setSearch(''); setIsOpen(true) }}
+          isDisabled={sheets.length === 0}
+          fontWeight='normal'
+          width='auto'
+          maxW='190px'
+          flexShrink={0}
+        >
+          {triggerLabel}
+        </Button>
+      </PopoverTrigger>
+      <Portal>
+        <PopoverContent minW='240px' maxW='360px' zIndex='popover'>
+          <PopoverArrow />
+          <PopoverBody p='6px'>
+            <Input
+              size='xs'
+              placeholder='Rechercher'
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              mb='6px'
+            />
+            <Checkbox
+              size='sm'
+              isChecked={allChecked}
+              isIndeterminate={!allChecked && !noneChecked}
+              onChange={(e) => toggleAll(e.target.checked)}
+            >
+              <Text fontSize='xs' fontStyle='italic'>(Tout sélectionner)</Text>
+            </Checkbox>
+            <Divider my='4px' />
+            <VStack align='stretch' spacing='2px' maxH='240px' overflowY='auto'>
+              {rows.map((s) => (
+                <Checkbox
+                  key={s.id}
+                  size='sm'
+                  isChecked={!hiddenSet.has(s.id)}
+                  onChange={(e) => onSet(s.id, !e.target.checked)}
+                >
+                  <Text fontSize='xs'>{s.name}</Text>
+                </Checkbox>
+              ))}
+              {rows.length === 0 && (
+                <Text fontSize='xs' color='gray.500' fontStyle='italic'>—</Text>
+              )}
+            </VStack>
+          </PopoverBody>
+        </PopoverContent>
+      </Portal>
+    </Popover>
+  )
+}
+
 export const UniverSpreadSheet = (
   { app_data, active }: { app_data: Class_ApplicationData, active: boolean }
 ) => {
@@ -128,6 +218,9 @@ export const UniverSpreadSheet = (
   const [activeSheetId, setActiveSheetId] = useState<string>('')
   // Colonnes masquées par onglet (indices).
   const [hiddenCols, setHiddenCols] = useState<{ [sheetId: string]: number[] }>({})
+  // Onglets du dernier build (ordre d'affichage) + onglets masqués (ids), pour le sélecteur "Onglets".
+  const [sheetsMeta, setSheetsMeta] = useState<Type_SheetMeta[]>([])
+  const [hiddenSheets, setHiddenSheets] = useState<string[]>([])
   // "Visibles uniquement" : ne lister que les éléments visibles (exclut repliés/agrégés).
   const onlyVisibleRef = useRef(false)
   const [onlyVisible, setOnlyVisible] = useState(false)
@@ -149,6 +242,24 @@ export const UniverSpreadSheet = (
     } else {
       ws.showColumns(col, 1)
     }
+  }
+
+  // Masque/affiche un onglet entier dans Univer. (Univer interdit de masquer la feuille active ->
+  // l'appelant doit basculer l'onglet actif avant.)
+  const setSheetHidden = (sheetId: string, hidden: boolean) => {
+    const api = apiRef.current
+    const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+    const ws = wb && wb.getSheetBySheetId ? wb.getSheetBySheetId(sheetId) : null
+    if (!ws) {
+      return
+    }
+    try {
+      if (hidden && typeof ws.hideSheet === 'function') {
+        ws.hideSheet()
+      } else if (!hidden && typeof ws.showSheet === 'function') {
+        ws.showSheet()
+      }
+    } catch (e) { /* ignore (ex: tentative de masquer la feuille active) */ }
   }
 
   // Fige la ligne d'en-tête (row 0) d'un onglet pour qu'elle reste visible au scroll.
@@ -295,6 +406,7 @@ export const UniverSpreadSheet = (
           }
           const built = buildSankeyWorkbookData(app_data, onlyVisibleRef.current)
           columnsRef.current = built.columns
+          setSheetsMeta(built.sheets)
           const wb: any = univerAPI.createWorkbook(built.data)
           const hidden: { [sheetId: string]: number[] } = {}
           Object.keys(built.columns).forEach((sheetId) => {
@@ -309,12 +421,25 @@ export const UniverSpreadSheet = (
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
-          // Restaure l'onglet actif APRÈS les opérations par-feuille (hide/freeze) qui, sinon,
-          // laissent active la dernière feuille traitée -> l'onglet changeait au moindre rebuild
-          // (Visibles uniquement, changement de data tag…).
-          if (keepActive && wb && typeof wb.setActiveSheet === 'function') {
-            try { wb.setActiveSheet(keepActive) } catch (e) { /* feuille absente */ }
+          // Onglet actif cible : on conserve celui sur lequel l'utilisateur était (keepActive) ;
+          // au tout premier build (keepActive null) l'onglet par défaut est Flux. On le rend actif
+          // AVANT de masquer les onglets vides (Univer interdit de masquer la feuille active) et
+          // APRÈS les opérations par-feuille (hide colonnes/freeze) qui laissent sinon active la
+          // dernière feuille traitée -> l'onglet changeait au moindre rebuild.
+          const targetActive = keepActive || SHEET_ID_FLUX
+          if (wb && typeof wb.setActiveSheet === 'function') {
+            try { wb.setActiveSheet(targetActive) } catch (e) { /* feuille absente */ }
           }
+          // Masque par défaut les onglets vides (sauf Flux, toujours visible, et sauf l'onglet actif).
+          const hiddenSh: string[] = []
+          built.sheets.forEach((s) => {
+            const shouldHide = !s.hasData && s.id !== SHEET_ID_FLUX && s.id !== targetActive
+            setSheetHidden(s.id, shouldHide)
+            if (shouldHide) {
+              hiddenSh.push(s.id)
+            }
+          })
+          setHiddenSheets(hiddenSh)
           const wbA = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           const asNow = wbA && wbA.getActiveSheet && wbA.getActiveSheet()
           if (asNow && asNow.getSheetId) {
@@ -385,6 +510,33 @@ export const UniverSpreadSheet = (
     })
   }
 
+  // Visibilité d'un onglet (Univer + état local), depuis le sélecteur "Onglets". Masquer l'onglet
+  // actif est interdit par Univer -> on bascule d'abord sur le 1er onglet visible restant (Flux en
+  // priorité) avant de masquer.
+  const handleSheetSet = (sheetId: string, hidden: boolean) => {
+    if (hidden && sheetId === activeSheetId) {
+      const hiddenNow = new Set(hiddenSheets)
+      const fallback = sheetsMeta.find((s) => s.id !== sheetId && !hiddenNow.has(s.id))
+      const target = (fallback && fallback.id) || SHEET_ID_FLUX
+      const api = apiRef.current
+      const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+      if (wb && typeof wb.setActiveSheet === 'function' && target !== sheetId) {
+        try { wb.setActiveSheet(target) } catch (e) { /* feuille absente */ }
+        setActiveSheetId(target)
+      }
+    }
+    setSheetHidden(sheetId, hidden)
+    setHiddenSheets((prev) => {
+      const cur = new Set(prev)
+      if (hidden) {
+        cur.add(sheetId)
+      } else {
+        cur.delete(sheetId)
+      }
+      return Array.from(cur)
+    })
+  }
+
   // Bascule "Visibles uniquement" : met à jour le ref + reconstruit le classeur.
   const toggleOnlyVisible = (v: boolean) => {
     onlyVisibleRef.current = v
@@ -409,6 +561,9 @@ export const UniverSpreadSheet = (
         : SHEET_ID_STOCK_CHAINING
     const api = apiRef.current
     const wb = api && api.getActiveWorkbook && api.getActiveWorkbook()
+    // L'onglet de la famille peut être masqué (vide jusqu'ici) -> le ré-afficher avant de l'activer,
+    // sinon setActiveSheet échoue et keepActive ne le capturerait pas au rebuild.
+    setSheetHidden(sheetId, false)
     if (wb && typeof wb.setActiveSheet === 'function') {
       try { wb.setActiveSheet(sheetId) } catch (e) { /* feuille absente */ }
     }
@@ -453,6 +608,12 @@ export const UniverSpreadSheet = (
             Parser
           </Button>
         )}
+
+        <SheetSelector
+          sheets={sheetsMeta}
+          hiddenSet={new Set(hiddenSheets)}
+          onSet={handleSheetSet}
+        />
 
         <ColumnSelector columns={optionalCols} hiddenSet={hiddenSet} onSet={handleColSet} />
 
