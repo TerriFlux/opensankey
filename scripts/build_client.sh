@@ -146,7 +146,10 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  printf ">>> Build standalone\n" && CI= NODE_OPTIONS=--max-old-space-size=8192 pnpm run build || exit_if_error $?
+  # DISABLE_ESLINT_PLUGIN : l'eslint interne de CRA/craco ne charge pas le plugin
+  # typescript-eslint v7/v8 et plante sur les `eslint-disable @typescript-eslint/...` du tableur.
+  # Le lint est déjà fait par l'étape dédiée `eslint --fix ./src`.
+  printf ">>> Build standalone\n" && DISABLE_ESLINT_PLUGIN=true CI= NODE_OPTIONS=--max-old-space-size=8192 pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
