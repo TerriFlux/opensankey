@@ -59,6 +59,17 @@ export type Type_AdditionalMenus = {
   template_module_key: string[]
 }
 
+// Position de la doc dans la grande zone :
+//  - sheet-right / -left / -top / -bottom : doc accolée au tableur dans le slot droit.
+//  - diagram-bottom : doc sous le diagramme (zone gauche), tableur inchangé à droite.
+//  - window-bottom : doc en bandeau pleine largeur en bas (diagramme ET tableur raccourcis).
+export type Type_MainZoneDocLayout =
+  'sheet-right' | 'sheet-left' | 'sheet-top' | 'sheet-bottom' | 'diagram-bottom' | 'window-bottom'
+// Positions « groupe tableur » : la doc partage le slot droit avec le tableur (sinon elle est en bas).
+export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
+  ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
+// Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
+export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
 export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -184,6 +195,10 @@ export class Class_MenuConfig {
   protected _main_zone_show_spreadsheet: boolean = false
   // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
   protected _main_zone_show_doc: boolean = false
+  // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
+  protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
+  // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
+  protected _main_zone_doc_bottom_px: number = 280
   protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
@@ -193,11 +208,54 @@ export class Class_MenuConfig {
   public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
   public get main_zone_show_doc() { return this._main_zone_show_doc }
   public set main_zone_show_doc(v: boolean) { this._main_zone_show_doc = v; this._notifyMainZone() }
+  public get main_zone_doc_layout() { return this._main_zone_doc_layout }
+  public set main_zone_doc_layout(v: Type_MainZoneDocLayout) { this._main_zone_doc_layout = v; this._notifyMainZone() }
+  public get main_zone_doc_bottom_px() { return this._main_zone_doc_bottom_px }
+  public set main_zone_doc_bottom_px(v: number) { this._main_zone_doc_bottom_px = v; this._notifyMainZone() }
   public get main_zone_split_ratio() { return this._main_zone_split_ratio }
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
+  }
+  /**
+   * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
+   * vérité : calculée à partir de l'état (booléens + ratio) et de window.innerWidth, donc valable
+   * pour N'IMPORTE quelle drawing area (maître ou vue recréée à la volée) sans état par instance.
+   * Cf. MainZoneTabs (spreadsheetWidthPx) pour la disposition de l'overlay.
+   */
+  public getMainZoneRightReservedPx(): number {
+    // La colonne de droite n'existe que si le tableur est affiché, OU si la doc est en mode « accolée
+    // au tableur » (sheet-*). En mode bas (diagram-bottom / window-bottom) la doc ne réserve pas de
+    // largeur à droite.
+    const docInRightColumn = this._main_zone_show_doc &&
+      DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
+    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn
+    if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
+    const MIN_SPREADSHEET_PX = 320
+    const MIN_DIAGRAM_PX = 160
+    const W = window.innerWidth
+    let w = (1 - this._main_zone_split_ratio) * W
+    w = Math.max(MIN_SPREADSHEET_PX, w)
+    w = Math.min(w, Math.max(MIN_SPREADSHEET_PX, W - MIN_DIAGRAM_PX))
+    return w
+  }
+
+  /**
+   * Hauteur (px) réservée en bas pour la doc quand elle est en mode bas (diagram-bottom / window-
+   * bottom). Symétrique de getMainZoneRightReservedPx : lue par window_fitting_height de toute
+   * drawing area, donc le diagramme se recadre dans la hauteur restante. 0 dans les autres cas.
+   */
+  public getMainZoneBottomReservedPx(): number {
+    if (!(this._main_zone_show_diagram && this._main_zone_show_doc)) return 0
+    if (!DOC_LAYOUTS_BOTTOM.includes(this._main_zone_doc_layout)) return 0
+    const MIN_DOC_PX = 120
+    const MIN_DIAGRAM_PX = 120
+    const H = window.innerHeight
+    let h = this._main_zone_doc_bottom_px
+    h = Math.max(MIN_DOC_PX, h)
+    h = Math.min(h, Math.max(MIN_DOC_PX, H - MIN_DIAGRAM_PX))
+    return h
   }
   /* ========================================
     Timeout dict

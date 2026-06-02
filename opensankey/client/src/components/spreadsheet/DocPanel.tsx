@@ -11,10 +11,15 @@
 
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
-import { Box, Button, ButtonGroup, Textarea } from '@chakra-ui/react'
+import {
+  Box, Button, ButtonGroup, Textarea,
+  Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
+} from '@chakra-ui/react'
+import { ChevronDownIcon } from '@chakra-ui/icons'
 import ReactMarkdown from 'react-markdown'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
+import { Type_MainZoneDocLayout } from '../../types/MenuConfig'
 import { randomId } from '../../types/Utils'
 
 type Type_DocMode = 'edit' | 'preview' | 'split'
@@ -56,6 +61,23 @@ const allowDataImages = (url: string): string => {
   return ['http', 'https', 'mailto', 'tel'].includes(m[1].toLowerCase()) ? url : ''
 }
 
+// Libellés courts des positions de la doc (pour le bouton du menu).
+const DOC_POS_LABEL: Record<Type_MainZoneDocLayout, string> = {
+  'sheet-right': 'À droite du tableur',
+  'sheet-left': 'À gauche du tableur',
+  'sheet-top': 'Au-dessus du tableur',
+  'sheet-bottom': 'En-dessous du tableur',
+  'diagram-bottom': 'Sous le diagramme',
+  'window-bottom': 'Bandeau bas'
+}
+// Positions « accolées au tableur » proposées dans le sous-groupe.
+const SHEET_POSITIONS: [Type_MainZoneDocLayout, string][] = [
+  ['sheet-right', 'À droite'],
+  ['sheet-left', 'À gauche'],
+  ['sheet-top', 'Au-dessus'],
+  ['sheet-bottom', 'En-dessous']
+]
+
 const tab_btn_style = (active: boolean) => ({
   size: 'xs' as const,
   variant: 'ghost' as const,
@@ -66,7 +88,18 @@ const tab_btn_style = (active: boolean) => ({
 })
 
 export const DocPanel = (
-  { app_data, active }: { app_data: Class_ApplicationData, active: boolean }
+  {
+    app_data, active,
+    docLayout, setDocLayout,
+    showDiagram, showSpreadsheet
+  }: {
+    app_data: Class_ApplicationData,
+    active: boolean,
+    docLayout: Type_MainZoneDocLayout,
+    setDocLayout: (v: Type_MainZoneDocLayout) => void,
+    showDiagram: boolean,
+    showSpreadsheet: boolean
+  }
 ) => {
   const [text, setText] = useState<string>(app_data.documentation_markdown)
   const [mode, setMode] = useState<Type_DocMode>('split')
@@ -167,7 +200,49 @@ export const DocPanel = (
         borderColor='gray.200'
         flex='0 0 auto'
       >
-        <Box fontSize='0.8rem' fontWeight='600' color='gray.700' mr='auto'>Documentation</Box>
+        <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
+        {/* Sélecteur de position de la doc dans la grande zone. */}
+        <Menu placement='bottom-start' isLazy>
+          <MenuButton
+            as={Button}
+            size='xs'
+            variant='outline'
+            fontWeight='normal'
+            rightIcon={<ChevronDownIcon />}
+          >
+            {DOC_POS_LABEL[docLayout]}
+          </MenuButton>
+          <MenuList fontSize='0.85rem' zIndex={1600}>
+            <MenuGroup title='Avec le tableur'>
+              {SHEET_POSITIONS.map(([pos, label]) => (
+                <MenuItem
+                  key={pos}
+                  pl='1.5rem'
+                  isDisabled={!showSpreadsheet}
+                  onClick={() => setDocLayout(pos)}
+                  fontWeight={docLayout === pos ? 'bold' : 'normal'}
+                >
+                  {docLayout === pos ? '✓ ' : ''}{label}
+                </MenuItem>
+              ))}
+            </MenuGroup>
+            <MenuDivider />
+            <MenuItem
+              isDisabled={!showDiagram}
+              onClick={() => setDocLayout('diagram-bottom')}
+              fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
+            >
+              {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
+            </MenuItem>
+            <MenuItem
+              onClick={() => setDocLayout('window-bottom')}
+              fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
+            >
+              {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
+            </MenuItem>
+          </MenuList>
+        </Menu>
+        <Box flex='1 1 auto' />
         <input
           ref={fileInputRef}
           type='file'

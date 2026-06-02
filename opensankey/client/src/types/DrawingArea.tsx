@@ -2661,13 +2661,25 @@ export class Class_DrawingArea {
     if (this.is_bg_image_ratio_mode) return
     this._height = _; this.drawBackground(); this.drawGrid()
   }
-  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
-  // Largeur réservée à droite de la grande zone pour le tableur (split view). Le diagramme se
-  // recadre dans la largeur restante via areaAutoFit() quand cette valeur change (cf MainZoneTabs).
-  protected _main_zone_right_reserved: number = 0
-  public get main_zone_right_reserved() { return this._main_zone_right_reserved }
-  public set main_zone_right_reserved(v: number) { this._main_zone_right_reserved = Math.max(0, v) }
-  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin - this._main_zone_right_reserved }
+  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved }
+  // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
+  // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
+  // drawing area est construite pendant le super() de ApplicationData, AVANT que la sous-classe ne
+  // crée menu_configuration (createNewMenuConfiguration) -> réserve nulle tant qu'il n'existe pas.
+  public get main_zone_bottom_reserved(): number {
+    return this.application_data.menu_configuration?.getMainZoneBottomReservedPx() ?? 0
+  }
+  // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
+  // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
+  // extractViewFromJSON, repartirait à 0 et déborderait sous le tableur. Le diagramme se recadre
+  // dans la largeur restante via areaAutoFit() (cf MainZoneTabs, déclenché au toggle / changement
+  // de vue).
+  public get main_zone_right_reserved(): number {
+    return this.application_data.menu_configuration?.getMainZoneRightReservedPx() ?? 0
+  }
+  public get window_fitting_width(): number {
+    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
+  }
 
   // Paper format getters/setters
 
