@@ -340,6 +340,12 @@ export class Class_ApplicationData {
 
   protected _file_name = default_file_name
 
+  // Documentation markdown libre attachée au diagramme (onglet « Doc »), persistée en JSON.
+  protected _documentation_markdown: string = ''
+  // Pièces jointes images de la doc : map id -> data-URI base64. Référencées dans le markdown par
+  // `img://<id>` (garde l'éditeur lisible) ; persistées en JSON avec le diagramme (autonome).
+  protected _documentation_images: { [id: string]: string } = {}
+
 
   /**
    * Drawing area
@@ -568,6 +574,9 @@ export class Class_ApplicationData {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
+    // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
+    this._documentation_markdown = ''
+    this._documentation_images = {}
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -753,6 +762,8 @@ export class Class_ApplicationData {
     if (this._language !== undefined)
       json_object['language'] = this._language
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
+    if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
+    if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -810,6 +821,9 @@ export class Class_ApplicationData {
     // Update drawing area
     DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
+    this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
+    const imgs = json_object['documentation_images']
+    this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
 
   }
 
@@ -1739,6 +1753,12 @@ export class Class_ApplicationData {
 
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
+
+  public get documentation_markdown(): string { return this._documentation_markdown }
+  public set documentation_markdown(value: string) { this._documentation_markdown = value }
+
+  public get documentation_images(): { [id: string]: string } { return this._documentation_images }
+  public set documentation_images(value: { [id: string]: string }) { this._documentation_images = value }
 
   /** Override in subclasses to expose named views as layout sources */
   public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
