@@ -1071,19 +1071,34 @@ export class Class_DrawingArea {
     if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
       const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
-        // Calculer la bounding box englobante
-        const minX = Math.min(bbox.x, legendBbox.x)
-        const minY = Math.min(bbox.y, legendBbox.y)
-        const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
-        const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
+        // Une légende stick_to_drawing peut être glissée arbitrairement loin du
+        // contenu (souvent par accident, ou héritée d'une position obsolète).
+        // L'inclure inconditionnellement gonflait la bbox de cadrage : l'auto-fit
+        // gardait alors une zone géante impossible à rapetisser, la légende
+        // restant hors écran sans retour possible. On ne l'inclut donc dans le
+        // cadrage que si elle est proche du contenu (à fit_margin près) ; sinon
+        // on fitte uniquement sur les éléments.
+        const tol = this._fit_margin
+        const legend_near_content =
+          legendBbox.x <= bbox.x + bbox.width + tol &&
+          legendBbox.x + legendBbox.width >= bbox.x - tol &&
+          legendBbox.y <= bbox.y + bbox.height + tol &&
+          legendBbox.y + legendBbox.height >= bbox.y - tol
+        if (legend_near_content) {
+          // Calculer la bounding box englobante
+          const minX = Math.min(bbox.x, legendBbox.x)
+          const minY = Math.min(bbox.y, legendBbox.y)
+          const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
+          const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
 
-        // Créer une nouvelle bbox combinée
-        bbox = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        } as DOMRect
+          // Créer une nouvelle bbox combinée
+          bbox = {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+          } as DOMRect
+        }
       }
     }
 
