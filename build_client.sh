@@ -86,7 +86,11 @@ if [ "$linter" = true ] ; then
   printf ">>> Run linter\n" && pnpm run lint || exit_if_error $?
 fi
 if [ "$build" = true ] ; then
-  printf ">>> Build standalone\n" && CI= pnpm run build || exit_if_error $?
+  # DISABLE_ESLINT_PLUGIN: OS build = react-scripts brut (pas craco comme OS+/SA) ; l'eslint
+  # interne de CRA ne charge pas le plugin typescript-eslint v7/v8 et plante sur les commentaires
+  # `eslint-disable @typescript-eslint/...` des fichiers tableur. Le lint est déjà fait par
+  # l'étape dédiée `eslint --fix ./src` au-dessus.
+  printf ">>> Build standalone\n" && DISABLE_ESLINT_PLUGIN=true CI= pnpm run build || exit_if_error $?
 fi
 if [ "$dist" = true ] ; then
   printf ">>> Build distribution lib\n" && pnpm run dist || exit_if_error $?
