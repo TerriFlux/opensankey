@@ -102,7 +102,7 @@ export const DocPanel = (
   }
 ) => {
   const [text, setText] = useState<string>(app_data.documentation_markdown)
-  const [mode, setMode] = useState<Type_DocMode>('split')
+  const [mode, setMode] = useState<Type_DocMode>('preview')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -149,6 +149,16 @@ export const DocPanel = (
     insertAtCursor(`\n![${alt}](img://${id})\n`)
   }
 
+  // Insère un lien interne `[Nom de la vue](view://<id>)` à la position du curseur. Le libellé reprend
+  // le nom courant de la vue (lisible même si la vue est renommée/supprimée ensuite).
+  const insertViewLink = (id: string, name: string) => {
+    if (mode === 'preview') setMode('split')
+    insertAtCursor(`[${name}](view://${id})`)
+  }
+
+  // Vues disponibles comme cibles de lien (vide en OpenSankey de base, peuplé en OpenSankey+).
+  const view_sources = app_data.layout_view_sources
+
   const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0]
     e.target.value = '' // permet de re-sélectionner le même fichier ensuite
@@ -178,10 +188,30 @@ export const DocPanel = (
   }
 
   // Résout les URLs du markdown pour l'aperçu : les références `img://<id>` -> data-URI de la map,
+  // les liens internes `view://<id>` laissés tels quels (interceptés au clic par LinkRenderer),
   // sinon sanitization standard (autorise data:image/ et protocoles sûrs).
   const resolveUrl = (url: string): string => {
     if (url.startsWith('img://')) return app_data.documentation_images[url.slice(6)] || ''
+    if (url.startsWith('view://')) return url
     return allowDataImages(url)
+  }
+
+  // Rendu personnalisé des liens : `view://<id>` active la vue correspondante au clic (navigation
+  // interne, pas une vraie URL) ; les autres liens s'ouvrent normalement dans un nouvel onglet.
+  const LinkRenderer = ({ href, children }: { href?: string, children?: React.ReactNode }) => {
+    if (href && href.startsWith('view://')) {
+      const view_id = href.slice(7)
+      return (
+        <a
+          href={href}
+          onClick={(e) => { e.preventDefault(); app_data.navigateToView(view_id) }}
+          style={{ cursor: 'pointer' }}
+        >
+          {children}
+        </a>
+      )
+    }
+    return <a href={href} target='_blank' rel='noreferrer'>{children}</a>
   }
 
   const showEditor = mode === 'edit' || mode === 'split'
@@ -259,6 +289,27 @@ export const DocPanel = (
         >
           Insérer une image
         </Button>
+        {view_sources.length > 0 && (
+          <Menu placement='bottom-end' isLazy>
+            <MenuButton
+              as={Button}
+              size='xs'
+              variant='outline'
+              fontWeight='normal'
+              mr='0.4rem'
+              rightIcon={<ChevronDownIcon />}
+            >
+              Lien vers une vue
+            </MenuButton>
+            <MenuList fontSize='0.85rem' zIndex={1600} maxHeight='16rem' overflowY='auto'>
+              {view_sources.map(({ id, name }) => (
+                <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
+                  {name}
+                </MenuItem>
+              ))}
+            </MenuList>
+          </Menu>
+        )}
         <ButtonGroup spacing='0.15rem'>
           <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
           <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
@@ -289,7 +340,7 @@ export const DocPanel = (
         {showPreview && (
           <Box flex='1 1 50%' minWidth={0}>
             <div className='os-md-preview' style={PREVIEW_STYLE}>
-              <ReactMarkdown urlTransform={resolveUrl}>{text}</ReactMarkdown>
+              <ReactMarkdown urlTransform={resolveUrl} components={{ a: LinkRenderer }}>{text}</ReactMarkdown>
             </div>
           </Box>
         )}

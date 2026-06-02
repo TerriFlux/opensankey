@@ -764,6 +764,7 @@ export class Class_ApplicationData {
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
     if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
     if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
+    json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -824,7 +825,8 @@ export class Class_ApplicationData {
     this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
-
+    const mz = json_object['main_zone']
+    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
   }
 
 
@@ -1762,6 +1764,10 @@ export class Class_ApplicationData {
 
   /** Override in subclasses to expose named views as layout sources */
   public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
+
+  /** Override in subclasses to navigate to a named view (used by doc markdown `view://<id>` links).
+   *  No-op when views are not supported (base OpenSankey). */
+  public navigateToView(_id: string): void { /* no-op */ }
 
   /** Override in subclasses to build a temporary DA from a view id */
   public getDrawingAreaFromViewId(_id: string): Class_DrawingArea | undefined { return undefined }
