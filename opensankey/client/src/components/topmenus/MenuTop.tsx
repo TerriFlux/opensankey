@@ -61,7 +61,8 @@ import {
   faCheck,
   faExclamation,
   faDiagramProject,
-  faTable
+  faTable,
+  faFileLines
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -171,10 +172,15 @@ const main_zone_btn_style = (active: boolean) => ({
 
 export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   const { t, icon_library, history } = new_data
-  const { showDiagram, showSpreadsheet, setShowDiagram, setShowSpreadsheet } = useMainZone(new_data)
-  // Bascule en gardant toujours au moins un panneau affiché.
-  const toggleDiagram = () => { const next = !showDiagram; if (!next && !showSpreadsheet) return; setShowDiagram(next) }
-  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !showDiagram) return; setShowSpreadsheet(next) }
+  const {
+    showDiagram, showSpreadsheet, showDoc,
+    setShowDiagram, setShowSpreadsheet, setShowDoc
+  } = useMainZone(new_data)
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc).
+  const others = (a: boolean, b: boolean) => a || b
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc)) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc)) return; setShowSpreadsheet(next) }
+  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet)) return; setShowDoc(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
@@ -257,6 +263,17 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
       >
         <FontAwesomeIcon icon={faTable} style={{ height: '0.95rem', width: '0.95rem' }} />
         <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Tableur</Box>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Doc'>
+      <Button
+        aria-label='Doc'
+        className='topbar_button_main_zone_doc'
+        onClick={toggleDoc}
+        {...main_zone_btn_style(showDoc)}
+      >
+        <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
       </Button>
     </OSTooltip>
   </ButtonGroup>
