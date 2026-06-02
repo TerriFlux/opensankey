@@ -879,11 +879,10 @@ export const UniversalFileConverter = ({
           excel: '.xlsx',
           json: '.json'
         }
-        //@ts-expect-error xxx
-        let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
+        const base = input_file ? (input_file as File).name.split('.')[0] : 'output'
+        let root_filename = base
         if (config.title == 'ProcessDialog.reconciliation') {
-          //@ts-expect-error xxx
-          root_filename = input_file.name.split('.')[0] + 'reconciled'
+          root_filename = base + 'reconciled'
         }
 
         // Reconciliation + debug: backend bundles the reconciled output and

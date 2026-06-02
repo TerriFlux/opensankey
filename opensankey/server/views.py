@@ -260,9 +260,9 @@ def retrieve_result():
                     mimetype="application/json"
                 )
             io_excel = IOExcel(io_json.sankey)
-            io_excel.write_sankey(_ + ".xlsx")
-            ext = "xlsx"
-            output_file_name = _ + ".xlsx"
+            io_excel.write_sankey(root_file_name + ".xlsx")
+            ext = ".xlsx"
+            output_file_name = root_file_name + ".xlsx"
 
         # Mapping extensions → mimetypes
         mimetype_map = {
@@ -603,10 +603,14 @@ def conversion_thread(
             trace.logger.info("=" * 80)
             return
 
-        # Choisir le bon IO selon le format
+        # Choisir le bon IO selon le format. 'blob' (= sankey courant) est
+        # toujours matérialisé en .json sur disque avant d'arriver ici (cf.
+        # launch_conversion / launch_optim), donc on le traite comme du json :
+        # le state de session peut encore porter 'blob' quand retrieve_json
+        # relance une conversion sur le fichier résultat.
         if input_format == 'excel':
             io_input = IOExcel()
-        elif input_format == 'json':
+        elif input_format in ('json', 'blob'):
             io_input = IOJson()
         else:
             raise ValueError(f"Format d'entrée '{input_format}' non supporté")
