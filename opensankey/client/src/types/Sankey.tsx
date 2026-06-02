@@ -45,6 +45,49 @@ import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, def
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
 
+// One Ratio Flux constraint row (mirror of SankeyExcelParser
+// iter_ratio_flux_constraints / the "Ratio Flux" Excel sheet). "*" on a side
+// denotes an aggregate of all incoming/outgoing flux of the other node.
+export type Type_RatioFluxConstraint = {
+  origin: string,
+  destination: string,
+  origin_ref: string,
+  destination_ref: string,
+  coef: number | null,
+  min: number | null,
+  max: number | null,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
+
+// One Ratio Stock Flux constraint row (#156, mirror of SankeyExcelParser
+// iter_ratio_stock_flux_constraints / the "Ratio Stock Flux" Excel sheet):
+//   flux[origin -> destination, période] = coef × S[stock, période réf]
+export type Type_RatioStockFluxConstraint = {
+  origin: string,
+  destination: string,
+  coef: number | null,
+  min: number | null,
+  max: number | null,
+  stock: string,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
+
+// One Stock Chaining constraint row (#156, mirror of
+// iter_stock_chaining_constraints / the "Chaînage Stock" Excel sheet):
+//   S[stock, période] = coef × S[stock, période réf] + Δstock[delta_stock, période]
+export type Type_StockChainingConstraint = {
+  stock: string,
+  coef: number | null,
+  delta_stock: string,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
+
 export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
@@ -80,6 +123,16 @@ export class Class_Sankey {
 
   private _icon_catalog: { [x: string]: string } = {}
 
+  // Ratio Flux constraints — diagram-level relations between flux (incl. the
+  // %IS/%OS/... family), canonical representation shared with the Excel parser
+  // (sankeyexcelparser#116). Stored natively because value_option per-link can
+  // only express a subset (no flux<->flux, no min/max, no "*" aggregates).
+  private _ratio_flux_constraints: Type_RatioFluxConstraint[] = []
+  // Stock constraints (#156), same diagram-level canonical representation,
+  // shared with the Excel parser and edited from the spreadsheet tabs.
+  private _ratio_stock_flux_constraints: Type_RatioStockFluxConstraint[] = []
+  private _stock_chaining_constraints: Type_StockChainingConstraint[] = []
+
   public normalised_link?: Class_LinkElement
 
   constructor(
@@ -94,6 +147,9 @@ export class Class_Sankey {
     this._data_tags_fingerprint = randomId()
 
     this._icon_catalog = {}
+    this._ratio_flux_constraints = []
+    this._ratio_stock_flux_constraints = []
+    this._stock_chaining_constraints = []
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -101,6 +157,30 @@ export class Class_Sankey {
 
   public get dimensions_list() {
     return Object.values(this._nodes_dimensions)
+  }
+
+  public get ratio_flux_constraints(): Type_RatioFluxConstraint[] {
+    return this._ratio_flux_constraints
+  }
+
+  public set ratio_flux_constraints(_: Type_RatioFluxConstraint[]) {
+    this._ratio_flux_constraints = _ ?? []
+  }
+
+  public get ratio_stock_flux_constraints(): Type_RatioStockFluxConstraint[] {
+    return this._ratio_stock_flux_constraints
+  }
+
+  public set ratio_stock_flux_constraints(_: Type_RatioStockFluxConstraint[]) {
+    this._ratio_stock_flux_constraints = _ ?? []
+  }
+
+  public get stock_chaining_constraints(): Type_StockChainingConstraint[] {
+    return this._stock_chaining_constraints
+  }
+
+  public set stock_chaining_constraints(_: Type_StockChainingConstraint[]) {
+    this._stock_chaining_constraints = _ ?? []
   }
 
   public delete() {

@@ -103,7 +103,9 @@ export const LinkValueTypeSelector = ({
   const [value_type, set_value_type] = useState(current_value_type)
   if (value_type !== current_value_type) set_value_type(current_value_type)
 
-  const type_constants = ['value', 'percent']
+  // 'percent' (%IS/%OS/...) retiré : ces ratios s'éditent désormais dans l'onglet
+  // « Ratio flux » du tableur (liste canonique, sankeyexcelparser#116), plus per-link.
+  const type_constants = ['value']
   if (state.unit_data_tagg) type_constants.push('ratio')
 
   const current_node_ref = value_option === '%PS' || value_option === '%IS' || value_option === '%OS' ? 'source' : 'target'
@@ -313,6 +315,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
   })
 
   const value_option = first_link_value?.value_option ?? default_value_option
+  // eslint-disable-next-line no-console
+  if (first_link) console.log('[TYPEDEBUG] render-read', { value_option, readLeaf: first_link_value, valueOptionOnLeaf: first_link_value?.value_option, selectedTags: first_link.selected_data_tags_list.map(t => t.id), valuesIsTree: !(first_link_value && first_link_value.constructor && first_link_value.constructor.name === 'Class_LinkValue') })
   // Force AFM tab when value_option is not 'value' (basic tab disabled)
   if (dataTab === 'basic' && value_option !== 'value' && app_data.has_sankey_afm) setDataTab('afm')
 
@@ -356,7 +360,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
 
   const afm_value_type = value_option === 'value' ? 'value' : value_option === 'intervals' ? 'intervals' : value_option === 'unit_ratio' ? 'ratio' : 'percent'
 
-  const afm_type_constants = ['value', 'intervals', 'percent']
+  // 'percent' retiré (édité dans l'onglet « Ratio flux » du tableur, #116).
+  const afm_type_constants = ['value', 'intervals']
   if (unit_data_tagg) afm_type_constants.push('ratio')
 
   const afm_node_ref = value_option === '%PS' || value_option === '%IS' || value_option === '%OS' ? 'source' : 'target'
@@ -571,11 +576,14 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           onChange={(evt) => {
             const computed = compute_value_option(evt.target.value, afm_node_ref, afm_dir)
             selected_links.forEach(l => {
+              const before = l.value
                 l.value!.value_option = computed as ValueOptionType
                 if (computed === 'unit_ratio') {
                   l.value!.ratio_unit_tag = unit_data_tagg?.tags_list[0] ?? null
                 }
                 l.drawElements()
+                // eslint-disable-next-line no-console
+                console.log('[TYPEDEBUG] write', { computed, beforeLeaf: before, afterReadLeaf: l.value, sameLeaf: before === l.value, valueOptionAfter: l.value?.value_option, selectedTags: l.selected_data_tags_list.map(t => t.id) })
             })
             refreshThisAndUpdateRelatedComponents()
           }}

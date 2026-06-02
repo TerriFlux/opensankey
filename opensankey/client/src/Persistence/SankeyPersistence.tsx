@@ -42,7 +42,7 @@ import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttri
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { Class_Sankey } from '../types/Sankey'
+import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -1515,6 +1515,19 @@ export class SankeyPersistence {
     // Icon catalog
     if (Object.keys(sankey.icon_catalog).length > 0) json_object['icon_catalog'] = sankey.icon_catalog as Type_JSON
 
+    // Ratio Flux constraints — diagram-level relations, canonical format shared
+    // with SankeyExcelParser (sankeyexcelparser#116). Additive & backward
+    // compatible: absent from older files -> the model keeps an empty list.
+    if (sankey.ratio_flux_constraints.length > 0)
+      json_object['ratio_flux_constraints'] = sankey.ratio_flux_constraints as unknown as Type_JSON
+
+    // Stock constraints (#156), same diagram-level canonical format. Additive &
+    // backward compatible: absent from older files -> empty lists.
+    if (sankey.ratio_stock_flux_constraints.length > 0)
+      json_object['ratio_stock_flux_constraints'] = sankey.ratio_stock_flux_constraints as unknown as Type_JSON
+    if (sankey.stock_chaining_constraints.length > 0)
+      json_object['stock_chaining_constraints'] = sankey.stock_chaining_constraints as unknown as Type_JSON
+
     sankey.create_child_links()
     // Out
     return json_object
@@ -1738,6 +1751,82 @@ export class SankeyPersistence {
     sankey.create_child_links()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
+
+    // Ratio Flux constraints (diagram-level, sankeyexcelparser#116). Additive:
+    // absent from older files -> empty list. The %IS/%OS/... family now lives
+    // here too (canonical), no longer per-link.
+    sankey.ratio_flux_constraints = (
+      Array.isArray(json_object['ratio_flux_constraints'])
+        ? json_object['ratio_flux_constraints']
+        : []
+    ) as unknown as Type_RatioFluxConstraint[]
+
+    // Stock constraints (#156). Additive: absent from older files -> empty.
+    sankey.ratio_stock_flux_constraints = (
+      Array.isArray(json_object['ratio_stock_flux_constraints'])
+        ? json_object['ratio_stock_flux_constraints']
+        : []
+    ) as unknown as Type_RatioStockFluxConstraint[]
+    sankey.stock_chaining_constraints = (
+      Array.isArray(json_object['stock_chaining_constraints'])
+        ? json_object['stock_chaining_constraints']
+        : []
+    ) as unknown as Type_StockChainingConstraint[]
+
+    // Legacy migration: older files store the %IS/%OS/... family per-link via
+    // value_option; fold them into the canonical list (sankeyexcelparser#116).
+    SankeyPersistence.migrate_legacy_link_ratios(sankey)
+  }
+
+  // Convert each legacy per-link %-type (value_option in %IS/%OS/%PS/%ID/%OD/%PD)
+  // into a diagram-level ratio_flux_constraints entry, then reset the link to a
+  // plain 'value' so it renders from its solved result and is no longer
+  // re-written per-link. Mirrors SankeyExcelParser create_ratio_constraint_from_json
+  // -> iter_ratio_flux_constraints. unit_ratio / intervals stay per-link.
+  private static migrate_legacy_link_ratios(sankey: Class_Sankey) {
+    const PERCENT = ['%IS', '%OS', '%PS', '%ID', '%OD', '%PD']
+    const firstParentName = (node: Class_NodeElement): string | null => {
+      const dims = node.dimensions_as_child
+      const parent = (dims && dims.length > 0) ? dims[0].parent : null
+      return parent ? parent.name : null
+    }
+    sankey.links_list.forEach((link) => {
+      const v = link.value
+      if (!v || !PERCENT.includes(v.value_option)) {
+        return
+      }
+      const X = link.source.name
+      const Y = link.target.name
+      // valueData holds the percentage (e.g. 60) -> canonical coef is the ratio.
+      const coef = (v.valueData != null) ? v.valueData / 100 : null
+      let origin_ref = ''
+      let destination_ref = ''
+      switch (v.value_option) {
+      case '%IS': origin_ref = '*'; destination_ref = X; break
+      case '%OS': origin_ref = X; destination_ref = '*'; break
+      case '%ID': origin_ref = '*'; destination_ref = Y; break
+      case '%OD': origin_ref = Y; destination_ref = '*'; break
+      case '%PS': {
+        const p = firstParentName(link.source)
+        if (!p) { return }  // no parent -> leave per-link (no data loss)
+        origin_ref = p; destination_ref = Y; break
+      }
+      case '%PD': {
+        const p = firstParentName(link.target)
+        if (!p) { return }
+        origin_ref = X; destination_ref = p; break
+      }
+      default: return
+      }
+      sankey.ratio_flux_constraints.push({
+        origin: X, destination: Y,
+        origin_ref, destination_ref,
+        coef, min: null, max: null,
+        data_tag: null, data_tag_ref: null, traduction: null
+      })
+      v.value_option = 'value'
+      v.valueData = null
+    })
   }
 
   private static load_tags(json_object: Type_JSON, sankey: Class_Sankey) {
