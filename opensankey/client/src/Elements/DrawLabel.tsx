@@ -799,7 +799,7 @@ export abstract class DrawLabelBase {
       // width*comp × height*comp. En mode déverrouillé, comp = 1 (no-op).
       const comp = this._element.drawing_area?.font_compensation ?? 1
 
-      if (this._label_values.vertical_text) {
+      if (this.getEffectiveTextAngle() === -90) {
         // Colonne tournée : colWidth=height, colHeight=width (mêmes principes
         // que NodeDrawLabelBase.verticalText, mais pour foreignObject).
         // Issue #1232 : dimensions VISIBLES en coords locales (compensées par
@@ -913,6 +913,14 @@ export abstract class DrawLabelBase {
         const bg = this.d3_selection?.select('.element_fo_background')
         if (bg && !bg.empty()) {
           bg.attr('transform', h_transform)
+        }
+
+        // Angle libre (≠ 0 et ≠ −90, ce dernier passant par la colonne ci-dessus) :
+        // on tourne tout le groupe FO autour du point d'ancrage du label. FO et fond
+        // gardent leur h_transform interne et suivent donc la rotation ensemble.
+        const fo_angle = this.getEffectiveTextAngle()
+        if (fo_angle !== 0) {
+          this.d3_selection?.attr('transform', `rotate(${fo_angle}, ${label_pos_x}, ${label_pos_y})`)
         }
       }
     }
@@ -1177,7 +1185,7 @@ export abstract class DrawLabelBase {
       // dérivé des dims du nœud (cf. drawFO) ; le recalculer ici dupliquerait
       // toute cette géométrie. On laisse donc le drag-end (drawGenericLabel) le
       // replacer correctement plutôt que d'écraser sa rotation pendant le drag.
-      if (this._label_values.vertical_text) return
+      if (this.getEffectiveTextAngle() !== 0) return
 
       const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
       // Issue #1232 : même compensation qu'à la pose initiale (drawFO).
@@ -1569,6 +1577,20 @@ export abstract class DrawLabelBase {
     return undefined
   }
 
+  /**
+   * Angle effectif de rotation du texte, en degrés (−180..180).
+   * `text_angle` (widget d'angle) prime ; à 0, on retombe sur la rétro-compat
+   * `vertical_text` → −90° (les liens surchargent pour tenir compte de is_vertical).
+   * −90° emprunte la géométrie de colonne historique (alignée au bord) ; tout
+   * autre angle non nul est une rotation générique autour du point d'ancrage.
+   */
+  protected getEffectiveTextAngle(): number {
+    const raw = Number((this._label_values as { text_angle?: number }).text_angle ?? 0)
+    const clamped = Math.max(-180, Math.min(180, Number.isFinite(raw) ? raw : 0))
+    if (clamped !== 0) return clamped
+    return this._label_values.vertical_text ? -90 : 0
+  }
+
   protected applyMultilineAlignment(
     textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
     tspanWidths: number[]
@@ -1581,7 +1603,11 @@ export abstract class DrawLabelBase {
     // est déjà encodée dans label_pos_x/label_pos_y/label_anchor/label_baseline via
     // getLabelPos ; on laisse le wrapper d3 gérer le `dy` em par tspan, et la rotation
     // appliquée par verticalText() s'occupe du reste.
-    if (this._label_values.vertical_text) return
+    // Pour un angle libre (≠ ±90), on laisse l'alignement multi-ligne se faire
+    // normalement : la rotation générique de verticalText() pivote ensuite le
+    // bloc déjà aligné autour de son point d'ancrage.
+    const _align_angle = this.getEffectiveTextAngle()
+    if (_align_angle === 90 || _align_angle === -90) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
     const maxWidth = Math.max(...tspanWidths, 1)
@@ -1672,7 +1698,18 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
   }
 
   protected override verticalText(tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
-    if (!this._label_values.vertical_text) return undefined
+    const angle = this.getEffectiveTextAngle()
+    if (angle === 0) return undefined
+
+    // Angle libre (≠ −90) : le texte a été posé/aligné normalement par
+    // updateLabelPos + applyMultilineAlignment ; on le pivote simplement autour
+    // de son point d'ancrage. Le fond reçoit le même transform (cf. drawBackground)
+    // et suit donc le texte. −90 garde la géométrie de colonne historique ci-dessous.
+    if (angle !== -90) {
+      const [px, py] = this.getLabelPos()
+      textElement.attr('transform', `rotate(${angle}, ${px}, ${py})`)
+      return undefined
+    }
 
     // Pivot dynamique = pivot mobile : tourner autour de (label_pos_x, label_pos_y) couple
     // l'extent pré-rotation (text-anchor sur X, baseline sur Y) avec la position post-rotation
@@ -2133,16 +2170,29 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     }
   }
 
+  /**
+   * Rétro-compat liens : `vertical_text` historique vaut +90° sur un lien vertical
+   * (texte top→bottom, sens du flux) et −90° sinon (bottom→top). Dès que l'angle
+   * explicite `text_angle` est posé, il prime.
+   */
+  protected override getEffectiveTextAngle(): number {
+    const raw = Number((this._label_values as { text_angle?: number }).text_angle ?? 0)
+    const clamped = Math.max(-180, Math.min(180, Number.isFinite(raw) ? raw : 0))
+    if (clamped !== 0) return clamped
+    if (this._label_values.vertical_text) return this.link.is_vertical ? 90 : -90
+    return 0
+  }
+
   protected override verticalText(_tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
-    if (!this._label_values.vertical_text) return undefined
+    const angle = this.getEffectiveTextAngle()
+    if (angle === 0) return undefined
 
     const [label_pos_x, label_pos_y] = this.getLabelPos()
     // Issue #165 : décalage proportionnel à la police effective.
     const dx = this.getEffectiveFontSize() / 2
 
-    // For vertical links, use +90° so text reads top→bottom (natural flow direction).
-    // For horizontal links, keep -90° so text reads bottom→top (left-to-right flow convention).
-    const angle = this.link.is_vertical ? 90 : -90
+    // Rotation autour du point d'ancrage du label. L'angle vient du widget
+    // (text_angle) ou, à défaut, de la rétro-compat vertical_text (±90 selon is_vertical).
     textElement.attr('transform', `translate(${-dx}, 0) rotate(${angle}, ${label_pos_x}, ${label_pos_y})`)
 
     return -dx
@@ -2283,7 +2333,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
     // For vertical links with vertical_text, remap axes:
     // horiz controls label_pos_x (within link cross-section), vert controls label_pos_y (along flow)
-    if (this.link.is_vertical && this._label_values.vertical_text && !this._label_values.position_absolute) {
+    // Réservé au mode colonne ±90 ; un angle libre tourne autour de l'ancrage normal.
+    if (this.link.is_vertical && Math.abs(this.getEffectiveTextAngle()) === 90 && !this._label_values.position_absolute) {
       const cx = this.link.position_x_start
       const half_thickness = this.link.thickness / 2
       if (this._label_values.horiz === 'left') {
