@@ -40,6 +40,7 @@ import {
   Select
 } from '@chakra-ui/react'
 import FileSaver from 'file-saver'
+import { PDFDocument } from 'pdf-lib'
 
 // Local libs
 import * as d3 from 'd3'
@@ -226,9 +227,7 @@ export const modalResolutionPNG: FType_ModalResolutionPNG = (
       disabled={!valid_input}
       onClick={() => {
         app_data.sendWaitingToast(
-          () => {
-            clickSavePNG(h, v, dpi, app_data)
-          },
+          () => clickSavePNG(h, v, dpi, app_data),
           {
             success: {
               title: app_data.t('toast.save_as_png.success.title')
@@ -281,9 +280,7 @@ export const modalResolutionPDF: FType_ModalResolutionPDF = (
     <Button
       onClick={() => {
         app_data.sendWaitingToast(
-          () => {
-            clickSavePDF(app_data, dpi)
-          },
+          () => clickSavePDF(app_data, dpi),
           {
             success: {
               title: app_data.t('toast.save_as_pdf.success.title')
@@ -323,7 +320,76 @@ export const clickSaveSVG = (
 }
 
 /**
- * Save sankey as PNG
+ * Rasterize a standalone SVG string to a PNG blob, entirely client-side.
+ *
+ * The export SVG produced by `pre_process_export_svg(true)` is self-contained
+ * (foreignObjects already converted to native <text>, images inlined as data
+ * URIs), so the browser renders it pixel-identically to the saved .svg — same
+ * font metrics, same text-box sizes, no body margin, no smart-shrinking. This
+ * replaces the previous server round-trip through wkhtmltoimage, which re-rendered
+ * the SVG in a different webkit engine and introduced gray borders, a left crop
+ * and undersized label backgrounds.
+ *
+ * A viewBox equal to the SVG's intrinsic size is injected and the root
+ * width/height are overridden to the target pixel size, so the SVG rasterizes
+ * crisply at full resolution instead of being scaled up from a smaller bitmap.
+ */
+export const rasterizeSVGToPNGBlob = (
+  svg_string: string,
+  target_w: number,
+  target_h: number
+): Promise<Blob> => {
+  // Inject viewBox + override root dimensions on the opening <svg> tag only
+  // (root attrs use single quotes; element attrs in the body use double quotes,
+  // so these regexes never touch the content).
+  const header_end = svg_string.indexOf('>')
+  let prepared = svg_string
+  if (header_end >= 0) {
+    let header = svg_string.slice(0, header_end)
+    const body = svg_string.slice(header_end)
+    const src_w = parseFloat(header.match(/width='([\d.]+)'/)?.[1] ?? String(target_w))
+    const src_h = parseFloat(header.match(/height='([\d.]+)'/)?.[1] ?? String(target_h))
+    header = header
+      .replace(/width='[\d.]+'/, `width='${target_w}'`)
+      .replace(/height='[\d.]+'/, `height='${target_h}'`)
+    if (!/viewBox=/.test(header)) header += ` viewBox='0 0 ${src_w} ${src_h}'`
+    prepared = header + body
+  }
+
+  return new Promise<Blob>((resolve, reject) => {
+    const url = URL.createObjectURL(new Blob([prepared], { type: 'image/svg+xml;charset=utf-8' }))
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = Math.max(1, Math.round(target_w))
+      canvas.height = Math.max(1, Math.round(target_h))
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        URL.revokeObjectURL(url)
+        reject(new Error('No 2D context for PNG export'))
+        return
+      }
+      // Flatten on white so the PNG isn't transparent in the padding around the
+      // drawing-area background rect.
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      URL.revokeObjectURL(url)
+      canvas.toBlob((png) => {
+        if (png) resolve(png)
+        else reject(new Error('canvas.toBlob returned null'))
+      }, 'image/png')
+    }
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('SVG image failed to load for PNG export'))
+    }
+    img.src = url
+  })
+}
+
+/**
+ * Save sankey as PNG (client-side rasterization, faithful to the SVG export).
  *
  * @param {(number | undefined)} h
  * @param {(number | undefined)} v
@@ -336,107 +402,82 @@ const clickSavePNG = (
   app_data: Class_ApplicationData
 ) => {
   const svg = app_data.pre_process_export_svg(true)
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  let size_to_send = ''
+  post_process_export_svg()
+
   const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
 
+  // Intrinsic SVG size (used as the default 1:1 target when no explicit size is set)
+  const src_w = parseFloat(svg.match(/width='([\d.]+)'/)?.[1] ?? '0')
+  const src_h = parseFloat(svg.match(/height='([\d.]+)'/)?.[1] ?? '0')
+
+  let target_w = src_w
+  let target_h = src_h
   if (app_data.drawing_area.is_paper_mode) {
     // Paper mode: compute raster size from paper dimensions and DPI
     const dims = app_data.drawing_area.getPaperDimensionsMm()
-    const w_px = Math.round(dims.width / 25.4 * dpi)
-    const h_px = Math.round(dims.height / 25.4 * dpi)
-    size_to_send = w_px + ' ' + h_px
+    target_w = Math.round(dims.width / 25.4 * dpi)
+    target_h = Math.round(dims.height / 25.4 * dpi)
   } else if (h !== undefined && v !== undefined) {
-    size_to_send = parseInt(String(h + legend_w)) + ' ' + parseInt(String(v))
+    target_w = Math.round(h + legend_w)
+    target_h = Math.round(v)
   }
 
-  form_data.append('size', size_to_send)
-
-  post_process_export_svg()
-
-  const path = window.location.origin
-  let url = path + '/opensankey/save/png'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
-
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/png' })
-    FileSaver.saveAs(newBlob, app_data.file_name + '.png')
-  }
-
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/save/png/post_clean'
-    fetch(url, fetchData)
-  }
-
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile).then(cleanFile)
+  return rasterizeSVGToPNGBlob(svg, target_w, target_h)
+    .then((png) => FileSaver.saveAs(png, app_data.file_name + '.png'))
 }
 
 /**
- * Save sankey as PDF
+ * Wrap a client-rasterized PNG of the SVG into a single-page PDF (pdf-lib).
+ *
+ * The PDF is a high-resolution raster of the export SVG, so it's pixel-faithful
+ * to the .svg / .png exports — no wkhtmltopdf re-render, no server round-trip.
+ * The page is sized in points and the raster supersampled to `dpi`; page aspect
+ * equals the SVG aspect, so the image fills the page without distortion.
+ */
+export const rasterizeSVGToPDFBlob = async (
+  svg_string: string,
+  page_w_pt: number,
+  page_h_pt: number,
+  raster_w: number,
+  raster_h: number
+): Promise<Blob> => {
+  const png = await rasterizeSVGToPNGBlob(svg_string, raster_w, raster_h)
+  const png_bytes = new Uint8Array(await png.arrayBuffer())
+  const pdf = await PDFDocument.create()
+  const image = await pdf.embedPng(png_bytes)
+  const page = pdf.addPage([page_w_pt, page_h_pt])
+  page.drawImage(image, { x: 0, y: 0, width: page_w_pt, height: page_h_pt })
+  const out = await pdf.save()
+  // Re-wrap so the BlobPart buffer type is a plain ArrayBuffer (strict tsc).
+  return new Blob([new Uint8Array(out)], { type: 'application/pdf' })
+}
+
+/**
+ * Save sankey as PDF (client-side high-resolution raster, faithful to the SVG).
  *
  * @param {Class_ApplicationData} app_data
  */
 export const clickSavePDF = (app_data: Class_ApplicationData, dpi: Type_ExportDPI = default_export_dpi) => {
   const svg = app_data.pre_process_export_svg(true)
-  const blob = new Blob([svg], { type: 'image/svg+xml' })
-  const form_data = new FormData()
-  form_data.append('html', blob)
-  form_data.append('dpi', String(dpi))
-
-  if (app_data.drawing_area.is_paper_mode) {
-    const dims = app_data.drawing_area.getPaperDimensionsMm()
-    form_data.append('paper_format', app_data.drawing_area.paper_format)
-    form_data.append('paper_orientation', app_data.drawing_area.paper_orientation)
-    form_data.append('margin_top', app_data.drawing_area.margin_top_mm + 'mm')
-    form_data.append('margin_right', app_data.drawing_area.margin_right_mm + 'mm')
-    form_data.append('margin_bottom', app_data.drawing_area.margin_bottom_mm + 'mm')
-    form_data.append('margin_left', app_data.drawing_area.margin_left_mm + 'mm')
-    // Fallback width/height
-    form_data.append('width', Class_DrawingArea.mmToPx(dims.width).toString())
-    form_data.append('height', Class_DrawingArea.mmToPx(dims.height).toString())
-  } else {
-    form_data.append('width', app_data.drawing_area.width.toString())
-    form_data.append('height', app_data.drawing_area.height.toString())
-  }
-
   post_process_export_svg()
 
-  const path = window.location.origin
-  let url = path + '/opensankey/save/pdf'
-  const fetchData = {
-    method: 'POST',
-    body: form_data
-  }
+  // The export SVG width/height already include the legend and the padding.
+  const src_w = parseFloat(svg.match(/width='([\d.]+)'/)?.[1] ?? '0')
+  const src_h = parseFloat(svg.match(/height='([\d.]+)'/)?.[1] ?? '0')
 
-  const showFile = (blob: BlobPart) => {
-    const newBlob = new Blob([blob], { type: 'application/pdf' })
-    FileSaver.saveAs(newBlob, app_data.file_name + '.pdf')
-  }
+  // Source pixels-per-inch: in paper mode the drawing-area px map to physical mm
+  // (Class_DrawingArea.mmToPx); in free mode treat them as CSS px at 96 dpi.
+  const px_per_inch = app_data.drawing_area.is_paper_mode
+    ? Class_DrawingArea.mmToPx(1) * 25.4
+    : 96
 
-  const cleanFile = () => {
-    const fetchData = {
-      method: 'POST'
-    }
-    url = path + '/opensankey/save/pdf/post_clean'
-    fetch(url, fetchData)
-  }
+  const page_w_pt = src_w / px_per_inch * 72
+  const page_h_pt = src_h / px_per_inch * 72
+  const raster_w = Math.round(src_w / px_per_inch * dpi)
+  const raster_h = Math.round(src_h / px_per_inch * dpi)
 
-  fetch(url, fetchData).then(
-    r => r.blob()
-  )
-    .then(showFile)
-    .then(cleanFile)
+  return rasterizeSVGToPDFBlob(svg, page_w_pt, page_h_pt, raster_w, raster_h)
+    .then((pdf) => FileSaver.saveAs(pdf, app_data.file_name + '.pdf'))
 }
 
 /**
