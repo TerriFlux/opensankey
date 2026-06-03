@@ -89,6 +89,38 @@ const HEX_TAG_SHEET = '#9BBB59' // vert (onglet Etiquettes)
 type Type_Cell = { v?: string | number, s?: any }
 type Type_CellData = { [row: number]: { [col: number]: Type_Cell } }
 
+// Largeur de colonne « auto » : Univer n'expose pas d'auto-fit de colonne dans sa façade (seulement
+// autoFitRow + le double-clic manuel sur la bordure). On estime donc la largeur ici à partir de la
+// longueur max du texte de la colonne (en-tête inclus), bornée à [COL_W_MIN, COL_W_MAX] pour éviter
+// qu'un nom de nœud très long n'étale la colonne sur tout l'écran.
+const COL_W_MIN = 60   // px : largeur plancher (colonnes courtes type Coef/Min/Max)
+const COL_W_MAX = 240  // px : plafond (au-delà, le contenu est tronqué et lisible au survol)
+const COL_W_CHAR = 7   // px : largeur moyenne d'un caractère pour la police par défaut Univer
+const COL_W_PAD = 16   // px : marge interne (gauche + droite) de la cellule
+
+const autoColumnWidths = (
+  cellData: Type_CellData, columnCount: number
+): { [col: number]: { w: number } } => {
+  const maxLen: { [col: number]: number } = {}
+  Object.keys(cellData).forEach((r) => {
+    const row = cellData[Number(r)]
+    Object.keys(row).forEach((c) => {
+      const col = Number(c)
+      const v = row[col] && row[col].v
+      const len = (v === undefined || v === null) ? 0 : String(v).length
+      if (len > (maxLen[col] || 0)) {
+        maxLen[col] = len
+      }
+    })
+  })
+  const out: { [col: number]: { w: number } } = {}
+  for (let col = 0; col < columnCount; col++) {
+    const w = Math.min(COL_W_MAX, Math.max(COL_W_MIN, (maxLen[col] || 0) * COL_W_CHAR + COL_W_PAD))
+    out[col] = { w }
+  }
+  return out
+}
+
 const toHex = (rgb: number[]): string =>
   '#' + rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')
 
@@ -456,8 +488,10 @@ export const buildSankeyWorkbookData = (
 
   const noeudsHeaders = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
 
-  // Colonnes à en-tête vertical (Niveau d'agrégation + étiquettes de niveau) : largeur réduite.
-  const noeudsColumnData: { [col: number]: { w: number } } = { [NOEUDS_COL.level]: { w: 28 } }
+  // Largeur auto depuis le contenu, puis colonnes à en-tête vertical (Niveau d'agrégation +
+  // étiquettes de niveau) forcées à une largeur réduite (texte pivoté -> pas de mesure pertinente).
+  const noeudsColumnData = autoColumnWidths(nodeCells, NOEUDS_CORE_COLS + tagCols.length + 2)
+  noeudsColumnData[NOEUDS_COL.level] = { w: 28 }
   tagCols.forEach((tc, j: number) => {
     if (tc.vertical) {
       noeudsColumnData[NOEUDS_CORE_COLS + j] = { w: 28 }
@@ -475,6 +509,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_FLUX,
         name: 'Flux',
         cellData: fluxCells,
+        columnData: autoColumnWidths(fluxCells, 9),
         rowCount: Math.max(100, links.length + 20),
         columnCount: 9
       },
@@ -491,6 +526,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_TAGS,
         name: 'Etiquettes',
         cellData: tagCells,
+        columnData: autoColumnWidths(tagCells, 6),
         rowCount: Math.max(50, tagRow + 20),
         columnCount: 6
       },
@@ -498,6 +534,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_STOCK,
         name: 'Stocks',
         cellData: stockCells,
+        columnData: autoColumnWidths(stockCells, stockHeaders.length),
         rowCount: Math.max(50, stockRow + 20),
         columnCount: stockHeaders.length
       },
@@ -505,6 +542,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_RATIO,
         name: 'Ratio flux',
         cellData: ratioCells,
+        columnData: autoColumnWidths(ratioCells, ratioHeaders.length),
         rowCount: Math.max(50, ratioRow + 20),
         columnCount: ratioHeaders.length
       },
@@ -512,6 +550,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_RATIO_STOCK,
         name: 'Ratio stock flux',
         cellData: ratioStockCells,
+        columnData: autoColumnWidths(ratioStockCells, ratioStockHeaders.length),
         rowCount: Math.max(50, ratioStockRow + 20),
         columnCount: ratioStockHeaders.length
       },
@@ -519,6 +558,7 @@ export const buildSankeyWorkbookData = (
         id: SHEET_ID_STOCK_CHAINING,
         name: 'Chaînage stock',
         cellData: stockChainCells,
+        columnData: autoColumnWidths(stockChainCells, stockChainHeaders.length),
         rowCount: Math.max(50, stockChainRow + 20),
         columnCount: stockChainHeaders.length
       }
