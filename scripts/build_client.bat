@@ -80,14 +80,14 @@ echo Linking dependencies ------------------------------------------------
 for %%S in (OpenSankey+ LoginComponent) do (
     pushd "!SCRIPT_DIR!\client\src\deps"
     if exist "%%S" rmdir "%%S"
-    mklink /D "%%S" "..\..\..\submodules\%%S\client\src"
+    mklink /J "%%S" "..\..\..\submodules\%%S\client\src"
     popd
 )
 
 for %%S in (OpenSankey+) do (
     pushd "!SCRIPT_DIR!\client\src\deps\LoginComponent\deps"
     if exist "%%S" rmdir "%%S"
-    mklink /D "%%S" "..\..\..\..\..\submodules\%%S\client\src"
+    mklink /J "%%S" "..\..\..\..\..\submodules\%%S\client\src"
     popd
 )
 
