@@ -998,7 +998,15 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
 
     if (input_format == 'blob' && output_format == 'json') {
-      app_data.saveToJSON({ ...output_options_base, ...output_options } as Type_JSON)
+      const save_kwargs = { ...output_options_base, ...output_options } as Type_JSON
+      // "One JSON per view": OSP injects save_all_views_as_json; when the option
+      // is checked and the handler exists, write one standalone JSON per view
+      // (zipped) instead of the single multi-view file.
+      if (save_kwargs['save_one_json_per_view'] && app_data.menu_configuration.save_all_views_as_json) {
+        app_data.menu_configuration.save_all_views_as_json(save_kwargs)
+      } else {
+        app_data.saveToJSON(save_kwargs)
+      }
       setStarted(false)
       setProcessing(false)
       setFailure(false)

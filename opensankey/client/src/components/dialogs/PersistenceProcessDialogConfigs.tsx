@@ -1677,6 +1677,35 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    // OSP only: when checked, the blob→json save writes one standalone JSON per
+    // view (master included), packaged in a single zip, instead of a single
+    // multi-view file. Routed through menu_configuration.save_all_views_as_json,
+    // injected by OpenSankey+. Visible only when saving the current sankey
+    // (input blob) and the diagram actually has views.
+    save_one_json_per_view: {
+      group: 'content',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'One JSON per view (zip)',
+        fr: 'Un JSON par vue (zip)',
+        es: 'Un JSON por vista (zip)',
+        de: 'Ein JSON pro Ansicht (zip)',
+        it: 'Un JSON per vista (zip)'
+      },
+      tooltips: {
+        en: 'Save one standalone JSON file per view (master included), packaged in a single zip, instead of a single multi-view file. Each file re-opens on its own.',
+        fr: 'Enregistrer un fichier JSON autonome par vue (master inclus), regroupés dans un seul zip, au lieu d\'un unique fichier multi-vues. Chaque fichier se rouvre indépendamment.',
+        es: 'Guardar un archivo JSON independiente por vista (master incluido), agrupados en un solo zip, en lugar de un único archivo multivista. Cada archivo se reabre por sí solo.',
+        de: 'Eine eigenständige JSON-Datei pro Ansicht (Master inbegriffen) in einem einzigen Zip speichern, statt einer einzelnen Multi-View-Datei. Jede Datei lässt sich eigenständig wieder öffnen.',
+        it: 'Salvare un file JSON autonomo per vista (master incluso), raggruppati in un unico zip, invece di un singolo file multi-vista. Ogni file si riapre da solo.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'blob' },
+        { type: 'custom', customCheck: (app_data) => (app_data as unknown as { has_views?: boolean }).has_views === true }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     keep_siblings: {
       group: 'content',
       default: false,
