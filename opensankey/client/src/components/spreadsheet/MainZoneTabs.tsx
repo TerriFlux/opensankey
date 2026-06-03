@@ -10,7 +10,7 @@
 // - Le diagramme D3 (#draw_zoom) reste toujours monté ; on ne fait que réserver de la largeur.
 // ==================================================================================================
 
-import React, { useEffect, useReducer, useState } from 'react'
+import React, { useEffect, useReducer, useRef, useState } from 'react'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_MainZoneDocLayout, DOC_LAYOUTS_WITH_SHEET, DOC_LAYOUTS_BOTTOM } from '../../types/MenuConfig'
@@ -141,7 +141,14 @@ export const MainZoneTabs = (
   // (menu_configuration.getMainZoneRight/BottomReservedPx, lues par window_fitting_width/height de
   // toute drawing area) : on déclenche juste le re-fit au commit (toggle, changement de mode/ratio,
   // fin de drag).
+  // On saute le premier run (montage) : App.tsx fait déjà le dessin initial. Ne redessiner que
+  // sur un VRAI changement de disposition, sinon double draw/toast « zone de dessin prête ».
+  const didMount = useRef(false)
   useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true
+      return
+    }
     drawing_area.areaAutoFit()
     app_data.draw()
   }, [showDiagram, showSpreadsheet, showDoc, docLayout, splitRatio, docBottomPx])
