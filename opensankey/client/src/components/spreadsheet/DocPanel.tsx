@@ -231,47 +231,49 @@ export const DocPanel = (
         flex='0 0 auto'
       >
         <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
-        {/* Sélecteur de position de la doc dans la grande zone. */}
-        <Menu placement='bottom-start' isLazy>
-          <MenuButton
-            as={Button}
-            size='xs'
-            variant='outline'
-            fontWeight='normal'
-            rightIcon={<ChevronDownIcon />}
-          >
-            {DOC_POS_LABEL[docLayout]}
-          </MenuButton>
-          <MenuList fontSize='0.85rem' zIndex={1600}>
-            <MenuGroup title='Avec le tableur'>
-              {SHEET_POSITIONS.map(([pos, label]) => (
-                <MenuItem
-                  key={pos}
-                  pl='1.5rem'
-                  isDisabled={!showSpreadsheet}
-                  onClick={() => setDocLayout(pos)}
-                  fontWeight={docLayout === pos ? 'bold' : 'normal'}
-                >
-                  {docLayout === pos ? '✓ ' : ''}{label}
-                </MenuItem>
-              ))}
-            </MenuGroup>
-            <MenuDivider />
-            <MenuItem
-              isDisabled={!showDiagram}
-              onClick={() => setDocLayout('diagram-bottom')}
-              fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
+        {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul). */}
+        {mode !== 'preview' && (
+          <Menu placement='bottom-start' isLazy>
+            <MenuButton
+              as={Button}
+              size='xs'
+              variant='outline'
+              fontWeight='normal'
+              rightIcon={<ChevronDownIcon />}
             >
-              {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
-            </MenuItem>
-            <MenuItem
-              onClick={() => setDocLayout('window-bottom')}
-              fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
-            >
-              {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
-            </MenuItem>
-          </MenuList>
-        </Menu>
+              {DOC_POS_LABEL[docLayout]}
+            </MenuButton>
+            <MenuList fontSize='0.85rem' zIndex={1600}>
+              <MenuGroup title='Avec le tableur'>
+                {SHEET_POSITIONS.map(([pos, label]) => (
+                  <MenuItem
+                    key={pos}
+                    pl='1.5rem'
+                    isDisabled={!showSpreadsheet}
+                    onClick={() => setDocLayout(pos)}
+                    fontWeight={docLayout === pos ? 'bold' : 'normal'}
+                  >
+                    {docLayout === pos ? '✓ ' : ''}{label}
+                  </MenuItem>
+                ))}
+              </MenuGroup>
+              <MenuDivider />
+              <MenuItem
+                isDisabled={!showDiagram}
+                onClick={() => setDocLayout('diagram-bottom')}
+                fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
+              >
+                {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
+              </MenuItem>
+              <MenuItem
+                onClick={() => setDocLayout('window-bottom')}
+                fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
+              >
+                {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        )}
         <Box flex='1 1 auto' />
         <input
           ref={fileInputRef}
@@ -280,15 +282,18 @@ export const DocPanel = (
           style={{ display: 'none' }}
           onChange={onPickImage}
         />
-        <Button
-          size='xs'
-          variant='outline'
-          fontWeight='normal'
-          mr='0.4rem'
-          onClick={() => fileInputRef.current?.click()}
-        >
+        {/* Bouton d'insertion d'image masqué en aperçu seul (rien à éditer). */}
+        {mode !== 'preview' && (
+          <Button
+            size='xs'
+            variant='outline'
+            fontWeight='normal'
+            mr='0.4rem'
+            onClick={() => fileInputRef.current?.click()}
+          >
           Insérer une image
-        </Button>
+          </Button>
+        )}
         {view_sources.length > 0 && (
           <Menu placement='bottom-end' isLazy>
             <MenuButton
