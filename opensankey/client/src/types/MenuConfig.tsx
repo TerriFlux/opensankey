@@ -419,6 +419,13 @@ export class Class_MenuConfig {
         }>
       }
   > = undefined
+  /**
+   * Optional handler that saves one standalone JSON file per view, packaged in a
+   * single zip. Injected by OSP (views are an OSP feature). When set, the
+   * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
+   * blob→json save through this instead of the single-file saveToJSON.
+   */
+  public save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
   /** Optional extra menu items appended to the top "Aide" dropdown (after Visite guidée / Tutoriels). Injected by SA (e.g. Sankeythèque) or other extensions. */
   public extra_help_menu_items?: Array<
     {
