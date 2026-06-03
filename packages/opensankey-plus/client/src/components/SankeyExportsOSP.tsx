@@ -32,6 +32,7 @@ import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
 import { default_main_sankey_id } from '../deps/OpenSankey/types/Utils'
 import { default_export_dpi, Type_ExportDPI } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
+import { rasterizeSVGToPNGBlob, rasterizeSVGToPDFBlob } from '../deps/OpenSankey/components/topmenus/SankeyExports'
 
 // ===========================================================================
 // Helpers
@@ -49,48 +50,42 @@ const getViewLabel = (app_data: Class_ApplicationDataOSP, view_id: string): stri
   return app_data.views_dict[view_id]?.name ?? view_id
 }
 
-// Build the form body used by /opensankey/save/png — same contract as clickSavePNG in OS
-const buildPNGFormData = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): FormData => {
+// Capture the current view as a PNG blob, rendered client-side (same path as
+// clickSavePNG in OS). Replaces the previous /opensankey/save/png round-trip
+// through wkhtmltoimage, so multi-view exports (zip / GIF / WebM) are now pixel
+// -faithful to the SVG export. Size logic mirrors the former buildPNGFormData.
+const captureViewAsPNGBlob = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): Promise<Blob> => {
   const svg = app_data.pre_process_export_svg(true)
-  const form_data = new FormData()
-  form_data.append('html', new Blob([svg], { type: 'image/svg+xml' }))
   const legend_w = !app_data.drawing_area.legend.masked ? app_data.drawing_area.legend.width : 0
-  let size_to_send = ''
+  let target_w: number, target_h: number
   if (app_data.drawing_area.is_paper_mode) {
     const dims = app_data.drawing_area.getPaperDimensionsMm()
-    const w_px = Math.round(dims.width / 25.4 * dpi)
-    const h_px = Math.round(dims.height / 25.4 * dpi)
-    size_to_send = w_px + ' ' + h_px
+    target_w = Math.round(dims.width / 25.4 * dpi)
+    target_h = Math.round(dims.height / 25.4 * dpi)
   } else {
-    const w = Math.round(app_data.drawing_area.width) + legend_w
-    const h = Math.round(app_data.drawing_area.height)
-    size_to_send = w + ' ' + h
+    target_w = Math.round(app_data.drawing_area.width) + legend_w
+    target_h = Math.round(app_data.drawing_area.height)
   }
-  form_data.append('size', size_to_send)
-  return form_data
+  return rasterizeSVGToPNGBlob(svg, target_w, target_h)
 }
 
-// Build the form body used by /opensankey/save/pdf — same contract as clickSavePDF in OS
-const buildPDFFormData = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): FormData => {
+// Capture the current view as a single-page PDF blob, rendered client-side (same
+// path as clickSavePDF in OS): a high-resolution raster of the SVG embedded via
+// pdf-lib. Faithful to the SVG export, mirrors clickSavePDF's page/raster sizing.
+const captureViewAsPDFBlob = (app_data: Class_ApplicationDataOSP, dpi: Type_ExportDPI): Promise<Blob> => {
   const svg = app_data.pre_process_export_svg(true)
-  const form_data = new FormData()
-  form_data.append('html', new Blob([svg], { type: 'image/svg+xml' }))
-  form_data.append('dpi', String(dpi))
-  if (app_data.drawing_area.is_paper_mode) {
-    const dims = app_data.drawing_area.getPaperDimensionsMm()
-    form_data.append('paper_format', app_data.drawing_area.paper_format)
-    form_data.append('paper_orientation', app_data.drawing_area.paper_orientation)
-    form_data.append('margin_top', app_data.drawing_area.margin_top_mm + 'mm')
-    form_data.append('margin_right', app_data.drawing_area.margin_right_mm + 'mm')
-    form_data.append('margin_bottom', app_data.drawing_area.margin_bottom_mm + 'mm')
-    form_data.append('margin_left', app_data.drawing_area.margin_left_mm + 'mm')
-    form_data.append('width', Class_DrawingArea.mmToPx(dims.width).toString())
-    form_data.append('height', Class_DrawingArea.mmToPx(dims.height).toString())
-  } else {
-    form_data.append('width', app_data.drawing_area.width.toString())
-    form_data.append('height', app_data.drawing_area.height.toString())
-  }
-  return form_data
+  // The export SVG width/height already include the legend and padding.
+  const src_w = parseFloat(svg.match(/width='([\d.]+)'/)?.[1] ?? '0')
+  const src_h = parseFloat(svg.match(/height='([\d.]+)'/)?.[1] ?? '0')
+  // Paper mode: drawing-area px map to physical mm; free mode: CSS px at 96 dpi.
+  const px_per_inch = app_data.drawing_area.is_paper_mode
+    ? Class_DrawingArea.mmToPx(1) * 25.4
+    : 96
+  const page_w_pt = src_w / px_per_inch * 72
+  const page_h_pt = src_h / px_per_inch * 72
+  const raster_w = Math.round(src_w / px_per_inch * dpi)
+  const raster_h = Math.round(src_h / px_per_inch * dpi)
+  return rasterizeSVGToPDFBlob(svg, page_w_pt, page_h_pt, raster_w, raster_h)
 }
 
 // ===========================================================================
@@ -139,23 +134,17 @@ const iterateAllViews = async <T,>(
 
 /**
  * Export every view (master included) as a PNG and package them into a single .zip.
- * Uses the existing /opensankey/save/png endpoint once per view.
+ * Renders each view client-side (same path as clickSavePNG in OS).
  */
 export const exportAllViewsAsPNGZip = async (
   app_data: Class_ApplicationDataOSP,
   dpi: Type_ExportDPI = default_export_dpi
 ): Promise<void> => {
-  const endpoint = window.location.origin + '/opensankey/save/png'
   const zip = new JSZip()
   const used_names = new Set<string>()
 
-  const results = await iterateAllViews(app_data, async (_view_id, label) => {
-    const form_data = buildPNGFormData(app_data, dpi)
-    const response = await fetch(endpoint, { method: 'POST', body: form_data })
-    const blob = await response.blob()
-    // Best-effort backend cleanup, same as clickSavePNG
-    fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
-    return blob
+  const results = await iterateAllViews(app_data, async (_view_id, _label) => {
+    return captureViewAsPNGBlob(app_data, dpi)
   })
 
   results.forEach(({ label, payload }) => {
@@ -175,20 +164,15 @@ export const exportAllViewsAsPNGZip = async (
 
 /**
  * Export every view (master included) as PDF pages concatenated into a single PDF.
- * Calls /opensankey/save/pdf once per view, then merges client-side with pdf-lib.
+ * Renders each view client-side (raster of the SVG), then merges with pdf-lib.
  */
 export const exportAllViewsAsPDFMerged = async (
   app_data: Class_ApplicationDataOSP,
   dpi: Type_ExportDPI = default_export_dpi
 ): Promise<void> => {
-  const endpoint = window.location.origin + '/opensankey/save/pdf'
-
   const results = await iterateAllViews(app_data, async () => {
-    const form_data = buildPDFFormData(app_data, dpi)
-    const response = await fetch(endpoint, { method: 'POST', body: form_data })
-    const buf = await response.arrayBuffer()
-    fetch(window.location.origin + '/opensankey/save/pdf/post_clean', { method: 'POST' }).catch(() => undefined)
-    return buf
+    const blob = await captureViewAsPDFBlob(app_data, dpi)
+    return blob.arrayBuffer()
   })
 
   const merged = await PDFDocument.create()
@@ -232,13 +216,8 @@ const captureSelectedViewsAsPNG = async (
   unique_view_ids: string[],
   dpi: Type_ExportDPI
 ): Promise<Map<string, { label: string; blob: Blob }>> => {
-  const endpoint = window.location.origin + '/opensankey/save/png'
   const results = await iterateAllViews(app_data, async () => {
-    const form_data = buildPNGFormData(app_data, dpi)
-    const response = await fetch(endpoint, { method: 'POST', body: form_data })
-    const blob = await response.blob()
-    fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
-    return blob
+    return captureViewAsPNGBlob(app_data, dpi)
   }, unique_view_ids)
   const map = new Map<string, { label: string; blob: Blob }>()
   results.forEach(({ view_id, label, payload }) => map.set(view_id, { label, blob: payload }))
@@ -420,7 +399,6 @@ const captureSequenceTagsAsPNG = async (
   tag_ids: string[],
   dpi: Type_ExportDPI
 ): Promise<Map<string, { label: string; blob: Blob }>> => {
-  const endpoint = window.location.origin + '/opensankey/save/png'
   const tags_by_id = new Map(tagg.tags_list.map((t) => [t.id, t]))
   const original_selected_ids = tagg.selected_tags_list.map((t) => t.id)
   const map = new Map<string, { label: string; blob: Blob }>()
@@ -431,10 +409,7 @@ const captureSequenceTagsAsPNG = async (
       if (!tag) continue
       tagg.selectTagsFromIds([tag_id])
       await waitForNextFrame()
-      const form_data = buildPNGFormData(app_data, dpi)
-      const response = await fetch(endpoint, { method: 'POST', body: form_data })
-      const blob = await response.blob()
-      fetch(window.location.origin + '/opensankey/save/png/post_clean', { method: 'POST' }).catch(() => undefined)
+      const blob = await captureViewAsPNGBlob(app_data, dpi)
       map.set(tag_id, { label: tag.name, blob })
     }
   } finally {
