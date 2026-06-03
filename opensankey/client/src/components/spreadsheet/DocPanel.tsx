@@ -17,6 +17,9 @@ import {
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import ReactMarkdown from 'react-markdown'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Type_MainZoneDocLayout } from '../../types/MenuConfig'
@@ -348,7 +351,12 @@ export const DocPanel = (
         {showPreview && (
           <Box flex='1 1 50%' minWidth={0}>
             <div className='os-md-preview' style={PREVIEW_STYLE}>
-              <ReactMarkdown urlTransform={resolveUrl} components={{ a: LinkRenderer }}>{text}</ReactMarkdown>
+              <ReactMarkdown
+                remarkPlugins={[remarkMath]}
+                rehypePlugins={[rehypeKatex]}
+                urlTransform={resolveUrl}
+                components={{ a: LinkRenderer }}
+              >{text}</ReactMarkdown>
             </div>
           </Box>
         )}
