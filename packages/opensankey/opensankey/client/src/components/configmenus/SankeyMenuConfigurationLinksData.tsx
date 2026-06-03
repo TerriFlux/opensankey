@@ -30,6 +30,7 @@ import { TFunction } from 'i18next'
 import { ValueOptionType, value_option_percent_constants_source, value_option_percent_constants_target } from '../../Elements/LinkValues'
 import { Class_LinkElement } from '../../Elements/Link'
 import { Box, Button } from '@chakra-ui/react'
+import { FaExchangeAlt } from 'react-icons/fa'
 import {
   RowSetter2Cols, DataTagSelector, OSTooltip,
   BOX2COLS, BOX2COLSTITLEH4,
@@ -406,6 +407,8 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
     >
       <Box
         display='grid'
+        gridColumn='1'
+        gridRow='1 / 3'
         gridTemplateColumns='1fr'
         gridTemplateRows='1fr 1fr'
         gridRowGap='0.25rem'
@@ -460,6 +463,27 @@ export const MenuConfigurationLinksData = ({ app_data }: { app_data: Class_Appli
           </InputGroup>
         </OSTooltip>
       </Box>
+      {/* Bouton inversion origine <-> destination */}
+      <OSTooltip label={t('Flux.tooltips.if')}>
+        <Button
+          variant='menuconfigpanel_option_button'
+          gridColumn='2'
+          gridRow='1 / 3'
+          alignSelf='center'
+          justifySelf='stretch'
+          height='2.25rem'
+          width='100%'
+          minWidth='unset'
+          padding='0'
+          isDisabled={selected_links.length !== 1}
+          onClick={() => {
+            selected_links.forEach(link => link.swapSourceAndTarget())
+            refreshThisAndUpdateRelatedComponents()
+          }}
+        >
+          <FaExchangeAlt size='1rem' style={{ transform: 'rotate(90deg)' }} />
+        </Button>
+      </OSTooltip>
     </Box>
     {/* Data tags selector */}
     {data_taggs_list.map(data_tagg => {
