@@ -2952,6 +2952,20 @@ const layerStyles = {
     gridTemplateColumns: '1fr 9fr'
   },
 
+  // Wrapper des sélecteurs d'éléments (MultiSelect rmsc). Le panneau déroulant
+  // de la lib est `position:absolute; z-index:1` : sans ce relèvement il passe
+  // derrière les sections de menu qui suivent (qui créent leurs propres
+  // contextes d'empilement) et paraît tronqué juste après « Tout sélectionner ».
+  submenuconfig_droplist: {
+    width: '100%',
+    '.rmsc .dropdown-content': {
+      zIndex: 'dropdown',
+    },
+    '.rmsc .options': {
+      maxHeight: '18rem',
+    },
+  },
+
   selector_elements: {
     width: '9rem',
     height: '1.5rem',

@@ -366,6 +366,9 @@ export const UniverSpreadSheet = (
           UniverSheetsCorePreset({
             container: liveContainer,
             toolbar: false,
+            // formulaBar: false -> retire la barre de formule (nom de cellule + fx + contenu) en
+            // haut de la grille : inutile ici (pas de saisie de formules, juste de la donnée tabulaire).
+            formulaBar: false,
             footer: { statisticBar: false }
           }),
           // Filtre (autofilter Excel : flèche par colonne, tri, recherche, valeurs) + tri par colonne.
