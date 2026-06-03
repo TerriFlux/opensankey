@@ -693,6 +693,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
   name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
   name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_text_angle!: NameLabelAttributeTypes['text_angle']
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
@@ -749,6 +750,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
   value_label_box_width!: ValueLabelAttributeTypes['box_width']
   value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_text_angle!: ValueLabelAttributeTypes['text_angle']
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
@@ -1048,6 +1050,7 @@ export class Class_ElementStyle {
   name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
   name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
   name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_text_angle!: NameLabelAttributeTypes['text_angle']
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
@@ -1091,6 +1094,7 @@ export class Class_ElementStyle {
   value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
   value_label_box_width!: ValueLabelAttributeTypes['box_width']
   value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_text_angle!: ValueLabelAttributeTypes['text_angle']
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']

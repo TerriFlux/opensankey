@@ -1210,6 +1210,29 @@ export const BASE_LABEL_CONFIG = {
       it: 'Orientare il testo verticalmente'
     }
   } satisfies AttributeConfig<boolean>,
+  // Angle de rotation libre du texte, en degrés (−180..180). Remplace le toggle
+  // `vertical_text` dans l'UI ; `vertical_text` est conservé pour la rétro-compat
+  // (anciens fichiers) et interprété comme −90° tant que text_angle vaut 0.
+  text_angle: {
+    default: 0 as number,
+    type: (() => 0) as (() => number),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Text angle',
+      fr: 'Angle du texte',
+      es: 'Ángulo del texto',
+      de: 'Textwinkel',
+      it: 'Angolo del testo'
+    },
+    tooltips: {
+      en: 'Rotate the text by an angle (−180° to 180°)',
+      fr: 'Pivoter le texte d\'un angle (−180° à 180°)',
+      es: 'Girar el texto un ángulo (−180° a 180°)',
+      de: 'Text um einen Winkel drehen (−180° bis 180°)',
+      it: 'Ruotare il testo di un angolo (−180° a 180°)'
+    }
+  } satisfies AttributeConfig<number>,
   position_absolute: {
     default: false as boolean,
     type: (() => false) as (() => boolean),

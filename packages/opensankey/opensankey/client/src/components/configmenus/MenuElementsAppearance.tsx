@@ -6,7 +6,7 @@
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
 import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
-import { MdTextRotateVertical, MdTextRotationNone } from 'react-icons/md'
+import { MdTextRotationAngleup } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
@@ -82,6 +82,51 @@ import {
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
+
+/**
+ * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
+ * "texte vertical". Icône (texte incliné) en guise de libellé + champ numérique
+ * compact, occupe une demi-largeur de zone. −90° = ancien mode vertical ; 0° = horizontal.
+ */
+const TextAngleControl = ({
+  app_data,
+  elements,
+  prefix,
+  refreshParentComponent
+}: {
+  app_data: Class_ApplicationData
+  elements: ElementsType
+  prefix: 'name_label' | 'value_label' | 'icon'
+  refreshParentComponent: () => void
+}) => {
+  const t = app_data.t
+  const menu_for_style = elements.length > 0 && elements[0] instanceof Class_ElementStyle
+  const attribute_values = getConfigValues(elements, BASE_LABEL_CONFIG, prefix, refreshParentComponent)
+  return (
+    <Box display='flex' alignItems='center' gap='0.35rem' mr='1rem'>
+      <OSTooltip label={t(`Noeud.labels.tooltips.${prefix}_text_angle`)}>
+        <Box as='span' display='inline-flex' alignItems='center' justifyContent='center' fontSize='1.2rem' flexShrink={0}>
+          <MdTextRotationAngleup />
+        </Box>
+      </OSTooltip>
+      <Box flex='1' minW='0'>
+        <ConfigMenuNumberInput
+          t={t}
+          default_value={Number(attribute_values.text_angle ?? 0)}
+          function_on_blur={(value) => { attribute_values.text_angle = (value ?? 0) }}
+          menu_for_style={menu_for_style}
+          minimum_value={-180}
+          maximum_value={180}
+          step={5}
+          stepper={true}
+          unit_text='°'
+          multiValue={isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_angle', prefix)}
+          isOverloaded={isElementAttributeOverloaded(elements, prefix + '_text_angle' as keyof typeof BASE_LABEL_CONFIG, BASE_LABEL_CONFIG)}
+        />
+      </Box>
+    </Box>
+  )
+}
 
 // ✅ Analyse de la sélection
 interface SelectionAnalysis {
@@ -615,26 +660,13 @@ const LabelContentComponent = ({
               getIsIndeterminate={() => isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'text_align', prefix)}
               t={t}
             />
-
-            <OverloadedButton
-              elements={elements}
-              config={BASE_LABEL_CONFIG}
-              attributePath={attributePath}
-              prefix={prefix}
-              attributeKey="vertical_text"
-              variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
-              onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
-            >
-              {<span style={{
-                display: 'inline-flex',
-                width: '1rem',
-                height: '1rem',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}>{labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
-            </OverloadedButton>
           </Box>
+          <TextAngleControl
+            app_data={app_data}
+            elements={elements}
+            prefix={prefix as 'name_label' | 'value_label' | 'icon'}
+            refreshParentComponent={refreshParentComponent}
+          />
           <ColorPickerWithSustainable
             app_data={app_data}
             elements={elements}
@@ -649,28 +681,14 @@ const LabelContentComponent = ({
       }
 
       {/* En rich_text le formatage (alignement, couleur) est géré par l'éditeur HTML, mais
-        vertical_text est une rotation globale du label → on l'expose ici aussi. */}
+        l'angle du texte est une rotation globale du label → on l'expose ici aussi. */}
       {displayMode === 'rich_text' && (
-        <Box layerStyle='options_4cols'>
-          <OverloadedButton
-            elements={elements}
-            config={BASE_LABEL_CONFIG}
-            attributePath={attributePath}
-            prefix={prefix}
-            attributeKey="vertical_text"
-            variant={getButtonVariant('', isConfigValueIndeterminate(elements, BASE_LABEL_CONFIG, 'vertical_text', prefix), labelValues.vertical_text)}
-            onClick={() => { labelValues.vertical_text = !labelValues.vertical_text }}
-          >
-            {<span style={{
-              display: 'inline-flex',
-              width: '1rem',
-              height: '1rem',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>{labelValues.vertical_text ? <MdTextRotateVertical /> : <MdTextRotationNone />}</span>}
-          </OverloadedButton>
-        </Box>
+        <TextAngleControl
+          app_data={app_data}
+          elements={elements}
+          prefix={prefix as 'name_label' | 'value_label' | 'icon'}
+          refreshParentComponent={refreshParentComponent}
+        />
       )}
 
       {/* Section ICON */}
