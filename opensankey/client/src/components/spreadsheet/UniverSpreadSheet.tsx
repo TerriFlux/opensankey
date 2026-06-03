@@ -635,6 +635,7 @@ export const UniverSpreadSheet = (
           isChecked={onlyVisible}
           onChange={(e) => toggleOnlyVisible(e.target.checked)}
           flexShrink={0}
+          width='auto'
         >
           <Text fontSize='xs'>Visibles uniquement</Text>
         </Checkbox>
