@@ -203,6 +203,10 @@ export class Class_MenuConfig {
   // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
   protected _main_zone_doc_bottom_px: number = 280
   protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
+  // Part de la colonne droite donnée au TABLEUR quand la doc est accolée (modes sheet-*) ; la doc
+  // occupe le reste. Réglée par le séparateur tableur/doc. Vaut pour l'axe horizontal (sheet-left/
+  // right) comme vertical (sheet-top/bottom).
+  protected _main_zone_doc_sheet_ratio: number = 0.5
   protected _main_zone_listeners: Array<() => void> = []
   protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
   public get main_zone_show_diagram() { return this._main_zone_show_diagram }
@@ -217,6 +221,8 @@ export class Class_MenuConfig {
   public set main_zone_doc_bottom_px(v: number) { this._main_zone_doc_bottom_px = v; this._notifyMainZone() }
   public get main_zone_split_ratio() { return this._main_zone_split_ratio }
   public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
+  public get main_zone_doc_sheet_ratio() { return this._main_zone_doc_sheet_ratio }
+  public set main_zone_doc_sheet_ratio(v: number) { this._main_zone_doc_sheet_ratio = v; this._notifyMainZone() }
   public addMainZoneListener(l: () => void): () => void {
     this._main_zone_listeners.push(l)
     return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
@@ -272,7 +278,8 @@ export class Class_MenuConfig {
       show_doc: this._main_zone_show_doc,
       doc_layout: this._main_zone_doc_layout,
       doc_bottom_px: this._main_zone_doc_bottom_px,
-      split_ratio: this._main_zone_split_ratio
+      split_ratio: this._main_zone_split_ratio,
+      doc_sheet_ratio: this._main_zone_doc_sheet_ratio
     }
   }
 
@@ -288,6 +295,7 @@ export class Class_MenuConfig {
     if ([...DOC_LAYOUTS_WITH_SHEET, ...DOC_LAYOUTS_BOTTOM].includes(layout)) this._main_zone_doc_layout = layout
     this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
     this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
+    this._main_zone_doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', this._main_zone_doc_sheet_ratio)
     this._notifyMainZone()
   }
 
