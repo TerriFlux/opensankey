@@ -1460,6 +1460,34 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * Reverse link direction by swapping its source and target nodes.
+   * Done in one shot to avoid the transient source === target state
+   * that the source/target setters would otherwise read as a recycling link.
+   * @memberof Class_LinkElement
+   */
+  public swapSourceAndTarget() {
+    const old_source = this._source
+    const old_target = this._target
+    // Recycling link (source === target) : nothing to swap
+    if (old_source === old_target)
+      return
+    // Re-register the link on its nodes WITHOUT going through the source/target
+    // setters. Those setters (reached transitively via add*Link → `link.source = this`)
+    // would momentarily see source === target and wrongly flag the link as recycling.
+    // We unregister, flip the private refs, then re-register: by the time
+    // add*Link runs, _source/_target already hold the new values so the setters
+    // it calls are no-ops and shape_is_recycling stays untouched.
+    old_source.removeOutputLink(this)
+    old_target.removeInputLink(this)
+    this._source = old_target
+    this._target = old_source
+    old_target.addOutputLink(this) // old_target is the new source
+    old_source.addInputLink(this) // old_source is the new target
+    // Set to recompute visibility from nodes after
+    this._are_source_and_target_displayed = undefined
+  }
+
+  /**
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
