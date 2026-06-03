@@ -30,7 +30,7 @@ import { PDFDocument } from 'pdf-lib'
 import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import { Class_DrawingArea } from '../deps/OpenSankey/types/DrawingArea'
 import { Class_DataTagGroup } from '../deps/OpenSankey/types/TagGroup'
-import { default_main_sankey_id } from '../deps/OpenSankey/types/Utils'
+import { default_main_sankey_id, Type_JSON } from '../deps/OpenSankey/types/Utils'
 import { default_export_dpi, Type_ExportDPI } from '../deps/OpenSankey/Elements/ElementsAttributesConfig'
 import { rasterizeSVGToPNGBlob, rasterizeSVGToPDFBlob } from '../deps/OpenSankey/components/topmenus/SankeyExports'
 
@@ -184,6 +184,49 @@ export const exportAllViewsAsPDFMerged = async (
   const merged_bytes = await merged.save()
   const merged_blob = new Blob([new Uint8Array(merged_bytes)], { type: 'application/pdf' })
   FileSaver.saveAs(merged_blob, sanitizeFileName(app_data.file_name) + '_all_views.pdf')
+}
+
+/**
+ * Export every view (master included) as a standalone JSON, packaged into a
+ * single .zip — one .json file per view. Each view is switched in turn (via
+ * iterateAllViews) and serialized with ``only_current_view: true`` so the
+ * produced file is a self-contained diagram that re-opens on its own. The
+ * master view is serialized as the plain base diagram: its embedded ``views`` /
+ * ``current_view`` metadata is stripped so the file isn't the whole multi-view
+ * bundle. ``output_options`` are the JSON save options from the dialog
+ * (with_values, keep_siblings, ...), forwarded verbatim to toJSON.
+ */
+export const exportAllViewsAsJSONZip = async (
+  app_data: Class_ApplicationDataOSP,
+  output_options: Type_JSON = {}
+): Promise<void> => {
+  const zip = new JSZip()
+  const used_names = new Set<string>()
+
+  const results = await iterateAllViews(app_data, async (view_id) => {
+    const json = app_data.toJSON({ ...output_options, only_current_view: true }) as Type_JSON
+    if (view_id === default_main_sankey_id) {
+      // Master: drop the embedded views so the file is the master diagram alone,
+      // not a duplicate of the full multi-view bundle.
+      delete json['views']
+      delete json['current_view']
+    }
+    return JSON.stringify(json)
+  })
+
+  results.forEach(({ label, payload }) => {
+    let file_name = sanitizeFileName(label) + '.json'
+    let dedup = 2
+    while (used_names.has(file_name)) {
+      file_name = sanitizeFileName(label) + '_' + dedup + '.json'
+      dedup += 1
+    }
+    used_names.add(file_name)
+    zip.file(file_name, payload)
+  })
+
+  const zip_blob = await zip.generateAsync({ type: 'blob' })
+  FileSaver.saveAs(zip_blob, sanitizeFileName(app_data.file_name) + '_all_views_json.zip')
 }
 
 // ===========================================================================
@@ -445,6 +488,11 @@ export const exportAnimatedDataTagSequence = async (
 
 export const registerExtraExportMenuItems = (app_data: Class_ApplicationDataOSP): void => {
   const mc = app_data.menu_configuration
+  // Expose the "one JSON per view" save to the OS persistence dialog. The dialog
+  // (OpenSankey, view-agnostic) calls this when its ``save_one_json_per_view``
+  // JSON output option is checked. Views are an OSP concept, so the actual
+  // serialization lives here.
+  mc.save_all_views_as_json = (kwargs: Type_JSON) => exportAllViewsAsJSONZip(app_data, kwargs)
   // All multi-view exports (PNG/PDF/GIF) are OpenSankey+ features. SVG stays free in MenuTop.
   const disabled_guard = () => !app_data.has_sankey_plus || !app_data.has_views || app_data.views_order.length === 0
   // Empty string => no tooltip wrapper (entry is enabled and self-explanatory).
