@@ -58,16 +58,22 @@ export const useMainZone = (app_data: Class_ApplicationData) => {
     docLayout: mc.main_zone_doc_layout,
     docBottomPx: mc.main_zone_doc_bottom_px,
     splitRatio: mc.main_zone_split_ratio,
+    docSheetRatio: mc.main_zone_doc_sheet_ratio,
     setShowDiagram: (v: boolean) => { mc.main_zone_show_diagram = v },
     setShowSpreadsheet: (v: boolean) => { mc.main_zone_show_spreadsheet = v },
     setShowDoc: (v: boolean) => { mc.main_zone_show_doc = v },
     setDocLayout: (v: Type_MainZoneDocLayout) => { mc.main_zone_doc_layout = v },
     setDocBottomPx: (v: number) => { mc.main_zone_doc_bottom_px = v },
-    setSplitRatio: (v: number) => { mc.main_zone_split_ratio = v }
+    setSplitRatio: (v: number) => { mc.main_zone_split_ratio = v },
+    setDocSheetRatio: (v: number) => { mc.main_zone_doc_sheet_ratio = v }
   }
 }
 
 const clampRatio = (r: number) => Math.min(MAX_RATIO, Math.max(MIN_RATIO, r))
+// Bornes du partage tableur/doc dans la colonne droite (modes sheet-*).
+const DOC_SHEET_MIN = 0.15
+const DOC_SHEET_MAX = 0.85
+const clampDocSheet = (r: number) => Math.min(DOC_SHEET_MAX, Math.max(DOC_SHEET_MIN, r))
 const MIN_DOC_PX = 120
 const MIN_ABOVE_PX = 120
 const SEP = '1px solid #e2e8f0'
@@ -89,8 +95,8 @@ export const MainZoneTabs = (
   { app_data }: { app_data: Class_ApplicationData }
 ) => {
   const {
-    showDiagram, showSpreadsheet, showDoc, docLayout, docBottomPx, splitRatio,
-    setDocLayout, setDocBottomPx
+    showDiagram, showSpreadsheet, showDoc, docLayout, docBottomPx, splitRatio, docSheetRatio,
+    setDocLayout, setDocBottomPx, setDocSheetRatio
   } = useMainZone(app_data)
 
   const drawing_area = app_data.drawing_area
@@ -126,6 +132,10 @@ export const MainZoneTabs = (
   const docH = (docBottomMode && !docAlone)
     ? Math.min(Math.max(MIN_DOC_PX, effDocPx), Math.max(MIN_DOC_PX, contentH - MIN_ABOVE_PX))
     : 0
+
+  // Ratio "live" du séparateur tableur/doc (part du tableur dans la colonne droite, modes sheet-*).
+  const [dragDocSheet, setDragDocSheet] = useState<number | null>(null)
+  const effDocSheet = clampDocSheet(dragDocSheet != null ? dragDocSheet : docSheetRatio)
 
   // Le diagramme se recadre dans la largeur/hauteur restantes via les réserves globales
   // (menu_configuration.getMainZoneRight/BottomReservedPx, lues par window_fitting_width/height de
@@ -179,6 +189,33 @@ export const MainZoneTabs = (
   const vDividerX = W - rightSlotW
   const showHDivider = docBottomMode && !docAlone
 
+  // --- Séparateur tableur/doc dans la colonne droite (modes sheet-*) ---
+  // N'existe que si les DEUX (tableur + doc accolée) sont affichés ; oriente selon l'axe d'accolement.
+  const showDocSheetDivider = rightColumnShown && showSpreadsheet && docWithSheet
+  const docSheetRow = docLayout === 'sheet-right' || docLayout === 'sheet-left'
+  const rightColW = showDiagram ? rightSlotW : W
+  // Ratio (part du tableur) déduit de la position souris, selon le mode d'accolement.
+  const docSheetFromMouse = (clientX: number, clientY: number): number => {
+    let r: number
+    if (docLayout === 'sheet-right') r = (clientX - rightLeft) / rightColW
+    else if (docLayout === 'sheet-left') r = (W - clientX) / rightColW
+    else if (docLayout === 'sheet-bottom') r = (clientY - contentTop) / contentH
+    else /* sheet-top */ r = (contentBottom - clientY) / contentH
+    return clampDocSheet(r)
+  }
+  const onDocSheetDividerDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const move = (ev: MouseEvent) => { setDragDocSheet(docSheetFromMouse(ev.clientX, ev.clientY)) }
+    const up = (ev: MouseEvent) => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      setDragDocSheet(null)
+      setDocSheetRatio(docSheetFromMouse(ev.clientX, ev.clientY))
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }
+
   const docPanelEl = (
     <DocPanel
       app_data={app_data}
@@ -220,11 +257,23 @@ export const MainZoneTabs = (
         >
           {showSpreadsheet && (
             <div style={{
-              flex: '1 1 0', minHeight: 0, minWidth: 0,
+              // Avec un séparateur tableur/doc : taille pilotée par le ratio ; sinon partage 50/50.
+              flex: showDocSheetDivider ? `0 0 ${effDocSheet * 100}%` : '1 1 0',
+              minHeight: 0, minWidth: 0,
               ...(docWithSheet ? sheetBorder(docLayout) : {})
             }}>
               <UniverSpreadSheet app_data={app_data} active={showSpreadsheet} />
             </div>
+          )}
+          {showDocSheetDivider && (
+            <div
+              onMouseDown={onDocSheetDividerDown}
+              style={{
+                flex: '0 0 6px',
+                cursor: docSheetRow ? 'col-resize' : 'row-resize',
+                background: '#cbd5e0'
+              }}
+            />
           )}
           {docWithSheet && (
             <div style={{ flex: '1 1 0', minHeight: 0, minWidth: 0 }}>
