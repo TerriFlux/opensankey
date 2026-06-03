@@ -239,6 +239,7 @@ export const DocPanel = (
               size='xs'
               variant='outline'
               fontWeight='normal'
+              width='auto'
               rightIcon={<ChevronDownIcon />}
             >
               {DOC_POS_LABEL[docLayout]}
@@ -288,19 +289,21 @@ export const DocPanel = (
             size='xs'
             variant='outline'
             fontWeight='normal'
+            width='auto'
             mr='0.4rem'
             onClick={() => fileInputRef.current?.click()}
           >
           Insérer une image
           </Button>
         )}
-        {view_sources.length > 0 && (
+        {mode !== 'preview' && view_sources.length > 0 && (
           <Menu placement='bottom-end' isLazy>
             <MenuButton
               as={Button}
               size='xs'
               variant='outline'
               fontWeight='normal'
+              width='auto'
               mr='0.4rem'
               rightIcon={<ChevronDownIcon />}
             >
