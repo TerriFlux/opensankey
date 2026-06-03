@@ -105,9 +105,8 @@ pushd "!SCRIPT_DIR!\client\src\deps"
 if exist "OpenSankey" (
     rmdir OpenSankey
 )
-mklink /D OpenSankey "..\..\..\submodules\OpenSankey\opensankey\client\src"
+mklink /J OpenSankey "..\..\..\submodules\OpenSankey\opensankey\client\src"
 popd
-*
 REM === Public directory ===
 pushd "!SCRIPT_DIR!\client"
 if exist "public" (
