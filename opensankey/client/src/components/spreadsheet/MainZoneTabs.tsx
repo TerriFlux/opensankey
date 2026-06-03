@@ -99,6 +99,13 @@ export const MainZoneTabs = (
     setDocLayout, setDocBottomPx, setDocSheetRatio
   } = useMainZone(app_data)
 
+  // Re-render on viewport resize so fixed-position panels stay within the browser window.
+  const [, forceResize] = useReducer((n: number) => n + 1, 0)
+  useEffect(() => {
+    window.addEventListener('resize', forceResize)
+    return () => window.removeEventListener('resize', forceResize)
+  }, [])
+
   const drawing_area = app_data.drawing_area
   const navH = drawing_area.getNavBarHeight ? drawing_area.getNavBarHeight() : 56
   const bottomH = drawing_area.getBottomBarHeight ? drawing_area.getBottomBarHeight() : 0

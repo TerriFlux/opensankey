@@ -226,106 +226,111 @@ export const DocPanel = (
       {/* Barre d'outils : bascule Édition / Aperçu / Côte à côte */}
       <Box
         display='flex'
+        flexWrap='wrap'
+        justifyContent='space-between'
         alignItems='center'
-        gap='0.5rem'
+        gap='0.25rem 0.5rem'
         padding='0.3rem 0.6rem'
         borderBottom='1px solid'
         borderColor='gray.200'
         flex='0 0 auto'
       >
-        <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
-        {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul). */}
-        {mode !== 'preview' && (
-          <Menu placement='bottom-start' isLazy>
-            <MenuButton
-              as={Button}
+        {/* Groupe gauche : libellé + sélecteur de position */}
+        <Box display='flex' alignItems='center' gap='0.5rem' flex='0 0 auto'>
+          <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
+          {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul). */}
+          {mode !== 'preview' && (
+            <Menu placement='bottom-start' isLazy>
+              <MenuButton
+                as={Button}
+                size='xs'
+                variant='outline'
+                fontWeight='normal'
+                width='auto'
+                rightIcon={<ChevronDownIcon />}
+              >
+                {DOC_POS_LABEL[docLayout]}
+              </MenuButton>
+              <MenuList fontSize='0.85rem' zIndex={1600}>
+                <MenuGroup title='Avec le tableur'>
+                  {SHEET_POSITIONS.map(([pos, label]) => (
+                    <MenuItem
+                      key={pos}
+                      pl='1.5rem'
+                      isDisabled={!showSpreadsheet}
+                      onClick={() => setDocLayout(pos)}
+                      fontWeight={docLayout === pos ? 'bold' : 'normal'}
+                    >
+                      {docLayout === pos ? '✓ ' : ''}{label}
+                    </MenuItem>
+                  ))}
+                </MenuGroup>
+                <MenuDivider />
+                <MenuItem
+                  isDisabled={!showDiagram}
+                  onClick={() => setDocLayout('diagram-bottom')}
+                  fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
+                >
+                  {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
+                </MenuItem>
+                <MenuItem
+                  onClick={() => setDocLayout('window-bottom')}
+                  fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
+                >
+                  {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          )}
+        </Box>
+        {/* Groupe droit : boutons d'insertion et bascule de mode */}
+        <Box display='flex' alignItems='center' gap='0.4rem' flex='0 0 auto'>
+          <input
+            ref={fileInputRef}
+            type='file'
+            accept='image/*'
+            style={{ display: 'none' }}
+            onChange={onPickImage}
+          />
+          {/* Bouton d'insertion d'image masqué en aperçu seul (rien à éditer). */}
+          {mode !== 'preview' && (
+            <Button
               size='xs'
               variant='outline'
               fontWeight='normal'
               width='auto'
-              rightIcon={<ChevronDownIcon />}
+              onClick={() => fileInputRef.current?.click()}
             >
-              {DOC_POS_LABEL[docLayout]}
-            </MenuButton>
-            <MenuList fontSize='0.85rem' zIndex={1600}>
-              <MenuGroup title='Avec le tableur'>
-                {SHEET_POSITIONS.map(([pos, label]) => (
-                  <MenuItem
-                    key={pos}
-                    pl='1.5rem'
-                    isDisabled={!showSpreadsheet}
-                    onClick={() => setDocLayout(pos)}
-                    fontWeight={docLayout === pos ? 'bold' : 'normal'}
-                  >
-                    {docLayout === pos ? '✓ ' : ''}{label}
+            Insérer une image
+            </Button>
+          )}
+          {mode !== 'preview' && view_sources.length > 0 && (
+            <Menu placement='bottom-end' isLazy>
+              <MenuButton
+                as={Button}
+                size='xs'
+                variant='outline'
+                fontWeight='normal'
+                width='auto'
+                rightIcon={<ChevronDownIcon />}
+              >
+                Lien vers une vue
+              </MenuButton>
+              <MenuList fontSize='0.85rem' zIndex={1600} maxHeight='16rem' overflowY='auto'>
+                {view_sources.map(({ id, name }) => (
+                  <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
+                    {name}
                   </MenuItem>
                 ))}
-              </MenuGroup>
-              <MenuDivider />
-              <MenuItem
-                isDisabled={!showDiagram}
-                onClick={() => setDocLayout('diagram-bottom')}
-                fontWeight={docLayout === 'diagram-bottom' ? 'bold' : 'normal'}
-              >
-                {docLayout === 'diagram-bottom' ? '✓ ' : ''}Sous le diagramme
-              </MenuItem>
-              <MenuItem
-                onClick={() => setDocLayout('window-bottom')}
-                fontWeight={docLayout === 'window-bottom' ? 'bold' : 'normal'}
-              >
-                {docLayout === 'window-bottom' ? '✓ ' : ''}Bandeau bas (pleine largeur)
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        )}
-        <Box flex='1 1 auto' />
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='image/*'
-          style={{ display: 'none' }}
-          onChange={onPickImage}
-        />
-        {/* Bouton d'insertion d'image masqué en aperçu seul (rien à éditer). */}
-        {mode !== 'preview' && (
-          <Button
-            size='xs'
-            variant='outline'
-            fontWeight='normal'
-            width='auto'
-            mr='0.4rem'
-            onClick={() => fileInputRef.current?.click()}
-          >
-          Insérer une image
-          </Button>
-        )}
-        {mode !== 'preview' && view_sources.length > 0 && (
-          <Menu placement='bottom-end' isLazy>
-            <MenuButton
-              as={Button}
-              size='xs'
-              variant='outline'
-              fontWeight='normal'
-              width='auto'
-              mr='0.4rem'
-              rightIcon={<ChevronDownIcon />}
-            >
-              Lien vers une vue
-            </MenuButton>
-            <MenuList fontSize='0.85rem' zIndex={1600} maxHeight='16rem' overflowY='auto'>
-              {view_sources.map(({ id, name }) => (
-                <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
-                  {name}
-                </MenuItem>
-              ))}
-            </MenuList>
-          </Menu>
-        )}
-        <ButtonGroup spacing='0.15rem'>
-          <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
-          <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
-          <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
-        </ButtonGroup>
+              </MenuList>
+            </Menu>
+          )}
+          <ButtonGroup spacing='0.15rem'>
+            <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
+            <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
+            <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
+          </ButtonGroup>
+        </Box>
       </Box>
 
       {/* Corps : éditeur et/ou aperçu */}
