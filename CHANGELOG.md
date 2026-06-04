@@ -11,6 +11,10 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
+## [Unreleased]
+
+_(à compléter)_
+
 ## [1.1.5] — 2026-06-04
 
 ### Application intégrée : tableur + documentation côte à côte avec le diagramme ([su-model/sankeyapplication#163](https://gitlab.com/su-model/sankeyapplication/-/issues/163), [#167](https://gitlab.com/su-model/sankeyapplication/-/issues/167))
