@@ -142,6 +142,7 @@ dev_opensankey:
     # Clean and pull repo
     - git config --global --add safe.directory $REPO_FOLDER
     - cd $REPO_FOLDER
+    - rm -f .git/index.lock || true
     - git reset --hard
     - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
