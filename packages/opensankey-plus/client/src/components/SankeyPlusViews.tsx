@@ -207,11 +207,12 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
       size='sizeMenuTopButton'
       isDisabled={!activate_button_to_create_view}
       onClick={() => {
-        const evt = document
-        const evt_ctrl_x = new KeyboardEvent('keydown', { key: 'x', ctrlKey: true })
-        if (evt.onkeydown) {
-          evt.onkeydown(evt_ctrl_x)
-        }
+        // Crée une vue VIDE (indépendante du diagramme courant)
+        const view_id = makeId('view')
+        app_data.createNewView(view_id, t('view.new_view_name'), false)
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+        app_data.setCurrentView(view_id)
+        app_data.menu_configuration_osp.updateComponentRelatedToViews()
       }}
     >
       <Box
@@ -232,6 +233,52 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
           gridRow="2"
         >
           {t('Menu.addView')}
+        </Box>
+      </Box>
+    </Button>
+  </OSTooltip>
+
+  // Button to copy the current view ----------------------------------------------------
+
+  const activate_button_to_copy_view = has_sankey_plus
+  const button_to_copy_view = <OSTooltip
+    placement='bottom'
+    label={
+      (!has_sankey_plus) ?
+        (t('Menu.sankeyOSPDisabled')) :
+        t('view.tooltips.buttonCloneView')}
+  >
+    <Button
+      variant='button_banner_view'
+      size='sizeMenuTopButton'
+      isDisabled={!activate_button_to_copy_view}
+      onClick={() => {
+        // Copie la vue courante dans une nouvelle vue (équivalent Ctrl+X)
+        const view_id = makeId('view')
+        app_data.createNewView(view_id, 'Copie de ' + app_data.drawing_area.name, true)
+        app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
+        app_data.setCurrentView(view_id)
+        app_data.menu_configuration_osp.updateComponentRelatedToViews()
+      }}
+    >
+      <Box
+        layerStyle='banner_view_buttons'
+      >
+        <Box
+          gridRow="1"
+          padding="0.1rem 0 0.1rem 0"
+        >
+          {icon_copy}
+          {
+            !has_sankey_plus ?
+              logo_locked
+              : <></>
+          }
+        </Box>
+        <Box
+          gridRow="2"
+        >
+          {t('Menu.cloneView')}
         </Box>
       </Box>
     </Button>
@@ -563,6 +610,12 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const buttonGroupView = <ButtonGroup
     className='BannerView'
     style={style}
+    // Uniformise la taille de toutes les icônes du bandeau. Elles viennent de 3
+    // conventions différentes : FontAwesome (taille via son CSS global, sans attribut
+    // width/height), react-icons (height/width="1em") et logos SVG (height/width en
+    // dur, ex 1.8rem). On force un carré identique avec !important pour battre le CSS
+    // FA + les attributs en dur ; le viewBox garde le ratio (pas de distorsion).
+    sx={{ svg: { width: '0.95rem !important', height: '0.95rem !important' } }}
   >
     {/* Load + Save  */}
     {is_editable && app_data.has_sankey_plus ? input_loader_json_catalog : <></>}
@@ -573,6 +626,7 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
 
     {/* Create, switch between or delete views */}
     {is_editable && app_data.has_sankey_plus ? button_to_create_view : <></>}
+    {is_editable && app_data.has_sankey_plus ? button_to_copy_view : <></>}
     {button_to_prev_view}
     {button_to_next_view}
     <Box
@@ -1500,9 +1554,9 @@ const TabImportExcelDataForUnitary = ({ app_data }: { app_data: Class_Applicatio
                   success: { title: t('toast.u_v_loaded') },
                   loading: { title: t('toast.u_v_loading') }
                 }
-            )
-          }}
-        >
+              )
+            }}
+          >
             {t('view.create')}
           </Button>
         </OSTooltip>

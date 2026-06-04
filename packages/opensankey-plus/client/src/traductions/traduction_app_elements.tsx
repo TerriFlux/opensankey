@@ -51,6 +51,7 @@ export const resources_app_elements = {
 
         'home': 'Master',
         'addView': 'Add',
+        'cloneView': 'Copy',
         'updateView': 'Update',
         'precView': 'Prec.',
         'nextView': 'Next',
@@ -231,6 +232,7 @@ export const resources_app_elements = {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
         'select': 'Select View',
+        'new_view_name': 'New view',
         'actual': 'Sankey master',
         'name': 'Name',
         'delete': 'Delete',
@@ -547,6 +549,7 @@ export const resources_app_elements = {
 
         'home': 'Maître',
         'addView': 'Ajout',
+        'cloneView': 'Copier',
         'updateView': 'M-à-j',
         'precView': 'Préc.',
         'nextView': 'Suiv.',
@@ -702,6 +705,7 @@ export const resources_app_elements = {
 
         'storytelling': 'Gestion des vues',
         'select': 'Sélection Vue',
+        'new_view_name': 'Nouvelle vue',
         'actual': 'Sankey maître',
         'name': 'Nom',
         'delete': 'Suppr.',
@@ -1015,6 +1019,7 @@ export const resources_app_elements = {
 
         'home': 'Principal',
         'addView': 'Añadir',
+        'cloneView': 'Copiar',
         'updateView': 'Actualizar',
         'precView': 'Ant.',
         'nextView': 'Sig.',
@@ -1192,6 +1197,7 @@ export const resources_app_elements = {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
         'select': 'Seleccionar vista',
+        'new_view_name': 'Nueva vista',
         'actual': 'Sankey principal',
         'name': 'Nombre',
         'delete': 'Eliminar',
@@ -1500,6 +1506,7 @@ export const resources_app_elements = {
 
         'home': 'Master',
         'addView': 'Hinzufügen',
+        'cloneView': 'Kopieren',
         'updateView': 'Aktualisieren',
         'precView': 'Zurück',
         'nextView': 'Weiter',
@@ -1677,6 +1684,7 @@ export const resources_app_elements = {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
         'select': 'Ansicht auswählen',
+        'new_view_name': 'Neue Ansicht',
         'actual': 'Sankey-Master',
         'name': 'Name',
         'delete': 'Löschen',
@@ -1985,6 +1993,7 @@ export const resources_app_elements = {
 
         'home': 'Principale',
         'addView': 'Aggiungi',
+        'cloneView': 'Copia',
         'updateView': 'Aggiorna',
         'precView': 'Prec.',
         'nextView': 'Succ.',
@@ -2162,6 +2171,7 @@ export const resources_app_elements = {
         'unit': 'Unit.',
         'storytelling': 'Storytelling',
         'select': 'Seleziona vista',
+        'new_view_name': 'Nuova vista',
         'actual': 'Sankey principale',
         'name': 'Nome',
         'delete': 'Elimina',
