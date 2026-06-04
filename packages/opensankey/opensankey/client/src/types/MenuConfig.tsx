@@ -316,6 +316,7 @@ export class Class_MenuConfig {
   private _ref_to_menu_updater: MutableRefObject<() => void>
   private _ref_to_submenu_updater: MutableRefObject<() => void>
   private _ref_to_spreadsheet: MutableRefObject<(() => void)>
+  private _ref_to_doc: MutableRefObject<(() => void)>
 
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<[boolean, (b: boolean) => void]>
@@ -480,6 +481,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
+    this._ref_to_doc = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
@@ -898,6 +900,8 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    // Resynchronise le panneau Doc markdown (un nouveau fichier / diagramme a pu être chargé).
+    this.ref_to_doc.current()
     this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
   }
 
@@ -1208,6 +1212,10 @@ export class Class_MenuConfig {
 
   public get ref_to_spreadsheet(): MutableRefObject<(() => void)> {
     return this._ref_to_spreadsheet
+  }
+
+  public get ref_to_doc(): MutableRefObject<(() => void)> {
+    return this._ref_to_doc
   }
 
   public get ref_menu_opened(): MutableRefObject<[boolean, (b: boolean) => void]> {
