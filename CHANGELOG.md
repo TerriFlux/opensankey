@@ -4,6 +4,10 @@ Format basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/).
 
 ## [Unreleased]
 
+### Added (import Excel dans la seule vue courante)
+
+- **Option « Charger seulement dans la vue courante » à l'import Excel** ([PersistenceProcessDialogConfigs.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialogConfigs.tsx), [PersistenceProcessDialog.tsx](opensankey/client/src/components/dialogs/PersistenceProcessDialog.tsx)) : nouvelle case (groupe « Contenu lu ») dans le dialogue d'ouverture Excel. Cochée, le fichier est chargé dans la seule vue active via le chemin `view_only` existant de `retrieveJSONResults` (`reset({only_current_view:true})` + `DrawingAreaPersistence.fromJSON`), sans réinitialiser le diagramme maître ni les autres vues ; décochée, l'import remplace tout le diagramme comme avant. La case n'est visible (et cochée par défaut) que lorsqu'on est dans une vue (`drawing_area.id !== default_main_sankey_id`) ; sur le diagramme principal le comportement est inchangé. Le calcul de `view_only` au chargement prend désormais en compte ce flag pour `input_format == 'excel'` (en plus du cas blob→blob). Option purement front : `load_sankey(**kwargs)` côté serveur l'ignore. i18n 5 langues.
+
 ### Added (verrou de taille — cadrage figé entre dataTags, #1240)
 
 - **Verrou de taille** ([MenuBottom.tsx](opensankey/client/src/components/topmenus/MenuBottom.tsx), [DrawingArea.tsx](opensankey/client/src/types/DrawingArea.tsx), [css/IconLibrairie.tsx](opensankey/client/src/css/IconLibrairie.tsx)) : nouveau bouton (barre du bas) qui fige hauteur, largeur et zoom — `areaAutoFit` devient inerte, donc plus de reflow d'un dataTag à l'autre. Aucun recalcul : on fige le cadrage courant (l'utilisateur se place sur le dataTag voulu, le plus grand, puis verrouille) ; `draw()` capture et réapplique le transform de zoom à travers le re-init du SVG. Setter `size_locked` (déverrouiller ⇒ re-fit), champ direct recopié dans `copyAttrFrom`. État de session, non persisté, défaut `false`. Icônes police/taille distinctes (A / ↕ + cadenas), i18n 5 langues. Related: su-model/sankeyapplication#1240.
