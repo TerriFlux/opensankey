@@ -669,7 +669,16 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       // we change view and don't want to save current modification
       if (id !== default_main_sankey_id) {
         // Update view with heredited attr from configured source (master by default)
-        this.reapplyHeriditedAttrToCurrentView()
+        this._drawing_area.bypass_redraws = true
+        const attrs_by_source = this._heredited_attr[id] ?? {}
+        // Apply in cascade following views_order
+        ;[default_main_sankey_id, ...this._views_order].forEach((source_id: string) => {
+          const attrs = attrs_by_source[source_id]
+          if (attrs && attrs.length > 0) {
+            const source_da = this.getDrawingAreaFromViewId(source_id)
+            if (source_da) updateFrom(this._drawing_area, source_da, attrs)
+          }
+        })
         // Create a clone of current view's DA
         if (!this.is_static) {
           const clone_drawing_area = this.createNewDrawingArea(makeId(this._drawing_area.id))
@@ -828,31 +837,6 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     this._views[view_id].json = compressJSONToGzip(
       DrawingAreaPersistenceOSP.toJSON(this._drawing_area as Class_DrawingAreaOSP)
     )
-  }
-
-  /**
-   * Re-apply the heredited_attr cascade onto the current view's drawing area.
-   *
-   * Used both on view switch (cf. _setCurrentView) and after in-place mutations
-   * of the active view's DA — e.g. reconciliation / completion reloading the
-   * view from server JSON via retrieveJSONResults, which would otherwise drop
-   * the attributes the view inherits from the master / other views.
-   *
-   * @memberof Class_ApplicationDataOSP
-   */
-  public override reapplyHeriditedAttrToCurrentView(): void {
-    const id = this._drawing_area.id
-    if (id === default_main_sankey_id) return
-    this._drawing_area.bypass_redraws = true
-    const attrs_by_source = this._heredited_attr[id] ?? {}
-    // Apply in cascade following views_order (master first)
-    ;[default_main_sankey_id, ...this._views_order].forEach((source_id: string) => {
-      const attrs = attrs_by_source[source_id]
-      if (attrs && attrs.length > 0) {
-        const source_da = this.getDrawingAreaFromViewId(source_id)
-        if (source_da) updateFrom(this._drawing_area, source_da, attrs)
-      }
-    })
   }
 
   public saveBeforeChangingView() {
