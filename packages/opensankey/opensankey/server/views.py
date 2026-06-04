@@ -88,16 +88,6 @@ image_template_folder = os.path.join(
     "images",
 )
 
-# SankeyData (tutoriels/templates servis) est le submodule SA-only monte a la
-# racine du checkout SA. Ce fichier vit 6 niveaux sous cette racine
-# (submodules/OpenSankey+/submodules/OpenSankey/opensankey/server/) : on en
-# deduit le chemin, ce qui evite une variable d'environnement dediee. Hors de ce
-# layout (OpenSankey standalone), le chemin n'existe pas et le chargement
-# retombe sur MFAData.
-sankey_data_folder = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), *([os.pardir] * 6), "SankeyData")
-)
-
 
 def get_process_state():  # ← Plus de paramètre session_id
     """Récupère l'état depuis Flask session"""
@@ -431,11 +421,15 @@ def launch_conversion():
 
         if input_format == "example_excel" or input_format == "example_json":
             exemple = request.form["file_name"]
-            # Les tutoriels/templates migres vivent dans le submodule SankeyData ;
-            # les exemples historiques restent dans MFAData. On resout SankeyData
-            # en priorite, avec repli sur MFAData.
-            candidate = os.path.join(sankey_data_folder, exemple)
-            if os.path.exists(candidate):
+            # Les tutoriels/templates migres vivent dans le submodule SankeyData
+            # (env SANKEY_DATA, posee automatiquement par app.py depuis la racine
+            # du checkout) ; les exemples historiques restent dans MFAData. On
+            # resout SANKEY_DATA en priorite, avec repli sur MFAData. NB : on ne
+            # peut PAS deduire le chemin depuis __file__ ici, car opensankey est
+            # installe (copie) en site-packages cote serveur.
+            sankey_data = os.environ.get("SANKEY_DATA")
+            candidate = os.path.join(sankey_data, exemple) if sankey_data else None
+            if candidate and os.path.exists(candidate):
                 input_file_name = candidate
             else:
                 input_file_name = os.path.join(os.environ.get("MFAData"), exemple)
