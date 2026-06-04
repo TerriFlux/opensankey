@@ -1,34 +1,34 @@
 #!/usr/bin/env bash
-# regenerate_testdata_refs.sh — Regenere les references *.json dans <SA>/TestData
+# regenerate_testdata_refs.sh — Regenere les references *.json dans <SA>/SankeyData/tests
 # pour les 3 suites de tests d'integration qui en dependent : SEP, MFA, OS.
 #
 # Usage : scripts/regenerate_testdata_refs.sh [SA_ROOT]
 #
 # Workflow attendu :
-#   1. Ajouter ton .xlsx dans <SA>/TestData/<MonDossier>/
+#   1. Ajouter ton .xlsx dans <SA>/SankeyData/tests/<MonDossier>/
 #   2. scripts/regenerate_testdata_refs.sh
-#   3. cd <SA>/TestData && git diff   (inspecte le diff souhaite)
-#   4. cd <SA>/TestData && git add . && git commit -m "test: ..."
+#   3. cd <SA>/SankeyData && git diff   (inspecte le diff souhaite)
+#   4. cd <SA>/SankeyData && git add . && git commit -m "test: ..."
 #      -> le hook post-commit (si installe) propose la cascade bump+push.
 #
 # Prerequis :
 #   - SEP, MFA, OpenSankey installes editable dans l'env Python courant
 #     (verif : `python -c "import SankeyExcelParser, mfa_problem"`)
-#   - Submodule TestData initialise dans SA (`git submodule update --init TestData`)
+#   - Submodule SankeyData initialise dans SA (`git submodule update --init SankeyData`)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SA_ROOT="${1:-$(cd "$SCRIPT_DIR/.." && pwd)}"
 
-TD="$SA_ROOT/TestData"
+TD="$SA_ROOT/SankeyData"
 [ -d "$TD" ] || { echo "ERR: $TD introuvable" >&2; exit 1; }
 
 SEP="$SA_ROOT/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser"
 OS="$SA_ROOT/submodules/OpenSankey+/submodules/OpenSankey"
 MFA="$SA_ROOT/submodules/MFAProblem"
 
-export TESTS_DIR="$TD"
+export TESTS_DIR="$TD/tests"
 
 echo "================================================================"
 echo " regenerate_testdata_refs.sh"

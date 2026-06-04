@@ -97,7 +97,7 @@ test:
     - echo $CI_PROJECT_DIR
     - source /home/gitlab-runner/gitlab_dev/bin/activate
     - export EIGEN_INCLUDE=$CI_PROJECT_DIR/submodules/MFAProblem/submodules/eigen
-    - export TESTS_DIR=$CI_PROJECT_DIR/TestData
+    - export TESTS_DIR=$CI_PROJECT_DIR/SankeyData/tests
     # Force-reinstall SEP and MFAProblem from the SA-pinned submodule paths so the
     # shared runner venv reflects this pipeline's pins (otherwise a previous job on
     # the runner can leave a stale install and tests run against the wrong code).
@@ -153,7 +153,7 @@ dev_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
-    - git config --global --add safe.directory $REPO_FOLDER/TestData
+    - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx
@@ -250,7 +250,7 @@ prod_opensankey:
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser
-    - git config --global --add safe.directory $REPO_FOLDER/TestData
+    - git config --global --add safe.directory $REPO_FOLDER/SankeyData
     - git submodule init
     - git submodule foreach --recursive git reset --hard
     - git submodule foreach --recursive git clean -fdx

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # install_testdata_hook.sh — Installe testdata_post_commit_hook.sh dans
-# <SA>/TestData/.git/hooks/post-commit.
+# <SA>/SankeyData/.git/hooks/post-commit.
 #
 # Depuis le retrait du submodule TestData de OS+/OS/SEP/MFA, TestData n'est
 # plus embarque que dans SankeyApplication. Un seul hook a poser.
@@ -22,7 +22,7 @@ if [ ! -f "$HOOK_SRC" ]; then
   exit 1
 fi
 
-TD="$SA_ROOT/TestData"
+TD="$SA_ROOT/SankeyData"
 if [ ! -e "$TD" ]; then
   echo "ERR: $TD pas initialise (git submodule update --init ?)" >&2
   exit 1

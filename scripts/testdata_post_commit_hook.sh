@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# testdata_post_commit_hook.sh — Hook post-commit pose dans <SA>/TestData/.git/hooks/.
+# testdata_post_commit_hook.sh — Hook post-commit pose dans <SA>/SankeyData/.git/hooks/.
 #
-# A chaque commit dans TestData, propose de pousser TestData + bumper le
+# A chaque commit dans SankeyData, propose de pousser SankeyData + bumper le
 # pointeur dans SA + commit/push SA, via bump_testdata.sh.
 #
 # Installation : scripts/install_testdata_hook.sh
@@ -39,7 +39,7 @@ SHORT="$(git -C "$TD_DIR" rev-parse --short=12 HEAD)"
 
 echo
 echo "================================================================"
-echo " TestData : commit detecte"
+echo " SankeyData : commit detecte"
 echo " SA root    : $SA_ROOT"
 echo " Target SHA : $SHORT"
 echo "================================================================"
