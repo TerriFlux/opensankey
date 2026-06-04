@@ -311,6 +311,13 @@ export const translations = {
       de: 'Beispiel laden',
       it: 'Carica esempio'
     },
+    load_tutorial: {
+      en: 'Loading tutorial',
+      fr: 'Chargement du tutoriel',
+      es: 'Cargando tutorial',
+      de: 'Tutorial laden',
+      it: 'Caricamento tutorial'
+    },
     no_input_file_detected: {
       en: 'No file has been selected',
       fr: 'Aucun fichier n\'a été sélectionné',
@@ -1995,6 +2002,23 @@ export const CONVERTER_CONFIGS = {
   } satisfies ConverterConfig,
   load_example_json: {
     title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example_json']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  load_tutorial: {
+    title: 'ProcessDialog.load_tutorial',
     launch_button_label: 'ProcessDialog.load',
     server_endpoint: '/opensankey/convert/launch',
     input: {
