@@ -1,5 +1,5 @@
 # Init all submodules recursively, then deinit the nested TestData/ working trees.
-# Only SA/TestData/ remains populated (the single shared test data source).
+# Only SA/SankeyData/ remains populated (the single shared test+content data source).
 $ErrorActionPreference = "Stop"
 
 $saRoot = (git rev-parse --show-toplevel).Trim()
@@ -22,5 +22,5 @@ foreach ($parent in $nestedParents) {
 }
 
 Write-Host ""
-Write-Host "TestData populated at: $saRoot/TestData"
-Write-Host "Set TESTS_DIR=$saRoot/TestData in your environment (see start_vscode.bat)."
+Write-Host "SankeyData populated at: $saRoot/SankeyData"
+Write-Host "Set TESTS_DIR=$saRoot/SankeyData/tests in your environment (see start_vscode.bat)."

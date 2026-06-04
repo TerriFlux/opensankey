@@ -8,5 +8,5 @@
 	path = submodules/MFAProblem
 	url = https://gitlab.com/su-model/mfa_problem.git
 [submodule "TestData"]
-	path = TestData
-	url = https://gitlab.com/su-model/tests.git
+	path = SankeyData
+	url = https://gitlab.com/su-model/SankeyData.git
