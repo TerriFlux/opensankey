@@ -420,9 +420,18 @@ def launch_conversion():
         output_file_name = os.path.join(tmp_dir, f"output{ext_map[output_format]}")
 
         if input_format == "example_excel" or input_format == "example_json":
-            data_folder = os.environ.get("MFAData")
             exemple = request.form["file_name"]
-            input_file_name = os.path.join(data_folder, exemple)
+            # Les tutoriels/templates migres vivent dans le submodule SankeyData
+            # (env SANKEY_DATA) ; les exemples historiques restent dans MFAData.
+            # On resout SANKEY_DATA en priorite, avec repli sur MFAData.
+            input_file_name = None
+            sankey_data = os.environ.get("SANKEY_DATA")
+            if sankey_data:
+                candidate = os.path.join(sankey_data, exemple)
+                if os.path.exists(candidate):
+                    input_file_name = candidate
+            if input_file_name is None:
+                input_file_name = os.path.join(os.environ.get("MFAData"), exemple)
             extension = os.path.splitext(input_file_name)[1]
             if extension == '.xlsx':
                 input_format = 'excel'
@@ -1265,27 +1274,6 @@ def menus_examples():
         print(str(expt))
         response = Response(response=str(expt), status=500, mimetype="application/json")
         return response
-
-    return response
-
-
-@opensankey.route("/menus/tutorials", methods=["POST"])
-def data_tuto():
-    """
-    Return data from MFAData/Formation/Tutoriels
-
-    Returns
-    -------
-    :return: object formated for Component ModalTuto
-    :rtype: object
-    """
-    data_folder = os.environ.get("MFAData")
-    data_folder += "/Formations/Tutoriels"
-    menus = {}
-    parse_folder(data_folder, menus)
-    context = menus
-    json_data = json.dumps(context)
-    response = Response(response=json_data, status=200, mimetype="application/json")
 
     return response
 
