@@ -610,12 +610,6 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const buttonGroupView = <ButtonGroup
     className='BannerView'
     style={style}
-    // Uniformise la taille de toutes les icônes du bandeau. Elles viennent de 3
-    // conventions différentes : FontAwesome (taille via son CSS global, sans attribut
-    // width/height), react-icons (height/width="1em") et logos SVG (height/width en
-    // dur, ex 1.8rem). On force un carré identique avec !important pour battre le CSS
-    // FA + les attributs en dur ; le viewBox garde le ratio (pas de distorsion).
-    sx={{ svg: { width: '0.95rem !important', height: '0.95rem !important' } }}
   >
     {/* Load + Save  */}
     {is_editable && app_data.has_sankey_plus ? input_loader_json_catalog : <></>}
