@@ -323,7 +323,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // via le universal converter, sans modale de navigation par dossiers.
   const open_tutorial_file = () => {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
-      CONVERTER_CONFIGS['load_example_json'], 'tutorials/Tutoriel.json.gz', true
+      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/Tutoriel.json.gz', true
     )
     ref_setter_show_modal_file_converter.current!(true)
   }
