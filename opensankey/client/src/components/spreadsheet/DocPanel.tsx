@@ -116,6 +116,13 @@ export const DocPanel = (
     }
   }, [active])
 
+  // Resynchronise même panneau déjà ouvert : chargement d'un fichier / nouveau diagramme déclenche
+  // updateAllMenuComponents() qui appelle cette ref (cf. le tableur via ref_to_spreadsheet).
+  useEffect(() => {
+    app_data.menu_configuration.ref_to_doc.current = () => setText(app_data.documentation_markdown)
+    return () => { app_data.menu_configuration.ref_to_doc.current = () => null }
+  }, [app_data])
+
   const applyText = (value: string) => {
     setText(value)
     app_data.documentation_markdown = value
