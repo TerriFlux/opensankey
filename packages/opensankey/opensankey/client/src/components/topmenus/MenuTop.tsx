@@ -24,7 +24,7 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
+import React, { useState, useEffect, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
 import { ChevronDownIcon, InfoOutlineIcon } from '@chakra-ui/icons'
 import parse from 'html-react-parser'
@@ -1270,6 +1270,7 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
  *   - REACT_APP_GIT_COMMIT      short commit hash
  *   - REACT_APP_GIT_COMMIT_DATE commit date (YYYY-MM-DD)
  *   - REACT_APP_CHANGELOG_URL   link to the changelog (lists current + previous versions)
+ *   - REACT_APP_VERSIONS_URL    endpoint returning archived versions [{ version, url }]
  */
 const AppInfoPopover = () => {
   const version = process.env.REACT_APP_VERSION ?? ''
@@ -1278,6 +1279,28 @@ const AppInfoPopover = () => {
   const git_commit = process.env.REACT_APP_GIT_COMMIT ?? ''
   const git_commit_date = process.env.REACT_APP_GIT_COMMIT_DATE ?? ''
   const changelog_url = process.env.REACT_APP_CHANGELOG_URL ?? ''
+  const versions_url = process.env.REACT_APP_VERSIONS_URL ?? ''
+
+  // Archived versions are discovered at runtime: the list grows after each
+  // deploy, so it can't be inlined at build time like the fields above. Only
+  // fetched when the consumer provides REACT_APP_VERSIONS_URL; the endpoint
+  // returns [{ version, url }]. Any failure is swallowed — the section just
+  // stays hidden (e.g. offline, static export, endpoint absent).
+  const [prev_versions, setPrevVersions] = useState<{ version: string, url: string }[]>([])
+  useEffect(() => {
+    if (!versions_url) return
+    let cancelled = false
+    fetch(versions_url)
+      .then(r => (r.ok ? r.json() : []))
+      .then(list => { if (!cancelled && Array.isArray(list)) setPrevVersions(list) })
+      .catch(() => { /* hide the section on failure */ })
+    return () => { cancelled = true }
+  }, [versions_url])
+
+  // Deployed build's bare version (channel suffix .a/.b stripped) so we can
+  // flag the current one if it's already among the archived slots.
+  const current_bare = version.replace(/\.[ab]$/, '')
+
   return <Popover placement='bottom-end' trigger='hover' openDelay={150}>
     <PopoverTrigger>
       <IconButton
@@ -1308,6 +1331,13 @@ const AppInfoPopover = () => {
             {git_commit && <Text color='gray.500'>
               Commit {git_commit}{git_commit_date && ` · ${git_commit_date}`}
             </Text>}
+            {prev_versions.length > 0 && <Divider my='0.25rem' />}
+            {prev_versions.length > 0 && <Text color='gray.500' fontSize='xs'>Versions précédentes</Text>}
+            {prev_versions.map(v => (
+              v.version === current_bare
+                ? <Text key={v.version} fontWeight='semibold'>v{v.version} (actuelle)</Text>
+                : <Link key={v.version} href={v.url} color='blue.500'>v{v.version}</Link>
+            ))}
             {changelog_url && <Divider my='0.25rem' />}
             {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
               Changelog
