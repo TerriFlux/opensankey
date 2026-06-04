@@ -420,6 +420,13 @@ export const retrieveJSONResults = (
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
   }
+  // In view_only mode the view's DA was reloaded from server JSON, which drops
+  // the attributes the view inherits from the master / other views. Re-apply the
+  // heredited_attr cascade before drawing & caching so the inheritance survives
+  // reconciliation / completion (no-op on plain OS / on the master view).
+  if (view_only) {
+    app_data.reapplyHeriditedAttrToCurrentView()
+  }
   app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
 

@@ -922,6 +922,17 @@ export class Class_ApplicationData {
   }
 
   /**
+   * Re-apply the inherited-attribute cascade (heredited_attr) onto the current
+   * view's drawing area. No-op for plain OS; ApplicationDataOSP overrides it so
+   * that mutations done in place on a view (e.g. reconciliation reloading the
+   * view's DA from server JSON) keep the attributes the view inherits from the
+   * master / other views instead of dropping them.
+   */
+  public reapplyHeriditedAttrToCurrentView(): void {
+    // No-op: plain ApplicationData has no views nor inheritance.
+  }
+
+  /**
    * Update current drawing area data from a json_object
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
