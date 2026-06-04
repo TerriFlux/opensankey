@@ -325,6 +325,18 @@ export const retrieveJSONResults = (
   // if (text === '{}')
   //   return
   const current_json = app_data.toJSON()
+  // Layout source for the "keep the starting layout" transfer (updateFromJSON below).
+  // app_data.toJSON() serialises the MASTER at top-level; when we are inside a view,
+  // the active view's own DA JSON lives under ['views'][view_id] (refreshed from the
+  // live DA by _toJSON). In view_only mode we must re-apply THAT view's layout, not
+  // the master's top-level one — otherwise the reconciled view ends up with the
+  // master positions/styles instead of keeping its own (mirrors master behaviour).
+  const layout_source_json: Type_JSON = (() => {
+    if (!view_only) return current_json
+    const views = current_json['views'] as Type_JSON | undefined
+    const view_layout = views?.[app_data.drawing_area.id] as Type_JSON | undefined
+    return view_layout ?? current_json
+  })()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
   if (view_only) {
@@ -405,7 +417,7 @@ export const retrieveJSONResults = (
   // Case 1 : Apply extracted layout if present -> contains positions
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(current_json)
+    app_data.updateFromJSON(layout_source_json)
     // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
     // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
     // replacés. setTrade(true) réapplique les styles import/export à TOUS les
@@ -419,13 +431,6 @@ export const retrieveJSONResults = (
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
-  }
-  // In view_only mode the view's DA was reloaded from server JSON, which drops
-  // the attributes the view inherits from the master / other views. Re-apply the
-  // heredited_attr cascade before drawing & caching so the inheritance survives
-  // reconciliation / completion (no-op on plain OS / on the master view).
-  if (view_only) {
-    app_data.reapplyHeriditedAttrToCurrentView()
   }
   app_data.drawing_area.draw()
   app_data.menu_configuration.updateComponentRelatedToStyles()
