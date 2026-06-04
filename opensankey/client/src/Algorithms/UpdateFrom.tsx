@@ -471,13 +471,43 @@ export const updateFrom = (
 
     // Update node position from other sankey
     if (sync_nodes_positions || all) {
+      // #1231 — depuis le passage corner→centre, la position « vérité » d'un nœud est son
+      // CENTRE (`_center_x/_center_y`, indépendant du datatag/échelle) ; le coin haut-gauche
+      // `position_x/y` n'est qu'une valeur DÉRIVÉE — et provisoire tant que la DA source n'a
+      // pas été dessinée (échelle non calculée). Transférer le coin (comportement d'avant
+      // #1231 jamais propagé ici) décale donc les centres : ex. « appliquer un layout depuis
+      // un fichier », où la source est chargée mais jamais dessinée → son coin vaut
+      // centre − taille_par_défaut/2, d'où un décalage d'une demi-taille même à tailles
+      // égales. On transfère donc le CENTRE stocké quand il existe ; le draw de la cible
+      // re-dérive le coin exact avec SA propre échelle. Fallback coin pour les sources sans
+      // centre (anciens fichiers < 1.1.5 jamais dessinés) et les modes proportionnel/écart.
+      const pos_type = drawing_area.sankey.default_style.shape_position_type
+      const keep_center = pos_type !== 'proportional' && pos_type !== 'parametric'
+      const center_settled: Class_NodeElement[] = []
       to_update
         .forEach(id => {
           const n = other_drawing_area.sankey.nodes_dict[matching_nodes_id[id] ?? id]
-          drawing_area.sankey.nodes_dict[id].setPosXY(n.position_x, n.position_y)
-          drawing_area.sankey.nodes_dict[id].position_u = n.position_u
-          drawing_area.sankey.nodes_dict[id].position_v = n.position_v
+          const curr = drawing_area.sankey.nodes_dict[id]
+          if (keep_center && n.center_x !== undefined && n.center_y !== undefined) {
+            curr.setStoredCenter(n.center_x, n.center_y)
+            center_settled.push(curr)
+          } else {
+            curr.setPosXY(n.position_x, n.position_y)
+          }
+          curr.position_u = n.position_u
+          curr.position_v = n.position_v
         })
+      // 2e passage — `getShapeHeightToUse()` dépend des positions des AUTRES nœuds : le côté
+      // gauche/droite d'un lien est un getter DYNAMIQUE calculé depuis les positions
+      // source/cible. Pendant la boucle ci-dessus les nœuds sont déplacés un par un, donc au
+      // moment où on pose le centre d'un nœud du milieu, ses voisins de droite peuvent être
+      // encore à leur position d'origine → liens classés du mauvais côté → hauteur transitoire
+      // fausse (typiquement doublée) → `setStoredCenter` dérive un coin faux. Ce coin faux
+      // serait ensuite figé en centre décalé par le `settleCenterAnchor()` de fin de fonction.
+      // Maintenant que TOUTES les positions sont posées (côtés de liens corrects, hauteurs
+      // finales), on re-dérive le coin depuis le centre autoritaire. Idempotent quand la
+      // hauteur n'a pas bougé (nœuds d'extrémité), corrige les nœuds intermédiaires.
+      center_settled.forEach(curr => curr.forceDeriveFromCenter())
     }
   }
 
@@ -771,4 +801,24 @@ export const updateFrom = (
   drawing_area.sankey.nodes_list.forEach(node => {
     if (node.shape_position_type === 'parametric') node.shape_position_type = 'absolute'
   })
+
+  // #1230 — Mode coordonnées absolues : après un re-chargement des positions
+  // (changement de vue), re-caler l'ancrage du centre sur la taille courante.
+  // La position importée (coin haut-gauche) doit être respectée telle quelle au
+  // prochain dessin, sans décalage parasite dû à un cache de taille hérité de la
+  // vue précédente. Fait après que positions ET valeurs aient été appliquées, donc
+  // getShape*ToUse() reflète déjà la nouvelle vue. Les changements de taille
+  // ULTÉRIEURS (échelle/datatag) re-centreront normalement.
+  if (sync_nodes_positions || all) {
+    // #1231 — modes proportionnel ET écart (ex-paramétrique) : re-capturer le cadre de
+    // référence (médiane globale, centre par colonne, sommes par colonne) sur les positions
+    // importées pour qu'elles soient respectées, puis suivies au prochain datatag.
+    const pos_type = drawing_area.sankey.default_style.shape_position_type
+    if (pos_type === 'proportional' || pos_type === 'parametric') {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.captureProportionalReference()
+    } else {
+      drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
+    }
+  }
 }

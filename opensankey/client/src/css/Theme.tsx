@@ -330,6 +330,29 @@ export const buttonStyles = {
     _active: { bgColor: 'secondaire.1', borderColor: 'secondaire.1', border: 'none' },
   }),
 
+  // Boutons de mode de POSITION (absolu / proportionnel / échelle) = navigation/vue.
+  // Vert (primaire.3) pour les distinguer des boutons de mode souris (édition, orange).
+  toolbar_button_position_mode: defineStyle({
+    bgColor: 'primaire.3',
+    border: 'none',
+    color: 'white',
+    zIndex: 0,
+    _hover: { bgColor: 'tertiaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', border: 'none' },
+  }),
+
+  toolbar_button_position_mode_activated: defineStyle({
+    bgColor: 'secondaire.3',
+    border: 'none',
+    outline: '2px solid',
+    outlineColor: 'secondaire.3',
+    outlineOffset: '-1px',
+    color: 'white',
+    zIndex: 1,
+    _hover: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+    _active: { bgColor: 'secondaire.3', borderColor: 'secondaire.3', border: 'none' },
+  }),
+
   // Menu top button
   menutop_button: defineStyle({
     textStyle: 'h4',
@@ -341,8 +364,8 @@ export const buttonStyles = {
     bg: 'transparent',
     bgColor: 'transparent',
     svg: {
-      'height': '2rem',
-      'width': '3rem'
+      'height': '1.25rem',
+      'width': '1.75rem'
     },
     _hover: {
       color: 'gray.600',
@@ -1138,28 +1161,27 @@ export const buttonStyles = {
     }
   }),
   button_banner_subscription: defineStyle({
-    border: '1px solid',
-    borderColor: 'gray.400',
+    border: '0',
     borderRadius: '4px',
-    lineHeight: 'unset',
-    padding: '0.15rem 0.5rem',
+    lineHeight: '1.1',
+    padding: '0.2rem 0.6rem',
     margin: '0',
-    bg: 'transparent',
-    bgColor: 'transparent',
+    bg: 'tertiaire.1',
+    bgColor: 'tertiaire.1',
     marginInlineStart: 0,
-    color: 'gray.700',
-    fontSize: '0.7rem',
+    color: 'white',
+    fontSize: '0.72rem',
     fontWeight: 'semibold',
     whiteSpace: 'nowrap',
+    height: '1.7rem',
     _hover: {
-      borderColor: 'gray.600',
-      bg: 'gray.100',
-      bgColor: 'gray.100',
-      color: 'gray.800',
+      bg: '#A36F4D',
+      bgColor: '#A36F4D',
+      color: 'white',
     },
     _active: {
-      bg: 'gray.200',
-      bgColor: 'gray.200',
+      bg: '#8B5C3F',
+      bgColor: '#8B5C3F',
     },
   }),
   menutop_button_view_activated: defineStyle({
@@ -1277,7 +1299,25 @@ export const menuStyles = {
       borderColor: 'transparent',
       bg: 'transparent',
       bgColor: 'transparent',
-      'svg': { 'height': '2rem', 'width': '3rem' },
+      height: '2.25rem',
+      minWidth: '2.75rem',
+      padding: '0',
+      marginRight: '0.25rem',
+      marginLeft: '0.25rem',
+      fontSize: '0.62rem',
+      lineHeight: '1',
+      'svg': { 'height': '1.25rem', 'width': '1.75rem' },
+      // Chakra MenuButton wraps content in a span — apply grid there so the
+      // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      span: {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gridTemplateRows: '1.45rem 0.8rem',
+        alignItems: 'center',
+        justifyItems: 'center',
+        height: '100%',
+        width: '100%',
+      },
       _hover: {
         color: 'gray.600',
         borderColor: 'transparent',
@@ -1346,12 +1386,16 @@ export const menuStyles = {
       margin: 'auto',
       border: '1px solid',
       borderColor: 'primaire.5',
-      height: '1.5rem',
-      width: '2rem',
+      borderRadius: '4px',
+      height: '1.35rem',
+      width: '1.85rem',
+      padding: '0 0.15rem',
       'span': {
         display: 'grid',
-        gridTemplateColumns: '4fr 1fr',
+        gridTemplateColumns: '1rem 0.55rem',
+        gridColumnGap: '0.1rem',
         alignItems: 'center',
+        justifyItems: 'center',
       }
     },
     item: {
@@ -1831,7 +1875,8 @@ export const drawerStyles = {
     dialogContainer: {
       width: 'inherit',
       background: 'none',
-      zIndex: 1
+      // Au-dessus de l'overlay tableur (zIndex 20) pour que le panneau config passe par-dessus.
+      zIndex: 30
     },
     body: {
       padding: '0',
@@ -2018,15 +2063,16 @@ export const tableStyles = {
   base: table.definePartsStyle({}),
   table_edit_grp_tag_node_link: createTableStyle('0.5fr 2fr 1.5fr'),
   table_edit_grp_tag_data: createTableStyle('0.75fr 2fr 1.5fr 1.5fr'),
-  table_edit_tag_node: createTableStyle('0.5fr 2fr 0.75fr 0.5fr'),
-  table_edit_tag_link: createTableStyle('0.5fr 2fr 0.5fr 0.75fr'),
-  table_edit_tag_data: createTableStyle('0.5fr 1.5fr 0.75fr'),
-  // Variants position : supprimer + nom + flèches
+  // supprimer + nom court + nom long + visible + couleur
+  table_edit_tag_node: createTableStyle('0.5fr 1fr 2fr 0.75fr 0.5fr'),
+  table_edit_tag_link: createTableStyle('0.5fr 1fr 2fr 0.5fr 0.75fr'),
+  table_edit_tag_data: createTableStyle('0.5fr 1fr 2fr 0.75fr'),
+  // Variants position : supprimer + nom court + nom long + flèches
   table_edit_grp_tag_node_link_pos: createTableStyle('0.5fr 2fr 1fr'),
   table_edit_grp_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_tag_node_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_tag_link_pos: createTableStyle('0.5fr 2fr 1fr'),
-  table_edit_tag_data_pos: createTableStyle('0.5fr 2fr 1fr'),
+  table_edit_tag_node_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
+  table_edit_tag_link_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
+  table_edit_tag_data_pos: createTableStyle('0.5fr 1fr 2fr 1fr'),
   table_edit_node_io: createTableStyle('3fr 1fr 0.7fr 1.3fr'),
 
   table_welcome_buttons: table.definePartsStyle({
@@ -2132,12 +2178,12 @@ export const sizes = {
     margin: 'auto'
   }),
   sizeMenuTopButton: defineStyle({
-    width: '3rem',
-    height: '3rem',
+    width: '2.75rem',
+    height: '2.25rem',
     minW: 'unset',
-    padding: '0.2rem',
-    marginRight: '0.5rem',
-    marginLeft: '0.5rem'
+    padding: '0',
+    marginRight: '0.25rem',
+    marginLeft: '0.25rem'
   }),
   sizeMenuTopButtonSaveCache: defineStyle({
     height: '2rem',
@@ -2242,7 +2288,25 @@ export const tabsStyles = {
       borderColor: 'transparent',
       bg: 'transparent',
       bgColor: 'transparent',
-      'svg': { 'height': '2rem', 'width': '3rem' },
+      height: '2.25rem',
+      minWidth: '2.75rem',
+      padding: '0',
+      marginRight: '0.25rem',
+      marginLeft: '0.25rem',
+      fontSize: '0.62rem',
+      lineHeight: '1',
+      'svg': { 'height': '1.25rem', 'width': '1.75rem' },
+      // Chakra MenuButton wraps content in a span — apply grid there so the
+      // inner Box(gridColumn=, gridRow=) place icon top + label/chevron below.
+      span: {
+        display: 'grid',
+        gridTemplateColumns: '1fr auto',
+        gridTemplateRows: '1.45rem 0.8rem',
+        alignItems: 'center',
+        justifyItems: 'center',
+        height: '100%',
+        width: '100%',
+      },
       _hover: {
         color: 'gray.600',
         borderColor: 'transparent',
@@ -2311,12 +2375,16 @@ export const tabsStyles = {
       margin: 'auto',
       border: '1px solid',
       borderColor: 'primaire.5',
-      height: '1.5rem',
-      width: '2rem',
+      borderRadius: '4px',
+      height: '1.35rem',
+      width: '1.85rem',
+      padding: '0 0.15rem',
       'span': {
         display: 'grid',
-        gridTemplateColumns: '4fr 1fr',
+        gridTemplateColumns: '1rem 0.55rem',
+        gridColumnGap: '0.1rem',
         alignItems: 'center',
+        justifyItems: 'center',
       }
     },
     item: {
@@ -2673,7 +2741,7 @@ const layerStyles = {
   menutop_layout_style: {
     display: 'grid',
     gridColumnGap: '0.25rem',
-    height: '5rem',
+    height: '2.5rem',
     width: 'auto',
     padding: '0',
     margin: '0px 3px 0px 3px',
@@ -2693,20 +2761,23 @@ const layerStyles = {
   menutop_button_style: {
     display: 'grid',
     gridTemplateColumns: '3fr',
-    gridTemplateRows: '2fr 1fr',
+    gridTemplateRows: '1.45rem 0.8rem',
     gridColumnGap: '0',
     gridRowGap: '0',
-    height: '3rem',
-    width: '4rem',
+    height: '100%',
+    width: '100%',
     padding: '0',
     margin: '0',
     textStyle: 'h4',
-    fontSize: default_font_size,
+    fontSize: '0.62rem',
+    lineHeight: '1',
     color: 'gray.600',
     stroke: 'gray.600',
     fill: 'gray.600',
     alignItems: 'center',
-    justifyItems: 'center'
+    justifyItems: 'center',
+    alignContent: 'center',
+    'svg': { 'height': '1.25rem', 'width': '1.75rem', display: 'block', margin: 'auto' }
   },
 
   menubottom_layout_style: {
@@ -2804,7 +2875,7 @@ const layerStyles = {
     zIndex: 1,
     height: 'fit-content',
     right: '1rem',
-    top: '75%',
+    top: '70%',
     transform: 'translateY(-50%)'
   },
 
@@ -2879,6 +2950,20 @@ const layerStyles = {
   menu_sub_section_head: {
     display: 'grid',
     gridTemplateColumns: '1fr 9fr'
+  },
+
+  // Wrapper des sélecteurs d'éléments (MultiSelect rmsc). Le panneau déroulant
+  // de la lib est `position:absolute; z-index:1` : sans ce relèvement il passe
+  // derrière les sections de menu qui suivent (qui créent leurs propres
+  // contextes d'empilement) et paraît tronqué juste après « Tout sélectionner ».
+  submenuconfig_droplist: {
+    width: '100%',
+    '.rmsc .dropdown-content': {
+      zIndex: 'dropdown',
+    },
+    '.rmsc .options': {
+      maxHeight: '18rem',
+    },
   },
 
   selector_elements: {
@@ -2956,11 +3041,13 @@ const layerStyles = {
   box_sequence: {
     display: 'grid',
     gridTemplateColumns: '0.5fr 11fr',
-    margin: '0.2rem'
+    alignItems: 'center',
+    margin: '0.1rem 0.2rem'
   },
   box_stepper: {
     marginLeft: '16px',
     marginRight: '16px',
+    lineHeight: '1',
   },
   drawerFilterBox: {
     display: 'grid',
@@ -3169,7 +3256,9 @@ export const opensankey_theme = extendTheme({
           indicator: {
           },
           title: {
-            fontSize: '0.8rem'
+            fontSize: '0.7rem',
+            lineHeight: '1.1',
+            marginTop: '0.1rem'
           }
         })
       }

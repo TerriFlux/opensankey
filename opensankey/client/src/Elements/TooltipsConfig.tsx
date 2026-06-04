@@ -48,9 +48,11 @@ export class TooltipEventManager {
   }
 
   private setupGlobalListeners() {
-    // Écouter les clics pour fermer les tooltips
+    // Écouter les clics pour fermer les tooltips (sauf si épinglé)
     document.addEventListener('click', (event) => {
       if (this.activeTooltip.element && !this.isClickInTooltip(event)) {
+        const tooltip = document.querySelector('.sankey-tooltip')
+        if (tooltip && tooltip.classList.contains('pinned')) return
         this.closeTooltip()
       }
     })
@@ -68,8 +70,14 @@ export class TooltipEventManager {
         const isOverTooltip = this.isMouseOverTooltip(event)
 
         if (!isOverElement && !isOverTooltip) {
-          // La souris n'est ni sur l'élément ni sur le tooltip
-          this.startAutoCloseTimer()
+          // La souris n'est ni sur l'élément ni sur le tooltip.
+          // Si le tooltip est épinglé, on ne ferme jamais automatiquement.
+          const tooltip = document.querySelector('.sankey-tooltip')
+          if (tooltip && tooltip.classList.contains('pinned')) {
+            this.clearAutoCloseTimer()
+          } else {
+            this.startAutoCloseTimer()
+          }
         } else {
           // La souris est sur l'élément ou le tooltip, annuler la fermeture
           this.clearAutoCloseTimer()

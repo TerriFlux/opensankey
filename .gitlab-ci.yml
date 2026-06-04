@@ -1,6 +1,5 @@
 stages:
     - build
-    - test
     - deploy
 # Pip's cache doesn't store the python packages
 # https://pip.pypa.io/en/stable/reference/pip_install/#caching
@@ -20,7 +19,6 @@ variables:
   PIP_DISABLE_PIP_VERSION_CHECK: "1"
   PIP_PROGRESS_BAR: "off"
   PIP_ROOT_USER_ACTION: "ignore"
-  TESTS_DIR: $CI_PROJECT_DIR/TestData
   PUBLIC_URL: "/"
 build:
   stage: build
@@ -39,24 +37,10 @@ build:
   except:
     - schedules
 
-test:
-  stage: test
-  tags: [py312]
-  script:
-    # Env
-    - export TESTS_DIR="$CI_PROJECT_DIR/TestData"
-    - echo $CI_PROJECT_DIR
-    - echo $EIGEN_INCLUDE
-    - echo $TESTS_DIR
-    - source /home/gitlab-runner/gitlab_dev/bin/activate
-    # Test
-    - bash test.sh
-  dependencies:
-    - build
-  rules:
-    - if: '$CI_COMMIT_TAG == "prod"'
-      when: never
-    - when: always
+# Pas de job `test` cote OpenSankey : opensankey/tests/ ne contient que
+# test_dict_results.py qui depend de TestData (submodule retire le 2026-05-19).
+# Les tests TestData tournent uniquement depuis SankeyApplication.
+# test.sh est conserve pour usage local (avec TESTS_DIR=<SA>/TestData).
 
 # =====================================================================
 # Déploiement Pages (single deployment, plan Free compatible)

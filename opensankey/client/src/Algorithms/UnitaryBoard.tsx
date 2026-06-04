@@ -22,7 +22,7 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   if (center_nodes.length === 0) return
   const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
-  const sectorTag = node_type?.tags_dict['secteur']
+  const _sectorTag = node_type?.tags_dict['secteur']
 
   // Réinitialiser tous les styles unitaires d'abord
   drawing_area.sankey.nodes_list.forEach(node => {
@@ -91,7 +91,11 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
     center_nodes.forEach(n => max_value = Math.max(max_value, n.data_value))
     drawing_area.scale = max_value / 1.5
   }
-  drawing_area.nodePositioning.computeAutoSankey(false, true)
+  // Appliquer formes et marges AVANT computeAutoSankey : elles modifient la HAUTEUR
+  // des nœuds (capsule vs rect + marges), dont dépendent le placement vertical
+  // symétrique et l'ordre des flux E/S. Si on les changeait après, les positions
+  // seraient calculées sur les hauteurs par défaut puis devenaient incohérentes
+  // (symptôme : croisements à la création, corrigés en relançant computeAutoSankey).
   drawing_area.sankey.nodes_list
     .forEach(n => {
       n.resetAttributes()
@@ -103,10 +107,29 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
         n.shape_margin_bottom = 20
       }
     })
-  center_nodes.forEach(n => n.reorganizeIOLinks())
-  drawing_area.sankey.default_style.shape_position_type = 'parametric'
-  drawing_area.sankey.nodes_list
-    .forEach(node => { node.position_v = -1 })
-
-  drawing_area.nodePositioning.computeParametrization(true)
+  // Reproduire le pipeline du bouton « disposition auto » (computeAutoSankeyWithToast),
+  // qui sort un résultat centré et sans croisement — sans le toast ni l'undo :
+  //   1. computeAutoSankey (positions) avec les espacements par défaut
+  //   2. computeParametrization (recalcule colonnes/centrage vertical)
+  //   3. reorganizeIOLinks sur TOUS les nœuds (ordre des flux E/S cohérent)
+  // L'ancien code se limitait à computeAutoSankey + reorganize du seul nœud central,
+  // d'où les croisements et le défaut de centrage à la création (corrigés dès qu'on
+  // relançait la disposition auto).
+  const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
+  const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+  drawing_area.nodePositioning.computeAutoSankey(false, true, default_dx, default_dy)
+  //drawing_area.nodePositioning.computeParametrization(true)
+  drawing_area.sankey.visible_nodes_list.forEach(n => n.reorganizeIOLinks())
+  // Rester en mode 'absolute' : les positions x/y calculées ci-dessus sont respectées
+  // telles quelles au rendu. L'ancien mode 'parametric' rappelait
+  // recomputeParametricLayout à chaque redraw, ré-empilant chaque colonne par le haut
+  // → la symétrie était perdue.
+  drawing_area.sankey.default_style.shape_position_type = 'absolute'
+  // Commit le coin courant (positions de computeAutoSankey) comme nouveau centre de
+  // vérité. Sans ça, le cache _center_x/_center_y hérité de l'état précédent reste
+  // obsolète : au 1er draw, anchorByCenterIfResized voit la taille changée (capsule/
+  // marges/échelle) et exécute applyCenterToCorner → les nœuds sautent à leur ancien
+  // centre, écrasant la disposition symétrique. C'est exactement ce que fait le
+  // else-branch de DrawingArea.setAbsoluteMode().
+  drawing_area.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
 }

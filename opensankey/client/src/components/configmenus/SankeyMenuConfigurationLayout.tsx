@@ -777,6 +777,101 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     </Box>
   </Box>
 }
+/**
+ * Composant de configuration du titre du diagramme (cf. ClassTemplate_DrawingTitle).
+ * Affiché à côté de la légende dans l'onglet style.
+ */
+export const TitleConfig = ({ app_data }: { app_data: Class_ApplicationData }) => {
+
+  const { t } = app_data
+  const [, setCount] = useState(0)
+  const sankey = app_data.drawing_area.sankey
+  const title = sankey.getTitleContainer()
+  const is_shown = !!title && title.is_visible
+
+  const refreshThisAndUpdateRelatedComponents = () => {
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+    setCount(a => a + 1)
+  }
+
+  const data_taggs = sankey.data_taggs_list
+  const [token_group_id, setTokenGroupId] = useState('')
+
+  // La visibilité du titre est pilotée ici. Le texte (statique + jetons) et le
+  // reste du style s'éditent via l'interface normale des zones de texte.
+  const eventTitleShown = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    if (evt.target.checked) {
+      sankey.getOrCreateTitleContainer().setVisible()
+    } else {
+      title?.setInvisible()
+    }
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  // Insère le jeton {NomDuGroupe} à la fin du texte du titre. Au rendu, il est
+  // remplacé par la valeur sélectionnée du data tag (combine statique + data tag).
+  const eventInsertToken = () => {
+    const grp = data_taggs.find(g => g.id === token_group_id)
+    if (!grp) return
+    const c = sankey.getOrCreateTitleContainer()
+    const token = '{' + grp.name + '}'
+    // Le titre édite name_label_text (texte de label indépendant), pas le nom.
+    const current = c.name_label_text
+    c.name_label_text = current ? current + ' ' + token : token
+    app_data.drawing_area.draw()
+    refreshThisAndUpdateRelatedComponents()
+  }
+
+  return <Box layerStyle='menu_sub_section'>
+    <Box as='span' layerStyle='menu_sub_section_title'>
+      <Checkbox
+        variant='menuconfigpanel_part_title_1_checkbox'
+        icon={<CustomFaEyeCheckIcon />}
+        isChecked={is_shown}
+        onChange={eventTitleShown}
+      >
+        {t('Menu.TitleSection')}
+      </Checkbox>
+    </Box>
+
+    <Box
+      layerStyle='menuconfigpanel_grid'
+      style={{ display: (is_shown ? '' : 'none') }}
+    >
+      {/* Édition du texte via l'interface ZDT */}
+      <Box layerStyle='menuconfigpanel_option_name'>
+        {t('Menu.TitleEditHint')}
+      </Box>
+
+      {/* Insertion d'un jeton data tag (combine statique + data tag) */}
+      {data_taggs.length > 0 &&
+        <Box as='span' layerStyle='options_2cols'>
+          <OSTooltip label={t('Menu.tooltips.TitleGroupSelect')}>
+            <Select
+              size='sm'
+              value={token_group_id}
+              onChange={(evt) => setTokenGroupId(evt.target.value)}
+            >
+              <option value=''>{t('Menu.TitleSelectGroup')}</option>
+              {data_taggs.map(tagg => (
+                <option key={tagg.id} value={tagg.id}>{tagg.name}</option>
+              ))}
+            </Select>
+          </OSTooltip>
+          <Button
+            variant='menuconfigpanel_option_button'
+            isDisabled={token_group_id === ''}
+            onClick={eventInsertToken}
+          >
+            {t('Menu.TitleInsertToken')}
+          </Button>
+        </Box>
+      }
+    </Box>
+  </Box>
+}
+
 export const GraphElementsOrdoner = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { icon_move_element_down, icon_move_element_up } = app_data.icon_library
   const [, forceUpdate] = useState(0)

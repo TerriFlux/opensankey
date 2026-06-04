@@ -21,7 +21,11 @@ export const value_option_percent_constants = [...value_option_percent_constants
 export const value_option_constants = ['value', ...value_option_percent_constants, 'unit_ratio', 'intervals'] as const
 export type ValueOptionType = typeof value_option_constants[number]
 
-export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, 'unit_ratio','normalized'] as const
+// Display-only unit options expressing the link value as a percent of a node
+// stock level (not MFA constraints). '%SS' = stock of source node ("en sortie"),
+// '%SD' = stock of destination node ("en entrée").
+export const unit_stock_percent_constants = ['%SS', '%SD'] as const
+export const unit_constants = ['unit_name', 'unit_tag', 'other_unit_tag', ...value_option_percent_constants, ...unit_stock_percent_constants, 'unit_ratio','normalized'] as const
 export type UnitType = typeof unit_constants[number]
 
 // CLASS ELEMENT VALUE TREE ************************************************************
@@ -725,9 +729,17 @@ export class Class_LinkValue extends Class_ElementValue {
 
   // LINK-SPECIFIC ATTRIBUTES ===========================================================
   private _ratio_unit_tag: Class_DataTag | null
+  // Free-text metadata of the data row (Données sheet "Source" / "URL" columns).
+  private _data_source: string | null = null
+  private _data_url: string | null = null
 
   public get ratio_unit_tag() { return this._ratio_unit_tag }
   public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
+
+  public get data_source() { return this._data_source }
+  public set data_source(_: string | null) { this._data_source = _ }
+  public get data_url() { return this._data_url }
+  public set data_url(_: string | null) { this._data_url = _ }
 
   public value_option: ValueOptionType = 'value'
 
@@ -745,7 +757,14 @@ export class Class_LinkValue extends Class_ElementValue {
   }
 
   public get has_intervals() {
-    return this._result_max[Class_LinkValue.SRC] !== null || this._result_min[Class_LinkValue.SRC] !== null
+    // #208 — un flux libre dont les contraintes figent min == max est déterminé,
+    // pas un intervalle : il ne doit donc pas être traité comme indéterminé
+    // (sinon linkIsStructure le force en "structure" et il apparaît comme flux
+    // nul/indéterminé au lieu d'afficher sa valeur réconciliée result_value).
+    const mn = this._result_min[Class_LinkValue.SRC]
+    const mx = this._result_max[Class_LinkValue.SRC]
+    if (mn === null || mx === null) return false
+    return mn !== mx
   }
 
   public get has_data() {
@@ -817,6 +836,8 @@ export class Class_LinkValue extends Class_ElementValue {
     if (element instanceof Class_LinkValue) {
       this.value_option = element.value_option
       this.ratio_unit_tag = element.ratio_unit_tag
+      this.data_source = element.data_source
+      this.data_url = element.data_url
     }
     // Copy vectors via base class
     super.copyFrom(element)
@@ -858,6 +879,8 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this.text_value) json_object['text_value'] = this.text_value
     if (this.value_option !== 'value') json_object['value_option'] = this.value_option
     if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
+    if (this._data_source != null) json_object['data_source'] = this._data_source
+    if (this._data_url != null) json_object['data_url'] = this._data_url
     return json_object
   }
 
@@ -900,6 +923,9 @@ export class Class_LinkValue extends Class_ElementValue {
 
       this._data_value[Class_LinkValue.TGT] = getNumberOrNullFromJSON(json_object, 'data_value_target')
       this._result_value[Class_LinkValue.TGT] = getNumberOrNullFromJSON(json_object, 'result_value_target')
+
+      this._data_source = getStringOrNullFromJSON(json_object, 'data_source')
+      this._data_url = getStringOrNullFromJSON(json_object, 'data_url')
 
       this.text_value = getStringFromJSON(json_object, 'text_value', this.text_value!)
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType

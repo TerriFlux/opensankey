@@ -32,6 +32,7 @@ import { TourProvider } from '@reactour/tour'
 /*************************************************************************************************/
 
 import { SankeyMenu } from './components/topmenus/SankeyMenus'
+import { MainZoneTabs } from './components/spreadsheet/MainZoneTabs'
 
 import { MenuConfigurationAppearance } from './components/configmenus/MenuElementsAppearance'
 import { ContextMenu, MenuConfig } from './components/dialogs/SankeyMenuContext'
@@ -106,6 +107,11 @@ export const OpenSankeyApp = ({
         updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
         app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
         app_data.drawing_area.draw()
+        // Le layout fusionne des attributs de la drawing area (verrous taille/police,
+        // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
+        // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars
+        // (barre de séquence, verrous) gardent l'état d'avant-layout — visible en viewer publish.
+        app_data.menu_configuration.updateAllMenuComponents()
         applyPublishRecenter()
       }).catch(e => console.log(e))
     } else {
@@ -191,7 +197,7 @@ export const OpenSankeyApp = ({
         <ModalWelcome
           app_data={app_data}
         />
-        {(window.sankey?.toolbar !== false) ?
+        {app_data.publish_options.filter_bar ?
           <ToolbarFilter
             app_data={app_data}
           /> : <></>}
@@ -235,6 +241,7 @@ export const OpenSankeyApp = ({
           app_data={app_data}
         />
       </React.Fragment>
+      <MainZoneTabs app_data={app_data} />
     </div>
 
   </TourProvider>

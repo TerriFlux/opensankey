@@ -26,7 +26,7 @@
 
 import React, { useState, useRef, MutableRefObject, ChangeEvent, Fragment } from 'react'
 import ReactCountryFlag from 'react-country-flag'
-import { ChevronDownIcon } from '@chakra-ui/icons'
+import { ChevronDownIcon, InfoOutlineIcon } from '@chakra-ui/icons'
 import parse from 'html-react-parser'
 import {
   Box,
@@ -45,11 +45,24 @@ import {
   Text,
   Divider,
   Menu,
-  Portal
+  Portal,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverBody,
+  IconButton,
+  Link,
+  VStack,
+  HStack,
+  Badge
 } from '@chakra-ui/react'
 import {
   faCheck,
-  faExclamation
+  faExclamation,
+  faDiagramProject,
+  faTable,
+  faFileLines
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -58,10 +71,9 @@ import { useTour } from '@reactour/tour'
 
 import { Type_JSON } from '../../types/Utils'
 
-import { clickSavePDF, clickSaveSVG } from './SankeyExports'
+import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
-import { ModalTuto } from './SankeyTutorials'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -69,6 +81,7 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { BaseApplicationDataType } from '../SankeyMenuTypes'
 import { OSTooltip } from '../configmenus/MenuCommon'
 import { Type_AdditionalMenus } from '../../types/MenuConfig'
+import { useMainZone } from '../spreadsheet/MainZoneTabs'
 import { CONVERTER_CONFIGS } from '../dialogs/PersistenceProcessDialogConfigs'
 
 /*************************************************************************************************/
@@ -111,15 +124,62 @@ export const GoToUserDoc = () => {
 /*************************************************************************************************/
 
 /**
- * Define cache saving function component,
- * not present in static
- * @param {*} {
- *   Class_ApplicationData
- * }
- * @return {*}
+ * Topbar "document state" buttons: undo / redo / save-in-cache.
+ * Grouped together because they all act on the current edit state of the
+ * diagram. Styled in the neutral grey of the menu (like the info button) —
+ * except the small check/exclamation overlay on the save button, which keeps
+ * its saved/unsaved colour semantics (green/red). Not present in static mode.
+ *
+ * The buttons re-render on every history change because their parent
+ * (SankeyMenu) subscribes to ref_to_menu_updater, which applyUndo/applyRedo/
+ * saveUndo/saveRedo all trigger — so can_undo / can_redo stay fresh.
  */
-export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
-  const { t } = new_data
+const topbar_state_btn_style = {
+  size: 'sm' as const,
+  boxSize: '2rem',
+  minWidth: '2rem',
+  fontSize: '1rem',
+  bg: 'transparent',
+  bgColor: 'transparent',
+  borderColor: 'transparent',
+  color: 'gray.700',
+  _hover: { bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' },
+  _active: { bg: 'gray.200', bgColor: 'gray.200' },
+  _disabled: { color: 'gray.300', bg: 'transparent', bgColor: 'transparent', cursor: 'not-allowed' },
+}
+
+// Boutons bascule de la grande zone (Diagramme / Tableur) : icône + petit texte, neutres (gris),
+// surlignés en gris quand actifs (pas de vert).
+const main_zone_btn_style = (active: boolean) => ({
+  size: 'sm' as const,
+  display: 'flex',
+  flexDirection: 'column' as const,
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '0.05rem',
+  height: 'auto',
+  minWidth: '2.7rem',
+  padding: '0.15rem 0.3rem',
+  fontSize: '1rem',
+  borderColor: 'transparent',
+  color: active ? 'gray.900' : 'gray.700',
+  bg: active ? 'gray.200' : 'transparent',
+  bgColor: active ? 'gray.200' : 'transparent',
+  _hover: { bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' },
+  _active: { bg: 'gray.200', bgColor: 'gray.200' },
+})
+
+export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
+  const { t, icon_library, history } = new_data
+  const {
+    showDiagram, showSpreadsheet, showDoc,
+    setShowDiagram, setShowSpreadsheet, setShowDoc
+  } = useMainZone(new_data)
+  // Bascule en gardant toujours au moins un panneau affiché (diagramme / tableur / doc).
+  const others = (a: boolean, b: boolean) => a || b
+  const toggleDiagram = () => { const next = !showDiagram; if (!next && !others(showSpreadsheet, showDoc)) return; setShowDiagram(next) }
+  const toggleSpreadsheet = () => { const next = !showSpreadsheet; if (!next && !others(showDiagram, showDoc)) return; setShowSpreadsheet(next) }
+  const toggleDoc = () => { const next = !showDoc; if (!next && !others(showDiagram, showSpreadsheet)) return; setShowDoc(next) }
 
   const [save_boolean, setSaveBoolean] = useState(true)
   new_data.menu_configuration.ref_to_save_in_cache_indicator.current = (b: boolean) => {
@@ -128,45 +188,94 @@ export const OpenSankeySaveButton = ({ new_data }: BaseApplicationDataType) => {
   }
   new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean
 
+  if (new_data.is_static) return <></>
+
   const ok_saved = save_boolean
-  const color_icon = ok_saved ? 'tertiaire.3' : 'tertiaire.1'
-  const indicator_saved_data = <Box
-    color={color_icon}
-  >
+  const indicator_saved_data = <Box color={ok_saved ? 'tertiaire.3' : 'tertiaire.1'}>
     <FontAwesomeIcon
       style={{ 'height': '0.75em', 'width': '0.75rem' }}
       icon={(ok_saved) ? faCheck : faExclamation} />
   </Box>
 
-  return !new_data.is_static ? <OSTooltip
-    placement='bottom'
-    label={t('Menu.tooltips.checkpoint')}
-  >
-    <Button
-      variant='menutop_button_save_in_cache'
-      className='menutop_button_save_in_cache'
-      size='sizeMenuTopButtonSaveCache'
-      onClick={() => {
-        const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
-        if (ev.onkeydown) {
-          ev.onkeydown(tmp)
-        }
-      }}
-    >
-      <Box>
-        <Box>
-          {new_data.icon_library.icon_save_in_cache}
+  return <ButtonGroup spacing='0.1rem' alignItems='center'>
+    <OSTooltip placement='bottom' label={t('Menu.undo')}>
+      <IconButton
+        aria-label={t('Menu.undo')}
+        className='topbar_button_undo'
+        icon={icon_library.icon_undo}
+        isDisabled={!history.can_undo}
+        onClick={() => history.applyUndo()}
+        {...topbar_state_btn_style}
+      />
+    </OSTooltip>
+    <OSTooltip placement='bottom' label={t('Menu.redo')}>
+      <IconButton
+        aria-label={t('Menu.redo')}
+        className='topbar_button_redo'
+        icon={icon_library.icon_redo}
+        isDisabled={!history.can_redo}
+        onClick={() => history.applyRedo()}
+        {...topbar_state_btn_style}
+      />
+    </OSTooltip>
+    <OSTooltip placement='bottom' label={t('Menu.tooltips.checkpoint')}>
+      <Button
+        aria-label={t('Menu.tooltips.checkpoint')}
+        className='topbar_button_save_in_cache'
+        onClick={() => {
+          const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
+          if (ev.onkeydown) {
+            ev.onkeydown(tmp)
+          }
+        }}
+        {...topbar_state_btn_style}
+      >
+        <Box position='relative' display='flex'>
+          {icon_library.icon_save_in_cache}
+          <Box
+            position='absolute'
+            bottom='-0.2rem'
+            right='-0.3rem'
+          >
+            {indicator_saved_data}
+          </Box>
         </Box>
-        <Box
-          position='absolute'
-          bottom='0.15rem'
-          right='0.1rem'
-        >
-          {indicator_saved_data}
-        </Box>
-      </Box>
-    </Button>
-  </OSTooltip> : <></>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Diagramme'>
+      <Button
+        aria-label='Diagramme'
+        className='topbar_button_main_zone_diagram'
+        onClick={toggleDiagram}
+        {...main_zone_btn_style(showDiagram)}
+      >
+        <FontAwesomeIcon icon={faDiagramProject} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Diagramme</Box>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Tableur'>
+      <Button
+        aria-label='Tableur'
+        className='topbar_button_main_zone_spreadsheet'
+        onClick={toggleSpreadsheet}
+        {...main_zone_btn_style(showSpreadsheet)}
+      >
+        <FontAwesomeIcon icon={faTable} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Tableur</Box>
+      </Button>
+    </OSTooltip>
+    <OSTooltip placement='bottom' label='Doc'>
+      <Button
+        aria-label='Doc'
+        className='topbar_button_main_zone_doc'
+        onClick={toggleDoc}
+        {...main_zone_btn_style(showDoc)}
+      >
+        <FontAwesomeIcon icon={faFileLines} style={{ height: '0.95rem', width: '0.95rem' }} />
+        <Box as='span' style={{ fontSize: '0.5rem', lineHeight: 1 }}>Doc</Box>
+      </Button>
+    </OSTooltip>
+  </ButtonGroup>
 }
 
 /**
@@ -183,21 +292,19 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   additionalMenus: MutableRefObject<Type_AdditionalMenus>,
 }) => {
   const { t } = new_data
+  // Tour launcher — used by the "Aide" dropdown's Visite guidée item. Safe to
+  // call here: MenuTopButtons renders inside the @reactour TourProvider.
+  const { setIsOpen } = useTour()
   const {
     ref_setter_show_modal_templates_lib,
     ref_setter_show_modal_file_converter,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_pdf_saver,
-    ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto, ref_setter_show_modal_support,
+    ref_setter_show_modal_apply_layout,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
-  const [show_tuto, set_show_tuto] = useState(false)
   const _load_json = useRef<HTMLInputElement>(null)
   const _load_sankeymatic = useRef<HTMLInputElement>(null)
-
-  ref_setter_show_modal_tuto.current = set_show_tuto
-
-
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
@@ -208,6 +315,15 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const open_converter_with = (config_key: keyof typeof CONVERTER_CONFIGS) => {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
       CONVERTER_CONFIGS[config_key], '', false
+    )
+    ref_setter_show_modal_file_converter.current!(true)
+  }
+
+  // Charge directement le tutoriel unique (SankeyData/tutorials/Tutoriel.json)
+  // via le universal converter, sans modale de navigation par dossiers.
+  const open_tutorial_file = () => {
+    new_data.menu_configuration.ref_universal_converter_set_config.current(
+      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/Tutoriel.json.gz', true
     )
     ref_setter_show_modal_file_converter.current!(true)
   }
@@ -567,7 +683,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     <Button
       variant='menutop_button'
       size='sizeMenuTopButton'
-      onClick={() => ref_setter_show_modal_tuto.current!(true)}
+      onClick={() => open_tutorial_file()}
       className='tutorials_button'
     >
       <Box
@@ -699,11 +815,79 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     </MenuList>
   </ChakraMenu>
 
+  // Consolidated "Aide" dropdown — groups the formerly standalone Visite guidée
+  // (tour) and Tutoriels buttons, and any extra_help_menu_items injected by
+  // upper layers (SA pushes Sankeythèque here). Frees horizontal space in the
+  // topbar on small screens. Legacy 'tour'/'tutoriel' keys stay in the dict.
+  // The source icons have heterogeneous sizes (logo_tour / logo_sankeytheque are
+  // 2rem topbar SVGs, icon_tuto is a 1em FA glyph) — normalize them to a uniform
+  // box so the menu rows line up cleanly.
+  const helpMenuIcon = (node: React.ReactNode) =>
+    <Box
+      display='inline-flex'
+      alignItems='center'
+      justifyContent='center'
+      boxSize='1.2rem'
+      sx={{ '& svg': { width: '1.1rem', height: '1.1rem' } }}
+    >
+      {node}
+    </Box>
+  const button_aide = <ChakraMenu
+    variant='menu_button_subnav_style'
+    placement='bottom-start' id='aide'
+  >
+    <OSTooltip placement='bottom' label={t('Menu.tooltips.aide')}>
+      <MenuButton className='menutop_button_aide'>
+        <Box gridColumn='1' gridColumnEnd='span 2' gridRow='1'>
+          {new_data.icon_library.icon_tuto}
+        </Box>
+        <Box gridColumn='1' gridRow='2'>
+          {t('Menu.aide')}
+        </Box>
+        <Box gridColumn='2' gridRow='2' height='1rem' width='1rem'>
+          <ChevronDownIcon style={{ 'height': '1rem', 'width': '1rem' }} />
+        </Box>
+      </MenuButton>
+    </OSTooltip>
+    <MenuList>
+      <MenuItem
+        icon={helpMenuIcon(logo_tour)}
+        onClick={() => { new_data.setSteps(); setIsOpen(true) }}
+      >
+        {t('guide.guide')}
+      </MenuItem>
+      <MenuItem
+        icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
+        onClick={() => open_tutorial_file()}
+      >
+        {t('Menu.formation')}
+      </MenuItem>
+      {(new_data.menu_configuration.extra_help_menu_items ?? []).map((item) => {
+        const tooltip_text = item.tooltip ? item.tooltip() : ''
+        const menu_item = (
+          <MenuItem
+            icon={helpMenuIcon(item.icon)}
+            isDisabled={item.disabled ? item.disabled() : false}
+            onClick={item.onClick}
+          >
+            {item.label}
+          </MenuItem>
+        )
+        // OSTooltip needs a non-disabled child to capture hover; wrap in <Box>
+        // so the tooltip still appears when the MenuItem is greyed out.
+        return tooltip_text
+          ? <OSTooltip key={item.key} placement='right' label={tooltip_text}><Box>{menu_item}</Box></OSTooltip>
+          : <Fragment key={item.key}>{menu_item}</Fragment>
+      })}
+    </MenuList>
+  </ChakraMenu>
+
   // Dict containing buttons of OpenSankey that will be displayed in order of menu_top_order
   const dict_components_menu_top: { [x: string]: React.JSX.Element; } = {
     // New consolidated entries (default menu_top_order uses these)
     'fichier': button_fichier,
     'edition': button_edition,
+    'aide': button_aide,
     // Legacy granular entries kept for retro-compat with custom menu_top_order
     // arrays that referenced the original split buttons.
     'resetDA': button_resetDA,
@@ -761,11 +945,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       new_data={new_data}
       show={show_excel_template}
       setShow={set_show_excel_template}
-    />
-    <ModalTuto
-      new_data={new_data}
-      show_tuto={show_tuto}
-      set_show_tuto={set_show_tuto}
     />
   </>
 }
@@ -913,7 +1092,7 @@ export const MenuTopButtonsStatic = ({ new_data, additionalMenus }: {
   let dict_components_menu_top: { [x: string]: React.JSX.Element; } = {}
   if (new_data.is_static && diagrams_list) dict_components_menu_top['diagrams'] = diagrams_element
   dict_components_menu_top = { ...dict_components_menu_top, ...additionalMenus.current.external_top_buttons_item }
-  if (new_data.is_static) dict_components_menu_top['edit'] = edit_button
+  if (new_data.is_static && new_data.publish_options.edit_button) dict_components_menu_top['edit'] = edit_button
   dict_components_menu_top['help'] = help_button
 
   return <Box
@@ -999,24 +1178,25 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
       }}>
 
       {
-        // Application image that indicate which module is activated
+        // Application image that indicate which module is activated.
+        // Logo is height-constrained and contain-fitted so OS and SS logos
+        // render with consistent visual weight despite different aspect ratios.
         <Box
-          alignSelf='left'
-          justifySelf='left'
-          display='inline-grid'
+          alignSelf='center'
+          justifySelf='start'
+          display='flex'
+          alignItems='center'
           height='100%'
+          paddingLeft='0.5rem'
         >
-          {/* {!new_data.is_static ? */}
-          <Image
-            height='80%'
-            justifySelf='left'
-            alignSelf='left'
-            src={logo} />
-          {/* <Image
-              height='5rem'
-              margin='5% 0'
-              src={logo_terriflux}
-              onClick={() => { window.open('https://terriflux.com/', '_blank') }} />} */}
+          {logo ? (
+            <Image
+              src={logo}
+              objectFit='contain'
+              maxHeight='2.1rem'
+              width='auto'
+            />
+          ) : null}
         </Box>}
       {
         // When application is static, search for a header (title of the project)
@@ -1049,10 +1229,19 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
         gap='0.25rem'
         width='unset'
       >
+        {/* Document-state block (undo / redo / save-in-cache) — its own group
+            separated from the language/info meta controls by a divider. */}
+        {!new_data.is_static ? <>
+          <TopBarStateButtons new_data={new_data} />
+          <Divider orientation='vertical' height='1.5rem' borderColor='gray.300' margin='0 0.25rem' />
+        </> : <></>}
+        {constent_additional_nav_item}
+        <AppInfoPopover />
+        {/* Language selector kept as the right-most control of the topbar. */}
         {!new_data.is_static ? <Menu variant='selector_lang'>
           <MenuButton>
-            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.75rem', width: '1rem', margin: 'auto' }} title={flag} />
-            <ChevronDownIcon />
+            <ReactCountryFlag countryCode={flag} svg style={{ height: '0.7rem', width: '1rem', margin: 'auto' }} title={flag} />
+            <ChevronDownIcon boxSize='0.8rem' />
           </MenuButton>
           <Portal>
             <MenuList>
@@ -1064,11 +1253,73 @@ export const MenuTopNavBar = ({ new_data, additionalMenus }: {
             </MenuList>
           </Portal>
         </Menu> : <></>}
-
-        {constent_additional_nav_item}
       </Box>
     </Box>
   </Box>
+}
+
+/**
+ * Topbar info popover: shows app version, release channel, build/commit info,
+ * a support mailto and a link to the changelog. All values are inlined at build
+ * time by the consumer's bundler from REACT_APP_* (see the consumer's
+ * craco/webpack config); this component stays generic and only renders a
+ * field/link when its variable is provided.
+ *   - REACT_APP_VERSION         display version, channel suffix already applied
+ *   - REACT_APP_RELEASE_CHANNEL 'alpha' | 'beta' | 'stable'
+ *   - REACT_APP_RELEASE_DATE    build date (YYYY-MM-DD)
+ *   - REACT_APP_GIT_COMMIT      short commit hash
+ *   - REACT_APP_GIT_COMMIT_DATE commit date (YYYY-MM-DD)
+ *   - REACT_APP_CHANGELOG_URL   link to the changelog (lists current + previous versions)
+ */
+const AppInfoPopover = () => {
+  const version = process.env.REACT_APP_VERSION ?? ''
+  const channel = process.env.REACT_APP_RELEASE_CHANNEL ?? ''
+  const release_date = process.env.REACT_APP_RELEASE_DATE ?? ''
+  const git_commit = process.env.REACT_APP_GIT_COMMIT ?? ''
+  const git_commit_date = process.env.REACT_APP_GIT_COMMIT_DATE ?? ''
+  const changelog_url = process.env.REACT_APP_CHANGELOG_URL ?? ''
+  return <Popover placement='bottom-end' trigger='hover' openDelay={150}>
+    <PopoverTrigger>
+      <IconButton
+        aria-label='Informations'
+        icon={<InfoOutlineIcon />}
+        size='sm'
+        boxSize='2rem'
+        fontSize='1rem'
+        bg='transparent'
+        bgColor='transparent'
+        borderColor='transparent'
+        color='gray.700'
+        _hover={{ bg: 'gray.100', bgColor: 'gray.100', color: 'gray.900' }}
+        _active={{ bg: 'gray.200', bgColor: 'gray.200' }}
+      />
+    </PopoverTrigger>
+    <Portal>
+      <PopoverContent width='auto' minWidth='13rem'>
+        <PopoverArrow />
+        <PopoverBody>
+          <VStack align='start' spacing='0.25rem' fontSize='sm'>
+            {version && <HStack spacing='0.4rem'>
+              <Text>Version {version}</Text>
+              {channel === 'alpha' && <Badge colorScheme='orange'>alpha</Badge>}
+              {channel === 'beta' && <Badge colorScheme='purple'>beta</Badge>}
+            </HStack>}
+            {release_date && <Text color='gray.500'>Build {release_date}</Text>}
+            {git_commit && <Text color='gray.500'>
+              Commit {git_commit}{git_commit_date && ` · ${git_commit_date}`}
+            </Text>}
+            {changelog_url && <Divider my='0.25rem' />}
+            {changelog_url && <Link href={changelog_url} color='blue.500' isExternal>
+              Changelog
+            </Link>}
+            <Link href='mailto:support@terriflux.fr' color='blue.500'>
+              support@terriflux.fr
+            </Link>
+          </VStack>
+        </PopoverBody>
+      </PopoverContent>
+    </Portal>
+  </Popover>
 }
 
 

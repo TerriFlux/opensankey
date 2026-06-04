@@ -42,11 +42,12 @@ import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttri
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { Class_Sankey } from '../types/Sankey'
+import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
-import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkExportCloseStyle, LinkImportCloseStyle, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
+import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
 import { convert_data_legacy, convert_pre_v_0_91 } from './Legacy'
+
 
 export class BaseElementPersistence {
   public static fromJSON_pre_0_9(
@@ -82,8 +83,16 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): Type_JSON {
-    json_object['x'] = base_element.position_x
-    json_object['y'] = base_element.position_y
+    // #1231 (1.1.5) — format courant : x/y = CENTRE du nœud (indépendant du datatag/échelle).
+    // Les autres éléments (conteneurs, liens, légende…) gardent le coin/position d'origine.
+    if (base_element instanceof Class_NodeElement) {
+      const c = base_element.centerForPersistence()
+      json_object['x'] = c.x
+      json_object['y'] = c.y
+    } else {
+      json_object['x'] = base_element.position_x
+      json_object['y'] = base_element.position_y
+    }
     return json_object
   }
   public static fromJSON(
@@ -92,8 +101,17 @@ export class BaseElementPersistence {
     json_object: Type_JSON,
     _kwargs?: Type_JSON
   ): void {
-    base_element.position_x = getNumberFromJSON(json_object, 'x', base_element.position_x)
-    base_element.position_y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    const x = getNumberFromJSON(json_object, 'x', base_element.position_x)
+    const y = getNumberFromJSON(json_object, 'y', base_element.position_y)
+    // #1231 (1.1.5) — fichier ≥ 1.1.5 (drapeau `pos_is_center` propagé via kwargs) : x/y est le
+    // CENTRE → on le pose directement. Sinon (fichiers < 1.1.5 ou éléments non-nœuds) : x/y est
+    // le coin → on le pose tel quel, et pour un nœud le centre sera migré au 1er draw (coin+taille/2).
+    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center']) {
+      base_element.setStoredCenter(x, y)
+    } else {
+      base_element.position_x = x
+      base_element.position_y = y
+    }
   }
 }
 export class ProtoElementPersistence extends BaseElementPersistence {
@@ -207,6 +225,15 @@ export class NodeBasePersistence extends ProtoElementPersistence {
   public static toJSON(node_base: Class_NodeBase, json_object: Type_JSON, kwargs?: Type_JSON) {
     super.toJSON(node_base, json_object, kwargs)
     json_object['name'] = node_base.name
+    // Label de nom indépendant du nom du nœud. Écrit uniquement s'il est utilisé,
+    // pour ne pas alourdir les fichiers ni modifier les diagrammes existants
+    // (rétro-compatible : absence des clés ⇒ défauts false/'' au chargement).
+    if (node_base.name_label_custom) {
+      json_object['name_label_custom'] = true
+    }
+    if (node_base.name_label_text !== '') {
+      json_object['name_label_text'] = node_base.name_label_text
+    }
     if (node_base.sankey.default_style.shape_position_type == 'parametric') {
       json_object['u'] = node_base.position_u
       json_object['v'] = node_base.position_v
@@ -250,6 +277,8 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
+    node_base['_name_label_custom'] = getBooleanFromJSON(json_node_object, 'name_label_custom', node_base.name_label_custom)
+    node_base['_name_label_text'] = getStringFromJSON(json_node_object, 'name_label_text', node_base.name_label_text)
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
 
@@ -279,6 +308,10 @@ export class ContainerPersistence extends NodeBasePersistence {
     super.toJSON(container, json_object, kwargs)
     json_object['tiedToNode'] = container.tied_to_nodes
     json_object['attachedNodes'] = container.attached_node.map(n => n.id)
+    // Titre du diagramme : zone de texte marquée is_title (additif/rétrocompatible)
+    if (container.is_title) {
+      json_object['is_title'] = true
+    }
 
     return json_object
   }
@@ -366,6 +399,8 @@ export class ContainerPersistence extends NodeBasePersistence {
     kwargs?: Type_JSON
   ): void {
     super.fromJSON(version, container, json_object, kwargs)
+
+    container['_is_title'] = getBooleanFromJSON(json_object, 'is_title', false)
 
     const configKeys = Object.keys(container['_config']) as Array<keyof ConfigType>
     configKeys.forEach(key => {
@@ -732,9 +767,26 @@ export class NodeElementPersistence extends NodeBasePersistence {
     // Stock & material balance
     if (node.has_stock) {
       json_object['has_stock'] = true
-      if (node._stock_values.has_data) {
+      // Save the stock values when there is input data OR a reconciled result
+      // (a reconciled-only stock has no input data but must still persist).
+      if (node._stock_values.has_data || node._stock_values.has_result) {
         json_object['stock_values'] = node._stock_values.toJSON()
       }
+    }
+    if (node.stock_shape_is_visible) {
+      json_object['stock_shape_is_visible'] = true
+    }
+    if (node.stock_si_caption !== 'Stock') {
+      json_object['stock_si_caption'] = node.stock_si_caption
+    }
+    if (node.stock_delta_caption !== 'Δ Stock') {
+      json_object['stock_delta_caption'] = node.stock_delta_caption
+    }
+    if (node.use_stock_for_height) {
+      json_object['use_stock_for_height'] = true
+    }
+    if (node.stock_height_scale_factor !== 1) {
+      json_object['stock_height_scale_factor'] = node.stock_height_scale_factor
     }
     if (!node.has_material_balance) {
       json_object['has_material_balance'] = false
@@ -941,8 +993,23 @@ export class NodeElementPersistence extends NodeBasePersistence {
     if (json_node_object['has_stock'] !== undefined) {
       node.has_stock = json_node_object['has_stock'] as boolean
     }
+    if (json_node_object['stock_shape_is_visible'] !== undefined) {
+      node.stock_shape_is_visible = json_node_object['stock_shape_is_visible'] as boolean
+    }
+    if (json_node_object['stock_si_caption'] !== undefined) {
+      node.stock_si_caption = json_node_object['stock_si_caption'] as string
+    }
+    if (json_node_object['stock_delta_caption'] !== undefined) {
+      node.stock_delta_caption = json_node_object['stock_delta_caption'] as string
+    }
     if (json_node_object['stock_values']) {
       node._stock_values.fromJSON(json_node_object['stock_values'] as Type_JSON)
+    }
+    if (json_node_object['use_stock_for_height'] !== undefined) {
+      node.use_stock_for_height = json_node_object['use_stock_for_height'] as boolean
+    }
+    if (json_node_object['stock_height_scale_factor'] !== undefined) {
+      node.stock_height_scale_factor = json_node_object['stock_height_scale_factor'] as number
     }
     if (json_node_object['has_material_balance'] !== undefined) {
       node.has_material_balance = json_node_object['has_material_balance'] as boolean
@@ -1448,6 +1515,19 @@ export class SankeyPersistence {
     // Icon catalog
     if (Object.keys(sankey.icon_catalog).length > 0) json_object['icon_catalog'] = sankey.icon_catalog as Type_JSON
 
+    // Ratio Flux constraints — diagram-level relations, canonical format shared
+    // with SankeyExcelParser (sankeyexcelparser#116). Additive & backward
+    // compatible: absent from older files -> the model keeps an empty list.
+    if (sankey.ratio_flux_constraints.length > 0)
+      json_object['ratio_flux_constraints'] = sankey.ratio_flux_constraints as unknown as Type_JSON
+
+    // Stock constraints (#156), same diagram-level canonical format. Additive &
+    // backward compatible: absent from older files -> empty lists.
+    if (sankey.ratio_stock_flux_constraints.length > 0)
+      json_object['ratio_stock_flux_constraints'] = sankey.ratio_stock_flux_constraints as unknown as Type_JSON
+    if (sankey.stock_chaining_constraints.length > 0)
+      json_object['stock_chaining_constraints'] = sankey.stock_chaining_constraints as unknown as Type_JSON
+
     sankey.create_child_links()
     // Out
     return json_object
@@ -1589,10 +1669,12 @@ export class SankeyPersistence {
     // First read styles
     if (json_object['style'] !== undefined) {
       // Set node styles from json data
-      const skip = [
-        LinkExportCloseStyle, LinkImportCloseStyle,
-        'LinkImportAboveStyle', 'LinkExportBelowStyle'
-      ]
+      // NE PLUS skipper LinkImportCloseStyle / LinkExportCloseStyle : ils étaient exclus du
+      // chargement, donc leurs valeurs sauvegardées (flux import/export collés) étaient perdues
+      // puis recréées par défaut (create_internal_style ne réécrit pas un style existant). On
+      // les charge maintenant comme les autres pour persister les réglages.
+      // ('LinkImportAboveStyle'/'LinkExportBelowStyle' n'existent pas comme styles → inoffensifs.)
+      const skip: string[] = []
 
       // D'abord traiter les styles dans l'ordre défini dans elementStyleConfigs
       const orderedStyleKeys = Object.keys(elementStyleConfigs) as ElementStyleKey[]
@@ -1612,7 +1694,7 @@ export class SankeyPersistence {
 
       // Ensuite traiter les styles personnalisés qui ne sont pas dans elementStyleConfigs
       Object.entries(json_object['style'])
-        .filter(([style_id, style_json]) =>
+        .filter(([style_id, _style_json]) =>
           !skip.includes(style_id) &&
           !Object.keys(elementStyleConfigs).includes(style_id)
         )
@@ -1638,6 +1720,10 @@ export class SankeyPersistence {
         kwargs
       )
     )
+    // #1231 (1.1.5) — fichier au format « centre » (marqueur explicite node_pos_is_center) ⇒
+    // les x/y des nœuds sont des CENTRES. On propage le drapeau via kwargs jusqu'à
+    // BaseElementPersistence.fromJSON. Absent (anciens fichiers) ⇒ x/y = coin → migration au draw.
+    const pos_is_center = json_object['node_pos_is_center'] === true
     SankeyPersistence.load_nodes(
       sankey,
       json_object,
@@ -1646,7 +1732,8 @@ export class SankeyPersistence {
         node,
         node_json as Type_JSON,
         kwargs
-      )
+      ),
+      { pos_is_center }
     )
     if (json_object.version != 0.8)
       sankey.nodes_list.forEach(node => node.dimensions_as_parent.forEach(dim => dim.normalize()))
@@ -1664,6 +1751,82 @@ export class SankeyPersistence {
     sankey.create_child_links()
     // Icon catalog
     sankey['_icon_catalog'] = getJSONFromJSON(json_object, 'icon_catalog', sankey.icon_catalog) as { [x: string]: string }
+
+    // Ratio Flux constraints (diagram-level, sankeyexcelparser#116). Additive:
+    // absent from older files -> empty list. The %IS/%OS/... family now lives
+    // here too (canonical), no longer per-link.
+    sankey.ratio_flux_constraints = (
+      Array.isArray(json_object['ratio_flux_constraints'])
+        ? json_object['ratio_flux_constraints']
+        : []
+    ) as unknown as Type_RatioFluxConstraint[]
+
+    // Stock constraints (#156). Additive: absent from older files -> empty.
+    sankey.ratio_stock_flux_constraints = (
+      Array.isArray(json_object['ratio_stock_flux_constraints'])
+        ? json_object['ratio_stock_flux_constraints']
+        : []
+    ) as unknown as Type_RatioStockFluxConstraint[]
+    sankey.stock_chaining_constraints = (
+      Array.isArray(json_object['stock_chaining_constraints'])
+        ? json_object['stock_chaining_constraints']
+        : []
+    ) as unknown as Type_StockChainingConstraint[]
+
+    // Legacy migration: older files store the %IS/%OS/... family per-link via
+    // value_option; fold them into the canonical list (sankeyexcelparser#116).
+    SankeyPersistence.migrate_legacy_link_ratios(sankey)
+  }
+
+  // Convert each legacy per-link %-type (value_option in %IS/%OS/%PS/%ID/%OD/%PD)
+  // into a diagram-level ratio_flux_constraints entry, then reset the link to a
+  // plain 'value' so it renders from its solved result and is no longer
+  // re-written per-link. Mirrors SankeyExcelParser create_ratio_constraint_from_json
+  // -> iter_ratio_flux_constraints. unit_ratio / intervals stay per-link.
+  private static migrate_legacy_link_ratios(sankey: Class_Sankey) {
+    const PERCENT = ['%IS', '%OS', '%PS', '%ID', '%OD', '%PD']
+    const firstParentName = (node: Class_NodeElement): string | null => {
+      const dims = node.dimensions_as_child
+      const parent = (dims && dims.length > 0) ? dims[0].parent : null
+      return parent ? parent.name : null
+    }
+    sankey.links_list.forEach((link) => {
+      const v = link.value
+      if (!v || !PERCENT.includes(v.value_option)) {
+        return
+      }
+      const X = link.source.name
+      const Y = link.target.name
+      // valueData holds the percentage (e.g. 60) -> canonical coef is the ratio.
+      const coef = (v.valueData != null) ? v.valueData / 100 : null
+      let origin_ref = ''
+      let destination_ref = ''
+      switch (v.value_option) {
+      case '%IS': origin_ref = '*'; destination_ref = X; break
+      case '%OS': origin_ref = X; destination_ref = '*'; break
+      case '%ID': origin_ref = '*'; destination_ref = Y; break
+      case '%OD': origin_ref = Y; destination_ref = '*'; break
+      case '%PS': {
+        const p = firstParentName(link.source)
+        if (!p) { return }  // no parent -> leave per-link (no data loss)
+        origin_ref = p; destination_ref = Y; break
+      }
+      case '%PD': {
+        const p = firstParentName(link.target)
+        if (!p) { return }
+        origin_ref = X; destination_ref = p; break
+      }
+      default: return
+      }
+      sankey.ratio_flux_constraints.push({
+        origin: X, destination: Y,
+        origin_ref, destination_ref,
+        coef, min: null, max: null,
+        data_tag: null, data_tag_ref: null, traduction: null
+      })
+      v.value_option = 'value'
+      v.valueData = null
+    })
   }
 
   private static load_tags(json_object: Type_JSON, sankey: Class_Sankey) {
@@ -1785,6 +1948,10 @@ export class DrawingAreaPersistence {
     const json_object = {} as Type_JSON
     // Add current version of app
     json_object['version'] = drawing_area.application_data.version
+    // #1231 (1.1.5) — marqueur de format : les x/y des nœuds sont des CENTRES (indépendant
+    // du datatag/échelle). Drapeau explicite (et non comparaison de version) → robuste et
+    // découplé du numéro de version. Absent ⇒ ancien format (coin) → migration au 1er draw.
+    json_object['node_pos_is_center'] = true
     // Dump DA attributes
     json_object['height'] = drawing_area.height
     json_object['width'] = drawing_area.width
@@ -1798,6 +1965,21 @@ export class DrawingAreaPersistence {
     if (drawing_area.minimum_flux) json_object['minimum_flux'] = drawing_area.minimum_flux
     if (!drawing_area.structure_mode_force_min) json_object['structure_mode_force_min'] = false
     if (drawing_area.arrow_use_standalone_layout) json_object['arrow_use_standalone_layout'] = true
+    // Issue #165 — toujours sérialisé : l'absence du flag identifie un fichier
+    // antérieur à la feature (chargé en déverrouillé pour préserver son rendu).
+    json_object['font_size_locked'] = drawing_area.font_size_locked
+    // Verrou de taille (largeur/hauteur/zoom figés au changement de dataTag).
+    // Défaut false → sérialisé seulement si activé (absence ⇒ déverrouillé).
+    if (drawing_area.size_locked) json_object['size_locked'] = true
+    // Mode de représentation import/export (proche / haut-bas) : persisté car les nœuds
+    // import/export siblings sont régénérés au chargement (cf. SplitIOrE).
+    if (drawing_area.import_export_above_below) json_object['import_export_above_below'] = true
+    // Datatag de référence du mode % (couple flux/datatag). Le flux de réf est persisté
+    // via l'attribut de lien `shape_is_reference_flux` ; le MODE lui-même n'est PAS persisté.
+    {
+      const ref_dt = drawing_area.nodePositioning.proportionalReferenceDatatagIds
+      if (ref_dt && ref_dt.length > 0) json_object['prop_reference_datatag'] = ref_dt
+    }
     if (drawing_area.filter_label > 0) json_object['filter_label'] = drawing_area.filter_label
     if (drawing_area.filter_link_value > 0) json_object['filter_link_value'] = drawing_area.filter_link_value
     if (drawing_area.type_data != initial_show_structure) json_object['show_structure'] = drawing_area.type_data
@@ -1824,7 +2006,18 @@ export class DrawingAreaPersistence {
       ...SankeyPersistence.toJSON(drawing_area.sankey, kwargs)
     }
 
-    out['order_g_elements'] = drawing_area.list_g_element // Order elements by id 
+    // Order elements by id — limité aux éléments réellement sérialisés en mode
+    // sauvegarde partielle (visibles seuls / tags), sinon tout l'ordre est conservé.
+    if (kwargs && (kwargs['save_only_visible_elements'] || kwargs['save_only_elements_with_tags'])) {
+      const saved_ids = new Set([
+        ...Object.keys((out['nodes'] as Type_JSON) ?? {}),
+        ...Object.keys((out['links'] as Type_JSON) ?? {}),
+        ...Object.keys((out['labels'] as Type_JSON) ?? {})
+      ])
+      out['order_g_elements'] = drawing_area.list_g_element.filter(id => saved_ids.has(id))
+    } else {
+      out['order_g_elements'] = drawing_area.list_g_element
+    }
     return out
   }
 
@@ -2083,6 +2276,17 @@ export class DrawingAreaPersistence {
       // le user devra réeffectuer ses expansions sur les fichiers legacy.
       this.fromJSON_pre_0_94(json_object)
     }
+    // Issue #165 — Mode « police verrouillée » (taille écran constante quel que
+    // soit le zoom). Les fichiers sans ce flag sont antérieurs à la feature :
+    // on les charge en déverrouillé pour préserver exactement leur rendu
+    // d'origine (police native qui grandit/rétrécit avec le zoom). Les fichiers
+    // récents sérialisent toujours le flag (cf. toJSON), donc présence ⇒ valeur
+    // explicite. Un nouveau diagramme (non chargé) démarre verrouillé.
+    drawing_area['_font_size_locked'] = getBooleanFromJSON(json_object, 'font_size_locked', false)
+    // Verrou de taille : champ direct (le setter size_locked déclenche un re-fit).
+    // Absence du flag ⇒ déverrouillé (défaut de la classe).
+    drawing_area['_size_locked'] = getBooleanFromJSON(json_object, 'size_locked', false)
+    drawing_area['_import_export_above_below'] = getBooleanFromJSON(json_object, 'import_export_above_below', false)
 
     drawing_area.application_data.language = getStringOrUndefinedFromJSON(json_object, 'language')
     drawing_area['_color'] = getStringFromJSON(json_object, 'couleur_fond_sankey', drawing_area.color)
@@ -2157,5 +2361,26 @@ export class DrawingAreaPersistence {
     }
     drawing_area.name = getStringFromJSON(json_object, 'name', drawing_area.name)
 
+    // #1231 — Le MODE de positionnement n'est PAS persisté : tout fichier se charge en mode
+    // ABSOLU (le mode % / échelle adaptée est une vue transitoire que l'utilisateur réactive).
+    // 'parametric' (ancien) et 'proportional' → 'absolute'. La valeur 'parametric' reste valide
+    // en interne pour les styles par-nœud d'échange import/export — on ne force QUE le style global.
+    if (drawing_area.sankey.default_style.shape_position_type === 'parametric' ||
+        drawing_area.sankey.default_style.shape_position_type === 'proportional' ||
+        drawing_area.sankey.default_style.shape_position_type === 'scale_adapted') {
+      drawing_area.sankey.default_style.shape_position_type = 'absolute'
+    }
+
+    // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
+    // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
+    // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne
+    // réactive pas le mode % (qui réutilisera ce couple).
+    drawing_area.nodePositioning.attachReferenceLinkFromAttributes()
+    {
+      const ref_dt = json_object['prop_reference_datatag']
+      if (Array.isArray(ref_dt)) {
+        drawing_area.nodePositioning.proportionalReferenceDatatagIds = ref_dt.map(String)
+      }
+    }
   }
 }

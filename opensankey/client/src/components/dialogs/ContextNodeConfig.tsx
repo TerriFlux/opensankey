@@ -209,8 +209,16 @@ export const NODE_MENU_CONFIG: MenuConfig = {
     {
       type: 'submenu',
       titleKey: 'align',
+      // L'alignement opère sur les nœuds ET les zones de texte sélectionnés :
+      // afficher la section dès qu'au moins deux de ces éléments sont sélectionnés
+      // (ex. 1 nœud + 1 zone de texte).
       visibilityConditions: [
-        { type: 'nodeCount', operator: '>', value: 1 }
+        {
+          type: 'custom',
+          customCheck: (app_data) =>
+            app_data.drawing_area.selected_nodes_list.length +
+            app_data.drawing_area.selected_containers_list.length > 1
+        }
       ],
       children: [
         {

@@ -1,5 +1,10 @@
 import React, { useState, useRef } from 'react'
-import Draggable from 'react-draggable'
+import Draggable, { DraggableProps } from 'react-draggable'
+
+// react-draggable : les typings embarqués rendent les props optionnelles, mais
+// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
+// On relâche le type ici pour que le build passe quelle que soit la source des typings.
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 import {
   Button,
   Box,
@@ -162,7 +167,7 @@ export const ModalExcelTemplate = ({
   if (!show) return null
 
   return (
-    <Draggable
+    <DraggableComponent
       nodeRef={nodeRef}
       handle='.excel-template-handle'
       defaultPosition={{ x: window.innerWidth / 4, y: window.innerHeight / 4 }}
@@ -267,6 +272,6 @@ export const ModalExcelTemplate = ({
           </Button>
         </Box>
       </Box>
-    </Draggable>
+    </DraggableComponent>
   )
 }

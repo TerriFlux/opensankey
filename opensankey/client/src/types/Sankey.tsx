@@ -41,9 +41,52 @@ import {
   default_style_name,
 } from '../types/Utils'
 import { sortNodesElements } from '../Elements/NodeBase'
-import { ALL_ATTRIBUTES_CONFIG } from '../Elements/ElementsAttributesConfig'
+import { ALL_ATTRIBUTES_CONFIG, default_title_bold, default_title_font_size, default_title_id, default_title_text } from '../Elements/ElementsAttributesConfig'
 import { Class_ElementStyle, Class_ProtoElement, StorageType } from '../Elements/Element'
 import { Class_ContainerElement } from '../Elements/TextZone'
+
+// One Ratio Flux constraint row (mirror of SankeyExcelParser
+// iter_ratio_flux_constraints / the "Ratio Flux" Excel sheet). "*" on a side
+// denotes an aggregate of all incoming/outgoing flux of the other node.
+export type Type_RatioFluxConstraint = {
+  origin: string,
+  destination: string,
+  origin_ref: string,
+  destination_ref: string,
+  coef: number | null,
+  min: number | null,
+  max: number | null,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
+
+// One Ratio Stock Flux constraint row (#156, mirror of SankeyExcelParser
+// iter_ratio_stock_flux_constraints / the "Ratio Stock Flux" Excel sheet):
+//   flux[origin -> destination, période] = coef × S[stock, période réf]
+export type Type_RatioStockFluxConstraint = {
+  origin: string,
+  destination: string,
+  coef: number | null,
+  min: number | null,
+  max: number | null,
+  stock: string,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
+
+// One Stock Chaining constraint row (#156, mirror of
+// iter_stock_chaining_constraints / the "Chaînage Stock" Excel sheet):
+//   S[stock, période] = coef × S[stock, période réf] + Δstock[delta_stock, période]
+export type Type_StockChainingConstraint = {
+  stock: string,
+  coef: number | null,
+  delta_stock: string,
+  data_tag: string | null,
+  data_tag_ref: string | null,
+  traduction: string | null,
+}
 
 export class Class_Sankey {
   public drawing_area: Class_DrawingArea
@@ -80,6 +123,16 @@ export class Class_Sankey {
 
   private _icon_catalog: { [x: string]: string } = {}
 
+  // Ratio Flux constraints — diagram-level relations between flux (incl. the
+  // %IS/%OS/... family), canonical representation shared with the Excel parser
+  // (sankeyexcelparser#116). Stored natively because value_option per-link can
+  // only express a subset (no flux<->flux, no min/max, no "*" aggregates).
+  private _ratio_flux_constraints: Type_RatioFluxConstraint[] = []
+  // Stock constraints (#156), same diagram-level canonical representation,
+  // shared with the Excel parser and edited from the spreadsheet tabs.
+  private _ratio_stock_flux_constraints: Type_RatioStockFluxConstraint[] = []
+  private _stock_chaining_constraints: Type_StockChainingConstraint[] = []
+
   public normalised_link?: Class_LinkElement
 
   constructor(
@@ -94,6 +147,9 @@ export class Class_Sankey {
     this._data_tags_fingerprint = randomId()
 
     this._icon_catalog = {}
+    this._ratio_flux_constraints = []
+    this._ratio_stock_flux_constraints = []
+    this._stock_chaining_constraints = []
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -101,6 +157,30 @@ export class Class_Sankey {
 
   public get dimensions_list() {
     return Object.values(this._nodes_dimensions)
+  }
+
+  public get ratio_flux_constraints(): Type_RatioFluxConstraint[] {
+    return this._ratio_flux_constraints
+  }
+
+  public set ratio_flux_constraints(_: Type_RatioFluxConstraint[]) {
+    this._ratio_flux_constraints = _ ?? []
+  }
+
+  public get ratio_stock_flux_constraints(): Type_RatioStockFluxConstraint[] {
+    return this._ratio_stock_flux_constraints
+  }
+
+  public set ratio_stock_flux_constraints(_: Type_RatioStockFluxConstraint[]) {
+    this._ratio_stock_flux_constraints = _ ?? []
+  }
+
+  public get stock_chaining_constraints(): Type_StockChainingConstraint[] {
+    return this._stock_chaining_constraints
+  }
+
+  public set stock_chaining_constraints(_: Type_StockChainingConstraint[]) {
+    this._stock_chaining_constraints = _ ?? []
   }
 
   public delete() {
@@ -426,6 +506,53 @@ export class Class_Sankey {
     const id = 'shape' + n
     const name = 'Forme ' + n
     return this.addNewContainer(id, name)
+  }
+
+  /**
+   * Retourne la zone de texte marquée comme titre du diagramme (ou undefined).
+   */
+  public getTitleContainer(): Class_ContainerElement | undefined {
+    return this.containers_list.find(c => c.is_title)
+  }
+
+  /**
+   * Retourne le container titre, en le créant s'il n'existe pas. À la création :
+   * gras, plus gros, centré, sans cadre, positionné en haut et centré sur le
+   * contenu. C'est une zone de texte normale, éditable via l'interface ZDT.
+   */
+  public getOrCreateTitleContainer(): Class_ContainerElement {
+    const existing = this.getTitleContainer()
+    if (existing) return existing
+    const title = this.addNewContainer(default_title_id, default_title_text)
+    title.is_title = true
+    // Le titre édite un texte de label indépendant (name_label_text), il ne
+    // renomme PAS la zone de texte (name reste l'identifiant interne).
+    title.name_label_custom = true
+    title.name_label_text = default_title_text
+    title.name_label_bold = true
+    title.name_label_font_size = default_title_font_size
+    title.name_label_horiz = 'middle'
+    title.shape_border_visible = false
+    title.shape_color_visible = false
+    const pos = this._computeTitleTopCenter(title.getShapeWidthToUse())
+    title.setPosXY(pos.x, pos.y)
+    return title
+  }
+
+  /**
+   * Position par défaut du titre : centré horizontalement sur la bbox logique
+   * des nœuds visibles, juste au-dessus.
+   */
+  private _computeTitleTopCenter(title_width: number): { x: number, y: number } {
+    const nodes = this.visible_nodes_list
+    if (nodes.length === 0) return { x: 0, y: 0 }
+    let min_x = Infinity, max_x = -Infinity, min_y = Infinity
+    nodes.forEach(n => {
+      min_x = Math.min(min_x, n.position_x)
+      max_x = Math.max(max_x, n.position_x + n.getShapeWidthToUse())
+      min_y = Math.min(min_y, n.position_y)
+    })
+    return { x: (min_x + max_x) / 2 - title_width / 2, y: min_y - 60 }
   }
 
   public addNewNodeWithName(name: string): Class_NodeElement {
@@ -1030,6 +1157,10 @@ export class Class_Sankey {
       return
     }
 
+    // Persister le mode (les nœuds import/export siblings étant régénérés au chargement,
+    // leur style seul ne survit pas ; SplitIOrE lira ce drapeau).
+    this.drawing_area.import_export_above_below = !close
+
     this.drawing_area.bypass_redraws = true
     const process_nodes = this.nodes_list
     const echangeTag = this.node_taggs_dict['type de noeud'].tags_dict['echange']
@@ -1043,7 +1174,7 @@ export class Class_Sankey {
 
     if (close) {
       // Mode "close" pour les imports
-      import_nodes.forEach((n, i) => {
+      import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportCloseStyle],
@@ -1083,7 +1214,7 @@ export class Class_Sankey {
       })
     } else {
       // Mode "above/below" pour les imports
-      import_nodes.forEach((n, i) => {
+      import_nodes.forEach((n, _i) => {
         // if (i == 0) n.sibling!.replaceStyles([
         //   node_styles_dict[NodeSectorStyle],
         //   node_styles_dict[NodeImportExportAboveBelowStyle],

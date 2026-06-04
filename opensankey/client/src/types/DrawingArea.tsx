@@ -26,7 +26,7 @@
 
 import * as d3 from 'd3'
 import { MouseEvent } from 'react'
-import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, default_main_sankey_id } from '../types/Utils'
+import { Type_JSON, Type_Structure, Type_DataSource, Type_IntervalDisplay, Type_DisaggregationGap, default_main_sankey_id } from '../types/Utils'
 import {
   default_background_color,
   default_black_color,
@@ -49,6 +49,7 @@ import {
 import {
   Class_NodeElement,
 } from '../Elements/Node'
+import { Class_StockShape } from '../Elements/StockShape'
 import {
   Class_LinkElement,
   sortLinksElementsByIds
@@ -94,6 +95,9 @@ export class Class_DrawingArea {
   // Scrollbars
   private _d3_scrollbar_h: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
   private _d3_scrollbar_v: d3.Selection<SVGGElement, unknown, HTMLElement, unknown> | null = null
+  // Border drawn directly on the SVG root (outside g_drawing's zoom transform)
+  // so it always frames the visible viewport, regardless of pan/zoom.
+  private _d3_viewport_border: d3.Selection<SVGRectElement, unknown, HTMLElement, unknown> | null = null
   private _scrollbar_size = 10
 
 
@@ -138,6 +142,98 @@ export class Class_DrawingArea {
   public _scale: number = default_scale
   private starting_x_point = 0
   private starting_y_point = 0
+
+  // Effective fit zoom applied by areaAutoFit. Used as a per-label font-size
+  // multiplier (1/_k_fit) so requested font-size in px stays constant on screen
+  // regardless of how aggressively the auto-fit shrinks the view (e.g. when
+  // _scale is large like 1e6 and the fit zoom collapses to ~1e-4). Stays at 1
+  // until areaAutoFit runs. Updated only by areaAutoFit (not by manual zoom).
+  protected _k_fit: number = 1
+  public get k_fit(): number { return this._k_fit }
+
+  // Issue #165 — Mode « police verrouillée ». Quand true (défaut), la taille de
+  // police des labels reste CONSTANTE à l'écran quel que soit le niveau de zoom
+  // (molette ET fit) : getEffectiveFontSize divise font_size par le zoom live
+  // (cf. font_compensation) et un re-render des labels est déclenché à chaque
+  // zoom. Quand false, la police vit dans le repère zoomé et grandit/rétrécit
+  // avec le zoom (comportement natif historique). Les fichiers persisted sans ce
+  // flag (antérieurs à la feature) chargent en false pour préserver leur rendu
+  // d'origine ; un nouveau diagramme démarre en true.
+  // Mode de représentation des nœuds import/export : false = « proche » (collé au
+  // nœud), true = « haut/bas » (en haut/bas du diagramme). Les nœuds import/export siblings
+  // sont RÉGÉNÉRÉS à chaque chargement par splitTrade/SplitIOrE → leur style ne peut pas être
+  // persisté directement. On persiste donc ce drapeau, lu par SplitIOrE (auparavant déduit à
+  // tort de `shape_position_type === 'parametric'`).
+  protected _import_export_above_below: boolean = false
+  public get import_export_above_below(): boolean { return this._import_export_above_below }
+  public set import_export_above_below(v: boolean) { this._import_export_above_below = v }
+
+  // Mode d'écart vertical des enfants pour les opérations structurelles
+  // (désagrégation, expansion latérale, englobement). Persisté (défaut 'fill' =
+  // comportement historique #1231). cf. Type_DisaggregationGap.
+  protected _disaggregation_gap_mode: Type_DisaggregationGap = 'fill'
+  public get disaggregation_gap_mode(): Type_DisaggregationGap { return this._disaggregation_gap_mode }
+  public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
+
+  // Écart constant (px) utilisé par le mode 'constant'. null = utiliser
+  // default_style.shape_position_dy (le getter le résout). Persisté seulement si défini.
+  protected _disaggregation_gap_value: number | null = null
+  public get disaggregation_gap_value(): number {
+    if (this._disaggregation_gap_value != null) return this._disaggregation_gap_value
+    return this._sankey?.default_style?.shape_position_dy ?? 0
+  }
+  public set disaggregation_gap_value(v: number) { this._disaggregation_gap_value = v }
+
+  // Surcharge TRANSITOIRE du mode d'écart pour une opération ponctuelle (clic droit).
+  // Non persistée, non copiée : posée juste avant l'op puis effacée. Le helper de
+  // positionnement lit `gap_mode_override ?? disaggregation_gap_mode`.
+  public gap_mode_override: Type_DisaggregationGap | undefined = undefined
+  public get effective_gap_mode(): Type_DisaggregationGap {
+    return this.gap_mode_override ?? this._disaggregation_gap_mode
+  }
+
+  protected _font_size_locked: boolean = true
+  public get font_size_locked(): boolean { return this._font_size_locked }
+  public set font_size_locked(v: boolean) {
+    if (this._font_size_locked === v) return
+    this._font_size_locked = v
+    this._refreshLabelsForFitZoom()
+  }
+
+  /**
+   * Multiplicateur appliqué à la font-size d'un label pour compenser le zoom.
+   * Mode verrouillé : 1 / zoom_live → la taille écran (font_size px) reste
+   * constante quel que soit le zoom. Mode déverrouillé : 1 → police native qui
+   * scale avec le repère zoomé. Source unique pour tous les calculs de label.
+   */
+  public get font_compensation(): number {
+    if (!this._font_size_locked) return 1
+    const k = this.getZoomScale()
+    return k > 0 ? 1 / k : 1
+  }
+
+  // Verrou de taille (#1240) : quand actif, le cadrage courant (hauteur, largeur,
+  // zoom) est figé tel quel — areaAutoFit devient inerte, donc plus de reflow d'un
+  // dataTag à l'autre. Aucun recalcul : l'utilisateur se place sur le dataTag voulu
+  // (le plus grand) puis verrouille. Persisté (cf. SankeyPersistence), défaut false.
+  protected _size_locked: boolean = false
+  public get size_locked(): boolean { return this._size_locked }
+  public set size_locked(v: boolean) {
+    if (this._size_locked === v) return
+    this._size_locked = v
+    // Verrouiller = figer le cadrage courant tel quel (pas de recalcul).
+    // Déverrouiller = on réajuste sur le dataTag courant.
+    if (v) this._locked_fit_dirty = false
+    else this.areaAutoFit()
+  }
+
+  // Cadrage verrouillé « à (re)calculer » : true tant que le layout n'est pas
+  // stabilisé (1er chargement, ou recenter ayant décalé les positions APRÈS le
+  // dernier fit). Le prochain draw verrouillé recalcule alors un fit vertical sur
+  // les positions finales puis repasse à false, ce qui fige le cadrage pour les
+  // changements de dataTag suivants. Évite de figer un transform périmé calculé
+  // trop tôt (avant recenter), cf. ApplicationData.fromJSON (draw → recenter → draw).
+  protected _locked_fit_dirty: boolean = true
 
   protected createNewSankey(id: string = default_main_sankey_id) {
     const sankey = new Class_Sankey(this, id)
@@ -334,6 +430,13 @@ export class Class_DrawingArea {
     this._data_source = drawing_area_to_copy._data_source
     this._interval_display = drawing_area_to_copy._interval_display
     this._width = drawing_area_to_copy._width
+    // Champ direct (pas le setter font_size_locked, qui a un garde + effet de bord)
+    this._font_size_locked = drawing_area_to_copy._font_size_locked
+    // Idem : champ direct, le setter size_locked déclenche un re-fit.
+    this._size_locked = drawing_area_to_copy._size_locked
+    this._import_export_above_below = drawing_area_to_copy._import_export_above_below
+    this._disaggregation_gap_mode = drawing_area_to_copy._disaggregation_gap_mode
+    this._disaggregation_gap_value = drawing_area_to_copy._disaggregation_gap_value
 
     this._show_background_image = drawing_area_to_copy._show_background_image
     this._background_image = drawing_area_to_copy._background_image
@@ -356,7 +459,12 @@ export class Class_DrawingArea {
   public afterFromJSON() {
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] : undefined
     const exchanges_nodes = this.sankey.nodes_list.filter(n => n.hasGivenTag(echangeTag!))
-    if (exchanges_nodes.length > 0 && (exchanges_nodes[0].input_links_list.length > 1 || exchanges_nodes[0].output_links_list.length > 1)) {
+    // Split dès qu'un nœud échange non encore splitté porte au moins un lien.
+    // `node.sibling` (et non le nombre de liens) marque un nœud déjà issu d'un
+    // split : les siblings import/export portent aussi le tag `echange` et ont
+    // exactement 1 lien, donc l'ancien seuil `> 1` ratait les échanges
+    // mono-flux (mfa_problem#222 : échanges produit/secteur asymétriques).
+    if (exchanges_nodes.some(n => !n.sibling && (n.input_links_list.length > 0 || n.output_links_list.length > 0))) {
       this.nodePositioning.splitTrade()
     }
     this.nodePositioning.arrangeTrade(true)
@@ -368,6 +476,13 @@ export class Class_DrawingArea {
     // This function calls explictly for a redraw
     this.bypass_redraws = false
 
+    // #1240 — Verrou de taille : _initDraw recrée le SVG de zoom et perd le
+    // transform (zoom/pan) ; areaAutoFit étant inerte quand verrouillé, on
+    // capture la vue courante avant de redessiner pour la réappliquer à
+    // l'identique après (le cadrage ne bouge donc pas d'un dataTag à l'autre).
+    const zoom_node = this._size_locked ? this.d3_selection_zoom_area?.node() : null
+    const locked_zoom_transform = zoom_node ? d3.zoomTransform(zoom_node) : null
+
     // Clean drawing area
     this.unDraw()
 
@@ -378,7 +493,24 @@ export class Class_DrawingArea {
     this.drawElements()
     // Fit area
 
-    this.areaAutoFit()
+    // Mode verrouillé : tant que le cadrage est « dirty » (1er rendu, ou recenter
+    // ayant décalé les positions après le dernier fit), on RECALCULE un fit unique
+    // sur les positions finales puis on fige (dirty=false). Sinon on réapplique à
+    // l'identique le transform capturé ci-dessus (cadrage figé d'un dataTag à
+    // l'autre). Ce fit verrouillé est VERTICAL (comme le mode static / le fit
+    // vertical manuel) : l'heuristique horiz/vert choisirait souvent l'horizontal
+    // et ferait déborder en hauteur ; le vertical garantit que le dataTag le plus
+    // grand tient dans la hauteur de la fenêtre.
+    const recompute_locked = this._size_locked && (this._locked_fit_dirty || !locked_zoom_transform)
+    this.areaAutoFit(recompute_locked ? false : undefined, recompute_locked)
+    if (recompute_locked) {
+      this._locked_fit_dirty = false
+    } else if (locked_zoom_transform && this.d3_selection_zoom_area) {
+      this.zoomListener.transform(this.d3_selection_zoom_area, locked_zoom_transform)
+      this.drawBackground()
+      this.drawGrid()
+      this._updateScrollbars()
+    }
     this._legend.draw()
     // Added events listeners
     this.setEventsListeners()
@@ -440,6 +572,14 @@ export class Class_DrawingArea {
 
     // Scrollbars (outside g_drawing so they stay fixed in viewport)
     this._initScrollbars()
+
+    // Viewport border (outside g_drawing → fixed frame, unaffected by pan/zoom)
+    this._d3_viewport_border = this.d3_selection_zoom_area.append('rect')
+      .attr('id', 'viewport_border')
+      .attr('fill', 'none')
+      .style('pointer-events', 'none')
+      .style('shape-rendering', 'crispEdges')
+    this._updateViewportBorder()
   }
 
   /**
@@ -496,6 +636,22 @@ export class Class_DrawingArea {
     // refreshed here before any node is drawn. Single source of truth.
     if (this.sankey.styles_dict['default'].shape_position_type === 'parametric') {
       this.nodePositioning.recomputeParametricLayout({ type: 'all' })
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'proportional') {
+      // #1231 — Mode proportionnel : garder le centre vertical des nœuds à une
+      // fraction constante de la hauteur du diagramme (en plus du centre fixe sous
+      // changement d'épaisseur). Doit tourner avant _sankey.draw().
+      this.nodePositioning.anchorProportionalNodes()
+    } else if (this.sankey.styles_dict['default'].shape_position_type === 'scale_adapted') {
+      // #1231 — Mode « échelle adaptée » : ajuster l'échelle (valeur→px) pour que le flux
+      // de référence garde la même épaisseur d'un datatag à l'autre, puis garder le centre
+      // des nœuds fixe pendant qu'ils se redimensionnent (comme l'absolu). Avant _sankey.draw().
+      this.nodePositioning.applyAdaptedScale()
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
+    } else {
+      // #1230 — Mode coordonnées absolues : garder le centre des nœuds fixe quand
+      // leur taille de rendu change (échelle/valeur/bascule de vue). Doit tourner
+      // avant _sankey.draw() pour que le coin recalculé soit utilisé dès cette frame.
+      this.nodePositioning.anchorAbsoluteNodesByCenter()
     }
     // Draw grid
     this.drawBackground()
@@ -505,6 +661,18 @@ export class Class_DrawingArea {
     //this._sankey.sortNodes()
     // Draw all nodes
     this._sankey.draw()
+    // #665 (refonte #1231) — post-processing « flux droit ». Tourne APRÈS un premier draw : le
+    // cache d'accroche (getOutputLinkStartingPoint/…) reflète les épaisseurs courantes. Déplace
+    // les nœuds cibles des flux marqués pour les rendre droits ; si ça bouge, on redessine une
+    // seule fois — appel direct à _sankey.draw() (pas drawElements) pour éviter la récursion.
+    // #1231 — DÉSACTIVÉ en mode proportionnel : la compression (anchorProportionalNodes, facteur
+    // global f_eff) place les nœuds de façon déterministe, et déplacer une cible pour « garder
+    // droit » casse cet empilement (résultat incohérent). Le flux droit reste actif en absolu /
+    // échelle adaptée.
+    if (this.sankey.styles_dict['default'].shape_position_type !== 'proportional' &&
+        this.nodePositioning.enforceStraightLinks()) {
+      this._sankey.draw()
+    }
     // Draw legend
     //this._legend.draw()
     this.drawBgImage()
@@ -814,7 +982,16 @@ export class Class_DrawingArea {
     }
   }
 
-  public areaAutoFit(horiz?: boolean) {
+  public areaAutoFit(horiz?: boolean, force_when_locked?: boolean) {
+
+    // Verrou de taille (#1240) : cadrage (hauteur, largeur, zoom) figé tel quel —
+    // aucun auto-fit au changement de dataTag. Exception : au tout premier rendu
+    // (chargement, ex. mode publish) aucun transform de zoom n'existe encore à
+    // réappliquer ; on autorise alors un fit unique pour établir le cadrage
+    // initial, qui restera ensuite figé (force_when_locked).
+    if (this._size_locked && !force_when_locked) return
+
+    const prev_k_fit = this._k_fit
 
     // Paper mode: dimensions are fixed, only adjust zoom to fit canvas in viewport
     if (this.is_paper_mode) {
@@ -826,6 +1003,7 @@ export class Class_DrawingArea {
         const new_k = Math.min(k_w, k_h)
         this._k_horiz = k_w
         this._k_vert = k_h
+        this._k_fit = new_k
         this._zoom_width = this._width
         this._zoom_height = this._height
         this._background_d3_groups_shift_x = 0
@@ -839,30 +1017,88 @@ export class Class_DrawingArea {
           [this._fit_margin / 2, this._fit_margin / 2 + this.getNavBarHeight()])
         this.drawBackground()
         this.drawGrid()
+        if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       }
       return
     }
 
-    let bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    // Issue #165 — Anti-divergence : quand la compensation fit-zoom est active
+    // (_k_fit < 1, donc labels grossis en coords locales pour rester à N px
+    // écran), les labels peuvent dominer le getBBox et faire diverger les fits
+    // successifs en cascade (bbox grandit → k_fit chute → labels encore plus
+    // gros). On masque temporairement les <text> pour fitter sur les formes
+    // uniquement. Au tout premier autoFit (_k_fit=1, pas encore de
+    // compensation), on garde le comportement historique qui inclut les labels.
+    // En mode déverrouillé (police native), aucune compensation : on inclut
+    // toujours les labels comme avant #165 (pas de divergence possible).
+    const skip_text_in_bbox = this._font_size_locked && this._k_fit !== 1
+    // Débordement des labels exclus de la bbox de fit (en px ÉCRAN), réservé plus
+    // bas pour que les labels en bord de diagramme ne touchent pas la bordure.
+    let label_overflow_left = 0
+    let label_overflow_right = 0
+    let label_overflow_top = 0
+    let label_overflow_bottom = 0
+    let bbox: DOMRect | undefined
+    if (skip_text_in_bbox) {
+      // Conversion monde→écran : les labels sont contre-scalés par
+      // font_compensation = 1/getZoomScale() (zoom LIVE), donc débordement monde
+      // × zoom live = px écran. NE PAS utiliser _k_fit : il peut différer du zoom
+      // live (molette depuis le dernier fit) et fausser la réserve — d'autant
+      // plus visible quand le fit collapse à ~1e-4 (grand user_scale).
+      const k_live = this.getZoomScale()
+      const full_bbox = this.d3_selection_elements_group?.node()?.getBBox()
+      const hidden_texts = this.d3_selection_elements_group?.selectAll<SVGTextElement, unknown>('text')
+      hidden_texts?.style('display', 'none')
+      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+      hidden_texts?.style('display', null)
+      if (full_bbox && bbox) {
+        label_overflow_left = Math.max(0, bbox.x - full_bbox.x) * k_live
+        label_overflow_right = Math.max(0, (full_bbox.x + full_bbox.width) - (bbox.x + bbox.width)) * k_live
+        label_overflow_top = Math.max(0, bbox.y - full_bbox.y) * k_live
+        label_overflow_bottom = Math.max(0, (full_bbox.y + full_bbox.height) - (bbox.y + bbox.height)) * k_live
+      }
+    } else {
+      bbox = this.d3_selection_elements_group?.node()?.getBBox() ?? undefined
+    }
 
     if (bbox == undefined)
       return
-    if (this.legend.is_visible && this.legend.stick_to_drawing) {
+    // Issue #165 — Anti-divergence : la legend stick_to_drawing est contre-
+    // scalée par 1/k_fit dans son transform (cf. Legend.applyPosition). Sa
+    // bbox locale est donc démultipliée par le même facteur, et l'inclure
+    // ici ferait diverger les fits successifs comme pour les <text>. On
+    // l'exclut quand la compensation est active.
+    if (!skip_text_in_bbox && this.legend.is_visible && this.legend.stick_to_drawing) {
       const legendBbox = this.d3_selection_legend?.node()?.getBBox()
       if (legendBbox) {
-        // Calculer la bounding box englobante
-        const minX = Math.min(bbox.x, legendBbox.x)
-        const minY = Math.min(bbox.y, legendBbox.y)
-        const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
-        const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
+        // Une légende stick_to_drawing peut être glissée arbitrairement loin du
+        // contenu (souvent par accident, ou héritée d'une position obsolète).
+        // L'inclure inconditionnellement gonflait la bbox de cadrage : l'auto-fit
+        // gardait alors une zone géante impossible à rapetisser, la légende
+        // restant hors écran sans retour possible. On ne l'inclut donc dans le
+        // cadrage que si elle est proche du contenu (à fit_margin près) ; sinon
+        // on fitte uniquement sur les éléments.
+        const tol = this._fit_margin
+        const legend_near_content =
+          legendBbox.x <= bbox.x + bbox.width + tol &&
+          legendBbox.x + legendBbox.width >= bbox.x - tol &&
+          legendBbox.y <= bbox.y + bbox.height + tol &&
+          legendBbox.y + legendBbox.height >= bbox.y - tol
+        if (legend_near_content) {
+          // Calculer la bounding box englobante
+          const minX = Math.min(bbox.x, legendBbox.x)
+          const minY = Math.min(bbox.y, legendBbox.y)
+          const maxX = Math.max(bbox.x + bbox.width, legendBbox.x + legendBbox.width)
+          const maxY = Math.max(bbox.y + bbox.height, legendBbox.y + legendBbox.height)
 
-        // Créer une nouvelle bbox combinée
-        bbox = {
-          x: minX,
-          y: minY,
-          width: maxX - minX,
-          height: maxY - minY
-        } as DOMRect
+          // Créer une nouvelle bbox combinée
+          bbox = {
+            x: minX,
+            y: minY,
+            width: maxX - minX,
+            height: maxY - minY
+          } as DOMRect
+        }
       }
     }
 
@@ -879,6 +1115,7 @@ export class Class_DrawingArea {
       this._background_d3_groups_shift_y = 0
       this._k_horiz = 1
       this._k_vert = 1
+      this._k_fit = 1
       if (this.d3_selection_zoom_area) {
         this._updateScrollbars()
         this.zoomListener.scaleTo(this.d3_selection_zoom_area, 1)
@@ -888,6 +1125,7 @@ export class Class_DrawingArea {
       }
       this.drawBackground()
       this.drawGrid()
+      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
       return
     }
 
@@ -919,7 +1157,15 @@ export class Class_DrawingArea {
       // } else {
       this._k_vert = new_k_height
       // }
-      const new_k = is_horiz ? new_k_horiz : new_k_height
+      // Le translateTo place le bord du monde à _fit_margin/2 px (marge fixe à
+      // gauche/haut). L'échelle doit donc étaler le monde sur (fenêtre - _fit_margin)
+      // et non sur toute la fenêtre, sinon le bord opposé déborde de _fit_margin/2
+      // et la marge symétrique disparaît de ce côté. On retranche en plus le
+      // débordement des labels (px écran), exclus de la bbox de fit (#165).
+      const new_k = is_horiz
+        ? (this.window_fitting_width - this._fit_margin - label_overflow_left - label_overflow_right) / this.width
+        : (this.window_fitting_height - this._fit_margin - label_overflow_top - label_overflow_bottom) / this.height
+      this._k_fit = new_k
       this._zoom_height = is_horiz ? Math.max(this.height, Math.min(this.height, this.window_fitting_height) / this._k_horiz) : this.height
       this._zoom_width = !is_horiz ? Math.max(this.width, Math.min(this.width, this.window_fitting_width) / this._k_vert) : this.width
       // Refresh translateExtent BEFORE scaleTo/translateTo so d3-zoom's constrain
@@ -929,10 +1175,55 @@ export class Class_DrawingArea {
       this.zoomListener.scaleTo(this.d3_selection_zoom_area, new_k)
       this.zoomListener.translateTo(
         this.d3_selection_zoom_area, 0, 0,
-        [this._fit_margin / 2 - this._background_d3_groups_shift_x * new_k, this._fit_margin / 2 + this.getNavBarHeight() - this._background_d3_groups_shift_y * new_k])
+        [this._fit_margin / 2 + (is_horiz ? label_overflow_left : 0) - this._background_d3_groups_shift_x * new_k,
+          this._fit_margin / 2 + this.getNavBarHeight() + (!is_horiz ? label_overflow_top : 0) - this._background_d3_groups_shift_y * new_k])
       this.drawBackground()
       this.drawGrid()
+      if (this._k_fit !== prev_k_fit) this._refreshLabelsForFitZoom()
     }
+  }
+
+  /**
+   * Re-render all node/link labels so the zoom compensation applied to
+   * font-size (see DrawLabelBase.getEffectiveFontSize) takes effect. En mode
+   * verrouillé (#165), déclenché à la fois par areaAutoFit (changement de k_fit)
+   * ET par le zoom molette (eventZoom, débouncé) : les labels ont été dessinés à
+   * l'ancien multiplicateur, un fresh draw est requis pour mettre à jour la
+   * font-size et les offsets de positionnement dépendants.
+   */
+  /**
+   * Force le recalcul de la font-size des labels (compensation 1/k) sur le zoom
+   * COURANT, sans condition. À utiliser avant un export : `_pre_process_export_svg` cale le
+   * zoom sur le fit (areaAutoFit) mais areaAutoFit ne rafraîchit les labels que si k_fit a
+   * changé — or ils peuvent porter la compensation d'un zoom manuel (ou d'une frame précédente),
+   * d'où une police non réajustée à l'échelle d'export. Cet appel garantit la cohérence
+   * font_size/k au moment de la capture.
+   */
+  public refreshLabelsForExport() {
+    this._refreshLabelsForFitZoom()
+  }
+
+  private _refreshLabelsForFitZoom() {
+    this._sankey.nodes_list.forEach(n => {
+      n.drawNameLabel()
+      n.drawValueLabel()
+      n.drawStockBox()
+    })
+    this._sankey.links_list.forEach(l => {
+      l.drawNameLabel()
+      l.drawValueLabel()
+    })
+    // ZDT (zones de texte / containers OS+) héritent de NodeBase mais n'ont
+    // qu'un name_label (pas de value_label). Le name_label utilise la même
+    // chaîne DrawLabel donc bénéficie aussi de la compensation.
+    this._sankey.containers_list.forEach(c => {
+      c.drawNameLabel()
+    })
+    // Legend : pas de compensation par-attribut (font-size hardcodée à
+    // _legend_police partout). À la place, on contre-scale son groupe racine
+    // via Legend.applyPosition() qui lit k_fit. Suffit de re-déclencher la
+    // pose du transform.
+    this._legend.applyPosition()
   }
 
   /**
@@ -941,9 +1232,9 @@ export class Class_DrawingArea {
    * and swap label horiz↔vert positions. Calling twice restores original state.
    */
   public verticalizeDiagram = () => {
-    const hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
+    const _hPosFromV = (v: Type_TextVPos): Type_TextHPos =>
       v === 'top' ? 'left' : v === 'bottom' ? 'right' : 'middle'
-    const vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
+    const _vPosFromH = (h: Type_TextHPos): Type_TextVPos =>
       h === 'left' ? 'top' : h === 'right' ? 'bottom' : 'middle'
     const flipOrientation = (o: Type_Orientation): Type_Orientation => {
       if (o === 'hh') return 'vv'
@@ -1267,6 +1558,7 @@ export class Class_DrawingArea {
     if (this.d3_selection_zoom_area) {
       this.d3_selection_zoom_area.remove()
       this.d3_selection_zoom_area = null
+      this._d3_viewport_border = null
     }
   }
 
@@ -1321,7 +1613,13 @@ export class Class_DrawingArea {
       this.legend.draw()
     }
 
-    this.areaAutoFit()
+    // recenter a décalé les positions et redessiné les éléments : la bbox reflète
+    // désormais le layout FINAL. En mode verrouillé on recalcule donc ici un fit
+    // VERTICAL sur ces positions définitives (et on lève le drapeau dirty), ce qui
+    // fige le bon cadrage — y compris dans les flux sans draw ultérieur. Sinon, fit
+    // normal (heuristique horiz/vert).
+    this.areaAutoFit(this._size_locked ? false : undefined, this._size_locked)
+    if (this._size_locked) this._locked_fit_dirty = false
     this.orderElementOnDA()
   }
   /**
@@ -1330,10 +1628,11 @@ export class Class_DrawingArea {
    * @param {*} drawing_area
    */
   protected drawBackground() {
-    const height = this.application_data.publish_options.embedded ? '100%' : this.height
     // Clean if needed
     this.d3_selection_bg?.selectAll('.bg').remove()
-    // Draw background
+    // Draw background (fill only — the editable-canvas border is drawn separately
+    // on the SVG root via _updateViewportBorder so it stays anchored to the viewport
+    // and doesn't slide off-screen when the user pans content).
     this.d3_selection_bg?.append('rect')
       .attr('class', 'bg')
       .attr('id', 'bg_drawing_area')
@@ -1343,12 +1642,36 @@ export class Class_DrawingArea {
       .attr(
         'transform',
         'translate(' + this._background_d3_groups_shift_x + ', ' + this._background_d3_groups_shift_y + ')')
-    if (this.editable) {
-      this.d3_selection_bg?.select('rect').style('stroke-width', 5)
-      this.d3_selection_bg?.select('rect').style('stroke', default_black_color)
-    }
+    this._updateViewportBorder()
     this.drawCursor()
     this.drawBgImage()
+  }
+
+  /**
+   * Position and size the viewport border rect so it frames the visible drawing
+   * area on the SVG root (outside g_drawing). Called on init and on every
+   * drawBackground() so it tracks navbar/bottombar/window changes.
+   */
+  private _updateViewportBorder() {
+    if (!this._d3_viewport_border) return
+    if (!this.editable) {
+      this._d3_viewport_border.attr('visibility', 'hidden')
+      return
+    }
+    const fm = this._fit_margin / 2
+    const navH = this.getNavBarHeight()
+    const viewW = this.window_fitting_width
+    const viewH = this.window_fitting_height
+    // viewW/viewH already exclude fit_margin and navbar/bottombar, so they map
+    // directly to the framed area (x=fm, y=navH+fm, w=viewW, h=viewH).
+    this._d3_viewport_border
+      .attr('visibility', 'visible')
+      .attr('x', fm)
+      .attr('y', navH + fm)
+      .attr('width', Math.max(0, viewW))
+      .attr('height', Math.max(0, viewH))
+      .style('stroke', default_black_color)
+      .style('stroke-width', 1)
   }
 
   /**
@@ -1467,7 +1790,7 @@ export class Class_DrawingArea {
    * @memberof Class_DrawingArea
    */
   private eventDoubleLMBClick(
-    event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
+    _event: React.MouseEvent<HTMLButtonElement, React.MouseEvent>
   ) {
     //if (event.ctrlKey) return
     //this.closeAllMenus()
@@ -1541,6 +1864,10 @@ export class Class_DrawingArea {
           target,
           this)
         this.drawing_link = true
+        // Peuple source._output_links_starting_point[ghost_link.id] pour que le
+        // 1er rendu du ghost_link voie son starting_point (sinon drawElements
+        // est skip et aucun path n'est tracé pendant le drag initial).
+        source.applyPosition()
         this._ghost_link_source = source
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
 
@@ -1996,30 +2323,15 @@ export class Class_DrawingArea {
 
     // Get the real bounding box of all content in g_drawing's local coordinate system
     // This handles negative coordinates correctly since getBBox returns the untransformed extent
-    let bbox: DOMRect
+    let bbox: DOMRect | null = null
     try {
       bbox = gNode.getBBox()
     } catch {
-      return // getBBox can throw if element has no rendered content
+      // getBBox can throw if element has no rendered content; treat as empty
     }
-    if (bbox.width === 0 && bbox.height === 0) return
+    const has_bbox = !!bbox && (bbox.width !== 0 || bbox.height !== 0)
 
-    // Map content bbox to screen coordinates using the zoom transform
-    const transform = d3.zoomTransform(svgNode)
-    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
-    const screenLeft = transform.x + bbox.x * transform.k
-    const screenRight = transform.x + (bbox.x + bbox.width) * transform.k
-    const screenTop = transform.y + bbox.y * transform.k
-    const screenBottom = transform.y + (bbox.y + bbox.height) * transform.k
-    const screenW = screenRight - screenLeft
-    const screenH = screenBottom - screenTop
-
-    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
-    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
-    // The translateExtent must include the "canvas" rectangle (paper in paper mode,
-    // background rect in free mode) so the custom constrain (anchor top-left) aligns
-    // that canvas to the viewport's top-left — not the elements bbox, which could be
-    // a small sub-region and would leave the canvas off-anchored.
+    // Canvas (paper or free-mode background) bounds in world coords
     let canvasX0: number
     let canvasY0: number
     let canvasX1: number
@@ -2035,13 +2347,35 @@ export class Class_DrawingArea {
       canvasX1 = canvasX0 + this._zoom_width
       canvasY1 = canvasY0 + this._zoom_height
     }
-    const panX0 = Math.min(bbox.x, canvasX0)
-    const panY0 = Math.min(bbox.y, canvasY0)
-    const panX1 = Math.max(bbox.x + bbox.width, canvasX1)
-    const panY1 = Math.max(bbox.y + bbox.height, canvasY1)
+    // Constrain zoom pan: content bbox in world coords + usable viewport (excludes navbar / bottom bar).
+    // d3-zoom clamps translateBy/scaleBy so the user can't pan past the content edges.
+    // The translateExtent must include the "canvas" rectangle so the custom constrain
+    // (anchor top-left) aligns that canvas to the viewport's top-left.
+    const panX0 = has_bbox ? Math.min(bbox!.x, canvasX0) : canvasX0
+    const panY0 = has_bbox ? Math.min(bbox!.y, canvasY0) : canvasY0
+    const panX1 = has_bbox ? Math.max(bbox!.x + bbox!.width, canvasX1) : canvasX1
+    const panY1 = has_bbox ? Math.max(bbox!.y + bbox!.height, canvasY1) : canvasY1
+    // Inset the viewport extent by fit_margin/2 so the constrain anchors the canvas
+    // top-left at (fit_margin/2, navH + fit_margin/2) — leaving a symmetric margin
+    // on the 4 sides (left/right/bottom = fit_margin/2; top = navbar + fit_margin/2).
+    const fm = this._fit_margin / 2
     this.zoomListener
-      .extent([[0, navH], [viewW, navH + viewH]])
+      .extent([[fm, navH + fm], [viewW - fm, navH + viewH - fm]])
       .translateExtent([[panX0, panY0], [panX1, panY1]])
+    // Without an actual bbox we can't (and don't need to) update scrollbars — they
+    // stay hidden until there is content. The extent / translateExtent above are
+    // enough for the initial draw and for empty-diagram resets to anchor correctly.
+    if (!has_bbox) return
+
+    // Map content bbox to screen coordinates using the zoom transform
+    const transform = d3.zoomTransform(svgNode)
+    // In screen space: point (localX, localY) -> (transform.x + localX * k, transform.y + localY * k)
+    const screenLeft = transform.x + bbox!.x * transform.k
+    const screenRight = transform.x + (bbox!.x + bbox!.width) * transform.k
+    const screenTop = transform.y + bbox!.y * transform.k
+    const screenBottom = transform.y + (bbox!.y + bbox!.height) * transform.k
+    const screenW = screenRight - screenLeft
+    const screenH = screenBottom - screenTop
 
     // Horizontal scrollbar: content wider than viewport
     // interrupt() cancels any pending d3 transition that could override opacity
@@ -2154,6 +2488,18 @@ export class Class_DrawingArea {
       this.application_data._add_waiting_process('update_scrollbars', () => {
         this._updateScrollbars()
       }, 100)
+
+      // Issue #165 — Mode verrouillé : la font-size écran doit rester constante
+      // pendant le zoom molette. Le zoom change le repère local (donc la taille
+      // apparente du texte) ; on re-render les labels avec le nouveau facteur de
+      // compensation (font_compensation lit le zoom live). Débouncé pour ne pas
+      // re-dessiner à chaque tick. En mode déverrouillé, le texte scale nativement
+      // avec le repère : aucun re-render nécessaire.
+      if (this._font_size_locked) {
+        this.application_data._add_waiting_process('refresh_labels_zoom', () => {
+          this._refreshLabelsForFitZoom()
+        }, 120)
+      }
     }
   }
 
@@ -2290,6 +2636,12 @@ export class Class_DrawingArea {
     return Object.values(this._selection)
       .filter(element => element instanceof Class_ContainerElement) as Class_ContainerElement[]
   }
+  // Stock visual sub-elements currently selected (SA#1229). Edited via the node
+  // appearance panels, which treat them as Class_NodeBase.
+  public get selected_stock_shapes_list(): Class_StockShape[] {
+    return Object.values(this._selection)
+      .filter(element => element instanceof Class_StockShape) as Class_StockShape[]
+  }
   // selected sorted
   public get selected_nodes_list_sorted(): Class_NodeElement[] {
     return this.selected_nodes_list
@@ -2324,8 +2676,25 @@ export class Class_DrawingArea {
     if (this.is_bg_image_ratio_mode) return
     this._height = _; this.drawBackground(); this.drawGrid()
   }
-  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() }
-  public get window_fitting_width(): number { return window.innerWidth - this._fit_margin }
+  public get window_fitting_height(): number { return window.innerHeight - this._fit_margin - this.getNavBarHeight() - this.getBottomBarHeight() - this.main_zone_bottom_reserved }
+  // Hauteur réservée en bas de la grande zone pour la doc (modes diagram-bottom / window-bottom).
+  // Source globale (menu_configuration), symétrique de main_zone_right_reserved. Null-safe : la
+  // drawing area est construite pendant le super() de ApplicationData, AVANT que la sous-classe ne
+  // crée menu_configuration (createNewMenuConfiguration) -> réserve nulle tant qu'il n'existe pas.
+  public get main_zone_bottom_reserved(): number {
+    return this.application_data.menu_configuration?.getMainZoneBottomReservedPx() ?? 0
+  }
+  // Largeur réservée à droite de la grande zone pour le tableur/doc (split view). Source globale
+  // (menu_configuration) plutôt qu'un champ par instance : sinon chaque vue, recréée à la volée par
+  // extractViewFromJSON, repartirait à 0 et déborderait sous le tableur. Le diagramme se recadre
+  // dans la largeur restante via areaAutoFit() (cf MainZoneTabs, déclenché au toggle / changement
+  // de vue).
+  public get main_zone_right_reserved(): number {
+    return this.application_data.menu_configuration?.getMainZoneRightReservedPx() ?? 0
+  }
+  public get window_fitting_width(): number {
+    return window.innerWidth - this._fit_margin - this.main_zone_right_reserved
+  }
 
   // Paper format getters/setters
 
@@ -2691,13 +3060,71 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       if (n.shape_position_v_locked !== true) n.position_v = -1
     })
+    // #1231 — mode « écart » : capturer le cadre de référence (médiane globale + centre
+    // par colonne + sommes par colonne) sur l'état courant cohérent, comme le mode
+    // proportionnel. Les centres de colonne suivront ensuite le % au changement de
+    // datatag/dimension, avec écarts constants. Fait après backCalculateShapePositionDyFromY
+    // et avant computeParametrization (l'ordre V ne change pas l'étendue géométrique).
+    this.nodePositioning.captureProportionalReference()
     this.nodePositioning.computeParametrization(false)
     this.bypass_redraws = false
   }
 
   public setAbsoluteMode() {
     const default_style = this.sankey.styles_dict['default']
+    const prev_mode = default_style.shape_position_type
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 — le flux/datatag de référence sont PERSISTÉS et conservés en mode absolu (on ne
+    // les efface plus) : seul le MODE change. Re-entrer en % réutilisera le couple de réf.
     default_style.shape_position_type = 'absolute'
+    if (prev_mode === 'scale_adapted' || prev_mode === 'proportional') {
+      // #1231 (1.1.5) — sortie d'un mode d'AFFICHAGE (échelle / proportionnel) : le coin
+      // courant est du scratch (rescalé par l'échelle adaptée, ou comprimé par le %). On
+      // FORCE le retour aux vrais centres stockés, sinon les positions d'affichage
+      // deviendraient les positions absolues (le % « collait »). Centres invariants → on
+      // retrouve exactement la position absolue d'avant l'entrée du mode.
+      this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    } else {
+      // #1230 — prev = absolu / parametric (ex. ops structurelles) : le coin courant EST la
+      // nouvelle vérité → on le commit comme centre (settle), pour que le 1er draw n'introduise
+      // aucun saut.
+      this.sankey.nodes_list.forEach(n => n.settleCenterAnchor())
+    }
+  }
+
+  // #1231 — Mode « échelle adaptée » : le flux de référence (clic droit) garde toujours la
+  // même épaisseur ; l'échelle du diagramme s'adapte à chaque datatag en conséquence. Les
+  // nœuds gardent leur centre fixe (comme l'absolu) pendant qu'ils se redimensionnent.
+  public setScaleAdaptedMode() {
+    const default_style = this.sankey.styles_dict['default']
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (proportionnel), le coin courant est
+    // comprimé. On revient d'abord aux VRAIS centres (sinon settleCenterAnchor figerait le
+    // coin comprimé comme centre → centres faussés). L'échelle adaptée part donc des positions
+    // absolues réelles ; le draw applique ensuite le rescale autour des centres invariants.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    default_style.shape_position_type = 'scale_adapted'
+    this.nodePositioning.captureScaleReference()
+    // #1231 — redessiner immédiatement pour appliquer l'échelle adaptée dès l'entrée du
+    // mode (sinon le rescale n'apparaissait qu'au draw suivant : navigation datatag).
+    this.draw()
+  }
+
+  public setProportionalMode() {
+    const default_style = this.sankey.styles_dict['default']
+    // #1231 — quitter l'« échelle adaptée » restaure l'échelle de base.
+    this.nodePositioning.clearScaleAdaptation()
+    // #1231 (1.1.5) — si on vient d'un mode d'AFFICHAGE (échelle), le coin courant est du
+    // scratch rescalé. On revient d'abord aux VRAIS centres pour que la capture de référence
+    // (médiane, centres de colonne) parte des positions absolues réelles, pas de l'affichage.
+    this.nodePositioning.deriveAbsoluteNodesFromCenter()
+    default_style.shape_position_type = 'proportional'
+    // #1231 — identifier les colonnes (position_u, sans déplacer les nœuds) puis
+    // capturer le cadre de référence (médiane = centre de gravité, haut/bas, sommes
+    // par colonne, centre de réf de chaque nœud). Au datatag courant f=1 → pas de saut
+    // à la bascule ; les autres datatags compriment/dilatent autour de la médiane.
+    this.nodePositioning.inferPositionUFromX()
+    this.nodePositioning.captureProportionalReference()
   }
 
   public resetAllVerticalIntervals(v_spacing?: number) {

@@ -35,7 +35,7 @@ import type {
 import type { Class_DataTagGroup } from '../types/TagGroup'
 
 import { Type_BaseElementPosition, link_data_label } from '../types/Utils'
-import { Class_ElementValueTree, Class_LinkValue, ValueOptionType } from './LinkValues'
+import { Class_ElementValueTree, Class_LinkValue } from './LinkValues'
 import { LinkDrawShape } from './LinkDrawShape'
 import { LinkControlPoints } from './LinkControlPoints'
 import { LinkTooltip } from './TooltipsLink'
@@ -323,6 +323,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     this._values.delete()
   }
 
+  // Anchor deltas are plain instance fields (not _storage attributes), so the
+  // generic copyAttrFrom would drop them — carry them explicitly so view sync
+  // (UpdateFrom) and full copies keep the per-anchor gaps.
+  public copyAttrFrom(_: Class_LinkElement): void {
+    super.copyAttrFrom(_)
+    this.source_anchor_delta = _.source_anchor_delta
+    this.target_anchor_delta = _.target_anchor_delta
+  }
+
   //public copyFrom(_: Class_ProtoElement<typeof ALL_ATTRIBUTES_CONFIG>) {
   public copyFrom(_: Class_LinkElement) {
     super.copyFrom(_)
@@ -459,6 +468,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
 
   public drawAsSelected() {
     this._link_control_points.drawControlPoint()
+    // Tout changement de sélection au niveau élément (clic sur le flux)
+    // clear la sub-sélection du label — l'utilisateur doit cliquer sur
+    // le <text> d'un label pour faire (ré)apparaître les poignées.
+    this.selected_label_prefix = null
+    // Poignées dans `g_handlers` (Class_Handler) — refresh appelle unDraw si
+    // le label n'est plus sub-sélectionné.
+    this._link_draw_label?.refreshLabelResizeHandles()
+    this._link_draw_value?.refreshLabelResizeHandles()
+    this._link_draw_icon?.refreshLabelResizeHandles()
   }
 
   /**
@@ -1442,6 +1460,34 @@ export class Class_LinkElement extends Class_LinkAttribute {
   }
 
   /**
+   * Reverse link direction by swapping its source and target nodes.
+   * Done in one shot to avoid the transient source === target state
+   * that the source/target setters would otherwise read as a recycling link.
+   * @memberof Class_LinkElement
+   */
+  public swapSourceAndTarget() {
+    const old_source = this._source
+    const old_target = this._target
+    // Recycling link (source === target) : nothing to swap
+    if (old_source === old_target)
+      return
+    // Re-register the link on its nodes WITHOUT going through the source/target
+    // setters. Those setters (reached transitively via add*Link → `link.source = this`)
+    // would momentarily see source === target and wrongly flag the link as recycling.
+    // We unregister, flip the private refs, then re-register: by the time
+    // add*Link runs, _source/_target already hold the new values so the setters
+    // it calls are no-ops and shape_is_recycling stays untouched.
+    old_source.removeOutputLink(this)
+    old_target.removeInputLink(this)
+    this._source = old_target
+    this._target = old_source
+    old_target.addOutputLink(this) // old_target is the new source
+    old_source.addInputLink(this) // old_source is the new target
+    // Set to recompute visibility from nodes after
+    this._are_source_and_target_displayed = undefined
+  }
+
+  /**
    * Get starting node side for link
    * @readonly
    * @type {Type_Side}
@@ -1560,6 +1606,18 @@ export class Class_LinkElement extends Class_LinkAttribute {
       return this._values
     else
       return this._values.getValueForDataTags(_ as Class_DataTag[]) as Class_LinkValue | null
+  }
+
+  /**
+   * #1231 — Valeur numérique du flux pour un jeu de datatags EXPLICITE (même extraction que
+   * `valueCurrent`, mais sans dépendre de la sélection courante). Utilisé par le mode % pour
+   * lire la valeur du flux de référence à son datatag de référence (couple flux/datatag).
+   */
+  public valueForDataTags(data_tags: Class_DataTag[]): number | null {
+    const v = this.valueForTags(data_tags)
+    if (!v) return null
+    if (this.drawing_area.type_data === 'data') return v.valueData ?? null
+    return v.valueResult ?? ((v.value_option === 'value' || v.value_option === 'intervals') ? v.valueData : null) ?? null
   }
 
   public valueForTag(tag: Class_DataTag | undefined) {
@@ -1886,7 +1944,7 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (this.valueCurrent == null) return true
     }
     if (this.sankey.drawing_area.type_data == 'reconciled') {
-      if (this.value?.result_min !== null) return true
+      if (this.value?.has_intervals) return true
     }
     return this.shape_is_structure
   }

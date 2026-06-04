@@ -319,7 +319,7 @@ export class Class_ApplicationData {
   }
 
   // App
-  public version: string = '1.1.4'
+  public version: string = '1.1.5'
   public fit_screen: boolean
   public static_path: string = 'static/opensankey'
   public options: { [_: string]: boolean | string } = {}
@@ -339,6 +339,12 @@ export class Class_ApplicationData {
   // PROTECTED ATTRIBUTES ==============================================================
 
   protected _file_name = default_file_name
+
+  // Documentation markdown libre attachée au diagramme (onglet « Doc »), persistée en JSON.
+  protected _documentation_markdown: string = ''
+  // Pièces jointes images de la doc : map id -> data-URI base64. Référencées dans le markdown par
+  // `img://<id>` (garde l'éditeur lisible) ; persistées en JSON avec le diagramme (autonome).
+  protected _documentation_images: { [id: string]: string } = {}
 
 
   /**
@@ -568,6 +574,9 @@ export class Class_ApplicationData {
     // Reset drawing area
     const by_pass_redraw = this._drawing_area.bypass_redraws
     this._file_name = default_file_name
+    // La doc markdown est attachée au diagramme : un nouveau diagramme repart d'une doc vide.
+    this._documentation_markdown = ''
+    this._documentation_images = {}
     // Undraw and create new DA
     this._drawing_area.unDraw()
     this._drawing_area = this.createNewDrawingArea()
@@ -678,7 +687,7 @@ export class Class_ApplicationData {
     this.drawing_area.bypass_redraws = true
     const json_data = this._toJSON(kwargs)
     this.drawing_area.draw()
-    if ((kwargs && kwargs['mode_compressed'])) {
+    if (kwargs && kwargs['compression'] === 'gzip') {
       const compressed = compressJSONToGzip(json_data)
       const blob = new Blob([compressed as BlobPart], { type: 'application/gzip' })
       const gzFilename = this._file_name.endsWith('.json')
@@ -753,6 +762,9 @@ export class Class_ApplicationData {
     if (this._language !== undefined)
       json_object['language'] = this._language
     if (this._file_name != default_file_name) json_object['name_file'] = this._file_name
+    if (this._documentation_markdown !== '') json_object['documentation_markdown'] = this._documentation_markdown
+    if (Object.keys(this._documentation_images).length > 0) json_object['documentation_images'] = this._documentation_images
+    json_object['main_zone'] = this.menu_configuration.mainZoneStateToJSON()
     return {
       ...json_object,
       ...DrawingAreaPersistence.toJSON(this.drawing_area, kwargs)
@@ -810,7 +822,11 @@ export class Class_ApplicationData {
     // Update drawing area
     DrawingAreaPersistence.fromJSON(this._drawing_area, json_object, kwargs)
     this._file_name = getStringFromJSON(json_object, 'name_file', this._file_name)
-
+    this._documentation_markdown = getStringFromJSON(json_object, 'documentation_markdown', '')
+    const imgs = json_object['documentation_images']
+    this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
+    const mz = json_object['main_zone']
+    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
   }
 
 
@@ -921,7 +937,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
     )
     //}
   }
@@ -970,6 +986,12 @@ export class Class_ApplicationData {
     if (d3_select && convert_fo) {
       d3_select.selectAll('foreignObject').nodes().forEach((node: d3.BaseType) => {
         const foNode = node as SVGForeignObjectElement
+        // Skip the inline edit-input foreignObjects (contenteditable div created by
+        // drawLabelInput, kept display:none until a label is double-clicked). They hold
+        // the raw, unformatted value and would otherwise be baked into a duplicate
+        // <text> overlapping the real label in PNG/PDF/SVG exports. Genuine rich-text
+        // label FOs use a non-editable .ql-editor div, so this leaves them untouched.
+        if (foNode.querySelector('[contenteditable]')) return
         // Measure wrapping on the LIVE original (clone is detached → no client rects).
         const originalFO = foNode.id ? document.getElementById(foNode.id) as unknown as SVGForeignObjectElement | null : null
         const measureDiv = (originalFO || foNode).querySelector('div') as HTMLElement | null
@@ -1137,11 +1159,13 @@ export class Class_ApplicationData {
         content: this.t('guide.menutop_edition'),
       },
       {
-        selector: '.menutop_button_save_in_cache',
+        // Save-in-cache moved to the topbar document-state block (undo/redo/save).
+        selector: '.topbar_button_save_in_cache',
         content: this.t('guide.save_in_cache'),
       },
       {
-        selector: '.tutorials_button',
+        // Visite guidée + Tutoriels (+ Sankeythèque) now live in the "Aide" dropdown.
+        selector: '.menutop_button_aide',
         content: this.t('guide.tutorials_button'),
       },
       ...(has_filter_toolbar ? [
@@ -1512,9 +1536,12 @@ export class Class_ApplicationData {
    */
   protected _isDrawingAreaActive() {
     const inputs = ['input', 'textarea']
+    const ae = document.activeElement as HTMLElement | null
     if (
-      document.activeElement &&
-      inputs.indexOf(document.activeElement.tagName.toLowerCase()) !== -1
+      ae && (
+        inputs.indexOf(ae.tagName.toLowerCase()) !== -1 ||
+        ae.isContentEditable
+      )
     ) {
       return false
     }
@@ -1583,6 +1610,10 @@ export class Class_ApplicationData {
   protected _pre_process_export_svg() {
     this.drawing_area.purgeSelection()
     this.drawing_area.areaAutoFit()
+    // areaAutoFit ne rafraîchit les labels que si k_fit a changé ; en export il faut
+    // que la font-size (compensée par 1/k) corresponde TOUJOURS au zoom d'export (= k_fit),
+    // sinon la police reste à la taille d'un zoom précédent → non réajustée dans le SVG capturé.
+    this.drawing_area.refreshLabelsForExport()
 
     const svg = this.drawing_area.d3_selection_zoom_area
     const svg_clone = svg?.clone(true) // clone so next instructions don't change displayed svg
@@ -1590,9 +1621,6 @@ export class Class_ApplicationData {
     // In paper mode, export at scale 1:1 (drawing area px = paper px)
     // In free mode, use the current zoom scale
     const scale_da = this.drawing_area.is_paper_mode ? 1 : this.drawing_area.getZoomScale()
-
-    // Legend width (if present)
-    const legend_w = !this.drawing_area.legend.masked ? this.drawing_area.legend.width : 0
 
     // areaAutoFit may shift the canvas origin to negative coordinates when content
     // (e.g. value labels above flows) extends past y=0; counter-translate g_drawing
@@ -1605,6 +1633,13 @@ export class Class_ApplicationData {
     const ty = -this.drawing_area.background_shift_y * scale_da + Class_ApplicationData.export_edge_padding
     svg_clone?.select('#g_drawing').attr('transform', `translate(${tx},${ty}) scale(${scale_da})`)
     svg_clone?.selectAll('input').remove()
+
+    // Drop editor-only chrome from the export. The editable-area frame (#viewport_border)
+    // lives on the zoom layer OUTSIDE g_drawing, so it keeps its on-screen position
+    // (offset by the nav bar height) instead of following the re-anchored diagram —
+    // it would otherwise be baked into the SVG/PNG/PDF as a stray border cutting across
+    // the export, shifted down by the top menu height.
+    svg_clone?.select('#viewport_border').remove()
 
     // wkhtmltoimage doesn't honor `dominant-baseline` consistently — node labels
     // render fine but link labels collide with their value-label sibling. We
@@ -1661,7 +1696,7 @@ export class Class_ApplicationData {
   public get url_prefix(): string { return this._url_prefix }
 
   public get logo(): string {
-    if (this.is_static && this.publish_options.logo) {
+    if (this.is_static && this.publish_options.logo !== null) {
       return this.publish_options.logo
     }
     return this._logo_opensankey
@@ -1721,8 +1756,18 @@ export class Class_ApplicationData {
   public get file_name(): string { return this._file_name }
   public set file_name(value: string) { this._file_name = value }
 
+  public get documentation_markdown(): string { return this._documentation_markdown }
+  public set documentation_markdown(value: string) { this._documentation_markdown = value }
+
+  public get documentation_images(): { [id: string]: string } { return this._documentation_images }
+  public set documentation_images(value: { [id: string]: string }) { this._documentation_images = value }
+
   /** Override in subclasses to expose named views as layout sources */
   public get layout_view_sources(): Array<{ id: string, name: string }> { return [] }
+
+  /** Override in subclasses to navigate to a named view (used by doc markdown `view://<id>` links).
+   *  No-op when views are not supported (base OpenSankey). */
+  public navigateToView(_id: string): void { /* no-op */ }
 
   /** Override in subclasses to build a temporary DA from a view id */
   public getDrawingAreaFromViewId(_id: string): Class_DrawingArea | undefined { return undefined }

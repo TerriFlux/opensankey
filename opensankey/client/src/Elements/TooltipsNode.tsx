@@ -218,7 +218,7 @@ export class NodeTooltip {
       this._node.sankey.flux_taggs_list.forEach(tagg => {
         const names: string[] = []
         link.flux_tags_list.forEach(tag => {
-          if (tag.group === tagg) names.push(tag.name)
+          if (tag.group === tagg) names.push(tag.display_name)
         })
         row += `<td>${names.join(', ') || '-'}</td>`
       })

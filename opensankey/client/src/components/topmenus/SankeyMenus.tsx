@@ -24,9 +24,14 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 
-import React, { MutableRefObject, useRef, useState } from 'react'
+import React, { MutableRefObject, useLayoutEffect, useRef, useState } from 'react'
 
-import Draggable from 'react-draggable'
+import Draggable, { DraggableProps } from 'react-draggable'
+
+// react-draggable : les typings embarqués rendent les props optionnelles, mais
+// @types/react-draggable (tiré par la résolution fraîche du CI) les rend requises.
+// On relâche le type ici pour que le build passe quelle que soit la source des typings.
+const DraggableComponent = Draggable as unknown as React.ComponentClass<Partial<DraggableProps>>
 
 import {
   Box,
@@ -36,19 +41,16 @@ import {
   Drawer,
   DrawerBody,
   DrawerContent,
-  Editable,
-  EditableInput,
-  EditablePreview,
   Text
 } from '@chakra-ui/react'
 
 import { ApplyLayoutDialog } from '../dialogs/SankeyMenuDialogs'
 import { DrawerSequenceDataTagg, ToolBarBottom } from './MenuBottom'
-import { SpreadSheet } from '../spreadsheet/SpreadSheet'
+import { useMainZone, mainZoneRightReservedPx } from '../spreadsheet/MainZoneTabs'
 import { modalResolutionPNG, modalResolutionPDF } from './SankeyExports'
-import { MenuTopNavBar, OpenSankeySaveButton } from './MenuTop'
+import { MenuTopNavBar } from './MenuTop'
 import { IType_DictHookRefSetterShowDialogComponents, keyTypeConfig, keyTypeElements, Type_AdditionalMenus } from '../../types/MenuConfig'
-import { DrawingAreaConfig, LegendConfig } from '../configmenus/SankeyMenuConfigurationLayout'
+import { DrawingAreaConfig, LegendConfig, TitleConfig } from '../configmenus/SankeyMenuConfigurationLayout'
 import { LinkValueTypeSelector, MenuConfigurationLinksData } from '../configmenus/SankeyMenuConfigurationLinksData'
 import { SankeyContainerSelection, SankeyNodeSelection } from '../configmenus/MenuElementsSelection'
 import { MenuConfigurationAppearance } from '../configmenus/MenuElementsAppearance'
@@ -59,10 +61,9 @@ import { UniversalFileConverter } from '../dialogs/PersistenceProcessDialog'
 import { FormatConfigStructure, } from '../dialogs/PersistenceProcessDialogConfigs'
 import { LabelRichTextEditor } from '../dialogs/RichTextEditor'
 //import { MenuUnit } from '../configmenus/MenuElementsLabelValue'
-import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
 
 export const menu_config_width = 20
-export const menu_config_min_width_px = 320
+export const menu_config_min_width_px = 420
 
 /**
  * Description placeholder
@@ -84,22 +85,42 @@ export const SankeyMenu = (
     output_config: FormatConfigStructure
   }
 ) => {
-  const { t, app_name, logo_terriflux, icon_library, menu_configuration } = app_data
+  const { t, icon_library, menu_configuration } = app_data
   const { icon_open_close_config } = icon_library
   const [show_nav, set_show_nav] = useState(false)
   const [, setCount] = useState(0)
 
   menu_configuration.ref_to_menu_updater.current = () => setCount(a => a + 1)
   menu_configuration.ref_menu_opened.current = [show_nav, (val) => set_show_nav(val)]
+
+  // getNavBarHeight() lit le DOM via getBoundingClientRect sur .TopMenu, qui
+  // n'existe pas encore au tout premier render -> fallback (~5rem) trop bas.
+  // Force un re-render apres mount (et re-mesure le navbar si sa taille change)
+  // pour que le bouton orange et le drawer aient le bon top immediatement.
+  useLayoutEffect(() => {
+    setCount(a => a + 1)
+    const navbar = document.getElementsByClassName('TopMenu')[0]
+    if (!navbar || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => setCount(a => a + 1))
+    ro.observe(navbar)
+    return () => ro.disconnect()
+  }, [])
+  // Largeur réservée à droite par le tableur (split) : on décale tout le chrome droite vers la
+  // gauche d'autant, comme si l'écran rétrécissait. useMainZone -> re-render au toggle/redimension.
+  useMainZone(app_data)
+  const rightReserve = mainZoneRightReservedPx(app_data)
   const drawer_width_css = 'max(' + menu_config_width + '%, ' + menu_config_min_width_px + 'px)'
-  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0] ? 'calc(' + drawer_width_css + ' + ' + app_data.drawing_area.fit_margin + 'px)' : app_data.drawing_area.fit_margin / 2
+  const posBtnOpenConfig = menu_configuration.ref_menu_opened.current[0]
+    ? 'calc(' + drawer_width_css + ' + ' + (app_data.drawing_area.fit_margin + rightReserve) + 'px)'
+    : (app_data.drawing_area.fit_margin + rightReserve)
   //Switch the variable value that handle opening and closing the configuration menu
   const toggleShow = () => {
     set_show_nav(!show_nav)
   }
 
-  // 1.75rem is the size of the btn save in cache + edit diagram name
-  const posTopMenuConfig = 'calc(' + (app_data.drawing_area.getNavBarHeight() + (app_data.drawing_area.fit_margin)) + 'px + 1.75rem)'
+  // Aligned with the floating config toggle button (same top as the wrench).
+  // The legacy +1.75rem offset was for the now-removed file_name Editable.
+  const posTopMenuConfig = app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin
 
   // JSX.Elements for the component ----------------------------------------------------------------
 
@@ -130,25 +151,8 @@ export const SankeyMenu = (
   />
 
 
-  const sankey_file_name = <Box style={{ top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin / 2, right: app_data.drawing_area.fit_margin / 2 }} className='toolbar_save_and_file_name' layerStyle='toolbar_save_and_file_name' >
-    <OpenSankeySaveButton new_data={app_data} />
-    <OSTooltip placement='left' label={t('Menu.tooltips.sankey_file_name') + app_data.file_name}>
-      <Box layerStyle='topbar_file_name' >
-        <Editable textAlign={'center'} justifyContent={'center'}
-          variant='name_file_editable'
-          defaultValue={app_data.file_name}
-          onSubmit={(evt) => {
-            if (evt) {
-              app_data.file_name = evt
-              setCount(a => a + 1)
-            }
-          }}>
-          <EditablePreview />
-          <EditableInput />
-        </Editable>
-      </Box>
-    </OSTooltip>
-  </Box>
+  // Save-in-cache button lives in the topbar document-state block
+  // (TopBarStateButtons in MenuTop). file_name Editable removed entirely.
 
   return (
     <>
@@ -156,7 +160,9 @@ export const SankeyMenu = (
       {(!app_data.is_static || app_data.publish_options.topbar) ?
         <MenuTopNavBar new_data={app_data} additionalMenus={additionalMenus} /> : <></>}
 
-      {/* Bottom Navbar with some more info */}
+      {/* Bottom Navbar — kept only for the data-tag sequence drawer (visible
+          when sequence groups exist). Footer with version/support/trial info
+          has been moved to the topbar (see MenuTopNavBar). */}
       {
         <Box
           className='BottomMenu'
@@ -166,51 +172,11 @@ export const SankeyMenu = (
           layerStyle='menubottom_layout_style'
         >
           <DrawerSequenceDataTagg new_data={app_data} />
-          {(!app_data.is_static || app_data.publish_options.footer) ? <Box
-            display='grid'
-            gridTemplateColumns='1fr 1fr 1fr 1fr 2fr'
-            margin='0.2rem'
-          >
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='start'
-            >
-              ©
-              <img
-                width={75}
-                src={logo_terriflux}
-                onClick={() => { window.open('https://terriflux.com/', '_blank') }}
-              />
-              - {t('tdr')}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              {app_name}
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='https://terriflux.com/mentions-legales/'>{t('legal')}</a>
-            </Box>
-            <Box layerStyle='menubottom_item_style'>
-              <a href='mailto:support@terriflux.fr	'>support@terriflux.fr</a>
-            </Box>
-            <Box
-              layerStyle='menubottom_item_style'
-              justifySelf='end'
-              paddingRight='1.5rem'
-              display='flex'
-              alignItems='center'
-              gap='0.5rem'
-            >
-              {additionalMenus.current.additional_bottom_item.map((el, i) => <React.Fragment key={i}>{el}</React.Fragment>)}
-            </Box>
-          </Box> :
-            <></>
-          }
         </Box>
       }
 
       {
         app_data.is_editable ? <>
-          {sankey_file_name}
           <Drawer
             blockScrollOnMount={false}
             isOpen={show_nav}
@@ -235,8 +201,8 @@ export const SankeyMenu = (
               className='drawer_menu_config'
               style={{
                 width: drawer_width_css,
-                height: 50 + '%',
-                right: app_data.drawing_area.fit_margin / 2,
+                height: 'fit-content',
+                right: app_data.drawing_area.fit_margin / 2 + rightReserve,
                 marginTop: posTopMenuConfig
               }}
             >
@@ -257,20 +223,28 @@ export const SankeyMenu = (
           <Button
             id='toggle-check'
             className='openMenu sideToolBar'
-            variant='toolbar_main_button'
+            variant='toolbar_button_open_filter'
+            size='sizeToolbarButton'
+            bg='primaire.1'
+            borderColor='secondaire.1'
+            _hover={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
+            _active={{ bg: 'tertiaire.1', borderColor: 'secondaire.1' }}
             onClick={toggleShow}
             value='menuConfigButton'
+            // Au-dessus de l'overlay tableur (zIndex 20) pour rester accessible en mode split/tableur.
+            zIndex={30}
             style={{
               right: posBtnOpenConfig,
-              top: posTopMenuConfig,
+              top: app_data.drawing_area.getNavBarHeight() + app_data.drawing_area.fit_margin,
             }}
           >
             {icon_open_close_config}
-          </Button></OSTooltip>
+          </Button>
+        </OSTooltip>
       ) : (<></>)}
 
 
-      {(!app_data.is_static || app_data.publish_options.toolbar) ? <ToolBarBottom
+      {(!app_data.is_static || app_data.publish_options.toolbar || app_data.publish_options.fit_toolbar) ? <ToolBarBottom
         new_data={app_data}
       /> : <></>}
 
@@ -431,9 +405,8 @@ const ConfigContent = ({ app_data, additional_menus }:
   const dict_config_windows: { [x: string]: { [x: string]: JSX.Element } } = {
     // Menus related to data config
     data: {
-      data: <WrapperContentConfig title={t('Menu.Config.title_table')}>
-        <SpreadSheet app_data={app_data} />
-      </WrapperContentConfig>,
+      // Le tableur (ex-reactgrid) a migré dans la grande zone (onglet "Tableur" de MainZoneTabs) ;
+      // il n'est plus exposé dans le panneau de config.
       node: <WrapperContentConfig title={t('Menu.Config.title_node')}>
         <SankeyNodeSelection app_data={app_data} />
       </WrapperContentConfig>,
@@ -458,6 +431,7 @@ const ConfigContent = ({ app_data, additional_menus }:
       legend: <WrapperContentConfig title={t('Menu.Config.title_legend')}>
         <>
           <LegendConfig app_data={app_data} />
+          <TitleConfig app_data={app_data} />
         </>
       </WrapperContentConfig>,
       element: <WrapperContentConfig title={t('Menu.Config.title_elements')}>
@@ -574,7 +548,7 @@ export const MenuDraggable = ({
   const [display_menu, set_display_menu] = useState(false)
   const nodeRef = useRef(null) // nodeRef as node from DOM (not Sankey node)
   dict_hook_ref_setter_show_dialog_components[dialog_name].current = set_display_menu
-  return <Draggable
+  return <DraggableComponent
     nodeRef={nodeRef}
     handle='.title_menu'
     defaultPosition={customPos !== undefined ? customPos : { x: window.innerWidth / 4, y: window.innerHeight / 4 }}
@@ -609,5 +583,5 @@ export const MenuDraggable = ({
         {content}
       </Box>
     </Box>
-  </Draggable>
+  </DraggableComponent>
 }

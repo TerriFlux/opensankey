@@ -24,12 +24,13 @@
 // Author        : Vincent LE DOZE & Vincent CLAVEL & Julien Alapetite for TerriFlux
 // ==================================================================================================
 import React from 'react'
-import { faAnchor, faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
-import { FaCaretSquareLeft, FaCaretSquareRight, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
+import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
+import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
   faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
-  faRotateLeft, faRotateRight, faScrewdriverWrench, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush
+  faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush,
+  faLock, faLockOpen, faFont
 } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
@@ -272,6 +273,41 @@ const logo_hh = <svg xmlns="http://www.w3.org/2000/svg"
   </g>
 </svg>
 // Ajout après logo_hh dans la section "Hand made icon"
+
+// Logo "Courbe" : une bézier en S avec tangentes horizontales aux extrémités,
+// qui évoque exactement la forme d'un flux courbé.
+const logo_courbe = <svg xmlns="http://www.w3.org/2000/svg"
+  width="1em"
+  height="1em"
+  viewBox="0 0 24 24"
+  fill="none"
+>
+  <path
+    d="M2 18 C12 18 12 6 22 6"
+    stroke="currentColor"
+    strokeWidth="2.6"
+    strokeLinecap="round"
+  />
+</svg>
+
+// Logo "Structure" : un flux réduit à son squelette (deux nœuds reliés par un
+// trait pointillé), pour le mode « comme s'il n'avait pas de valeur ».
+const logo_structure = <svg xmlns="http://www.w3.org/2000/svg"
+  width="1em"
+  height="1em"
+  viewBox="0 0 24 24"
+  fill="none"
+>
+  <path
+    d="M5 12 H19"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeDasharray="3 3.5"
+  />
+  <circle cx="4" cy="12" r="2.6" fill="currentColor" />
+  <circle cx="20" cy="12" r="2.6" fill="currentColor" />
+</svg>
 
 const logo_recycle = <svg xmlns="http://www.w3.org/2000/svg"
   width="1em"
@@ -596,6 +632,58 @@ const CapsuleHShapeIcon: React.FC<ShapeIconProps> = ({
     height={height}
   >
     <path d="M 4.5,4.5 h 8 a 4,4 0 0,1 0,8 h -8 a 4,4 0 0,1 0,-8 Z" />
+  </svg>
+)
+
+// Icônes de hachure : carré contour + traits parallèles selon l'orientation.
+// Utilisées par le sélecteur d'orientation de hachure du nœud.
+interface HatchIconProps {
+  stroke?: string
+  width?: string
+  height?: string
+}
+const HatchVerticalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="5" y1="1.5" x2="5" y2="15.5" />
+    <line x1="8.5" y1="1.5" x2="8.5" y2="15.5" />
+    <line x1="12" y1="1.5" x2="12" y2="15.5" />
+  </svg>
+)
+const HatchHorizontalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="5" x2="15.5" y2="5" />
+    <line x1="1.5" y1="8.5" x2="15.5" y2="8.5" />
+    <line x1="1.5" y1="12" x2="15.5" y2="12" />
+  </svg>
+)
+const HatchDiagonalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="9" x2="9" y2="1.5" />
+    <line x1="1.5" y1="15.5" x2="15.5" y2="1.5" />
+    <line x1="8" y1="15.5" x2="15.5" y2="8" />
+  </svg>
+)
+const HatchAntidiagonalIcon: React.FC<HatchIconProps> = ({
+  stroke = 'currentColor', width = '1rem', height = '1rem'
+}) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox='0 0 17 17' width={width} height={height}
+    fill="none" stroke={stroke} strokeWidth={1}>
+    <rect x="1.5" y="1.5" width="14" height="14" />
+    <line x1="1.5" y1="8" x2="9" y2="15.5" />
+    <line x1="1.5" y1="1.5" x2="15.5" y2="15.5" />
+    <line x1="8" y1="1.5" x2="15.5" y2="9" />
   </svg>
 )
 
@@ -1420,6 +1508,10 @@ export class Class_IconLibrary {
   protected _icon_ellipse_shape = <EllipseShapeIcon />
   protected _icon_capsule_shape = <CapsuleShapeIcon />
   protected _icon_capsule_h_shape = <CapsuleHShapeIcon />
+  protected _icon_hatch_vertical = <HatchVerticalIcon />
+  protected _icon_hatch_horizontal = <HatchHorizontalIcon />
+  protected _icon_hatch_diagonal = <HatchDiagonalIcon />
+  protected _icon_hatch_antidiagonal = <HatchAntidiagonalIcon />
   protected _icon_new_da = <FontAwesomeIcon icon={faPlus} />
 
   protected _icon_open_sankey = <FontAwesomeIcon icon={faFolderOpen} />
@@ -1464,6 +1556,11 @@ export class Class_IconLibrary {
   protected _icon_area_fit_vert = <FontAwesomeIcon icon={faArrowsUpDown} />
   protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
 
+  protected _icon_font_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
+  protected _icon_font_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
+  protected _icon_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faArrowsUpDown} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
+  protected _icon_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faArrowsUpDown} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
+
   protected _icon_config_spreadsheet = <FontAwesomeIcon icon={faTable} />
   protected _icon_config_menu = <FontAwesomeIcon icon={faSliders} />
 
@@ -1493,7 +1590,7 @@ export class Class_IconLibrary {
 
   protected _icon_open_config = <FaAngleDoubleLeft />
   protected _icon_close_config = <FaAngleDoubleRight />
-  protected _icon_open_close_config = <FontAwesomeIcon icon={faScrewdriverWrench} />
+  protected _icon_open_close_config = <FaCog />
 
   protected _icon_move_element_down = <FaArrowAltCircleDown />
   protected _icon_move_element_up = <FaArrowAltCircleUp />
@@ -1510,6 +1607,9 @@ export class Class_IconLibrary {
   protected _icon_orientation_hv = logo_hv
   protected _icon_orientation_vh = logo_vh
   protected _icon_orientation_recycle = logo_recycle
+
+  protected _icon_link_curved = logo_courbe
+  protected _icon_link_structure = logo_structure
 
   protected _icon_order_up = <FaAngleUp />
   protected _icon_order_down = <FaAngleDown />
@@ -1640,6 +1740,10 @@ export class Class_IconLibrary {
   public get icon_exit_fullscreen() { return this._icon_exit_fullscreen }
   public get icon_area_fit_vert() { return this._icon_area_fit_vert }
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
+  public get icon_font_size_locked() { return this._icon_font_size_locked }
+  public get icon_font_size_unlocked() { return this._icon_font_size_unlocked }
+  public get icon_size_locked() { return this._icon_size_locked }
+  public get icon_size_unlocked() { return this._icon_size_unlocked }
   public get icon_config_spreadsheet() { return this._icon_config_spreadsheet }
   public get icon_config_menu() { return this._icon_config_menu }
 
@@ -1740,9 +1844,15 @@ export class Class_IconLibrary {
   public get icon_orientation_hv() { return this.normalizeIcon(this._icon_orientation_hv) }
   public get icon_orientation_vh() { return this.normalizeIcon(this._icon_orientation_vh) }
   public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
+  public get icon_link_curved() { return this.normalizeIcon(this._icon_link_curved) }
+  public get icon_link_structure() { return this.normalizeIcon(this._icon_link_structure) }
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
+  public get icon_hatch_vertical() { return this.normalizeIcon(this._icon_hatch_vertical) }
+  public get icon_hatch_horizontal() { return this.normalizeIcon(this._icon_hatch_horizontal) }
+  public get icon_hatch_diagonal() { return this.normalizeIcon(this._icon_hatch_diagonal) }
+  public get icon_hatch_antidiagonal() { return this.normalizeIcon(this._icon_hatch_antidiagonal) }
   public get icon_capsule_h_shape() { return this.normalizeIcon(this._icon_capsule_h_shape) }
   public get icon_verticalize_diagram() { return this.normalizeIcon(this._icon_verticalize_diagram) }
   public get icon_decimals() { return this.normalizeIcon(this._icon_decimals) }

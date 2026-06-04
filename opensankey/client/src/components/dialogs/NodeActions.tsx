@@ -4,6 +4,7 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_NodeElement } from '../../Elements/Node'
+import { Class_NodeBase } from '../../Elements/NodeBase'
 import {
   aggregate,
   disaggregate,
@@ -45,6 +46,10 @@ export class NodeActions {
     this.drawing_area.application_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
     this.drawing_area.application_data.menu_configuration.ref_to_spreadsheet?.current()
     this.drawing_area.application_data.menu_configuration.ref_to_menu_context_nodes_updater.current()
+    // #1231 — rafraîchir le menu Hiérarchies (toolbar) pour qu'il reflète tout de suite
+    // l'état hybride après une (dés)agrégation locale : bouton « Réinitialiser » +
+    // dropdowns désactivés, sans avoir à recharger.
+    this.drawing_area.application_data.menu_configuration.ref_to_toolbar_level_tag_filter_updater?.current?.()
   }
 
   private closeContextMenu = () => {
@@ -316,9 +321,17 @@ export class NodeActions {
       c.findExpandedAncestor() !== null
     const stackable = cs.filter(c => !isExpandedChild(c))
     const expanded = cs.filter(isExpandedChild)
+    // #1231 — exactement comme la DÉSAGRÉGATION : les enfants suivent le mode d'écart
+    // vertical configuré (cf. Type_DisaggregationGap / layoutChildrenInParentSlot). On lit
+    // la hauteur du slot AVANT de passer le parent en cadre (sinon getShapeHeightToUse
+    // renvoie l'enveloppe des enfants → circulaire). Défaut 'fill' = remplissage du slot
+    // [haut, bas] → le cadre les entoure et aucun voisin n'est poussé. Le x du parent est
+    // TOUJOURS appliqué (même en 'keep' qui ne conserve que le Y des enfants).
+    const parent_top = p.position_y
+    const parent_h = p.getShapeHeightToUse()
     p.tied_to_nodes = true
     stackable.forEach(c => { c.position_x = p.position_x })
-    NodePositioning.stackNodesVertically(stackable, p.position_y)
+    this.drawing_area.nodePositioning.layoutChildrenInParentSlot(stackable, parent_top, parent_h)
     stackable.forEach(c => p.attachNodeToCont(c))
     expanded.forEach(c => p.attachNodeToCont(c))
     p.expandToContainAttachedNodes()
@@ -365,13 +378,33 @@ export class NodeActions {
     const prev_mode = dim.container_mode
     const parent = dim.parent
     const before = this._captureTiedFrameState([parent])
+    const is_prop = this.drawing_area.sankey.default_style.shape_position_type === 'proportional'
     const apply = () => {
+      // #1231 — opération STRUCTURELLE : suspendre la compression proportionnelle. Sinon
+      // un draw transitoire (déclenché par setContainerMode/attach, parent-cadre + enfants
+      // visibles dans la même colonne → somme de colonne doublée) ferait bondir f, dilatant
+      // tout le diagramme, et la re-capture finale figerait cet état dilaté.
+      this.drawing_area.nodePositioning.suppressProportionalCompression = is_prop
       if (target_mode === null) {
+        // #1231 — en mode englobant, expandToContainAttachedNodes a élargi le cadre pour
+        // inclure les LABELS des enfants (via le getBBox SVG). En sortant, le parent garde
+        // ce x/y label-inclus → il apparaît décalé. On le recale sur le x/y du nœud enfant
+        // LE PLUS HAUT (forme, sans label) = sa position logique d'origine. Le désenglobement
+        // RÉAGRÈGE (enfants cachés) → on lit les positions AVANT unsetContainerMode, et sur
+        // TOUS les enfants (leur position_x/y stockée survit au masquage).
+        const all_children = (dim.children as Class_NodeElement[])
+        const top_child = all_children.length > 0
+          ? all_children.reduce((a, b) => (b.position_y < a.position_y ? b : a))
+          : undefined
         dim.unsetContainerMode()
         // Mirror entering: detach this dim's children from the parent's
         // frame; preserve sibling/manual attaches.
         dim.children.forEach(child => parent.dettachNodeFromCont(child))
         if (parent.attached_node.length === 0) parent.tied_to_nodes = false
+        if (top_child) {
+          parent.position_x = top_child.position_x
+          parent.position_y = top_child.position_y
+        }
       } else {
         dim.setContainerMode(target_mode)
         parent.tied_to_nodes = true
@@ -386,12 +419,26 @@ export class NodeActions {
       // dans un parent en container_mode — sinon l'enveloppe visuelle de
       // l'ancêtre n'intègre pas les nouveaux enfants/petits-enfants.
       this._restackEnglobingChain(parent)
+      // #1231 — l'englobement est une commande de positionnement → bascule en mode ABSOLU
+      // (positions explicites des enfants dans le cadre). Le couple flux/datatag de réf reste
+      // persisté. setAbsoluteMode re-cale les ancres de centre (#1230).
+      this.drawing_area.setAbsoluteMode()
+      // Lever la suppression APRÈS (le mode est désormais absolu → pas de compression de toute façon).
+      this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
+      // #1231 — redessiner juste le nœud-cadre une fois les positions finales des
+      // enfants appliquées (sa taille = enveloppe des enfants), sinon le cadre n'apparaît
+      // qu'au prochain redraw manuel. Inutile de redessiner toute la zone.
+      parent.draw()
     }
     const undo = () => {
+      this.drawing_area.nodePositioning.suppressProportionalCompression = is_prop
       if (prev_mode === null) dim.unsetContainerMode()
       else dim.setContainerMode(prev_mode)
       this._restoreTiedFrameState(before)
+      // #1231 — comme apply : on reste en mode absolu (réf persistée conservée).
+      this.drawing_area.setAbsoluteMode()
+      this.drawing_area.nodePositioning.suppressProportionalCompression = false
       this.drawing_area.draw()
     }
     this.executeWithUndo(apply, undo)
@@ -520,11 +567,19 @@ export class NodeActions {
     attr: 'position_x' | 'position_y',
     pos: 'b' | 'm' | 'a'
   ) => {
+    // L'alignement opère sur les nœuds ET les zones de texte (containers)
+    // sélectionnés : tous héritent de Class_NodeBase et partagent
+    // position_x/y, getShapeWidthToUse/HeightToUse, shape_type et setPosXY.
+    const elements: Class_NodeBase[] = [
+      ...this.selected_nodes,
+      ...this.drawing_area.selected_containers_list,
+    ]
+
     const dict_old_pos: { [x: string]: [number, number] } = {}
-    this.selected_nodes.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
+    elements.forEach(n => dict_old_pos[n.id] = [n.position_x, n.position_y])
 
     const doAlign = () => {
-      const node_ref = this.selected_nodes
+      const node_ref = elements
         .filter(nf => nf.shape_position_type != 'relative')
         .sort((n1, n2) => {
           return ref == 'min' ? n1[attr] - n2[attr] : n2[attr] - n1[attr]
@@ -543,7 +598,7 @@ export class NodeActions {
         center_ref = pos_ref + (wORh_ref / 2)
       }
 
-      this.selected_nodes
+      elements
         .filter(n => n != node_ref && n.shape_position_type != 'relative')
         .forEach(n => {
           const is_circle_to_shift = (n.shape_type === 'ellipse')
@@ -567,7 +622,7 @@ export class NodeActions {
     }
 
     const undoAlign = () => {
-      this.selected_nodes.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
+      elements.forEach(n => n.setPosXY(dict_old_pos[n.id][0], dict_old_pos[n.id][1]))
     }
 
     this.executeWithUndo(doAlign, undoAlign)

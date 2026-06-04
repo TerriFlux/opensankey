@@ -38,6 +38,15 @@ export type Type_Shape = 'ellipse' | 'rect' | 'bezier_outline' | 'bezier_path' |
 export type Type_TextHPos = 'left' | 'middle' | 'right'
 export type Type_TextVPos = 'top' | 'middle' | 'bottom'
 export type Type_Side = 'right' | 'left' | 'top' | 'bottom'
+// Alignement de la pile d'ancres des flux le long d'un côté du nœud.
+// 'center' = comportement historique (pile centrée sur le côté).
+export type Type_AnchorAlignVertical = 'top' | 'center' | 'bottom'
+export type Type_AnchorAlignHorizontal = 'left' | 'center' | 'right'
+export const default_anchor_align_vertical: Type_AnchorAlignVertical = 'center'
+export const default_anchor_align_horizontal: Type_AnchorAlignHorizontal = 'center'
+// Orientation des hachures de remplissage d'un nœud ('none' = pas de hachure).
+export type Type_HatchOrientation = 'none' | 'vertical' | 'horizontal' | 'diagonal' | 'antidiagonal'
+export const default_hatch_orientation: Type_HatchOrientation = 'none'
 export type Type_VerticalAlignment = 'left' | 'right'
 export type Type_ExtremityPosition = 'top' | 'bottom' | 'left' | 'right'
 export const default_position_type = 'absolute'
@@ -126,6 +135,12 @@ export const default_width = 180
 export const default_info_link_value_void = false
 export const default_legend_position_x = 300
 export const default_legend_position_y = 50
+// Titre du diagramme : zone de texte (Class_ContainerElement) marquée is_title.
+export const default_title_source = 'custom'
+export const default_title_font_size = 24
+export const default_title_bold = true
+export const default_title_text = 'Titre'
+export const default_title_id = 'drawing_title'
 export const initial_show_structure = 'free_value'
 export const default_grid_size = 50
 export const default_grid_visible = true
@@ -171,6 +186,7 @@ export type BaseActionType =
   | 'drawFO'
   | 'drawImage'
   | 'drawIcon'
+  | 'applyPosition'
 
 export type NodeBaseActionType = BaseActionType
 export type LinkBaseActionType = BaseActionType | 'drawArrow' | 'drawControlPoint' | 'drawWithNodes'
@@ -450,7 +466,10 @@ export const BASE_SHAPE_CONFIG = {
     default: true as boolean,
     type: (() => true) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements en plus de drawShape pour que toggler la visibilité d'un
+    // fond de label rafraîchisse aussi le label (sinon le fond et ses
+    // poignées de redimensionnement n'apparaissent/disparaissent pas).
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Shape and background',
       fr: 'Forme et Fond',
@@ -534,7 +553,10 @@ export const BASE_SHAPE_CONFIG = {
     default: false as boolean,
     type: (() => false) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements (en plus de drawShape) pour que le toggle du fond et de la
+    // largeur fixe redessine les labels : les poignées de redimensionnement
+    // sont rendues dans drawGenericBackground, donc le label doit être redessiné.
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Fixed width',
       fr: 'Largeur fixe',
@@ -555,7 +577,8 @@ export const BASE_SHAPE_CONFIG = {
     default: 150,
     type: (() => 150) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements pour que le label (et donc les poignées) soit redessiné.
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Width',
       fr: 'Largeur',
@@ -576,7 +599,7 @@ export const BASE_SHAPE_CONFIG = {
     default: true as boolean,
     type: (() => true) as (() => boolean),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    actions: ['drawShape', 'drawElements'] as BaseActionType[],
     labels: {
       en: 'Background',
       fr: 'Fond',
@@ -1127,7 +1150,10 @@ export const BASE_LABEL_CONFIG = {
     default: 150,
     type: (() => 150) as (() => number),
     category: '',
-    actions: [] as BaseActionType[],
+    // drawElements pour que les poignées de redimensionnement du label et le
+    // fond (qui suit la largeur du label en mode unlocked) soient refresh
+    // après modification depuis le menu.
+    actions: ['drawElements'] as BaseActionType[],
     labels: {
       en: 'Width',
       fr: 'Largeur',
@@ -1144,8 +1170,8 @@ export const BASE_LABEL_CONFIG = {
     }
   } satisfies AttributeConfig<number>,
   wrap_long_words: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
+    default: true as boolean,
+    type: (() => true) as (() => boolean),
     category: '',
     actions: [] as BaseActionType[],
     labels: {
@@ -1184,6 +1210,29 @@ export const BASE_LABEL_CONFIG = {
       it: 'Orientare il testo verticalmente'
     }
   } satisfies AttributeConfig<boolean>,
+  // Angle de rotation libre du texte, en degrés (−180..180). Remplace le toggle
+  // `vertical_text` dans l'UI ; `vertical_text` est conservé pour la rétro-compat
+  // (anciens fichiers) et interprété comme −90° tant que text_angle vaut 0.
+  text_angle: {
+    default: 0 as number,
+    type: (() => 0) as (() => number),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Text angle',
+      fr: 'Angle du texte',
+      es: 'Ángulo del texto',
+      de: 'Textwinkel',
+      it: 'Angolo del testo'
+    },
+    tooltips: {
+      en: 'Rotate the text by an angle (−180° to 180°)',
+      fr: 'Pivoter le texte d\'un angle (−180° à 180°)',
+      es: 'Girar el texto un ángulo (−180° a 180°)',
+      de: 'Text um einen Winkel drehen (−180° bis 180°)',
+      it: 'Ruotare il testo di un angolo (−180° a 180°)'
+    }
+  } satisfies AttributeConfig<number>,
   position_absolute: {
     default: false as boolean,
     type: (() => false) as (() => boolean),
@@ -1873,23 +1922,23 @@ export const STOCK_LABEL_CONFIG = {
   ...STOCK_LABEL_BASE_CONFIG,
 
   box_width: {
-    default: 0.6,
-    type: (() => 0.6) as (() => number),
+    default: 150,
+    type: (() => 150) as (() => number),
     category: 'stock_label' as const,
     actions: ['drawStockBox'] as BaseActionType[],
     labels: {
-      en: 'Box width (ratio)',
-      fr: 'Largeur boite (ratio)',
-      es: 'Ancho de caja (ratio)',
-      de: 'Kastenbreite (Verhältnis)',
-      it: 'Larghezza riquadro (rapporto)'
+      en: 'Box width (px)',
+      fr: 'Largeur boite (px)',
+      es: 'Ancho de caja (px)',
+      de: 'Kastenbreite (px)',
+      it: 'Larghezza riquadro (px)'
     },
     tooltips: {
-      en: 'Box width as ratio of node width (0.1 to 1)',
-      fr: 'Largeur de la boite en ratio de la largeur du noeud (0.1 a 1)',
-      es: 'Ancho de la caja como ratio del ancho del nodo (0.1 a 1)',
-      de: 'Kastenbreite als Verhältnis zur Knotenbreite (0.1 bis 1)',
-      it: 'Larghezza del riquadro come rapporto della larghezza del nodo (0.1 a 1)'
+      en: 'Wrap width of the stock label box, in screen px',
+      fr: 'Largeur de retour à la ligne de la boite de stock, en px écran',
+      es: 'Ancho de ajuste de la caja de stock, en px de pantalla',
+      de: 'Umbruchbreite des Stock-Kastens, in Bildschirm-px',
+      it: 'Larghezza di a capo del riquadro stock, in px schermo'
     }
   } satisfies AttributeConfig<number>,
 } as const
@@ -2275,6 +2324,47 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'x'
     }
   } satisfies AttributeConfig<number>,
+  // =================== ALIGNEMENT DES ANCRES DE FLUX ===================
+  anchor_align_vertical: {
+    default: default_anchor_align_vertical,
+    type: (() => default_anchor_align_vertical) as (() => Type_AnchorAlignVertical),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (vertical sides)',
+      fr: 'Ancres (côtés verticaux)',
+      es: 'Anclas (lados verticales)',
+      de: 'Anker (vertikale Seiten)',
+      it: 'Ancore (lati verticali)'
+    },
+    tooltips: {
+      en: 'Vertical alignment of link anchors on the left/right sides of the node (top / center / bottom).',
+      fr: 'Alignement vertical des ancres de flux sur les côtés gauche/droite du nœud (haut / centre / bas).',
+      es: 'Alineación vertical de las anclas de flujo en los lados izquierdo/derecho del nodo (arriba / centro / abajo).',
+      de: 'Vertikale Ausrichtung der Flussanker an den linken/rechten Seiten des Knotens (oben / Mitte / unten).',
+      it: 'Allineamento verticale delle ancore di flusso sui lati sinistro/destro del nodo (alto / centro / basso).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignVertical>,
+  anchor_align_horizontal: {
+    default: default_anchor_align_horizontal,
+    type: (() => default_anchor_align_horizontal) as (() => Type_AnchorAlignHorizontal),
+    category: 'shape' as const,
+    actions: ['applyPosition'] as BaseActionType[],
+    labels: {
+      en: 'Anchors (horizontal sides)',
+      fr: 'Ancres (côtés horizontaux)',
+      es: 'Anclas (lados horizontales)',
+      de: 'Anker (horizontale Seiten)',
+      it: 'Ancore (lati orizzontali)'
+    },
+    tooltips: {
+      en: 'Horizontal alignment of link anchors on the top/bottom sides of the node (left / center / right).',
+      fr: 'Alignement horizontal des ancres de flux sur les côtés haut/bas du nœud (gauche / centre / droite).',
+      es: 'Alineación horizontal de las anclas de flujo en los lados superior/inferior del nodo (izquierda / centro / derecha).',
+      de: 'Horizontale Ausrichtung der Flussanker an den oberen/unteren Seiten des Knotens (links / Mitte / rechts).',
+      it: 'Allineamento orizzontale delle ancore di flusso sui lati superiore/inferiore del nodo (sinistra / centro / destra).'
+    }
+  } satisfies AttributeConfig<Type_AnchorAlignHorizontal>,
   // =================== AUTRES ATTRIBUTS ===================
   orphan_node_visible: {
     default: true as boolean,
@@ -2336,6 +2426,26 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Se bloccato, il calcolo autosankey preserva l\'ordine verticale relativo (v) di questo nodo nella sua colonna invece di ricalcolarlo.'
     }
   } satisfies AttributeConfig<boolean>,
+  hatch: {
+    default: default_hatch_orientation,
+    type: (() => default_hatch_orientation) as (() => Type_HatchOrientation),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Hatching',
+      fr: 'Hachures',
+      es: 'Rayado',
+      de: 'Schraffur',
+      it: 'Tratteggio'
+    },
+    tooltips: {
+      en: 'Fill the selected node(s) with a hatch pattern (none / vertical / horizontal / diagonal / anti-diagonal)',
+      fr: 'Remplit le/les nœud(s) sélectionné(s) avec un motif de hachures (aucune / verticale / horizontale / diagonale / anti-diagonale)',
+      es: 'Rellena el/los nodo(s) seleccionado(s) con un patrón de rayado (ninguno / vertical / horizontal / diagonal / anti-diagonal)',
+      de: 'Füllt den/die ausgewählten Knoten mit einem Schraffurmuster (keine / vertikal / horizontal / diagonal / anti-diagonal)',
+      it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
+    }
+  } satisfies AttributeConfig<Type_HatchOrientation>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
@@ -2466,6 +2576,92 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Representa el/los flujo(s) seleccionado(s) como si no tuvieran valores',
       de: 'Stellt den/die ausgewählten Fluss/Flüsse dar, als ob sie keine Werte hätten',
       it: 'Rappresenta il/i flusso/i selezionato/i come se non avessero valori'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  must_stay_straight: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Keep straight',
+      fr: 'Garder droit',
+      es: 'Mantener recto',
+      de: 'Gerade halten',
+      it: 'Mantieni dritto'
+    },
+    tooltips: {
+      en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Set via right-click "Straighten flow".',
+      fr: 'Garder ce flux exactement horizontal pour tous les tags de données (seuls les écarts verticaux s\'adaptent). Activé via clic droit « Rendre droit ».',
+      es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Activado con clic derecho «Enderezar flujo».',
+      de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Über Rechtsklick „Fluss begradigen" aktiviert.',
+      it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Attivato con clic destro «Raddrizza flusso».'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  straight_include_children: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Keep disaggregated flows straight',
+      fr: 'Garder droit les flux désagrégés',
+      es: 'Mantener rectos los flujos desagregados',
+      de: 'Disaggregierte Flüsse gerade halten',
+      it: 'Mantieni dritti i flussi disaggregati'
+    },
+    tooltips: {
+      en: 'Also keep the child flows straight (between the disaggregated children of the source and target), so straightness survives disaggregation.',
+      fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation.',
+      es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación.',
+      de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt.',
+      it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  is_reference_flux: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    // Pas d'action au set : le redraw est piloté par le handler (setReferenceFlux) ; poser
+    // le marqueur ne doit pas déclencher de dessin (notamment pendant le nettoyage de l'ancien).
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Reference flow',
+      fr: 'Flux de référence',
+      es: 'Flujo de referencia',
+      de: 'Referenzfluss',
+      it: 'Flusso di riferimento'
+    },
+    tooltips: {
+      en: 'In proportional / adapted-scale mode, anchor the diagram on this flow. Set via right-click "Set as reference flow".',
+      fr: 'En mode proportionnel / échelle adaptée, ancrer le diagramme sur ce flux. Activé via clic droit « Définir comme flux de référence ».',
+      es: 'En modo proporcional / escala adaptada, anclar el diagrama en este flujo. Activado con clic derecho «Definir como flujo de referencia».',
+      de: 'Im proportionalen / angepassten Maßstab-Modus das Diagramm an diesem Fluss verankern. Über Rechtsklick „Als Referenzfluss festlegen" aktiviert.',
+      it: 'In modalità proporzionale / scala adattata, ancorare il diagramma a questo flusso. Attivato con clic destro «Imposta come flusso di riferimento».'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  show_as_path_locked: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Lock stroke rendering',
+      fr: 'Verrouiller le rendu en trait',
+      es: 'Bloquear renderizado en trazo',
+      de: 'Strich-Darstellung sperren',
+      it: 'Blocca il rendering a tratto'
+    },
+    tooltips: {
+      en: 'Force this flow to always render as a stroked path, even when thick and short. By default a thick, short flow auto-switches to a filled shape so the stroke does not overlap itself at sharp turns.',
+      fr: 'Force ce flux à toujours être tracé en trait (chemin), même épais et court. Par défaut un flux épais et court bascule automatiquement en forme pleine pour éviter que le trait ne se chevauche dans les coudes serrés.',
+      es: 'Obliga a este flujo a representarse siempre como trazo, incluso grueso y corto. Por defecto un flujo grueso y corto cambia automáticamente a forma rellena para que el trazo no se solape en las curvas cerradas.',
+      de: 'Erzwingt, dass dieser Fluss immer als Strich gezeichnet wird, auch wenn dick und kurz. Standardmäßig wechselt ein dicker, kurzer Fluss automatisch zu einer gefüllten Form, damit sich der Strich an engen Kurven nicht selbst überlappt.',
+      it: 'Forza questo flusso a essere sempre disegnato come tratto, anche se spesso e corto. Per impostazione predefinita un flusso spesso e corto passa automaticamente a forma piena affinché il tratto non si sovrapponga nelle curve strette.'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -2749,6 +2945,32 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       it: 'Regolare automaticamente la posizione verticale'
     }
   } satisfies AttributeConfig<boolean>,
+
+  // Source du texte du label de flux. 'custom' = comportement actuel (texte saisi
+  // via text_value). 'none' masque, 'source'/'target' affichent le nom du nœud
+  // amont/aval, 'source_target' affiche "source → target".
+  // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
+  // mais ignoré côté valeur.
+  text_source: {
+    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target',
+    type: (() => 'custom') as (() => string),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Label content',
+      fr: 'Contenu du label',
+      es: 'Contenido de la etiqueta',
+      de: 'Beschriftungstext',
+      it: 'Contenuto etichetta'
+    },
+    tooltips: {
+      en: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
+      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, ou source → destination',
+      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, o origen → destino',
+      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens oder Quelle → Ziel',
+      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, o sorgente → destinazione'
+    }
+  } satisfies AttributeConfig<string>,
 } as const
 
 const createLinkLabelSpecificConfig = <P extends string>(prefix: P, category: string, drawAction: BaseActionType) => {

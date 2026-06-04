@@ -4,7 +4,7 @@ import * as d3 from 'd3'
 import { textwrap } from 'd3-textwrap'
 import {
   BASE_SHAPE_CONFIG, getLinkLabelSpecificValue,
-  getNameLabelValues, getNodeShapeSpecificValues, getShapeValue,
+  getNameLabelValues, getShapeValue,
   getValueLabelValues, LinkLabelSpecificValues,
   NameLabelAttributeTypes,
   ShapePrefix,
@@ -34,16 +34,26 @@ function getMeasureContext(): CanvasRenderingContext2D | null {
   return _measureCanvasCtx
 }
 
-function getCanvasFontString(textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): string {
+// Construit la chaîne `font` canvas (style/poids/famille du <text>) avec une
+// taille de police imposée (px). Sert à mesurer la césure en espace écran
+// (issue #165) : la font effectivement rendue est compensée du zoom
+// (font_size / zoom), valeur qui peut dépasser la limite de taille de
+// canvas.measureText et fausser la mesure. On mesure donc avec la font_size
+// brute (écran) ; le ratio glyphe/boîte étant identique à l'espace local, les
+// points de césure sont les mêmes.
+function getCanvasFontStringAtSize(
+  textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>,
+  fontSizePx: number
+): string {
   const node = textElement.node()
-  if (!node || typeof window === 'undefined') return '12px sans-serif'
+  if (!node || typeof window === 'undefined') return `${fontSizePx}px sans-serif`
   const computed = window.getComputedStyle(node)
-  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${computed.fontSize || '12px'} ${computed.fontFamily || 'sans-serif'}`
+  return `${computed.fontStyle || 'normal'} ${computed.fontWeight || 'normal'} ${fontSizePx}px ${computed.fontFamily || 'sans-serif'}`
 }
 
 // Insert spaces inside words that exceed maxWidth, with a trailing hyphen at each
 // break point so d3-textwrap can wrap the resulting sub-words onto separate lines.
-function breakLongWords(text: string, maxWidth: number, font: string): string {
+export function breakLongWords(text: string, maxWidth: number, font: string): string {
   if (!text || maxWidth <= 0) return text
   const ctx = getMeasureContext()
   if (!ctx) return text
@@ -94,6 +104,25 @@ function getTransformedBBox(
 }
 
 /**
+ * Class_Handler pour les poignées de redimensionnement de label.
+ *
+ * Diffère du Class_Handler standard : la visibilité ne dépend PAS de
+ * `_ref_element.is_selected`. La sub-sélection du label (clic sur son <text>)
+ * suffit à afficher les poignées ; sinon, cliquer sur le label seul (qui
+ * stopPropagation pour ne pas toggler la sélection de la forme) laisserait
+ * `is_selected = false` et `draw()` resterait no-op.
+ *
+ * Le filtrage selected_label_prefix === this.prefix est fait en amont par
+ * `_shouldShowResizeHandles` (qui appelle unDraw si non remplie), donc ici
+ * on garde juste `_is_visible && ref_element.is_visible`.
+ */
+class Class_LabelResizeHandler extends Class_Handler {
+  public override get is_visible(): boolean {
+    return this._is_visible && this.ref_element.is_visible
+  }
+}
+
+/**
  * Classe de base abstraite pour tous les labels (nodes et links)
  */
 export abstract class DrawLabelBase {
@@ -105,6 +134,19 @@ export abstract class DrawLabelBase {
   protected enableEditing: boolean = false
 
   public d3_selection: d3_selection_type | null = null
+
+  // Poignées de redimensionnement de la "boîte" du label (label.box_width).
+  // Implémentées avec Class_Handler (mêmes infrastructure / parent / drag que
+  // les poignées de redimensionnement des nœuds : `g_handlers` au top-level,
+  // coords absolues dans le repère `g_drawing`, taille divisée par le zoom).
+  // Créées paresseusement à la première sub-sélection du label.
+  private _resize_handle_left: Class_Handler | null = null
+  private _resize_handle_right: Class_Handler | null = null
+  private _resize_drag_state: {
+    initial_width: number
+    prev_suspend: boolean
+    accumulated_dx: number
+  } = { initial_width: 0, prev_suspend: false, accumulated_dx: 0 }
 
   protected abstract createLabelGroup(): d3_selection_type | null
 
@@ -131,6 +173,35 @@ export abstract class DrawLabelBase {
 
   protected getTextSelector(): string {
     return `.${this.prefix}_text`
+  }
+
+  /**
+   * Returns the label's font-size compensated for the drawing area's live zoom
+   * (issue #165, mode « police verrouillée »). Labels live in the local
+   * coordinate system that d3-zoom scales by k ; without compensation a 20px
+   * font renders as 20*k screen px — invisible when k ≈ 1e-4 (large Sankey
+   * scale) or varying with every wheel zoom. En mode verrouillé, on multiplie
+   * par font_compensation (= 1/k live) pour annuler le scale SVG : la taille
+   * écran reste égale à _label_values.font_size quel que soit le zoom. En mode
+   * déverrouillé, font_compensation vaut 1 (police native qui scale avec le
+   * zoom). Toute la logique de positionnement dérivée de font_size (line height,
+   * offsets multi-ligne, boîte d'édition) doit passer par ce getter.
+   */
+  protected getEffectiveFontSize(): number {
+    const raw = this._label_values.font_size
+    const comp = this._element.drawing_area?.font_compensation ?? 1
+    return raw * comp
+  }
+
+  /**
+   * Issue #1232 — transform de placement d'un foreignObject rich text :
+   * translate au coin haut-gauche local + scale(comp) pour annuler le zoom en
+   * mode police verrouillée. comp === 1 (mode déverrouillé) → translate seul,
+   * rendu strictement identique au comportement historique. Partagé entre
+   * drawFO (pose initiale) et updateGenericPosition (drag) pour rester cohérent.
+   */
+  protected foScaleTransform(x: number, y: number, comp: number): string {
+    return comp !== 1 ? `translate(${x}, ${y}) scale(${comp})` : `translate(${x}, ${y})`
   }
 
   // =================== STICK TO LABEL (valeur collée au libellé) ===================
@@ -171,24 +242,22 @@ export abstract class DrawLabelBase {
 
     if (!bgValues.visible) return null
 
-    // Largeur du fond : "verrouillée" → valeur fixe pilotée par l'utilisateur
-    // (box_width), sinon → s'adapte au contenu (largeur passée en paramètre,
-    // ex. bbox du texte). Quand verrouillée, le fond garde le même ancrage que
-    // le contenu (text-anchor) pour rester calé sur la forme du nœud :
-    //   - start  → bord gauche du fond aligné sur le bord gauche du contenu
-    //   - end    → bord droit du fond aligné sur le bord droit du contenu
-    //   - middle → centre du fond aligné sur le centre du contenu
+    // Largeur du fond :
+    //   - locked   → valeur fixe pilotée par l'utilisateur (bgValues.box_width).
+    //   - unlocked → s'adapte à la largeur effective du contenu (bbox du
+    //     texte ou bbox combinée en mode stick). label.box_width n'est que
+    //     la limite de wrap, pas la largeur visible du label.
     let bg_x = x
     let bg_width = width
     if (bgValues.width_locked) {
       bg_width = bgValues.box_width
-      if (options?.anchor === 'start') {
-        bg_x = x
-      } else if (options?.anchor === 'end') {
-        bg_x = x + width - bg_width
-      } else {
-        bg_x = x + width / 2 - bg_width / 2
-      }
+    }
+    if (options?.anchor === 'start') {
+      bg_x = x
+    } else if (options?.anchor === 'end') {
+      bg_x = x + width - bg_width
+    } else {
+      bg_x = x + width / 2 - bg_width / 2
     }
 
     const type_to_use = bgValues.type === 'ellipse' ? 'ellipse' : (bgValues.type === 'rect' ? 'rect' : 'path')
@@ -219,6 +288,232 @@ export abstract class DrawLabelBase {
     }
     bgElement.lower()
     return bgElement
+  }
+
+  /**
+   * Poignées de redimensionnement de la "boîte" du label (label.box_width).
+   *
+   * Architecture (calquée sur les poignées de redimensionnement des nœuds
+   * `_drag_handler.{left,right,top,bottom}`) :
+   *   - les poignées sont des `Class_Handler` instanciés dans le top-level
+   *     `g_handlers` du drawing area, repère absolu = repère `g_drawing` ;
+   *   - leur position est calculée en transformant le point d'ancrage du
+   *     label (label_pos_x en repère local du <g> label) vers ce repère
+   *     absolu via la matrice CTM relative — fonctionne uniformément pour
+   *     nœuds (dont le <g> a un translate) et liens (dont le <g> n'en a pas) ;
+   *   - le drag utilise `event.dx` directement (déjà en repère `g_drawing`),
+   *     même unité que `box_width`. La poignée tirée suit toujours le
+   *     curseur 1:1, l'autre poignée bouge selon le facteur (2 pour ancre
+   *     'middle' qui est symétrique, 1 pour 'start'/'end' où seul le bord
+   *     libre bouge — l'autre étant ancré, ne sera pas dessinée).
+   *   - taille du carré compensée par `1/zoomScale` (héritée de Class_Handler).
+   *
+   * Visibilité : tied à la sub-sélection du label (`selected_label_prefix`).
+   * À chaque appel, refreshLabelResizeHandles re-positionne et re-dessine
+   * (ou cache) les poignées en fonction de l'état courant.
+   */
+  public refreshLabelResizeHandles(): void {
+    if (!this._shouldShowResizeHandles()) {
+      this._resize_handle_left?.unDraw()
+      this._resize_handle_right?.unDraw()
+      return
+    }
+
+    this._ensureResizeHandlesCreated()
+
+    const positions = this._computeResizeHandlesAbsolutePos()
+    if (!positions) {
+      this._resize_handle_left?.unDraw()
+      this._resize_handle_right?.unDraw()
+      return
+    }
+
+    // Bord ancré (start → gauche, end → droite) : on ne dessine que le bord
+    // libre, sinon la poignée ancrée ne suivrait pas le curseur (elle reste
+    // sur label_pos_x) et c'est l'autre bord du label qui "fuit".
+    const anchor = positions.anchor
+    if (anchor === 'start') {
+      this._resize_handle_left?.unDraw()
+    } else {
+      this._resize_handle_left!.setPosXY(positions.left[0], positions.left[1])
+      this._resize_handle_left!.draw()
+    }
+    if (anchor === 'end') {
+      this._resize_handle_right?.unDraw()
+    } else {
+      this._resize_handle_right!.setPosXY(positions.right[0], positions.right[1])
+      this._resize_handle_right!.draw()
+    }
+    // Curseur ew-resize une fois le <g> draw() (chaque draw recrée le DOM).
+    this._resize_handle_left?.d3_selection?.style('cursor', 'ew-resize')
+    this._resize_handle_right?.d3_selection?.style('cursor', 'ew-resize')
+  }
+
+  private _shouldShowResizeHandles(): boolean {
+    if (!this.d3_selection) return false
+    if (!this._element.drawing_area?.editable) return false
+    if ((this._element as Class_BaseShape).selected_label_prefix !== this.prefix) return false
+    if (this._label_values == null) return false
+    const box_width = (this._label_values as { box_width?: number }).box_width ?? 0
+    return Number.isFinite(box_width) && box_width > 0
+  }
+
+  /**
+   * Crée paresseusement les deux Class_Handler avec leurs callbacks de drag.
+   * Les callbacks accèdent à `this.prefix`, `this._element`, etc. via closure.
+   */
+  private _ensureResizeHandlesCreated(): void {
+    if (this._resize_handle_left && this._resize_handle_right) return
+
+    const widthAttr = `${this.prefix}_box_width`
+    const element = this._element as unknown as {
+      _suspend_actions?: boolean
+      drawNameLabel?: () => void
+      drawValueLabel?: () => void
+    }
+
+    const fullRedraw = () => {
+      if (this.prefix === 'name_label' && typeof element.drawNameLabel === 'function') {
+        element.drawNameLabel()
+      } else if (this.prefix === 'value_label' && typeof element.drawValueLabel === 'function') {
+        element.drawValueLabel()
+      } else {
+        this.drawGenericLabel()
+      }
+    }
+
+    const state = this._resize_drag_state
+
+    const dragStart = () => () => {
+      this._element.drawing_area.bypass_redraws = true
+      state.prev_suspend = Boolean(element._suspend_actions)
+      element._suspend_actions = true
+      state.initial_width = Number(Reflect.get(element, widthAttr) ?? 0)
+      state.accumulated_dx = 0
+    }
+
+    const dragMove = (side: 'left' | 'right') =>
+      (event: d3.D3DragEvent<SVGGElement, unknown, unknown>) => {
+        // event.dx est dans le repère `g_handlers` = repère `g_drawing` (le
+        // zoom est sur `g_drawing` lui-même, donc ses descendants partagent
+        // ce repère "drawing-area zoomed"). C'est exactement l'unité de
+        // box_width → addition directe, pas de conversion.
+        state.accumulated_dx += event.dx
+        const anchor = this._currentTextAnchor()
+        const factor = anchor === 'middle' ? 2 : 1
+        const bw_sign = side === 'right' ? 1 : -1
+        const new_box_width = Math.max(
+          10,
+          state.initial_width + bw_sign * state.accumulated_dx * factor
+        )
+        Reflect.set(element, widthAttr, new_box_width)
+        // Repositionner les poignées sans redessiner le label (bypass_redraws
+        // est ON). Le texte sera reflowed au redraw final dans 'end'.
+        const positions = this._computeResizeHandlesAbsolutePos()
+        if (positions) {
+          if (anchor !== 'start')
+            this._resize_handle_left?.setPosXY(positions.left[0], positions.left[1])
+          if (anchor !== 'end')
+            this._resize_handle_right?.setPosXY(positions.right[0], positions.right[1])
+        }
+      }
+
+    const dragEnd = () => () => {
+      element._suspend_actions = state.prev_suspend
+      this._element.drawing_area.bypass_redraws = false
+      const final_width = Number(Reflect.get(element, widthAttr))
+      const initial_width = state.initial_width
+      if (Math.abs(final_width - initial_width) > 0.5) {
+        const inv = () => {
+          Reflect.set(element, widthAttr, initial_width)
+          fullRedraw()
+        }
+        const redo = () => {
+          Reflect.set(element, widthAttr, final_width)
+          fullRedraw()
+        }
+        this._element.drawing_area.application_data.history.saveUndo(inv)
+        this._element.drawing_area.application_data.history.saveRedo(redo)
+      }
+      fullRedraw()
+    }
+
+    this._resize_handle_left = new Class_LabelResizeHandler(
+      `label_resize_${this.prefix}_left_${this.getElementId()}`,
+      this._element.drawing_area,
+      this._element,
+      dragStart(),
+      dragMove('left'),
+      dragEnd(),
+      { class: 'label_resize_handle label_resize_handle_left' }
+    )
+    this._resize_handle_right = new Class_LabelResizeHandler(
+      `label_resize_${this.prefix}_right_${this.getElementId()}`,
+      this._element.drawing_area,
+      this._element,
+      dragStart(),
+      dragMove('right'),
+      dragEnd(),
+      { class: 'label_resize_handle label_resize_handle_right' }
+    )
+  }
+
+  private _currentTextAnchor(): string {
+    const text_node = this.d3_selection?.select(this.getTextSelector()).node() as SVGTextElement | null
+    return text_node?.getAttribute('text-anchor') ?? 'middle'
+  }
+
+  /**
+   * Calcule la position absolue (repère `g_handlers` = `g_drawing`) des
+   * deux poignées à partir de la position d'ancrage du label en repère
+   * local et de la box_width courante. Utilise la matrice CTM relative
+   * `g_handlers` ← `label_g` pour traverser uniformément les transforms
+   * intermédiaires (translate du nœud, identité pour les liens).
+   */
+  private _computeResizeHandlesAbsolutePos(): {
+    left: [number, number]
+    right: [number, number]
+    anchor: string
+  } | null {
+    if (!this.d3_selection) return null
+    const label_g = this.d3_selection.node() as SVGGraphicsElement | null
+    const handlers_grp = this._element.drawing_area.d3_selection_handlers?.node() as SVGGraphicsElement | null
+    if (!label_g || !handlers_grp) return null
+    const label_ctm = label_g.getCTM()
+    const handlers_ctm = handlers_grp.getCTM()
+    if (!label_ctm || !handlers_ctm) return null
+    const rel = handlers_ctm.inverse().multiply(label_ctm)
+
+    const text_node = this.d3_selection.select(this.getTextSelector()).node() as SVGGraphicsElement | null
+    if (!text_node) return null
+    const text_bbox = text_node.getBBox()
+    const handle_y_local = text_bbox.y + text_bbox.height / 2
+
+    const [label_pos_x] = this.getLabelPos()
+    const anchor = (text_node as SVGTextElement).getAttribute('text-anchor') ?? 'middle'
+    const box_width = Number((this._label_values as { box_width?: number })?.box_width ?? 0)
+
+    let bl_local: number, br_local: number
+    if (anchor === 'start') {
+      bl_local = label_pos_x
+      br_local = label_pos_x + box_width
+    } else if (anchor === 'end') {
+      bl_local = label_pos_x - box_width
+      br_local = label_pos_x
+    } else {
+      bl_local = label_pos_x - box_width / 2
+      br_local = label_pos_x + box_width / 2
+    }
+
+    const transformPoint = (x: number, y: number): [number, number] => [
+      rel.a * x + rel.c * y + rel.e,
+      rel.b * x + rel.d * y + rel.f,
+    ]
+    return {
+      left: transformPoint(bl_local, handle_y_local),
+      right: transformPoint(br_local, handle_y_local),
+      anchor,
+    }
   }
 
   /**
@@ -496,11 +791,22 @@ export abstract class DrawLabelBase {
       const divNode = d3_div_selection.node() as HTMLDivElement
       const height = divNode.offsetHeight || divNode.scrollHeight
 
-      if (this._label_values.vertical_text) {
+      // Issue #1232 — police verrouillée : le foreignObject vit dans le repère
+      // zoomé (facteur k). En texte simple, font-size est compensée par
+      // font_compensation (=1/k) ; pour le rich text (tailles inline arbitraires
+      // venant de Quill) on contre-scale tout le FO à la place, comme la légende
+      // (cf. Legend.applyPosition). L'empreinte locale visible vaut donc
+      // width*comp × height*comp. En mode déverrouillé, comp = 1 (no-op).
+      const comp = this._element.drawing_area?.font_compensation ?? 1
+
+      if (this.getEffectiveTextAngle() === -90) {
         // Colonne tournée : colWidth=height, colHeight=width (mêmes principes
         // que NodeDrawLabelBase.verticalText, mais pour foreignObject).
-        const colWidth = height
-        const colHeight = width
+        // Issue #1232 : dimensions VISIBLES en coords locales (compensées par
+        // comp), car le positionnement se fait dans le repère des dims du nœud
+        // (shape_*) qui, elles, vivent en coords locales.
+        const colWidth = height * comp
+        const colHeight = width * comp
         const shape_w = this._element.shape_min_width
         const shape_h = this._element.shape_min_height
         const margin_l = this._element.shape_margin_left
@@ -536,12 +842,19 @@ export abstract class DrawLabelBase {
           }
         }
 
+        // ty + colHeight : colHeight = width*comp = hauteur visible de la
+        // colonne (cf. dérivation issue #1232). rotate(-90) puis scale(comp) :
+        // le scale étant uniforme, il commute avec la rotation. Le FO est rendu
+        // à sa taille native (width×height) et placé/contre-scalé par le transform.
+        const v_transform = comp !== 1
+          ? `translate(${tx}, ${ty + colHeight}) rotate(-90) scale(${comp})`
+          : `translate(${tx}, ${ty + colHeight}) rotate(-90)`
         d3_selection_g_FO
           .attr('width', width)
           .attr('height', height)
           .attr('x', 0)
           .attr('y', 0)
-          .attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+          .attr('transform', v_transform)
 
         this.drawGenericBackground(
           this.d3_selection!,
@@ -553,37 +866,62 @@ export abstract class DrawLabelBase {
         )
         const bg = this.d3_selection?.select('.element_fo_background')
         if (bg && !bg.empty()) {
-          bg.attr('transform', `translate(${tx}, ${ty + width}) rotate(-90)`)
+          bg.attr('transform', v_transform)
         }
       } else {
+        // Empreinte locale visible (compensée). Le coin haut-gauche est calculé
+        // avec ces dimensions pour que l'ancrage (middle/end, baseline) reste
+        // correct quel que soit le zoom.
+        const vis_width = width * comp
+        const vis_height = height * comp
+
         let adjusted_x = label_pos_x
         if (label_anchor === 'middle') {
-          adjusted_x = label_pos_x - width / 2
+          adjusted_x = label_pos_x - vis_width / 2
         } else if (label_anchor === 'end') {
-          adjusted_x = label_pos_x - width
+          adjusted_x = label_pos_x - vis_width
         }
 
         let adjusted_y = label_pos_y
         if (label_baseline === 'text-after-edge') {
-          adjusted_y = label_pos_y - height
+          adjusted_y = label_pos_y - vis_height
         } else if (label_baseline === 'middle') {
-          adjusted_y = label_pos_y - height / 2
+          adjusted_y = label_pos_y - vis_height / 2
         }
 
+        // FO rendu à sa taille CSS native (width×height), amené au coin
+        // haut-gauche local puis contre-scalé par comp (translate … scale).
+        const h_transform = this.foScaleTransform(adjusted_x, adjusted_y, comp)
         d3_selection_g_FO
           .attr('width', width)
           .attr('height', height)
-          .attr('x', adjusted_x)
-          .attr('y', adjusted_y)
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('transform', h_transform)
 
+        // Le fond est dessiné à la taille native (0,0,width,height) et reçoit le
+        // même transform : il reste ainsi aligné et à taille écran constante,
+        // exactement comme le texte.
         this.drawGenericBackground(
           this.d3_selection!,
-          adjusted_x,
-          adjusted_y,
+          0,
+          0,
           width,
           height,
           { className: 'element_fo_background' }
         )
+        const bg = this.d3_selection?.select('.element_fo_background')
+        if (bg && !bg.empty()) {
+          bg.attr('transform', h_transform)
+        }
+
+        // Angle libre (≠ 0 et ≠ −90, ce dernier passant par la colonne ci-dessus) :
+        // on tourne tout le groupe FO autour du point d'ancrage du label. FO et fond
+        // gardent leur h_transform interne et suivent donc la rotation ensemble.
+        const fo_angle = this.getEffectiveTextAngle()
+        if (fo_angle !== 0) {
+          this.d3_selection?.attr('transform', `rotate(${fo_angle}, ${label_pos_x}, ${label_pos_y})`)
+        }
       }
     }
 
@@ -634,7 +972,7 @@ export abstract class DrawLabelBase {
     const [final_x, final_y, final_width, final_height] = this.getImageDimensions(icon_pos_x, icon_pos_y, icon_width, icon_height)
 
     // Dessiner l'image
-    const imageElement = this.d3_selection.append('image')
+    const _imageElement = this.d3_selection.append('image')
       .attr('id', `image_${this.prefix}_${this.getElementId()}`)
       .attr('class', 'illustration image')
       .attr('xlink:href', this._label_values.image_src)
@@ -843,32 +1181,43 @@ export abstract class DrawLabelBase {
     // Pour FO
     const fo = this.d3_selection.select('.element_fo')
     if (!fo.empty()) {
-      const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+      // Le rich text vertical est positionné par un transform translate+rotate
+      // dérivé des dims du nœud (cf. drawFO) ; le recalculer ici dupliquerait
+      // toute cette géométrie. On laisse donc le drag-end (drawGenericLabel) le
+      // replacer correctement plutôt que d'écraser sa rotation pendant le drag.
+      if (this.getEffectiveTextAngle() !== 0) return
 
-      // Récupérer les dimensions actuelles du FO
+      const [label_pos_x, label_pos_y, label_anchor, label_baseline] = this.getLabelPos()
+      // Issue #1232 : même compensation qu'à la pose initiale (drawFO).
+      const comp = this._element.drawing_area?.font_compensation ?? 1
+
+      // Récupérer les dimensions natives du FO, puis l'empreinte locale visible.
       const foWidth = parseFloat(fo.attr('width')) || 0
       const foHeight = parseFloat(fo.attr('height')) || 0
+      const vis_width = foWidth * comp
+      const vis_height = foHeight * comp
 
-      // Appliquer les mêmes ajustements que dans measureAndResize
+      // Appliquer les mêmes ajustements que dans drawFO
       let adjusted_x = label_pos_x
       if (label_anchor === 'middle') {
-        adjusted_x = label_pos_x - foWidth / 2
+        adjusted_x = label_pos_x - vis_width / 2
       } else if (label_anchor === 'end') {
-        adjusted_x = label_pos_x - foWidth
+        adjusted_x = label_pos_x - vis_width
       }
 
       let adjusted_y = label_pos_y
       if (label_baseline === 'text-after-edge') {
-        adjusted_y = label_pos_y - foHeight
+        adjusted_y = label_pos_y - vis_height
       } else if (label_baseline === 'middle') {
-        adjusted_y = label_pos_y - foHeight / 2
+        adjusted_y = label_pos_y - vis_height / 2
       }
-      fo.attr('x', adjusted_x).attr('y', adjusted_y)
+      const transform = this.foScaleTransform(adjusted_x, adjusted_y, comp)
+      fo.attr('x', 0).attr('y', 0).attr('transform', transform)
 
-      // Mettre à jour le background aussi
+      // Mettre à jour le background aussi (même transform → reste aligné)
       const foBg = this.d3_selection.select('.element_fo_background')
       if (!foBg.empty()) {
-        foBg.attr('x', adjusted_x - 5).attr('y', adjusted_y - 5)
+        foBg.attr('x', 0).attr('y', 0).attr('transform', transform)
       }
 
       return
@@ -895,25 +1244,33 @@ export abstract class DrawLabelBase {
   }
 
   /**
-   * ✅ Input d'édition générique
+   * ✅ Input d'édition générique (contenteditable, multi-ligne, WYSIWYG)
    */
   public setInputLabelVisible(initialValue?: string) {
     const foSel = this.d3_selection?.select(`.${this.prefix}_fo_input`)
     foSel?.style('display', null)
     this.d3_selection?.select(`.${this.prefix}_text`).style('display', 'none')
     const inputId = `${this.prefix}_input_${this.getElementId()}`
-    const input = document.getElementById(inputId) as HTMLInputElement | null
+    const input = document.getElementById(inputId) as HTMLElement | null
     if (!input) return
-    // Same focus sequence as double-click (which works): pre-fill value first,
-    // then select() to focus + select content, then move caret to end.
+    input.focus()
+    const sel = window.getSelection()
+    const range = document.createRange()
     if (initialValue !== undefined) {
-      input.value = initialValue
-    }
-    input.select()
-    if (initialValue !== undefined) {
-      const len = input.value.length
-      input.setSelectionRange(len, len)
+      // Ultra-shortcut "tape directement sur un élément sélectionné" :
+      // on conserve le nom existant et on insère la touche tapée en fin,
+      // comme si l'utilisateur avait double-cliqué puis tapé la touche.
+      input.textContent = (input.textContent ?? '') + initialValue
+      range.selectNodeContents(input)
+      range.collapse(false)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
       input.dispatchEvent(new Event('input', { bubbles: true }))
+    } else {
+      // Double-clic : sélectionne tout le contenu (équivalent input.select()).
+      range.selectNodeContents(input)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
   }
 
@@ -934,30 +1291,88 @@ export abstract class DrawLabelBase {
   ) {
     if (!this._element.drawing_area.editable) return
 
-    d3_selection?.append('foreignObject')
+    // WYSIWYG : on utilise un <div contenteditable> à la largeur du label
+    // (label.box_width). Le texte wrappe au même point que le rendu, et la
+    // boîte grandit verticalement à mesure que des lignes sont ajoutées.
+    // Quand wrap_long_words est on, les mots longs cassent aussi.
+    // Quand le label tient sur une ligne sans espace, la boîte d\'édition
+    // déborde horizontalement (overflow visible) plutôt que de wrapper.
+    const lbl = this._label_values as { box_width?: number, wrap_long_words?: boolean, font_size?: number } | undefined
+    const target_width = lbl?.box_width ?? box_width
+    const wrap_long = lbl?.wrap_long_words ?? false
+    // Compensation zoom (issue #165) : le foreignObject vit dans le repère
+    // local zoomé, donc la CSS font-size en px y est aussi multipliée par k.
+    const comp = this._element.drawing_area?.font_compensation ?? 1
+    const raw_font_size = lbl?.font_size ?? 12
+    const font_size = raw_font_size * comp
+    const line_height = Math.max(font_size * 1.3, 14 * comp)
+    // Hauteur généreuse pour ne pas clipper plusieurs lignes ; overflow visible.
+    const fo_height = Math.max(box_height, line_height * 10)
+
+    const fo = d3_selection?.append('foreignObject')
       .classed(this.prefix, true)
       .classed(`${this.prefix}_fo_input`, true)
       .attr('x', box_pos_x)
       .attr('y', box_pos_y)
-      .attr('width', box_width)
-      .attr('height', box_height)
+      .attr('width', target_width)
+      .attr('height', fo_height)
+      .attr('overflow', 'visible')
       .style('display', 'none')
-      .append('xhtml:div')
-      .append('input')
+
+    if (!fo) return
+
+    // Comportement demandé :
+    //  - césure (wrap_long_words) ON  → la boîte fait `target_width` et le
+    //    texte wrappe en bout de ligne (y compris en cassant les mots longs).
+    //  - césure OFF                  → la boîte grandit horizontalement au
+    //    fur et à mesure qu'on tape (pas de wrap).
+    const div = fo.append('xhtml:div')
       .classed(this.prefix, true)
       .classed(`${this.prefix}_input`, true)
       .attr('id', `${this.prefix}_input_${this._element.id}`)
-      .attr('type', 'text')
-      .attr('value', this.getInputInitialValue())
-      .attr('font-size', String(this._label_values.font_size) + 'px')
-      .on('input', (evt) => {
+      .attr('contenteditable', 'true')
+      .style('display', 'inline-block')
+      .style('min-height', `${line_height}px`)
+      .style('font-size', `${font_size}px`)
+      .style('line-height', `${line_height}px`)
+      .style('outline', '1px solid #1f77b4')
+      .style('background', 'rgba(255,255,255,0.95)')
+      .style('padding', '1px 2px')
+      .style('box-sizing', 'content-box')
+      .style('cursor', 'text')
+    if (wrap_long) {
+      div
+        .style('width', `${target_width}px`)
+        .style('white-space', 'pre-wrap')
+        .style('overflow-wrap', 'break-word')
+        .style('word-break', 'break-word')
+    } else {
+      div
+        .style('white-space', 'nowrap')
+    }
+    (div.node() as HTMLDivElement).textContent = this.getInputInitialValue()
+    div
+      // Empêcher les events souris de bubbler vers le <g> de l'élément :
+      // sinon mouseup/click déclenche eventSimpleLMBClick → drawAsSelected →
+      // redraw du label → l'input disparaît dès qu'on relâche la souris.
+      .on('mousedown', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('mouseup', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('click', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('dblclick', (evt: MouseEvent) => { evt.stopPropagation() })
+      .on('input', (evt: Event) => {
         this._element.sankey.drawing_area.bypass_redraws = true
-        this.onInputChange?.(evt.target.value)
+        const text = (evt.target as HTMLElement).innerText ?? ''
+        this.onInputChange?.(text)
         this._element.sankey.drawing_area.bypass_redraws = false
       })
       .on('keydown', (evt: KeyboardEvent) => {
-        if (evt.key === 'Enter' || evt.key === 'Escape') {
-          (evt.target as HTMLInputElement).blur()
+        // Enter valide (sans insérer de saut de ligne) ; Shift+Enter insère
+        // un saut ; Escape valide aussi (le blur déclenche le redraw final).
+        if (evt.key === 'Enter' && !evt.shiftKey) {
+          evt.preventDefault();
+          (evt.target as HTMLElement).blur()
+        } else if (evt.key === 'Escape') {
+          (evt.target as HTMLElement).blur()
         }
       })
       .on('blur', () => this.setInputLabelInvisible())
@@ -975,6 +1390,25 @@ export abstract class DrawLabelBase {
   ): void {
     if (!this._element.drawing_area.editable) return
     textElement.style('cursor', 'text')
+      .on('click', (evt: MouseEvent) => {
+        // Clic sur le label : sélectionne l'élément + sous-sélectionne ce
+        // label (les poignées n'apparaîtront que pour ce label).
+        // stopPropagation pour éviter le double-trigger via le <g> du nœud
+        // (qui purge + ré-ajoute → flicker visuel).
+        evt.stopPropagation()
+        const el = this._element as Class_BaseShape
+        const drawing_area = el.drawing_area
+        // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
+        // n'itère pas dessus et la sub-sélection reste collée (poignées qui
+        // ne disparaissent pas en clic ailleurs / Escape).
+        if (!el.is_selected) {
+          drawing_area.addElementToSelection(el)
+        }
+        // Set APRÈS addElementToSelection (qui passe par drawAsSelected →
+        // clear de selected_label_prefix).
+        el.selected_label_prefix = this.prefix as 'name_label' | 'value_label' | 'icon'
+        this.refreshLabelResizeHandles()
+      })
       .on('dblclick', (evt: MouseEvent) => {
         evt.stopPropagation()
         evt.preventDefault()
@@ -1052,15 +1486,31 @@ export abstract class DrawLabelBase {
     const hasSpecialContent = this.applySpecialTextContent(textElement, labelText)
 
     if (!hasSpecialContent) {
+      const k_inv_local = this._element.drawing_area?.font_compensation ?? 1
+      // Issue #165 — box_width est défini par l'utilisateur en px écran. En mode
+      // police verrouillée la font est grossie de k_inv en coords locales pour
+      // rester constante à l'écran ; on grossit box_width du MÊME facteur, donc
+      // le ratio glyphe/boîte reste identique au mode natif et le wrap volontaire
+      // (libellés multi-mots) se déclenche exactement comme avant à box_width px
+      // écran. Pas d'override sur la largeur naturelle du texte : ça désactivait
+      // tout retour à la ligne dès que la compensation était active.
+      const eff_box_width = this._label_values.box_width * k_inv_local
       let processedText = labelText
       if (this._label_values.wrap_long_words) {
-        processedText = breakLongWords(labelText, this._label_values.box_width, getCanvasFontString(textElement))
+        // Césure mesurée en px écran (font_size + box_width bruts) : canvas.measureText
+        // n'est pas fiable à la taille compensée. textwrap re-placera ensuite les
+        // sous-mots sur les bonnes lignes en coords locales via eff_box_width.
+        processedText = breakLongWords(
+          labelText,
+          this._label_values.box_width,
+          getCanvasFontStringAtSize(textElement, this._label_values.font_size)
+        )
       }
       const hasSpaces = processedText.includes(' ')
 
       if (hasSpaces) {
         const wrapper = textwrap()
-          .bounds({ height: 100, width: this._label_values.box_width })
+          .bounds({ height: 100 * k_inv_local, width: eff_box_width })
           .method('tspans')
 
         textElement
@@ -1115,10 +1565,30 @@ export abstract class DrawLabelBase {
 
     this.applyTextDragHandlers(textElement)
     this.finalizeLabelCreation(textElement)
+
+    // Poignées de redimensionnement (label.box_width) — Class_Handler dans
+    // `g_handlers`, en coords absolues `g_drawing` (cf. doc de la méthode).
+    // Re-positionne les poignées après chaque redraw du label si elles
+    // étaient affichées (sub-sélection active), sinon ne fait rien.
+    this.refreshLabelResizeHandles()
   }
 
   protected verticalText(_tspanWidths: number[], _textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
     return undefined
+  }
+
+  /**
+   * Angle effectif de rotation du texte, en degrés (−180..180).
+   * `text_angle` (widget d'angle) prime ; à 0, on retombe sur la rétro-compat
+   * `vertical_text` → −90° (les liens surchargent pour tenir compte de is_vertical).
+   * −90° emprunte la géométrie de colonne historique (alignée au bord) ; tout
+   * autre angle non nul est une rotation générique autour du point d'ancrage.
+   */
+  protected getEffectiveTextAngle(): number {
+    const raw = Number((this._label_values as { text_angle?: number }).text_angle ?? 0)
+    const clamped = Math.max(-180, Math.min(180, Number.isFinite(raw) ? raw : 0))
+    if (clamped !== 0) return clamped
+    return this._label_values.vertical_text ? -90 : 0
   }
 
   protected applyMultilineAlignment(
@@ -1133,7 +1603,11 @@ export abstract class DrawLabelBase {
     // est déjà encodée dans label_pos_x/label_pos_y/label_anchor/label_baseline via
     // getLabelPos ; on laisse le wrapper d3 gérer le `dy` em par tspan, et la rotation
     // appliquée par verticalText() s'occupe du reste.
-    if (this._label_values.vertical_text) return
+    // Pour un angle libre (≠ ±90), on laisse l'alignement multi-ligne se faire
+    // normalement : la rotation générique de verticalText() pivote ensuite le
+    // bloc déjà aligné autour de son point d'ancrage.
+    const _align_angle = this.getEffectiveTextAngle()
+    if (_align_angle === 90 || _align_angle === -90) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
     const maxWidth = Math.max(...tspanWidths, 1)
@@ -1142,7 +1616,9 @@ export abstract class DrawLabelBase {
 
     const vert = this._label_values.vert
     const lineCount = Math.max(0, tspanWidths.length - 1)
-    const font_size = this._label_values.font_size
+    // Issue #165 : décalages multi-ligne en coords locales doivent suivre la
+    // taille de police effectivement rendue (compensée du fit-zoom).
+    const font_size = this.getEffectiveFontSize()
     const inside_vert = this._label_values.inside_vert  // ✅ AJOUTÉ
 
     // ✅ MODIFIÉ : Ne pas décaler vers le haut si inside_vert et vert === 'top'
@@ -1222,7 +1698,18 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
   }
 
   protected override verticalText(tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
-    if (!this._label_values.vertical_text) return undefined
+    const angle = this.getEffectiveTextAngle()
+    if (angle === 0) return undefined
+
+    // Angle libre (≠ −90) : le texte a été posé/aligné normalement par
+    // updateLabelPos + applyMultilineAlignment ; on le pivote simplement autour
+    // de son point d'ancrage. Le fond reçoit le même transform (cf. drawBackground)
+    // et suit donc le texte. −90 garde la géométrie de colonne historique ci-dessous.
+    if (angle !== -90) {
+      const [px, py] = this.getLabelPos()
+      textElement.attr('transform', `rotate(${angle}, ${px}, ${py})`)
+      return undefined
+    }
 
     // Pivot dynamique = pivot mobile : tourner autour de (label_pos_x, label_pos_y) couple
     // l'extent pré-rotation (text-anchor sur X, baseline sur Y) avec la position post-rotation
@@ -1235,7 +1722,8 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     // Texte horizontal pré-rotation : box (0, 0)-(textWidth, colWidth) avec colWidth = lineCount * lineHeight.
     // Après rotate(-90, 0, 0)   : box (0, -textWidth)-(colWidth, 0).
     // Translate (tx, ty + textWidth) → box finale (tx, ty)-(tx + colWidth, ty + textWidth).
-    const lineHeight = this._label_values.font_size
+    // Issue #165 : lineHeight aligné sur la police effective (compensée fit-zoom).
+    const lineHeight = this.getEffectiveFontSize()
     const textWidth = tspanWidths.length ? Math.max(...tspanWidths) : 0
     const numLines = Math.max(1, tspanWidths.length)
     const colWidth = numLines * lineHeight
@@ -1432,19 +1920,6 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     label_pos_y = label_pos_dy + shape_height + this._label_values.vert_shift
     label_baseline = 'text-before-edge'
 
-    let margin_top = this.node.shape_margin_top
-    if (this.node.shape_type === 'capsule') {
-      margin_top = this.node.getShapeWidthToUse() / 2
-    }
-    let margin_bottom = this.node.shape_margin_top
-    if (this.node.shape_type === 'capsule') {
-      margin_bottom = this.node.getShapeWidthToUse() / 2
-    }
-    if (this.node.shape_type === 'capsule_h') {
-      margin_top = this.node.shape_margin_top
-      margin_bottom = this.node.shape_margin_bottom
-    }
-
     if (this._label_values.position_absolute) {
       label_pos_y = this._label_values.position_y
       label_baseline = 'middle'
@@ -1497,7 +1972,7 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       ?.attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
-      .attr('font-size', String(this._label_values.font_size) + 'px')
+      .attr('font-size', String(this.getEffectiveFontSize()) + 'px')
       .attr('font-family', this._label_values.font_family)
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
       .attr('stroke', 'none')
@@ -1522,17 +1997,27 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
     return `${this.prefix}_text_${this._element.id}`
   }
 
+  protected editingEnabled(): boolean {
+    return this.enableEditing
+  }
+
   protected override finalizeLabelCreation(
     textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>
   ): void {
-    if (this.enableEditing) {
+    if (this.editingEnabled()) {
       const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
 
-      const labelText = String(this.getLabelText())
-      const box_width = Math.min(
-        labelText.length * this._label_values.font_size,
-        this._label_values.box_width
-      )
+      // La zone d'édition doit avoir la même largeur que la "boîte" du label
+      // (label.box_width = la limite de wrap, donc l'enveloppe des poignées
+      // de redimensionnement). Le <foreignObject> créé par drawLabelInput
+      // utilise déjà cette largeur ; il faut que le positionnement (box_pos_x
+      // en fonction de l'ancre) parte de la même valeur, sinon le FO se
+      // retrouve décalé latéralement par rapport au label (visible quand le
+      // texte naturel est plus court que box_width).
+      // Issue #165 : eff_font_size = police compensée (constante à l'écran en
+      // mode verrouillé) pour que le positionnement de la box suive les glyphes.
+      const eff_font_size = this.getEffectiveFontSize()
+      const box_width = this._label_values.box_width
 
       let box_pos_x = label_pos_x
       let box_pos_y = label_pos_y
@@ -1540,9 +2025,9 @@ export abstract class NodeDrawLabelBase extends DrawLabelBase {
       const vert = this._label_values.vert
       if (vert === 'top') {
         const lineCount = (textElement.selectAll('tspan').nodes().length ?? 1) - 1
-        box_pos_y -= lineCount * this._label_values.font_size
+        box_pos_y -= lineCount * eff_font_size
       } else if (vert === 'middle') {
-        box_pos_y -= this._label_values.font_size / 2
+        box_pos_y -= eff_font_size / 2
       }
 
       if (label_anchor === 'end') {
@@ -1582,16 +2067,32 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
   protected getLabelText(): string {
     if (this._label_values.has_fo) return ''
     if (this._label_values.icon_name != '') return ''
-    return this.node.name_label
+    if (this.prefix === 'name_label' && this._label_values.is_value && this.node instanceof Class_NodeElement) {
+      return this.node.name_value_label
+    }
+    return this.node.name_label_effective
   }
 
   protected shouldDrawLabel(): boolean {
     return this._label_values.is_visible
   }
 
+  // En mode « value », le libellé affiche une valeur calculée : on désactive
+  // l'édition inline (sinon un double-clic renommerait le nœud).
+  protected override editingEnabled(): boolean {
+    return this.enableEditing && !(this.prefix === 'name_label' && this._label_values.is_value)
+  }
+
   protected onInputChange(value: string): void {
-    this.node.name = value
-    // Sync name_label → fo_content only when rich text mode is active
+    // En mode label personnalisé, l'édition inline écrit dans le champ de label
+    // indépendant (le nœud n'est PAS renommé) ; sinon elle renomme le nœud,
+    // comportement historique.
+    if (this.node.name_label_custom) {
+      this.node.name_label_text = value
+    } else {
+      this.node.name = value
+    }
+    // Sync texte → fo_content uniquement en mode rich text
     if (this._label_values.has_fo) {
       this.node.name_label_fo_content = `<p>${value}</p>`
     }
@@ -1669,15 +2170,29 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     }
   }
 
+  /**
+   * Rétro-compat liens : `vertical_text` historique vaut +90° sur un lien vertical
+   * (texte top→bottom, sens du flux) et −90° sinon (bottom→top). Dès que l'angle
+   * explicite `text_angle` est posé, il prime.
+   */
+  protected override getEffectiveTextAngle(): number {
+    const raw = Number((this._label_values as { text_angle?: number }).text_angle ?? 0)
+    const clamped = Math.max(-180, Math.min(180, Number.isFinite(raw) ? raw : 0))
+    if (clamped !== 0) return clamped
+    if (this._label_values.vertical_text) return this.link.is_vertical ? 90 : -90
+    return 0
+  }
+
   protected override verticalText(_tspanWidths: number[], textElement: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown>): number | undefined {
-    if (!this._label_values.vertical_text) return undefined
+    const angle = this.getEffectiveTextAngle()
+    if (angle === 0) return undefined
 
     const [label_pos_x, label_pos_y] = this.getLabelPos()
-    const dx = this._label_values.font_size / 2
+    // Issue #165 : décalage proportionnel à la police effective.
+    const dx = this.getEffectiveFontSize() / 2
 
-    // For vertical links, use +90° so text reads top→bottom (natural flow direction).
-    // For horizontal links, keep -90° so text reads bottom→top (left-to-right flow convention).
-    const angle = this.link.is_vertical ? 90 : -90
+    // Rotation autour du point d'ancrage du label. L'angle vient du widget
+    // (text_angle) ou, à défaut, de la rétro-compat vertical_text (±90 selon is_vertical).
     textElement.attr('transform', `translate(${-dx}, 0) rotate(${angle}, ${label_pos_x}, ${label_pos_y})`)
 
     return -dx
@@ -1703,10 +2218,13 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
     return '.link_value_text'
   }
 
-  // Côté liens, le name_label est positionné par rapport au flux : on ne le
-  // recale pas verticalement, la valeur se contente d'y coller.
+  // Côté liens, le name_label est positionné par rapport au flux (bord haut/bas
+  // de l'épaisseur) : on ne le recale pas verticalement en top/bottom, la valeur
+  // se contente d'y coller. En revanche, quand le nom est centré sur le flux
+  // (vert='middle'), on recale le bloc combiné nom+valeur pour qu'il soit centré
+  // sur le flux, pas seulement le nom.
   protected override stickRecentersVertically(): boolean {
-    return false
+    return this._label_values.vert === 'middle'
   }
 
   protected getTextPathSelector(): string {
@@ -1714,11 +2232,15 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   }
 
   protected getFontSize(): number {
+    // Comparaison vs link.thickness en coords locales : on raisonne en taille
+    // logique puis on compense le fit-zoom à la fin pour garder une police
+    // constante à l'écran (issue #165).
     let font_size = this._label_values.font_size
     if (font_size > this.link.thickness && this.link.is_multi_link) {
       font_size = this.link.thickness
     }
-    return font_size
+    const comp = this._element.drawing_area?.font_compensation ?? 1
+    return font_size * comp
   }
 
   /**
@@ -1811,7 +2333,8 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
 
     // For vertical links with vertical_text, remap axes:
     // horiz controls label_pos_x (within link cross-section), vert controls label_pos_y (along flow)
-    if (this.link.is_vertical && this._label_values.vertical_text && !this._label_values.position_absolute) {
+    // Réservé au mode colonne ±90 ; un angle libre tourne autour de l'ancrage normal.
+    if (this.link.is_vertical && Math.abs(this.getEffectiveTextAngle()) === 90 && !this._label_values.position_absolute) {
       const cx = this.link.position_x_start
       const half_thickness = this.link.thickness / 2
       if (this._label_values.horiz === 'left') {
@@ -1848,10 +2371,17 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
   protected applyTextStyle(
     selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
+    // Si la couleur du label est verrouillée (color_sustainable), elle prime toujours.
+    // Sinon : quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il prend
+    // la couleur du flux (association visuelle ; pas de corps de flux derrière lui pour le porter) ;
+    // dans les autres cas, comportement habituel (= couleur du flux quand non verrouillé).
+    const fill = this._label_values.color_sustainable
+      ? this._label_values.color
+      : this._element.getShapeColorToUse()
     selection
       ?.attr('font-size', String(this.getFontSize()) + 'px')
       .attr('font-family', this._label_values.font_family)
-      .attr('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
+      .attr('fill', fill)
       .attr('font-weight', this._label_values.bold ? 'bold' : 'normal')
       .attr('font-style', this._label_values.italic ? 'italic' : 'normal')
       .style('text-transform', this._label_values.uppercase ? 'uppercase' : 'none')
@@ -2100,16 +2630,31 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
     if (this._label_values.is_value) {
       return this.link.data_label(this.prefix as 'name_label')
     }
-    return this.link.text_value
+    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
+    switch (text_source) {
+    case 'none': return ''
+    case 'source': return this.link.source?.name_label_effective ?? ''
+    case 'target': return this.link.target?.name_label_effective ?? ''
+    case 'source_target': {
+      const s = this.link.source?.name_label_effective ?? ''
+      const t = this.link.target?.name_label_effective ?? ''
+      return `${s} → ${t}`
+    }
+    case 'custom':
+    default:
+      return this.link.text_value
+    }
   }
 
   protected shouldDrawLabel(): boolean {
     const link_text = this.getLabelText()
     const link_val = this.link.valueCurrent
+    const text_source = this.prefix === 'name_label' ? this.link.name_label_text_source : 'custom'
 
     return (
       this._label_values.is_visible &&
       !this._label_values.has_fo &&
+      text_source !== 'none' &&
       ((link_text ?? '') !== '') &&
       !(link_val !== undefined && link_val !== null && link_val <= this._element.drawing_area.filter_label)
     )
@@ -2187,18 +2732,19 @@ export class LinkDrawValueLabel extends LinkDrawLabelBase {
     if (!this.enableEditing || this._label_values.has_fo) return
 
     const [label_pos_x, label_pos_y, label_anchor] = this.getLabelPos()
-    const initial = this.getInputInitialValue()
-    const minBoxWidth = this._label_values.font_size * 4
-    const box_width = Math.max(
-      Math.min((initial.length + 2) * this._label_values.font_size * 0.6, this._label_values.box_width || 120),
-      minBoxWidth
-    )
+    // Largeur cohérente avec le <foreignObject> (label.box_width = limite de
+    // wrap, enveloppe des poignées). Évite le décalage latéral du FO par
+    // rapport au label quand le texte naturel est plus court.
+    // Issue #165 : eff_font_size = police compensée (constante à l'écran en mode
+    // verrouillé) pour que le positionnement de la box suive les glyphes.
+    const eff_font_size = this.getEffectiveFontSize()
+    const box_width = this._label_values.box_width || 120
 
     let box_pos_x = label_pos_x
     if (label_anchor === 'end') box_pos_x -= box_width
     else if (label_anchor === 'middle') box_pos_x -= box_width / 2
 
-    const box_pos_y = label_pos_y - this._label_values.font_size / 2
+    const box_pos_y = label_pos_y - eff_font_size / 2
 
     this.drawLabelInput(this.d3_selection, box_pos_x, box_pos_y, box_width)
     this.attachDoubleClickEdit(textElement)

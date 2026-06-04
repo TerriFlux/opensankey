@@ -1,4 +1,5 @@
 import { MenuCondition } from './SankeyMenuContext'
+import { default_main_sankey_id } from '../../types/Utils'
 
 export const translations = {
   ProcessDialog: {
@@ -64,6 +65,34 @@ export const translations = {
       es: 'Iniciar',
       de: 'Starten',
       it: 'Avvia'
+    },
+    with_reconciled_label: {
+      en: 'Reconcile',
+      fr: 'Réconcilier',
+      es: 'Reconciliar',
+      de: 'Abgleichen',
+      it: 'Riconciliare'
+    },
+    with_reconciled_tooltip: {
+      en: 'Run the standard reconciliation pass. Measured values may be adjusted to satisfy all mass balances.',
+      fr: 'Lance la passe de réconciliation standard. Les valeurs mesurées peuvent être ajustées pour satisfaire tous les bilans matière.',
+      es: 'Ejecuta la pasada de reconciliación estándar. Los valores medidos pueden ajustarse para satisfacer todos los balances de masa.',
+      de: 'Führt den Standardabgleich aus. Messwerte können angepasst werden, damit alle Massenbilanzen erfüllt sind.',
+      it: 'Esegue la riconciliazione standard. I valori misurati possono essere modificati per soddisfare tutti i bilanci di massa.'
+    },
+    with_completed_label: {
+      en: 'Complete (no-redundancy)',
+      fr: 'Compléter (sans redondance)',
+      es: 'Completar (sin redundancia)',
+      de: 'Vervollständigen (ohne Redundanz)',
+      it: 'Completare (senza ridondanza)'
+    },
+    with_completed_tooltip: {
+      en: 'Add a "Completed value" column to the analysis sheet: redundant balance constraints are dropped, measured values are preserved as-is, and only unknown flows are filled in.',
+      fr: 'Ajoute une colonne « Valeur complétée » à la feuille d\'analyse : les bilans redondants sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés.',
+      es: 'Añade una columna "Valor completado" a la hoja de análisis: se eliminan las restricciones redundantes, los valores medidos se conservan tal cual y solo se completan los flujos desconocidos.',
+      de: 'Fügt der Analyseblatt eine Spalte „Vervollständigter Wert" hinzu: redundante Bilanzgleichungen werden entfernt, Messwerte bleiben unverändert und nur unbekannte Flüsse werden ergänzt.',
+      it: 'Aggiunge una colonna « Valore completato » al foglio di analisi: i vincoli di bilancio ridondanti vengono rimossi, i valori misurati sono mantenuti invariati e vengono completati solo i flussi sconosciuti.'
     },
     processing: {
       en: 'Processing...',
@@ -205,6 +234,13 @@ export const translations = {
       de: 'Abstimmung',
       it: 'Riconciliazione'
     },
+    completion: {
+      en: 'Completion',
+      fr: 'Complétion',
+      es: 'Compleción',
+      de: 'Vervollständigung',
+      it: 'Completamento'
+    },
     open_excel_file: {
       en: 'Open an excel file',
       fr: 'Ouvrir fichier excel',
@@ -274,6 +310,13 @@ export const translations = {
       es: 'Cargar ejemplo',
       de: 'Beispiel laden',
       it: 'Carica esempio'
+    },
+    load_tutorial: {
+      en: 'Loading tutorial',
+      fr: 'Chargement du tutoriel',
+      es: 'Cargando tutorial',
+      de: 'Tutorial laden',
+      it: 'Caricamento tutorial'
     },
     no_input_file_detected: {
       en: 'No file has been selected',
@@ -501,6 +544,13 @@ export const translations = {
       de: 'Infos',
       it: 'Info'
     },
+    log_warnings: {
+      fr: 'Warnings',
+      en: 'Warnings',
+      es: 'Advertencias',
+      de: 'Warnungen',
+      it: 'Avvisi'
+    },
     log_errors: {
       fr: 'Erreurs',
       en: 'Errors',
@@ -514,6 +564,13 @@ export const translations = {
       es: 'Depuración',
       de: 'Debug',
       it: 'Debug'
+    },
+    warnings_to_read: {
+      fr: 'Cliquer pour n\'afficher que les warnings',
+      en: 'Click to show only warnings',
+      es: 'Haga clic para mostrar solo las advertencias',
+      de: 'Klicken, um nur Warnungen anzuzeigen',
+      it: 'Clicca per mostrare solo gli avvisi'
     }
   }
 }
@@ -528,10 +585,10 @@ export type OptionGroup =
 
 // Ordre d'affichage imposé des groupes dans la boîte de dialogue.
 export const OPTION_GROUP_ORDER: OptionGroup[] = [
+  'merge',
   'autocorrection',
   'sheets',
   'content',
-  'merge',
   'presentation',
   'solver',
 ]
@@ -589,6 +646,10 @@ export interface FormatAttributeConfig<T> {
   // Force a row break in the auto-generated options renderer before rendering
   // this option's unit (parent + visibility-conditioned children).
   breakBefore?: boolean
+  // For string-typed options rendered as a ComboBox/Select (mutually exclusive
+  // choices). Each entry maps a stored value to its localized label. When set,
+  // the renderer draws a <Select> instead of a checkbox/number input.
+  selectOptions?: { value: string; labels: { en: string; fr: string; es?: string; de?: string; it?: string } }[]
 }
 export type FormatConfigStructure = Record<string, FormatAttributeConfig<boolean | number | string> | object>
 // ==================================================================================================
@@ -735,11 +796,155 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       visibilityConditions: [
         { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
       ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    allow_flux_to_descendant: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Allow fluxes from a node to its descendants',
+        fr: 'Autoriser les flux d\'un nœud vers ses descendants',
+        es: 'Permitir flujos de un nodo hacia sus descendientes',
+        de: 'Flüsse von einem Knoten zu seinen Nachfahren erlauben',
+        it: 'Consentire flussi da un nodo verso i suoi discendenti'
+      },
+      tooltips: {
+        en: 'If checked: fluxes that connect a node to one of its own hierarchical descendants (or vice-versa) are kept as-is and highlighted in red on the corrected output. Otherwise: load fails, naming the offending flux.',
+        fr: 'Si coché : les flux qui relient un nœud à un de ses descendants hiérarchiques (ou inversement) sont conservés tels quels et surlignés en rouge sur la sortie corrigée. Sinon : le chargement échoue en nommant le flux fautif.',
+        es: 'Si está marcado: los flujos que conectan un nodo con uno de sus descendientes jerárquicos (o viceversa) se conservan tal cual y se resaltan en rojo en la salida corregida. De lo contrario: la carga falla, nombrando el flujo problemático.',
+        de: 'Wenn aktiviert: Flüsse, die einen Knoten mit einem seiner hierarchischen Nachfahren verbinden (oder umgekehrt), werden unverändert beibehalten und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: das Laden schlägt fehl und nennt den problematischen Fluss.',
+        it: 'Se selezionato: i flussi che collegano un nodo a uno dei suoi discendenti gerarchici (o viceversa) vengono mantenuti così come sono ed evidenziati in rosso nell\'output corretto. Altrimenti: il caricamento fallisce, indicando il flusso problematico.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autonormalize_ratio_constraints: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Renormalize ratio constraints whose sum is close to 1',
+        fr: 'Renormaliser les contraintes ratio dont la somme est proche de 1',
+        es: 'Renormalizar las restricciones ratio cuya suma es cercana a 1',
+        de: 'Verhältnis-Constraints renormalisieren, deren Summe nahe 1 liegt',
+        it: 'Rinormalizzare i vincoli ratio la cui somma è vicina a 1'
+      },
+      tooltips: {
+        en: 'If checked: when share-of-input ratio_flux constraints on a node sum to a value close to 1 (within ±1e-3) but not exactly 1, each ratio is rescaled by 1/sum so they sum to 1 exactly; otherwise the reference flux would be forced to 0 by mass balance. Sums farther than ±1e-3 from 1 always trigger a warning and are never auto-corrected. If unchecked: load aborts on the near-1 case.',
+        fr: 'Si coché : lorsque les contraintes ratio_flux de répartition d\'un nœud somment à une valeur proche de 1 (à ±1e-3 près) mais non exactement 1, chaque ratio est rééchelonné par 1/somme pour sommer exactement à 1 ; sinon le flux de référence serait forcé à 0 par la conservation de masse. Les sommes plus éloignées que ±1e-3 de 1 déclenchent toujours un avertissement et ne sont jamais auto-corrigées. Si décoché : le chargement échoue sur le cas proche de 1.',
+        es: 'Si está marcado: cuando las restricciones ratio_flux de reparto de un nodo suman un valor cercano a 1 (dentro de ±1e-3) pero no exactamente 1, cada ratio se reescala por 1/suma para sumar exactamente a 1; de lo contrario el flujo de referencia se forzaría a 0 por el balance de masa. Las sumas más lejanas que ±1e-3 de 1 siempre generan una advertencia y nunca se autocorrigen. Si no está marcado: la carga falla en el caso cercano a 1.',
+        de: 'Wenn aktiviert: wenn ratio_flux-Aufteilungs-Constraints an einem Knoten zu einem Wert nahe 1 (innerhalb ±1e-3) aber nicht genau 1 summieren, wird jeder Quotient mit 1/Summe skaliert, sodass die Summe genau 1 ergibt; andernfalls würde der Referenzfluss durch die Massenbilanz auf 0 gezwungen. Summen weiter als ±1e-3 von 1 entfernt lösen immer eine Warnung aus und werden nie autokorrigiert. Wenn deaktiviert: das Laden schlägt im Nahe-1-Fall fehl.',
+        it: 'Se selezionato: quando i vincoli ratio_flux di ripartizione di un nodo sommano a un valore vicino a 1 (entro ±1e-3) ma non esattamente 1, ogni ratio viene riscalato per 1/somma per sommare esattamente a 1; altrimenti il flusso di riferimento sarebbe forzato a 0 dal bilancio di massa. Le somme più lontane di ±1e-3 da 1 generano sempre un avviso e non vengono mai autocorrette. Se non selezionato: il caricamento fallisce sul caso vicino a 1.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autofix_ter_duplicate_entries: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Merge (union) inconsistent duplicated TER entries',
+        fr: 'Fusionner (union) les doublons incohérents du TER',
+        es: 'Fusionar (unión) las entradas duplicadas incoherentes del TER',
+        de: 'Inkonsistente doppelte TER-Einträge zusammenführen (Vereinigung)',
+        it: 'Unire (unione) le voci duplicate incoerenti del TER'
+      },
+      tooltips: {
+        en: 'If checked: when a node that is a parent along several dimensions appears more than once in the TER (supply-use table) with copies whose crosses differ, the copies are merged by union (a flux is kept if present in at least one copy) and a warning lists the re-incorporated fluxes. If unchecked: load fails, listing the inconsistent fluxes (cross present in one copy only).',
+        fr: 'Si coché : quand un nœud parent selon plusieurs dimensions apparaît plusieurs fois dans le TER (table emplois-ressources) avec des copies dont les croix diffèrent, les copies sont fusionnées par union (un flux est conservé s\'il est présent dans au moins une copie) et un avertissement liste les flux ré-incorporés. Si décoché : le chargement échoue en listant les flux incohérents (croix présente dans une seule copie).',
+        es: 'Si está marcado: cuando un nodo padre según varias dimensiones aparece varias veces en el TER (tabla empleos-recursos) con copias cuyas cruces difieren, las copias se fusionan por unión (un flujo se conserva si está presente en al menos una copia) y una advertencia lista los flujos reincorporados. Si no está marcado: la carga falla, listando los flujos incoherentes (cruz presente en una sola copia).',
+        de: 'Wenn aktiviert: wenn ein Knoten, der entlang mehrerer Dimensionen ein Elternknoten ist, mehrfach in der TER (Aufkommens-Verwendungs-Tabelle) mit Kopien erscheint, deren Kreuze sich unterscheiden, werden die Kopien durch Vereinigung zusammengeführt (ein Fluss bleibt erhalten, wenn er in mindestens einer Kopie vorhanden ist) und eine Warnung listet die wieder aufgenommenen Flüsse auf. Wenn deaktiviert: das Laden schlägt fehl und listet die inkonsistenten Flüsse auf (Kreuz nur in einer Kopie vorhanden).',
+        it: 'Se selezionato: quando un nodo padre secondo più dimensioni appare più volte nel TER (tabella impieghi-risorse) con copie le cui croci differiscono, le copie vengono unite per unione (un flusso è mantenuto se presente in almeno una copia) e un avviso elenca i flussi reincorporati. Se non selezionato: il caricamento fallisce, elencando i flussi incoerenti (croce presente in una sola copia).'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    typo_strict: {
+      group: 'autocorrection',
+      breakBefore: true,
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Strict typo check on node names',
+        fr: 'Vérification stricte des typos de noms de nœuds',
+        es: 'Verificación estricta de erratas en los nombres de nodos',
+        de: 'Strenge Tippfehlerprüfung bei Knotennamen',
+        it: 'Verifica rigorosa dei refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked: two node labels that differ only by spaces, spacing around punctuation, case or accents make the load fail (the typo must be fixed in the file). If unchecked: the offending label is assimilated to the existing node and a warning is emitted.',
+        fr: 'Si coché : deux libellés de nœud qui ne diffèrent que par des espaces, de la ponctuation, la casse ou les accents font échouer le chargement (la typo doit être corrigée dans le fichier). Si décoché : le libellé fautif est assimilé au nœud existant et un avertissement est émis.',
+        es: 'Si está marcado: dos etiquetas de nodo que difieren solo por espacios, puntuación, mayúsculas o acentos hacen que la carga falle (la errata debe corregirse en el archivo). Si no está marcado: la etiqueta problemática se asimila al nodo existente y se emite una advertencia.',
+        de: 'Wenn aktiviert: zwei Knotenbezeichnungen, die sich nur durch Leerzeichen, Interpunktion, Groß-/Kleinschreibung oder Akzente unterscheiden, lassen das Laden fehlschlagen (der Tippfehler muss in der Datei korrigiert werden). Wenn deaktiviert: die betroffene Bezeichnung wird dem vorhandenen Knoten zugeordnet und eine Warnung ausgegeben.',
+        it: 'Se selezionato: due etichette di nodo che differiscono solo per spazi, punteggiatura, maiuscole/minuscole o accenti fanno fallire il caricamento (il refuso va corretto nel file). Se non selezionato: l\'etichetta problematica viene assimilata al nodo esistente e viene emesso un avviso.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
+    autocorrect_typo: {
+      group: 'autocorrection',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Auto-correct node name typos',
+        fr: 'Auto-corriger les typos de noms de nœuds',
+        es: 'Autocorregir las erratas en los nombres de nodos',
+        de: 'Tippfehler in Knotennamen automatisch korrigieren',
+        it: 'Correggere automaticamente i refusi nei nomi dei nodi'
+      },
+      tooltips: {
+        en: 'If checked (and "strict typo check" unchecked): labels assimilated to an existing node are corrected to the canonical name and highlighted in red on the corrected output. Otherwise: warning only, no highlight.',
+        fr: 'Si coché (et « vérification stricte des typos » décochée) : les libellés assimilés à un nœud existant sont corrigés vers le nom canonique et surlignés en rouge sur la sortie corrigée. Sinon : simple avertissement sans surlignage.',
+        es: 'Si está marcado (y "verificación estricta de erratas" desmarcada): las etiquetas asimiladas a un nodo existente se corrigen al nombre canónico y se resaltan en rojo en la salida corregida. De lo contrario: solo advertencia, sin resaltado.',
+        de: 'Wenn aktiviert (und „strenge Tippfehlerprüfung“ deaktiviert): dem vorhandenen Knoten zugeordnete Bezeichnungen werden auf den kanonischen Namen korrigiert und in der korrigierten Ausgabe rot hervorgehoben. Andernfalls: nur Warnung, keine Hervorhebung.',
+        it: 'Se selezionato (e "verifica rigorosa dei refusi" deselezionata): le etichette assimilate a un nodo esistente vengono corrette al nome canonico ed evidenziate in rosso nell\'output corretto. Altrimenti: solo avviso, senza evidenziazione.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
   // =================== EXCEL ===================
   excel: {
+    // Charger l'Excel dans la seule vue courante au lieu de réinitialiser tout
+    // le diagramme. Visible (et coché par défaut) uniquement quand on est dans
+    // une vue (drawing_area != maître) ; sur le diagramme principal l'import
+    // remplace tout comme avant. Câblé dans le calcul de ``view_only`` du
+    // chargement (PersistenceProcessDialog).
+    only_current_view: {
+      group: 'content',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Load only into the current view',
+        fr: 'Charger seulement dans la vue courante',
+        es: 'Cargar solo en la vista actual',
+        de: 'Nur in die aktuelle Ansicht laden',
+        it: 'Caricare solo nella vista corrente'
+      },
+      tooltips: {
+        en: 'If checked: the Excel file is loaded into the current view only, without resetting the master diagram or the other views. If unchecked: loading replaces the whole diagram (all views).',
+        fr: 'Si coché : le fichier Excel est chargé uniquement dans la vue courante, sans réinitialiser le diagramme maître ni les autres vues. Si décoché : le chargement remplace tout le diagramme (toutes les vues).',
+        es: 'Si está marcado: el archivo Excel se carga solo en la vista actual, sin reiniciar el diagrama maestro ni las demás vistas. Si no está marcado: la carga reemplaza todo el diagrama (todas las vistas).',
+        de: 'Wenn aktiviert: die Excel-Datei wird nur in die aktuelle Ansicht geladen, ohne das Master-Diagramm oder die anderen Ansichten zurückzusetzen. Wenn deaktiviert: das Laden ersetzt das gesamte Diagramm (alle Ansichten).',
+        it: 'Se selezionato: il file Excel viene caricato solo nella vista corrente, senza reimpostare il diagramma master o le altre viste. Se non selezionato: il caricamento sostituisce l\'intero diagramma (tutte le viste).'
+      },
+      visibilityConditions: [
+        { type: 'custom', customCheck: (app_data) => app_data.drawing_area.id !== default_main_sankey_id }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     with_nodes_sheets: {
       group: 'sheets',
       default: true,
@@ -797,6 +1002,26 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         es: 'Cargar la tabla IO_SHEET / TER_SHEET desde el archivo Excel. Desmarcar para no cargarla.',
         de: 'IO_SHEET / TER_SHEET-Tabelle aus der Excel-Datei laden. Deaktivieren, um sie nicht zu laden.',
         it: 'Caricare la tabella IO_SHEET / TER_SHEET dal file Excel. Deselezionare per non caricarla.'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    layout: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Sheet layout',
+        fr: 'Onglet mise en page',
+        es: 'Hoja de diseño',
+        de: 'Layout-Blatt',
+        it: 'Foglio layout'
+      },
+      tooltips: {
+        en: 'Load the hidden "layout" sheet (saved diagram positions and styles) from the Excel file. Uncheck to ignore the saved layout and recompute an automatic one.',
+        fr: 'Charger l\'onglet caché « layout » (positions et styles du diagramme sauvegardés) depuis le fichier Excel. Décocher pour ignorer la mise en page sauvegardée et en recalculer une automatiquement.',
+        es: 'Cargar la hoja oculta «layout» (posiciones y estilos del diagrama guardados) desde el archivo Excel. Desmarcar para ignorar el diseño guardado y recalcular uno automático.',
+        de: 'Das versteckte „layout"-Blatt (gespeicherte Diagrammpositionen und -stile) aus der Excel-Datei laden. Deaktivieren, um das gespeicherte Layout zu ignorieren und ein automatisches neu zu berechnen.',
+        it: 'Caricare il foglio nascosto «layout» (posizioni e stili del diagramma salvati) dal file Excel. Deselezionare per ignorare il layout salvato e ricalcolarne uno automatico.'
       }
     } satisfies FormatAttributeConfig<boolean>
   },
@@ -936,7 +1161,7 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
 
   record_simulations: {
     group: 'solver',
-    default: true,
+    default: false,
     type: (() => true) as (() => boolean),
     labels: {
       en: 'Record simulations in output',
@@ -946,11 +1171,11 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
       it: 'Registrare le simulazioni nel file di output'
     },
     tooltips: {
-      en: 'Persist every Monte-Carlo realisation in the output file (one row per draw). Disable to keep only the aggregated bounds.',
-      fr: 'Persister chaque réalisation Monte-Carlo dans le fichier de sortie (une ligne par tirage). Désactiver pour ne garder que les bornes agrégées.',
-      es: 'Persistir cada realización Monte-Carlo en el archivo de salida (una fila por tirada). Desactivar para conservar solo los límites agregados.',
-      de: 'Jede Monte-Carlo-Realisierung in der Ausgabedatei speichern (eine Zeile pro Ziehung). Deaktivieren, um nur die aggregierten Grenzen zu behalten.',
-      it: 'Persistere ogni realizzazione Monte-Carlo nel file di output (una riga per estrazione). Disattivare per mantenere solo i limiti aggregati.'
+      en: 'Persist every Monte-Carlo realisation in the output file (one column per draw, one row per flow). Off by default — the sheet can blow up to 1000+ columns.',
+      fr: 'Persister chaque réalisation Monte-Carlo dans le fichier de sortie (une colonne par tirage, une ligne par flux). Désactivé par défaut — l\'onglet peut faire 1000+ colonnes.',
+      es: 'Persistir cada realización Monte-Carlo en el archivo de salida (una columna por tirada, una fila por flujo). Desactivado por defecto — la hoja puede tener más de 1000 columnas.',
+      de: 'Jede Monte-Carlo-Realisierung in der Ausgabedatei speichern (eine Spalte pro Ziehung, eine Zeile pro Fluss). Standardmäßig deaktiviert — das Blatt kann 1000+ Spalten haben.',
+      it: 'Persistere ogni realizzazione Monte-Carlo nel file di output (una colonna per estrazione, una riga per flusso). Disattivato per impostazione predefinita — il foglio può avere 1000+ colonne.'
     },
     visibilityConditions: [
       { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true },
@@ -975,6 +1200,52 @@ const BASE_OUTPUT_CONFIG: FormatConfigStructure = {
       es: 'Añadir la hoja de la matriz de restricciones Ai y escribir un archivo constraints_summary.txt junto a la salida.',
       de: 'Das Ai-Beschränkungsmatrix-Blatt hinzufügen und eine Datei constraints_summary.txt neben der Ausgabe schreiben.',
       it: 'Aggiungere il foglio della matrice di vincoli Ai e scrivere un file constraints_summary.txt accanto all\'output.'
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
+    ]
+  } satisfies FormatAttributeConfig<boolean>,
+
+  with_reconciled: {
+    group: 'solver',
+    default: true,
+    type: (() => true) as (() => boolean),
+    labels: {
+      en: 'Reconcile',
+      fr: 'Réconcilier',
+      es: 'Reconciliar',
+      de: 'Abgleichen',
+      it: 'Riconciliare'
+    },
+    tooltips: {
+      en: 'Run the standard reconciliation pass. Measured values may be adjusted to satisfy all mass balances.',
+      fr: 'Lance la passe de réconciliation standard. Les valeurs mesurées peuvent être ajustées pour satisfaire tous les bilans matière.',
+      es: 'Ejecuta la pasada de reconciliación estándar. Los valores medidos pueden ajustarse para satisfacer todos los balances de masa.',
+      de: 'Führt den Standardabgleich aus. Messwerte können angepasst werden, damit alle Massenbilanzen erfüllt sind.',
+      it: 'Esegue la riconciliazione standard. I valori misurati possono essere modificati per soddisfare tutti i bilanci di massa.'
+    },
+    visibilityConditions: [
+      { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
+    ]
+  } satisfies FormatAttributeConfig<boolean>,
+
+  with_completed: {
+    group: 'solver',
+    default: false,
+    type: (() => false) as (() => boolean),
+    labels: {
+      en: 'Complete (no-redundancy)',
+      fr: 'Compléter (sans redondance)',
+      es: 'Completar (sin redundancia)',
+      de: 'Vervollständigen (ohne Redundanz)',
+      it: 'Completare (senza ridondanza)'
+    },
+    tooltips: {
+      en: 'Add a "Completed value" column to the analysis sheet: redundant balance constraints are dropped, measured values are preserved as-is, and only unknown flows are filled in.',
+      fr: 'Ajoute une colonne « Valeur complétée » à la feuille d\'analyse : les bilans redondants sont retirés, les valeurs mesurées sont conservées telles quelles et seuls les flux inconnus sont complétés.',
+      es: 'Añade una columna "Valor completado" a la hoja de análisis: se eliminan las restricciones redundantes, los valores medidos se conservan tal cual y solo se completan los flujos desconocidos.',
+      de: 'Fügt der Analyseblatt eine Spalte „Vervollständigter Wert" hinzu: redundante Bilanzgleichungen werden entfernt, Messwerte bleiben unverändert und nur unbekannte Flüsse werden ergänzt.',
+      it: 'Aggiunge una colonna « Valore completato » al foglio di analisi: i vincoli di bilancio ridondanti vengono rimossi, i valori misurati sono mantenuti invariati e vengono completati solo i flussi sconosciuti.'
     },
     visibilityConditions: [
       { type: 'optionProperty', property: '_solver_options_enabled', operator: '==', value: true }
@@ -1045,11 +1316,11 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         it: 'Riscrivere i fogli specifici di OpenSankey'
       },
       tooltips: {
-        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave them untouched (only meaningful when keeping other sheets from the input).',
-        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour les laisser intacts (utile uniquement si on conserve les autres onglets de l\'entrée).',
-        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejarlas intactas (útil solo si se conservan las otras hojas de la entrada).',
-        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um sie unverändert zu lassen (nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden).',
-        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciarli intatti (utile solo se si mantengono gli altri fogli dell\'input).'
+        en: 'Write SankeyExcelParser-format sheets (nodes, data, IO/TER, tags, layout, ...) to the output. Uncheck to leave the ones already present in the input file untouched; sheets not yet in the file (e.g. post-solver results) are still written. Has no effect on a fresh output — only meaningful when keeping other sheets from the input.',
+        fr: 'Écrire les onglets du format SankeyExcelParser (nœuds, données, IO/TER, tags, mise en page, ...) dans la sortie. Décocher pour laisser intacts ceux déjà présents dans le fichier d\'entrée ; les onglets nouveaux (pas encore dans le fichier, ex : résultats post-solveur) restent écrits. Sans effet sur une sortie vierge — utile uniquement si on conserve les autres onglets de l\'entrée.',
+        es: 'Escribir las hojas del formato SankeyExcelParser (nodos, datos, IO/TER, etiquetas, diseño, ...) en la salida. Desmarcar para dejar intactas las que ya están presentes en el archivo de entrada; las hojas aún no presentes en el archivo (p. ej. resultados tras el solver) se siguen escribiendo. Sin efecto en una salida nueva — útil solo si se conservan las otras hojas de la entrada.',
+        de: 'SankeyExcelParser-Format-Blätter (Knoten, Daten, IO/TER, Tags, Layout, ...) in die Ausgabe schreiben. Deaktivieren, um die bereits in der Eingabedatei vorhandenen unverändert zu lassen; noch nicht in der Datei enthaltene Blätter (z. B. Ergebnisse nach dem Solver) werden weiterhin geschrieben. Ohne Wirkung bei einer neuen Ausgabe — nur sinnvoll, wenn andere Blätter aus der Eingabe behalten werden.',
+        it: 'Scrivere i fogli del formato SankeyExcelParser (nodi, dati, IO/TER, tag, layout, ...) nell\'output. Deselezionare per lasciare intatti quelli già presenti nel file di input; i fogli non ancora presenti nel file (es. risultati dopo il solver) vengono comunque scritti. Nessun effetto su un output nuovo — utile solo se si mantengono gli altri fogli dell\'input.'
       }
     } satisfies FormatAttributeConfig<boolean>,
 
@@ -1133,26 +1404,6 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    with_nodes_sheets: {
-      group: 'sheets',
-      default: true,
-      type: (() => true) as (() => boolean),
-      labels: {
-        en: 'Sheets nodes',
-        fr: 'Onglets nœuds',
-        es: 'Hojas de nodos',
-        de: 'Knotenblätter',
-        it: 'Fogli nodi'
-      },
-      tooltips: {
-        en: 'Activate writing of nodes related sheets',
-        fr: 'Activer l\'écriture des feuilles liées aux nœuds',
-        es: 'Activar la escritura de las hojas relacionadas con los nodos',
-        de: 'Schreiben von knotenbezogenen Blättern aktivieren',
-        it: 'Attivare la scrittura dei fogli relativi ai nodi'
-      }
-    } satisfies FormatAttributeConfig<boolean>,
-
     layout: {
       group: 'sheets',
       default: true,
@@ -1172,6 +1423,92 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         it: 'Foglio contenente il layout del diagramma'
       }
     } satisfies FormatAttributeConfig<boolean>,
+
+    with_nodes_sheets: {
+      group: 'sheets',
+      default: true,
+      type: (() => true) as (() => boolean),
+      breakBefore: true,
+      labels: {
+        en: 'Sheets nodes',
+        fr: 'Onglets nœuds',
+        es: 'Hojas de nodos',
+        de: 'Knotenblätter',
+        it: 'Fogli nodi'
+      },
+      tooltips: {
+        en: 'Activate writing of nodes related sheets',
+        fr: 'Activer l\'écriture des feuilles liées aux nœuds',
+        es: 'Activar la escritura de las hojas relacionadas con los nodos',
+        de: 'Schreiben von knotenbezogenen Blättern aktivieren',
+        it: 'Attivare la scrittura dei fogli relativi ai nodi'
+      }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    nodes_sheet_format: {
+      group: 'sheets',
+      default: 'auto',
+      type: (() => 'auto') as (() => string),
+      labels: {
+        en: 'Nodes sheet format',
+        fr: 'Format',
+        es: 'Formato de las hojas de nodos',
+        de: 'Format der Knotenblätter',
+        it: 'Formato dei fogli nodi'
+      },
+      tooltips: {
+        en: 'Layout of the node-definition sheet(s). "Automatic" keeps the historical behavior (single nodes sheet, split into Products/Sectors/Exchanges when the node-type tag is present). The other choices force a specific layout.',
+        fr: 'Disposition de la (des) feuille(s) de définition des nœuds. « Automatique » conserve le comportement historique (feuille nœuds unique, séparée en Produits/Secteurs/Échanges si le tag de type de nœud est présent). Les autres choix forcent une disposition précise.',
+        es: 'Disposición de la(s) hoja(s) de definición de nodos. «Automático» mantiene el comportamiento histórico (hoja única de nodos, dividida en Productos/Sectores/Intercambios si está presente la etiqueta de tipo de nodo). Las demás opciones fuerzan una disposición concreta.',
+        de: 'Layout der Knotendefinitionsblätter. „Automatisch" behält das bisherige Verhalten bei (einzelnes Knotenblatt, aufgeteilt in Produkte/Sektoren/Austausch, wenn das Knotentyp-Tag vorhanden ist). Die anderen Optionen erzwingen ein bestimmtes Layout.',
+        it: 'Disposizione del(i) foglio(i) di definizione dei nodi. «Automatico» mantiene il comportamento storico (foglio nodi unico, suddiviso in Prodotti/Settori/Scambi se è presente il tag tipo di nodo). Le altre scelte forzano una disposizione specifica.'
+      },
+      selectOptions: [
+        {
+          value: 'auto',
+          labels: {
+            en: 'Automatic (by node-type tag)',
+            fr: 'Automatique (selon le tag type de nœud)',
+            es: 'Automático (según la etiqueta de tipo de nodo)',
+            de: 'Automatisch (nach Knotentyp-Tag)',
+            it: 'Automatico (in base al tag tipo di nodo)'
+          }
+        },
+        {
+          value: 'nodes',
+          labels: {
+            en: 'Single nodes sheet',
+            fr: 'Feuille nœuds unique',
+            es: 'Hoja única de nodos',
+            de: 'Einzelnes Knotenblatt',
+            it: 'Foglio nodi unico'
+          }
+        },
+        {
+          value: 'products_sectors',
+          labels: {
+            en: 'Products / Sectors / Exchanges',
+            fr: 'Produits / Secteurs / Échanges',
+            es: 'Productos / Sectores / Intercambios',
+            de: 'Produkte / Sektoren / Austausch',
+            it: 'Prodotti / Settori / Scambi'
+          }
+        },
+        {
+          value: 'nodes_agg',
+          labels: {
+            en: 'Aggregated nodes (nodes agg)',
+            fr: 'Nœuds agrégés (nodes agg)',
+            es: 'Nodos agregados (nodes agg)',
+            de: 'Aggregierte Knoten (nodes agg)',
+            it: 'Nodi aggregati (nodes agg)'
+          }
+        }
+      ],
+      visibilityConditions: [
+        { type: 'optionProperty', property: 'with_nodes_sheets', operator: '==', value: true }
+      ]
+    } satisfies FormatAttributeConfig<string>,
 
     activate_data_table: {
       group: 'sheets',
@@ -1376,6 +1713,35 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
+    // OSP only: when checked, the blob→json save writes one standalone JSON per
+    // view (master included), packaged in a single zip, instead of a single
+    // multi-view file. Routed through menu_configuration.save_all_views_as_json,
+    // injected by OpenSankey+. Visible only when saving the current sankey
+    // (input blob) and the diagram actually has views.
+    save_one_json_per_view: {
+      group: 'content',
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'One JSON per view (zip)',
+        fr: 'Un JSON par vue (zip)',
+        es: 'Un JSON por vista (zip)',
+        de: 'Ein JSON pro Ansicht (zip)',
+        it: 'Un JSON per vista (zip)'
+      },
+      tooltips: {
+        en: 'Save one standalone JSON file per view (master included), packaged in a single zip, instead of a single multi-view file. Each file re-opens on its own.',
+        fr: 'Enregistrer un fichier JSON autonome par vue (master inclus), regroupés dans un seul zip, au lieu d\'un unique fichier multi-vues. Chaque fichier se rouvre indépendamment.',
+        es: 'Guardar un archivo JSON independiente por vista (master incluido), agrupados en un solo zip, en lugar de un único archivo multivista. Cada archivo se reabre por sí solo.',
+        de: 'Eine eigenständige JSON-Datei pro Ansicht (Master inbegriffen) in einem einzigen Zip speichern, statt einer einzelnen Multi-View-Datei. Jede Datei lässt sich eigenständig wieder öffnen.',
+        it: 'Salvare un file JSON autonomo per vista (master incluso), raggruppati in un unico zip, invece di un singolo file multi-vista. Ogni file si riapre da solo.'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'blob' },
+        { type: 'custom', customCheck: (app_data) => (app_data as unknown as { has_views?: boolean }).has_views === true }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     keep_siblings: {
       group: 'content',
       default: false,
@@ -1396,25 +1762,47 @@ export const OUTPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       }
     } satisfies FormatAttributeConfig<boolean>,
 
-    mode_compressed: {
+    compression: {
       group: 'content',
-      default: false,
-      type: (() => false) as (() => boolean),
+      default: 'none',
+      type: (() => 'none') as (() => string),
       labels: {
-        en: 'ZIP file',
-        fr: 'Fichier ZIP',
-        es: 'Archivo ZIP',
-        de: 'ZIP-Datei',
-        it: 'File ZIP'
+        en: 'Compression',
+        fr: 'Compression',
+        es: 'Compresión',
+        de: 'Komprimierung',
+        it: 'Compressione'
       },
       tooltips: {
-        en: 'Compress the file as ZIP',
-        fr: 'Compresser le fichier en ZIP',
-        es: 'Comprimir el archivo como ZIP',
-        de: 'Datei als ZIP komprimieren',
-        it: 'Comprimi il file come ZIP'
-      }
-    } satisfies FormatAttributeConfig<boolean>
+        en: 'Output format: plain JSON (.json) or gzip-compressed JSON (.json.gz). The compressed file is smaller and can be reloaded directly.',
+        fr: 'Format de sortie : JSON brut (.json) ou JSON compressé en gzip (.json.gz). Le fichier compressé est plus léger et peut être rechargé directement.',
+        es: 'Formato de salida: JSON sin comprimir (.json) o JSON comprimido en gzip (.json.gz). El archivo comprimido es más ligero y puede recargarse directamente.',
+        de: 'Ausgabeformat: reines JSON (.json) oder gzip-komprimiertes JSON (.json.gz). Die komprimierte Datei ist kleiner und kann direkt neu geladen werden.',
+        it: 'Formato di output: JSON semplice (.json) o JSON compresso in gzip (.json.gz). Il file compresso è più leggero e può essere ricaricato direttamente.'
+      },
+      selectOptions: [
+        {
+          value: 'none',
+          labels: {
+            en: 'None (.json)',
+            fr: 'Aucune (.json)',
+            es: 'Ninguna (.json)',
+            de: 'Keine (.json)',
+            it: 'Nessuna (.json)'
+          }
+        },
+        {
+          value: 'gzip',
+          labels: {
+            en: 'gzip (.json.gz)',
+            fr: 'gzip (.json.gz)',
+            es: 'gzip (.json.gz)',
+            de: 'gzip (.json.gz)',
+            it: 'gzip (.json.gz)'
+          }
+        }
+      ]
+    } satisfies FormatAttributeConfig<string>
   },
 
   blob: {},
@@ -1538,6 +1926,8 @@ export const SOLVER_OPTION_KEYS = [
   'record_simulations',
   'debug_mode',
   'skip_rref',
+  'with_reconciled',
+  'with_completed',
 ] as const
 
 export const CONVERTER_CONFIGS = {
@@ -1612,6 +2002,23 @@ export const CONVERTER_CONFIGS = {
   } satisfies ConverterConfig,
   load_example_json: {
     title: 'ProcessDialog.load_example',
+    launch_button_label: 'ProcessDialog.load',
+    server_endpoint: '/opensankey/convert/launch',
+    input: {
+      required: false,
+      format: {
+        options: ['example_json']  // Format fixe, pas de sélecteur
+      },
+    },
+    output: {
+      required: false,
+      format: {
+        options: ['json']  // Format fixe
+      },
+    }
+  } satisfies ConverterConfig,
+  load_tutorial: {
+    title: 'ProcessDialog.load_tutorial',
     launch_button_label: 'ProcessDialog.load',
     server_endpoint: '/opensankey/convert/launch',
     input: {

@@ -646,6 +646,12 @@ export abstract class Class_ProtoElement extends Class_BaseElement {
 
 }
 export abstract class Class_BaseShape extends Class_ProtoElement {
+  // Sous-sélection : préfixe du label actuellement focus (clic sur le <text>
+  // du label). Sert à n'afficher les poignées de redimensionnement du label
+  // que quand l'utilisateur a cliqué sur le label lui-même, pas sur la forme.
+  // null si aucun label n'est sub-sélectionné.
+  public selected_label_prefix: 'name_label' | 'value_label' | 'icon' | null = null
+
   // =================== SHAPE ATTRIBUTES (shape_*) ===================
   shape_visible!: ShapeAttributeTypes['visible']
   shape_type!: ShapeAttributeTypes['type']
@@ -687,6 +693,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
   name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
   name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_text_angle!: NameLabelAttributeTypes['text_angle']
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
@@ -743,6 +750,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
   value_label_box_width!: ValueLabelAttributeTypes['box_width']
   value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_text_angle!: ValueLabelAttributeTypes['text_angle']
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
@@ -781,15 +789,20 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  value_label_text_source!: LinkLabelSpecificValues['text_source']
 
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  name_label_text_source!: LinkLabelSpecificValues['text_source']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
   stock_label_font_family!: StockLabelAttributeTypes['font_family']
   stock_label_font_size!: StockLabelAttributeTypes['font_size']
   stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_bold!: StockLabelAttributeTypes['bold']
+  stock_label_italic!: StockLabelAttributeTypes['italic']
+  stock_label_uppercase!: StockLabelAttributeTypes['uppercase']
   stock_label_horiz!: StockLabelAttributeTypes['horiz']
   stock_label_vert!: StockLabelAttributeTypes['vert']
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
@@ -821,6 +834,9 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
+  shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -852,6 +868,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
   shape_is_recycling_locked!: LinkShapeSpecificValues['is_recycling_locked']
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_must_stay_straight!: LinkShapeSpecificValues['must_stay_straight']
+  shape_straight_include_children!: LinkShapeSpecificValues['straight_include_children']
+  shape_is_reference_flux!: LinkShapeSpecificValues['is_reference_flux']
+  shape_show_as_path_locked!: LinkShapeSpecificValues['show_as_path_locked']
   shape_orientation!: LinkShapeSpecificValues['orientation']
   shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
   shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
@@ -1030,6 +1050,7 @@ export class Class_ElementStyle {
   name_label_vert_shift!: NameLabelAttributeTypes['vert_shift']
   name_label_box_width!: NameLabelAttributeTypes['box_width'] // same as name_label_background_min_width ?
   name_label_vertical_text!: NameLabelAttributeTypes['vertical_text']
+  name_label_text_angle!: NameLabelAttributeTypes['text_angle']
   name_label_position_x!: NameLabelAttributeTypes['position_x']
   name_label_position_y!: NameLabelAttributeTypes['position_y']
   name_label_position_offset!: NameLabelAttributeTypes['position_offset']
@@ -1073,6 +1094,7 @@ export class Class_ElementStyle {
   value_label_vert_shift!: ValueLabelAttributeTypes['vert_shift']
   value_label_box_width!: ValueLabelAttributeTypes['box_width']
   value_label_vertical_text!: ValueLabelAttributeTypes['vertical_text']
+  value_label_text_angle!: ValueLabelAttributeTypes['text_angle']
   value_label_position_x!: ValueLabelAttributeTypes['position_x']
   value_label_position_y!: ValueLabelAttributeTypes['position_y']
   value_label_position_offset!: ValueLabelAttributeTypes['position_offset']
@@ -1135,6 +1157,10 @@ export class Class_ElementStyle {
   shape_is_recycling!: LinkShapeSpecificValues['is_recycling']
   shape_is_recycling_locked!: LinkShapeSpecificValues['is_recycling_locked']
   shape_is_structure!: LinkShapeSpecificValues['is_structure']
+  shape_must_stay_straight!: LinkShapeSpecificValues['must_stay_straight']
+  shape_straight_include_children!: LinkShapeSpecificValues['straight_include_children']
+  shape_is_reference_flux!: LinkShapeSpecificValues['is_reference_flux']
+  shape_show_as_path_locked!: LinkShapeSpecificValues['show_as_path_locked']
   shape_orientation!: LinkShapeSpecificValues['orientation']
   shape_starting_curve!: LinkShapeSpecificValues['starting_curve']
   shape_ending_curve!: LinkShapeSpecificValues['ending_curve']
@@ -1149,14 +1175,19 @@ export class Class_ElementStyle {
 
   value_label_on_path!: LinkLabelSpecificValues['on_path']
   value_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  value_label_text_source!: LinkLabelSpecificValues['text_source']
 
   name_label_on_path!: LinkLabelSpecificValues['on_path']
   name_label_pos_auto!: LinkLabelSpecificValues['pos_auto']
+  name_label_text_source!: LinkLabelSpecificValues['text_source']
 
   // =================== STOCK LABEL ATTRIBUTES (stock_label_*) ===================
   stock_label_is_visible!: StockLabelAttributeTypes['is_visible']
   stock_label_font_size!: StockLabelAttributeTypes['font_size']
   stock_label_color!: StockLabelAttributeTypes['color']
+  stock_label_bold!: StockLabelAttributeTypes['bold']
+  stock_label_italic!: StockLabelAttributeTypes['italic']
+  stock_label_uppercase!: StockLabelAttributeTypes['uppercase']
   stock_label_horiz!: StockLabelAttributeTypes['horiz']
   stock_label_vert!: StockLabelAttributeTypes['vert']
   stock_label_inside_horiz!: StockLabelAttributeTypes['inside_horiz']
@@ -1168,6 +1199,9 @@ export class Class_ElementStyle {
   shape_position_type!: NodeShapeSpecificAttributeTypes['position_type']
   shape_position_dx!: NodeShapeSpecificAttributeTypes['position_dx']
   shape_position_dy!: NodeShapeSpecificAttributeTypes['position_dy']
+  shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
+  shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
+  shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']

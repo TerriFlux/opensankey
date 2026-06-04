@@ -45,6 +45,7 @@ import { Class_DataTagGroup, Class_LevelTagGroup, Class_TagGroup, Class_ViewTagG
 import { NodeTagsManager } from './NodeTagsManager'
 import { NodeDrawValueLabel } from './DrawLabel'
 import { Class_StockValue, Class_ElementValueTree } from './LinkValues'
+import { Class_StockShape } from './StockShape'
 import { Type_Side } from './ElementsAttributesConfig'
 import { NodeStyle, NodeImportCloseStyle, NodeExportCloseStyle, NodeImportExportCloseStyle, LinkImportCloseStyle, LinkExportCloseStyle, LinkImportExportCloseStyle, LinkImportExportAboveBelowStyle, NodeExportBelowStyle, NodeImportAboveStyle, NodeImportExportAboveBelowStyle, NodeSectorStyle, LinkStyle } from './ElementStyle'
 // 
@@ -75,8 +76,29 @@ export class Class_NodeElement extends Class_NodeBase {
 
   // Stock values (parallel to link values but for nodes)
   public has_stock: boolean = false
+  // Visibility of the node-like stock shape (SA#1229). Independent of has_stock
+  // (whether a stock exists) and of stock_label_is_visible (the legacy stock
+  // box). Default false: the shape is only drawn when explicitly enabled.
+  public stock_shape_is_visible: boolean = false
+  // Editable captions for the legacy stock box labels (SA#1229): replace the
+  // former hardcoded "SI:" / "ΔS:" prefixes. Formatting (font/size/...) stays
+  // block-wide via stock_label_*; these only customize the caption TEXT.
+  public stock_si_caption: string = 'Stock'
+  public stock_delta_caption: string = 'Δ Stock'
+  // When true, the node's own rectangle height encodes its stock level instead
+  // of the flux thickness. Independent of the stock shape (#1229).
+  public use_stock_for_height: boolean = false
+  // Per-node scale multiplier for stock-driven height, mirroring the flux
+  // local_link_scale ("Facteur d'échelle"): the base flux scale is multiplied
+  // by this factor (larger factor = shorter node). Default 1.
+  public stock_height_scale_factor: number = 1
   public has_material_balance: boolean = true
   public _stock_values: Class_StockValue | Class_ElementValueTree
+
+  // Stock visual sub-element (SA#1229): node-like shape stacked above the node
+  // that reuses the full node attribute machinery. Lazily created when the node
+  // has a stock. Not a graph node — owned and drawn by this host.
+  public _stock_shape: Class_StockShape | null = null
 
   /**
    * Get current stock value based on selected data tags.
@@ -194,6 +216,11 @@ export class Class_NodeElement extends Class_NodeBase {
   protected override cleanForDeletion() {
     this._nodeDimensionsManager.cleanForDeletion()
     this._nodeTagsManager.cleanForDeletion()
+    // Cleanup stock visual sub-element (SA#1229)
+    if (this._stock_shape) {
+      this._stock_shape.delete()
+      this._stock_shape = null
+    }
     // Cleanup links (lignes 282-297)
     this._links_order = []
     Object.values(this._input_links).forEach(link => {
@@ -218,6 +245,20 @@ export class Class_NodeElement extends Class_NodeBase {
     this.copyDimensionsFrom(_ as Class_NodeElement)
     this._tooltip_text = _._tooltip_text
     this._nodeTagsManager.copyTagsFrom(_)
+  }
+
+  // Stock appearance fields are plain instance fields (not _storage
+  // attributes), so the generic copyAttrFrom would drop them — carry them
+  // explicitly so view sync (UpdateFrom) and full copies keep them. This
+  // includes the stock/delta label captions and the stock-shape visibility,
+  // which otherwise stay frozen on the old view after an updateFrom.
+  public copyAttrFrom(_: Class_NodeElement): void {
+    super.copyAttrFrom(_)
+    this.use_stock_for_height = _.use_stock_for_height
+    this.stock_height_scale_factor = _.stock_height_scale_factor
+    this.stock_shape_is_visible = _.stock_shape_is_visible
+    this.stock_si_caption = _.stock_si_caption
+    this.stock_delta_caption = _.stock_delta_caption
   }
 
   public copyDimensionsFrom(node_to_copy: Class_NodeElement) {
@@ -326,6 +367,22 @@ export class Class_NodeElement extends Class_NodeBase {
     // forme et redessiner le fond du name_label pour qu'il les englobe.
     this._nodeDrawNameLabel.refreshStickLayout()
     this.drawStockBox()
+    this._drawStockShape()
+  }
+
+  /**
+   * Manage the lifecycle of the stock visual sub-element (SA#1229): lazily
+   * create it when the node carries a stock, draw it, or remove it otherwise.
+   */
+  private _drawStockShape() {
+    if (this.has_stock && this.stock_shape_is_visible) {
+      if (!this._stock_shape) {
+        this._stock_shape = new Class_StockShape(this, this.drawing_area)
+      }
+      this._stock_shape.draw()
+    } else if (this._stock_shape) {
+      this._stock_shape.unDraw()
+    }
   }
 
   public override drawNameLabel() {
@@ -371,7 +428,6 @@ export class Class_NodeElement extends Class_NodeBase {
     const vert = this.stock_label_vert
     const insideH = this.stock_label_inside_horiz
     const insideV = this.stock_label_inside_vert
-    const boxWidthRatio = this.stock_label_box_width ?? 0.6
     const bgColor = this.stock_label_background_color_sustainable
       ? this.stock_label_background_color : this.getShapeColorToUse()
     const bgVisible = this.stock_label_background_color_visible
@@ -386,7 +442,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
     const padding = 4
     const margin = 4
-    const MIN_FONT_SIZE = 6
+    // Issue #165 : en mode verrouill\u00e9 la police demand\u00e9e est en px \u00e9cran. On
+    // pr\u00e9compense par font_compensation (= 1/k live) pour annuler l'\u00e9chelle SVG
+    // appliqu\u00e9e par d3-zoom au rep\u00e8re local ; en mode d\u00e9verrouill\u00e9 elle vaut 1.
+    const k_inv = this.drawing_area?.font_compensation ?? 1
 
     // Build text lines (SF redundant with SI + delta)
     // Use format_value to handle units, decimals, scientific notation, etc.
@@ -394,36 +453,49 @@ export class Class_NodeElement extends Class_NodeBase {
     const unitName = this.stock_label_unit ?? ''
     const formatStock = (v: number) =>
       format_value('free_value', v, this, unitName, 'stock_label')
-    if (si !== null) lines.push('SI: ' + formatStock(si))
+    // Stacked layout (SA#1229), no width management for now:
+    //   <stock caption> / <stock value> / (blank) / <delta caption> / <delta value>
+    if (si !== null) {
+      if (this.stock_si_caption) lines.push(this.stock_si_caption)
+      lines.push(formatStock(si))
+    }
+    // Blank line separating the stock group from the delta group.
+    if (si !== null && dv !== null) lines.push('')
     if (dv !== null) {
+      if (this.stock_delta_caption) lines.push(this.stock_delta_caption)
       const sign = dv >= 0 ? '+' : ''
-      lines.push('\u0394S: ' + sign + formatStock(dv))
+      lines.push(sign + formatStock(dv))
     }
     if (lines.length === 0) return
 
-    // Box width = ratio of node width
-    const boxW = boxWidthRatio > 0 ? nodeW * boxWidthRatio : nodeW * 0.6
-
-    // Auto-shrink font size to fit inside node when stock label is inside
-    let fontSize = baseFontSize
-    // Vertical fit: if inside vertically, lines must fit in node height
-    if (insideV) {
-      const availableH = nodeH - 2 * margin - 2 * padding
-      const maxFontFromH = Math.floor(availableH / lines.length) - 3
-      if (maxFontFromH < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromH)
-    }
-    // Horizontal fit: estimate text width (~0.6 * fontSize per char)
-    if (insideH) {
-      const longestLine = lines.reduce((m, l) => Math.max(m, l.length), 0)
-      const availableW = boxW - 2 * padding
-      const maxFontFromW = Math.floor(availableW / (longestLine * 0.6))
-      if (maxFontFromW < fontSize) fontSize = Math.max(MIN_FONT_SIZE, maxFontFromW)
-    }
-
+    // Font size honoured as set (no auto-shrink). Lines are simply stacked and
+    // the box auto-sizes to the content (no wrap / box_width for now).
+    const fontSize = baseFontSize * k_inv
     const lineH = fontSize + 3
     const boxH = lines.length * lineH + padding * 2
 
-    // Compute X position
+    const g = this.d3_selection?.append('g').classed('stock_box', true)
+    const content = g?.append('g')
+
+    let maxW = 0
+    lines.forEach((line, i) => {
+      const t = content?.append('text')
+        .attr('x', 0)
+        .attr('y', padding + (i + 1) * lineH - 2)
+        .attr('text-anchor', 'start')
+        .attr('font-size', fontSize)
+        .attr('font-family', this.stock_label_font_family)
+        .attr('font-weight', this.stock_label_bold ? 'bold' : 'normal')
+        .attr('font-style', this.stock_label_italic ? 'italic' : 'normal')
+        .style('text-transform', this.stock_label_uppercase ? 'uppercase' : 'none')
+        .attr('fill', textColor)
+        .text(line)
+      const w = t?.node()?.getBBox().width ?? 0
+      if (w > maxW) maxW = w
+    })
+    const boxW = maxW + 2 * padding
+
+    // Box placement relative to the node (horiz / vert), same rules as before.
     let boxX = 0
     if (horiz === 'left') {
       boxX = insideH ? margin : -boxW - margin
@@ -432,8 +504,6 @@ export class Class_NodeElement extends Class_NodeBase {
     } else {
       boxX = (nodeW - boxW) / 2
     }
-
-    // Compute Y position
     let boxY = 0
     if (vert === 'top') {
       boxY = insideV ? margin : -boxH - margin
@@ -443,12 +513,10 @@ export class Class_NodeElement extends Class_NodeBase {
       boxY = (nodeH - boxH) / 2
     }
 
-    const g = this.d3_selection?.append('g')
-      .classed('stock_box', true)
-
-    // Background rect
+    // Place the text content inside the box, then draw the background BEHIND it.
+    content?.attr('transform', 'translate(' + (boxX + padding) + ', ' + boxY + ')')
     if (this.stock_label_background_visible) {
-      g?.append('rect')
+      g?.insert('rect', ':first-child')
         .attr('x', boxX)
         .attr('y', boxY)
         .attr('width', boxW)
@@ -460,28 +528,17 @@ export class Class_NodeElement extends Class_NodeBase {
         .attr('stroke-width', borderThickness)
         .attr('stroke-dasharray', borderDashed ? '4,2' : '')
     }
-
-    // Text
-    const textAnchor = horiz === 'right' ? 'end' : horiz === 'left' ? 'start' : 'middle'
-    const textX = textAnchor === 'end' ? boxX + boxW - padding
-      : textAnchor === 'start' ? boxX + padding
-        : boxX + boxW / 2
-
-    lines.forEach((text, i) => {
-      g?.append('text')
-        .attr('x', textX)
-        .attr('y', boxY + padding + (i + 1) * lineH - 2)
-        .attr('text-anchor', textAnchor)
-        .attr('font-size', fontSize)
-        .attr('font-family', this.stock_label_font_family)
-        .attr('fill', textColor)
-        .text(text)
-    })
   }
   //public get value_label() { return this._nodeDrawValueLabel.getValueLabel() }
   public drawValueLabel() {
     if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
+    // En mode stick, le <g> de la valeur est recréé sans transform : sans ce
+    // recalage il reste à sa position non-ancrée (drift au redraw suivant le
+    // toggle). Symétrique de drawNameLabel / drawElements / _draw.
+    if (this.value_label_stick_to_label) {
+      this._nodeDrawNameLabel?.refreshStickLayout()
+    }
     this._orderD3Elements()
   }
 
@@ -603,6 +660,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public drawAsSelected() {
     super.drawAsSelected()
+    // Les poignées du label apparaissent au clic sur le <text> du label,
+    // pas à la sélection de la forme. Refresh quand même pour que unDraw()
+    // soit appelé en cas de désélection.
+    this._nodeDrawValueLabel?.refreshLabelResizeHandles()
     this.links_order_visible
       .forEach(link => {
         if (link.source === this) this._output_links_handle[link.id].draw()
@@ -648,7 +709,29 @@ export class Class_NodeElement extends Class_NodeBase {
     return Math.max(sum_of_top_thickness, sum_of_bottom_thickness, super.getShapeWidthToUse())
   }
 
+  /**
+   * Current stock initial value used for stock-driven node sizing. Result in
+   * reconciled/calculated mode, raw data otherwise (mirrors drawStockBox).
+   */
+  public currentStockInitialForHeight(): number | null {
+    if (!this.has_stock) return null
+    const sv = this.stock_value
+    if (!sv) return null
+    const use_result = this.drawing_area.type_data !== 'data'
+    const si = use_result ? (sv.stockInitialResult ?? sv.stockInitialData) : sv.stockInitialData
+    return (si === null || si === undefined) ? null : si
+  }
+
   public getShapeHeightToUse() {
+    if (this.use_stock_for_height) {
+      const si = this.currentStockInitialForHeight()
+      if (si !== null) {
+        // Mirror the flux local_link_scale: base flux scale divided by the
+        // per-node factor (larger factor = shorter node).
+        const factor = this.stock_height_scale_factor > 0 ? this.stock_height_scale_factor : 1
+        return Math.max(this.drawing_area.scaleValueToPx(Math.abs(si)) / factor, 1)
+      }
+    }
     const echangeTag = this.sankey.node_taggs_dict['type de noeud'] ? this.sankey.node_taggs_dict['type de noeud'].tags_dict['echange'] as Class_Tag : undefined
     const clamped = this.drawing_area.is_structure_display
     const sum_of_left_thickness = this.getSumOfLinksThickness('left', clamped, true)
@@ -863,6 +946,11 @@ export class Class_NodeElement extends Class_NodeBase {
     super.drawElements()
     if (!this._nodeDrawValueLabel) return
     this._nodeDrawValueLabel.drawGenericLabel()
+    // En mode stick, le fond combiné nom+valeur n'est dessiné que via
+    // refreshStickLayout — il faut le rappeler après chaque redraw.
+    if (this.value_label_stick_to_label) {
+      this._nodeDrawNameLabel?.refreshStickLayout()
+    }
     //this._drawLinksStartCaps() // Ajouter ici
   }
   /**
@@ -1109,13 +1197,23 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private getLinksStartingPositionOffSet(side: Type_Side) {
     // The cumulative packing also consumes the user-set anchor deltas, so the
-    // centering offset must account for them to keep the stack centered.
+    // alignment offset must account for them to keep the stack coherent.
     const occupied = this.getSumOfLinksThickness(side) + this.getSumOfAnchorDeltas(side)
     if (side === 'left' || side === 'right') {
-      return Math.max(0, (this.getShapeHeightToUse() - occupied) / 2)
+      const free = this.getShapeHeightToUse() - occupied
+      // 'top' = flush against the node top, 'center' = historical centering,
+      // 'bottom' = flush against the node bottom.
+      const align = this.shape_anchor_align_vertical
+      const offset = align === 'top' ? 0 : align === 'bottom' ? free : free / 2
+      return Math.max(0, offset)
     }
     else {
-      return Math.max(0, (this.getShapeWidthToUse() - occupied) / 2)
+      const free = this.getShapeWidthToUse() - occupied
+      // 'left' = flush against the node left, 'center' = historical centering,
+      // 'right' = flush against the node right.
+      const align = this.shape_anchor_align_horizontal
+      const offset = align === 'left' ? 0 : align === 'right' ? free : free / 2
+      return Math.max(0, offset)
     }
   }
 
@@ -1605,16 +1703,17 @@ export class Class_NodeElement extends Class_NodeBase {
         new_node.addTag(tag)
       })
 
-      // Déterminer les styles en fonction du type de position
-      const isParametric = this.shape_position_type === 'parametric'
+      // Déterminer les styles selon le MODE import/export persisté (drapeau dédié,
+      // anciennement déduit à tort de `shape_position_type === 'parametric'`).
+      const isAboveBelow = this.drawing_area.import_export_above_below
 
-      const node_importation_style = isParametric ? NodeImportAboveStyle : NodeImportCloseStyle
-      const node_exportation_style = isParametric ? NodeExportBelowStyle : NodeExportCloseStyle
-      const node_importexport_style = isParametric ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
+      const node_importation_style = isAboveBelow ? NodeImportAboveStyle : NodeImportCloseStyle
+      const node_exportation_style = isAboveBelow ? NodeExportBelowStyle : NodeExportCloseStyle
+      const node_importexport_style = isAboveBelow ? NodeImportExportAboveBelowStyle : NodeImportExportCloseStyle
 
-      const link_importation_style = isParametric ? '' : LinkImportCloseStyle
-      const link_exportation_style = isParametric ? '' : LinkExportCloseStyle
-      const link_importexport_style = isParametric ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
+      const link_importation_style = isAboveBelow ? '' : LinkImportCloseStyle
+      const link_exportation_style = isAboveBelow ? '' : LinkExportCloseStyle
+      const link_importexport_style = isAboveBelow ? LinkImportExportAboveBelowStyle : LinkImportExportCloseStyle
 
       // Appliquer les styles au nouveau noeud
       const styles_dict = new_node.sankey.styles_dict
@@ -1630,12 +1729,14 @@ export class Class_NodeElement extends Class_NodeBase {
         styles_dict[link_importexport_style]
       ])
 
-      // Ajouter le style spécifique d'importation/exportation en mode parametric
-      if (isParametric) {
-        const specific_link_style = importation ? link_importation_style : link_exportation_style
-        if (specific_link_style) {
-          input_or_output_link.addStyle(styles_dict[specific_link_style])
-        }
+      // Ajouter le style DIRECTIONNEL du flux (Flux import/export collé) dès qu'il est
+      // défini (= mode proche ; vide en haut/bas). Auparavant conditionné au mode haut/bas, donc
+      // JAMAIS appliqué à la régénération → « Flux import/export collé » présent après setTrade
+      // (toggle) mais PERDU au rechargement (splitTrade régénère le flux sans ce style). On
+      // s'aligne ainsi sur setTrade qui pose bien [LinkStyle, LinkImportExportCloseStyle, Link(Import|Export)CloseStyle].
+      const specific_link_style = importation ? link_importation_style : link_exportation_style
+      if (specific_link_style) {
+        input_or_output_link.addStyle(styles_dict[specific_link_style])
       }
 
       input_or_output_link.shape_is_recycling = false
@@ -1761,6 +1862,19 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get data_label(): string {
+    return this._computeValueLabelText('value_label')
+  }
+
+  /**
+   * Valeur du nœud rendue dans le slot du libellé de nom quand celui-ci est en
+   * mode « value » (name_label_is_value). Même calcul que data_label, mais
+   * formaté avec les attributs name_label_* (unité, décimales…).
+   */
+  public get name_value_label(): string {
+    return this._computeValueLabelText('name_label')
+  }
+
+  private _computeValueLabelText(prefix: 'name_label' | 'value_label'): string {
     let input_val = 0
     let output_val = 0
 
@@ -1813,12 +1927,13 @@ export class Class_NodeElement extends Class_NodeBase {
     const has_in = link_in.length > 0
     const has_out = link_out.length > 0
 
+    const unit = prefix === 'value_label' ? this.value_label_unit : this.name_label_unit
     const fmt = (v: number) => format_value(
       this.sankey.drawing_area.type_data,
       v,
       this,
-      this.value_label_unit,
-      'value_label'
+      unit,
+      prefix
     )
 
     // No flux at all
@@ -1826,8 +1941,9 @@ export class Class_NodeElement extends Class_NodeBase {
     // Only one direction: show that value
     if (!has_in) return fmt(total_out)
     if (!has_out) return fmt(total_in)
-    // Both directions: apply display mode chosen by the user
-    const mode = this.value_label_in_out_display_mode
+    // Both directions: apply display mode chosen by the user. Le sélecteur
+    // in/out/both n'existe que pour value_label ; le name_label reste sur 'both'.
+    const mode = prefix === 'value_label' ? this.value_label_in_out_display_mode : 'both'
     if (mode === 'in') return fmt(total_in)
     if (mode === 'out') return fmt(total_out)
     // mode === 'both': if both values render identically (e.g. after significant

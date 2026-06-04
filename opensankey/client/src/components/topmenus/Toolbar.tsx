@@ -7,9 +7,12 @@ import {
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
 import { Class_ApplicationData } from '../../types/ApplicationData'
-import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_NodeTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
+import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
+import { disaggregate, aggregate, resetLocalHierarchy } from '../../Algorithms/Hierarchies'
+import { Class_NodeElement } from '../../Elements/Node'
+import { Type_DisaggregationGap } from '../../types/Utils'
 
 const width_fitler_drawer = 270
 
@@ -53,7 +56,7 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
-  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin / 2
+  const width_drawer = (drawerOpen ? width_fitler_drawer + app_data.drawing_area.fit_margin / 2 : 0) + app_data.drawing_area.fit_margin
   app_data.menu_configuration.ref_close_filter_drawer.current = setDrawerOpen
   app_data.menu_configuration.ref_toolbar.current = forceUpdate
 
@@ -397,6 +400,13 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Component updater
   const [, setCount] = useState(0)
 
+  // #1231 — État HYBRIDE : des nœuds ont été désagrégés localement (clic droit →
+  // force_show_children). Tant que c'est le cas, le menu Hiérarchies global ne doit pas
+  // agir (dropdowns désactivés) ; l'utilisateur doit d'abord « Réinitialiser » pour
+  // revenir à l'état uniforme du menu.
+  const has_local_hierarchy = mode === 'level' &&
+    sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.force_show_children))
+
   // Configuration du updater selon le mode
   if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
     //@ts-expect-error xxx
@@ -467,6 +477,16 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Gestion des actions spécifiques selon le mode
   const handleTagSelection = (tagg: Class_TagGroup, values: string[]) => {
+    // #1231 — pour les level taggs, mémoriser le niveau AVANT de changer la sélection,
+    // afin de connaître le sens (descendre = désagréger / monter = agréger) et de
+    // récupérer les nœuds visibles du niveau courant.
+    const old_level_idx = (mode === 'level')
+      ? tagg.tags_list.findIndex(t => t.is_selected)
+      : -1
+    const nodes_before = (mode === 'level')
+      ? [...drawing_area.sankey.visible_nodes_list]
+      : []
+
     if (values.length > 1) {
       tagg.selectTagsFromIds(values)
     } else {
@@ -476,14 +496,35 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
     // Actions spécifiques selon le mode
     switch (mode) {
-    case 'level':
+    case 'level': {
       app_data.drawing_area.bypass_redraws = true
-      if (app_data.drawing_area.sankey.default_style.shape_position_type == 'parametric') {
-        app_data.drawing_area.nodePositioning.computeParametricVForTagg(tagg.selected_tags_list[0] as Class_LevelTag)
+      // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
+      // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
+      // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
+      // (dropdown) garantit un seul cran. `showAccordingToLevelTags()` ci-dessous nettoie
+      // ensuite les force-flags (mode global = visibilité pilotée par les level-tags).
+      const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
+      if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
+        nodes_before.forEach(n => {
+          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id)
+          if (dim && dim.children.length > 0) {
+            disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
+          }
+        })
+      } else if (old_level_idx >= 0 && new_level_idx < old_level_idx) {
+        nodes_before.forEach(n => {
+          const dim = n.dimensions_as_child.find(d => d.id === tagg.id)
+          if (dim) {
+            aggregate(app_data, n as Class_NodeElement, dim.parent.id, false)
+          }
+        })
       }
       app_data.drawing_area.sankey.showAccordingToLevelTags()
       app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
       updateUnitaryStyles(app_data.drawing_area)
+      // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
+      // de positionnement → mode absolu (réf flux/datatag persistée conservée).
+      app_data.drawing_area.setAbsoluteMode()
       app_data.drawing_area.draw()
       app_data.drawing_area.to_recenter = true
       app_data.drawing_area.recenter()
@@ -491,6 +532,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       app_data.drawing_area.orderElementOnDA()
 
       break
+    }
     case 'data':
       handleDataTagSelection(tagg as unknown as Class_DataTagGroup, values)
       break
@@ -563,7 +605,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
             closeOnSelect={false} // Garde le menu ouvert
             placement="bottom-start"
           >
-            {({ isOpen, onClose }) => (
+            {({ isOpen: _isOpen, onClose }) => (
               <>
                 <MenuButton
                   width="100%"
@@ -593,7 +635,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                     }
                   }}
                 >
-                  <span>{tagg.tags_list.find(t => t.id === selected_value)?.name ?? ''}</span>
+                  <span>{tagg.tags_list.find(t => t.id === selected_value)?.display_name ?? ''}</span>
                   <ChevronDownIcon color="gray.500" />
                 </MenuButton>
                 <MenuList
@@ -607,7 +649,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                     }
                   }}
                 >
-                  {tagg.tags_list.map((tag, index) => (
+                  {tagg.tags_list.map((tag, _index) => (
                     <MenuItem
                       key={tag.id}
                       icon={tag.id === selected_value ? <CheckIcon /> : undefined}
@@ -624,7 +666,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
                         drawing_area.bypass_redraws = false
                       }}
                     >
-                      {tag.name}
+                      {tag.display_name}
                     </MenuItem>
                   ))}
                 </MenuList>
@@ -633,24 +675,33 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           </Menu>
         )
       }
+      // #1231 — Hiérarchie pas-à-pas : en mode 'level', on ne peut changer que d'UN
+      // niveau à la fois (désactiver les options à plus de ±1 du niveau courant). Force
+      // à désagréger/agréger en se basant sur la position des parents/enfants immédiats.
+      const cur_idx = tagg.tags_list.findIndex(t => t.id === selected_value)
       return (
         <Select
           key={tagg.name}
           value={selected_value}
+          isDisabled={has_local_hierarchy}
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             handleTagSelection(tagg, [evt.target.value])
           }}
         >
-          {tagg.tags_list.map(tag => (
-            <option key={tag.id} value={tag.id}>
-              {tag.name}
+          {tagg.tags_list.map((tag, idx) => (
+            <option
+              key={tag.id}
+              value={tag.id}
+              disabled={mode === 'level' && cur_idx >= 0 && Math.abs(idx - cur_idx) > 1}
+            >
+              {tag.display_name}
             </option>
           ))}
         </Select>
       )
     } else if (tagg.banner === 'multi') {
       const options = tagg.tags_list.map(tag => ({
-        label: tag.name,
+        label: tag.display_name,
         value: tag.id,
         selected: tag.is_selected,
         disabled: mode === 'data' && tagg.selected_tags_list.length < 2 && tag.id === tagg.selected_tags_list[0]?.id
@@ -840,12 +891,87 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   let title_key = config.title_key
   if (mode === 'level' && taggs_in_banner.length > 0 && taggs_in_banner[0].name === 'Primaire') title_key = 'ndd_one'
 
+  // #1231 — Bouton « Réinitialiser » en haut du menu Hiérarchies, visible uniquement en
+  // état hybride (désagrégations locales). Il ré-agrège les désagrégations locales et
+  // revient à l'état uniforme du menu, ce qui réactive les dropdowns de niveau.
+  const ResetHierarchyButton = (mode === 'level' && has_local_hierarchy) ? (
+    <Box layerStyle='filter_grid_row'>
+      <OSTooltip label={t('Banner.resetHierarchyTooltip')}>
+        <Button
+          size='xs'
+          variant='menuconfigpanel_option_button'
+          onClick={() => {
+            resetLocalHierarchy(app_data)
+            updateComponents()
+          }}>
+          {t('Banner.resetHierarchy')}
+        </Button>
+      </OSTooltip>
+    </Box>
+  ) : null
+
+  // #1231 — Réglage GLOBAL du mode d'écart vertical des enfants (désagrégation / expansion /
+  // englobement), placé sous Hiérarchies (mode 'level'). Persisté ; sert de défaut, le widget
+  // par-nœud (clic droit) peut le surcharger ponctuellement.
+  const GapModeControl = (mode === 'level') ? (
+    <Box layerStyle='menuconfig_grid'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        <OSTooltip label={t('MEP.tooltips.childGapMode')}>
+          <Box as='span'>{t('MEP.childGapMode')}</Box>
+        </OSTooltip>
+      </Box>
+      <Box layerStyle='filter_grid_row'>
+        <Select
+          size='xs'
+          value={drawing_area.disaggregation_gap_mode}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            const val = evt.target.value as Type_DisaggregationGap
+            const f = (_: Type_DisaggregationGap) => {
+              drawing_area.disaggregation_gap_mode = _
+              updateComponents()
+            }
+            app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_mode', val, f)
+          }}>
+          <option value='fill'>{t('MEP.childGapFill')}</option>
+          <option value='keep'>{t('MEP.childGapKeep')}</option>
+          <option value='children_dy'>{t('MEP.childGapDy')}</option>
+          <option value='constant'>{t('MEP.childGapConst')}</option>
+        </Select>
+      </Box>
+      {drawing_area.disaggregation_gap_mode === 'constant' && (
+        <Box layerStyle='filter_grid_row'>
+          <Box layerStyle='menuconfigpanel_option_name'>
+            <OSTooltip label={t('MEP.tooltips.childGapValue')}>
+              <Box as='span'>{t('MEP.childGapValue')}</Box>
+            </OSTooltip>
+          </Box>
+          <ConfigMenuNumberInput
+            t={app_data.t}
+            default_value={drawing_area.disaggregation_gap_value}
+            function_on_blur={(evt: number | null | undefined) => {
+              if (evt == null) return
+              const f = (_: number) => {
+                drawing_area.disaggregation_gap_value = _
+                updateComponents()
+              }
+              app_data.setValueAndSaveHistory(drawing_area, 'disaggregation_gap_value', evt, f)
+            }}
+            minimum_value={0}
+            stepper={true}
+          />
+        </Box>
+      )}
+    </Box>
+  ) : null
+
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
+      {ResetHierarchyButton}
       {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
+      {GapModeControl}
     </FilterWrapperBox>
   ) : <></>
 }

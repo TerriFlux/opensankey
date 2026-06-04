@@ -325,6 +325,18 @@ export const retrieveJSONResults = (
   // if (text === '{}')
   //   return
   const current_json = app_data.toJSON()
+  // Layout source for the "keep the starting layout" transfer (updateFromJSON below).
+  // app_data.toJSON() serialises the MASTER at top-level; when we are inside a view,
+  // the active view's own DA JSON lives under ['views'][view_id] (refreshed from the
+  // live DA by _toJSON). In view_only mode we must re-apply THAT view's layout, not
+  // the master's top-level one — otherwise the reconciled view ends up with the
+  // master positions/styles instead of keeping its own (mirrors master behaviour).
+  const layout_source_json: Type_JSON = (() => {
+    if (!view_only) return current_json
+    const views = current_json['views'] as Type_JSON | undefined
+    const view_layout = views?.[app_data.drawing_area.id] as Type_JSON | undefined
+    return view_layout ?? current_json
+  })()
   //const data_as_json = JSON.parse(text) as Type_JSON
   JSON_data['version'] = app_data.version // Avoid converter process
   if (view_only) {
@@ -405,10 +417,17 @@ export const retrieveJSONResults = (
   // Case 1 : Apply extracted layout if present -> contains positions
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(current_json)
+    app_data.updateFromJSON(layout_source_json)
+    // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
+    // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
+    // replacés. setTrade(true) réapplique les styles import/export à TOUS les
+    // échanges (produits ET secteurs) puis appelle arrangeTrade (placement,
+    // secteurs en horizontal). Sinon les import/export secteur restent "collés".
+    app_data.drawing_area.sankey.setTrade(true)
   } else if (JSON_data['layout']) {
     app_data.drawing_area.nodePositioning.computeScale()
     app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+    app_data.drawing_area.sankey.setTrade(true)
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
     app_data.drawing_area.sankey.setTrade(true)
@@ -644,6 +663,10 @@ export const UniversalFileConverter = ({
   const [processing, setProcessing] = useState(false)
   const [started, setStarted] = useState(false)
   const [result, setResult] = useState('')
+  // Filtres de log actifs du terminal (1=Infos, 2=Erreurs, 3=Debug, 4=Warnings).
+  // Remonté ici (et non dans ProcessTerminal) pour que le badge récap puisse
+  // basculer le terminal en mode « warnings uniquement ».
+  const [log_filter, setLogFilter] = useState([1, 2, 4])
 
   const getCurrentOutputOptions = () => {
     switch (output_format) {
@@ -665,7 +688,15 @@ export const UniversalFileConverter = ({
     }
   }
 
-  const initialize = (config: ConverterConfig, file_path: string, launch_at_opening: boolean) => {
+  const initialize = (
+    config: ConverterConfig,
+    file_path: string,
+    launch_at_opening: boolean,
+    default_solver_options?: {
+      with_reconciled?: boolean,
+      with_completed?: boolean,
+    },
+  ) => {
     // The dialog is reused across "Open JSON" / "Open Excel" / etc., so a
     // previously picked file and the prior run's status (success/failure
     // banner, terminal output) must not leak into the next opening.
@@ -704,7 +735,16 @@ export const UniversalFileConverter = ({
     set_input_options_base({ ...getDefaultOutputOptions(input_config['base']), ...(config.input_overrides_base ?? {}) })
     set_output_options_excel({ ...getDefaultOutputOptions(output_config['excel']), ...(config.output_overrides_excel ?? {}) })
     set_output_options_json({ ...getDefaultOutputOptions(output_config['json']), ...(config.output_overrides_json ?? {}) })
-    set_output_options_base({ ...getDefaultOutputOptions(output_config['base']), ...(config.output_overrides_base ?? {}) })
+    // Pre-set solver-only flags from the caller (e.g. the "Compléter le
+    // diagramme" command pre-checks with_completed so the user does not need
+    // to toggle it manually before launching). These flags live in
+    // output_options_base, declared with group='solver' in the config so they
+    // render alongside enable_uncertainty / debug_mode / skip_rref.
+    set_output_options_base({
+      ...getDefaultOutputOptions(output_config['base']),
+      ...(config.output_overrides_base ?? {}),
+      ...(default_solver_options ?? {}),
+    })
 
     setLaunchAtOpening(launch_at_opening)
     set_show_terminal(false)
@@ -784,12 +824,17 @@ export const UniversalFileConverter = ({
         if (input_format == 'example_json') {
           app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
         } else {
-          // Reconciliation in-place inside a view (blob→blob from the active view)
-          // must only touch the current view's drawing area — never replace
-          // app_data, otherwise the master and the other views are wiped.
+          // Loading into the current view only (never replace app_data, otherwise
+          // the master and the other views are wiped). Two triggers:
+          //   - blob→blob reconciliation from the active view (always view-only),
+          //   - Excel import with the user-set ``only_current_view`` option
+          //     (checked by default, only shown when inside a view).
+          const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
           const view_only =
-            input_format == 'blob' && output_format == 'blob' &&
-            app_data.drawing_area.id !== default_main_sankey_id
+            is_inside_view && (
+              (input_format == 'blob' && output_format == 'blob') ||
+              (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
+            )
           retrieveJSONResults(
             app_data,
             jsonData,
@@ -851,11 +896,10 @@ export const UniversalFileConverter = ({
           excel: '.xlsx',
           json: '.json'
         }
-        //@ts-expect-error xxx
-        let root_filename = input_file ? input_file.name.split('.')[0] : 'output'
+        const base = input_file ? (input_file as File).name.split('.')[0] : 'output'
+        let root_filename = base
         if (config.title == 'ProcessDialog.reconciliation') {
-          //@ts-expect-error xxx
-          root_filename = input_file.name.split('.')[0] + 'reconciled'
+          root_filename = base + 'reconciled'
         }
 
         // Reconciliation + debug: backend bundles the reconciled output and
@@ -943,9 +987,10 @@ export const UniversalFileConverter = ({
     }
     form_data.append('output_options', JSON.stringify(output_options))
     const input_options = getCurrentInputOptions() as Record<string, unknown>
-    // The six input options (create_new_nodes, create_new_flux,
+    // The eight input options (create_new_nodes, create_new_flux,
     // propagate_flux_to_children, propagate_flux_to_parent,
-    // autofix_parenthood_mat_balance, autofix_constraint_redundancies) are
+    // autofix_parenthood_mat_balance, autofix_constraint_redundancies,
+    // allow_flux_to_descendant, autonormalize_ratio_constraints) are
     // passed through verbatim — load_sankey consumes those literal names.
     // No inversion: false = abort with a message naming the option,
     // true = fix + populate _auto_corrected_* for the red highlight.
@@ -970,7 +1015,15 @@ export const UniversalFileConverter = ({
     form_data.append('output_format', output_format)
 
     if (input_format == 'blob' && output_format == 'json') {
-      app_data.saveToJSON({ ...output_options_base, ...output_options } as Type_JSON)
+      const save_kwargs = { ...output_options_base, ...output_options } as Type_JSON
+      // "One JSON per view": OSP injects save_all_views_as_json; when the option
+      // is checked and the handler exists, write one standalone JSON per view
+      // (zipped) instead of the single multi-view file.
+      if (save_kwargs['save_one_json_per_view'] && app_data.menu_configuration.save_all_views_as_json) {
+        app_data.menu_configuration.save_all_views_as_json(save_kwargs)
+      } else {
+        app_data.saveToJSON(save_kwargs)
+      }
       setStarted(false)
       setProcessing(false)
       setFailure(false)
@@ -985,6 +1038,16 @@ export const UniversalFileConverter = ({
       setFailure(false)
       return
     }
+    // Libellé localisé contextuel imprimé dans le bandeau serveur (cf.
+    // conversion_thread / launch_optim). Dérivé du titre du dialogue —
+    // « Ouvrir fichier excel », « Édition de fichier », « Réconciliation »… ;
+    // pour la complétion sans redondance, on distingue « Complétion ».
+    let process_label = t(config.title)
+    if (is_reconciliation && solver_options['with_completed'] && !solver_options['with_reconciled']) {
+      process_label = t('ProcessDialog.completion')
+    }
+    form_data.append('process_label', process_label)
+
     const url = window.location.origin + config.server_endpoint
 
     console.log(`🔄 Lancement conversion ${input_format} → ${output_format}`)
@@ -992,31 +1055,46 @@ export const UniversalFileConverter = ({
     console.log('Options sortie:', output_options)
 
     set_show_terminal(true)
+    // Garde-fou : un échec HTTP non-JSON (413/502/504 nginx, etc.) ou un network
+    // error doit interrompre le polling check_process et afficher un message
+    // lisible. Le terminal ne rend que les lignes qui contiennent ERROR/WARNING
+    // /INFO/DEBUG — d'où le préfixe ERROR.
+    const fail = (msg: string) => {
+      setResult(msg)
+      setProcessing(false)
+      setFailure(true)
+    }
     fetch(url, { method: 'POST', body: form_data })
-    // .then(response => {
-    //   if (!response.ok) {
-    //     console.error('❌ Erreur lancement conversion:')
-
-    //     // Mettre à jour les états pour indiquer l'échec
-    //     setStarted(false)
-    //     setProcessing(false)
-    //     setFailure(true)
-    //     setResult('❌ Erreur lancement conversion:')
-    //   }
-    //   return response.json()
-    // })
-    // .then(data => {
-    //   console.log('✅ Conversion lancée avec succès:', data)
-    // })
-    // .catch(error => {
-    //   console.error('❌ Erreur lancement conversion:', error)
-
-    //   // Mettre à jour les états pour indiquer l'échec
-    //   setStarted(false)
-    //   setProcessing(false)
-    //   setFailure(true)
-    //   setResult('❌ Erreur lancement conversion:')
-    // })
+      .then(async response => {
+        const content_type = response.headers.get('content-type') || ''
+        const is_json = content_type.includes('application/json')
+        if (response.ok && is_json) {
+          // Succès — le Counter prend le relais via check_process.
+          return
+        }
+        if (response.status === 413) {
+          fail('ERROR Fichier trop volumineux pour le serveur. Contactez l\'administrateur.')
+          return
+        }
+        if (response.status === 502 || response.status === 504) {
+          fail(`ERROR Backend injoignable (HTTP ${response.status}). Réessayez dans un instant ou contactez l'administrateur.`)
+          return
+        }
+        if (response.status === 500 && is_json) {
+          try {
+            const data = await response.json()
+            const detail = (data && (data.error || data.message)) || JSON.stringify(data)
+            fail('ERROR Erreur backend : ' + detail)
+          } catch {
+            fail('ERROR Erreur backend (500), réponse illisible.')
+          }
+          return
+        }
+        fail(`ERROR Erreur inattendue (HTTP ${response.status}${is_json ? '' : ', réponse non-JSON'}).`)
+      })
+      .catch(error => {
+        fail('ERROR Connexion au serveur échouée : ' + (error?.message || String(error)))
+      })
   }
 
   if (launch_at_opening) {
@@ -1304,6 +1382,7 @@ export const UniversalFileConverter = ({
       })()}
 
 
+
       {/* Bouton de lancement */}
       {!launch_at_opening ? <>
         <Divider borderBottomWidth='2px' opacity='1' borderColor='primaire.2' />
@@ -1313,7 +1392,14 @@ export const UniversalFileConverter = ({
           <Button
             variant="menuconfigpanel_option_button_secondary"
             size='sizeButtonDialog'
-            isDisabled={input_format !== 'blob' && config.input.required && !input_file}
+            isDisabled={
+              (input_format !== 'blob' && config.input.required && !input_file)
+              || (
+                config.title === 'ProcessDialog.reconciliation'
+                && !output_options_base.with_reconciled
+                && !output_options_base.with_completed
+              )
+            }
             onClick={generic_process}
           >
             {t(config.launch_button_label)}
@@ -1359,19 +1445,27 @@ export const UniversalFileConverter = ({
                   ? result.split('\n').filter((l: string) => l.includes('WARNING')).length
                   : 0
                 if (warning_count === 0) return null
+                // Badge cliquable : bascule le terminal en « warnings uniquement »,
+                // re-clic restaure les filtres par défaut.
+                const only_warnings = log_filter.length === 1 && log_filter[0] === 4
                 return (
                   <Box
+                    as='button'
+                    type='button'
+                    onClick={() => setLogFilter(only_warnings ? [1, 2, 4] : [4])}
                     display='inline-flex'
                     alignItems='center'
                     gap='4px'
                     px='8px'
                     py='2px'
                     borderRadius='full'
-                    bg='#fef3c7'
-                    color='#b7791f'
+                    bg={only_warnings ? '#b7791f' : '#fef3c7'}
+                    color={only_warnings ? '#fef3c7' : '#b7791f'}
                     fontSize='sm'
                     fontWeight='bold'
-                    title={t('ProcessDialog.warnings_to_read') || `${warning_count} warning(s) à lire`}
+                    cursor='pointer'
+                    _hover={{ filter: 'brightness(0.95)' }}
+                    title={t('ProcessDialog.warnings_to_read') || `${warning_count} warning(s) — cliquer pour n'afficher que les warnings`}
                   >
                     <WarningIcon />
                     {warning_count}
@@ -1394,6 +1488,8 @@ export const UniversalFileConverter = ({
             started={started}
             result={result}
             setResult={setResult}
+            value={log_filter}
+            setValue={setLogFilter}
           />
         </>
       )}

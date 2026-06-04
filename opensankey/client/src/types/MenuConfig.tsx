@@ -27,7 +27,10 @@
 // External imports
 import React, { Dispatch, MutableRefObject, RefObject, SetStateAction, useRef } from 'react'
 
-import { Type_MacroTagGroup } from '../types/Utils'
+import {
+  Type_MacroTagGroup, Type_JSON,
+  getBooleanFromJSON, getNumberFromJSON, getStringFromJSON
+} from '../types/Utils'
 import { typeButtonElementConfigurable } from '../components/topmenus/SankeyMenus'
 import { Class_DataTagGroup } from './TagGroup'
 import { Class_DataTag } from './Tag'
@@ -37,7 +40,6 @@ import {
 import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ElementStyle } from '../Elements/Element'
-import { Class_NodeElement } from '../Elements/Node'
 
 export type Type_AdditionalMenus = {
   external_top_buttons_item: { [x: string]: JSX.Element },
@@ -60,6 +62,17 @@ export type Type_AdditionalMenus = {
   template_module_key: string[]
 }
 
+// Position de la doc dans la grande zone :
+//  - sheet-right / -left / -top / -bottom : doc accolée au tableur dans le slot droit.
+//  - diagram-bottom : doc sous le diagramme (zone gauche), tableur inchangé à droite.
+//  - window-bottom : doc en bandeau pleine largeur en bas (diagramme ET tableur raccourcis).
+export type Type_MainZoneDocLayout =
+  'sheet-right' | 'sheet-left' | 'sheet-top' | 'sheet-bottom' | 'diagram-bottom' | 'window-bottom'
+// Positions « groupe tableur » : la doc partage le slot droit avec le tableur (sinon elle est en bas).
+export const DOC_LAYOUTS_WITH_SHEET: Type_MainZoneDocLayout[] =
+  ['sheet-right', 'sheet-left', 'sheet-top', 'sheet-bottom']
+// Positions qui placent la doc en bas et raccourcissent le diagramme (réserve verticale).
+export const DOC_LAYOUTS_BOTTOM: Type_MainZoneDocLayout[] = ['diagram-bottom', 'window-bottom']
 export type keyTypeConfig = 'data' | 'style'
 export type keyTypeElements = 'data' | 'DA' | 'flow' | 'node' | 'element' | 'object' | 'legend'
 export interface IType_DictHookRefSetterShowDialogComponents {
@@ -67,7 +80,6 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Modal - Welcome
   ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -119,25 +131,22 @@ export class Class_MenuConfig {
    */
   protected _menu_top_order = [
     [
-      // Consolidated Fichier dropdown (Nouveau / Ouvrir / Enregistrer collapsed
-      // under MenuGroup sections). Exporter stays standalone next to it because
-      // it is reached often enough to warrant a top-level button. Legacy split
-      // keys (resetDA, open_sankey, save_sankey, export_sankey) remain
-      // registered for backwards-compatible custom menu_top_order arrays.
+      // Document operations grouped together (no internal divider): Fichier
+      // (Nouveau/Ouvrir/Enregistrer dropdown), Exporter, and Édition (MEP,
+      // spreadsheet editor, Index/TER/TES shortcuts). Legacy split keys
+      // (resetDA, open_sankey, save_sankey, export_sankey, mep) stay registered
+      // in dict_components_menu_top for backwards-compatible custom orders.
       'fichier',
       'export_sankey',
-    ],
-    [
-      // Édition dropdown carries MEP, the spreadsheet editor (ex format
-      // converter) and the Index/TER/TES shortcuts. Legacy 'mep' key kept.
       'edition',
       'edit_style',
     ],
     [
-      // 'welcome',
-      'tour',
-      'tutoriel',
-      // 'documentation',
+      // Consolidated "Aide" dropdown gathering Visite guidée + Tutoriels (and,
+      // via extra_help_menu_items, upper-layer entries like SA's Sankeythèque).
+      // Legacy split keys ('tour', 'tutoriel') stay registered in
+      // dict_components_menu_top for backwards-compatible custom menu_top_order.
+      'aide',
     ],
   //   [
   //     'contact',
@@ -165,7 +174,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   protected _style_config: { [x: string]: { theme: string; elements_configurable: string[] } } = {
-    'data': { 'theme': '#78a7c2', elements_configurable: ['data', 'flow', 'node', 'object'] },
+    'data': { 'theme': '#78a7c2', elements_configurable: ['flow', 'node', 'object'] },
     'style': { 'theme': '#78c2ad', elements_configurable: ['DA', 'legend', 'element', 'tag_flow', 'tag_node'] },
     'presentation': { 'theme': '#778a95', elements_configurable: ['node_tag', 'flow_tag', 'data_tag', 'view'] }
   }
@@ -180,6 +189,115 @@ export class Class_MenuConfig {
   public get elements_configurable_selected() { return this._elements_configurable_selected }
   public get tab_selected() { return this._tab_selected }
   public set tab_selected(tab_selected) { this._tab_selected = tab_selected }
+
+  // Grande zone : diagramme et/ou tableur affichables simultanément (split view avec séparateur
+  // déplaçable). Deux booléens indépendants + ratio du séparateur (0..1 = part gauche/diagramme).
+  // Pub/sub pour partager l'état entre la barre du haut et l'overlay MainZoneTabs.
+  protected _main_zone_show_diagram: boolean = true
+  protected _main_zone_show_spreadsheet: boolean = false
+  // Onglet « Doc » : panneau de documentation markdown, partage le slot droit comme le tableur.
+  protected _main_zone_show_doc: boolean = false
+  // Position de la doc dans la grande zone (cf. Type_MainZoneDocLayout).
+  protected _main_zone_doc_layout: Type_MainZoneDocLayout = 'sheet-right'
+  // Hauteur (px) de la doc dans les modes bas (diagram-bottom / window-bottom), réglée par la poignée.
+  protected _main_zone_doc_bottom_px: number = 280
+  protected _main_zone_split_ratio: number = 2 / 3 // part gauche/diagramme -> tableur = 1/3
+  // Part de la colonne droite donnée au TABLEUR quand la doc est accolée (modes sheet-*) ; la doc
+  // occupe le reste. Réglée par le séparateur tableur/doc. Vaut pour l'axe horizontal (sheet-left/
+  // right) comme vertical (sheet-top/bottom).
+  protected _main_zone_doc_sheet_ratio: number = 0.5
+  protected _main_zone_listeners: Array<() => void> = []
+  protected _notifyMainZone() { this._main_zone_listeners.forEach((l) => l()) }
+  public get main_zone_show_diagram() { return this._main_zone_show_diagram }
+  public set main_zone_show_diagram(v: boolean) { this._main_zone_show_diagram = v; this._notifyMainZone() }
+  public get main_zone_show_spreadsheet() { return this._main_zone_show_spreadsheet }
+  public set main_zone_show_spreadsheet(v: boolean) { this._main_zone_show_spreadsheet = v; this._notifyMainZone() }
+  public get main_zone_show_doc() { return this._main_zone_show_doc }
+  public set main_zone_show_doc(v: boolean) { this._main_zone_show_doc = v; this._notifyMainZone() }
+  public get main_zone_doc_layout() { return this._main_zone_doc_layout }
+  public set main_zone_doc_layout(v: Type_MainZoneDocLayout) { this._main_zone_doc_layout = v; this._notifyMainZone() }
+  public get main_zone_doc_bottom_px() { return this._main_zone_doc_bottom_px }
+  public set main_zone_doc_bottom_px(v: number) { this._main_zone_doc_bottom_px = v; this._notifyMainZone() }
+  public get main_zone_split_ratio() { return this._main_zone_split_ratio }
+  public set main_zone_split_ratio(v: number) { this._main_zone_split_ratio = v; this._notifyMainZone() }
+  public get main_zone_doc_sheet_ratio() { return this._main_zone_doc_sheet_ratio }
+  public set main_zone_doc_sheet_ratio(v: number) { this._main_zone_doc_sheet_ratio = v; this._notifyMainZone() }
+  public addMainZoneListener(l: () => void): () => void {
+    this._main_zone_listeners.push(l)
+    return () => { this._main_zone_listeners = this._main_zone_listeners.filter((x) => x !== l) }
+  }
+  /**
+   * Largeur (px) réservée à droite par le tableur/doc en mode split (0 sinon). Source unique de
+   * vérité : calculée à partir de l'état (booléens + ratio) et de window.innerWidth, donc valable
+   * pour N'IMPORTE quelle drawing area (maître ou vue recréée à la volée) sans état par instance.
+   * Cf. MainZoneTabs (spreadsheetWidthPx) pour la disposition de l'overlay.
+   */
+  public getMainZoneRightReservedPx(): number {
+    // La colonne de droite n'existe que si le tableur est affiché, OU si la doc est en mode « accolée
+    // au tableur » (sheet-*). En mode bas (diagram-bottom / window-bottom) la doc ne réserve pas de
+    // largeur à droite.
+    const docInRightColumn = this._main_zone_show_doc &&
+      DOC_LAYOUTS_WITH_SHEET.includes(this._main_zone_doc_layout)
+    const rightColumnShown = this._main_zone_show_spreadsheet || docInRightColumn
+    if (!(this._main_zone_show_diagram && rightColumnShown)) return 0
+    const MIN_SPREADSHEET_PX = 320
+    const MIN_DIAGRAM_PX = 160
+    const W = window.innerWidth
+    let w = (1 - this._main_zone_split_ratio) * W
+    w = Math.max(MIN_SPREADSHEET_PX, w)
+    w = Math.min(w, Math.max(MIN_SPREADSHEET_PX, W - MIN_DIAGRAM_PX))
+    return w
+  }
+
+  /**
+   * Hauteur (px) réservée en bas pour la doc quand elle est en mode bas (diagram-bottom / window-
+   * bottom). Symétrique de getMainZoneRightReservedPx : lue par window_fitting_height de toute
+   * drawing area, donc le diagramme se recadre dans la hauteur restante. 0 dans les autres cas.
+   */
+  public getMainZoneBottomReservedPx(): number {
+    if (!(this._main_zone_show_diagram && this._main_zone_show_doc)) return 0
+    if (!DOC_LAYOUTS_BOTTOM.includes(this._main_zone_doc_layout)) return 0
+    const MIN_DOC_PX = 120
+    const MIN_DIAGRAM_PX = 120
+    const H = window.innerHeight
+    let h = this._main_zone_doc_bottom_px
+    h = Math.max(MIN_DOC_PX, h)
+    h = Math.min(h, Math.max(MIN_DOC_PX, H - MIN_DIAGRAM_PX))
+    return h
+  }
+  /**
+   * Sérialise l'état d'affichage de la grande zone (panneaux diagramme / tableur / doc visibles,
+   * position de la doc, ratios) pour le persister dans le JSON du diagramme. Restauré par
+   * mainZoneStateFromJSON au chargement.
+   */
+  public mainZoneStateToJSON(): Type_JSON {
+    return {
+      show_diagram: this._main_zone_show_diagram,
+      show_spreadsheet: this._main_zone_show_spreadsheet,
+      show_doc: this._main_zone_show_doc,
+      doc_layout: this._main_zone_doc_layout,
+      doc_bottom_px: this._main_zone_doc_bottom_px,
+      split_ratio: this._main_zone_split_ratio,
+      doc_sheet_ratio: this._main_zone_doc_sheet_ratio
+    }
+  }
+
+  /**
+   * Restaure l'état d'affichage de la grande zone depuis le JSON (clé `main_zone`). Les champs
+   * absents conservent la valeur courante. Notifie les abonnés (barre du haut + MainZoneTabs).
+   */
+  public mainZoneStateFromJSON(json: Type_JSON) {
+    this._main_zone_show_diagram = getBooleanFromJSON(json, 'show_diagram', this._main_zone_show_diagram)
+    this._main_zone_show_spreadsheet = getBooleanFromJSON(json, 'show_spreadsheet', this._main_zone_show_spreadsheet)
+    this._main_zone_show_doc = getBooleanFromJSON(json, 'show_doc', this._main_zone_show_doc)
+    const layout = getStringFromJSON(json, 'doc_layout', this._main_zone_doc_layout) as Type_MainZoneDocLayout
+    if ([...DOC_LAYOUTS_WITH_SHEET, ...DOC_LAYOUTS_BOTTOM].includes(layout)) this._main_zone_doc_layout = layout
+    this._main_zone_doc_bottom_px = getNumberFromJSON(json, 'doc_bottom_px', this._main_zone_doc_bottom_px)
+    this._main_zone_split_ratio = getNumberFromJSON(json, 'split_ratio', this._main_zone_split_ratio)
+    this._main_zone_doc_sheet_ratio = getNumberFromJSON(json, 'doc_sheet_ratio', this._main_zone_doc_sheet_ratio)
+    this._notifyMainZone()
+  }
+
   /* ========================================
     Timeout dict
   =========================================== */
@@ -198,6 +316,7 @@ export class Class_MenuConfig {
   private _ref_to_menu_updater: MutableRefObject<() => void>
   private _ref_to_submenu_updater: MutableRefObject<() => void>
   private _ref_to_spreadsheet: MutableRefObject<(() => void)>
+  private _ref_to_doc: MutableRefObject<(() => void)>
 
   // Ref to state if configuration is opened
   private _ref_menu_opened: MutableRefObject<[boolean, (b: boolean) => void]>
@@ -261,7 +380,7 @@ export class Class_MenuConfig {
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
-  private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean) => void>
+  private _ref_universal_converter_set_config: MutableRefObject<(_: ConverterConfig, file_path: string, launch_at_opening: boolean, default_solver_options?: { with_reconciled?: boolean, with_completed?: boolean }) => void>
 
   private _ref_to_updater_modal_apply_layout: MutableRefObject<() => void>
   /** If provided, row keys returning true will be greyed in UpdateModeGrid */
@@ -299,6 +418,25 @@ export class Class_MenuConfig {
           tooltip?: () => string
         }>
       }
+  > = undefined
+  /**
+   * Optional handler that saves one standalone JSON file per view, packaged in a
+   * single zip. Injected by OSP (views are an OSP feature). When set, the
+   * persistence dialog's ``save_one_json_per_view`` JSON output option routes the
+   * blob→json save through this instead of the single-file saveToJSON.
+   */
+  public save_all_views_as_json?: (kwargs: Type_JSON) => Promise<void> | void = undefined
+  /** Optional extra menu items appended to the top "Aide" dropdown (after Visite guidée / Tutoriels). Injected by SA (e.g. Sankeythèque) or other extensions. */
+  public extra_help_menu_items?: Array<
+    {
+      key: string
+      label: string
+      icon?: React.ReactNode
+      onClick: () => void
+      disabled?: () => boolean
+      // Returns the tooltip text for the item. Empty string => no tooltip wrapper.
+      tooltip?: () => string
+    }
   > = undefined
   private _ref_to_modal_pref_updater: MutableRefObject<() => void>
   protected _ref_to_toolbar_bottom_updater: MutableRefObject<() => void>
@@ -343,6 +481,7 @@ export class Class_MenuConfig {
     this._ref_to_menu_updater = useRef(() => null)
     this._ref_to_submenu_updater = useRef(() => null)
     this._ref_to_spreadsheet = useRef(() => null)
+    this._ref_to_doc = useRef(() => null)
     this._ref_to_menu_config_updater = useRef(() => null)
     this._ref_menu_opened = useRef([false, () => null])
 
@@ -427,7 +566,6 @@ export class Class_MenuConfig {
       // Modal - Welcome
       ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -492,7 +630,6 @@ export class Class_MenuConfig {
   public closeAllMenus() {
     this.closeConfigMenu()
     this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_tuto.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
@@ -763,6 +900,8 @@ export class Class_MenuConfig {
     this.updateAllComponentsRelatedToContainers()
     this.updateComponentPref()
     this._ref_to_toolbar_bottom_updater.current()
+    // Resynchronise le panneau Doc markdown (un nouveau fichier / diagramme a pu être chargé).
+    this.ref_to_doc.current()
     this.dict_setter_show_dialog.ref_setter_modal_welcome_active_page.current(v => !v)
   }
 
@@ -1073,6 +1212,10 @@ export class Class_MenuConfig {
 
   public get ref_to_spreadsheet(): MutableRefObject<(() => void)> {
     return this._ref_to_spreadsheet
+  }
+
+  public get ref_to_doc(): MutableRefObject<(() => void)> {
+    return this._ref_to_doc
   }
 
   public get ref_menu_opened(): MutableRefObject<[boolean, (b: boolean) => void]> {

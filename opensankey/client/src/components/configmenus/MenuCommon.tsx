@@ -37,8 +37,6 @@ import {
   InputRightAddon,
   InputGroup,
   Input,
-  FormErrorMessage,
-  FormControl,
 } from '@chakra-ui/react'
 import { t, TFunction } from 'i18next'
 import {
@@ -56,10 +54,9 @@ import {
   Tooltip,
   Select,
   PlacementWithLogical,
-  Textarea
+  Textarea,
+  SystemStyleObject
 } from '@chakra-ui/react'
-import { Class_LinkElement } from '../../Elements/Link'
-import { Class_ElementStyle } from '../../Elements/Element'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 import { FaSquare } from 'react-icons/fa'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -68,7 +65,6 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { FCType_WrapperBoxSubSectionMenu } from '../SankeyMenuTypes'
 import { Class_DataTagGroup } from '../../types/TagGroup'
 import { SankeyLinkSelectionSimple, SankeyNodeSelectionSimple } from './MenuElementsSelection'
-import { Class_NodeBase } from '../../Elements/NodeBase'
 import { AttributeConfig, ElementsType, ExtractConfigValue, getConfigValues, isConfigValueIndeterminate, ALL_ATTRIBUTES_CONFIG, updateElements, useElementAttributeConfig, ShapePrefix } from '../../Elements/ElementsAttributesConfig'
 
 // Déclaration du type pour l'EyeDropper API
@@ -627,7 +623,7 @@ export const DataTagSelector = ({ data_tagg, value, onChange }: {
         value={value}
         onChange={onChange}
       >
-        {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.name}</option>)}
+        {data_tagg.tags_list.map(tag => <option key={tag.id} value={tag.id}>{tag.display_name}</option>)}
       </Select>
     </Box>
   )
@@ -752,6 +748,8 @@ interface OverloadedButtonProps {
   variant: string
   onClick: () => void
   children: React.ReactNode
+  // Styles additionnels fusionnés dans le sx du bouton (ex. forcer un bouton carré).
+  buttonSx?: SystemStyleObject
 }
 
 export const OverloadedButton = ({
@@ -762,7 +760,8 @@ export const OverloadedButton = ({
   attributeKey,
   variant,
   onClick,
-  children
+  children,
+  buttonSx
 }: React.PropsWithChildren<OverloadedButtonProps>) => {
   const fullAttributeKey = `${prefix}_${attributeKey}` as keyof typeof config
   const tooltipLabel = t(`${String(attributePath)}.tooltips.${String(fullAttributeKey)}`)
@@ -777,7 +776,7 @@ export const OverloadedButton = ({
         <Button
           variant={variant}
           onClick={onClick}
-          sx={{ padding: '4px', minWidth: 'auto', height: 'auto' }}
+          sx={{ padding: '4px', minWidth: 'auto', height: 'auto', ...buttonSx }}
         >
           {children}
         </Button>
@@ -1225,7 +1224,7 @@ export const InputIndicatorWrapper = ({
   isOverloaded = false,
   isMultiValue = false,
   children,
-  t
+  t: _t
 }: React.PropsWithChildren<{
   isOverloaded?: boolean
   isMultiValue?: boolean

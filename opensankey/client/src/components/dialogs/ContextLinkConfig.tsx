@@ -30,6 +30,25 @@ export const LINK_MENU_CONFIG: MenuConfig = {
     },
     {
       type: 'button',
+      actionName: 'straightenLink'
+    },
+    {
+      type: 'button',
+      actionName: 'straightenChildren'
+    },
+    {
+      type: 'button',
+      actionName: 'setReferenceFlux',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const m = app_data.drawing_area.sankey.default_style.shape_position_type
+          return m === 'proportional' || m === 'scale_adapted'
+        }
+      }]
+    },
+    {
+      type: 'button',
       actionName: 'splitLink'
     },
     {
@@ -55,6 +74,89 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         de: 'Quelle und Ziel des/der ausgewählten Flusses/Flüsse umkehren',
         it: 'Inverti l\'origine e la destinazione del/dei flusso/i selezionato/i'
       }
+    },
+
+    straightenLink: {
+      type: 'toggle',
+      labels: {
+        en: 'Straighten flow',
+        fr: 'Rendre droit',
+        es: 'Enderezar flujo',
+        de: 'Fluss begradigen',
+        it: 'Raddrizza flusso'
+      },
+      labelsToggle: {
+        en: { true: 'Release (kept straight)', false: 'Straighten flow' },
+        fr: { true: 'Libérer (gardé droit)', false: 'Rendre droit' },
+        es: { true: 'Liberar (mantenido recto)', false: 'Enderezar flujo' },
+        de: { true: 'Lösen (gerade gehalten)', false: 'Fluss begradigen' },
+        it: { true: 'Libera (mantenuto dritto)', false: 'Raddrizza flusso' }
+      },
+      tooltips: {
+        en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Click again to release.',
+        fr: 'Garder ce flux exactement horizontal pour tous les tags de données (seuls les écarts verticaux s\'adaptent). Recliquer pour libérer.',
+        es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Vuelva a hacer clic para liberar.',
+        de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Erneut klicken zum Lösen.',
+        it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Clicca di nuovo per liberare.'
+      },
+      getToggleValue: 'straightenLinkValue',
+      closeMenuAfter: true,
+      undoable: true
+    },
+
+    straightenChildren: {
+      type: 'toggle',
+      labels: {
+        en: 'Straighten disaggregated flows',
+        fr: 'Droit aussi en désagrégeant',
+        es: 'Enderezar flujos desagregados',
+        de: 'Disaggregierte Flüsse begradigen',
+        it: 'Raddrizza flussi disaggregati'
+      },
+      labelsToggle: {
+        en: { true: 'Children kept straight', false: 'Straighten disaggregated flows' },
+        fr: { true: 'Enfants gardés droits', false: 'Droit aussi en désagrégeant' },
+        es: { true: 'Hijos mantenidos rectos', false: 'Enderezar flujos desagregados' },
+        de: { true: 'Kinder gerade gehalten', false: 'Disaggregierte Flüsse begradigen' },
+        it: { true: 'Figli mantenuti dritti', false: 'Raddrizza flussi disaggregati' }
+      },
+      tooltips: {
+        en: 'Also keep the child flows straight (between the disaggregated children of source and target), so straightness survives disaggregation. Requires "Straighten flow".',
+        fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation. Nécessite « Rendre droit ».',
+        es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación. Requiere «Enderezar flujo».',
+        de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt. Erfordert „Fluss begradigen".',
+        it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione. Richiede «Raddrizza flusso».'
+      },
+      getToggleValue: 'straightenChildrenValue',
+      closeMenuAfter: true,
+      undoable: true
+    },
+
+    setReferenceFlux: {
+      type: 'toggle',
+      labels: {
+        en: 'Reference flow (proportional)',
+        fr: 'Flux de référence (proportionnel)',
+        es: 'Flujo de referencia (proporcional)',
+        de: 'Referenzfluss (proportional)',
+        it: 'Flusso di riferimento (proporzionale)'
+      },
+      labelsToggle: {
+        en: { true: 'Unset reference flow', false: 'Set as reference flow' },
+        fr: { true: 'Retirer le flux de référence', false: 'Définir comme flux de référence' },
+        es: { true: 'Quitar flujo de referencia', false: 'Definir como flujo de referencia' },
+        de: { true: 'Referenzfluss entfernen', false: 'Als Referenzfluss festlegen' },
+        it: { true: 'Rimuovi flusso di riferimento', false: 'Imposta come flusso di riferimento' }
+      },
+      tooltips: {
+        en: 'In proportional mode, anchor the diagram center of gravity on this flow and scale everything by this flow\'s thickness ratio across data tags.',
+        fr: 'En mode proportionnel, ancrer le centre de gravité du diagramme sur ce flux et dimensionner tout le reste selon le ratio d\'épaisseur de ce flux entre les tags de données.',
+        es: 'En modo proporcional, anclar el centro de gravedad del diagrama en este flujo y escalar todo según la relación de grosor de este flujo entre las etiquetas de datos.',
+        de: 'Im proportionalen Modus den Schwerpunkt des Diagramms an diesem Fluss verankern und alles anhand des Dickenverhältnisses dieses Flusses über die Daten-Tags skalieren.',
+        it: 'In modalità proporzionale, ancorare il baricentro del diagramma a questo flusso e ridimensionare tutto in base al rapporto di spessore di questo flusso tra i tag di dati.'
+      },
+      getToggleValue: 'setReferenceFluxValue',
+      closeMenuAfter: true
     },
 
     splitLink: {
@@ -300,6 +402,107 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     // Actions simples
     inverseIO: () => {
       drawing_area.inverseSelectedLinks()
+    },
+
+    // Rendre droit / Libérer (su-model/opensankey#665) : marque le flux cliqué
+    // comme « à garder droit » (shape_must_stay_straight) et le redresse tout de
+    // suite ; recliquer le libère. Le maintien est ensuite ré-appliqué
+    // automatiquement à chaque draw (donc à chaque changement de data tag) par
+    // NodePositioning.enforceStraightLinks via drawElements.
+    straightenLink: () => {
+      const link = contextualised_link
+      if (!link) return
+      const will_mark = !link.shape_must_stay_straight
+      // Snapshot du flag + des position_y/shape_position_dy de tous les nœuds
+      // visibles (le back-calc réécrit les écarts) pour un undo fidèle.
+      const old_flag = link.shape_must_stay_straight
+      const saved = drawing_area.sankey.visible_nodes_list.map(n => ({
+        n, y: n.position_y, dy: n.shape_position_dy
+      }))
+
+      const doToggle = () => {
+        link.shape_must_stay_straight = will_mark
+        if (will_mark) {
+          // Aligne immédiatement ; les futurs draws le maintiendront.
+          drawing_area.nodePositioning.straightenLink(link)
+        } else {
+          // Libéré : on ne le maintient plus, il reste où il est.
+          drawing_area.drawElements()
+        }
+        refreshThisAndToggleSaving()
+      }
+
+      const undoToggle = () => {
+        link.shape_must_stay_straight = old_flag
+        saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+
+      executeWithUndo(doToggle, undoToggle)
+    },
+
+    // Valeur courante du toggle « Rendre droit » (coche/état du libellé).
+    straightenLinkValue: () => {
+      return contextualised_link?.shape_must_stay_straight ?? false
+    },
+
+    // #1231 — « Droit aussi en désagrégeant » : marque le flux pour que sa droiture
+    // se propage dynamiquement aux flux enfant-enfant (descendants désagrégés) via
+    // enforceStraightLinks. Marque aussi shape_must_stay_straight (prérequis) pour que
+    // l'option ait un effet seule.
+    straightenChildren: () => {
+      const link = contextualised_link
+      if (!link) return
+      const will_mark = !link.shape_straight_include_children
+      const old_include = link.shape_straight_include_children
+      const old_straight = link.shape_must_stay_straight
+
+      const doToggle = () => {
+        link.shape_straight_include_children = will_mark
+        if (will_mark) link.shape_must_stay_straight = true
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+      const undoToggle = () => {
+        link.shape_straight_include_children = old_include
+        link.shape_must_stay_straight = old_straight
+        drawing_area.drawElements()
+        refreshThisAndToggleSaving()
+      }
+      executeWithUndo(doToggle, undoToggle)
+    },
+
+    // Valeur courante du toggle « Droit aussi en désagrégeant ».
+    straightenChildrenValue: () => {
+      return contextualised_link?.shape_straight_include_children ?? false
+    },
+
+    // #1231 — Mode proportionnel : désigner/retirer ce flux comme flux de référence. La
+    // médiane (centre de gravité) se cale sur le centre vertical du flux et le facteur de
+    // compression devient le ratio d'épaisseur de ce flux entre datatags. Transitoire :
+    // re-capture la référence puis redessine (f = 1 au moment de la sélection → pas de saut).
+    setReferenceFlux: () => {
+      const link = contextualised_link
+      if (!link) return
+      const np = drawing_area.nodePositioning
+      const is_ref = np.proportionalReferenceLink === link
+      np.setProportionalReferenceLink(is_ref ? undefined : link)
+      // Le même flux sert aux deux modes (proportionnel + échelle). On reste cohérent quel
+      // que soit le mode courant : à la sélection, re-capturer les deux références ; au
+      // retrait, restaurer l'échelle de base (échelle adaptée) en plus de la re-capture %.
+      if (is_ref) {
+        np.clearScaleAdaptation()
+      } else {
+        np.captureScaleReference()
+      }
+      np.captureProportionalReference()
+      drawing_area.drawElements()
+      refreshThisAndToggleSaving()
+    },
+
+    setReferenceFluxValue: () => {
+      return drawing_area.nodePositioning.proportionalReferenceLink === contextualised_link
     },
 
     // Style actions
