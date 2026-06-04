@@ -852,6 +852,15 @@ export const UniversalFileConverter = ({
           )
         }
         //setAutoLoad(false)
+      } else {
+        // Le statut a beau etre "termine", la recuperation du resultat peut
+        // echouer (ex: fichier introuvable cote serveur -> 404). Sans ce else,
+        // le code tombait en bas et affichait "Succes" alors que rien n'etait
+        // charge. On remonte l'erreur dans le dialogue.
+        setResult('FAILED Erreur chargement: ' + response.status + ' ' + response.statusText)
+        setProcessing(false)
+        setFailure(true)
+        return
       }
     } catch (error) {
       setResult('FAILED Erreur chargement JSON:' + error)
