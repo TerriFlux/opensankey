@@ -74,7 +74,6 @@ import { Type_JSON } from '../../types/Utils'
 import { clickSaveSVG } from './SankeyExports'
 import { ModalTemplate } from './SankeyTemplates'
 import { ModalExcelTemplate } from './ExcelTemplateModal'
-import { ModalTuto } from './SankeyTutorials'
 import {
   loadUniversalJSON,
 } from '../../Persistence/UniversalJSONCompression'
@@ -301,16 +300,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     ref_setter_show_modal_file_converter,
     ref_setter_png_saver_res_h, ref_setter_png_saver_res_v, ref_setter_show_modal_png_saver,
     ref_setter_show_modal_pdf_saver,
-    ref_setter_show_modal_apply_layout, ref_setter_show_modal_tuto,
+    ref_setter_show_modal_apply_layout,
   } = new_data.menu_configuration.dict_setter_show_dialog
   // Hook -----------------------------------
-  const [show_tuto, set_show_tuto] = useState(false)
   const _load_json = useRef<HTMLInputElement>(null)
   const _load_sankeymatic = useRef<HTMLInputElement>(null)
-
-  ref_setter_show_modal_tuto.current = set_show_tuto
-
-
 
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
@@ -321,6 +315,15 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const open_converter_with = (config_key: keyof typeof CONVERTER_CONFIGS) => {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
       CONVERTER_CONFIGS[config_key], '', false
+    )
+    ref_setter_show_modal_file_converter.current!(true)
+  }
+
+  // Charge directement le tutoriel unique (SankeyData/tutorials/Tutoriel.json)
+  // via le universal converter, sans modale de navigation par dossiers.
+  const open_tutorial_file = () => {
+    new_data.menu_configuration.ref_universal_converter_set_config.current(
+      CONVERTER_CONFIGS['load_example_json'], 'tutorials/Tutoriel.json.gz', true
     )
     ref_setter_show_modal_file_converter.current!(true)
   }
@@ -680,7 +683,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     <Button
       variant='menutop_button'
       size='sizeMenuTopButton'
-      onClick={() => ref_setter_show_modal_tuto.current!(true)}
+      onClick={() => open_tutorial_file()}
       className='tutorials_button'
     >
       <Box
@@ -855,7 +858,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       </MenuItem>
       <MenuItem
         icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
-        onClick={() => ref_setter_show_modal_tuto.current!(true)}
+        onClick={() => open_tutorial_file()}
       >
         {t('Menu.formation')}
       </MenuItem>
@@ -942,11 +945,6 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       new_data={new_data}
       show={show_excel_template}
       setShow={set_show_excel_template}
-    />
-    <ModalTuto
-      new_data={new_data}
-      show_tuto={show_tuto}
-      set_show_tuto={set_show_tuto}
     />
   </>
 }

@@ -80,7 +80,6 @@ export interface IType_DictHookRefSetterShowDialogComponents {
   // Modal - Welcome
   ref_setter_modal_welcome_active_page: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_welcome: MutableRefObject<Dispatch<SetStateAction<boolean>>>
-  ref_setter_show_modal_tuto: MutableRefObject<Dispatch<SetStateAction<boolean>>>
   ref_setter_show_modal_support: MutableRefObject<Dispatch<SetStateAction<boolean>>>
 
   ref_setter_show_modal_file_converter: MutableRefObject<Dispatch<SetStateAction<boolean>>>
@@ -565,7 +564,6 @@ export class Class_MenuConfig {
       // Modal - Welcome
       ref_setter_modal_welcome_active_page: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_welcome: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
-      ref_setter_show_modal_tuto: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
       ref_setter_show_modal_support: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
 
       ref_setter_show_modal_file_converter: useRef<Dispatch<SetStateAction<boolean>>>(() => null),
@@ -630,7 +628,6 @@ export class Class_MenuConfig {
   public closeAllMenus() {
     this.closeConfigMenu()
     this._dict_setter_show_dialog.ref_setter_show_modal_welcome.current(false)
-    this._dict_setter_show_dialog.ref_setter_show_modal_tuto.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_support.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(false)
     this._dict_setter_show_dialog.ref_setter_show_modal_rich_text_editor.current(false)
