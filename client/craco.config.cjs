@@ -35,6 +35,11 @@ process.env.REACT_APP_GIT_COMMIT_DATE = commitDate
 // so a single link covers both "what changed" and "previous versions".
 process.env.REACT_APP_CHANGELOG_URL =
     process.env.REACT_APP_CHANGELOG_URL || '/changelog'
+// Archived versions served by the SA Flask backend (route /versions) — lists
+// the /v<X.Y.Z>/ slots produced by archive_version.sh. Discovered at runtime
+// (the list grows after each deploy), so it can't be a build-time constant.
+process.env.REACT_APP_VERSIONS_URL =
+    process.env.REACT_APP_VERSIONS_URL || '/versions'
 
 module.exports = {
     devServer: {

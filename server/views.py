@@ -142,6 +142,30 @@ content.insertBefore(nav,content.firstChild);
     return Response(page, mimetype="text/html")
 
 
+@sankeyapp.route("/versions")
+def versions():
+    """List archived version slots so the topbar info popover can link to them.
+
+    Each archived version is deployed by archive_version.sh as a self-contained
+    slot dir ~/<env>_v<X.Y.Z>_opensankey served under /v<X.Y.Z>/. We discover
+    them by globbing those dirs — archiving a version makes it appear here with
+    no manual registry to keep in sync. Returns [{version, url}] newest-first.
+    """
+    import glob
+    import re
+
+    env = os.environ.get("ENV", "prod")
+    home = os.path.expanduser("~")
+    found = set()
+    for d in glob.glob(os.path.join(home, f"{env}_v*_opensankey")):
+        m = re.search(rf"{re.escape(env)}_v(\d+\.\d+\.\d+[^_/]*)_opensankey$", d)
+        if m:
+            found.add(m.group(1))
+    # Semantic descending sort (1.1.10 > 1.1.9), tolerant of pre-release suffixes.
+    ordered = sorted(found, key=lambda v: [int(x) for x in re.findall(r"\d+", v)], reverse=True)
+    return jsonify([{"version": v, "url": f"/v{v}/"} for v in ordered])
+
+
 @sankeyapp.route("/<path:path>")
 def goto(path):
     try:
