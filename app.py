@@ -3,6 +3,15 @@ import flaskfilemanager
 import os
 import secrets
 
+# SankeyData (tutoriels/templates servis) est le submodule a la racine de ce
+# checkout. opensankey etant installe (copie) en site-packages cote serveur, il
+# ne peut pas deduire ce chemin depuis son propre __file__ ; on le lui transmet
+# via l'env SANKEY_DATA. setdefault => un vrai env pose a la main reste prioritaire.
+os.environ.setdefault(
+    "SANKEY_DATA",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "SankeyData"),
+)
+
 try:
     from .server import create_app
 except Exception:
