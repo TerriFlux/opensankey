@@ -11,7 +11,17 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ---
 
-## [Unreleased] — Mai 2026
+## [1.1.5] — 2026-06-04
+
+### Application intégrée : tableur + documentation côte à côte avec le diagramme ([su-model/sankeyapplication#163](https://gitlab.com/su-model/sankeyapplication/-/issues/163), [#167](https://gitlab.com/su-model/sankeyapplication/-/issues/167))
+
+C'est le changement majeur de la version : OpenSankey passe d'un éditeur de diagramme à une **application complètement intégrée**, où la saisie des données (tableur) et la documentation se font dans l'application, à côté du diagramme, sans aller-retour avec Excel.
+
+- **Tableur intégré (Univer)** : nouveau classeur à onglets calqué sur le format Excel SankeyExcelParser (Flux, Nœuds, Données, Étiquettes, Stocks, Ratio flux, Ratio stock, Chaînage des stocks), monté dans la « grande zone » via `MainZoneTabs`. Remplace l'ancien `@silevis/reactgrid`. Édition directe répercutée sur le modèle Sankey (write-back `UniverSankeyBridge`), sélecteur de colonnes optionnelles façon filtre Excel (`ColumnSelector`), largeur de colonnes auto-bornée à l'ouverture d'un onglet, modale « Ajouter une contrainte » (`AddConstraintModal`) pour ratios de flux / de stock, opérations de hiérarchie (`UniverHierarchyOps`). Couleurs alignées sur `excel_formatter.py`. Univer (`@univerjs/presets`) chargé en **dynamic import** (chunk séparé, hors bundle initial) ; l'instance ne vit que pendant que l'onglet est actif.
+- **Panneau de documentation (`DocPanel`)** : onglet « Doc » avec éditeur Markdown + aperçu (modes `edit` / `preview` / `split`), rendu des équations LaTeX via `remark-math` + `rehype-katex` (KaTeX), insertion d'images (référence `img://id`). Contenu stocké dans `ApplicationData.documentation_markdown` (+ `documentation_images`) et persisté en JSON avec le diagramme ; l'édition marque les données comme non sauvegardées (Ctrl+S).
+- **Grande zone en split-view (`MainZoneTabs`)** : diagramme, tableur et doc affichables simultanément, pilotés par trois bascules de la barre du haut (`main_zone_show_diagram` / `_spreadsheet` / `_doc`). Séparateurs déplaçables (vertical diagramme/colonne droite, horizontal pour la doc en bas, tableur/doc dans les modes `sheet-*`), dispositions de doc multiples (`sheet-right/left/top/bottom`, `window-bottom`, `diagram-bottom`, doc seule), recadrage automatique du diagramme dans l'espace restant (`getMainZoneRightReservedPx` + `areaAutoFit`).
+
+Détail technique : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
 
 ### Tooltips : détail des flux enfants par dimension, épingle et déplacement ([su-model/sankeyapplication#158](https://gitlab.com/su-model/sankeyapplication/-/issues/158))
 
@@ -49,14 +59,12 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 Voir : [submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/CHANGELOG.md).
 
-## [Unreleased] — POC dual-output : colonne « Valeur complétée » dans la feuille Analyse
-
-### Ajouté
+### POC dual-output : colonne « Valeur complétée » dans la feuille Analyse
 
 - **Mode dual-output pour la réconciliation** ([server/views.py](server/views.py)) : le dialog de réconciliation expose désormais deux cases dans l'onglet *Solveur*, **« Réconcilier »** (cochée par défaut) et **« Compléter (sans redondance) »** (décochée). Quand les deux sont cochées, le solveur effectue **2 passes** : la 1ère donne la `Valeur reconciliée` (mode standard), la 2ème — en *no-redundancy* — donne une nouvelle colonne `Valeur complétée` dans l'onglet *Analyse des résultats* (les mesures sont préservées telles quelles, seuls les flux inconnus sont calculés). Permet de comparer côte à côte les valeurs ajustées et les mesures préservées dans un seul fichier de sortie.
 - **Backward-compat** : l'ancien flag `remove_redundancy: true` (utilisé par l'action OSP « Compléter le diagramme ») est mappé sur le mode « Compléter seul » (1 passe `no-redundancy`, résultat dans `Valeur reconciliée`).
 
-### Détails techniques
+  Détails techniques :
 
 - **MFA** : `optimisation()` accepte `target_field` (`"data_value"` ou `"completed_value"`) et `skip_reset_results`. Quand `target_field == "completed_value"` et qu'un `alterego` existe déjà sur la `Data`, `mfa_problem_output()` met juste à jour `alterego.completed_value` sans rebuild.
 - **SEP** : `Data.completed_value` (+ `StockData.completed_value`) et nouvelle constante `ANALYSIS_VALUE_COMPLETED`. La colonne « Valeur complétée » est insérée entre `Valeur reconciliée` et `Borne inférieure` dans `ANALYSIS_SHEET_COLS_2` (et idem pour `stocks_analysis`).
