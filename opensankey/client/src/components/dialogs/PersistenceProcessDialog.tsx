@@ -812,12 +812,17 @@ export const UniversalFileConverter = ({
         if (input_format == 'example_json') {
           app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
         } else {
-          // Reconciliation in-place inside a view (blob→blob from the active view)
-          // must only touch the current view's drawing area — never replace
-          // app_data, otherwise the master and the other views are wiped.
+          // Loading into the current view only (never replace app_data, otherwise
+          // the master and the other views are wiped). Two triggers:
+          //   - blob→blob reconciliation from the active view (always view-only),
+          //   - Excel import with the user-set ``only_current_view`` option
+          //     (checked by default, only shown when inside a view).
+          const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
           const view_only =
-            input_format == 'blob' && output_format == 'blob' &&
-            app_data.drawing_area.id !== default_main_sankey_id
+            is_inside_view && (
+              (input_format == 'blob' && output_format == 'blob') ||
+              (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
+            )
           retrieveJSONResults(
             app_data,
             jsonData,

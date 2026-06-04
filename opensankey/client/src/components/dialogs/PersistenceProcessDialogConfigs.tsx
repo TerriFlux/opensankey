@@ -1,4 +1,5 @@
 import { MenuCondition } from './SankeyMenuContext'
+import { default_main_sankey_id } from '../../types/Utils'
 
 export const translations = {
   ProcessDialog: {
@@ -909,6 +910,34 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
 
   // =================== EXCEL ===================
   excel: {
+    // Charger l'Excel dans la seule vue courante au lieu de réinitialiser tout
+    // le diagramme. Visible (et coché par défaut) uniquement quand on est dans
+    // une vue (drawing_area != maître) ; sur le diagramme principal l'import
+    // remplace tout comme avant. Câblé dans le calcul de ``view_only`` du
+    // chargement (PersistenceProcessDialog).
+    only_current_view: {
+      group: 'content',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Load only into the current view',
+        fr: 'Charger seulement dans la vue courante',
+        es: 'Cargar solo en la vista actual',
+        de: 'Nur in die aktuelle Ansicht laden',
+        it: 'Caricare solo nella vista corrente'
+      },
+      tooltips: {
+        en: 'If checked: the Excel file is loaded into the current view only, without resetting the master diagram or the other views. If unchecked: loading replaces the whole diagram (all views).',
+        fr: 'Si coché : le fichier Excel est chargé uniquement dans la vue courante, sans réinitialiser le diagramme maître ni les autres vues. Si décoché : le chargement remplace tout le diagramme (toutes les vues).',
+        es: 'Si está marcado: el archivo Excel se carga solo en la vista actual, sin reiniciar el diagrama maestro ni las demás vistas. Si no está marcado: la carga reemplaza todo el diagrama (todas las vistas).',
+        de: 'Wenn aktiviert: die Excel-Datei wird nur in die aktuelle Ansicht geladen, ohne das Master-Diagramm oder die anderen Ansichten zurückzusetzen. Wenn deaktiviert: das Laden ersetzt das gesamte Diagramm (alle Ansichten).',
+        it: 'Se selezionato: il file Excel viene caricato solo nella vista corrente, senza reimpostare il diagramma master o le altre viste. Se non selezionato: il caricamento sostituisce l\'intero diagramma (tutte le viste).'
+      },
+      visibilityConditions: [
+        { type: 'custom', customCheck: (app_data) => app_data.drawing_area.id !== default_main_sankey_id }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     with_nodes_sheets: {
       group: 'sheets',
       default: true,
