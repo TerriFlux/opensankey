@@ -2368,25 +2368,16 @@ export abstract class LinkDrawLabelBase extends DrawLabelBase {
       .attr('text-anchor', label_anchor)
   }
 
-  /**
-   * Le label (nom ou valeur) est-il auto-placé AU-DESSUS du flux faute de place,
-   * parce que sa police est plus grande que l'épaisseur du flux ? (Même condition que le
-   * placement « top » automatique, cf. getTextPathOffset / getLabelPos.) Dans ce cas le
-   * label déborde hors du flux : il n'a pas le corps du flux derrière lui pour le porter.
-   */
-  protected isAutoPlacedAboveFlux(): boolean {
-    return (this._specific_label_values.pos_auto ?? false) && this.getFontSize() > this.link.thickness
-  }
-
   protected applyTextStyle(
     selection: d3.Selection<SVGTextElement, unknown, SVGGElement, unknown> | undefined
   ) {
-    // Quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il prend la
-    // couleur du flux (association visuelle ; pas de corps de flux derrière lui pour le porter).
-    // Activé par défaut. Sinon, comportement habituel (couleur dédiée du label ou flux).
-    const fill = this.isAutoPlacedAboveFlux()
-      ? this._element.getShapeColorToUse()
-      : (this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
+    // Si la couleur du label est verrouillée (color_sustainable), elle prime toujours.
+    // Sinon : quand le label déborde au-dessus du flux (trop gros pour tenir dedans), il prend
+    // la couleur du flux (association visuelle ; pas de corps de flux derrière lui pour le porter) ;
+    // dans les autres cas, comportement habituel (= couleur du flux quand non verrouillé).
+    const fill = this._label_values.color_sustainable
+      ? this._label_values.color
+      : this._element.getShapeColorToUse()
     selection
       ?.attr('font-size', String(this.getFontSize()) + 'px')
       .attr('font-family', this._label_values.font_family)
