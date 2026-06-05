@@ -47,6 +47,8 @@ const ViewerInner: FC<ViewerSankeyApplicationProps> = ({ initial_data, ...option
     if (initial_data && app_data.menu_configuration) {
       app_data.fromJSON(initial_data as unknown as Type_JSON)
       app_data.draw()
+      // Applique l'état initial demandé via props viewer (position_mode / data_tag_selection)
+      app_data.applyPublishStateOptions()
     }
   }, [app_data, initial_data])
 

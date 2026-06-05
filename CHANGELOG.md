@@ -13,7 +13,9 @@ Ce fichier agrège les changements visibles pour les utilisateurs de SankeyAppli
 
 ## [Unreleased]
 
-_(à compléter)_
+### Viewers : état initial paramétrable (mode de navigation + data tag présélectionné)
+
+- Nouvelles options de publication `position_mode` (`'absolute' | 'proportional' | 'scale_adapted'`) et `data_tag_selection` (`{ groupe : tag }`, résolus par id ou par nom), acceptées via `window.sankey` et en props des Viewers `ViewerOpenSankeyApp` / `ViewerSankeyApplication`. Permet d'ouvrir un diagramme embarqué directement dans le mode de navigation voulu et sur un data tag donné. Détail technique : [submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md](submodules/OpenSankey+/submodules/OpenSankey/CHANGELOG.md).
 
 ## [1.1.5] — 2026-06-04
 

@@ -126,6 +126,42 @@ Filtres topbar
      - ``true``
      - Affiche le filtre par valeur.
 
+État initial
+~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+   :widths: 25 20 55
+
+   * - Option
+     - Type
+     - Effet
+   * - ``position_mode``
+     - ``'absolute' | 'proportional' | 'scale_adapted'``
+     - Impose le mode de navigation/positionnement à l'ouverture (équivalent d'un
+       clic dans la barre du bas : absolu, proportionnel/pourcentage, ou échelle
+       adaptée). Valeur invalide ignorée.
+   * - ``data_tag_selection``
+     - ``Record<string, string>``
+     - Présélectionne un data tag par groupe de data tags :
+       ``{ groupe : tag }``. Le groupe et le tag se résolvent par **id ou par nom**.
+       Un groupe ou tag introuvable est ignoré (``console.warn``).
+
+Ces options sont appliquées après le chargement du diagramme (et de l'éventuel
+``diagram_layout``) via ``Class_ApplicationData.applyPublishStateOptions()`` ; la
+sélection des data tags est appliquée avant le mode de positionnement car les
+modes proportionnel/échelle capturent leur référence sur le data tag courant.
+
+Exemple :
+
+.. code-block:: tsx
+
+   position_mode="proportional"
+   data_tag_selection={{
+     "Année":  "2030",
+     "Scénario": "tendanciel",
+   }}
+
 Multi-diagrammes
 ~~~~~~~~~~~~~~~~
 
