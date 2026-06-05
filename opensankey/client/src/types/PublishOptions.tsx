@@ -10,6 +10,10 @@
 // (ViewerOpenSankeyApp / ViewerSankeyApplication) : voir applyViewerOptions().
 // ==================================================================================================
 
+// Modes de navigation / positionnement (cf. DrawingArea.setAbsoluteMode / setProportionalMode /
+// setScaleAdaptedMode et styles_dict['default'].shape_position_type).
+export type Type_PositionMode = 'absolute' | 'proportional' | 'scale_adapted'
+
 export interface SankeyGlobals {
   // Mode
   publish?: boolean      // true => is_static
@@ -42,6 +46,10 @@ export interface SankeyGlobals {
   data_type_intervals?: boolean   // default true
   value_filter?: boolean          // default true
 
+  // État initial
+  position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
+  data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
+
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
 }
@@ -60,6 +68,8 @@ export interface PublishOptions {
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
+  position_mode: Type_PositionMode | null
+  data_tag_selection: Record<string, string> | null
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -76,6 +86,17 @@ declare global {
 
 const bool = (v: unknown, def: boolean): boolean => (typeof v === 'boolean' ? v : def)
 const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
+const POSITION_MODES: Type_PositionMode[] = ['absolute', 'proportional', 'scale_adapted']
+const posMode = (v: unknown): Type_PositionMode | null =>
+  (typeof v === 'string' && (POSITION_MODES as string[]).includes(v)) ? v as Type_PositionMode : null
+const strRecord = (v: unknown): Record<string, string> | null => {
+  if (!v || typeof v !== 'object' || Array.isArray(v)) return null
+  const out: Record<string, string> = {}
+  for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+    if (typeof val === 'string') out[k] = val
+  }
+  return Object.keys(out).length > 0 ? out : null
+}
 
 let _warned_sous_filieres = false
 
@@ -107,6 +128,8 @@ export const getPublishOptions = (): PublishOptions => {
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
+    position_mode: posMode(s.position_mode),
+    data_tag_selection: strRecord(s.data_tag_selection),
     logo: str(s.logo),
     header: str(s.header),
     diagram: (typeof s.diagram === 'string')
@@ -149,6 +172,8 @@ export type ViewerSankeyOptions = {
   data_type?: boolean
   data_type_intervals?: boolean
   value_filter?: boolean
+  position_mode?: Type_PositionMode
+  data_tag_selection?: Record<string, string>
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -168,6 +193,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
+    'position_mode', 'data_tag_selection',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {

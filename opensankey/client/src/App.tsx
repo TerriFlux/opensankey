@@ -112,9 +112,11 @@ export const OpenSankeyApp = ({
         // déclenché par fromJSON ci-dessus. Sans ce rafraîchissement, les menus/toolbars
         // (barre de séquence, verrous) gardent l'état d'avant-layout — visible en viewer publish.
         app_data.menu_configuration.updateAllMenuComponents()
+        app_data.applyPublishStateOptions()
         applyPublishRecenter()
       }).catch(e => console.log(e))
     } else {
+      app_data.applyPublishStateOptions()
       applyPublishRecenter()
     }
   }
