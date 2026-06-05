@@ -963,6 +963,55 @@ export class Class_ApplicationData {
   }
 
   /**
+   * Applique l'état initial demandé par les options de publication (`publish_options`) :
+   * présélection d'un data tag dans un ou plusieurs groupes, puis mode de navigation
+   * (absolu / proportionnel / échelle adaptée). À appeler APRÈS le chargement du diagramme
+   * (et l'éventuel layout), une fois que les tags et positions existent.
+   *
+   * - `data_tag_selection` est un dict { groupe : tag } où groupe/tag se résolvent par id OU par nom.
+   *   Appliqué AVANT le mode car les modes proportionnel/échelle capturent leur référence sur le
+   *   datatag courant.
+   * - `position_mode` impose le mode de positionnement, comme un clic dans la barre du bas.
+   * @memberof Class_ApplicationData
+   */
+  public applyPublishStateOptions(): void {
+    const opts = this.publish_options
+    if (!opts.data_tag_selection && !opts.position_mode) return
+    const sankey = this._drawing_area.sankey
+
+    // 1) Présélection des data tags
+    if (opts.data_tag_selection) {
+      for (const [group_key, tag_key] of Object.entries(opts.data_tag_selection)) {
+        const group = sankey.data_taggs_list.find(g => g.id === group_key || g.name === group_key)
+        if (!group) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] position/data_tag_selection : groupe de data tag introuvable « ${group_key} »`)
+          continue
+        }
+        const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+        if (!tag) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] data_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
+          continue
+        }
+        group.selectTagsFromId(tag.id)
+      }
+    }
+
+    // 2) Mode de navigation
+    if (opts.position_mode) {
+      const current = sankey.styles_dict['default'].shape_position_type
+      if (current !== opts.position_mode) {
+        if (opts.position_mode === 'absolute') this._drawing_area.setAbsoluteMode()
+        else if (opts.position_mode === 'proportional') this._drawing_area.setProportionalMode()
+        else if (opts.position_mode === 'scale_adapted') this._drawing_area.setScaleAdaptedMode()
+      }
+    }
+
+    this._drawing_area.draw()
+  }
+
+  /**
    * Create a waiting toast and add function to waiting queue.
    * @param {() => void} funct
    * @param {Type_TextForToastPromise} [intake] Info text for loading, success or error
