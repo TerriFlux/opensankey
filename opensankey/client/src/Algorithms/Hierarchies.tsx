@@ -26,7 +26,7 @@
 
 import { Class_Tag } from '../types/Tag'
 import { Class_NodeElement } from '../Elements/Node'
-import { Class_NodeDimension } from '../Elements/NodeDimension'
+import { Class_NodeDimension, Type_ContainerMode } from '../Elements/NodeDimension'
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_ApplicationData } from '../types/ApplicationData'
 import { NodePositioning } from './NodePositioning'
@@ -380,27 +380,48 @@ export const aggregate = (
 
 /**
  * #1231 — Reset des désagrégations LOCALES (hybrides). Quand l'utilisateur a désagrégé
- * des nœuds au clic droit (force_show_children sur certaines dims), le diagramme est en
- * état HYBRIDE (niveaux mixtes) et le menu Hiérarchies global ne doit plus agir. Ce reset
- * ramène à l'état uniforme montré par le menu : il repositionne chaque parent local sur
- * le slot de ses enfants (plusieurs passes pour les désagrégations imbriquées), efface
- * tous les force-flags (showAccordingToLevelTags), puis réorganise / re-base le mode %.
+ * des nœuds au clic droit, le diagramme est en état HYBRIDE (niveaux mixtes) et le menu
+ * Hiérarchies global ne doit plus agir. Ce reset ramène à l'état uniforme montré par le
+ * menu. Couvre TOUS les modes de désagrégation locale :
+ *  - simple (force_show_children) : repositionne le parent sur le slot de ses enfants ;
+ *  - englobement (container_mode) : détache le cadre géométrique (le flag + le style cadre
+ *    seront nettoyés par showAccordingToLevelTags → unsetForcingToShow) puis repositionne ;
+ *  - expansion (is_expanded) : `contract()` détruit les liens d'expansion et restaure les
+ *    liens externes masqués.
+ * Puis efface tous les force-flags (showAccordingToLevelTags) et réorganise / re-base le mode %.
  */
 export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
   const sankey = new_data.drawing_area.sankey
   const dims_with_children: Class_NodeDimension[] = []
+  const container_dims: Class_NodeDimension[] = []
+  const expanded_dims: Class_NodeDimension[] = []
   sankey.nodes_list.forEach(n => {
     n.dimensions_as_parent.forEach(d => {
-      if (d.force_show_children) dims_with_children.push(d as Class_NodeDimension)
+      // États mutuellement exclusifs (cf. les setters de Class_NodeDimension).
+      if (d.is_expanded) expanded_dims.push(d as Class_NodeDimension)
+      else if (d.container_mode) container_dims.push(d as Class_NodeDimension)
+      else if (d.force_show_children) dims_with_children.push(d as Class_NodeDimension)
     })
   })
-  if (dims_with_children.length === 0) return
+  if (dims_with_children.length === 0 && container_dims.length === 0 && expanded_dims.length === 0) return
 
   const Do = () => {
-    // Repositionner chaque parent local sur le bord haut de ses enfants. Plusieurs
-    // passes pour propager des feuilles vers le haut en cas de désagrégations imbriquées.
+    // 1. Contracter les expansions latérales (détruit les liens d'expansion, restaure les
+    //    liens externes masqués, reset le flag).
+    expanded_dims.forEach(d => contract(new_data, d.parent as Class_NodeElement))
+    // 2. Détacher les cadres englobants de leurs enfants (le flag container_mode et le
+    //    style cadre sont nettoyés ensuite par showAccordingToLevelTags).
+    container_dims.forEach(d => {
+      const p = d.parent as Class_NodeElement
+      ;(d.children as Class_NodeElement[]).forEach(c => p.dettachNodeFromCont(c))
+      if (p.attached_node.length === 0) p.tied_to_nodes = false
+    })
+    // 3. Repositionner chaque parent désagrégé (simple OU englobant) sur le bord haut de
+    //    ses enfants. Plusieurs passes pour propager des feuilles vers le haut en cas de
+    //    désagrégations imbriquées.
+    const dims_to_restack = [...dims_with_children, ...container_dims]
     for (let pass = 0; pass < 4; pass++) {
-      dims_with_children.forEach(d => {
+      dims_to_restack.forEach(d => {
         const children = d.children as Class_NodeElement[]
         if (children.length === 0) return
         const top = Math.min(...children.map(c => c.position_y))
@@ -420,6 +441,43 @@ export const resetLocalHierarchy = (new_data: Class_ApplicationData) => {
   Do()
 }
 
+
+/**
+ * #1231 — Applique l'ENGLOBEMENT (container) sur une dim, en réutilisant le cœur
+ * de NodeActions._runContainerModeWithUndo via les API publiques. Utilisé par la
+ * désagrégation GLOBALE pour réappliquer le type mémorisé d'un nœud (clic droit
+ * englobant → menu Hiérarchies). Le parent devient cadre, ses enfants remplissent
+ * son slot (mode d'écart configuré) et sont attachés à l'enveloppe.
+ *
+ * `setContainerMode(mode, true)` est appelé avec fromJSON=true pour POSER le flag
+ * et le style sans déclencher de reorg/draw transitoire : l'appelant (Toolbar)
+ * fait un unique draw final. Le positionnement (slot + enveloppe) est fait ici.
+ */
+export const applyContainerModeForDim = (
+  new_data: Class_ApplicationData,
+  dim: Class_NodeDimension,
+  mode: Exclude<Type_ContainerMode, null>
+) => {
+  const parent = dim.parent as Class_NodeElement
+  // Lire le slot AVANT de passer le parent en cadre (sinon getShapeHeightToUse
+  // renvoie l'enveloppe des enfants → circulaire).
+  const parent_top = parent.position_y
+  const parent_h = parent.getShapeHeightToUse()
+  dim.setContainerMode(mode, true)
+  parent.tied_to_nodes = true
+  const children = dim.children as Class_NodeElement[]
+  children.forEach(c => { c.position_x = parent.position_x })
+  new_data.drawing_area.nodePositioning.layoutChildrenInParentSlot(children, parent_top, parent_h)
+  children.forEach(c => parent.attachNodeToCont(c))
+  parent.expandToContainAttachedNodes()
+  // Reorg E/S sur le parent, les enfants ET leurs voisins externes.
+  const to_reorg = new Set<Class_NodeElement>([parent, ...children])
+  children.forEach(c => {
+    c.input_links_list.forEach(l => to_reorg.add(l.source as Class_NodeElement))
+    c.output_links_list.forEach(l => to_reorg.add(l.target as Class_NodeElement))
+  })
+  to_reorg.forEach(n => n.reorganizeIOLinks())
+}
 
 /**
  * Désagrégation simple - descend d'un niveau hiérarchique
