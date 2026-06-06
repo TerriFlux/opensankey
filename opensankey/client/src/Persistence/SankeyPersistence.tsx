@@ -1039,7 +1039,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.legend_bg_border) json_legend['legend_bg_border'] = legend.legend_bg_border
     if (legend.legend_bg_color != default_legend_bg_color) json_legend['legend_bg_color'] = legend.legend_bg_color
     if (legend.legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = legend.legend_bg_opacity
-    if (legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
+    if (!legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
     if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
