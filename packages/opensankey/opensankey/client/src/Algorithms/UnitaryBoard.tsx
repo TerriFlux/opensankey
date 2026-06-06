@@ -10,9 +10,6 @@ import { Class_DataTagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 // Fonction utilitaire pour gérer les styles unitaires dynamiquement
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
   drawing_area.bypass_redraws = true
-  drawing_area.legend.position_x = 50
-  drawing_area.legend.position_y = 250
-  drawing_area.legend.stick_to_drawing = false
   const center_nodes = drawing_area.sankey.visible_nodes_list
     .filter(node => node.tags_dict['unitary']?.is_selected ||
             (node.tags_dict['product_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['product_unitary']?.is_selected ||
@@ -20,6 +17,14 @@ export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
 
 
   if (center_nodes.length === 0) return
+
+  // Le repositionnement de la légende fait partie du layout du board unitaire :
+  // on ne le fait QUE quand des nœuds unitaires sont actifs. Le faire avant ce
+  // garde écrasait la position de la légende sur tout diagramme normal à chaque
+  // appel (ex. changement de niveau d'agrégation), la collant à gauche.
+  drawing_area.legend.position_x = 50
+  drawing_area.legend.position_y = 250
+  drawing_area.legend.stick_to_drawing = false
   const node_type = drawing_area.sankey.node_taggs_dict['type de noeud']
   const productTag = node_type?.tags_dict['produit']
   const _sectorTag = node_type?.tags_dict['secteur']
