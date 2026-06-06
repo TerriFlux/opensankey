@@ -34,7 +34,7 @@ import {
 import { Class_DataTag, Class_LevelTag, Class_Tag } from '../types/Tag'
 import { Class_DataTagGroup } from '../types/TagGroup'
 import { Class_DrawingArea } from '../types/DrawingArea'
-import { PAPER_TARGET_FONT_SIZES } from '../Elements/ElementsAttributesConfig'
+import { PAPER_TARGET_FONT_SIZES, Type_StraightMode } from '../Elements/ElementsAttributesConfig'
 import { NodeImportExportAboveBelowStyle, NodeImportExportCloseStyle, NodeLeftExtremityStyle, NodeRightExtremityStyle, NodeSectorStyle } from '../Elements/ElementStyle'
 
 
@@ -2828,39 +2828,63 @@ export class NodePositioning {
       L.is_visible && !L.shape_is_recycling && L.source !== L.target &&
       !(echangeTag && (L.source.hasGivenTag(echangeTag) || L.target.hasGivenTag(echangeTag)))
 
-    // Flux à redresser = marqués visibles + (si include_children) flux visibles dont
-    // source ET cible descendent des nœuds d'un flux marqué (même hidden).
-    const to_straighten = new Set<Class_LinkElement>()
+    // Mode d'ancrage effectif d'un flux. Source de vérité = `shape_straight_mode`
+    // (enum). Rétrocompat : un ancien fichier ne portant que `shape_must_stay_straight`
+    // se comporte comme l'ancien modèle, soit l'ancrage 'source'. 'none' = libre.
+    const effectiveMode = (L: Class_LinkElement): Type_StraightMode | null => {
+      const m = L.shape_straight_mode
+      if (m && m !== 'none') return m
+      return L.shape_must_stay_straight ? 'source' : null
+    }
+
+    // Flux à redresser → mode. Marqués visibles + (si include_children) flux visibles
+    // dont source ET cible descendent des nœuds d'un flux marqué (même hidden) ; les
+    // enfants héritent du mode du parent.
+    const to_straighten = new Map<Class_LinkElement, Type_StraightMode>()
     this.drawingArea.sankey.links_list.forEach(L => {
-      if (!L.shape_must_stay_straight) return
-      if (isStraightenable(L)) to_straighten.add(L)
+      const mode = effectiveMode(L as Class_LinkElement)
+      if (!mode) return
+      if (isStraightenable(L)) to_straighten.set(L as Class_LinkElement, mode)
       if (L.shape_straight_include_children) {
         this.collectDescendantStraightLinks(L as Class_LinkElement, isStraightenable)
-          .forEach(c => to_straighten.add(c))
+          .forEach(c => { if (!to_straighten.has(c)) to_straighten.set(c, mode) })
       }
     })
     if (to_straighten.size === 0) return false
 
     // Offsets d'accroche relatifs (invariants par translation), capturés depuis le
     // cache AVANT tout déplacement.
-    type SItem = { L: Class_LinkElement, startOff: number, endOff: number }
+    type SItem = { L: Class_LinkElement, mode: Type_StraightMode, startOff: number, endOff: number }
     const items: SItem[] = []
-    to_straighten.forEach(L => {
+    to_straighten.forEach((mode, L) => {
       const s = (L.source as Class_NodeElement).getOutputLinkStartingPoint(L)
       const e = (L.target as Class_NodeElement).getInputLinkEndingPoint(L)
       if (!s || !e) return
-      items.push({ L, startOff: s.y - L.source.position_y, endOff: e.y - L.target.position_y })
+      items.push({ L, mode, startOff: s.y - L.source.position_y, endOff: e.y - L.target.position_y })
     })
     // Amont → aval : un nœud déplacé comme cible doit l'être avant d'être source.
     items.sort((a, b) => a.L.source.position_u - b.L.source.position_u)
 
     let moved = false
-    items.forEach(({ L, startOff, endOff }) => {
-      const delta = (L.source.position_y + startOff) - (L.target.position_y + endOff)
-      if (Math.abs(delta) > 0.5) {
-        L.target.position_y += delta
-        moved = true
+    items.forEach(({ L, mode, startOff, endOff }) => {
+      const srcAccr = L.source.position_y + startOff   // y de l'accroche côté source
+      const tgtAccr = L.target.position_y + endOff      // y de l'accroche côté cible
+      // Ligne droite cible selon le mode (y croît vers le bas → min = le plus haut).
+      let line: number
+      switch (mode) {
+      case 'target': line = tgtAccr; break
+      case 'highest': line = Math.min(srcAccr, tgtAccr); break
+      case 'lowest': line = Math.max(srcAccr, tgtAccr); break
+      // 'source' (défaut) et 'absolute' (réservé → repli sur 'source' pour l'instant).
+      default: line = srcAccr; break
       }
+      // Amène chaque accroche sur la ligne en déplaçant son nœud. Le nœud de
+      // référence du mode a un delta nul (line = son accroche) → il ne bouge pas ;
+      // 'highest'/'lowest' déplacent les deux vers la ligne commune.
+      const ds = line - srcAccr
+      if (Math.abs(ds) > 0.5) { L.source.position_y += ds; moved = true }
+      const dt = line - tgtAccr
+      if (Math.abs(dt) > 0.5) { L.target.position_y += dt; moved = true }
     })
     return moved
   }

@@ -55,6 +55,11 @@ export const default_auto_y = false
 export const default_dx = 200
 export const default_dy = 50
 export type Type_Orientation = 'hh' | 'vv' | 'vh' | 'hv'
+// Ancrage de droiture d'un flux (#665, refonte multi-ancrage). 'none' = libre (flux non
+// contraint). 'source'/'target' = l'accroche aval/amont s'aligne sur l'autre (déplace le
+// nœud opposé). 'highest'/'lowest' = les deux accroches s'alignent sur la plus haute / la
+// plus basse. 'absolute' (réservé, 2e passe) = la position propre du flux place les nœuds.
+export type Type_StraightMode = 'none' | 'source' | 'target' | 'highest' | 'lowest' | 'absolute'
 export type Type_PathLabelHPosition = 'left' | 'middle' | 'right'
 export type Type_PathLabelVPosition = 'top' | 'middle' | 'bottom'
 export type Type_customisable_style_attr = keyof typeof ALL_ATTRIBUTES_CONFIG
@@ -2620,6 +2625,27 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione.'
     }
   } satisfies AttributeConfig<boolean>,
+
+  straight_mode: {
+    default: 'none' as Type_StraightMode,
+    type: (() => 'none') as (() => Type_StraightMode),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Straightness anchor',
+      fr: 'Ancrage de droiture',
+      es: 'Anclaje de rectitud',
+      de: 'Geradheits-Anker',
+      it: 'Ancoraggio rettitudine'
+    },
+    tooltips: {
+      en: 'Where this flow is kept straight: none (free), aligned to source, aligned to target, highest or lowest of the two. Set via right-click "Straightness".',
+      fr: 'Où ce flux est gardé droit : aucun (libre), en face de la source, en face de la destination, le plus haut ou le plus bas des deux. Activé via clic droit « Rectitude ».',
+      es: 'Dónde se mantiene recto este flujo: ninguno (libre), alineado al origen, alineado al destino, el más alto o el más bajo de los dos. Activado con clic derecho «Rectitud».',
+      de: 'Wo dieser Fluss gerade gehalten wird: keine (frei), an Quelle ausgerichtet, an Ziel ausgerichtet, höchster oder niedrigster der beiden. Über Rechtsklick „Geradheit" aktiviert.',
+      it: 'Dove questo flusso è mantenuto dritto: nessuno (libero), allineato all\'origine, allineato alla destinazione, il più alto o il più basso dei due. Attivato con clic destro «Rettitudine».'
+    }
+  } satisfies AttributeConfig<Type_StraightMode>,
 
   is_reference_flux: {
     default: false,

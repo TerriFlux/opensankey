@@ -82,6 +82,7 @@ import {
 import { SankeyMultiTypeSelectionSimple } from './MenuElementsSelection'
 import { unit_constants } from '../../Elements/LinkValues'
 import { NodeIOReorganizer } from '../dialogs/NodeIOReorganizer'
+import { STRAIGHT_MENU_MODES, straightActionKey, Type_StraightMenuMode } from '../dialogs/ContextLinkConfig'
 
 /**
  * Widget d'angle du texte du label (−180°..180°) : remplace l'ancien toggle
@@ -1908,6 +1909,46 @@ export const MenuConfigurationAppearance = ({
                         />
                       </Box>
                       {/* </Box> */}
+                      {/* Droiture multi-ancrage (#665) : mode d'ancrage + propagation aux
+                          enfants. Pendant menu du clic droit « Rectitude ». */}
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_mode')}>
+                          <Box layerStyle='menuconfigpanel_option_name'>
+                            {t('Flux.apparence.shape_straight_mode')}
+                          </Box>
+                        </OSTooltip>
+                        <Select
+                          w='100%'
+                          value={linkShapeValues.straight_mode}
+                          onChange={(evt) => {
+                            const v = evt.target.value as Type_StraightMenuMode
+                            linkShapeValues.straight_mode = v
+                            // Drapeau legacy gardé en phase (rétrocompat enforceStraightLinks).
+                            linkShapeValues.must_stay_straight = v !== 'none'
+                            if (v === 'none') linkShapeValues.straight_include_children = false
+                          }}
+                        >
+                          {STRAIGHT_MENU_MODES.map(mode => (
+                            <option key={'straight_' + mode} value={mode}>
+                              {t('ContextMenuLinks.' + straightActionKey('Flux', mode))}
+                            </option>
+                          ))}
+                        </Select>
+                      </Box>
+                      <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+                        <OSTooltip label={t('Flux.apparence.tooltips.shape_straight_include_children')}>
+                          <Box layerStyle='menuconfigpanel_option_name'>
+                            {t('Flux.apparence.shape_straight_include_children')}
+                          </Box>
+                        </OSTooltip>
+                        <Checkbox
+                          isChecked={linkShapeValues.straight_include_children}
+                          isDisabled={linkShapeValues.straight_mode === 'none'}
+                          onChange={(evt) => {
+                            linkShapeValues.straight_include_children = evt.target.checked
+                          }}
+                        />
+                      </Box>
                       <Box as='span' textStyle='title_sub_section'>{t('Flux.apparence.anchor')}</Box>
                       <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
                         {[
