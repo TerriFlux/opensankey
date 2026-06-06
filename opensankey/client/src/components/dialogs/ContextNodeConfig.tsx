@@ -121,6 +121,14 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       children: [
         { type: 'button', actionName: 'editName' },
         { type: 'button', actionName: 'resetAttr' },
+        {
+          type: 'button',
+          actionName: 'applyStyleToChildren',
+          visibilityConditions: [
+            { type: 'nodeCount', operator: '==', value: 1 },
+            { type: 'nodeProperty', property: 'is_parent', operator: '==', value: true }
+          ]
+        },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
       ]
     },
@@ -696,6 +704,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Reset attributes', fr: 'Réinit. valeurs styles', es: 'Restablecer atributos', de: 'Attribute zurücksetzen', it: 'Reimposta attributi' },
       tooltips: { en: 'Reset all attributes', fr: 'Réinitialiser tous les attributs', es: 'Restablecer todos los atributos', de: 'Alle Attribute zurücksetzen', it: 'Reimpostare tutti gli attributi' },
+      undoable: true
+    },
+
+    applyStyleToChildren: {
+      type: 'action',
+      labels: { en: 'Apply style to children', fr: 'Appliquer le style aux enfants', es: 'Aplicar estilo a los hijos', de: 'Stil auf Kinder anwenden', it: 'Applica stile ai figli' },
+      tooltips: { en: 'Copy this node\'s style and attributes onto all its descendants in the dimension hierarchy', fr: 'Copier le style et les attributs de ce nœud sur toute sa descendance dans la hiérarchie de dimensions', es: 'Copiar el estilo y los atributos de este nodo en toda su descendencia en la jerarquía de dimensiones', de: 'Stil und Attribute dieses Knotens auf alle Nachfahren in der Dimensionshierarchie kopieren', it: 'Copia lo stile e gli attributi di questo nodo su tutta la sua discendenza nella gerarchia delle dimensioni' },
       undoable: true
     },
 
