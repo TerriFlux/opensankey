@@ -1,7 +1,60 @@
-import { MenuConfig } from './SankeyMenuContext'
+import { MenuConfig, MenuAction, MenuStructureItem } from './SankeyMenuContext'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
+
+// === Droiture multi-ancrage (su-model/opensankey#665, refonte) ===
+// Le menu « Rectitude » propose deux portées (« Flux uniquement », « Enfants ») et, pour
+// chacune, un mode d'ancrage. Le mode est stocké dans `shape_straight_mode` ; la portée
+// « Enfants » pose en plus `shape_straight_include_children`. 'absolute' est réservé (2e
+// passe) et n'est donc pas listé ici. Actions et handlers sont générés par (portée, mode)
+// pour rester DRY et i18n (les libellés alimentent l'autogen de traductions).
+export const STRAIGHT_MENU_MODES = ['none', 'source', 'target', 'highest', 'lowest'] as const
+export type Type_StraightMenuMode = typeof STRAIGHT_MENU_MODES[number]
+type StraightScope = 'Flux' | 'Children'
+const capFirst = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+export const straightActionKey = (scope: StraightScope, mode: Type_StraightMenuMode) =>
+  `straight${scope}${capFirst(mode)}`
+
+export const STRAIGHT_MODE_LABELS: Record<Type_StraightMenuMode, Record<string, string>> = {
+  none: { en: 'Free', fr: 'Libre', es: 'Libre', de: 'Frei', it: 'Libero' },
+  source: { en: 'Aligned to source', fr: 'En face de la source', es: 'Alineado al origen', de: 'An Quelle ausgerichtet', it: 'Allineato all\'origine' },
+  target: { en: 'Aligned to target', fr: 'En face de la destination', es: 'Alineado al destino', de: 'An Ziel ausgerichtet', it: 'Allineato alla destinazione' },
+  highest: { en: 'Highest of the two', fr: 'Le plus haut des deux', es: 'El más alto de los dos', de: 'Höchster der beiden', it: 'Il più alto dei due' },
+  lowest: { en: 'Lowest of the two', fr: 'Le plus bas des deux', es: 'El más bajo de los dos', de: 'Niedrigster der beiden', it: 'Il più basso dei due' }
+}
+const STRAIGHT_MODE_TIPS: Record<Type_StraightMenuMode, Record<string, string>> = {
+  none: { en: 'Release this flow (not kept straight).', fr: 'Libérer ce flux (non gardé droit).', es: 'Liberar este flujo (no mantenido recto).', de: 'Diesen Fluss lösen (nicht gerade gehalten).', it: 'Libera questo flusso (non mantenuto dritto).' },
+  source: { en: 'Keep straight by aligning onto the source anchor (moves the target).', fr: 'Garder droit en alignant sur l\'accroche source (déplace la cible).', es: 'Mantener recto alineando sobre el anclaje del origen (mueve el destino).', de: 'Gerade halten durch Ausrichtung am Quell-Anker (verschiebt das Ziel).', it: 'Mantieni dritto allineando sull\'ancoraggio origine (sposta la destinazione).' },
+  target: { en: 'Keep straight by aligning onto the target anchor (moves the source).', fr: 'Garder droit en alignant sur l\'accroche cible (déplace la source).', es: 'Mantener recto alineando sobre el anclaje del destino (mueve el origen).', de: 'Gerade halten durch Ausrichtung am Ziel-Anker (verschiebt die Quelle).', it: 'Mantieni dritto allineando sull\'ancoraggio destinazione (sposta l\'origine).' },
+  highest: { en: 'Keep straight by aligning both anchors onto the highest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus haute des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más alto de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am höchsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più alto dei due.' },
+  lowest: { en: 'Keep straight by aligning both anchors onto the lowest of the two.', fr: 'Garder droit en alignant les deux accroches sur la plus basse des deux.', es: 'Mantener recto alineando ambos anclajes sobre el más bajo de los dos.', de: 'Gerade halten durch Ausrichtung beider Anker am niedrigsten der beiden.', it: 'Mantieni dritto allineando entrambi gli ancoraggi sul più basso dei due.' }
+}
+
+// Boutons d'un sous-menu de portée (un par mode), liés à l'action générée correspondante.
+const buildStraightButtons = (scope: StraightScope): MenuStructureItem[] =>
+  STRAIGHT_MENU_MODES.map(mode => ({ type: 'button', actionName: straightActionKey(scope, mode) }))
+
+// Une action toggle par (portée, mode) ; le libellé = libellé du mode (la portée vient du
+// sous-menu parent). showCheck + getToggleValue affichent la coche du mode actif.
+const buildStraightActions = (): Record<string, MenuAction> => {
+  const acts: Record<string, MenuAction> = {}
+  ;(['Flux', 'Children'] as StraightScope[]).forEach(scope => {
+    STRAIGHT_MENU_MODES.forEach(mode => {
+      const key = straightActionKey(scope, mode)
+      acts[key] = {
+        type: 'toggle',
+        labels: STRAIGHT_MODE_LABELS[mode],
+        tooltips: STRAIGHT_MODE_TIPS[mode],
+        getToggleValue: `${key}Value`,
+        showCheck: true,
+        closeMenuAfter: true,
+        undoable: true
+      }
+    })
+  })
+  return acts
+}
 
 export const LINK_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -40,12 +93,20 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       actionName: 'inverseIO'
     },
     {
-      type: 'button',
-      actionName: 'straightenLink'
-    },
-    {
-      type: 'button',
-      actionName: 'straightenChildren'
+      type: 'submenu',
+      titleKey: 'Straightness',
+      children: [
+        {
+          type: 'submenu',
+          titleKey: 'StraightnessFlux',
+          children: buildStraightButtons('Flux')
+        },
+        {
+          type: 'submenu',
+          titleKey: 'StraightnessChildren',
+          children: buildStraightButtons('Children')
+        }
+      ]
     },
     {
       type: 'button',
@@ -87,61 +148,8 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       }
     },
 
-    straightenLink: {
-      type: 'toggle',
-      labels: {
-        en: 'Straighten flow',
-        fr: 'Rendre droit',
-        es: 'Enderezar flujo',
-        de: 'Fluss begradigen',
-        it: 'Raddrizza flusso'
-      },
-      labelsToggle: {
-        en: { true: 'Release (kept straight)', false: 'Straighten flow' },
-        fr: { true: 'Libérer (gardé droit)', false: 'Rendre droit' },
-        es: { true: 'Liberar (mantenido recto)', false: 'Enderezar flujo' },
-        de: { true: 'Lösen (gerade gehalten)', false: 'Fluss begradigen' },
-        it: { true: 'Libera (mantenuto dritto)', false: 'Raddrizza flusso' }
-      },
-      tooltips: {
-        en: 'Keep this flow exactly horizontal across all data tags (only vertical gaps adapt). Click again to release.',
-        fr: 'Garder ce flux exactement horizontal pour tous les tags de données (seuls les écarts verticaux s\'adaptent). Recliquer pour libérer.',
-        es: 'Mantener este flujo exactamente horizontal en todas las etiquetas de datos (solo se adaptan los espacios verticales). Vuelva a hacer clic para liberar.',
-        de: 'Diesen Fluss über alle Daten-Tags hinweg exakt horizontal halten (nur vertikale Abstände passen sich an). Erneut klicken zum Lösen.',
-        it: 'Mantieni questo flusso esattamente orizzontale per tutti i tag di dati (solo gli spazi verticali si adattano). Clicca di nuovo per liberare.'
-      },
-      getToggleValue: 'straightenLinkValue',
-      closeMenuAfter: true,
-      undoable: true
-    },
-
-    straightenChildren: {
-      type: 'toggle',
-      labels: {
-        en: 'Straighten disaggregated flows',
-        fr: 'Droit aussi en désagrégeant',
-        es: 'Enderezar flujos desagregados',
-        de: 'Disaggregierte Flüsse begradigen',
-        it: 'Raddrizza flussi disaggregati'
-      },
-      labelsToggle: {
-        en: { true: 'Children kept straight', false: 'Straighten disaggregated flows' },
-        fr: { true: 'Enfants gardés droits', false: 'Droit aussi en désagrégeant' },
-        es: { true: 'Hijos mantenidos rectos', false: 'Enderezar flujos desagregados' },
-        de: { true: 'Kinder gerade gehalten', false: 'Disaggregierte Flüsse begradigen' },
-        it: { true: 'Figli mantenuti dritti', false: 'Raddrizza flussi disaggregati' }
-      },
-      tooltips: {
-        en: 'Also keep the child flows straight (between the disaggregated children of source and target), so straightness survives disaggregation. Requires "Straighten flow".',
-        fr: 'Garder aussi droits les flux enfants (entre les descendants désagrégés de la source et de la cible), pour que la droiture survive à la désagrégation. Nécessite « Rendre droit ».',
-        es: 'Mantener rectos también los flujos hijos (entre los descendientes desagregados del origen y del destino), para que la rectitud sobreviva a la desagregación. Requiere «Enderezar flujo».',
-        de: 'Auch die untergeordneten Flüsse gerade halten (zwischen den disaggregierten Kindknoten von Quelle und Ziel), damit die Geradheit die Disaggregation überlebt. Erfordert „Fluss begradigen".',
-        it: 'Mantieni dritti anche i flussi figli (tra i discendenti disaggregati di origine e destinazione), così la rettitudine sopravvive alla disaggregazione. Richiede «Raddrizza flusso».'
-      },
-      getToggleValue: 'straightenChildrenValue',
-      closeMenuAfter: true,
-      undoable: true
-    },
+    // Droiture multi-ancrage : une action toggle par (portée, mode), générée.
+    ...buildStraightActions(),
 
     setReferenceFlux: {
       type: 'toggle',
@@ -405,6 +413,27 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       es: 'Editar valor',
       de: 'Wert bearbeiten',
       it: 'Modifica valore'
+    },
+    Straightness: {
+      en: 'Straightness',
+      fr: 'Rectitude',
+      es: 'Rectitud',
+      de: 'Geradheit',
+      it: 'Rettitudine'
+    },
+    StraightnessFlux: {
+      en: 'Flow only',
+      fr: 'Flux uniquement',
+      es: 'Solo el flujo',
+      de: 'Nur Fluss',
+      it: 'Solo flusso'
+    },
+    StraightnessChildren: {
+      en: 'Children',
+      fr: 'Enfants',
+      es: 'Hijos',
+      de: 'Kinder',
+      it: 'Figli'
     }
   }
 } as const
@@ -428,84 +457,68 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
     actionFn()
   }
 
+  // === Droiture multi-ancrage (#665, refonte) ===
+  // Pose le mode d'ancrage (`shape_straight_mode`) du flux cliqué et, selon la portée,
+  // la propagation aux enfants (`shape_straight_include_children`). On garde le drapeau
+  // legacy `shape_must_stay_straight` en phase (= mode ≠ 'none') pour la rétrocompat.
+  // L'application/maintien réel est fait par NodePositioning.enforceStraightLinks à chaque
+  // draw. Undo : on restaure les 3 attributs + les position_y/dy des nœuds visibles.
+  const applyStraightMode = (scope: StraightScope, mode: Type_StraightMenuMode) => {
+    const link = contextualised_link
+    if (!link) return
+    const include = scope === 'Children' && mode !== 'none'
+    const old = {
+      mode: link.shape_straight_mode,
+      include: link.shape_straight_include_children,
+      legacy: link.shape_must_stay_straight
+    }
+    const saved = drawing_area.sankey.visible_nodes_list.map(n => ({
+      n, y: n.position_y, dy: n.shape_position_dy
+    }))
+    const doApply = () => {
+      link.shape_straight_mode = mode
+      link.shape_straight_include_children = include
+      link.shape_must_stay_straight = mode !== 'none'
+      drawing_area.drawElements()
+      refreshThisAndToggleSaving()
+    }
+    const undoApply = () => {
+      link.shape_straight_mode = old.mode
+      link.shape_straight_include_children = old.include
+      link.shape_must_stay_straight = old.legacy
+      saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
+      drawing_area.drawElements()
+      refreshThisAndToggleSaving()
+    }
+    executeWithUndo(doApply, undoApply)
+  }
+
+  // Coche du mode actif. 'none' (« Libre ») n'est coché que dans le sous-menu « Flux »
+  // quand le flux est libre. Sinon : mode courant ET portée concordante (include_children).
+  const isStraightModeActive = (scope: StraightScope, mode: Type_StraightMenuMode): boolean => {
+    const link = contextualised_link
+    if (!link) return false
+    const m = link.shape_straight_mode ?? 'none'
+    const include = link.shape_straight_include_children ?? false
+    if (mode === 'none') return scope === 'Flux' && m === 'none'
+    return m === mode && (scope === 'Children' ? include : !include)
+  }
+
+  const straightHandlers: Record<string, (() => void) | (() => boolean)> = {}
+  ;(['Flux', 'Children'] as StraightScope[]).forEach(scope => {
+    STRAIGHT_MENU_MODES.forEach(mode => {
+      const key = straightActionKey(scope, mode)
+      straightHandlers[key] = () => applyStraightMode(scope, mode)
+      straightHandlers[`${key}Value`] = () => isStraightModeActive(scope, mode)
+    })
+  })
+
   return {
+    ...straightHandlers,
+
     // Actions simples
     inverseIO: () => {
       drawing_area.inverseSelectedLinks()
-    },
-
-    // Rendre droit / Libérer (su-model/opensankey#665) : marque le flux cliqué
-    // comme « à garder droit » (shape_must_stay_straight) et le redresse tout de
-    // suite ; recliquer le libère. Le maintien est ensuite ré-appliqué
-    // automatiquement à chaque draw (donc à chaque changement de data tag) par
-    // NodePositioning.enforceStraightLinks via drawElements.
-    straightenLink: () => {
-      const link = contextualised_link
-      if (!link) return
-      const will_mark = !link.shape_must_stay_straight
-      // Snapshot du flag + des position_y/shape_position_dy de tous les nœuds
-      // visibles (le back-calc réécrit les écarts) pour un undo fidèle.
-      const old_flag = link.shape_must_stay_straight
-      const saved = drawing_area.sankey.visible_nodes_list.map(n => ({
-        n, y: n.position_y, dy: n.shape_position_dy
-      }))
-
-      const doToggle = () => {
-        link.shape_must_stay_straight = will_mark
-        if (will_mark) {
-          // Aligne immédiatement ; les futurs draws le maintiendront.
-          drawing_area.nodePositioning.straightenLink(link)
-        } else {
-          // Libéré : on ne le maintient plus, il reste où il est.
-          drawing_area.drawElements()
-        }
-        refreshThisAndToggleSaving()
-      }
-
-      const undoToggle = () => {
-        link.shape_must_stay_straight = old_flag
-        saved.forEach(({ n, y, dy }) => { n.position_y = y; n.shape_position_dy = dy })
-        drawing_area.drawElements()
-        refreshThisAndToggleSaving()
-      }
-
-      executeWithUndo(doToggle, undoToggle)
-    },
-
-    // Valeur courante du toggle « Rendre droit » (coche/état du libellé).
-    straightenLinkValue: () => {
-      return contextualised_link?.shape_must_stay_straight ?? false
-    },
-
-    // #1231 — « Droit aussi en désagrégeant » : marque le flux pour que sa droiture
-    // se propage dynamiquement aux flux enfant-enfant (descendants désagrégés) via
-    // enforceStraightLinks. Marque aussi shape_must_stay_straight (prérequis) pour que
-    // l'option ait un effet seule.
-    straightenChildren: () => {
-      const link = contextualised_link
-      if (!link) return
-      const will_mark = !link.shape_straight_include_children
-      const old_include = link.shape_straight_include_children
-      const old_straight = link.shape_must_stay_straight
-
-      const doToggle = () => {
-        link.shape_straight_include_children = will_mark
-        if (will_mark) link.shape_must_stay_straight = true
-        drawing_area.drawElements()
-        refreshThisAndToggleSaving()
-      }
-      const undoToggle = () => {
-        link.shape_straight_include_children = old_include
-        link.shape_must_stay_straight = old_straight
-        drawing_area.drawElements()
-        refreshThisAndToggleSaving()
-      }
-      executeWithUndo(doToggle, undoToggle)
-    },
-
-    // Valeur courante du toggle « Droit aussi en désagrégeant ».
-    straightenChildrenValue: () => {
-      return contextualised_link?.shape_straight_include_children ?? false
     },
 
     // #1231 — Mode proportionnel : désigner/retirer ce flux comme flux de référence. La
