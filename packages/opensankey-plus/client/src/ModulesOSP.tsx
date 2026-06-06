@@ -241,7 +241,7 @@ export const moduleDialogsOSP: FType_ModuleDialogs = (
   const mc = app_data.menu_configuration as Class_MenuConfigOSP
 
   // Grey out tagNode/tagFlux/tagData rows in UpdateModeGrid when no OSP licence
-  const _osp_tag_keys = ['tagNode', 'addTagNode', 'removeTagNode', 'tagFlux', 'addTagFlux', 'removeTagFlux', 'tagData', 'addTagData', 'removeTagData']
+  const _osp_tag_keys = ['tagNode', 'addTagNode', 'removeTagNode', 'assignTagNode', 'tagFlux', 'addTagFlux', 'removeTagFlux', 'assignTagFlux', 'tagData', 'addTagData', 'removeTagData']
   mc.apply_layout_is_row_disabled = (key: string) =>
     _osp_tag_keys.includes(key) && !app_data.has_sankey_plus
 
