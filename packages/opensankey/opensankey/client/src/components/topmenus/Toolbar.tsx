@@ -10,8 +10,9 @@ import { Class_ApplicationData } from '../../types/ApplicationData'
 import { Class_TagGroup, Class_DataTagGroup, Class_LevelTagGroup, Class_ViewTagGroup } from '../../types/TagGroup'
 import { Class_LevelTag } from '../../types/Tag'
 import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
-import { disaggregate, aggregate, resetLocalHierarchy } from '../../Algorithms/Hierarchies'
+import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, applyContainerModeForDim } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
+import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
 import { Type_DisaggregationGap } from '../../types/Utils'
 
 const width_fitler_drawer = 270
@@ -400,12 +401,15 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
   // Component updater
   const [, setCount] = useState(0)
 
-  // #1231 — État HYBRIDE : des nœuds ont été désagrégés localement (clic droit →
-  // force_show_children). Tant que c'est le cas, le menu Hiérarchies global ne doit pas
-  // agir (dropdowns désactivés) ; l'utilisateur doit d'abord « Réinitialiser » pour
-  // revenir à l'état uniforme du menu.
+  // #1231 — État HYBRIDE LOCAL : des nœuds ont été désagrégés via le clic droit (et NON
+  // via le menu Hiérarchies global). On se base sur l'ORIGINE de l'action
+  // (`forced_by_local_action`), pas sur l'état d'affichage : une désagrégation globale
+  // englobante/expansion pose aussi container_mode/is_expanded mais ne doit PAS afficher
+  // le bouton. Couvre les 3 modes locaux (simple/englobant/expansion). Tant que c'est le
+  // cas, le menu global ne doit pas agir (dropdowns désactivés) ; l'utilisateur doit
+  // d'abord « Réinitialiser » pour revenir à l'état uniforme du menu.
   const has_local_hierarchy = mode === 'level' &&
-    sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.force_show_children))
+    sankey.nodes_list.some(n => n.dimensions_as_parent.some(d => d.forced_by_local_action))
 
   // Configuration du updater selon le mode
   if (config.ref_updater_key && app_data.menu_configuration[config.ref_updater_key as keyof typeof app_data.menu_configuration]) {
@@ -501,13 +505,31 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       // #1231 — Désagrégation/agrégation GLOBALE = application des fonctions LOCALES
       // nœud par nœud (mêmes positions que le clic droit : enfants remplissent le slot
       // du parent). On part des nœuds visibles du niveau précédent. La contrainte ±1
-      // (dropdown) garantit un seul cran. `showAccordingToLevelTags()` ci-dessous nettoie
-      // ensuite les force-flags (mode global = visibilité pilotée par les level-tags).
+      // (dropdown) garantit un seul cran. En désagrégation uniforme « simple »,
+      // `showAccordingToLevelTags()` ci-dessous nettoie les force-flags (visibilité
+      // pilotée par les level-tags) ; en présence d'un type hybride mémorisé
+      // (englobant/expansion) on garde les flags (cf. `any_hybrid`).
       const new_level_idx = tagg.tags_list.findIndex(t => t.id === values[0])
+      // #1231 — DÉSAGRÉGATION : chaque nœud applique le type qu'il a MÉMORISÉ
+      // (clic droit local : simple / englobant / expansion), au lieu de toujours
+      // désagréger « simple ». La préférence survit aux agrégations et au
+      // rechargement (cf. Class_NodeDimension.preferred_disaggregation).
+      let any_hybrid = false
       if (old_level_idx >= 0 && new_level_idx > old_level_idx) {
         nodes_before.forEach(n => {
-          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id)
-          if (dim && dim.children.length > 0) {
+          const dim = n.dimensions_as_parent.find(d => d.id === tagg.id) as Class_NodeDimension | undefined
+          if (!dim || dim.children.length === 0) return
+          const pref: Type_DisaggregationKind | null = dim.preferred_disaggregation
+          if (pref === 'expanded_left' || pref === 'expanded_right') {
+            // Le parent est encore VISIBLE ici (on n'a pas encore appelé
+            // showAccordingToLevelTags) → la redistribution des valeurs sur les
+            // liens d'expansion a le bon contexte.
+            any_hybrid = true
+            disaggregationExpansion(app_data, n as Class_NodeElement, pref === 'expanded_left', dim.children[0] as Class_NodeElement)
+          } else if (pref && pref !== 'children') {
+            any_hybrid = true
+            applyContainerModeForDim(app_data, dim, pref)
+          } else {
             disaggregate(app_data, n as Class_NodeElement, dim.children[0].id, false)
           }
         })
@@ -519,7 +541,14 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
           }
         })
       }
-      app_data.drawing_area.sankey.showAccordingToLevelTags()
+      // #1231 — `showAccordingToLevelTags()` efface TOUS les force-flags (y compris
+      // container/expansion) pour piloter la visibilité par les level-tags. On ne le
+      // fait QUE si la désagrégation est uniforme « simple » : dès qu'un nœud utilise
+      // un type hybride (englobant/expansion), l'état est volontairement hybride et on
+      // garde ses flags. L'agrégation (sens inverse) repasse toujours par le mode propre.
+      if (!any_hybrid) {
+        app_data.drawing_area.sankey.showAccordingToLevelTags()
+      }
       app_data.drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
       updateUnitaryStyles(app_data.drawing_area)
       // #1231 — un changement de niveau (désagrégation/agrégation globale) est une commande
