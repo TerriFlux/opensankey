@@ -2551,9 +2551,24 @@ export class Class_DrawingArea {
 
   public applyStyleFromPaintSource(target: Class_ProtoElement): void {
     if (!this._style_paint_source) return
-    const source = this._style_paint_source
+    const transition = this._applyStyleFromSourceToTarget(this._style_paint_source, target)
+    if (!transition) return
+    this.application_data.history.saveUndo(transition.undo)
+    this.application_data.history.saveRedo(transition.redo)
+  }
+
+  /**
+   * Applique le style (styles custom + attributs) de `source` sur `target` et
+   * renvoie les fonctions undo/redo correspondantes (sans les enregistrer dans
+   * l'historique). Renvoie null si les deux éléments ne sont pas de même nature
+   * (nœud→nœud, flux→flux uniquement).
+   */
+  private _applyStyleFromSourceToTarget(
+    source: Class_ProtoElement,
+    target: Class_ProtoElement
+  ): { undo: () => void, redo: () => void } | null {
     // Même type uniquement (nœud→nœud, flux→flux)
-    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return
+    if ((source instanceof Class_NodeElement) !== (target instanceof Class_NodeElement)) return null
     // Capturer l'état avant pour undo
     const old_storage = target.snapshotStorage()
     const old_custom_styles = target.getCustomStyles()
@@ -2574,13 +2589,70 @@ export class Class_DrawingArea {
       target.restoreStorage(new_storage)
       target.draw()
     }
-    this.application_data.history.saveUndo(undo)
-    this.application_data.history.saveRedo(redo)
     // Appliquer
     target.removeAllStyles()
     new_custom_styles.forEach(s => target.addStyle(s))
     target.copyAttrFrom(source)
     target.draw()
+    return { undo, redo }
+  }
+
+  /**
+   * Propage le style du nœud `source` à toute sa descendance dans la hiérarchie
+   * de dimensions (désagrégation), même si les enfants sont actuellement
+   * agrégés/masqués. Toutes les modifications sont regroupées dans une seule
+   * transition d'historique (un seul undo/redo).
+   */
+  public applyStyleToNodeChildren(source: Class_NodeElement): void {
+    // collectNodeDescendants inclut le nœud lui-même ; on l'exclut pour ne pas
+    // « réappliquer » le style du parent sur lui-même.
+    const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
+    const undos: Array<() => void> = []
+    const redos: Array<() => void> = []
+    descendants.forEach(target => {
+      const transition = this._applyStyleFromSourceToTarget(source, target)
+      if (transition) {
+        undos.push(transition.undo)
+        redos.push(transition.redo)
+      }
+    })
+    if (undos.length === 0) return
+    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
+    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
+  }
+
+  /**
+   * Propage le style du flux `source` à tous ses flux enfants : les flux
+   * existants reliant un descendant de la source du flux à un descendant de sa
+   * cible (combinaison des flux entre les nœuds enfants de chaque extrémité).
+   * Toutes les modifications sont regroupées dans une seule transition undo/redo.
+   */
+  public applyStyleToLinkChildren(source: Class_LinkElement): void {
+    // Même logique que NodePositioning.collectChildLinks (propagation de la
+    // droiture aux flux désagrégés) : on parcourt TOUS les liens du sankey (les
+    // flux enfants existent même quand le parent est agrégé, juste invisibles) et
+    // on retient ceux reliant un descendant de la source à un descendant de la
+    // cible. collectNodeDescendants inclut le nœud lui-même, donc a→b avec b
+    // désagrégé en b1,b2 cible bien a→b1 et a→b2.
+    const src_descendants = NodePositioning.collectNodeDescendants(source.source as Class_NodeElement)
+    const tgt_descendants = NodePositioning.collectNodeDescendants(source.target as Class_NodeElement)
+    const child_links = this.sankey.links_list.filter(link =>
+      link !== source &&
+      src_descendants.has(link.source as Class_NodeElement) &&
+      tgt_descendants.has(link.target as Class_NodeElement)
+    ) as Class_LinkElement[]
+    const undos: Array<() => void> = []
+    const redos: Array<() => void> = []
+    child_links.forEach(target => {
+      const transition = this._applyStyleFromSourceToTarget(source, target)
+      if (transition) {
+        undos.push(transition.undo)
+        redos.push(transition.redo)
+      }
+    })
+    if (undos.length === 0) return
+    this.application_data.history.saveUndo(() => undos.forEach(u => u()))
+    this.application_data.history.saveRedo(() => redos.forEach(r => r()))
   }
 
   public switchMode() {

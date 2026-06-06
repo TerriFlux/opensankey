@@ -11,6 +11,17 @@ export const LINK_MENU_CONFIG: MenuConfig = {
       children: [
         { type: 'widget', widgetName: 'MenuContextLinksData', widgetProps: {} },
         { type: 'button', actionName: 'resetAttr' },
+        {
+          type: 'button',
+          actionName: 'applyStyleToChildren',
+          visibilityConditions: [{
+            type: 'custom',
+            customCheck: (app_data) => {
+              const l = app_data.drawing_area.link_contextualised
+              return !!l && (l.source.is_parent || l.target.is_parent)
+            }
+          }]
+        },
         { type: 'widget', widgetName: 'ButtonLinkContextAssignStyle' }
       ]
     },
@@ -213,6 +224,25 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         es: 'Restablecer todos los atributos locales a los valores predeterminados',
         de: 'Alle lokalen Attribute auf Standardwerte zurücksetzen',
         it: 'Reimpostare tutti gli attributi locali ai valori predefiniti'
+      },
+      undoable: true
+    },
+
+    applyStyleToChildren: {
+      type: 'action',
+      labels: {
+        en: 'Apply style to children',
+        fr: 'Appliquer le style aux enfants',
+        es: 'Aplicar estilo a los hijos',
+        de: 'Stil auf Kinder anwenden',
+        it: 'Applica stile ai figli'
+      },
+      tooltips: {
+        en: 'Copy this flow\'s style and attributes onto all child flows between the source\'s and target\'s child nodes',
+        fr: 'Copier le style et les attributs de ce flux sur tous les flux enfants reliant les nœuds enfants de la source et de la cible',
+        es: 'Copiar el estilo y los atributos de este flujo en todos los flujos hijos entre los nodos hijos del origen y del destino',
+        de: 'Stil und Attribute dieses Flusses auf alle Kind-Flüsse zwischen den Kindknoten von Quelle und Ziel kopieren',
+        it: 'Copia lo stile e gli attributi di questo flusso su tutti i flussi figli tra i nodi figli dell\'origine e della destinazione'
       },
       undoable: true
     },
@@ -525,6 +555,15 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
       }
 
       executeWithUndo(doReset, undoReset)
+    },
+
+    // Propage le style du flux contextualisé à ses flux enfants (flux entre les
+    // descendants de la source et ceux de la cible). Undo/redo géré dans
+    // applyStyleToLinkChildren.
+    applyStyleToChildren: () => {
+      if (!contextualised_link) return
+      drawing_area.applyStyleToLinkChildren(contextualised_link)
+      refreshThisAndToggleSaving()
     },
 
     // Plan actions
