@@ -937,7 +937,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
     )
     //}
   }
@@ -1771,11 +1771,11 @@ export class Class_ApplicationData {
       allNodes: ['addNode', 'removeNode', 'posNode', 'attrNode'],
       allFlux: ['addFlux', 'removeFlux', 'posFlux', 'attrFlux'],
       allFreeLabels: ['addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel'],
-      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode'],
-      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux'],
+      allTagNode: ['addTagNode', 'removeTagNode', 'tagNode', 'assignTagNode'],
+      allTagFlux: ['addTagFlux', 'removeTagFlux', 'tagFlux', 'assignTagFlux'],
       allTagData: ['addTagData', 'removeTagData', 'tagData'],
       allTagLevel: ['addTagLevel', 'removeTagLevel', 'tagLevel'],
-      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
+      allTags: ['addTagNode', 'removeTagNode', 'tagNode', 'assignTagNode', 'addTagFlux', 'removeTagFlux', 'tagFlux', 'assignTagFlux', 'addTagData', 'removeTagData', 'tagData', 'addTagLevel', 'removeTagLevel', 'tagLevel'],
       allStyles: ['styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel'],
       allDA: ['attrDrawingArea', 'scale'],
       allValues: ['Values']
