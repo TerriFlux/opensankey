@@ -81,6 +81,7 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
   const attrLabel  = t('Menu.Transformation.Attribut')
   const geoLabel   = t('Menu.Transformation.Geometry')
   const majLabel   = t('Menu.Transformation.updateTags')
+  const majElemLabel = t('Menu.Transformation.updateElementTags')
 
   // Column header cell
   const hdr = (label: string) => (
@@ -105,14 +106,20 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
   )
 
   const tagGrid = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '4px' }
+  const tagGridAssign = { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '4px' }
 
-  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string) => {
+  // assignKey: string → 4e colonne « Maj assignation » active ; null → 4e colonne vide
+  // (ligne dans un onglet 4-cols mais sans assignation, ex. Niveaux de détail) ;
+  // undefined → onglet 3-cols classique (Données).
+  const tagRow = (label: string, addKey: string, removeKey: string, updateKey: string, assignKey?: string | null) => {
     const disabled = is_row_disabled?.(updateKey) ?? false
+    const has_assign_col = assignKey !== undefined
     return (
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' mb='1' opacity={disabled ? 0.45 : 1} pointerEvents={disabled ? 'none' : undefined}>
         <Box layerStyle='menuconfigpanel_option_name'>{label}</Box>
-        <Box sx={tagGrid}>
+        <Box sx={has_assign_col ? tagGridAssign : tagGrid}>
           {btn(addKey, '+')}{btn(removeKey, '−')}{btn(updateKey, 'X')}
+          {has_assign_col && (assignKey ? btn(assignKey, 'X') : <Box />)}
         </Box>
       </Box>
     )
@@ -131,6 +138,11 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
   const tagHeader = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
     <Box />
     <Box sx={tagGrid}>{hdr(addLabel)}{hdr(delLabel)}{hdr(majLabel)}</Box>
+  </Box>
+
+  const tagHeaderAssign = <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
+    <Box />
+    <Box sx={tagGridAssign}>{hdr(addLabel)}{hdr(delLabel)}{hdr(majLabel)}{hdr(majElemLabel)}</Box>
   </Box>
 
   const tabSx = {
@@ -163,10 +175,10 @@ export const UpdateModeGrid = ({ attrs, onToggle, t, show_expert_rows = true, ex
       </>)}
 
       {show_expert_rows && tp(<>
-        {tagHeader}
-        {tagRow(t('Menu.Transformation.tagNode'),  'addTagNode',  'removeTagNode',  'tagNode')}
-        {tagRow(t('Menu.Transformation.tagFlux'),  'addTagFlux',  'removeTagFlux',  'tagFlux')}
-        {tagRow(t('Menu.Transformation.tagLevel'), 'addTagLevel', 'removeTagLevel', 'tagLevel')}
+        {tagHeaderAssign}
+        {tagRow(t('Menu.Transformation.tagNode'),  'addTagNode',  'removeTagNode',  'tagNode',  'assignTagNode')}
+        {tagRow(t('Menu.Transformation.tagFlux'),  'addTagFlux',  'removeTagFlux',  'tagFlux',  'assignTagFlux')}
+        {tagRow(t('Menu.Transformation.tagLevel'), 'addTagLevel', 'removeTagLevel', 'tagLevel', null)}
       </>)}
 
       {show_expert_rows && tp(<>
