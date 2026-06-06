@@ -1144,6 +1144,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
     // ajouter doublerait la taille (bug observé sur deux englobants
     // i_c_o_c reliés enfant↔enfant et sur l'arête parent↔enfant masquée
     // qui retombait sur les enfants externes via la dim sœur).
+    //
+    // #1231 — on ne compte la face MASQUÉE que si la face OPPOSÉE du nœud
+    // n'a aucun lien visible. En `in_children_out_parent` (resp.
+    // `in_parent_out_children`) la face entrée (resp. sortie) reste visible
+    // et porte déjà le débit réel : sommer en plus la face masquée — qui
+    // contient les variantes jumelles à TOUS les niveaux d'agrégation de
+    // l'autre extrémité (agrégé + désagrégés) — gonflait la hauteur d'un
+    // facteur. On ne retombe sur la face masquée que quand les DEUX faces
+    // sont masquées (cas `in_parent_out_parent`, seule source de hauteur).
     const s = this._source
     const t = this._target
     const my_dims = [...node.dimensions_as_parent, ...node.dimensions_as_child]
@@ -1152,12 +1161,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
       if (!d.children.includes(node)) return false
       const mode = d.container_mode
       if (s === node) {
-        // sortie du nœud-enfant masquée par ce mode → à compter pour son sizing
-        return mode === 'in_children_out_parent' || mode === 'in_parent_out_parent'
+        // sortie du nœud-enfant masquée par ce mode → à compter pour son sizing,
+        // mais seulement si la face entrée ne porte rien de visible.
+        return (mode === 'in_children_out_parent' || mode === 'in_parent_out_parent') &&
+          !node.hasVisibleInputLinks()
       }
       if (t === node) {
-        // entrée du nœud-enfant masquée par ce mode → à compter pour son sizing
-        return mode === 'in_parent_out_children' || mode === 'in_parent_out_parent'
+        // entrée du nœud-enfant masquée par ce mode → à compter pour son sizing,
+        // mais seulement si la face sortie ne porte rien de visible.
+        return (mode === 'in_parent_out_children' || mode === 'in_parent_out_parent') &&
+          !node.hasVisibleOutputLinks()
       }
       return false
     })
