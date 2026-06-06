@@ -85,7 +85,12 @@ export class BaseElementPersistence {
   ): Type_JSON {
     // #1231 (1.1.5) — format courant : x/y = CENTRE du nœud (indépendant du datatag/échelle).
     // Les autres éléments (conteneurs, liens, légende…) gardent le coin/position d'origine.
-    if (base_element instanceof Class_NodeElement) {
+    // Exception (mode englobant) : un nœud cadre tied a une hauteur DÉRIVÉE de l'enveloppe de
+    // ses enfants → la conversion centre↔coin (coin = centre − hauteur/2) est instable au
+    // rechargement (au moment où le coin est reconstruit les enfants ne sont pas encore
+    // attachés, l'enveloppe vaut 0). On persiste donc le coin directement, comme les
+    // conteneurs — cohérent avec `anchorAbsoluteNodesByCenter` qui exclut déjà les cadres tied.
+    if (base_element instanceof Class_NodeElement && !base_element.tied_to_nodes) {
       const c = base_element.centerForPersistence()
       json_object['x'] = c.x
       json_object['y'] = c.y
@@ -106,7 +111,12 @@ export class BaseElementPersistence {
     // #1231 (1.1.5) — fichier ≥ 1.1.5 (drapeau `pos_is_center` propagé via kwargs) : x/y est le
     // CENTRE → on le pose directement. Sinon (fichiers < 1.1.5 ou éléments non-nœuds) : x/y est
     // le coin → on le pose tel quel, et pour un nœud le centre sera migré au 1er draw (coin+taille/2).
-    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center']) {
+    // Exception cadres tied (mode englobant) : persistés en COIN par toJSON (hauteur dérivée de
+    // l'enveloppe, instable à la reconstruction du centre tant que les enfants ne sont pas
+    // attachés) → on lit le coin tel quel, sans passer par setStoredCenter. Le drapeau `tiedToNode`
+    // est lu directement du JSON car `_tied_to_nodes` n'est restauré que plus tard (NodeBase.fromJSON).
+    const is_tied_frame = getBooleanFromJSON(json_object, 'tiedToNode', false)
+    if (base_element instanceof Class_NodeElement && _kwargs?.['pos_is_center'] && !is_tied_frame) {
       base_element.setStoredCenter(x, y)
     } else {
       base_element.position_x = x
