@@ -322,6 +322,11 @@ export const updateFrom = (
         // Issue #1225 — flags d'expansion latérale unifiés sur la dim
         if (src_dim.expanded_left) dim.setExpandedSide('left', true)
         else if (src_dim.expanded_right) dim.setExpandedSide('right', true)
+        // #1231 — recopier le type de désagrégation mémorisé (indépendant de l'état
+        // d'affichage), pour que la désagrégation globale réapplique le même type
+        // dans la vue cible. Les setX ci-dessus sont en fromJSON=true → ne le posent
+        // pas eux-mêmes ; on le copie explicitement comme la persistance.
+        dim.preferred_disaggregation = src_dim.preferred_disaggregation
       })
     })
     drawing_area.sankey.nodes_list.forEach(n => n.dimensionsUpdated())
@@ -402,7 +407,9 @@ export const updateFrom = (
 
   const add_nodes = mode.includes('addNode')
   const remove_nodes = mode.includes('removeNode')
-  const sync_nodes_tags = mode.includes('tagNode')
+  // `tagNode` met à jour la définition du groupe d'étiquettes (bloc plus haut) ;
+  // `assignTagNode` met à jour l'assignation des étiquettes aux nœuds (réfs ci-dessous).
+  const sync_nodes_tags = mode.includes('assignTagNode')
   const sync_nodes_positions = mode.includes('posNode')
   const sync_nodes_attr = mode.includes('attrNode')
 
@@ -449,7 +456,7 @@ export const updateFrom = (
     }
 
     // Update nodes ref to node_taggs
-    // (copyDimensionsFrom is intentionally NOT called here: tagNode owns only
+    // (copyDimensionsFrom is intentionally NOT called here: assignTagNode owns only
     //  tag references, not dimensions — pulling dimensions would propagate
     //  force_show_children and other dim state that should stay local.)
     if ((sync_nodes_tags) || all) {
@@ -516,7 +523,9 @@ export const updateFrom = (
   const add_flux = mode.includes('addFlux')
   const remove_flux = mode.includes('removeFlux')
   const pos_flux = mode.includes('posFlux')
-  const sync_flux_tags = mode.includes('tagFlux')
+  // `tagFlux` met à jour la définition du groupe d'étiquettes (bloc plus haut) ;
+  // `assignTagFlux` met à jour l'assignation des étiquettes aux valeurs de flux.
+  const sync_flux_tags = mode.includes('assignTagFlux')
   const sync_flux_values = mode.includes('Values')
   const sync_flux_attr = mode.includes('attrFlux')
 

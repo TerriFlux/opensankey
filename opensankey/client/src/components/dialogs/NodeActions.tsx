@@ -167,8 +167,12 @@ export class NodeActions {
     const childDims = this.contextualised_node.dimensions_as_parent
 
     if (childDims.length > 0) {
-      const child = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0].children[0].id
+      const target_dim = childDims.filter(dim => dim.children.filter(c => c.id == dim_name).length > 0)[0]
+      const child = target_dim.children[0].id
       disaggregate(this.app_data, this.contextualised_node, child)
+      // #1231 — désagrégation LOCALE (clic droit) → marque l'état hybride local
+      // (affiche « Réinitialiser la hiérarchie »).
+      target_dim.forced_by_local_action = true
       this._restackEnglobingChain(this.contextualised_node)
       this.drawing_area.draw()
       // this.drawing_area.purgeSelection()
@@ -208,6 +212,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, true, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -216,6 +223,9 @@ export class NodeActions {
       const child = this.drawing_area.sankey.nodes_dict[dim_name]
       if (!child) return
       disaggregationExpansion(this.app_data, node, false, child)
+      // #1231 — expansion LOCALE (clic droit) → marque l'état hybride local.
+      const dim = node.nodeDimensionAsParent(child)
+      if (dim) dim.forced_by_local_action = true
     })
   }
 
@@ -407,6 +417,9 @@ export class NodeActions {
         }
       } else {
         dim.setContainerMode(target_mode)
+        // #1231 — englobement LOCAL (clic droit) → marque l'état hybride local
+        // (affiche « Réinitialiser la hiérarchie »).
+        dim.forced_by_local_action = true
         parent.tied_to_nodes = true
         // Mirror leaving: attach this dim's children into the parent's
         // geometric frame, so the cadre géométrique behaves like a ZDT
