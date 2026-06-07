@@ -1172,6 +1172,20 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * que l'utilisateur, lui, considère ces liens comme visibles.
    */
   public get is_visible_ignoring_container_modes(): boolean {
+    return this._is_visible_ignoring_container_modes(true)
+  }
+
+  /**
+   * Variante de `is_visible_ignoring_container_modes` qui IGNORE la condition
+   * `is_not_zero`. Un flux à valeur nulle (typiquement fraîchement créé, valeur
+   * pas encore saisie) reste structurellement présent : il doit quand même
+   * définir la topologie pour le placement automatique. Cf. `is_visible_ignoring_zero`.
+   */
+  public get is_visible_ignoring_container_modes_and_zero(): boolean {
+    return this._is_visible_ignoring_container_modes(false)
+  }
+
+  private _is_visible_ignoring_container_modes(require_non_zero: boolean): boolean {
     if (this.sankey.drawing_area.drawing_link) {
       return super.is_visible
     }
@@ -1195,8 +1209,19 @@ export class Class_LinkElement extends Class_LinkAttribute {
       Object.values(this._child_links).length == 0 &&
       this.are_source_and_target_displayed &&
       this.are_related_flux_tags_selected &&
-      this.is_not_zero
+      (!require_non_zero || this.is_not_zero)
     )
+  }
+
+  /**
+   * Visibilité « structurelle » pour le placement automatique : identique à
+   * `is_visible` mais en ignorant la valeur nulle. Le calcul d'index horizontal
+   * (computeAutoSankey, qui pilote position_x) doit traverser un flux à 0 comme
+   * le fait detectAllCyclesAndOptimize (qui pilote position_u) — sinon le nœud
+   * cible d'un flux sans valeur n'est pas atteint et reste mal placé en X.
+   */
+  public get is_visible_ignoring_zero(): boolean {
+    return this.is_visible_ignoring_container_modes_and_zero && this.is_allowed_by_container_modes
   }
 
   /**

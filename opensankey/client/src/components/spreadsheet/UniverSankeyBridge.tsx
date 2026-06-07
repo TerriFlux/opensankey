@@ -36,7 +36,21 @@ export const attachSankeyBridge = (
 
   const redraw = () => {
     if (!menu_configuration.spreadsheet_freeze) {
-      drawing_area.nodePositioning.computeAutoSankeyWithToast(true, true)
+      // Reproduire EXACTEMENT l'appel du bouton « disposition auto » (MenuContextAutoLayout) :
+      // mêmes espacements et modes sources/puits configurés par l'utilisateur. L'ancien appel
+      // `(true, true)` figeait les défauts (before_neighbor/after_neighbor, espacements = dx/dy
+      // du NŒUD au lieu du style par défaut) → disposition différente de celle obtenue via le
+      // menu après rechargement (que l'utilisateur prend comme référence).
+      const default_dx = sankey.styles_dict['default'].shape_position_dx ?? 0
+      const default_dy = sankey.styles_dict['default'].shape_position_dy ?? 0
+      drawing_area.nodePositioning.computeAutoSankeyWithToast(
+        false,
+        app_data.layout_optimize_crossing,
+        app_data.layout_h_spacing ?? default_dx,
+        app_data.layout_v_spacing ?? default_dy,
+        app_data.layout_sources_mode,
+        app_data.layout_sinks_mode
+      )
     }
     app_data.draw()
   }
@@ -301,6 +315,12 @@ export const attachSankeyBridge = (
 
     drawing_area.setToModeEdition(false)
     const hasAfm = app_data.has_sankey_afm
+    // Signature de la liste des nœuds AVANT traitement : une édition de flux peut créer un nœud
+    // (origine/destination inédite), renommer une extrémité ou supprimer un nœud devenu orphelin.
+    // Ces changements doivent se répercuter dans l'onglet Noeuds (et Flux) -> rebuild différé si la
+    // signature change. Saut de ligne comme séparateur (improbable dans un nom de nœud).
+    const nodeSig = (): string => sankey.nodes_list.map((n: any) => String(n.name)).join('\n')
+    const beforeNodeSig = nodeSig()
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
     const originalLinkCount = rowLinks().length
     const originalNodeCount = rowNodes().length
@@ -381,17 +401,24 @@ export const attachSankeyBridge = (
       }
     })
 
+    // La liste des nœuds a-t-elle changé (création/renommage/suppression d'orphelin via l'onglet
+    // Flux notamment) ? Si oui, l'onglet Noeuds est devenu obsolète et doit être reconstruit.
+    const nodesChanged = nodeSig() !== beforeNodeSig
+
     if (structural) {
       redraw()
     } else if (value) {
       drawing_area.updateScaleAtLinkValueSetting()
       app_data.draw()
     } else if (tagChanged) {
-      // Renommage de groupe/étiquettes/couleurs : redessin (légende + couleurs) + reconstruction du
-      // classeur pour répercuter les nouveaux noms dans les colonnes node-tags de l'onglet Noeuds.
-      // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait
-      // l'unit Univer en plein vol (crash "univerInstanceService is null").
       app_data.draw()
+    }
+
+    // Reconstruction du classeur pour répercuter dans l'onglet Noeuds (et Flux) les renommages de
+    // tags/étiquettes OU les changements de la liste des nœuds induits par une édition de flux.
+    // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait l'unit
+    // Univer en plein vol (crash "univerInstanceService is null").
+    if (tagChanged || nodesChanged) {
       const ref = app_data.menu_configuration.ref_to_spreadsheet
       if (ref && ref.current) {
         setTimeout(() => { if (ref.current) { ref.current() } }, 0)
