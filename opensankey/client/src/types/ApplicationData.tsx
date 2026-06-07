@@ -44,6 +44,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../Algorithms/UpdateFrom'
+import { prepositionAllInPlace } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 
 // SPECIFIC TYPES **********************************************************************/
@@ -796,12 +797,28 @@ export class Class_ApplicationData {
     this._fromJSON(json_object, kwargs)
     // Post processing & menu updating
     this._afterFromJSON()
+    // Le « filtre vue » est un état d'exploration transitoire, pas un état persistant
+    // du diagramme : OFF au chargement (le fichier s'ouvre normal, l'utilisateur active
+    // le filtre à la main). view_mode reste persisté en JSON mais réinitialisé ici.
+    // IMPORTANT : si le fichier a été sauvé filtre actif, la visibilité a pu être
+    // calculée/cachée avec le filtre ON ; remettre view_mode=false ne suffit pas, il
+    // faut INVALIDER les caches (node_tags_fingerprint + visibilité) sinon des nœuds
+    // restent cachés au chargement.
+    const had_view_mode = this._drawing_area.sankey.view_taggs_list.some(t => t.view_mode)
+    this._drawing_area.sankey.view_taggs_list.forEach(t => { t.view_mode = false })
+    if (had_view_mode) {
+      this._drawing_area.sankey.nodeTagsUpdated()
+      this._drawing_area.sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+    }
     // Then draw if asked
     if (draw) {
       this._drawing_area.sankey.sortNodes()
       // If the JSON has no geometric info, auto-layout the diagram
       if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
         this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+        // Puis pré-positionner tous les nœuds (désagrégation récursive in-place) pour
+        // que le filtre vue révèle des nœuds déjà placés (cf. prepositionAllInPlace).
+        prepositionAllInPlace(this)
       }
       this._drawing_area.draw()
       this._drawing_area.recenter()

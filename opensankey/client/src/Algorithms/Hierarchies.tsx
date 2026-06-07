@@ -783,3 +783,64 @@ export const contract = (
   new_data.drawing_area.nodePositioning.computeParametrization(false)
   new_data.drawing_area.draw()
 }
+
+/**
+ * Pré-positionne TOUS les nœuds in-place. Désagrège récursivement chaque nœud (enfants
+ * placés dans le slot du parent — avec leurs VRAIES hauteurs, car réellement affichés
+ * le temps de la passe), descend, puis ré-agrège : les positions des enfants PERSISTENT
+ * (aggregate ne touche que le parent). Résultat : chaque nœud caché reçoit une position
+ * cohérente dans l'empreinte de son ancêtre → le filtre vue (ou toute désagrégation
+ * ultérieure) révèle des nœuds déjà placés, plus empilés à la position par défaut.
+ * Opère sur la mise en page courante (ne relance PAS computeAutoSankey).
+ */
+export const prepositionAllInPlace = (new_data: Class_ApplicationData) => {
+  const da = new_data.drawing_area
+  da.bypass_redraws = true
+  const seen = new Set<string>()
+  const visit = (node: Class_NodeElement) => {
+    if (seen.has(node.id)) return
+    seen.add(node.id)
+    // Snapshot des dims/enfants : disaggregate/aggregate mutent la visibilité.
+    node.dimensions_as_parent.slice().forEach((dim: Class_NodeDimension) => {
+      const children = (dim.children as Class_NodeElement[]).slice()
+      if (children.length === 0) return
+      const first = children[0]
+      disaggregate(new_data, node, first.id, false)
+      children.forEach(visit)
+      aggregate(new_data, first, node.id, false)
+    })
+  }
+  da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(visit)
+  da.bypass_redraws = false
+  da.draw()
+}
+
+/**
+ * Place le CENTRE de chaque enfant sur le centre de son parent, récursivement : tous
+ * les descendants se retrouvent donc au centre de leur ancêtre niveau 1. Version propre
+ * et statique de l'ancien « mode ancêtres » : une fois lancé, le filtre vue qui révèle
+ * des feuilles les montre empilées à la position de leur ancêtre (pas de mécanique
+ * dynamique). Léger (ne fait que poser des centres, pas de désagrégation).
+ */
+export const centerChildrenOnParent = (new_data: Class_ApplicationData) => {
+  const da = new_data.drawing_area
+  da.bypass_redraws = true
+  const seen = new Set<string>()
+  const visit = (node: Class_NodeElement) => {
+    if (seen.has(node.id)) return
+    seen.add(node.id)
+    const center = node.centerForPersistence()
+    node.dimensions_as_parent.forEach((dim: Class_NodeDimension) => {
+      (dim.children as Class_NodeElement[]).forEach(c => {
+        // setStoredCenter pose le centre comme vérité (le coin en est dérivé) ; comme on
+        // visite ensuite l'enfant, ses propres enfants hériteront de CE centre → collapse
+        // transitif vers l'ancêtre niveau 1.
+        c.setStoredCenter(center.x, center.y)
+        visit(c)
+      })
+    })
+  }
+  da.sankey.nodes_list.filter(n => !n.is_child).slice().forEach(visit)
+  da.bypass_redraws = false
+  da.draw()
+}

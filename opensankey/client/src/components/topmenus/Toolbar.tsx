@@ -13,7 +13,7 @@ import { updateUnitaryStyles } from '../../Algorithms/UnitaryBoard'
 import { disaggregate, aggregate, resetLocalHierarchy, disaggregationExpansion, applyContainerModeForDim } from '../../Algorithms/Hierarchies'
 import { Class_NodeElement } from '../../Elements/Node'
 import { Class_NodeDimension, Type_DisaggregationKind } from '../../Elements/NodeDimension'
-import { Type_DisaggregationGap } from '../../types/Utils'
+import { Type_DisaggregationGap, const_default_position_x, const_default_position_y } from '../../types/Utils'
 
 const width_fitler_drawer = 270
 
@@ -573,11 +573,54 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       break
     case 'unitary':
       updateUnitaryStyles(app_data.drawing_area)
+      // Filtre vue générique : la sélection à valeur unique a posé bypass_redraws=true
+      // (l.497) via un <Select> SANS wrapper de reset (contrairement au Menu unitaire)
+      // → forcer false, sinon draw/recenter/computeAutoSankey ne rendent rien et il
+      // faut re-sélectionner pour voir.
+      if (app_data.drawing_area.sankey.view_mode_active) {
+        app_data.drawing_area.bypass_redraws = false
+      }
       app_data.drawing_area.draw()
+      // Si le changement de valeur révèle des nœuds jamais positionnés (encore à la
+      // position par défaut), relancer une mise en page auto (comme au chargement).
+      // On stabilise d'abord la visibilité (2 passes de is_visible).
+      if (app_data.drawing_area.sankey.view_mode_active) {
+        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+        app_data.drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
+        // Mise en page auto SEULEMENT en sous-mode GLOBAL 'auto' (pas en 'filter' = on
+        // garde les positions).
+        if (app_data.drawing_area.view_filter_kind === 'auto') {
+          const needs_auto_layout = app_data.drawing_area.sankey.visible_nodes_list.some(n =>
+            n.position_x === const_default_position_x &&
+            n.position_y === const_default_position_y)
+          if (needs_auto_layout) {
+            app_data.drawing_area.nodePositioning.computeAutoSankey(true, true)
+          }
+        }
+        app_data.drawing_area.bypass_redraws = false
+      }
       app_data.drawing_area.to_recenter = true
       app_data.drawing_area.recenter()
       break
     }
+    updateComponents()
+  }
+
+  // Filtre vue : (ré)applique après un changement d'activation (œil) ou de sous-mode
+  // global. Stabilise la visibilité (2 passes) puis, en sous-mode GLOBAL 'auto', relance
+  // une mise en page auto si des nœuds révélés sont encore à la position par défaut.
+  const applyViewFilter = () => {
+    sankey.nodeTagsUpdated()
+    sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+    sankey.nodes_list.forEach(n => { void n.is_visible })
+    sankey.nodes_list.forEach(n => { void n.is_visible })
+    if (sankey.view_mode_active && drawing_area.view_filter_kind === 'auto') {
+      const needs = sankey.visible_nodes_list.some(n =>
+        n.position_x === const_default_position_x &&
+        n.position_y === const_default_position_y)
+      if (needs) drawing_area.nodePositioning.computeAutoSankey(true, true)
+    }
+    drawing_area.draw()
     updateComponents()
   }
 
@@ -626,8 +669,10 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     if (tagg.banner === 'one') {
       const selected_value = tagg.selected_tags_list[0]?.id ?? ''
 
-      // Pour le mode unitary, utiliser un Menu avec preview
-      if (mode === 'unitary') {
+      // Pour les vues unitaires câblées (product/sector/unitary), Menu avec preview.
+      // Les view tags GÉNÉRIQUES (filtre vue) utilisent le sélecteur standard <Select>
+      // (même type que la sélection des données).
+      if (mode === 'unitary' && tagg.id.includes('unitary')) {
         return (
           <Menu
             key={tagg.name}
@@ -798,6 +843,25 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     } else if (mode === 'unitary') {
       // MODIFIÉ : utiliser view_taggs_dict et gérer correctement les siblings
       const view_tagg = tagg as Class_ViewTagGroup
+      // View tags GÉNÉRIQUES (filtre vue) : œil on/off (view_mode) à droite, comme
+      // l'action des données. Le sous-mode (Filtre seul / Auto) est GLOBAL (un seul
+      // Select pour tous les view tags, cf. ViewFilterKindControl plus bas).
+      if (!tagg.id.includes('unitary')) {
+        return (
+          <OSTooltip label={t('Banner.view_mode_tt')}>
+            <Box justifySelf='end' alignSelf='center'>
+              <Checkbox
+                icon={<CustomFaEyeCheckIcon />}
+                isChecked={view_tagg.view_mode}
+                onChange={evt => {
+                  view_tagg.view_mode = evt.target.checked
+                  applyViewFilter()
+                }}
+              />
+            </Box>
+          </OSTooltip>
+        )
+      }
       const view_taggs = Object.values(sankey.view_taggs_dict)
         .filter(t => t.banner !== 'none')
 
@@ -993,6 +1057,30 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
     </Box>
   ) : null
 
+  // Réglage GLOBAL du sous-mode du filtre vue (commun à tous les view tags) :
+  // « Filtre seul » (garde les positions) vs « Mise en page auto ».
+  const ViewFilterKindControl = (mode === 'unitary' && taggs_in_banner.some(t => !t.id.includes('unitary'))) ? (
+    <Box layerStyle='menuconfig_grid'>
+      <Box layerStyle='menuconfigpanel_option_name'>
+        <OSTooltip label={t('Banner.view_mode_tt')}>
+          <Box as='span'>{t('Banner.view_mode')}</Box>
+        </OSTooltip>
+      </Box>
+      <Box layerStyle='filter_grid_row'>
+        <Select
+          size='xs'
+          value={drawing_area.view_filter_kind}
+          onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
+            drawing_area.view_filter_kind = evt.target.value as 'filter' | 'auto'
+            applyViewFilter()
+          }}>
+          <option value='filter'>{t('Banner.view_filter_only')}</option>
+          <option value='auto'>{t('Banner.view_auto_layout')}</option>
+        </Select>
+      </Box>
+    </Box>
+  ) : null
+
   // Rendu final
   return SelectorOfTagsByGroup.length > 0 ? (
     <FilterWrapperBox app_data={app_data} title={t(`Banner.${title_key}`)} defaultOpen={app_data.is_static}>
@@ -1000,6 +1088,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       {config.show_title_column ? title_filter_column(app_data) : null}
       {TypeSelectionHeader}
       {SelectorOfTagsByGroup}
+      {ViewFilterKindControl}
       {GapModeControl}
     </FilterWrapperBox>
   ) : <></>

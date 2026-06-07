@@ -9,14 +9,17 @@ import { Class_DataTagGroup, Class_ViewTagGroup } from '../types/TagGroup'
 
 // Fonction utilitaire pour gérer les styles unitaires dynamiquement
 export const updateUnitaryStyles = (drawing_area: Class_DrawingArea) => {
-  drawing_area.bypass_redraws = true
   const center_nodes = drawing_area.sankey.visible_nodes_list
     .filter(node => node.tags_dict['unitary']?.is_selected ||
             (node.tags_dict['product_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['product_unitary']?.is_selected ||
             (node.tags_dict['sector_unitary']?.group as Class_ViewTagGroup)?.activated && node.tags_dict['sector_unitary']?.is_selected)
 
-
+  // IMPORTANT : ne poser bypass_redraws qu'APRÈS ce garde. Sinon, pour un view tag
+  // GÉNÉRIQUE (pas de nœud central unitaire), on return early en laissant
+  // bypass_redraws=true → tous les draw()/recenter() suivants deviennent no-op
+  // (positions calculées mais pas rendues : « il faut re-sélectionner pour voir »).
   if (center_nodes.length === 0) return
+  drawing_area.bypass_redraws = true
 
   // Le repositionnement de la légende fait partie du layout du board unitaire :
   // on ne le fait QUE quand des nœuds unitaires sont actifs. Le faire avant ce
