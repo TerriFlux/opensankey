@@ -217,6 +217,17 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
       </Button>
     </OSTooltip>
 
+    <OSTooltip placement={app_data.is_static ? 'left' : 'top'} label={t('Banner.tooltipRecenter')}>
+      <Button variant='toolbar_button_6'
+        size={size}
+        onClick={() => {
+          app_data.drawing_area.to_recenter = true
+          app_data.drawing_area.recenter()
+        }}>
+        {app_data.icon_library.icon_recenter}
+      </Button>
+    </OSTooltip>
+
     <OSTooltip
       placement={app_data.is_static ? 'left' : 'top'}
       label={app_data.drawing_area.font_size_locked ? t('Banner.tooltipFontLocked') : t('Banner.tooltipFontUnlocked')}
