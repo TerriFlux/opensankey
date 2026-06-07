@@ -27,7 +27,7 @@ import React from 'react'
 import { faCopy, faDeleteLeft, faFolderTree, faIcons, faListCheck, faObjectUngroup } from '@fortawesome/free-solid-svg-icons'
 import { FaCaretSquareLeft, FaCaretSquareRight, FaCog, FaFileImport, FaPalette, FaRandom, FaUser, FaPowerOff } from 'react-icons/fa'
 import {
-  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
+  faArrowPointer, faArrowsLeftRight, faArrowsUpDown, faArrowsToDot, faChartSimple, faCloudArrowUp, faCompress, faDownload, faExpand,
   faFile, faFileExport, faFileInvoice, faFolderOpen, faGears, faImage, faPenNib, faPenToSquare, faPlus, faRepeat,
   faRotateLeft, faRotateRight, faShapes, faShareNodes, faSliders, faTable, faUpRightFromSquare, faXmark, faBox, faFileExcel, faFileCode, faArrowRightArrowLeft, faBrush,
   faLock, faLockOpen, faFont
@@ -1555,6 +1555,7 @@ export class Class_IconLibrary {
 
   protected _icon_area_fit_vert = <FontAwesomeIcon icon={faArrowsUpDown} />
   protected _icon_area_fit_horiz = <FontAwesomeIcon icon={faArrowsLeftRight} />
+  protected _icon_recenter = <FontAwesomeIcon icon={faArrowsToDot} />
 
   protected _icon_font_size_locked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLock} /></span>
   protected _icon_font_size_unlocked = <span style={{ display: 'inline-flex', alignItems: 'center', gap: '1px' }}><FontAwesomeIcon icon={faFont} style={{ fontSize: '0.7em' }} /><FontAwesomeIcon icon={faLockOpen} /></span>
@@ -1740,6 +1741,7 @@ export class Class_IconLibrary {
   public get icon_exit_fullscreen() { return this._icon_exit_fullscreen }
   public get icon_area_fit_vert() { return this._icon_area_fit_vert }
   public get icon_area_fit_horiz() { return this._icon_area_fit_horiz }
+  public get icon_recenter() { return this._icon_recenter }
   public get icon_font_size_locked() { return this._icon_font_size_locked }
   public get icon_font_size_unlocked() { return this._icon_font_size_unlocked }
   public get icon_size_locked() { return this._icon_size_locked }
