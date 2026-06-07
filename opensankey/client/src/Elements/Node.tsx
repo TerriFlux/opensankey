@@ -1529,7 +1529,43 @@ export class Class_NodeElement extends Class_NodeBase {
       const the_unitary_tagg = is_product ? 'product_unitary' : is_sector ? 'sector_unitary' : 'unitary'
       return this._taggs_dict[the_unitary_tagg]  && (this._taggs_dict[the_unitary_tagg][0].group as Class_ViewTagGroup).activated && this._taggs_dict[the_unitary_tagg][0].is_selected
     }
-    return false    
+    return false
+  }
+
+  /**
+   * Filtre « mode vue » (cf. Class_ViewTagGroup.view_mode), version PLATE qui
+   * court-circuite les level tags. Retourne :
+   *  - undefined : aucun groupe view tag en mode filtre, OU ce nœud ne porte aucun
+   *    de ces groupes → porte node-tag/dimension normale ;
+   *  - true  : le nœud porte une étiquette SÉLECTIONNÉE d'un groupe en mode filtre ;
+   *  - false : le nœud porte une autre étiquette (non sélectionnée) d'un tel groupe.
+   * (Visibilité seulement — pas de remontée vers les ancêtres ; cf. #173 pour ça.)
+   */
+  public viewTagVisibility(): boolean | undefined {
+    const groups = this.sankey.view_mode_groups
+    if (groups.length === 0) return undefined
+    // INTERSECTION (AND) de tous les groupes en mode filtre : un nœud n'est visible
+    // que s'il satisfait CHAQUE groupe auquel il est concerné. Croiser deux filtres
+    // affine donc le détail (on retire globalement des nœuds). Retourne undefined si
+    // le nœud n'est concerné par aucun groupe (porte node-tag/dimension normale).
+    let concerned = false
+    let visible = true
+    for (const g of groups) {
+      const own = this.grouped_taggs_dict[g.id]
+      if (own && own.length > 0) {
+        // Porte ce groupe : doit avoir une étiquette sélectionnée.
+        concerned = true
+        if (!own.some(tag => tag.is_selected)) visible = false
+      } else if (this.dimensions_as_parent.some(dim =>
+        dim.children.some(c => (c.grouped_taggs_dict[g.id]?.length ?? 0) > 0))) {
+        // Ne porte pas le groupe mais a un enfant qui le porte = AGRÉGAT de la vue
+        // (ex. nœud niveau 1 « bois ») → caché, sinon il s'afficherait EN PLUS des
+        // feuilles (superposition).
+        concerned = true
+        visible = false
+      }
+    }
+    return concerned ? visible : undefined
   }
 
   public get are_related_node_tags_selected(): boolean {
@@ -1569,6 +1605,13 @@ export class Class_NodeElement extends Class_NodeBase {
       } else {
         are_related_node_tags_selected = true
       }
+
+      // Mode filtre vue (généralisation du mécanisme unitaire) : un groupe view tag
+      // en mode filtre cache un nœud qui ne porte aucune de ses étiquettes sélectionnées.
+      // Décidé ICI (caché par node_tags_fingerprint) pour que la visibilité des liens
+      // se recalcule. Court-circuit des level tags via are_related_dimensions_selected.
+      const vt = this.viewTagVisibility()
+      if (vt !== undefined) are_related_node_tags_selected = vt && are_related_node_tags_selected
 
       if (are_related_node_tags_selected !== this._are_related_node_tags_selected) {
         this.updateVisibilityFingerprint()
@@ -1779,6 +1822,10 @@ export class Class_NodeElement extends Class_NodeBase {
 
   public get are_related_dimensions_selected(): boolean {
     if (this.is_unitary_tag) return true
+    // Mode filtre vue (généralisation de is_unitary_tag) : un nœud gouverné par un
+    // groupe view tag en mode filtre court-circuite les level tags. Le show/hide réel
+    // est décidé par are_related_node_tags_selected (fingerprinté).
+    if (this.sankey.view_mode_active && this.viewTagVisibility() !== undefined) return true
 
     if (this._are_related_dimensions_selected === undefined) {
       const are_related_dimensions_selected = this._nodeDimensionsManager.checkIfRelatedDimensionsAreSelected()

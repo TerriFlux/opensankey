@@ -174,6 +174,10 @@ export class Class_DrawingArea {
   protected _disaggregation_gap_mode: Type_DisaggregationGap = 'fill'
   public get disaggregation_gap_mode(): Type_DisaggregationGap { return this._disaggregation_gap_mode }
   public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
+  // Sous-mode GLOBAL du filtre vue (commun à tous les view tags) : 'filter' = visibilité
+  // seule (on garde les positions) ; 'auto' = filtre + mise en page auto des nœuds
+  // révélés. Session-global (non persisté), défaut 'auto'.
+  public view_filter_kind: 'filter' | 'auto' = 'auto'
 
   // Écart constant (px) utilisé par le mode 'constant'. null = utiliser
   // default_style.shape_position_dy (le getter le résout). Persisté seulement si défini.
