@@ -224,7 +224,17 @@ export const refreshAfterHierarchyChange = (app_data: Class_ApplicationData) => 
   const da = app_data.drawing_area as any
   try {
     if (!app_data.menu_configuration.spreadsheet_freeze) {
-      da.nodePositioning.computeAutoSankeyWithToast(true, true)
+      // Mêmes paramètres que le bouton « disposition auto » (cf. UniverSankeyBridge.redraw).
+      const default_dx = app_data.drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
+      const default_dy = app_data.drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
+      da.nodePositioning.computeAutoSankeyWithToast(
+        false,
+        app_data.layout_optimize_crossing,
+        app_data.layout_h_spacing ?? default_dx,
+        app_data.layout_v_spacing ?? default_dy,
+        app_data.layout_sources_mode,
+        app_data.layout_sinks_mode
+      )
     }
     app_data.draw()
   } catch (err) {

@@ -679,9 +679,16 @@ export class NodePositioning {
         horizontal_indexes_per_nodes_ids[node.id] = -1
       })
 
-      // Identifier et traiter les nœuds sources en priorité
-      const source_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && node.hasVisibleOutputLinks())
-      const lone_nodes = nodes_to_process.filter(node => !node.hasVisibleInputLinks() && !node.hasVisibleOutputLinks())
+      // Identifier et traiter les nœuds sources en priorité.
+      // On compte les liens « structurels » (is_visible_ignoring_zero) et pas seulement
+      // is_visible : un flux à valeur nulle (souvent fraîchement créé) doit quand même
+      // relier ses nœuds pour l'indexation horizontale, sinon le nœud cible apparaît
+      // comme une source/un nœud isolé et se retrouve mal placé en X (position_u, lui,
+      // ignore déjà la valeur — d'où la divergence X/U observée).
+      const hasLayoutInput = (node: Class_NodeElement) => node.input_links_list.some(l => l.is_visible_ignoring_zero)
+      const hasLayoutOutput = (node: Class_NodeElement) => node.output_links_list.some(l => l.is_visible_ignoring_zero)
+      const source_nodes = nodes_to_process.filter(node => !hasLayoutInput(node) && hasLayoutOutput(node))
+      const lone_nodes = nodes_to_process.filter(node => !hasLayoutInput(node) && !hasLayoutOutput(node))
 
       console.log('source nodes:', source_nodes.map(n => n.id))
       console.log('lone nodes:', lone_nodes.map(n => n.id))
@@ -1396,7 +1403,7 @@ export class NodePositioning {
 
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
-        if (!link_data || !link.is_visible) return
+        if (!link_data || !link.is_visible_ignoring_zero) return
         const target_id = link_data.target.id
         if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
 
@@ -1425,7 +1432,7 @@ export class NodePositioning {
 
       node.output_links_list.forEach(link => {
         const link_data = this.drawingArea.sankey.links_dict[link.id]
-        if (!link_data || !link.is_visible) return
+        if (!link_data || !link.is_visible_ignoring_zero) return
         const target_id = link_data.target.id
         if (!nodes_set.has(target_id) || recycling_set.has(link.id)) return
 
@@ -2071,19 +2078,22 @@ export class NodePositioning {
         if (import_link.length > 0) {
           this.drawingArea.sankey.nodes_dict[node_id].position_y -= import_link[0].thickness
         } else {
+          // is_visible_ignoring_zero (et pas is_visible) : un flux à valeur nulle (souvent
+          // fraîchement créé) doit quand même aligner verticalement son nœud cible sur sa
+          // source, sinon le nœud reste à son Y par défaut (cf. fix horizontal analogue).
           const non_recycling_input_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
-            l.is_visible && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
+            l.is_visible_ignoring_zero && !l.shape_is_recycling && !(echangeTag && l.source.hasGivenTag(echangeTag))
           )
 
           if (non_recycling_input_links.length > 0) {
             const recycling_links = this.drawingArea.sankey.nodes_dict[node_id].input_links_list.filter(l =>
-              l.is_visible && l.shape_is_recycling
+              l.is_visible_ignoring_zero && l.shape_is_recycling
             )
 
             if (recycling_links.length > 0) {
               this.drawingArea.sankey.nodes_dict[node_id].position_y += recycling_links[0].thickness
             } else if (non_recycling_input_links.filter(l =>
-              l.source.output_links_list.filter(ol => ol.is_visible).length == 1
+              l.source.output_links_list.filter(ol => ol.is_visible_ignoring_zero).length == 1
             ).length == 1 && idx == 0) {
               // Alignement des centres : si le premier nœud de la colonne a une
               // unique source 1-vers-1, on l'aligne verticalement avec cette source.
