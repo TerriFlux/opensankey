@@ -67,11 +67,19 @@ export const LINK_MENU_CONFIG: MenuConfig = {
         {
           type: 'button',
           actionName: 'applyStyleToChildren',
+          // Visible dès qu'au moins un flux parent (source ou cible parent) est
+          // sélectionné : l'action propage le style de CHAQUE flux parent
+          // sélectionné à ses propres flux enfants (multi-sélection supportée).
           visibilityConditions: [{
             type: 'custom',
             customCheck: (app_data) => {
-              const l = app_data.drawing_area.link_contextualised
-              return !!l && (l.source.is_parent || l.target.is_parent)
+              const selected = app_data.drawing_area.selected_links_list
+              const links = selected.length > 0
+                ? selected
+                : (app_data.drawing_area.link_contextualised
+                  ? [app_data.drawing_area.link_contextualised]
+                  : [])
+              return links.some(l => l.source.is_parent || l.target.is_parent)
             }
           }]
         },
@@ -570,12 +578,19 @@ export const createLinkModifier = (app_data: Class_ApplicationData) => {
       executeWithUndo(doReset, undoReset)
     },
 
-    // Propage le style du flux contextualisé à ses flux enfants (flux entre les
-    // descendants de la source et ceux de la cible). Undo/redo géré dans
-    // applyStyleToLinkChildren.
+    // Propage le style de chaque flux parent sélectionné à ses flux enfants
+    // (flux entre les descendants de la source et ceux de la cible).
+    // Multi-sélection supportée : si rien n'est sélectionné on retombe sur le
+    // flux contextualisé. Undo/redo (une seule transition) géré dans
+    // applyStyleToLinksChildren.
     applyStyleToChildren: () => {
-      if (!contextualised_link) return
-      drawing_area.applyStyleToLinkChildren(contextualised_link)
+      const selected = drawing_area.selected_links_list
+      const parents = (selected.length > 0
+        ? selected
+        : (contextualised_link ? [contextualised_link] : [])
+      ).filter(l => l.source.is_parent || l.target.is_parent)
+      if (parents.length === 0) return
+      drawing_area.applyStyleToLinksChildren(parents)
       refreshThisAndToggleSaving()
     },
 

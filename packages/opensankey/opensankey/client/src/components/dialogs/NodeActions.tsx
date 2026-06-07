@@ -771,12 +771,19 @@ export class NodeActions {
     this.executeWithUndo(doReset, undoReset)
   }
 
-  // Propage le style (styles custom + attributs) du nœud contextualisé à
-  // toute sa descendance dans la hiérarchie de dimensions (comme le pinceau,
-  // mais parent → enfants). L'undo/redo est géré dans applyStyleToNodeChildren.
+  // Propage le style (styles custom + attributs) de chaque nœud parent
+  // sélectionné à toute sa descendance dans la hiérarchie de dimensions (comme
+  // le pinceau, mais parent → enfants). Multi-sélection supportée : si aucun
+  // nœud n'est sélectionné on retombe sur le nœud contextualisé. L'undo/redo
+  // (une seule transition pour toute la sélection) est géré dans
+  // applyStyleToNodesChildren.
   applyStyleToChildren = () => {
-    if (!this.contextualised_node) return
-    this.drawing_area.applyStyleToNodeChildren(this.contextualised_node)
+    const parents = (this.selected_nodes.length > 0
+      ? this.selected_nodes
+      : (this.contextualised_node ? [this.contextualised_node] : [])
+    ).filter(n => n.is_parent)
+    if (parents.length === 0) return
+    this.drawing_area.applyStyleToNodesChildren(parents)
     this.refreshAndSave()
   }
 

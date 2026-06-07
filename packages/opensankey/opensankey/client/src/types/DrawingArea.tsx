@@ -176,8 +176,8 @@ export class Class_DrawingArea {
   public set disaggregation_gap_mode(v: Type_DisaggregationGap) { this._disaggregation_gap_mode = v }
   // Sous-mode GLOBAL du filtre vue (commun à tous les view tags) : 'filter' = visibilité
   // seule (on garde les positions) ; 'auto' = filtre + mise en page auto des nœuds
-  // révélés. Session-global (non persisté), défaut 'auto'.
-  public view_filter_kind: 'filter' | 'auto' = 'auto'
+  // révélés. Session-global (non persisté), défaut 'filter'.
+  public view_filter_kind: 'filter' | 'auto' = 'filter'
 
   // Écart constant (px) utilisé par le mode 'constant'. null = utiliser
   // default_style.shape_position_dy (le getter le résout). Persisté seulement si défini.
@@ -2602,17 +2602,18 @@ export class Class_DrawingArea {
   }
 
   /**
-   * Propage le style du nœud `source` à toute sa descendance dans la hiérarchie
-   * de dimensions (désagrégation), même si les enfants sont actuellement
-   * agrégés/masqués. Toutes les modifications sont regroupées dans une seule
-   * transition d'historique (un seul undo/redo).
+   * Collecte (sans toucher à l'historique) les transitions de propagation du
+   * style du nœud `source` à toute sa descendance dans la hiérarchie de
+   * dimensions. Partagé par la variante mono- et multi-source.
    */
-  public applyStyleToNodeChildren(source: Class_NodeElement): void {
+  private _collectStyleToNodeChildren(
+    source: Class_NodeElement,
+    undos: Array<() => void>,
+    redos: Array<() => void>
+  ): void {
     // collectNodeDescendants inclut le nœud lui-même ; on l'exclut pour ne pas
     // « réappliquer » le style du parent sur lui-même.
     const descendants = [...NodePositioning.collectNodeDescendants(source)].filter(n => n !== source)
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
     descendants.forEach(target => {
       const transition = this._applyStyleFromSourceToTarget(source, target)
       if (transition) {
@@ -2620,6 +2621,27 @@ export class Class_DrawingArea {
         redos.push(transition.redo)
       }
     })
+  }
+
+  /**
+   * Propage le style du nœud `source` à toute sa descendance dans la hiérarchie
+   * de dimensions (désagrégation), même si les enfants sont actuellement
+   * agrégés/masqués. Toutes les modifications sont regroupées dans une seule
+   * transition d'historique (un seul undo/redo).
+   */
+  public applyStyleToNodeChildren(source: Class_NodeElement): void {
+    this.applyStyleToNodesChildren([source])
+  }
+
+  /**
+   * Variante multi-sélection : propage le style de CHAQUE nœud parent de
+   * `sources` à sa propre descendance, le tout regroupé dans une seule
+   * transition d'historique.
+   */
+  public applyStyleToNodesChildren(sources: Class_NodeElement[]): void {
+    const undos: Array<() => void> = []
+    const redos: Array<() => void> = []
+    sources.forEach(source => this._collectStyleToNodeChildren(source, undos, redos))
     if (undos.length === 0) return
     this.application_data.history.saveUndo(() => undos.forEach(u => u()))
     this.application_data.history.saveRedo(() => redos.forEach(r => r()))
@@ -2632,6 +2654,19 @@ export class Class_DrawingArea {
    * Toutes les modifications sont regroupées dans une seule transition undo/redo.
    */
   public applyStyleToLinkChildren(source: Class_LinkElement): void {
+    this.applyStyleToLinksChildren([source])
+  }
+
+  /**
+   * Collecte (sans toucher à l'historique) les transitions de propagation du
+   * style du flux `source` à ses flux enfants. Partagé par la variante mono- et
+   * multi-source.
+   */
+  private _collectStyleToLinkChildren(
+    source: Class_LinkElement,
+    undos: Array<() => void>,
+    redos: Array<() => void>
+  ): void {
     // Même logique que NodePositioning.collectChildLinks (propagation de la
     // droiture aux flux désagrégés) : on parcourt TOUS les liens du sankey (les
     // flux enfants existent même quand le parent est agrégé, juste invisibles) et
@@ -2645,8 +2680,6 @@ export class Class_DrawingArea {
       src_descendants.has(link.source as Class_NodeElement) &&
       tgt_descendants.has(link.target as Class_NodeElement)
     ) as Class_LinkElement[]
-    const undos: Array<() => void> = []
-    const redos: Array<() => void> = []
     child_links.forEach(target => {
       const transition = this._applyStyleFromSourceToTarget(source, target)
       if (transition) {
@@ -2654,6 +2687,17 @@ export class Class_DrawingArea {
         redos.push(transition.redo)
       }
     })
+  }
+
+  /**
+   * Variante multi-sélection : propage le style de CHAQUE flux parent de
+   * `sources` à ses propres flux enfants, le tout regroupé dans une seule
+   * transition d'historique.
+   */
+  public applyStyleToLinksChildren(sources: Class_LinkElement[]): void {
+    const undos: Array<() => void> = []
+    const redos: Array<() => void> = []
+    sources.forEach(source => this._collectStyleToLinkChildren(source, undos, redos))
     if (undos.length === 0) return
     this.application_data.history.saveUndo(() => undos.forEach(u => u()))
     this.application_data.history.saveRedo(() => redos.forEach(r => r()))
