@@ -923,6 +923,12 @@ export class Class_LevelTagGroup  extends Class_NodeTagGroup{
 export class Class_ViewTagGroup extends Class_NodeTagGroup {
   private _activated: boolean = false
   private _siblings: string[] = []
+  // Mode « filtre vue » : quand actif sur un groupe de view tags (banner 'one'),
+  // sélectionner une étiquette filtre le diagramme en COURT-CIRCUITANT les level
+  // tags (généralisation du mécanisme unitaire) : les nœuds portant l'étiquette
+  // sélectionnée sont montrés quel que soit le niveau, les autres étiquettes du
+  // groupe sont cachées. (Visibilité seulement — pas de remontée vers les ancêtres.)
+  private _view_mode: boolean = false
 
   /**
    * True if tag is currently on a deletion process
@@ -969,20 +975,25 @@ export class Class_ViewTagGroup extends Class_NodeTagGroup {
     super._copyFrom(tagg_to_copy)
     this._activated = tagg_to_copy._activated
     this._siblings = [...tagg_to_copy._siblings]
+    this._view_mode = tagg_to_copy._view_mode
   }
 
   protected _toJSON(json_object: Type_JSON, _kwargs?: Type_JSON) {
     super._toJSON(json_object, _kwargs)
     json_object['activated'] = this._activated
     json_object['siblings'] = this._siblings
-
+    json_object['view_mode'] = this._view_mode
   }
 
   protected _fromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     super._fromJSON(json_object, kwargs)
     this._activated = getBooleanFromJSON(json_object, 'activated', this._activated)
     this._siblings = getStringListFromJSON(json_object, 'siblings', this._siblings)
+    this._view_mode = getBooleanFromJSON(json_object, 'view_mode', this._view_mode)
   }
+
+  public get view_mode(): boolean { return this._view_mode }
+  public set view_mode(_: boolean) { this._view_mode = _ }
 
   /**
    * Function to add sibling to current group and referenced group,
