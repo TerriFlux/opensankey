@@ -124,9 +124,15 @@ export const NODE_MENU_CONFIG: MenuConfig = {
         {
           type: 'button',
           actionName: 'applyStyleToChildren',
+          // Visible dès qu'au moins un nœud parent est sélectionné : l'action
+          // propage le style de CHAQUE nœud parent sélectionné à ses propres
+          // enfants (multi-sélection supportée).
           visibilityConditions: [
-            { type: 'nodeCount', operator: '==', value: 1 },
-            { type: 'nodeProperty', property: 'is_parent', operator: '==', value: true }
+            {
+              type: 'custom',
+              customCheck: (app_data) =>
+                app_data.drawing_area.selected_nodes_list.some(n => n.is_parent)
+            }
           ]
         },
         { type: 'widget', widgetName: 'ButtonNodeContextAssignStyle' }
