@@ -178,7 +178,7 @@ test_opensankey:
     ENV: test
     APP_NAME: test_sankeyapp
   tags:
-    - test
+    - py312
   environment:
     name: test
   before_script:
@@ -224,7 +224,7 @@ prod_opensankey:
     ENV: prod
     APP_NAME : prod_sankeyapp
   tags:
-    - prod
+    - py312
   environment:
     name: prod
   rules:
