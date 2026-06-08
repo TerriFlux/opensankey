@@ -1,6 +1,10 @@
 {
   "permissions": {
     "allow": [
+      "Bash(curl -s \"https://gitlab.com/api/v4/*)",
+      "Bash(curl -s -H \"PRIVATE-TOKEN: $GITLAB_TOKEN\" *)",
+      "Bash(git -C * log *)",
+      "Bash(git -C * rev-parse *)",
       "Bash(git:*)",
       "Bash(glab:*)",
       "Bash(pnpm:*)",
