@@ -13,7 +13,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import {
   Button, Popover, PopoverTrigger, PopoverContent, PopoverArrow, PopoverBody,
-  Portal, Input, Checkbox, Divider, VStack, Text
+  Portal, Input, Checkbox, Divider, VStack, Text, Menu, MenuButton, MenuList, MenuItem
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
 
@@ -27,6 +27,67 @@ import { parseHierarchyFromLevels, refreshAfterHierarchyChange } from './UniverH
 import { AddConstraintModal } from './AddConstraintModal'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+// Filtres d'affichage du tableur. Pour l'instant deux modes ; la liste est destinée à s'enrichir
+// (ex. masquer les flux à zéro, n'afficher qu'un tag…) sans toucher au reste de la barre d'outils.
+// 'visible' = seulement les éléments visibles (exclut repliés/agrégés) → onlyVisible.
+const DISPLAY_FILTERS: { id: 'all' | 'visible', label: string }[] = [
+  { id: 'all', label: 'Tout afficher' },
+  { id: 'visible', label: 'Visibles uniquement' }
+]
+
+// Modes de placement des nœuds créés depuis le tableur (cf. MenuConfig.spreadsheet_placement_mode).
+const PLACEMENT_MODES: { id: 'auto' | 'none' | 'increment', label: string }[] = [
+  { id: 'auto', label: 'Placement : auto' },
+  { id: 'none', label: 'Placement : aucun' },
+  { id: 'increment', label: 'Placement : incrémental' }
+]
+
+/**
+ * Sélecteur mono-choix compact, calqué sur le style des boutons « Onglets »/« Colonnes »
+ * (Button outline xs + chevron). Affiche le libellé de l'option courante ; les options sont
+ * dans un menu déroulant.
+ */
+const SingleSelectMenu = <T extends string>(
+  { value, options, onChange, maxW, title }:
+  {
+    value: T, options: { id: T, label: string }[], onChange: (v: T) => void,
+    maxW?: string, title?: string
+  }
+) => {
+  const current = options.find((o) => o.id === value)
+  return (
+    <Menu isLazy placement='bottom-start'>
+      <MenuButton
+        as={Button}
+        size='xs'
+        variant='outline'
+        rightIcon={<ChevronDownIcon />}
+        fontWeight='normal'
+        width='auto'
+        maxW={maxW ?? '170px'}
+        flexShrink={0}
+        title={title}
+      >
+        {current ? current.label : ''}
+      </MenuButton>
+      <Portal>
+        <MenuList minW='auto' zIndex='popover'>
+          {options.map((o) => (
+            <MenuItem
+              key={o.id}
+              fontSize='xs'
+              fontWeight={o.id === value ? 'bold' : 'normal'}
+              onClick={() => onChange(o.id)}
+            >
+              {o.label}
+            </MenuItem>
+          ))}
+        </MenuList>
+      </Portal>
+    </Menu>
+  )
+}
 
 /**
  * Sélecteur de colonnes optionnelles, style filtre Excel (Popover + recherche + "Tout sélectionner"
@@ -226,6 +287,10 @@ export const UniverSpreadSheet = (
   const [onlyVisible, setOnlyVisible] = useState(false)
   // Mode filtre (autofilter Excel) actif sur l'onglet courant.
   const [filterOn, setFilterOn] = useState(false)
+  // Mode de placement des nœuds créés depuis le tableur (miroir de menu_configuration).
+  const [placementMode, setPlacementMode] = useState<'auto' | 'none' | 'increment'>(
+    app_data.menu_configuration.spreadsheet_placement_mode
+  )
   // Modale « Ajouter une contrainte » (onglets Ratio flux / Ratio stock flux / Chaînage stock).
   const [isAddConstraintOpen, setIsAddConstraintOpen] = useState(false)
 
@@ -633,15 +698,24 @@ export const UniverSpreadSheet = (
           Filtrer
         </Button>
 
-        <Checkbox
-          size='sm'
-          isChecked={onlyVisible}
-          onChange={(e) => toggleOnlyVisible(e.target.checked)}
-          flexShrink={0}
-          width='auto'
-        >
-          <Text fontSize='xs'>Visibles uniquement</Text>
-        </Checkbox>
+        {/* Filtre d'affichage (extensible : voir DISPLAY_FILTERS). */}
+        <SingleSelectMenu
+          value={onlyVisible ? 'visible' : 'all'}
+          options={DISPLAY_FILTERS}
+          onChange={(v) => toggleOnlyVisible(v === 'visible')}
+          title="Filtre d'affichage des lignes du tableur"
+        />
+
+        {/* Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud). */}
+        <SingleSelectMenu
+          value={placementMode}
+          options={PLACEMENT_MODES}
+          onChange={(m) => {
+            setPlacementMode(m)
+            app_data.menu_configuration.spreadsheet_placement_mode = m
+          }}
+          title="Comment positionner un nœud créé en ajoutant un flux : auto (disposition complète), aucun (position par défaut), incrémental (devine la place sans bouger les autres)"
+        />
       </div>
       <div ref={containerRef} style={{ flex: 1, minHeight: 0 }} />
       <AddConstraintModal
