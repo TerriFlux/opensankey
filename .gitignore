@@ -70,3 +70,8 @@ dbg_constraints__summary_txt_filename
 
 # Local POC outputs (test_dual_output_poc.py)
 tmp_poc/
+
+# Fichiers temporaires et logs locaux
+_tmp_*.json
+logs/
+.claude/scheduled_tasks.lock
