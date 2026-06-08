@@ -223,7 +223,9 @@ export const expandSelected = (app_data: Class_ApplicationData, univerAPI: any):
 export const refreshAfterHierarchyChange = (app_data: Class_ApplicationData) => {
   const da = app_data.drawing_area as any
   try {
-    if (!app_data.menu_configuration.spreadsheet_freeze) {
+    // Relayout complet seulement en mode 'auto' (freeze legacy force 'none').
+    const placement = app_data.menu_configuration.spreadsheet_placement_mode
+    if (placement === 'auto' && !app_data.menu_configuration.spreadsheet_freeze) {
       // Mêmes paramètres que le bouton « disposition auto » (cf. UniverSankeyBridge.redraw).
       const default_dx = app_data.drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
       const default_dy = app_data.drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0

@@ -34,8 +34,66 @@ export const attachSankeyBridge = (
   const rowLinks = (): any[] => fluxRowLinks(app_data, onlyVisibleRef.current)
   const rowNodes = (): any[] => noeudsRowEntries(app_data, onlyVisibleRef.current).map((e: any) => e.node)
 
-  const redraw = () => {
-    if (!menu_configuration.spreadsheet_freeze) {
+  // Place les nœuds NOUVELLEMENT créés (ajout de flux/nœud) sans toucher aux nœuds existants.
+  // Heuristique : un nœud se cale juste à DROITE de ses voisins amont (sources) ou juste à
+  // GAUCHE de ses voisins aval (cibles) déjà positionnés, à leur hauteur moyenne. Plusieurs
+  // passes pour résoudre les chaînes de nœuds tous neufs (A→B où A et B sont inédits).
+  const placeNewNodesIncrementally = (newNodes: any[]) => {
+    if (!newNodes || newNodes.length === 0) {
+      return
+    }
+    const default_dx = sankey.styles_dict['default'].shape_position_dx ?? 0
+    const default_dy = sankey.styles_dict['default'].shape_position_dy ?? 0
+    const hx = app_data.layout_h_spacing ?? default_dx ?? 100
+    const vy = app_data.layout_v_spacing ?? default_dy ?? 50
+    const newSet = new Set(newNodes)
+    // Un voisin est utilisable comme repère s'il est déjà positionné (= pas un autre nœud neuf
+    // encore non placé). On le suit via un set des nœuds restant à placer.
+    const pending = new Set(newNodes)
+    const avg = (xs: number[]): number => xs.reduce((a, b) => a + b, 0) / xs.length
+
+    let progressed = true
+    while (pending.size > 0 && progressed) {
+      progressed = false
+      pending.forEach((n: any) => {
+        const sources = n.input_links_list.map((l: any) => l.source).filter((s: any) => !pending.has(s))
+        const targets = n.output_links_list.map((l: any) => l.target).filter((t: any) => !pending.has(t))
+        let x: number | null = null
+        let y: number | null = null
+        if (sources.length > 0) {
+          const ref = sources.reduce((a: any, b: any) => (b.position_x > a.position_x ? b : a))
+          x = ref.position_x + ref.getShapeWidthToUse() + hx
+          y = avg(sources.map((s: any) => s.position_y))
+        } else if (targets.length > 0) {
+          const ref = targets.reduce((a: any, b: any) => (b.position_x < a.position_x ? b : a))
+          x = ref.position_x - n.getShapeWidthToUse() - hx
+          y = avg(targets.map((t: any) => t.position_y))
+        }
+        if (x !== null && y !== null) {
+          // Évite l'empilement exact sur un nœud déjà placé à la même colonne.
+          const h = n.getShapeHeightToUse() || 1
+          const collide = (yy: number) => sankey.nodes_list.some((o: any) =>
+            o !== n && !newSet.has(o) && Math.abs(o.position_x - (x as number)) < 1 &&
+            Math.abs(o.position_y - yy) < h)
+          while (collide(y)) {
+            y += h + vy
+          }
+          n.setPosXY(x, y)
+          pending.delete(n)
+          progressed = true
+        }
+      })
+    }
+    // Les nœuds isolés (aucun voisin positionné : nœud ajouté seul dans l'onglet Noeuds) gardent
+    // leur position par défaut — rien à faire, ils restent où createNewNode les a posés.
+  }
+
+  // newNodes : nœuds créés par l'édition courante (mode 'increment' uniquement).
+  const redraw = (newNodes: any[] = []) => {
+    const mode = menu_configuration.spreadsheet_placement_mode
+    // 'spreadsheet_freeze' (legacy reactgrid) force le mode 'none' s'il est actif.
+    const effective = menu_configuration.spreadsheet_freeze ? 'none' : mode
+    if (effective === 'auto') {
       // Reproduire EXACTEMENT l'appel du bouton « disposition auto » (MenuContextAutoLayout) :
       // mêmes espacements et modes sources/puits configurés par l'utilisateur. L'ancien appel
       // `(true, true)` figeait les défauts (before_neighbor/after_neighbor, espacements = dx/dy
@@ -51,6 +109,24 @@ export const attachSankeyBridge = (
         app_data.layout_sources_mode,
         app_data.layout_sinks_mode
       )
+    } else if (effective === 'increment') {
+      placeNewNodesIncrementally(newNodes)
+    }
+    // 'none' : aucun replacement, le nouveau nœud garde sa position par défaut.
+
+    // Intégration légère des nouveaux nœuds (modes 'none'/'increment') : en mode parametric, la
+    // position Y d'un nœud est DÉRIVÉE de position_u ; un nœud fraîchement créé n'a pas de u, donc
+    // recomputeParametricLayout (appelé par drawElements) lui calcule un y invalide → il ne s'affiche
+    // pas (et part de 0 = rien ne se crée à l'écran). inferPositionUFromX + computeParametrization(false)
+    // lui donnent ses coordonnées paramétriques à partir de son x, SANS relayout complet (pas de reset
+    // d'ancres / recentrage / optimisation de croisements). C'est le chemin de la création de flux au
+    // drop canvas (cf. DrawingArea.eventReleasedClick). En mode absolu, position_x/y suffisent → rien à faire.
+    if (
+      effective !== 'auto' && newNodes.length > 0 &&
+      sankey.styles_dict['default'].shape_position_type === 'parametric'
+    ) {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.computeParametrization(false)
     }
     app_data.draw()
   }
@@ -321,6 +397,9 @@ export const attachSankeyBridge = (
     // signature change. Saut de ligne comme séparateur (improbable dans un nom de nœud).
     const nodeSig = (): string => sankey.nodes_list.map((n: any) => String(n.name)).join('\n')
     const beforeNodeSig = nodeSig()
+    // Ids des nœuds AVANT traitement : permet d'isoler les nœuds créés par cette édition pour le
+    // placement incrémental (mode 'increment').
+    const beforeNodeIds = new Set(sankey.nodes_list.map((n: any) => n.id))
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
     const originalLinkCount = rowLinks().length
     const originalNodeCount = rowNodes().length
@@ -404,9 +483,10 @@ export const attachSankeyBridge = (
     // La liste des nœuds a-t-elle changé (création/renommage/suppression d'orphelin via l'onglet
     // Flux notamment) ? Si oui, l'onglet Noeuds est devenu obsolète et doit être reconstruit.
     const nodesChanged = nodeSig() !== beforeNodeSig
+    const newNodes = sankey.nodes_list.filter((n: any) => !beforeNodeIds.has(n.id))
 
     if (structural) {
-      redraw()
+      redraw(newNodes)
     } else if (value) {
       drawing_area.updateScaleAtLinkValueSetting()
       app_data.draw()

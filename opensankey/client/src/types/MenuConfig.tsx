@@ -166,6 +166,14 @@ export class Class_MenuConfig {
 
   protected _spreadsheet_freeze = false
 
+  // Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud) :
+  //  - 'auto'      : relance la disposition automatique complète (comportement historique)
+  //  - 'none'      : ne replace rien, le nouveau nœud garde sa position par défaut
+  //  - 'increment' : ne bouge pas les nœuds existants, le nouveau nœud devine sa position
+  //                  à partir de ses voisins (cf. UniverSankeyBridge.placeNewNodesIncrementally)
+  // Réglage de session (non persisté).
+  protected _spreadsheet_placement_mode: 'auto' | 'none' | 'increment' = 'auto'
+
   /**
    * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
    *
@@ -1458,6 +1466,9 @@ export class Class_MenuConfig {
 
   public get spreadsheet_freeze() { return this._spreadsheet_freeze }
   public set spreadsheet_freeze(_) { this._spreadsheet_freeze = _ }
+
+  public get spreadsheet_placement_mode() { return this._spreadsheet_placement_mode }
+  public set spreadsheet_placement_mode(_: 'auto' | 'none' | 'increment') { this._spreadsheet_placement_mode = _ }
 
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }
