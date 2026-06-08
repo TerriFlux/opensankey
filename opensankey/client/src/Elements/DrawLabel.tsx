@@ -2085,11 +2085,12 @@ export class NodeDrawNameLabel extends NodeDrawLabelBase {
 
   protected onInputChange(value: string): void {
     // En mode label personnalisé, l'édition inline écrit dans le champ de label
-    // indépendant (le nœud n'est PAS renommé) ; sinon elle renomme le nœud,
-    // comportement historique.
-    if (this.node.name_label_custom) {
+    // indépendant (le nœud n'est PAS renommé) ; en mode 'name' elle renomme le
+    // nœud (historique) ; pour les sources dérivées (tag/ancestor) le label ne
+    // s'édite pas directement → on ignore la saisie.
+    if (this.node.name_label_source === 'custom') {
       this.node.name_label_text = value
-    } else {
+    } else if (this.node.name_label_source === 'name') {
       this.node.name = value
     }
     // Sync texte → fo_content uniquement en mode rich text
@@ -2639,6 +2640,13 @@ export class LinkDrawNameLabel extends LinkDrawLabelBase {
       const s = this.link.source?.name_label_effective ?? ''
       const t = this.link.target?.name_label_effective ?? ''
       return `${s} → ${t}`
+    }
+    case 'tag': {
+      // Tag de flux assigné au lien dans le groupe choisi (premier si plusieurs).
+      const group_id = this.link.name_label_flux_tag_group_id
+      if (group_id === '') return this.link.text_value
+      const tag = this.link.flux_tags_list.find(t => t.group.id === group_id)
+      return tag ? tag.display_name : this.link.text_value
     }
     case 'custom':
     default:

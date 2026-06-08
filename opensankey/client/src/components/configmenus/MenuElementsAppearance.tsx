@@ -999,7 +999,7 @@ const LabelContentComponent = ({
               </OverloadedButton>
             </Box>
           </Box>
-          {prefix === 'name_label' && (
+          {prefix === 'name_label' && (<>
             <Box layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Flux.labels.name_label_text_source')}
@@ -1014,28 +1014,50 @@ const LabelContentComponent = ({
                     value={linkLabelValues.text_source as string}
                     onChange={(evt) => { linkLabelValues.text_source = evt.target.value }}
                   >
-                    {['custom', 'none', 'source', 'target', 'source_target'].map(opt => (
+                    {['custom', 'none', 'source', 'target', 'source_target',
+                      ...(app_data.drawing_area.sankey.flux_taggs_list.length > 0 ? ['tag'] : [])].map(opt => (
                       <option key={'text_source_' + opt} value={opt}>{t('Flux.labels.text_source.' + opt)}</option>
                     ))}
                   </Select>
                 </OSTooltip>
               </InputIndicatorWrapper>
             </Box>
-          )}
+            {linkLabelValues.text_source === 'tag' && (
+              <Box layerStyle='menuconfigpanel_row_2cols'>
+                <Box layerStyle='menuconfigpanel_option_name'>
+                  {t('Flux.labels.name_label_tag_group')}
+                </Box>
+                <Select
+                  value={linkLabelValues.flux_tag_group_id as string}
+                  onChange={(evt) => { linkLabelValues.flux_tag_group_id = evt.target.value }}
+                >
+                  {app_data.drawing_area.sankey.flux_taggs_list.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </Select>
+              </Box>
+            )}
+          </>)}
           {/* </Box> */}
         </>
       ) : null}
-      {/* Contenu du label de nom : 'name' (= le nom de l'élément, historique) ou
-          'custom' (= un texte de label indépendant, éditable sans renommer
-          l'élément — même principe que text_value du flux). Factorisé pour les
-          nœuds ET les zones de texte (containers) : tous deux des Class_NodeBase
-          avec name_label_custom / name_label_text. */}
+      {/* Contenu du label de nom. Quatre sources, factorisées pour les nœuds ET
+          les zones de texte (containers), tous deux des Class_NodeBase :
+           - 'name'     : le nom de l'élément (historique)
+           - 'custom'   : un texte de label indépendant, éditable sans renommer
+           - 'tag'      : le nom long (display_name) d'un tag choisi
+           - 'ancestor' : le nom du nœud ancêtre racine le long d'une dimension */}
       {(() => {
         if (prefix !== 'name_label') return null
         const name_label_elements = [...selection.nodes, ...selection.containers] as Class_NodeBase[]
         if (name_label_elements.length === 0) return null
         const first = name_label_elements[0]
-        const is_custom = first?.name_label_custom ?? false
+        const source = first?.name_label_source ?? 'name'
+        const sankey = app_data.drawing_area.sankey
+        // Source 'tag' (nœuds) : on choisit un groupe de tags de nœud ; le label
+        // affiche le tag de ce groupe assigné au nœud (le premier si plusieurs).
+        const tag_groups = sankey.node_taggs_list
+        const dimension_groups = sankey.level_taggs_list
         // Libellé de l'option « nom » selon le type sélectionné.
         const name_option_label = selection.hasNodes
           ? t('Noeud.labels.text_source.name')
@@ -1047,24 +1069,30 @@ const LabelContentComponent = ({
             </Box>
             <OSTooltip label={t('Noeud.labels.tooltips.name_label_text_source')}>
               <Select
-                value={is_custom ? 'custom' : 'name'}
+                value={source}
                 onChange={(evt) => {
-                  const useCustom = evt.target.value === 'custom'
+                  const new_source = evt.target.value as 'name' | 'custom' | 'tag' | 'ancestor'
                   name_label_elements.forEach(n => {
-                    // À l'activation, amorcer le texte custom avec le nom courant
+                    // À l'activation custom, amorcer le texte avec le nom courant
                     // s'il est vide, pour ne pas afficher un label vide.
-                    if (useCustom && !n.name_label_text) n.name_label_text = n.name_label
-                    n.name_label_custom = useCustom
+                    if (new_source === 'custom' && !n.name_label_text) n.name_label_text = n.name_label
+                    // Amorcer le groupe par défaut pour la source 'tag'.
+                    if (new_source === 'tag' && !n.name_label_tag_group_id && tag_groups[0]) {
+                      n.name_label_tag_group_id = tag_groups[0].id
+                    }
+                    n.name_label_source = new_source
                   })
                   refreshParentComponent()
                 }}
               >
                 <option value='name'>{name_option_label}</option>
                 <option value='custom'>{t('Noeud.labels.text_source.custom')}</option>
+                {selection.hasNodes && tag_groups.length > 0 ? <option value='tag'>{t('Noeud.labels.text_source.tag')}</option> : null}
+                {selection.hasNodes ? <option value='ancestor'>{t('Noeud.labels.text_source.ancestor')}</option> : null}
               </Select>
             </OSTooltip>
           </Box>
-          {is_custom && displayMode === 'simple_text' ? (
+          {source === 'custom' && displayMode === 'simple_text' ? (
             <Box layerStyle='menuconfigpanel_row_2cols'>
               <Box layerStyle='menuconfigpanel_option_name'>
                 {t('Noeud.labels.name_label_text')}
@@ -1076,6 +1104,40 @@ const LabelContentComponent = ({
                   refreshParentComponent()
                 }}
               />
+            </Box>
+          ) : null}
+          {source === 'tag' ? (
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Noeud.labels.name_label_tag_group')}
+              </Box>
+              <Select
+                value={first?.name_label_tag_group_id ?? ''}
+                onChange={(evt) => {
+                  const group_id = evt.target.value
+                  name_label_elements.forEach(n => { n.name_label_tag_group_id = group_id })
+                  refreshParentComponent()
+                }}
+              >
+                {tag_groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </Select>
+            </Box>
+          ) : null}
+          {source === 'ancestor' && dimension_groups.length > 1 ? (
+            <Box layerStyle='menuconfigpanel_row_2cols'>
+              <Box layerStyle='menuconfigpanel_option_name'>
+                {t('Noeud.labels.name_label_dimension')}
+              </Box>
+              <Select
+                value={first?.name_label_dimension_id ?? ''}
+                onChange={(evt) => {
+                  name_label_elements.forEach(n => { n.name_label_dimension_id = evt.target.value })
+                  refreshParentComponent()
+                }}
+              >
+                <option value=''>{t('Noeud.labels.name_label_dimension_auto')}</option>
+                {dimension_groups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+              </Select>
             </Box>
           ) : null}
         </>

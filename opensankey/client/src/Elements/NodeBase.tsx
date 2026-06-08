@@ -37,6 +37,10 @@ import { NodeEventsHandler } from './NodeEventsHandler'
 export const default_selected_stroke_width = 3
 //export const label_margin = 0
 
+// Sources possibles pour le contenu du label de nom d'un nœud / d'une zone de
+// texte. Voir _name_label_source sur Class_NodeBase.
+export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor'
+
 export function sortNodesElements(
   a: Class_NodeBase | Class_ElementStyle,
   b: Class_NodeBase | Class_ElementStyle
@@ -60,13 +64,22 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_v: number
 
   protected _name: string
-  // Label de nom indépendant du nom du nœud (même principe que text_value du
-  // flux). Quand _name_label_custom est true, le name_label affiche
-  // _name_label_text au lieu du nom, et l'édition (inline + rich text) écrit
-  // dans _name_label_text SANS renommer le nœud. Défaut false → comportement
-  // historique (le label EST le nom).
-  protected _name_label_custom: boolean = false
+  // Source du contenu du label de nom. Défaut 'name' → comportement historique
+  // (le label EST le nom de l'élément). Les autres sources rendent un texte
+  // indépendant du nom, SANS renommer l'élément :
+  //  - 'custom'   : texte libre saisi (_name_label_text), édité inline / rich text
+  //  - 'tag'      : nom long (display_name) du tag de nœud assigné au nœud dans
+  //                 le groupe choisi (_name_label_tag_group_id ; premier si
+  //                 plusieurs). Réservé aux nœuds (un container n'a pas de tags).
+  //  - 'ancestor' : nom du nœud ancêtre racine le long d'une dimension choisie
+  //                 (_name_label_dimension_id ; un groupe de level tags)
+  protected _name_label_source: Type_NameLabelSource = 'name'
   protected _name_label_text: string = ''
+  // Source 'tag' : groupe de tags dont on affiche le tag assigné au nœud.
+  protected _name_label_tag_group_id: string = ''
+  // Source 'ancestor' : dimension (id de groupe de level tags) le long de
+  // laquelle remonter ; '' = première dimension dont le nœud est enfant.
+  protected _name_label_dimension_id: string = ''
   protected _nodeDrawShape: NodeDrawShape
   protected _nodeDrawNameLabel: NodeDrawNameLabel
   protected _nodeDrawIcon: NodeDrawNameLabel
@@ -188,8 +201,10 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
     this._name = _.name
-    this._name_label_custom = _._name_label_custom
+    this._name_label_source = _._name_label_source
     this._name_label_text = _._name_label_text
+    this._name_label_tag_group_id = _._name_label_tag_group_id
+    this._name_label_dimension_id = _._name_label_dimension_id
     this._position_u = _._position_u
     this._position_v = _._position_v
 
@@ -552,16 +567,40 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     return this._name
   }
 
-  // Label de nom indépendant (cf. _name_label_custom / _name_label_text).
-  public get name_label_custom() { return this._name_label_custom }
-  public set name_label_custom(_: boolean) { this._name_label_custom = _; this.drawNameLabel() }
+  // Source du contenu du label (cf. _name_label_source).
+  public get name_label_source(): Type_NameLabelSource { return this._name_label_source }
+  public set name_label_source(_: Type_NameLabelSource) { this._name_label_source = _; this.drawNameLabel() }
+  // Compat historique : name_label_custom <=> source 'custom'. Conserve le
+  // comportement des appelants existants (édition inline/rich text, titre…).
+  public get name_label_custom() { return this._name_label_source === 'custom' }
+  public set name_label_custom(_: boolean) { this._name_label_source = _ ? 'custom' : 'name'; this.drawNameLabel() }
   public get name_label_text() { return this._name_label_text }
   public set name_label_text(_: string) { this._name_label_text = _; this.drawNameLabel() }
-  // Texte effectivement affiché par le name_label : le texte custom indépendant
-  // quand il est activé, sinon le nom (avec le découpage par séparateur). Sert de
-  // source unique au rendu (getLabelText) et à l'init du rich text.
+  public get name_label_tag_group_id() { return this._name_label_tag_group_id }
+  public set name_label_tag_group_id(_: string) { this._name_label_tag_group_id = _; this.drawNameLabel() }
+  public get name_label_dimension_id() { return this._name_label_dimension_id }
+  public set name_label_dimension_id(_: string) { this._name_label_dimension_id = _; this.drawNameLabel() }
+
+  // Texte effectivement affiché par le name_label, selon la source choisie. Sert
+  // de source unique au rendu (getLabelText) et à l'init du rich text.
   public get name_label_effective(): string {
-    return this._name_label_custom ? this._name_label_text : this.name_label
+    switch (this._name_label_source) {
+    case 'custom': return this._name_label_text
+    case 'tag': return this.resolveTagLabel()
+    case 'ancestor': return this.resolveAncestorLabel()
+    default: return this.name_label
+    }
+  }
+
+  // Sources 'tag' et 'ancestor' : surchargées par Class_NodeElement (qui porte
+  // les tags et les dimensions). Par défaut (zone de texte / base) → nom de
+  // l'élément, car un container n'a ni tags assignés ni dimensions.
+  protected resolveTagLabel(): string {
+    return this.name_label
+  }
+
+  protected resolveAncestorLabel(): string {
+    return this.name_label
   }
 
   public get attached_container(): Class_NodeBase[] { return this._attached_container }

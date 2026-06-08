@@ -40,7 +40,7 @@ import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
 import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttributeValue } from '../Elements/Element'
 import { Class_LinkElement } from '../Elements/Link'
-import { Class_NodeBase } from '../Elements/NodeBase'
+import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
 import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
@@ -237,12 +237,18 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     json_object['name'] = node_base.name
     // Label de nom indépendant du nom du nœud. Écrit uniquement s'il est utilisé,
     // pour ne pas alourdir les fichiers ni modifier les diagrammes existants
-    // (rétro-compatible : absence des clés ⇒ défauts false/'' au chargement).
-    if (node_base.name_label_custom) {
-      json_object['name_label_custom'] = true
+    // (rétro-compatible : absence des clés ⇒ défaut 'name'/'' au chargement).
+    if (node_base.name_label_source !== 'name') {
+      json_object['name_label_source'] = node_base.name_label_source
     }
     if (node_base.name_label_text !== '') {
       json_object['name_label_text'] = node_base.name_label_text
+    }
+    if (node_base.name_label_tag_group_id !== '') {
+      json_object['name_label_tag_group_id'] = node_base.name_label_tag_group_id
+    }
+    if (node_base.name_label_dimension_id !== '') {
+      json_object['name_label_dimension_id'] = node_base.name_label_dimension_id
     }
     if (node_base.sankey.default_style.shape_position_type == 'parametric') {
       json_object['u'] = node_base.position_u
@@ -287,8 +293,14 @@ export class NodeBasePersistence extends ProtoElementPersistence {
     super.fromJSON(version, node_base, json_node_object, kwargs)
 
     node_base['_name'] = getStringFromJSON(json_node_object, 'name', node_base.name)
-    node_base['_name_label_custom'] = getBooleanFromJSON(json_node_object, 'name_label_custom', node_base.name_label_custom)
+    // Rétro-compat : anciens fichiers avec le booléen name_label_custom → 'custom'.
+    const legacy_custom = getBooleanFromJSON(json_node_object, 'name_label_custom', false)
+    node_base['_name_label_source'] = getStringFromJSON(
+      json_node_object, 'name_label_source', legacy_custom ? 'custom' : node_base.name_label_source
+    ) as Type_NameLabelSource
     node_base['_name_label_text'] = getStringFromJSON(json_node_object, 'name_label_text', node_base.name_label_text)
+    node_base['_name_label_tag_group_id'] = getStringFromJSON(json_node_object, 'name_label_tag_group_id', node_base.name_label_tag_group_id)
+    node_base['_name_label_dimension_id'] = getStringFromJSON(json_node_object, 'name_label_dimension_id', node_base.name_label_dimension_id)
     node_base['_position_u'] = getNumberFromJSON(json_node_object, 'u', node_base.position_u)
     node_base['_position_v'] = getNumberFromJSON(json_node_object, 'v', node_base.position_v)
 

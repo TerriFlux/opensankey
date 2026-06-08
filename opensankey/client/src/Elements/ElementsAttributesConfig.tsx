@@ -2978,7 +2978,7 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
   // Stocké aussi sur value_label par symétrie de createLinkLabelSpecificConfig
   // mais ignoré côté valeur.
   text_source: {
-    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target',
+    default: 'custom' as 'custom' | 'none' | 'flow' | 'source' | 'target' | 'source_target' | 'tag',
     type: (() => 'custom') as (() => string),
     category: '',
     actions: [] as BaseActionType[],
@@ -2990,11 +2990,34 @@ export const LINKS_LABEL_SPECIFIC_CONFIG = {
       it: 'Contenuto etichetta'
     },
     tooltips: {
-      en: 'Pick what the link label displays: typed text, nothing, source/target node name, or source → target',
-      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, ou source → destination',
-      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, o origen → destino',
-      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens oder Quelle → Ziel',
-      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, o sorgente → destinazione'
+      en: 'Pick what the link label displays: typed text, nothing, source/target node name, source → target, or an assigned flux tag',
+      fr: 'Choisir ce qu\'affiche le label du flux : texte saisi, rien, nom du nœud source/destination, source → destination, ou un tag de flux assigné',
+      es: 'Elegir lo que muestra la etiqueta: texto, nada, nombre del nodo origen/destino, origen → destino, o una etiqueta de flujo asignada',
+      de: 'Wählen, was die Beschriftung anzeigt: Text, nichts, Name des Quell-/Zielknotens, Quelle → Ziel oder ein zugewiesener Fluss-Tag',
+      it: 'Scegli cosa mostra l\'etichetta: testo, nulla, nome del nodo sorgente/destinazione, sorgente → destinazione, o un tag di flusso assegnato'
+    }
+  } satisfies AttributeConfig<string>,
+
+  // Source 'tag' : id du groupe de tags de flux dont on affiche le tag assigné
+  // au lien (le premier si plusieurs). Vide si la source n'est pas 'tag'.
+  flux_tag_group_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: '',
+    actions: [] as BaseActionType[],
+    labels: {
+      en: 'Tag group',
+      fr: 'Groupe de tags',
+      es: 'Grupo de etiquetas',
+      de: 'Tag-Gruppe',
+      it: 'Gruppo di tag'
+    },
+    tooltips: {
+      en: 'Flux tag group whose assigned tag is shown as the label',
+      fr: 'Groupe de tags de flux dont le tag assigné est affiché comme label',
+      es: 'Grupo de etiquetas de flujo cuya etiqueta asignada se muestra como etiqueta',
+      de: 'Fluss-Tag-Gruppe, deren zugewiesener Tag als Beschriftung angezeigt wird',
+      it: 'Gruppo di tag di flusso il cui tag assegnato è mostrato come etichetta'
     }
   } satisfies AttributeConfig<string>,
 } as const
