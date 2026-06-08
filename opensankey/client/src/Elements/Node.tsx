@@ -566,6 +566,36 @@ export class Class_NodeElement extends Class_NodeBase {
     return [...new Set(nodeList)]
   }
 
+  // Source 'tag' du label : display_name du tag de nœud assigné au nœud dans le
+  // groupe choisi (le premier si plusieurs). Aucun tag dans ce groupe → nom du
+  // nœud.
+  protected override resolveTagLabel(): string {
+    const group_id = this._name_label_tag_group_id
+    if (group_id === '') return this.name_label
+    const tag = this.tags_list.find(t => t.group.id === group_id)
+    return tag ? tag.display_name : this.name_label
+  }
+
+  // Source 'ancestor' du label : remonte le long de la dimension choisie
+  // (_name_label_dimension_id = id d'un groupe de level tags) jusqu'à l'ancêtre
+  // racine, et affiche son nom. Dimension vide → première dimension dont le nœud
+  // est enfant. Aucun ancêtre → nom de l'élément (il EST déjà la racine).
+  protected override resolveAncestorLabel(): string {
+    let dim_id = this._name_label_dimension_id
+    if (dim_id === '') dim_id = this.dimensions_as_child[0]?.id ?? ''
+    if (dim_id === '') return this.name_label
+    let current = this.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+    if (!current) return this.name_label
+    const seen = new Set<string>([this.id])
+    while (current && !seen.has(current.id)) {
+      seen.add(current.id)
+      const next = current.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
+      if (!next) break
+      current = next
+    }
+    return current ? current.name_label : this.name_label
+  }
+
   // TAGS METHODS =======================================================================
   public hasGivenTag(tag: Class_Tag) { return this._nodeTagsManager.hasGivenTag(tag) }
   public tagsUpdated() { this._are_related_node_tags_selected = undefined }
