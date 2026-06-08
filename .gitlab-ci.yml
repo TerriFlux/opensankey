@@ -329,15 +329,18 @@ publish:python:
 
     # ----------------------------------------------------------------
     # MFAProblem — build_wheel_linux.sh gère tout (manylinux + auditwheel)
+    # Sans argument le script boucle sur cp310 et cp312, produisant deux
+    # wheels dans dist/. pip choisit automatiquement la bonne selon le
+    # Python de l'environnement cible.
     # ----------------------------------------------------------------
-    - echo "[publish:python] Build MFAProblem wheel (manylinux, cp312)"
-    - bash submodules/MFAProblem/build_wheel_linux.sh cp312-cp312
+    - echo "[publish:python] Build MFAProblem wheels (manylinux, cp310 + cp312)"
+    - bash submodules/MFAProblem/build_wheel_linux.sh cp310-cp310 cp312-cp312
 
     # ----------------------------------------------------------------
     # SankeyExcelParser — même recette manylinux pour cohérence
     # ----------------------------------------------------------------
-    - echo "[publish:python] Build SankeyExcelParser wheel (manylinux, cp312)"
-    - bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp312-cp312
+    - echo "[publish:python] Build SankeyExcelParser wheels (manylinux, cp310 + cp312)"
+    - bash submodules/OpenSankey+/submodules/OpenSankey/submodules/SankeyExcelParser/build_wheel_linux.sh cp310-cp310 cp312-cp312
 
     # ----------------------------------------------------------------
     # Ceinture-bretelles : les wheel builds tournent en root dans le
