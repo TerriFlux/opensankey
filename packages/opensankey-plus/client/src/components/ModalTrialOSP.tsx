@@ -52,23 +52,47 @@ const refreshAfterTrialChange = (app_data: Class_ApplicationDataOSP) => {
   } catch { /* menus may not be ready in all contexts */ }
 }
 
-/** Subscribe action shared by the expired modal and the bottom-bar banner.
- *
- * Two things to get right here:
- *  - The app runs under a HashRouter, so client routes live under `/#/...`.
- *    Navigating to a bare `/license/checkout` hits the Flask server (which does
- *    not serve it) and lands nowhere — it must be `#/license/checkout`.
- *  - `/license/checkout` is a PrivateRoute: a user without an account is bounced
- *    back to `/`. So users without an account are sent to account creation
- *    instead, which is the real first step of the subscription funnel.
- *
- * `app_data` is the SA subclass at runtime (Class_ApplicationDataSA extends the
- * OS+ one), which carries the login component — read it defensively.
- */
-const goToCheckout = (app_data: Class_ApplicationDataOSP) => {
-  const has_account = !!(app_data as unknown as
+// --- Dev override: force the "has account" answer to preview both CTA destinations
+//     (set by DevTrialDebugOSP). null = use the real login state. ---
+let _dev_force_account: boolean | null = null
+export const devSetForceAccount = (v: boolean | null): void => { _dev_force_account = v }
+export const devGetForceAccount = (): boolean | null => _dev_force_account
+
+/** Whether the user holds an account. `app_data` is the SA subclass at runtime
+ *  (Class_ApplicationDataSA extends the OS+ one), which carries the login component. */
+const readHasAccount = (app_data: Class_ApplicationDataOSP): boolean => {
+  if (_dev_force_account !== null) return _dev_force_account
+  return !!(app_data as unknown as
     { login_component?: { has_account?: boolean } }).login_component?.has_account
-  window.location.hash = has_account ? '#/license/checkout' : '#/register'
+}
+
+/** Where the subscribe CTA points. Two things to get right here:
+ *  - The app runs under a HashRouter, so client routes live under `/#/...`. A bare
+ *    `/license/checkout` hits the Flask server (which doesn't serve it) and lands
+ *    nowhere — it must be `#/license/checkout`.
+ *  - `/license/checkout` is a PrivateRoute: a user without an account is bounced back
+ *    to `/`. So users without an account are sent to account creation instead, which
+ *    is the real first step of the subscription funnel. */
+export const resolveCheckoutDestination = (app_data: Class_ApplicationDataOSP): string =>
+  readHasAccount(app_data) ? '#/license/checkout' : '#/register'
+
+/** Subscribe action shared by the expired modal and the bottom-bar banner. */
+export const goToCheckout = (app_data: Class_ApplicationDataOSP): void => {
+  window.location.hash = resolveCheckoutDestination(app_data)
+}
+
+// --- Dev: force-open the trial modals on demand, bypassing their normal triggers. ---
+type Type_TrialModalKind = 'welcome' | 'expired'
+const _force_open_listeners: Record<Type_TrialModalKind, Array<() => void>> = { welcome: [], expired: [] }
+export const devForceOpenTrialModal = (kind: Type_TrialModalKind): void => {
+  _force_open_listeners[kind].forEach((fn) => { try { fn() } catch { /* ignore */ } })
+}
+const subscribeForceOpen = (kind: Type_TrialModalKind, fn: () => void): (() => void) => {
+  _force_open_listeners[kind].push(fn)
+  return () => {
+    const i = _force_open_listeners[kind].indexOf(fn)
+    if (i >= 0) _force_open_listeners[kind].splice(i, 1)
+  }
 }
 
 // ==================================================================================================
@@ -84,6 +108,9 @@ export const ModalTrialWelcomeOSP: FC<TrialComponentProps> = ({ app_data }) => {
     if (hasBeenOffered()) return
     setShow(true)
   }, [app_data])
+
+  // Dev panel can force this modal open regardless of the trigger conditions.
+  useEffect(() => subscribeForceOpen('welcome', () => setShow(true)), [])
 
   const handleStart = () => {
     startTrial()
@@ -151,6 +178,9 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
     if (state.is_started && state.is_expired) setShow(true)
   }, [app_data])
 
+  // Dev panel can force this modal open regardless of the trigger conditions.
+  useEffect(() => subscribeForceOpen('expired', () => setShow(true)), [])
+
   const dismiss = () => {
     markExpiredAcknowledged()
     setShow(false)
@@ -211,6 +241,12 @@ const banner_listeners: Array<() => void> = []
 const bumpBanner = () => {
   _banner_revision += 1
   banner_listeners.forEach((fn) => { try { fn() } catch { /* ignore */ } })
+}
+
+/** Refresh menus + bottom-bar banner after a trial state change (used by the dev panel). */
+export const refreshTrialUI = (app_data: Class_ApplicationDataOSP): void => {
+  refreshAfterTrialChange(app_data)
+  bumpBanner()
 }
 
 export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {

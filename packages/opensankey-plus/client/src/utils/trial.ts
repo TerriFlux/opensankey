@@ -194,3 +194,49 @@ export const markTrialConverted = (): void => {
     /* ignore */
   }
 }
+
+// ==================================================================================================
+// Dev-only helpers — used by DevTrialDebugOSP to force any trial state without waiting 30 days or
+// hand-editing localStorage. Never called from the normal UI.
+// ==================================================================================================
+
+const ALL_TRIAL_KEYS = [
+  TRIAL_OFFERED_KEY, TRIAL_KEY, TRIAL_UUID_KEY,
+  TRIAL_PINGED_KEY, TRIAL_CONVERTED_KEY, TRIAL_EXPIRED_ACK_KEY,
+]
+
+/** Wipe every trial key — back to the pristine "first ever load" state (welcome modal fires). */
+export const devResetTrial = (): void => {
+  ALL_TRIAL_KEYS.forEach((k) => { try { localStorage.removeItem(k) } catch { /* ignore */ } })
+}
+
+/** Offered but never started (the welcome modal was dismissed with "Maybe later"). */
+export const devSetOffered = (): void => {
+  devResetTrial()
+  safeSet(TRIAL_OFFERED_KEY, '1')
+}
+
+/** Active trial with the given whole days remaining (clamped to [0, duration]). */
+export const devSetActive = (days_remaining: number): void => {
+  devResetTrial()
+  const remaining = Math.min(TRIAL_DURATION_DAYS, Math.max(0, Math.floor(days_remaining)))
+  const elapsed = TRIAL_DURATION_DAYS - remaining
+  safeSet(TRIAL_OFFERED_KEY, '1')
+  safeSet(TRIAL_KEY, String(Date.now() - elapsed * MS_PER_DAY))
+  safeSet(TRIAL_UUID_KEY, generateUUID())
+  safeSet(TRIAL_PINGED_KEY, '1')
+}
+
+/** Started trial just past expiry (day 31), ack cleared so the expired modal can fire. */
+export const devSetExpired = (): void => {
+  devResetTrial()
+  safeSet(TRIAL_OFFERED_KEY, '1')
+  safeSet(TRIAL_KEY, String(Date.now() - (TRIAL_DURATION_DAYS + 1) * MS_PER_DAY))
+  safeSet(TRIAL_UUID_KEY, generateUUID())
+  safeSet(TRIAL_PINGED_KEY, '1')
+}
+
+/** Clear the "expired modal acknowledged" flag so the one-shot behaviour can be re-tested. */
+export const devClearExpiredAck = (): void => {
+  try { localStorage.removeItem(TRIAL_EXPIRED_ACK_KEY) } catch { /* ignore */ }
+}
