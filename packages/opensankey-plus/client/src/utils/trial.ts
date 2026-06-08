@@ -24,6 +24,7 @@ const TRIAL_KEY = 'os_plus_trial_start'
 const TRIAL_UUID_KEY = 'os_plus_trial_uuid'
 const TRIAL_PINGED_KEY = 'os_plus_trial_pinged'
 const TRIAL_CONVERTED_KEY = 'os_plus_trial_converted'
+const TRIAL_EXPIRED_ACK_KEY = 'os_plus_trial_expired_ack'
 const TRIAL_DURATION_DAYS = 30
 const MS_PER_DAY = 1000 * 60 * 60 * 24
 
@@ -165,6 +166,17 @@ export const isTrialActive = (): boolean => getTrialState().is_active
 
 /** True once a started trial has expired. */
 export const isTrialExpired = (): boolean => getTrialState().is_expired
+
+/**
+ * The expired modal is a one-shot nag: once the user has made a choice
+ * (continue free / subscribe / dismiss), it must never reappear in this browser.
+ */
+export const hasExpiredBeenAcknowledged = (): boolean => safeGet(TRIAL_EXPIRED_ACK_KEY) === '1'
+
+/** Persist that the user has acknowledged the expired modal. */
+export const markExpiredAcknowledged = (): void => {
+  safeSet(TRIAL_EXPIRED_ACK_KEY, '1')
+}
 
 /**
  * Notify the server that this anonymous trial UUID has converted to a paid licence.

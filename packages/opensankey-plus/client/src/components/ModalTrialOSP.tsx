@@ -18,6 +18,8 @@ import {
   Box,
   Button,
   ButtonGroup,
+  IconButton,
+  Image,
   Modal,
   ModalBody,
   ModalContent,
@@ -32,7 +34,9 @@ import { Class_ApplicationDataOSP } from '../types/ApplicationDataOSP'
 import {
   getTrialState,
   hasBeenOffered,
+  hasExpiredBeenAcknowledged,
   hasTrialStarted,
+  markExpiredAcknowledged,
   markTrialOffered,
   startTrial,
 } from '../utils/trial'
@@ -48,10 +52,23 @@ const refreshAfterTrialChange = (app_data: Class_ApplicationDataOSP) => {
   } catch { /* menus may not be ready in all contexts */ }
 }
 
-/** Subscribe action shared by the welcome and expired modals. */
-const goToCheckout = () => {
-  // Same target as BannerSubscriptionSA / BannerTrialOSP.
-  window.location.href = '/license/checkout'
+/** Subscribe action shared by the expired modal and the bottom-bar banner.
+ *
+ * Two things to get right here:
+ *  - The app runs under a HashRouter, so client routes live under `/#/...`.
+ *    Navigating to a bare `/license/checkout` hits the Flask server (which does
+ *    not serve it) and lands nowhere — it must be `#/license/checkout`.
+ *  - `/license/checkout` is a PrivateRoute: a user without an account is bounced
+ *    back to `/`. So users without an account are sent to account creation
+ *    instead, which is the real first step of the subscription funnel.
+ *
+ * `app_data` is the SA subclass at runtime (Class_ApplicationDataSA extends the
+ * OS+ one), which carries the login component — read it defensively.
+ */
+const goToCheckout = (app_data: Class_ApplicationDataOSP) => {
+  const has_account = !!(app_data as unknown as
+    { login_component?: { has_account?: boolean } }).login_component?.has_account
+  window.location.hash = has_account ? '#/license/checkout' : '#/register'
 }
 
 // ==================================================================================================
@@ -127,16 +144,23 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
 
   useEffect(() => {
     if (app_data.has_real_sankey_plus_licence) return
+    // One-shot: never show it again once the user has made a choice.
+    if (hasExpiredBeenAcknowledged()) return
     const state = getTrialState()
     // Only nag users who actually started the trial. Users who declined never see this.
     if (state.is_started && state.is_expired) setShow(true)
   }, [app_data])
 
+  const dismiss = () => {
+    markExpiredAcknowledged()
+    setShow(false)
+  }
+
   return (
     <Modal
       isCentered
       isOpen={show}
-      onClose={() => setShow(false)}
+      onClose={dismiss}
       variant='modal_dialog'
     >
       <ModalOverlay />
@@ -152,13 +176,13 @@ export const ModalTrialExpiredOSP: FC<TrialComponentProps> = ({ app_data }) => {
           <ButtonGroup>
             <Button
               variant='menuconfigpanel_del_button'
-              onClick={() => setShow(false)}
+              onClick={dismiss}
             >
               {t('Trial.continue_free')}
             </Button>
             <Button
               variant='menuconfigpanel_add_button'
-              onClick={() => { setShow(false); goToCheckout() }}
+              onClick={() => { dismiss(); goToCheckout(app_data) }}
             >
               {t('Trial.subscribe')}
             </Button>
@@ -206,32 +230,42 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
 
   const state = getTrialState()
 
+  // Compact icon CTA that matches the surrounding top-bar icon buttons. The
+  // descriptive label lives in the tooltip so the button stays small.
+  const iconCTA = (label: string, onClick: () => void) => (
+    <Tooltip label={label} placement='top'>
+      <IconButton
+        aria-label={label}
+        variant='button_banner_subscription'
+        onClick={onClick}
+        minW='1.7rem'
+        w='1.7rem'
+        h='1.7rem'
+        p='0.2rem'
+        icon={
+          <Image
+            src={app_data.logo_sankey_plus}
+            alt=''
+            h='100%'
+            w='100%'
+            objectFit='contain'
+          />
+        }
+      />
+    </Tooltip>
+  )
+
   // Trial active — show countdown CTA pointing at the subscription page.
   if (state.is_active) {
-    return (
-      <Tooltip label={t('Trial.banner_active_tooltip')} placement='top'>
-        <Button
-          variant='button_banner_subscription'
-          onClick={goToCheckout}
-        >
-          {t('Trial.banner_active', { days: state.days_remaining })}
-        </Button>
-      </Tooltip>
+    return iconCTA(
+      t('Trial.banner_active', { days: state.days_remaining }),
+      () => goToCheckout(app_data),
     )
   }
 
   // Trial expired (or trial active but at day 31) — fall back to plain "Unlock" CTA.
   if (hasTrialStarted()) {
-    return (
-      <Tooltip label={t('Menu.get_premium_tooltip')} placement='top'>
-        <Button
-          variant='button_banner_subscription'
-          onClick={goToCheckout}
-        >
-          {t('Menu.get_premium')}
-        </Button>
-      </Tooltip>
-    )
+    return iconCTA(t('Menu.get_premium_tooltip'), () => goToCheckout(app_data))
   }
 
   // Trial not started yet — offer the opt-in directly from the banner.
@@ -240,16 +274,7 @@ export const BannerTrialOSP: FC<TrialComponentProps> = ({ app_data }) => {
     refreshAfterTrialChange(app_data)
     bumpBanner()
   }
-  return (
-    <Tooltip label={t('Trial.banner_start_tooltip')} placement='top'>
-      <Button
-        variant='button_banner_subscription'
-        onClick={handleStart}
-      >
-        {t('Trial.banner_start')}
-      </Button>
-    </Tooltip>
-  )
+  return iconCTA(t('Trial.banner_start_tooltip'), handleStart)
 }
 
 // Re-export the legacy name so existing imports keep working.
