@@ -803,77 +803,79 @@ export const UniversalFileConverter = ({
 
 
     // ========== MODE CHARGEMENT CLASSIQUE ==========
-    const path = window.location.origin
-    const url = path + url_prefix + 'upload/retrieve_result'
-    const form_data = new FormData()
+    // Le rapatriement du résultat puis le chargement dans la zone de dessin
+    // (retrieveJSONResults / fromJSON) peuvent figer l'UI plusieurs secondes sur
+    // un gros diagramme. On enveloppe tout dans sendWaitingToast pour afficher un
+    // spinner « Chargement du diagramme... » pendant cette phase sans feedback.
+    app_data.sendWaitingToast(
+      async () => {
+        const path = window.location.origin
+        const url = path + url_prefix + 'upload/retrieve_result'
+        const form_data = new FormData()
 
-    const fetchData = {
-      method: 'POST',
-      body: form_data
-    }
-    // app_data.sendWaitingToast(
-    //   async () => {
-    try {
-
-      const response = await fetch(url, fetchData)
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer()
-        //const uint8Array = new Uint8Array(arrayBuffer)
-        const decompressed = await decompressGzipDataFixed(arrayBuffer)
-        const jsonData = JSON.parse(decompressed)
-        if (input_format == 'example_json') {
-          app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
-        } else {
-          // Loading into the current view only (never replace app_data, otherwise
-          // the master and the other views are wiped). Two triggers:
-          //   - blob→blob reconciliation from the active view (always view-only),
-          //   - Excel import with the user-set ``only_current_view`` option
-          //     (checked by default, only shown when inside a view).
-          const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
-          const view_only =
-            is_inside_view && (
-              (input_format == 'blob' && output_format == 'blob') ||
-              (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
-            )
-          retrieveJSONResults(
-            app_data,
-            jsonData,
-            auto_layout,
-            output_options_json as Type_JSON,
-            app_data.layout_h_spacing ?? undefined,
-            app_data.layout_v_spacing ?? undefined,
-            app_data.layout_optimize_crossing,
-            app_data.layout_sources_mode,
-            app_data.layout_sinks_mode,
-            paperFormat,
-            paperOrientation,
-            marginMm,
-            view_only
-          )
+        const fetchData = {
+          method: 'POST',
+          body: form_data
         }
-        //setAutoLoad(false)
-      } else {
-        // Le statut a beau etre "termine", la recuperation du resultat peut
-        // echouer (ex: fichier introuvable cote serveur -> 404). Sans ce else,
-        // le code tombait en bas et affichait "Succes" alors que rien n'etait
-        // charge. On remonte l'erreur dans le dialogue.
-        setResult('FAILED Erreur chargement: ' + response.status + ' ' + response.statusText)
-        setProcessing(false)
-        setFailure(true)
-        return
+        try {
+          const response = await fetch(url, fetchData)
+          if (!response.ok) {
+            // Le statut a beau etre "termine", la recuperation du resultat peut
+            // echouer (ex: fichier introuvable cote serveur -> 404). On remonte
+            // l'erreur dans le dialogue ET dans le toast (throw plus bas).
+            throw new Error('chargement: ' + response.status + ' ' + response.statusText)
+          }
+          const arrayBuffer = await response.arrayBuffer()
+          //const uint8Array = new Uint8Array(arrayBuffer)
+          const decompressed = await decompressGzipDataFixed(arrayBuffer)
+          const jsonData = JSON.parse(decompressed)
+          if (input_format == 'example_json') {
+            app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
+          } else {
+            // Loading into the current view only (never replace app_data, otherwise
+            // the master and the other views are wiped). Two triggers:
+            //   - blob→blob reconciliation from the active view (always view-only),
+            //   - Excel import with the user-set ``only_current_view`` option
+            //     (checked by default, only shown when inside a view).
+            const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
+            const view_only =
+              is_inside_view && (
+                (input_format == 'blob' && output_format == 'blob') ||
+                (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
+              )
+            retrieveJSONResults(
+              app_data,
+              jsonData,
+              auto_layout,
+              output_options_json as Type_JSON,
+              app_data.layout_h_spacing ?? undefined,
+              app_data.layout_v_spacing ?? undefined,
+              app_data.layout_optimize_crossing,
+              app_data.layout_sources_mode,
+              app_data.layout_sinks_mode,
+              paperFormat,
+              paperOrientation,
+              marginMm,
+              view_only
+            )
+          }
+          //setAutoLoad(false)
+          setProcessing(false)
+          setFailure(false)
+        } catch (error) {
+          setResult('FAILED Erreur chargement JSON:' + error)
+          setProcessing(false)
+          //setStarted(false)
+          setFailure(true)
+          throw error // propage au toast pour afficher l'erreur
+        }
+      },
+      {
+        success: { title: app_data.t('toast.load_json.success.title') },
+        loading: { title: app_data.t('toast.load_json.loading.title') },
+        error: { title: app_data.t('toast.load_json.error.title') }
       }
-    } catch (error) {
-      setResult('FAILED Erreur chargement JSON:' + error)
-      setProcessing(false)
-      //setStarted(false)
-      setFailure(true)
-      return
-    }
-
-    //setStarted(false)
-    setProcessing(false)
-    setFailure(false)
-    // })
+    )
   }
 
   const downloadFileResult = () => {
