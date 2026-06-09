@@ -106,6 +106,11 @@ export const OpenSankeyApp = ({
         app_data.drawing_area.bypass_redraws = true
         updateFrom(app_data.drawing_area, tmp_DA, layout_mode)
         app_data.post_apply_layout_callback?.(tmp_DA, layout_data as Type_JSON, layout_mode)
+        // Dédup #draw_zoom sur le chemin différé du layout : le draw() ci-dessous arrive
+        // APRÈS le useEffect de dédup mount-only (qui ne voit donc pas le SVG dupliqué créé
+        // par le double-mount React 18 StrictMode). Sans ce remove(), passer diagram_layout
+        // en plus de diagram laisse deux #draw_zoom, dont un seul lié à l'app_data vivant.
+        d3.select('#draw_zoom').remove()
         app_data.drawing_area.draw()
         // Le layout fusionne des attributs de la drawing area (verrous taille/police,
         // banner='sequence' & sélection des data tags, etc.) APRÈS le updateAllMenuComponents()
