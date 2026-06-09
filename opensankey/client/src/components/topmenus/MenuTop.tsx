@@ -309,6 +309,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
 
+  // Ouvrir un dropdown du menu du haut (Fichier, Exporter, …) ferme le tiroir de
+  // filtres de gauche, sinon les deux se chevauchent à l'écran.
+  const closeFilterDrawer = () => new_data.menu_configuration.ref_close_filter_drawer.current?.(false)
+
   // Helper used by the Fichier/Édition menus to reset the universal converter
   // dialog with a given config and open it. Centralizes the two boilerplate
   // calls so each menu item stays a one-liner.
@@ -332,6 +336,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_resetDA = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='nouveau'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip
       placement='bottom'
@@ -379,6 +384,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_open_sankey = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='ouvrir'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.ouvrir')}>
       <MenuButton className='menutop_button_open'>
@@ -498,6 +504,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     placement='bottom-start'
     variant='menu_button_subnav_style'
     id='enregistrer'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.enregistrer')}>
       <MenuButton className='menutop_button_save'>
@@ -555,6 +562,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     placement='bottom-start'
     variant='menu_button_subnav_style'
     id='exporter'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.export')}>
       <MenuButton className='menutop_button_export'>
@@ -714,6 +722,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_fichier = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='fichier'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.fichier')}>
       <MenuButton className='menutop_button_fichier'>
@@ -780,6 +789,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_edition = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='edition'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.edit')}>
       <MenuButton className='menutop_button_edition'>
@@ -835,6 +845,7 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_aide = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='aide'
+    onOpen={closeFilterDrawer}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.aide')}>
       <MenuButton className='menutop_button_aide'>
