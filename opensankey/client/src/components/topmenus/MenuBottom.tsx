@@ -222,7 +222,8 @@ const ComponetStretchButtons = ({ app_data, updateParentComponent }: { app_data:
         size={size}
         onClick={() => {
           app_data.drawing_area.to_recenter = true
-          app_data.drawing_area.recenter()
+          // Bouton explicite : recadre même quand le verrou de taille est actif (#1240).
+          app_data.drawing_area.recenter(true)
         }}>
         {app_data.icon_library.icon_recenter}
       </Button>
