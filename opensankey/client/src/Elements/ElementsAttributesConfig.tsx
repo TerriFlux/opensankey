@@ -1917,6 +1917,94 @@ export const NAME_LABEL_CONFIG = {
       it: 'Posizione del separatore'
     }
   } satisfies AttributeConfig<'before' | 'after'>,
+
+  // Source du contenu du label (cf. Type_NameLabelSource sur Class_NodeBase) :
+  // 'name' (défaut) = nom de l'élément, 'custom' = texte libre (name_label_text),
+  // 'tag' = tag assigné dans le groupe name_label_tag_group_id, 'ancestor' = nom
+  // de l'ancêtre racine le long de la dimension name_label_dimension_id.
+  source: {
+    default: 'name' as 'name' | 'custom' | 'tag' | 'ancestor',
+    type: (() => 'name') as (() => 'name' | 'custom' | 'tag' | 'ancestor'),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Label content',
+      fr: 'Contenu du label',
+      es: 'Contenido de la etiqueta',
+      de: 'Beschriftungsinhalt',
+      it: 'Contenuto etichetta'
+    },
+    tooltips: {
+      en: 'Source of the label text (element name, custom text, assigned tag, ancestor name)',
+      fr: 'Source du texte du label (nom de l\'élément, texte personnalisé, tag assigné, nom de l\'ancêtre)',
+      es: 'Origen del texto de la etiqueta (nombre del elemento, texto personalizado, etiqueta asignada, nombre del ancestro)',
+      de: 'Quelle des Beschriftungstextes (Elementname, benutzerdefinierter Text, zugewiesener Tag, Vorfahrenname)',
+      it: 'Origine del testo dell\'etichetta (nome elemento, testo personalizzato, tag assegnato, nome antenato)'
+    }
+  } satisfies AttributeConfig<'name' | 'custom' | 'tag' | 'ancestor'>,
+
+  text: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Custom text',
+      fr: 'Texte personnalisé',
+      es: 'Texto personalizado',
+      de: 'Benutzerdefinierter Text',
+      it: 'Testo personalizzato'
+    },
+    tooltips: {
+      en: 'Free text shown when label content is "custom"',
+      fr: 'Texte libre affiché quand le contenu du label est « personnalisé »',
+      es: 'Texto libre mostrado cuando el contenido de la etiqueta es «personalizado»',
+      de: 'Freitext, der angezeigt wird, wenn der Beschriftungsinhalt „benutzerdefiniert“ ist',
+      it: 'Testo libero mostrato quando il contenuto dell\'etichetta è «personalizzato»'
+    }
+  } satisfies AttributeConfig<string>,
+
+  tag_group_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Tag group',
+      fr: 'Groupe de tags',
+      es: 'Grupo de etiquetas',
+      de: 'Tag-Gruppe',
+      it: 'Gruppo di tag'
+    },
+    tooltips: {
+      en: 'Tag group whose assigned tag is shown when label content is "tag"',
+      fr: 'Groupe de tags dont le tag assigné est affiché quand le contenu du label est « tag »',
+      es: 'Grupo de etiquetas cuya etiqueta asignada se muestra cuando el contenido es «tag»',
+      de: 'Tag-Gruppe, deren zugewiesener Tag bei Inhalt „tag“ angezeigt wird',
+      it: 'Gruppo di tag il cui tag assegnato è mostrato quando il contenuto è «tag»'
+    }
+  } satisfies AttributeConfig<string>,
+
+  dimension_id: {
+    default: '',
+    type: (() => '') as (() => string),
+    category: 'name_label' as const,
+    actions: ['drawNameLabel'] as BaseActionType[],
+    labels: {
+      en: 'Dimension',
+      fr: 'Dimension',
+      es: 'Dimensión',
+      de: 'Dimension',
+      it: 'Dimensione'
+    },
+    tooltips: {
+      en: 'Dimension to climb to the root ancestor when label content is "ancestor" (empty = first)',
+      fr: 'Dimension à remonter jusqu\'à l\'ancêtre racine quand le contenu du label est « ancêtre » (vide = première)',
+      es: 'Dimensión a recorrer hasta el ancestro raíz cuando el contenido es «ancestro» (vacío = primera)',
+      de: 'Dimension bis zum Wurzel-Vorfahren bei Inhalt „Vorfahre“ (leer = erste)',
+      it: 'Dimensione da risalire fino all\'antenato radice quando il contenuto è «antenato» (vuoto = prima)'
+    }
+  } satisfies AttributeConfig<string>,
 } as const
 
 const VALUE_LABEL_BASE_CONFIG = createLabelConfig('value_label', 'value_label', 'drawValueLabel')
