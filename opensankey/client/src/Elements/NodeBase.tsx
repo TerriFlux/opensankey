@@ -38,7 +38,7 @@ export const default_selected_stroke_width = 3
 //export const label_margin = 0
 
 // Sources possibles pour le contenu du label de nom d'un nœud / d'une zone de
-// texte. Voir _name_label_source sur Class_NodeBase.
+// texte. Voir l'attribut de style name_label_source (NAME_LABEL_CONFIG).
 export type Type_NameLabelSource = 'name' | 'custom' | 'tag' | 'ancestor'
 
 export function sortNodesElements(
@@ -64,22 +64,13 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   private _position_v: number
 
   protected _name: string
-  // Source du contenu du label de nom. Défaut 'name' → comportement historique
-  // (le label EST le nom de l'élément). Les autres sources rendent un texte
-  // indépendant du nom, SANS renommer l'élément :
-  //  - 'custom'   : texte libre saisi (_name_label_text), édité inline / rich text
-  //  - 'tag'      : nom long (display_name) du tag de nœud assigné au nœud dans
-  //                 le groupe choisi (_name_label_tag_group_id ; premier si
-  //                 plusieurs). Réservé aux nœuds (un container n'a pas de tags).
-  //  - 'ancestor' : nom du nœud ancêtre racine le long d'une dimension choisie
-  //                 (_name_label_dimension_id ; un groupe de level tags)
-  protected _name_label_source: Type_NameLabelSource = 'name'
-  protected _name_label_text: string = ''
-  // Source 'tag' : groupe de tags dont on affiche le tag assigné au nœud.
-  protected _name_label_tag_group_id: string = ''
-  // Source 'ancestor' : dimension (id de groupe de level tags) le long de
-  // laquelle remonter ; '' = première dimension dont le nœud est enfant.
-  protected _name_label_dimension_id: string = ''
+  // Le contenu du label de nom (source, texte libre, groupe de tags, dimension)
+  // est désormais porté par le système d'attributs/styles (_storage) :
+  // name_label_source / name_label_text / name_label_tag_group_id /
+  // name_label_dimension_id, définis dans NAME_LABEL_CONFIG. Voir
+  // Type_NameLabelSource pour la sémantique des valeurs de source. Ils sont ainsi
+  // propagés par le pinceau et « appliquer le style aux enfants », et éditables
+  // dans le menu de configuration des styles.
   protected _nodeDrawShape: NodeDrawShape
   protected _nodeDrawNameLabel: NodeDrawNameLabel
   protected _nodeDrawIcon: NodeDrawNameLabel
@@ -201,10 +192,8 @@ export abstract class Class_NodeBase extends Class_BaseShape {
   protected _copyFrom(_: Class_NodeBase): void {
     super._copyFrom(_)
     this._name = _.name
-    this._name_label_source = _._name_label_source
-    this._name_label_text = _._name_label_text
-    this._name_label_tag_group_id = _._name_label_tag_group_id
-    this._name_label_dimension_id = _._name_label_dimension_id
+    // name_label_source/text/tag_group_id/dimension_id sont des attributs _storage,
+    // déjà copiés par copyAttrFrom (appelé dans Element._copyFrom via super).
     this._position_u = _._position_u
     this._position_v = _._position_v
 
@@ -567,25 +556,18 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     return this._name
   }
 
-  // Source du contenu du label (cf. _name_label_source).
-  public get name_label_source(): Type_NameLabelSource { return this._name_label_source }
-  public set name_label_source(_: Type_NameLabelSource) { this._name_label_source = _; this.drawNameLabel() }
   // Compat historique : name_label_custom <=> source 'custom'. Conserve le
   // comportement des appelants existants (édition inline/rich text, titre…).
-  public get name_label_custom() { return this._name_label_source === 'custom' }
-  public set name_label_custom(_: boolean) { this._name_label_source = _ ? 'custom' : 'name'; this.drawNameLabel() }
-  public get name_label_text() { return this._name_label_text }
-  public set name_label_text(_: string) { this._name_label_text = _; this.drawNameLabel() }
-  public get name_label_tag_group_id() { return this._name_label_tag_group_id }
-  public set name_label_tag_group_id(_: string) { this._name_label_tag_group_id = _; this.drawNameLabel() }
-  public get name_label_dimension_id() { return this._name_label_dimension_id }
-  public set name_label_dimension_id(_: string) { this._name_label_dimension_id = _; this.drawNameLabel() }
+  // name_label_source est un attribut _storage (NAME_LABEL_CONFIG) ; l'affecter
+  // déclenche l'action drawNameLabel.
+  public get name_label_custom() { return this.name_label_source === 'custom' }
+  public set name_label_custom(_: boolean) { this.name_label_source = _ ? 'custom' : 'name' }
 
   // Texte effectivement affiché par le name_label, selon la source choisie. Sert
   // de source unique au rendu (getLabelText) et à l'init du rich text.
   public get name_label_effective(): string {
-    switch (this._name_label_source) {
-    case 'custom': return this._name_label_text
+    switch (this.name_label_source) {
+    case 'custom': return this.name_label_text
     case 'tag': return this.resolveTagLabel()
     case 'ancestor': return this.resolveAncestorLabel()
     default: return this.name_label

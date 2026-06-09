@@ -685,6 +685,11 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   // Separator
   name_label_separator!: NameLabelAttributeTypes['separator']
   name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+  // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
+  name_label_source!: NameLabelAttributeTypes['source']
+  name_label_text!: NameLabelAttributeTypes['text']
+  name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
+  name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 
   // Position
   name_label_horiz!: NameLabelAttributeTypes['horiz']
@@ -1044,6 +1049,11 @@ export class Class_ElementStyle {
   // Separator
   name_label_separator!: NameLabelAttributeTypes['separator']
   name_label_separator_part!: NameLabelAttributeTypes['separator_part']
+  // Contenu du label (cf. Type_NameLabelSource) — désormais portés par le style.
+  name_label_source!: NameLabelAttributeTypes['source']
+  name_label_text!: NameLabelAttributeTypes['text']
+  name_label_tag_group_id!: NameLabelAttributeTypes['tag_group_id']
+  name_label_dimension_id!: NameLabelAttributeTypes['dimension_id']
 
   // Position
   name_label_horiz!: NameLabelAttributeTypes['horiz']

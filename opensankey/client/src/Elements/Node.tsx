@@ -570,18 +570,18 @@ export class Class_NodeElement extends Class_NodeBase {
   // groupe choisi (le premier si plusieurs). Aucun tag dans ce groupe → nom du
   // nœud.
   protected override resolveTagLabel(): string {
-    const group_id = this._name_label_tag_group_id
+    const group_id = this.name_label_tag_group_id
     if (group_id === '') return this.name_label
     const tag = this.tags_list.find(t => t.group.id === group_id)
     return tag ? tag.display_name : this.name_label
   }
 
   // Source 'ancestor' du label : remonte le long de la dimension choisie
-  // (_name_label_dimension_id = id d'un groupe de level tags) jusqu'à l'ancêtre
+  // (name_label_dimension_id = id d'un groupe de level tags) jusqu'à l'ancêtre
   // racine, et affiche son nom. Dimension vide → première dimension dont le nœud
   // est enfant. Aucun ancêtre → nom de l'élément (il EST déjà la racine).
   protected override resolveAncestorLabel(): string {
-    let dim_id = this._name_label_dimension_id
+    let dim_id = this.name_label_dimension_id
     if (dim_id === '') dim_id = this.dimensions_as_child[0]?.id ?? ''
     if (dim_id === '') return this.name_label
     let current = this.dimensions_as_child.find(d => d.id === dim_id)?.parent as Class_NodeElement | undefined
