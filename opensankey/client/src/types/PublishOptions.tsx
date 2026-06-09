@@ -45,6 +45,10 @@ export interface SankeyGlobals {
   data_type?: boolean             // default true
   data_type_intervals?: boolean   // default true
   value_filter?: boolean          // default true
+  view_filter?: boolean           // default true : section "génération de vues" (view_taggs) dans le drawer
+  level_filter?: boolean          // default true : section "niveaux/hiérarchies" (level_taggs) dans le drawer
+  node_filter?: boolean           // default true : section "tags d'éléments" (node/flux_taggs) dans le drawer
+  data_filter?: boolean           // default true : section "sélection de données" (data_taggs) dans le drawer
 
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
@@ -68,6 +72,10 @@ export interface PublishOptions {
   data_type: boolean
   data_type_intervals: boolean
   value_filter: boolean
+  view_filter: boolean
+  level_filter: boolean
+  node_filter: boolean
+  data_filter: boolean
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
   logo: string | null
@@ -128,6 +136,10 @@ export const getPublishOptions = (): PublishOptions => {
     data_type: bool(s.data_type, true),
     data_type_intervals: bool(s.data_type_intervals, true),
     value_filter: bool(s.value_filter, true),
+    view_filter: bool(s.view_filter, true),
+    level_filter: bool(s.level_filter, true),
+    node_filter: bool(s.node_filter, true),
+    data_filter: bool(s.data_filter, true),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
     logo: str(s.logo),
@@ -172,6 +184,10 @@ export type ViewerSankeyOptions = {
   data_type?: boolean
   data_type_intervals?: boolean
   value_filter?: boolean
+  view_filter?: boolean
+  level_filter?: boolean
+  node_filter?: boolean
+  data_filter?: boolean
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
   // Configs per-diagramme (clé = nom dans diagrams_list)
@@ -193,6 +209,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'logo', 'header', 'diagram', 'diagram_layout', 'diagram_layout_options',
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
+    'view_filter', 'level_filter', 'node_filter', 'data_filter',
     'position_mode', 'data_tag_selection',
   ]
   for (const k of keys) {
