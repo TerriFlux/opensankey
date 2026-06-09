@@ -1566,10 +1566,18 @@ export class Class_DrawingArea {
     }
   }
 
-  public recenter() {
+  public recenter(force: boolean = false) {
     if (!this.to_recenter) return
     // In paper mode, positions are already computed for the format — don't shift
     if (this.is_paper_mode) return
+    // Verrou de taille (#1240) : une fois le cadrage figé (_locked_fit_dirty=false),
+    // un changement de dataTag/viewTag/niveau NE DOIT plus rien recadrer. recenter()
+    // décale les positions ET force un areaAutoFit (force_when_locked) — donc un
+    // reflow visible à chaque sélection, ce qui contredit le verrou. On le neutralise
+    // pour ces recadrages AUTOMATIQUES. Exceptions : le tout premier recenter
+    // (chargement, dirty=true, cf. ApplicationData.fromJSON draw→recenter→draw) qui
+    // établit le cadrage initial, et le bouton « recentrer » explicite (force=true).
+    if (this._size_locked && !this._locked_fit_dirty && !force) return
     const bbox = this.d3_selection_elements_group?.node()?.getBBox()
     if (!bbox) return
     if ((bbox.width == 0) && (bbox.height == 0)) {
