@@ -33,12 +33,12 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
 
     // Vérifier UnitaryTagGroupFilter
     const view_taggs = Object.values(sankey.view_taggs_dict).filter(tagg => tagg.banner !== 'none')
-    const has_unitary_filter = view_taggs.length > 0
+    const has_unitary_filter = app_data.publish_options.view_filter && view_taggs.length > 0
 
     // Vérifier LevelTagFilter
     const nb_level_taggs = Object.values(sankey.level_taggs_dict).filter(tagg => tagg.banner !== 'none').length
-    let has_level_filter = nb_level_taggs > 0
-    if (nb_level_taggs === 1) {
+    let has_level_filter = app_data.publish_options.level_filter && nb_level_taggs > 0
+    if (app_data.publish_options.level_filter && nb_level_taggs === 1) {
       const level_tagg = Object.values(sankey.level_taggs_dict)[0]
       has_level_filter = level_tagg.tags_list.length > 1
     }
@@ -46,12 +46,14 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
     // Vérifier NodeTagGroupFilter (element mode)
     const element_taggs = [...Object.values(sankey.node_taggs_dict), ...Object.values(sankey.flux_taggs_dict)]
       .filter(tagg => tagg.banner !== 'none' && !tagg.id.includes('unitary'))
-    const has_element_filter = element_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    const has_element_filter = app_data.publish_options.node_filter &&
+      element_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
 
     // Vérifier DataTagGroupFilter
     const data_taggs = Object.values(sankey.data_taggs_dict)
       .filter(tagg => tagg.banner === 'one' || tagg.banner === 'multi')
-    const has_data_filter = data_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
+    const has_data_filter = app_data.publish_options.data_filter &&
+      data_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
     return has_data_type_filter || has_value_filter || has_unitary_filter ||
       has_level_filter || has_element_filter || has_data_filter
   }
@@ -117,10 +119,18 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
             {
               app_data.publish_options.value_filter ? <FlowValueFilter app_data={app_data} /> : <></>
             }
-            <UnitaryTagGroupFilter app_data={app_data} />
-            <LevelTagFilter app_data={app_data} />
-            <NodeTagGroupFilter app_data={app_data} level={false} />
-            <DataTagGroupFilter app_data={app_data} />
+            {
+              app_data.publish_options.view_filter ? <UnitaryTagGroupFilter app_data={app_data} /> : <></>
+            }
+            {
+              app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
+            }
+            {
+              app_data.publish_options.node_filter ? <NodeTagGroupFilter app_data={app_data} level={false} /> : <></>
+            }
+            {
+              app_data.publish_options.data_filter ? <DataTagGroupFilter app_data={app_data} /> : <></>
+            }
           </Box>
         </DrawerBody>
       </DrawerContent>
@@ -1059,7 +1069,7 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Réglage GLOBAL du sous-mode du filtre vue (commun à tous les view tags) :
   // « Filtre seul » (garde les positions) vs « Mise en page auto ».
-  const ViewFilterKindControl = (mode === 'unitary' && taggs_in_banner.some(t => !t.id.includes('unitary'))) ? (
+  const ViewFilterKindControl = (mode === 'unitary' && !app_data.is_static && taggs_in_banner.some(t => !t.id.includes('unitary'))) ? (
     <Box layerStyle='menuconfig_grid'>
       <Box layerStyle='menuconfigpanel_option_name'>
         <OSTooltip label={t('Banner.view_mode_tt')}>
