@@ -50,6 +50,17 @@ export const resources_loading_toasts = {
             title: 'Error while trying to save',
           }
         },
+        load_json: {
+          success: {
+            title: 'Diagram loaded',
+          },
+          loading: {
+            title: 'Loading diagram...',
+          },
+          error: {
+            title: 'Error while loading the diagram',
+          }
+        },
         save_as_json: {
           success: {
             title: 'Download will start shortly',
@@ -165,6 +176,17 @@ export const resources_loading_toasts = {
           },
           error: {
             title: 'Echec lors de la sauvegarde',
+          }
+        },
+        load_json: {
+          success: {
+            title: 'Diagramme chargé',
+          },
+          loading: {
+            title: 'Chargement du diagramme...',
+          },
+          error: {
+            title: 'Erreur lors du chargement du diagramme',
           }
         },
         save_as_json: {
@@ -284,6 +306,17 @@ export const resources_loading_toasts = {
             title: 'Error al intentar guardar',
           }
         },
+        load_json: {
+          success: {
+            title: 'Diagrama cargado',
+          },
+          loading: {
+            title: 'Cargando diagrama...',
+          },
+          error: {
+            title: 'Error al cargar el diagrama',
+          }
+        },
         save_as_json: {
           success: {
             title: 'La descarga comenzará en breve',
@@ -401,6 +434,17 @@ export const resources_loading_toasts = {
             title: 'Fehler beim Speichern',
           }
         },
+        load_json: {
+          success: {
+            title: 'Diagramm geladen',
+          },
+          loading: {
+            title: 'Diagramm wird geladen...',
+          },
+          error: {
+            title: 'Fehler beim Laden des Diagramms',
+          }
+        },
         save_as_json: {
           success: {
             title: 'Der Download beginnt in Kürze',
@@ -516,6 +560,17 @@ export const resources_loading_toasts = {
           },
           error: {
             title: 'Errore durante il salvataggio',
+          }
+        },
+        load_json: {
+          success: {
+            title: 'Diagramma caricato',
+          },
+          loading: {
+            title: 'Caricamento del diagramma...',
+          },
+          error: {
+            title: 'Errore durante il caricamento del diagramma',
           }
         },
         save_as_json: {
