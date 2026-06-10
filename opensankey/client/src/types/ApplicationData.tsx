@@ -36,7 +36,7 @@ import { StepType } from '@reactour/tour'
 import { useToast, CreateToastFnReturn } from '@chakra-ui/react'
 
 import { Class_MenuConfig, keyTypeConfig, keyTypeElements } from '../types/MenuConfig'
-import { default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
+import { const_default_position_x, const_default_position_y, default_file_name, default_toast_duration, default_toast_waiting_delay, getStringFromJSON, randomId, toast_bypass, Type_JSON } from './Utils'
 import { getPublishOptions, PublishOptions } from './PublishOptions'
 import { Class_ApplicationHistory } from './ApplicationHistory'
 import { Class_IconLibrary } from '../css/IconLibrairie'
@@ -989,12 +989,14 @@ export class Class_ApplicationData {
    * - `data_tag_selection` est un dict { groupe : tag } où groupe/tag se résolvent par id OU par nom.
    *   Appliqué AVANT le mode car les modes proportionnel/échelle capturent leur référence sur le
    *   datatag courant.
+   * - `view_tag_selection` est un dict { groupe : tag } (même résolution id/nom) qui sélectionne la
+   *   valeur ET active le filtre vue (view_mode) du groupe, comme l'œil dans la barre du bas.
    * - `position_mode` impose le mode de positionnement, comme un clic dans la barre du bas.
    * @memberof Class_ApplicationData
    */
   public applyPublishStateOptions(): void {
     const opts = this.publish_options
-    if (!opts.data_tag_selection && !opts.position_mode) return
+    if (!opts.data_tag_selection && !opts.view_tag_selection && !opts.position_mode) return
     const sankey = this._drawing_area.sankey
 
     // 1) Présélection des data tags
@@ -1016,7 +1018,55 @@ export class Class_ApplicationData {
       }
     }
 
-    // 2) Mode de navigation
+    // 2) Présélection des view tags + activation du filtre vue (view_mode) du groupe.
+    //    Un view tag n'a aucun effet visuel tant que view_mode n'est pas actif ; on reproduit
+    //    donc la séquence de l'œil de la barre du bas (cf. Toolbar.applyViewFilter) : activer le
+    //    groupe + view_mode, sélectionner la valeur, puis recalculer la visibilité (caches
+    //    node_tags_fingerprint + is_visible) et éventuellement relancer une mise en page auto si
+    //    le filtre révèle des nœuds encore à la position par défaut.
+    if (opts.view_tag_selection) {
+      let any_view_applied = false
+      for (const [group_key, tag_key] of Object.entries(opts.view_tag_selection)) {
+        const group = sankey.view_taggs_list.find(g => g.id === group_key || g.name === group_key)
+        if (!group) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] view_tag_selection : groupe de view tag introuvable « ${group_key} »`)
+          continue
+        }
+        // Mots-clés spéciaux « all » / « none » / « * » : désactivent le filtre vue du groupe →
+        // toutes les valeurs redeviennent visibles (équivalent de décocher l'œil dans la barre du bas).
+        const tag_key_lc = tag_key.toLowerCase()
+        if (tag_key_lc === 'all' || tag_key_lc === 'none' || tag_key === '*') {
+          group.view_mode = false
+          any_view_applied = true
+          continue
+        }
+        const tag = group.tags_list.find(t => t.id === tag_key || t.name === tag_key)
+        if (!tag) {
+          // eslint-disable-next-line no-console
+          console.warn(`[OpenSankey] view_tag_selection : tag « ${tag_key} » introuvable dans le groupe « ${group_key} »`)
+          continue
+        }
+        group.activated = true
+        group.view_mode = true
+        group.selectTagsFromId(tag.id)
+        any_view_applied = true
+      }
+      if (any_view_applied) {
+        sankey.nodeTagsUpdated()
+        sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
+        sankey.nodes_list.forEach(n => { void n.is_visible })
+        sankey.nodes_list.forEach(n => { void n.is_visible })
+        if (sankey.view_mode_active && this._drawing_area.view_filter_kind === 'auto') {
+          const needs_auto_layout = sankey.visible_nodes_list.some(n =>
+            n.position_x === const_default_position_x &&
+            n.position_y === const_default_position_y)
+          if (needs_auto_layout) this._drawing_area.nodePositioning.computeAutoSankey(true, true)
+        }
+      }
+    }
+
+    // 3) Mode de navigation
     if (opts.position_mode) {
       const current = sankey.styles_dict['default'].shape_position_type
       if (current !== opts.position_mode) {
