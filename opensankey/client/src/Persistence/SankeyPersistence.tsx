@@ -2027,7 +2027,7 @@ export class DrawingAreaPersistence {
     if (drawing_area.bg_image_horizontal_align !== 'left') json_object['bg_image_horizontal_align'] = drawing_area.bg_image_horizontal_align
 
     if (Object.keys(drawing_area.mfa_options).length > 0)
-      json_object['solver_options'] = drawing_area.mfa_options
+      json_object['solver_options'] = drawing_area.mfa_options as Type_JSON
 
     const out = {
       ...json_object,
