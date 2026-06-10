@@ -44,7 +44,7 @@ import { Class_DrawingArea } from './DrawingArea'
 import { initializeTooltipSystem } from '../Elements/TooltipsConfig'
 import { compressJSONToGzip, decompressUploadedFileUniversal } from '../Persistence/UniversalJSONCompression'
 import { updateFrom } from '../Algorithms/UpdateFrom'
-import { prepositionAllInPlace } from '../Algorithms/Hierarchies'
+import { centerChildrenOnParent } from '../Algorithms/Hierarchies'
 import { DrawingAreaPersistence } from '../Persistence/SankeyPersistence'
 
 // SPECIFIC TYPES **********************************************************************/
@@ -816,9 +816,10 @@ export class Class_ApplicationData {
       // If the JSON has no geometric info, auto-layout the diagram
       if (!('height' in json_object) && !('width' in json_object) && !('user_scale' in json_object)) {
         this._drawing_area.nodePositioning.computeAutoSankey(true, true)
-        // Puis pré-positionner tous les nœuds (désagrégation récursive in-place) pour
-        // que le filtre vue révèle des nœuds déjà placés (cf. prepositionAllInPlace).
-        prepositionAllInPlace(this)
+        // Puis centrer chaque enfant sur son ancêtre niveau 1 (version légère : pose juste
+        // les centres, pas de désagrégation/ré-agrégation récursive — bien plus rapide au
+        // chargement) pour que le filtre vue révèle des nœuds déjà placés.
+        centerChildrenOnParent(this)
       }
       this._drawing_area.draw()
       this._drawing_area.recenter()
