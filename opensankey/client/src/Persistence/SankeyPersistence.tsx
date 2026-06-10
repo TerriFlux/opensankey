@@ -2026,6 +2026,9 @@ export class DrawingAreaPersistence {
     if (drawing_area.constrain_to_bg_image_ratio) json_object['constrain_to_bg_image_ratio'] = drawing_area.constrain_to_bg_image_ratio
     if (drawing_area.bg_image_horizontal_align !== 'left') json_object['bg_image_horizontal_align'] = drawing_area.bg_image_horizontal_align
 
+    if (Object.keys(drawing_area.mfa_options).length > 0)
+      json_object['solver_options'] = drawing_area.mfa_options
+
     const out = {
       ...json_object,
       ...LegendPersistence.toJSON(drawing_area.legend, json_object),
@@ -2357,6 +2360,12 @@ export class DrawingAreaPersistence {
       const v = getStringFromJSON(json_object, 'bg_image_horizontal_align', drawing_area.bg_image_horizontal_align)
       drawing_area['_bg_image_horizontal_align'] = (v === 'center' || v === 'right') ? v : 'left'
     }
+
+    // Solver options from Excel "Options" sheet, re-serialized here as 'solver_options'
+    const solver_opts = json_object['solver_options']
+    drawing_area.mfa_options = (solver_opts && typeof solver_opts === 'object' && !Array.isArray(solver_opts))
+      ? solver_opts as Record<string, unknown>
+      : {}
 
     LegendPersistence.fromJSON(+version!, drawing_area.legend, json_object)
     SankeyPersistence.fromJSON(+version!, drawing_area.sankey, json_object)
