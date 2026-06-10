@@ -743,6 +743,7 @@ export const UniversalFileConverter = ({
     set_output_options_base({
       ...getDefaultOutputOptions(output_config['base']),
       ...(config.output_overrides_base ?? {}),
+      ...app_data.drawing_area.mfa_options,
       ...(default_solver_options ?? {}),
     })
 

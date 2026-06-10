@@ -112,6 +112,9 @@ export class Class_DrawingArea {
   public bypass_redraws: boolean = false
   public bypass_compute_positions: boolean = false
 
+  /** Solver/reconciliation options loaded from an Excel "Options" sheet. Pre-fills the reconciliation dialog. */
+  public mfa_options: Record<string, unknown> = {}
+
   protected _height: number
   protected _width: number
   protected _zoom_width: number
