@@ -53,6 +53,7 @@ export interface SankeyGlobals {
   // État initial
   position_mode?: Type_PositionMode  // mode de navigation imposé à l'ouverture (absolu/proportionnel/échelle adaptée)
   data_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } préselectionné à l'ouverture
+  view_tag_selection?: Record<string, string>  // { groupe (id ou nom) : tag (id ou nom) } : active le filtre vue du groupe sur ce tag à l'ouverture
 
   // Indexer pour configs per-diagramme (diagrams_list etc.)
   [key: string]: unknown
@@ -78,6 +79,7 @@ export interface PublishOptions {
   data_filter: boolean
   position_mode: Type_PositionMode | null
   data_tag_selection: Record<string, string> | null
+  view_tag_selection: Record<string, string> | null
   logo: string | null
   header: string | null
   diagram: string | Record<string, unknown> | null
@@ -142,6 +144,7 @@ export const getPublishOptions = (): PublishOptions => {
     data_filter: bool(s.data_filter, true),
     position_mode: posMode(s.position_mode),
     data_tag_selection: strRecord(s.data_tag_selection),
+    view_tag_selection: strRecord(s.view_tag_selection),
     logo: str(s.logo),
     header: str(s.header),
     diagram: (typeof s.diagram === 'string')
@@ -190,6 +193,7 @@ export type ViewerSankeyOptions = {
   data_filter?: boolean
   position_mode?: Type_PositionMode
   data_tag_selection?: Record<string, string>
+  view_tag_selection?: Record<string, string>
   // Configs per-diagramme (clé = nom dans diagrams_list)
   diagrams_config?: Record<string, Record<string, unknown>>
 }
@@ -210,7 +214,7 @@ export const applyViewerOptions = (options: ViewerSankeyOptions = {}): void => {
     'diagrams_list', 'sous_filieres',
     'data_type', 'data_type_intervals', 'value_filter',
     'view_filter', 'level_filter', 'node_filter', 'data_filter',
-    'position_mode', 'data_tag_selection',
+    'position_mode', 'data_tag_selection', 'view_tag_selection',
   ]
   for (const k of keys) {
     if (options[k] !== undefined) {
