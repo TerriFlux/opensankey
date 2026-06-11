@@ -1023,6 +1023,40 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
         de: 'Das versteckte „layout"-Blatt (gespeicherte Diagrammpositionen und -stile) aus der Excel-Datei laden. Deaktivieren, um das gespeicherte Layout zu ignorieren und ein automatisches neu zu berechnen.',
         it: 'Caricare il foglio nascosto «layout» (posizioni e stili del diagramma salvati) dal file Excel. Deselezionare per ignorare il layout salvato e ricalcolarne uno automatico.'
       }
+    } satisfies FormatAttributeConfig<boolean>,
+
+    // « Charger seulement la mise en page » : court-circuite tout le parse SEP
+    // (nœuds/données/TER) côté serveur et charge directement le JSON complet
+    // stocké dans l'onglet caché « layout », exactement comme l'ouverture d'un
+    // fichier JSON (remplacement total, pas de réconciliation). Câblé serveur
+    // (conversion_thread, short-circuit only_layout) + client (handleFinish →
+    // app_data.fromJSON). Override les autres cases « Onglets lus ».
+    only_layout: {
+      group: 'sheets',
+      breakBefore: true,
+      default: false,
+      type: (() => false) as (() => boolean),
+      labels: {
+        en: 'Load only the layout (like a JSON)',
+        fr: 'Charger seulement la mise en page (comme un JSON)',
+        es: 'Cargar solo el diseño (como un JSON)',
+        de: 'Nur das Layout laden (wie ein JSON)',
+        it: 'Caricare solo il layout (come un JSON)'
+      },
+      tooltips: {
+        en: 'If checked: the structural sheets (nodes, data, SUT/IOT) are NOT parsed. Only the hidden "layout" sheet — which already stores a complete diagram — is read and loaded as-is, exactly like opening a JSON file. Fast, no reconciliation, and works even if the structural sheets contain errors. Requires the Excel to contain a layout sheet (i.e. it was exported from the app). The other "Read sheets" options above are ignored.',
+        fr: 'Si coché : les onglets structurels (nœuds, données, TER/TES) ne sont PAS analysés. Seul l\'onglet caché « layout » — qui contient déjà un diagramme complet — est lu et chargé tel quel, exactement comme l\'ouverture d\'un fichier JSON. Rapide, sans réconciliation, et fonctionne même si les onglets structurels contiennent des erreurs. Nécessite que l\'Excel contienne un onglet layout (export depuis l\'application). Les autres options « Onglets lus » ci-dessus sont ignorées.',
+        es: 'Si está marcado: las hojas estructurales (nodos, datos, SUT/IOT) NO se analizan. Solo se lee la hoja oculta «layout» —que ya contiene un diagrama completo— y se carga tal cual, exactamente como abrir un archivo JSON. Rápido, sin reconciliación, y funciona aunque las hojas estructurales tengan errores. Requiere que el Excel contenga una hoja layout (exportado desde la aplicación). Las demás opciones «Hojas leídas» anteriores se ignoran.',
+        de: 'Wenn aktiviert: die strukturellen Blätter (Knoten, Daten, SUT/IOT) werden NICHT geparst. Nur das versteckte „layout"-Blatt — das bereits ein vollständiges Diagramm enthält — wird gelesen und unverändert geladen, genau wie das Öffnen einer JSON-Datei. Schnell, ohne Abgleich, und funktioniert auch wenn die strukturellen Blätter Fehler enthalten. Erfordert, dass die Excel-Datei ein layout-Blatt enthält (aus der Anwendung exportiert). Die anderen „Gelesene Blätter"-Optionen oben werden ignoriert.',
+        it: 'Se selezionato: i fogli strutturali (nodi, dati, SUT/IOT) NON vengono analizzati. Viene letto solo il foglio nascosto «layout» — che contiene già un diagramma completo — e caricato così com\'è, esattamente come aprire un file JSON. Veloce, senza riconciliazione, e funziona anche se i fogli strutturali contengono errori. Richiede che l\'Excel contenga un foglio layout (esportato dall\'applicazione). Le altre opzioni «Fogli letti» sopra vengono ignorate.'
+      },
+      // Limité au chemin « ouverture » (excel → json). Le court-circuit serveur
+      // n'écrit qu'un JSON ; en sortie excel (convertisseur) il lèverait une
+      // erreur, donc on masque l'option dans ce contexte.
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' },
+        { type: 'optionProperty', property: '_output_format', operator: '==', value: 'json' }
+      ]
     } satisfies FormatAttributeConfig<boolean>
   },
 
