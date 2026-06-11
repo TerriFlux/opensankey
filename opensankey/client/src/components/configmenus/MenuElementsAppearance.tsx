@@ -1248,7 +1248,13 @@ export const MenuConfigurationAppearance = ({
     : []
 
   return (
-    <Box layerStyle='box_content_config'>
+    <Box
+      layerStyle='box_content_config'
+      // Quand rien n'est sélectionné, seul le sélecteur s'affiche : on réserve une
+      // hauteur minimale pour que son menu déroulant ne soit pas rogné par
+      // l'overflow du conteneur de config parent.
+      style={!showContent ? { minHeight: '18rem' } : undefined}
+    >
       {/* ✅ SÉLECTEUR MULTI-TYPE */}
       {!menu_for_style && (
         <SankeyMultiTypeSelectionSimple app_data={app_data} enabledTypes={['node', 'link', 'container', 'stock']} />
