@@ -654,24 +654,28 @@ def conversion_thread(
         # on ignore la mise en page sauvegardée (positions/styles) pour laisser
         # le front recalculer une mise en page automatique. Défaut = True.
         if input_format == 'excel' and input_options.get('layout', True):
-            try:
-                # Vérifier que la sheet layout existe
-                with pd.ExcelFile(input_file_name) as excel_file:
-                    if "layout" in excel_file.sheet_names:
-                        layout_table = pd.read_excel(input_file_name, "layout")
-                        trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
-                        layout_json_str = layout_table.columns[0] + \
-                            "".join([layout_table.iloc[_][0] for _ in layout_table.index])
-                        layout_json = json.loads(layout_json_str)
+            # try:
+            # Vérifier que la sheet layout existe
+            with pd.ExcelFile(input_file_name) as excel_file:
+                if "layout" in excel_file.sheet_names:
+                    # header=None : l'onglet « layout » est écrit en colonne A
+                    # lignes 1..N sans en-tête (cf. write ci-dessous). Sans ça,
+                    # read_excel prend la 1re ligne comme nom de colonne et
+                    # l'accès par label `[0]` lève KeyError sur pandas 2.x.
+                    layout_table = pd.read_excel(input_file_name, "layout", header=None)
+                    trace.logger.info("{:-<{w}}".format("Extract diagram layout ", w=max_line_length))
+                    layout_json_str = "".join(
+                        str(layout_table.iloc[_, 0]) for _ in range(len(layout_table)))
+                    layout_json = json.loads(layout_json_str)
 
-                        # Ajouter le layout aux options de sortie pour JSON
-                        if output_format == 'json':
-                            output_options['layout'] = layout_json
-                            trace.logger.info("✓ Layout extracted and will be included in JSON")
-                    else:
-                        trace.logger.debug("No layout sheet found in Excel file")
-            except Exception as e:
-                trace.logger.warning(f"Could not extract layout: {e}")
+                    # Ajouter le layout aux options de sortie pour JSON
+                    if output_format == 'json':
+                        output_options['layout'] = layout_json
+                        trace.logger.info("✓ Layout extracted and will be included in JSON")
+                else:
+                    trace.logger.debug("No layout sheet found in Excel file")
+            # except Exception as e:
+            #     trace.logger.warning(f"Could not extract layout: {e}")
 
         t_read = perf_counter() - t_read_start
 
