@@ -1041,6 +1041,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     if (legend.legend_bg_opacity != default_legend_bg_opacity) json_legend['legend_bg_opacity'] = legend.legend_bg_opacity
     if (legend.legend_show_dataTags) json_legend['legend_show_dataTags'] = legend.legend_show_dataTags
     if (legend.legend_show_constraints) json_legend['legend_show_constraints'] = legend.legend_show_constraints
+    if (legend.legend_horizontal) json_legend['legend_horizontal'] = legend.legend_horizontal
     if (legend.stick_to_drawing != undefined) json_legend['legend_stick_to_drawing'] = legend.stick_to_drawing
     if (legend.info_link_value_void) json_legend['info_link_value_void'] = legend.info_link_value_void
     if (!legend.legend_show_data_type) json_legend['legend_show_data_type'] = legend.legend_show_data_type
@@ -1108,6 +1109,7 @@ export class LegendPersistence extends ProtoElementPersistence {
     legend['_legend_bg_opacity'] = getNumberFromJSON(json_legend, 'legend_bg_opacity', legend.legend_bg_opacity)
     legend['_legend_show_dataTags'] = getBooleanFromJSON(json_legend, 'legend_show_dataTags', legend.legend_show_dataTags)
     legend['_legend_show_constraints'] = getBooleanFromJSON(json_legend, 'legend_show_constraints', legend.legend_show_constraints)
+    legend['_legend_horizontal'] = getBooleanFromJSON(json_legend, 'legend_horizontal', legend.legend_horizontal)
     legend['_info_link_value_void'] = getBooleanFromJSON(json_legend, 'info_link_value_void', legend.info_link_value_void)
     legend['_legend_show_data_type'] = getBooleanFromJSON(json_legend, 'legend_show_data_type', legend.legend_show_data_type)
     legend['_stick_to_drawing'] = getBooleanFromJSON(json_legend, 'legend_stick_to_drawing', legend.stick_to_drawing)
