@@ -980,6 +980,7 @@ export abstract class DrawLabelBase {
       .attr('y', final_y)
       .attr('width', final_width)
       .attr('height', final_height)
+      .attr('opacity', this._element.shape_opacity)
 
     // Setup drag
     this.setupImageDrag()
@@ -1065,6 +1066,7 @@ export abstract class DrawLabelBase {
       .append('g')
       .append('path')
       .style('fill', this._label_values.color_sustainable ? this._label_values.color : this._element.getShapeColorToUse())
+      .style('opacity', this._element.shape_opacity)
       .attr('d', this._element.sankey.getIconFromCatalog(this._label_values.icon_name))
 
     // ✅ Appliquer le drag générique unifié
