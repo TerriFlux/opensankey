@@ -2517,7 +2517,25 @@ export const MenuShapeAttributes = ({
               {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
             </OverloadedCheckbox>
           </Box>
-          <Box />
+          {prefix === 'shape' ? (
+            <Box as='span' layerStyle='options_2cols'>
+              <OverloadedCheckbox
+                elements={elements}
+                config={BASE_SHAPE_CONFIG}
+                prefix={prefix}
+                attributeKey="shadow_visible"
+                isChecked={shapeValues.shadow_visible}
+                onChange={(checked) => { shapeValues.shadow_visible = checked }}
+                getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
+                tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+                t={t}
+              >
+                {t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+              </OverloadedCheckbox>
+            </Box>
+          ) : (
+            <Box />
+          )}
         </Box>
 
         {/* Largeur du fond :

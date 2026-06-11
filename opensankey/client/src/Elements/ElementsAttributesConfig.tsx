@@ -809,6 +809,28 @@ export const BASE_SHAPE_CONFIG = {
       it: 'Raggio del bordo in pixel'
     }
   } satisfies AttributeConfig<number>,
+
+  shadow_visible: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawShape'] as BaseActionType[],
+    labels: {
+      en: 'Drop shadow',
+      fr: 'Ombre portée',
+      es: 'Sombra paralela',
+      de: 'Schlagschatten',
+      it: 'Ombra esterna'
+    },
+    tooltips: {
+      en: 'Add a drop shadow behind the element',
+      fr: 'Ajouter une ombre portée derrière l\'élément',
+      es: 'Añadir una sombra paralela detrás del elemento',
+      de: 'Schlagschatten hinter dem Element hinzufügen',
+      it: 'Aggiungere un\'ombra esterna dietro l\'elemento'
+    }
+  } satisfies AttributeConfig<boolean>,
+
   margin_left: {
     default: 0,
     type: (() => 0) as (() => number),
