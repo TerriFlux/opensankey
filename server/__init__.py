@@ -14,7 +14,7 @@ from flask_cors import CORS
 # Global functions
 def create_app():
     # Instanciate app
-    app = Flask(__name__, template_folder="./templates")
+    app = Flask(__name__, template_folder="./templates", static_folder=None)
 
     # Set up CORS (Cross-Origin)
     CORS(app, support_credentials=True)

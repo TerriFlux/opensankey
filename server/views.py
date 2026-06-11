@@ -64,7 +64,7 @@ sankeyapp = Blueprint(
     __name__,
     static_folder=static_folder,
     template_folder=template_folder,
-    static_url_path="/static/sankeyapp",
+    static_url_path="/static",
 )
 
 
