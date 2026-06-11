@@ -30,8 +30,8 @@ import { MouseEvent } from 'react'
 
 import {
   default_display_legend_scale, default_element_color, default_info_link_value_void, default_legend_bg_border,
-  default_legend_bg_color, default_legend_bg_opacity, default_legend_police, default_legend_show_constraints,
-  default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width
+  default_legend_bg_color, default_legend_bg_opacity, default_legend_horizontal, default_legend_police,
+  default_legend_show_constraints, default_legend_show_dataTags, default_masked, default_stick_to_drawing, default_width
 } from './ElementsAttributesConfig'
 
 import { Class_DataTag, Class_Tag } from '../types/Tag'
@@ -49,6 +49,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
   private _legend_bg_opacity: number = default_legend_bg_opacity
   private _legend_show_dataTags: boolean = default_legend_show_dataTags
   private _legend_show_constraints: boolean = default_legend_show_constraints
+  private _legend_horizontal: boolean = default_legend_horizontal
   private _width: number = default_width
   private _info_link_value_void: boolean = default_info_link_value_void
   private _legend_show_data_type: boolean = false
@@ -83,6 +84,7 @@ export class ClassTemplate_Legend extends Class_NodeBase {
     this._legend_bg_opacity = cast_copy._legend_bg_opacity
     this._legend_show_dataTags = cast_copy._legend_show_dataTags
     this._legend_show_constraints = cast_copy._legend_show_constraints
+    this._legend_horizontal = cast_copy._legend_horizontal
     this._info_link_value_void = cast_copy._info_link_value_void
     this._legend_show_data_type = cast_copy._legend_show_data_type
     this._stick_to_drawing = cast_copy._stick_to_drawing
@@ -373,16 +375,31 @@ export class ClassTemplate_Legend extends Class_NodeBase {
               .style('fill-opacity', 1)
 
             // Ajout du label
-            tagElement?.append('text')
+            const tag_label = tagElement?.append('text')
               .attr('class', 'name_tag')
               .attr('x', this._legend_police + 5)
               .attr('y', 0)
               .attr('font-size', this._legend_police + 'px')
               .text(tag.display_name)
-              .call(this._wrapper)
+            // En mode horizontal on garde le label sur une seule ligne (pas de wrap)
+            if (!this._legend_horizontal) {
+              tag_label?.call(this._wrapper)
+            }
 
-            this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
+            if (this._legend_horizontal) {
+              // Avance horizontale : largeur du carré + espace + largeur du texte + marge
+              const text_node = tag_label?.node() as SVGTextContentElement | null | undefined
+              const text_width = text_node?.getComputedTextLength?.() ?? 0
+              this._dx += this._legend_police + 5 + text_width + 14
+            } else {
+              this._dy += ((tagElement?.select('.name_tag').selectAll('tspan').nodes().length ?? 0) * this.legend_police) + 2
+            }
           })
+        // Fin du groupe : en mode horizontal, retour à la ligne pour le groupe suivant
+        if (this._legend_horizontal && this._dx > 0) {
+          this._dx = 0
+          this._dy += this._legend_police + 4
+        }
       })
     // Show wich data_tag are selected by group
     if (this._legend_show_dataTags) {
@@ -754,6 +771,9 @@ export class ClassTemplate_Legend extends Class_NodeBase {
 
   public get legend_show_constraints(): boolean { return this._legend_show_constraints }
   public set legend_show_constraints(_) { this._legend_show_constraints = _; this.draw() }
+
+  public get legend_horizontal(): boolean { return this._legend_horizontal }
+  public set legend_horizontal(_) { this._legend_horizontal = _; this.draw(); this.drawing_area.areaAutoFit() }
 
   public get width(): number { return this._width }
   public set width(_) { this._width = _; this.draw() }

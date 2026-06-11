@@ -136,6 +136,7 @@ export const default_legend_bg_color = default_element_color
 export const default_legend_bg_opacity = 0
 export const default_legend_show_dataTags = true
 export const default_legend_show_constraints = false
+export const default_legend_horizontal = false
 export const default_width = 180
 export const default_info_link_value_void = false
 export const default_legend_position_x = 300

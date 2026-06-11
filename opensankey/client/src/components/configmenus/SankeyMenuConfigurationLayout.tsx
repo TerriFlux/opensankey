@@ -614,6 +614,14 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
     app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_show_data_type', checked, f)
   }
 
+  const eventLegendHorizontal = (checked: boolean) => {
+    const f = (_: boolean) => {
+      app_data.drawing_area.legend.legend_horizontal = _
+      refreshThisAndUpdateRelatedComponents()
+    }
+    app_data.setValueAndSaveHistory(app_data.drawing_area.legend, 'legend_horizontal', checked, f)
+  }
+
   return <Box layerStyle='menu_sub_section'>
     {/* ✅ TITRE AVEC CHECKBOX DE VISIBILITÉ */}
     <Box
@@ -771,6 +779,12 @@ export const LegendConfig = ({ app_data }: { app_data: Class_ApplicationData }) 
           onClick={() => eventLegendDataType(!app_data.drawing_area.legend.legend_show_data_type)}
         >
           {t('MEP.leg_show_data_type')}
+        </Button>
+        <Button
+          variant={app_data.drawing_area.legend.legend_horizontal ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+          onClick={() => eventLegendHorizontal(!app_data.drawing_area.legend.legend_horizontal)}
+        >
+          {t('MEP.leg_horizontal')}
         </Button>
       </Box>
 
