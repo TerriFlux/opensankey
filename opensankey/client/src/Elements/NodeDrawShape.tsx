@@ -209,6 +209,10 @@ export class NodeDrawShape {
       .attr('stroke-opacity', (this._node.shape_border_visible) ? 1 : 0)
       .attr('clip-path', clip_attr)
       .attr('pointer-events', acts_as_frame ? 'visibleStroke' : null)
+    // Ombre portée : appliquée sur le groupe g_node_shape (pas sur .node_shape)
+    // pour que le clip de bordure interne ne rogne pas l'ombre.
+    this._node.d3_selection_g_shape
+      ?.attr('filter', this._node.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
     if (acts_as_frame && sel) {
       const hover_thickness = Math.max(base_thickness * 3, base_thickness + 6)
       sel
