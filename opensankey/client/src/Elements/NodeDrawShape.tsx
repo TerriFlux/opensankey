@@ -163,17 +163,19 @@ export class NodeDrawShape {
     // We skip this for frame nodes (tied_to_nodes) because their pointer-events
     // rely on the outer half of the visible stroke for click detection.
     //
-    // The <clipPath> is inserted as a sibling element inside d3_selection_g_shape
-    // so that its `userSpaceOnUse` coordinates align with the group's local
-    // coordinate system — the same system in which the shape element lives
-    // (the shape uses a translate transform to account for margins).
+    // The <clipPath> is inserted as a sibling element inside d3_selection_g_shape.
+    // A `userSpaceOnUse` clip-path is resolved in the user space of the element
+    // that references it — INCLUDING that element's own `transform`. The shape
+    // element already carries `translate(-margin_left,-margin_top)` (applied
+    // below), so the clip geometry inherits it automatically. We must therefore
+    // give the clip the RAW geometry (no margin translate) — re-applying the
+    // margin here would double-count it and shift the clip up-left by one margin,
+    // cropping the border on the right/bottom edges (visible when margins != 0).
     let clip_attr: string | null = null
     if (!acts_as_frame && base_thickness > 0 && this._node.shape_border_visible) {
       const g_shape = this._node.d3_selection_g_shape
       if (g_shape) {
         const clip_id = `clip-node-border-${this._node.id}`
-        // clipPath lives directly in the shape group — its coordinates are
-        // therefore in the group's local space (userSpaceOnUse default).
         const clip_g = g_shape.append('g').classed('node_border_clip_def', true)
         const clip = clip_g.append('clipPath').attr('id', clip_id)
         if (this._node.shape_type === 'rect') {
@@ -181,18 +183,16 @@ export class NodeDrawShape {
             .attr('width', width)
             .attr('height', height)
             .attr('rx', this._node.shape_border_radius)
-            .attr('transform', `translate(${-margin_left},${-margin_top})`)
         } else if (this._node.shape_type === 'ellipse') {
           clip.append('ellipse')
-            .attr('cx', width / 2 - margin_left)
-            .attr('cy', height / 2 - margin_top)
+            .attr('cx', width / 2)
+            .attr('cy', height / 2)
             .attr('rx', width / 2)
             .attr('ry', height / 2)
         } else {
           // capsule / capsule_h — reuse the same path geometry
           clip.append('path')
             .attr('d', this._node.shape_type === 'capsule' ? this.getCapsulePath() : this.getHorizontalCapsulePath())
-            .attr('transform', `translate(${-margin_left},${-margin_top})`)
         }
         clip_attr = `url(#${clip_id})`
       }
