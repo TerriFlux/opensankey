@@ -146,6 +146,14 @@ Filtres topbar
      - Présélectionne un data tag par groupe de data tags :
        ``{ groupe : tag }``. Le groupe et le tag se résolvent par **id ou par nom**.
        Un groupe ou tag introuvable est ignoré (``console.warn``).
+   * - ``view_tag_selection``
+     - ``Record<string, string>``
+     - Présélectionne un view tag par groupe de view tags : ``{ groupe : tag }``
+       (résolution **id ou nom**). Sélectionne la valeur **et** active le filtre vue
+       (``view_mode``) du groupe — comme l'œil dans la barre du bas — pour que le
+       diagramme s'ouvre déjà filtré sur cette vue. Groupe/tag introuvable ignoré
+       (``console.warn``). Valeur spéciale ``"all"``, ``"none"`` ou ``"*"`` :
+       **désactive** le filtre vue du groupe (toutes les valeurs visibles).
 
 Ces options sont appliquées après le chargement du diagramme (et de l'éventuel
 ``diagram_layout``) via ``Class_ApplicationData.applyPublishStateOptions()`` ; la
@@ -160,6 +168,9 @@ Exemple :
    data_tag_selection={{
      "Année":  "2030",
      "Scénario": "tendanciel",
+   }}
+   view_tag_selection={{
+     "Vue": "Synthèse",
    }}
 
 Multi-diagrammes
