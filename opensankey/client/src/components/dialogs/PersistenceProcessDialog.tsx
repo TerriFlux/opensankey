@@ -830,7 +830,13 @@ export const UniversalFileConverter = ({
           //const uint8Array = new Uint8Array(arrayBuffer)
           const decompressed = await decompressGzipDataFixed(arrayBuffer)
           const jsonData = JSON.parse(decompressed)
-          if (input_format == 'example_json') {
+          // « Charger seulement la mise en page » : le serveur a court-circuité
+          // le parse SEP et renvoyé le contenu de l'onglet « layout », qui est un
+          // diagramme JSON complet. On le charge tel quel comme un fichier JSON
+          // (remplacement total, pas de recalcul de mise en page ni de
+          // réconciliation), exactement comme le chemin example_json.
+          const only_layout = input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_layout'])
+          if (input_format == 'example_json' || only_layout) {
             app_data.fromJSON(jsonData as Type_JSON, {} /*output_options_json*/)
           } else {
             // Loading into the current view only (never replace app_data, otherwise
