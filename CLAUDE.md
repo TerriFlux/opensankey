@@ -4,9 +4,6 @@
 Application web SaaS (Flask + React) de visualisation de flux Sankey, développée par TerriFlux.
 Repo GitLab : https://gitlab.com/su-model/sankeyapplication
 
-## Frontière avec Claude Cowork (depuis 2026-06-04)
-Deux outils, rôles **orthogonaux**. **Claude Code (ici)** = développement de l'application (le COMMENT : bugs, fonctionnalités, CI/CD, déploiement, maintenance du moteur `MFAProblem`/`SankeyExcelParser` et publication des wheels). **Claude Cowork** (dossier `C:\TerriFlux\MFAData\Cowork`) = chargé d'études — il mène les analyses MFA et **consomme** le moteur comme une boîte noire (il lance `bin/run_reconciliation.py`, n'édite pas le code). Les demandes de développement issues des études arrivent ici sous forme d'**issues GitLab** (file canonique) : les traiter normalement, taguer la version qui les livre. Le point d'entrée headless `submodules/MFAProblem/bin/run_reconciliation.py` (qui réplique `server/views.py`) est le **contrat** consommé par Cowork — préserver sa compatibilité et la publication des wheels manylinux sur le registre PyPI GitLab du groupe.
-
 ## Structure clé
 - `client/` — lib React `@terriflux/sankeyapplication` (publiée sur GitLab Package Registry)
 - `submodules/MFAProblem/` — solveur MFA compilé (Cython + pybind11 + Eigen)

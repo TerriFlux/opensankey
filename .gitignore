@@ -75,3 +75,6 @@ tmp_poc/
 _tmp_*.json
 logs/
 .claude/scheduled_tasks.lock
+
+# Contexte Claude personnel, propre à chaque contributeur
+CLAUDE.local.md
