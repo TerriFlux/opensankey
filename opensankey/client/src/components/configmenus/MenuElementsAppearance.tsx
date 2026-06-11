@@ -2501,38 +2501,38 @@ export const MenuShapeAttributes = ({
             maximum_value={20}
             stepper={true}
             isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
+          <Box />
+        </Box>
 
-          <Box as='span' layerStyle='options_2cols'>
+        {/* Tireté et Ombre portée côte à côte */}
+        <Box as='span' layerStyle='options_2cols'>
+          <OverloadedCheckbox
+            elements={elements}
+            config={config}
+            prefix={prefix}
+            attributeKey="border_dashed"
+            isChecked={shapeValues.border_dashed}
+            onChange={(checked) => { shapeValues.border_dashed = checked }}
+            getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
+            tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+            t={t}
+          >
+            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+          </OverloadedCheckbox>
+          {prefix === 'shape' ? (
             <OverloadedCheckbox
               elements={elements}
-              config={config}
+              config={BASE_SHAPE_CONFIG}
               prefix={prefix}
-              attributeKey="border_dashed"
-              isChecked={shapeValues.border_dashed}
-              onChange={(checked) => { shapeValues.border_dashed = checked }}
-              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              attributeKey="shadow_visible"
+              isChecked={shapeValues.shadow_visible}
+              onChange={(checked) => { shapeValues.shadow_visible = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
+              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
               t={t}
             >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
+              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
             </OverloadedCheckbox>
-          </Box>
-          {prefix === 'shape' ? (
-            <Box as='span' layerStyle='options_2cols'>
-              <OverloadedCheckbox
-                elements={elements}
-                config={BASE_SHAPE_CONFIG}
-                prefix={prefix}
-                attributeKey="shadow_visible"
-                isChecked={shapeValues.shadow_visible}
-                onChange={(checked) => { shapeValues.shadow_visible = checked }}
-                getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
-                tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
-                t={t}
-              >
-                {t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
-              </OverloadedCheckbox>
-            </Box>
           ) : (
             <Box />
           )}
