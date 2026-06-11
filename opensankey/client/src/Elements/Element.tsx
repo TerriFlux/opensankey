@@ -670,6 +670,9 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_border_dashed!: ShapeAttributeTypes['border_dashed']
   shape_border_radius!: ShapeAttributeTypes['border_radius']
 
+  // =================== SHADOW ATTRIBUTES (shadow_*) ===================
+  shape_shadow_visible!: ShapeAttributeTypes['shadow_visible']
+
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font
   name_label_has_fo!: NameLabelAttributeTypes['has_fo']
@@ -1026,6 +1029,9 @@ export class Class_ElementStyle {
   shape_border_thickness!: ShapeAttributeTypes['border_thickness']
   shape_border_dashed!: ShapeAttributeTypes['border_dashed']
   shape_border_radius!: ShapeAttributeTypes['border_radius']
+
+  // =================== SHADOW ATTRIBUTES (shadow_*) ===================
+  shape_shadow_visible!: ShapeAttributeTypes['shadow_visible']
 
   // =================== NAME LABEL ATTRIBUTES (name_label_*) ===================
   // Visibility & Font

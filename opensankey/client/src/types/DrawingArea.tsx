@@ -570,6 +570,26 @@ export class Class_DrawingArea {
 
     this.d3_selection_def_gradient = this.d3_selection_elements_group?.append('g').attr('id', 'def_gradient') ?? null
 
+    // Filtre d'ombre portée partagé, référencé par les éléments dont
+    // shape_shadow_visible est vrai (cf. NodeDrawShape / LinkDrawShape).
+    // Région élargie pour ne pas rogner l'ombre (offset + flou).
+    if (this.d3_selection_def_gradient) {
+      this.d3_selection_def_gradient.select('#os_drop_shadow').remove()
+      const shadow_filter = this.d3_selection_def_gradient.append('defs')
+        .append('filter')
+        .attr('id', 'os_drop_shadow')
+        .attr('x', '-40%')
+        .attr('y', '-40%')
+        .attr('width', '180%')
+        .attr('height', '180%')
+      shadow_filter.append('feDropShadow')
+        .attr('dx', 2)
+        .attr('dy', 2)
+        .attr('stdDeviation', 2)
+        .attr('flood-color', '#000000')
+        .attr('flood-opacity', 0.35)
+    }
+
     // Scrollbars (outside g_drawing so they stay fixed in viewport)
     this._initScrollbars()
 

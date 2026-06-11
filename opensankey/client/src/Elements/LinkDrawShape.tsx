@@ -202,6 +202,7 @@ export class LinkDrawShape {
           .attr('stroke-opacity', is_stroke ? shape_opacity : '0')
           .attr('stroke-width', is_stroke ? thickness : '0')
           .attr('stroke-dasharray', show_as_dash ? '10,2' : '')
+          .attr('filter', this._link.shape_shadow_visible ? 'url(#os_drop_shadow)' : null)
 
         if (!is_stroke) {
           this._link.d3_selection?.selectAll('.link_path')
