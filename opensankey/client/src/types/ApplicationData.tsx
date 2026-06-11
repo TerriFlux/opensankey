@@ -1424,6 +1424,13 @@ export class Class_ApplicationData {
           node.draw()
         })
       }
+      // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE (_center_x/_center_y,
+      // cf. centerForPersistence). Un déplacement aux flèches ne met à jour que le coin et
+      // ne déclenche pas de passe drawElements() complète qui resynchroniserait le centre :
+      // sans ce commit, sauver après un déplacement clavier persiste le centre d'AVANT et le
+      // nœud revient à sa place au rechargement. Les zones de texte persistent leur coin et
+      // ne sont donc pas concernées (cohérent avec le fix du drag).
+      app_ref.drawing_area.selected_nodes_list.forEach(node => node.settleCenterAnchor())
       // Update drawing area size so none of elements are outside the DA
       this.drawing_area.areaAutoFit()
     }
