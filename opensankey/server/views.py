@@ -613,6 +613,50 @@ def conversion_thread(
             trace.logger.info("=" * 80)
             return
 
+        # Ad-hoc shortcut : « Charger seulement la mise en page ». On ne parse
+        # PAS le contenu Sankey (nœuds/données/TER) : on extrait uniquement
+        # l'onglet caché « layout », qui contient déjà un JSON complet du
+        # diagramme, et on le renvoie tel quel — exactement comme l'ouverture
+        # d'un fichier JSON. Court-circuite load_sankey (donc réconciliation et
+        # checks de cohérence), ce qui rouvre rapidement la mise en page d'un
+        # Excel sans dépendre de la validité des onglets structurels.
+        if input_options.get("only_layout"):
+            if input_format != 'excel' or output_format != 'json':
+                raise ValueError(
+                    "only_layout requires excel input and json output"
+                )
+            with pd.ExcelFile(input_file_name) as excel_file:
+                has_layout = "layout" in excel_file.sheet_names
+            if not has_layout:
+                t_total = perf_counter() - t_total_start
+                trace.logger.error("=" * 80)
+                trace.logger.error(
+                    f"✗ {op_label} — échec après {t_total:.3f}s : aucun onglet "
+                    "« layout » dans le fichier Excel (la mise en page n'est "
+                    "présente que dans les fichiers exportés depuis l'application)"
+                )
+                trace.logger.error("=" * 80)
+                write_process_status(log_filename, PROCESS_STATUS_FAILED)
+                return
+            # header=None : l'onglet « layout » est écrit en colonne A sans
+            # en-tête (cf. write_sankey plus bas), une ligne par fragment.
+            layout_table = pd.read_excel(input_file_name, "layout", header=None)
+            layout_json_str = "".join(
+                str(layout_table.iloc[_, 0]) for _ in range(len(layout_table)))
+            # json.loads valide le contenu (échec propre si l'onglet est corrompu)
+            layout_json = json.loads(layout_json_str)
+            with open(output_file_name, "w", encoding="utf-8") as f:
+                json.dump(layout_json, f)
+            t_total = perf_counter() - t_total_start
+            trace.logger.info("=" * 80)
+            trace.logger.info(
+                f"✓ {op_label} en {t_total:.3f}s — mise en page seule extraite "
+                "(onglets structurels ignorés)"
+            )
+            write_process_status(log_filename, PROCESS_STATUS_FINISHED)
+            trace.logger.info("=" * 80)
+            return
+
         # Choisir le bon IO selon le format. 'blob' (= sankey courant) est
         # toujours matérialisé en .json sur disque avant d'arriver ici (cf.
         # launch_conversion / launch_optim), donc on le traite comme du json :

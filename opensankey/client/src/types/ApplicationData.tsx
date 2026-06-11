@@ -937,7 +937,7 @@ export class Class_ApplicationData {
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'freeLabels', 'Views', 'tagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel', 'Views', 'tagLevel', 'addTagLevel', 'removeTagLevel', 'tagNode', 'assignTagNode', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
     )
     //}
   }
