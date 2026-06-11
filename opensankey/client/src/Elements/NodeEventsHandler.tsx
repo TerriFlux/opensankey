@@ -442,6 +442,13 @@ export class NodeEventsHandler {
             if (n.position_x < min_x) min_x = n.position_x
             if (n.position_y < min_y) min_y = n.position_y
             n.setPosXY(n.position_x + event.dx, n.position_y + event.dy)
+            // #1230/#1231 — La position PERSISTÉE d'un nœud est son CENTRE
+            // (_center_x/_center_y, cf. centerForPersistence). En mode absolu un drag
+            // ne déclenche pas de drawElements() complet, donc anchorByCenterIfResized()
+            // ne tourne pas et le centre n'est jamais resynchronisé sur le coin déplacé.
+            // Sans ce commit, sauver juste après un déplacement persiste le centre
+            // d'AVANT le drag → le nœud revient à sa place au rechargement.
+            n.settleCenterAnchor()
           })
       }
     }
@@ -453,8 +460,13 @@ export class NodeEventsHandler {
       else {
         // Set position
         // Update node position
-        if (this._node.shape_position_type !== 'relative')
+        if (this._node.shape_position_type !== 'relative') {
           this._node.setPosXY(this._node.position_x + event.dx, this._node.position_y + event.dy)
+          // #1230/#1231 — Recommit du CENTRE persisté sur le coin déplacé (cf. branche
+          // multi-sélection ci-dessus) : sans ça, sauver après un drag en mode absolu
+          // restaure l'ancienne position au rechargement.
+          this._node.settleCenterAnchor()
+        }
         if (this._node.shape_position_type == 'relative') {
           const node_element = this._node as Class_NodeElement
           if (node_element.hasInputLinks()) {
@@ -525,7 +537,8 @@ export class NodeEventsHandler {
         Object.keys(dict_old_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
-          if (n) n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1])
+          // #1230/#1231 — recommit du centre persisté après restauration du coin.
+          if (n) { n.setPosXY(dict_old_pos[k][0], dict_old_pos[k][1]); n.settleCenterAnchor() }
         })
         Object.keys(dict_old_sizes).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
@@ -549,7 +562,8 @@ export class NodeEventsHandler {
         Object.keys(dict_new_pos).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
           if (!n) n = _.drawing_area.sankey.containers_dict[k]
-          if (n) n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1])
+          // #1230/#1231 — recommit du centre persisté après restauration du coin.
+          if (n) { n.setPosXY(dict_new_pos[k][0], dict_new_pos[k][1]); n.settleCenterAnchor() }
         })
         Object.keys(dict_new_sizes).forEach(k => {
           let n = _.drawing_area.sankey.nodes_dict[k] as Class_NodeBase
