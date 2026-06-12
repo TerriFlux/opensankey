@@ -3081,7 +3081,25 @@ export function updateElements<
   refreshParentComponent: () => void
 ) {
   const fullKey = prefix ? `${prefix}_${String(key)}` : String(key)
-  // Create a dict of old val for each elements 
+  // #1231 — Changer la hauteur/largeur min d'un nœud depuis le menu redessine la forme en
+  // mode TOP-ancré (action `drawElements` au niveau nœud : le coin haut reste, la boîte
+  // grandit vers le bas → le centre bouge). Or la vérité persistée ET le modèle d'ancrage
+  // (#1230/#1231) sont le CENTRE : au changement de datatag/échelle le centre reste fixe. Pour
+  // rester cohérent, un changement de taille au menu doit aussi garder le CENTRE fixe (le coin
+  // est redérivé du centre stocké → croissance symétrique haut/bas). C'est l'inverse des
+  // poignées de drag, qui gardent volontairement le bord opposé fixe (settleCenterAnchor).
+  const is_size_attr = fullKey === 'shape_min_height' || fullKey === 'shape_min_width'
+  const reCenterNodes = () => {
+    if (!is_size_attr) return
+    elements.forEach(el => {
+      const node = el as { forceDeriveFromCenter?: () => void, draw?: () => void }
+      if (typeof node.forceDeriveFromCenter === 'function') {
+        node.forceDeriveFromCenter() // coin = centre stocké − taille/2 (centre fixe)
+        node.draw?.()
+      }
+    })
+  }
+  // Create a dict of old val for each elements
   const dict_old_val: { [id: string]: ExtractConfigValue<CONFIG[K]> } = {}
   elements.forEach(element => {
     dict_old_val[element.id] = Reflect.get(element, fullKey)
@@ -3092,6 +3110,7 @@ export function updateElements<
     elements.forEach(element => {
       Reflect.set(element, fullKey, value)
     })
+    reCenterNodes()
     refreshParentComponent()
   }
 
@@ -3099,6 +3118,7 @@ export function updateElements<
   const inv_updateElements = () => {
     elements.forEach(element => Reflect.set(element, fullKey, dict_old_val[element.id])
     )
+    reCenterNodes()
     refreshParentComponent()
   }
 

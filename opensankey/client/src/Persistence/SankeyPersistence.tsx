@@ -748,7 +748,13 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     const json_local = getJSONOrUndefinedFromJSON(json_object, 'local')
     if (
       json_local
-      && json_local['shape_is_recycling'] === true
+      // Clé moderne OU clé legacy `recycling` (fichiers < 0.92, cf. fromJSON_0_91 ligne 628 :
+      // `recycling` -> `shape_is_recycling`). Sans la clé legacy ici, un recyclage forcé d'un
+      // vieux fichier restait NON verrouillé → traité en auto par SEP à la réconciliation, qui
+      // n'écrivait alors rien → le flux revenait non-recyclage (côté de lien inversé, hauteur
+      // de nœud faussée). On lit le JSON brut (les deux clés) pour être indépendant de l'ordre
+      // des passes de chargement.
+      && (json_local['shape_is_recycling'] === true || json_local['recycling'] === true)
       && json_local['shape_is_recycling_locked'] === undefined
     ) {
       link.attributes['shape_is_recycling_locked'] = true
