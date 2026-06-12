@@ -150,20 +150,33 @@ def versions():
     slot dir ~/<env>_v<X.Y.Z>_opensankey served under /v<X.Y.Z>/. We discover
     them by globbing those dirs — archiving a version makes it appear here with
     no manual registry to keep in sync. Returns [{version, url}] newest-first.
+
+    Versions hosted on another server (e.g. a version only kept on a backup
+    host, not archived as a local slot) can be added via the env var
+    EXTRA_VERSION_LINKS, a comma/semicolon-separated list of "<version>=<url>"
+    pairs, e.g. "1.1.5=https://backup.open-sankey.fr/". An explicit link there
+    overrides the local slot for the same version.
     """
     import glob
     import re
 
     env = os.environ.get("ENV", "prod")
     home = os.path.expanduser("~")
-    found = set()
+    # version -> url ; local archived slots first, then env overrides/adds.
+    links = {}
     for d in glob.glob(os.path.join(home, f"{env}_v*_opensankey")):
         m = re.search(rf"{re.escape(env)}_v(\d+\.\d+\.\d+[^_/]*)_opensankey$", d)
         if m:
-            found.add(m.group(1))
+            links[m.group(1)] = f"/v{m.group(1)}/"
+    for pair in re.split(r"[,;]", os.environ.get("EXTRA_VERSION_LINKS", "")):
+        if "=" in pair:
+            ver, _, url = pair.partition("=")
+            ver, url = ver.strip(), url.strip()
+            if ver and url:
+                links[ver] = url
     # Semantic descending sort (1.1.10 > 1.1.9), tolerant of pre-release suffixes.
-    ordered = sorted(found, key=lambda v: [int(x) for x in re.findall(r"\d+", v)], reverse=True)
-    return jsonify([{"version": v, "url": f"/v{v}/"} for v in ordered])
+    ordered = sorted(links, key=lambda v: [int(x) for x in re.findall(r"\d+", v)], reverse=True)
+    return jsonify([{"version": v, "url": links[v]} for v in ordered])
 
 
 @sankeyapp.route("/<path:path>")
