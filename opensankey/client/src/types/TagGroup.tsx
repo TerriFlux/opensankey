@@ -91,7 +91,14 @@ export abstract class Class_ProtoTagGroup {
     this._name = tagg_to_copy._name
     this._banner = tagg_to_copy._banner
     this._tag_count = tagg_to_copy._tag_count
-    this._tags_order = [...tagg_to_copy._tags_order]
+    // tagg_to_copy._tags_order holds the SOURCE group's tag ids. When the two
+    // groups were matched by name but carry different tag ids (e.g. updateFrom
+    // a JSON whose tags were renamed), copying the order verbatim would leave
+    // this group's tags_order pointing at ids absent from its tags_dict. Since
+    // tags_list is derived from tags_order, that empties tags_list and the sync
+    // loops below run on nothing, orphaning every tag. Translate source ids back
+    // to this group's ids via revert_matching_id so the order stays resolvable.
+    this._tags_order = tagg_to_copy._tags_order.map(id => revert_matching_id[id] ?? id)
 
     // Synchro current tags
     this.tags_list
