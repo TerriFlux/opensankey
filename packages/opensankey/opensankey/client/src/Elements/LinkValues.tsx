@@ -729,9 +729,10 @@ export class Class_LinkValue extends Class_ElementValue {
 
   // LINK-SPECIFIC ATTRIBUTES ===========================================================
   private _ratio_unit_tag: Class_DataTag | null
-  // Free-text metadata of the data row (Données sheet "Source" / "URL" columns).
+  // Free-text metadata of the data row (Données sheet "Source" / "URL" / "Hypothèse" columns).
   private _data_source: string | null = null
   private _data_url: string | null = null
+  private _data_hypothesis: string | null = null
 
   public get ratio_unit_tag() { return this._ratio_unit_tag }
   public set ratio_unit_tag(_) { this._ratio_unit_tag = _ }
@@ -740,6 +741,8 @@ export class Class_LinkValue extends Class_ElementValue {
   public set data_source(_: string | null) { this._data_source = _ }
   public get data_url() { return this._data_url }
   public set data_url(_: string | null) { this._data_url = _ }
+  public get data_hypothesis() { return this._data_hypothesis }
+  public set data_hypothesis(_: string | null) { this._data_hypothesis = _ }
 
   public value_option: ValueOptionType = 'value'
 
@@ -838,6 +841,7 @@ export class Class_LinkValue extends Class_ElementValue {
       this.ratio_unit_tag = element.ratio_unit_tag
       this.data_source = element.data_source
       this.data_url = element.data_url
+      this.data_hypothesis = element.data_hypothesis
     }
     // Copy vectors via base class
     super.copyFrom(element)
@@ -881,6 +885,7 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this._ratio_unit_tag) json_object['ratio_unit_tag'] = this._ratio_unit_tag.id
     if (this._data_source != null) json_object['data_source'] = this._data_source
     if (this._data_url != null) json_object['data_url'] = this._data_url
+    if (this._data_hypothesis != null) json_object['data_hypothesis'] = this._data_hypothesis
     return json_object
   }
 
@@ -926,6 +931,7 @@ export class Class_LinkValue extends Class_ElementValue {
 
       this._data_source = getStringOrNullFromJSON(json_object, 'data_source')
       this._data_url = getStringOrNullFromJSON(json_object, 'data_url')
+      this._data_hypothesis = getStringOrNullFromJSON(json_object, 'data_hypothesis')
 
       this.text_value = getStringFromJSON(json_object, 'text_value', this.text_value!)
       this.value_option = getStringFromJSON(json_object, 'value_option', 'value') as ValueOptionType
