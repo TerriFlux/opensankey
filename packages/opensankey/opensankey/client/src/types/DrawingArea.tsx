@@ -1621,6 +1621,11 @@ export class Class_DrawingArea {
     this.sankey.nodes_list.forEach(n => {
       n.position_x += this._elements_d3_groups_shift_x
       n.position_y += this._elements_d3_groups_shift_y
+      // #1231 — La position persistée d'un nœud est son CENTRE (_center_x/_center_y, cf.
+      // centerForPersistence). recenter() ne décale que le coin ; sans ce report, le centre
+      // stocké reste périmé et le nœud « revient » à sa place pré-recenter au rechargement
+      // (régression visible sur les vieux fichiers v0.91 qui forcent un recenter au load).
+      n.translateStoredCenter(this._elements_d3_groups_shift_x, this._elements_d3_groups_shift_y)
       if (n.value_label_position_x) n.value_label_position_x += this._elements_d3_groups_shift_x
       if (n.value_label_position_y) n.value_label_position_y += this._elements_d3_groups_shift_y
       if (n.name_label_position_x) n.name_label_position_x += this._elements_d3_groups_shift_x
