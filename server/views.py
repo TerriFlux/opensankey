@@ -267,6 +267,13 @@ def solve_optimisation_problem_unified(
                 "preserve_extra_columns",
                 output_options["preserve_extra_columns"],
             )
+        # Pipeline MFA : les fluxTags des lignes de données sont des
+        # annotations (source, méthode, traduction, ...) qui varient par
+        # ligne — ils ne doivent pas fragmenter un flux physique en N
+        # variables solveur déconnectées (issue #168). La convention
+        # OpenSankey « N Links par (o,d) » reste le défaut partout ailleurs.
+        if input_format == 'excel':
+            input_options.setdefault("split_flux_by_fluxtags", False)
         ok, msg = io_input.load_sankey(input_filename, **input_options)
         if not ok:
             trace.logger.error("ERROR in input file.")
