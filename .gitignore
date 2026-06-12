@@ -78,3 +78,6 @@ logs/
 
 # Contexte Claude personnel, propre à chaque contributeur
 CLAUDE.local.md
+
+# Secrets / config locale (ne pas committer)
+.env
