@@ -177,7 +177,7 @@ export class LinkTooltip {
     }
     this._link.value_label_is_visible = data_label_visible
 
-    // Source / URL de la donnée courante (colonnes "Source"/"URL" de l'onglet Données)
+    // Source / URL / Hypothèse de la donnée courante (colonnes "Source"/"URL"/"Hypothèse" de l'onglet Données)
     html += this.getDataSourceUrlRows()
 
     // Contexte dataTags courant (Année, région…)
@@ -324,7 +324,7 @@ export class LinkTooltip {
   }
 
   /**
-   * Lignes <tr> "Source" et "URL" de la donnée courante du flux. Affichées
+   * Lignes <tr> "Source", "URL" et "Hypothèse" de la donnée courante du flux. Affichées
    * seulement si renseignées ; l'URL est rendue cliquable (le tooltip étant
    * épinglable, cf. #158). Aucun affichage si le flux n'a pas de valeur courante.
    */
@@ -337,6 +337,9 @@ export class LinkTooltip {
     }
     if (value.data_url) {
       html += `<tr><th>URL</th><td>${this.urlAnchor(value.data_url)}</td></tr>`
+    }
+    if (value.data_hypothesis) {
+      html += `<tr><th>Hypothèse</th><td>${this.escapeHtml(value.data_hypothesis)}</td></tr>`
     }
     return html
   }
