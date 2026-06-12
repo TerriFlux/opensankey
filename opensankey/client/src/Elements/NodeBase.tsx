@@ -381,6 +381,19 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this._center_anchor_h = this.getShapeHeightToUse()
   }
 
+  /**
+   * #1231 (1.1.5) — Translation RIGIDE du centre stocké (et de la référence proportionnelle)
+   * du même vecteur qu'un décalage de position_x/y. À appeler quand le coin est translaté en
+   * bloc SANS passer par les gestes habituels (typiquement `DrawingArea.recenter()`), sinon le
+   * centre persisté (`centerForPersistence`) reste périmé et les nœuds « reviennent » à leur
+   * place pré-décalage au rechargement. No-op sur les champs non encore initialisés.
+   */
+  public translateStoredCenter(dx: number, dy: number) {
+    if (this._center_x !== undefined) this._center_x += dx
+    if (this._center_y !== undefined) this._center_y += dy
+    if (this._prop_center_ref !== undefined) this._prop_center_ref += dy
+  }
+
   /** #1231 (1.1.5) — Centre stocké (lecture), undefined si pas encore initialisé. */
   public get center_x() { return this._center_x }
   public get center_y() { return this._center_y }
