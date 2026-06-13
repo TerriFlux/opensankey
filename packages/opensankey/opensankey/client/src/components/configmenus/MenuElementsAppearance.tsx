@@ -1215,7 +1215,12 @@ export const MenuConfigurationAppearance = ({
     return elements
   }
 
+  // En mode style, ref_selected_style.current peut pointer un id absent du
+  // styles_dict de la vue courante (après changement de vue/style) : on filtre
+  // les entrées undefined pour éviter un allElements = [undefined] (length 1
+  // mais elements[0] === undefined → Reflect.get called on non-object).
   const allElements = (menu_for_style ? [sankey.styles_dict[ref_selected_style.current]] : getAllSelectedElements())
+    .filter(Boolean) as Class_ElementStyle[] | (Class_NodeElement | Class_LinkElement | Class_ContainerElement)[]
   const selection = analyzeSelection(allElements)
   const elements = allElements as ElementsType
   const base_elements = allElements as Class_NodeElement[] | Class_LinkElement[] | Class_ContainerElement[]
