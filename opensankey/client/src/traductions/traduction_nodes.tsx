@@ -243,7 +243,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Unitary node input',
         SankeyUnitaryNodeOutputStyle: 'Unitary node output',
         LinkInUnitaryStyle: 'Unitary input link',
-        LinkOutUnitaryStyle: 'Unitary output link'
+        LinkOutUnitaryStyle: 'Unitary output link',
+        family: 'Family',
+        family_predefined: 'Application styles',
+        family_user: 'User styles'
       }
     }
   },
@@ -483,7 +486,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Unitaire noeud entrée',
         SankeyUnitaryNodeOutputStyle: 'Unitaire noeud sortie',
         LinkInUnitaryStyle: 'Unitaire flux entrée',
-        LinkOutUnitaryStyle: 'Unitaire flux sortie'
+        LinkOutUnitaryStyle: 'Unitaire flux sortie',
+        family: 'Famille',
+        family_predefined: 'Styles de l\'application',
+        family_user: 'Styles utilisateur'
       }
     }
   },
@@ -725,7 +731,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Nodo unitario entrada',
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario salida',
         LinkInUnitaryStyle: 'Flujo unitario entrada',
-        LinkOutUnitaryStyle: 'Flujo unitario salida'
+        LinkOutUnitaryStyle: 'Flujo unitario salida',
+        family: 'Familia',
+        family_predefined: 'Estilos de la aplicación',
+        family_user: 'Estilos de usuario'
       }
     }
   },
@@ -967,7 +976,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Einheitsknoten Eingang',
         SankeyUnitaryNodeOutputStyle: 'Einheitsknoten Ausgang',
         LinkInUnitaryStyle: 'Einheitsfluss Eingang',
-        LinkOutUnitaryStyle: 'Einheitsfluss Ausgang'
+        LinkOutUnitaryStyle: 'Einheitsfluss Ausgang',
+        family: 'Familie',
+        family_predefined: 'Anwendungsstile',
+        family_user: 'Benutzerstile'
       }
     }
   },
@@ -1209,7 +1221,10 @@ export const resources_nodes = {
         SankeyUnitaryNodeInputStyle: 'Nodo unitario ingresso',
         SankeyUnitaryNodeOutputStyle: 'Nodo unitario uscita',
         LinkInUnitaryStyle: 'Flusso unitario ingresso',
-        LinkOutUnitaryStyle: 'Flusso unitario uscita'
+        LinkOutUnitaryStyle: 'Flusso unitario uscita',
+        family: 'Famiglia',
+        family_predefined: 'Stili dell\'applicazione',
+        family_user: 'Stili utente'
       }
     }
   }
