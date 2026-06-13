@@ -941,12 +941,12 @@ export const OverloadIndicatorWrapper = ({
       display='inline-flex'
       sx={{
         '& > *': {
-          boxShadow: '0 0 0 1.5px rgba(66, 153, 225, 0.5)', // blue.400 avec transparence
+          boxShadow: '0 0 0 1.5px rgba(128, 90, 213, 0.7)', // purple.500 = surcharge
           borderRadius: '6px',
           transition: 'box-shadow 0.2s'
         },
         '&:hover > *': {
-          boxShadow: '0 0 0 2px rgba(66, 153, 225, 0.8)', // blue.500 plus opaque
+          boxShadow: '0 0 0 2px rgba(128, 90, 213, 1)', // purple.500 opaque
         },
         cursor: 'help'
       }}
@@ -1233,8 +1233,8 @@ export const InputIndicatorWrapper = ({
 }>) => {
   // Priorité : multiValue > overloaded
   const hasIndicator = isMultiValue || isOverloaded
-  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(66, 153, 225, 0.5)' // orange ou bleu
-  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(66, 153, 225, 0.8)'
+  const color = isMultiValue ? 'rgba(237, 137, 54, 0.5)' : 'rgba(128, 90, 213, 0.7)' // orange (multi) ou violet (surcharge)
+  const colorHover = isMultiValue ? 'rgba(237, 137, 54, 0.8)' : 'rgba(128, 90, 213, 1)'
 
   if (!hasIndicator) {
     return <>{children}</>
