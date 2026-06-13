@@ -1284,6 +1284,12 @@ export class Class_ElementStyle {
   }
 
   public copyFrom(element: Class_ElementStyle) {
+    // Remise à zéro avant copie, comme copyAttrFrom pour les éléments : un style
+    // « hérité » doit devenir identique à sa source, sinon les clés posées dans la
+    // vue mais absentes du maître survivaient au ré-héritage (incohérence styles vs
+    // éléments). Seule la branche styleDA « update » de updateFrom est concernée
+    // (les autres appelants copient sur un style fraîchement créé, donc déjà vide).
+    this._storage = {}
     Object.keys(element._storage).forEach(key => {
       this._storage[key] = element._storage[key]
     })
