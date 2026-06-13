@@ -543,6 +543,38 @@ export const UniversalFileConverter = ({
       })
   }, [])
 
+  // [SA #162] As soon as an Excel input file is picked, peek its "Options de
+  // réconciliation" sheet and pre-tick the matching checkboxes. The full parse
+  // only runs on "Lancer", which is too late to inform the load options, so a
+  // tiny server endpoint reads just that sheet (reusing the parser's
+  // accent-insensitive recognition + coercion) and we overlay its values onto
+  // the option buckets: INPUT (autocorrection) options into input_options_base,
+  // SOLVER options into output_options_base. Best-effort: a missing sheet or a
+  // failed peek leaves the defaults untouched and never blocks selection.
+  useEffect(() => {
+    if (input_format !== 'excel' || !input_file) return
+    let cancelled = false
+    const fd = new FormData()
+    fd.append('file', input_file)
+    fetch(window.location.origin + url_prefix + '/convert/peek_options', { method: 'POST', body: fd })
+      .then((r) => (r.ok ? r.json() : { solver_options: {} }))
+      .then((data: { solver_options?: Record<string, unknown> }) => {
+        if (cancelled) return
+        const opts = data?.solver_options ?? {}
+        if (!opts || Object.keys(opts).length === 0) return
+        const pick = (keys: readonly string[]): Record<string, unknown> =>
+          Object.fromEntries(Object.entries(opts).filter(([k]) => keys.includes(k)))
+        const fi = pick(INPUT_OPTION_KEYS)
+        const fs = pick(SOLVER_OPTION_KEYS)
+        if (Object.keys(fi).length > 0)
+          set_input_options_base((prev) => ({ ...prev, ...fi }) as typeof input_options_base)
+        if (Object.keys(fs).length > 0)
+          set_output_options_base((prev) => ({ ...prev, ...fs }) as typeof output_options_base)
+      })
+      .catch(() => { /* peek is best-effort; never block file selection */ })
+    return () => { cancelled = true }
+  }, [input_file, input_format])
+
   // [SA #136] Generic enforcement of `disabledConditions` + `forcedValueWhenDisabled`
   // declared on FormatAttributeConfig entries. When an option's
   // disabledConditions evaluate true on the merged options, its bucket value is

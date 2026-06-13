@@ -383,6 +383,52 @@ def retrieve_json():
         )
 
 
+@opensankey.route("/convert/peek_options", methods=["POST"])
+def peek_options():
+    """
+    [IID=162] Lightweight, synchronous peek of an uploaded Excel workbook's
+    "Options de réconciliation" sheet.
+
+    Returns the key-value options it declares (input autocorrection flags +
+    solver flags) so the converter / reconciliation dialog can pre-tick the
+    matching checkboxes the moment the file is selected — before the full parse
+    runs, which is otherwise too late to inform the load options. Reuses the
+    parser's own sheet-name recognition (accent-insensitive) and value coercion
+    so it stays consistent with an actual load. Always answers 200 with a
+    (possibly empty) ``solver_options`` map; never blocks file selection.
+    """
+    from SankeyExcelParser.classes.sankey_pandas import SankeyPandas
+    import SankeyExcelParser.io_excel_constants as PEEK_CONST
+    options = {}
+    tmp_dir = None
+    try:
+        uploaded = request.files.get("file")
+        if uploaded is not None:
+            tmp_dir = tempfile.mkdtemp()
+            path = os.path.join(tmp_dir, "peek.xlsx")
+            uploaded.save(path)
+            sankey = SankeyPandas()
+            xl = pd.ExcelFile(path)
+            for sheet_name in xl.sheet_names:
+                ok, refkey = sankey._consistantSheetName(sheet_name)
+                if ok and refkey == PEEK_CONST.MFA_OPTIONS_SHEET:
+                    ok_read, _ = sankey.xl_read_mfa_options_sheet(xl.parse(sheet_name))
+                    if ok_read:
+                        options = sankey.mfa_options
+                    break
+    except Exception as e:
+        trace.logger.warning(f"peek_options: {e}")
+        options = {}
+    finally:
+        if tmp_dir is not None:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+    return Response(
+        json.dumps({"solver_options": options}),
+        status=200,
+        mimetype="application/json",
+    )
+
+
 @opensankey.route("/convert/launch", methods=["POST"])
 def launch_conversion():
     """
