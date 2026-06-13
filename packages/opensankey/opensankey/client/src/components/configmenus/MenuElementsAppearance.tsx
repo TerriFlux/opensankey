@@ -36,6 +36,7 @@ import {
   OverloadedCheckbox,
   isElementAttributeOverloaded,
   InputIndicatorWrapper,
+  OverloadIndicatorWrapper,
   CustomFaEyeCheckIcon,
   WrapperBoxSubSectionMenu
 } from './MenuCommon'
@@ -2630,23 +2631,27 @@ export const ShapeTypeSelector = ({
   }
 
   return (
-    <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
-      <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'}>
-        {shapeTypes.map(({ value, position, icon }) => (
-          <Button
-            key={value}
-            variant={getButtonVariant(
-              position,
-              isShapeValueIndeterminate(elements, prefix, 'type'),
-              shapeValues.type === value
-            )}
-            onClick={() => { shapeValues.type = value }}
-          >
-            {icon}
-          </Button>
-        ))}
-      </Box>
-    </OSTooltip>
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, `${prefix}_type` as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)}
+    >
+      <OSTooltip label={t(`${attributePath}.tooltips.shape_type`)}>
+        <Box layerStyle={prefix === 'shape' ? 'options_4cols' : 'options_3cols'} sx={{ width: 'fit-content' }}>
+          {shapeTypes.map(({ value, position, icon }) => (
+            <Button
+              key={value}
+              variant={getButtonVariant(
+                position,
+                isShapeValueIndeterminate(elements, prefix, 'type'),
+                shapeValues.type === value
+              )}
+              onClick={() => { shapeValues.type = value }}
+            >
+              {icon}
+            </Button>
+          ))}
+        </Box>
+      </OSTooltip>
+    </OverloadIndicatorWrapper>
   )
 }
 
@@ -2679,25 +2684,29 @@ export const HatchSelector = ({
   ]
 
   return (
-    <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
-      <Box layerStyle='options_4cols'>
-        {options.map(({ value, position, icon }) => (
-          <Button
-            key={value}
-            variant={getButtonVariant(
-              position,
-              isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
-              nodeShapeValues.hatch === value
-            )}
-            onClick={() => {
-              nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
-            }}
-          >
-            {icon}
-          </Button>
-        ))}
-      </Box>
-    </OSTooltip>
+    <OverloadIndicatorWrapper
+      isOverloaded={isElementAttributeOverloaded(elements, 'shape_hatch' as keyof typeof NODE_SHAPE_SPECIFIC_CONFIG, NODE_SHAPE_SPECIFIC_CONFIG)}
+    >
+      <OSTooltip label={t(`${attributePath}.tooltips.shape_hatch`)}>
+        <Box layerStyle='options_4cols' sx={{ width: 'fit-content' }}>
+          {options.map(({ value, position, icon }) => (
+            <Button
+              key={value}
+              variant={getButtonVariant(
+                position,
+                isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'hatch'),
+                nodeShapeValues.hatch === value
+              )}
+              onClick={() => {
+                nodeShapeValues.hatch = (nodeShapeValues.hatch === value) ? 'none' : value
+              }}
+            >
+              {icon}
+            </Button>
+          ))}
+        </Box>
+      </OSTooltip>
+    </OverloadIndicatorWrapper>
   )
 }
 
