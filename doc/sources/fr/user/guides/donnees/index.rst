@@ -4,6 +4,7 @@ Données
 Saisir, modifier et importer les données qui alimentent un diagramme :
 valeurs, unités, libellés libres, imports simples.
 
-.. note::
+.. toctree::
+   :maxdepth: 1
 
-   Section à rédiger.
+   valeurs_unites

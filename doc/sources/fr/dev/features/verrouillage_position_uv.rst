@@ -120,13 +120,10 @@ geste suivant.
 Fichiers modifiés
 -----------------
 
-=======================================================  =================================================================
-Fichier                                                   Changement
-=======================================================  =================================================================
-``opensankey/client/src/Elements/NodeEventsHandler.tsx``  Champs ``_shift_*``, logique de verrou dans ``handleMouseDrag``,
-                                                          suppression des court-circuits ``shiftKey`` dans
-                                                          ``handleMouseDragStart`` / ``handleMouseDragEnd``.
-=======================================================  =================================================================
+- ``opensankey/client/src/Elements/NodeEventsHandler.tsx`` — champs
+  ``_shift_*``, logique de verrou dans ``handleMouseDrag``, suppression
+  des court-circuits ``shiftKey`` dans ``handleMouseDragStart`` /
+  ``handleMouseDragEnd``.
 
 Décisions et alternatives écartées
 ----------------------------------

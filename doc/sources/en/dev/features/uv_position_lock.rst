@@ -117,13 +117,10 @@ end of the drag so they do not leak into the next gesture.
 Modified files
 --------------
 
-=======================================================  ==================================================================
-File                                                      Change
-=======================================================  ==================================================================
-``opensankey/client/src/Elements/NodeEventsHandler.tsx``  ``_shift_*`` fields, lock logic inside ``handleMouseDrag``,
-                                                          removal of the ``shiftKey`` short-circuits in
-                                                          ``handleMouseDragStart`` / ``handleMouseDragEnd``.
-=======================================================  ==================================================================
+- ``opensankey/client/src/Elements/NodeEventsHandler.tsx`` — ``_shift_*``
+  fields, lock logic inside ``handleMouseDrag``, removal of the
+  ``shiftKey`` short-circuits in ``handleMouseDragStart`` /
+  ``handleMouseDragEnd``.
 
 Decisions and rejected alternatives
 -----------------------------------

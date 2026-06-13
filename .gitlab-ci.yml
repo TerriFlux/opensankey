@@ -674,6 +674,36 @@ pages:
         echo '</body></html>'
       } > "$PUBLIC_DIR/index.html"
 
+    # =================================================================
+    # ÉTAPE 4 — Documentation Sphinx (RST) → public/doc + public/$V/doc
+    # La doc vit dans le repo principal (doc/sources), pas dans un
+    # sous-module — compatible avec GIT_SUBMODULE_STRATEGY: none.
+    # =================================================================
+    - echo "[INFO] Build de la documentation Sphinx"
+    - |
+      DOC_SRC="$CI_PROJECT_DIR/doc/sources"
+      if [ -f "$DOC_SRC/conf.py" ]; then
+        python3 -m venv "$CI_PROJECT_DIR/.docvenv"
+        . "$CI_PROJECT_DIR/.docvenv/bin/activate"
+        pip install --quiet --upgrade pip
+        pip install --quiet sphinx sphinx_rtd_theme
+        # Build unique, copié à la fois dans la version courante et à la
+        # racine /doc (URL stable, indépendante de la version).
+        sphinx-build -b html -D language=fr "$DOC_SRC" "$VERSION_DIR/doc" \
+          && echo "[INFO] Doc générée dans $VERSION_DIR/doc" \
+          || echo "[ATTENTION] Build doc en échec (déploiement poursuivi)"
+        deactivate
+        if [ -d "$VERSION_DIR/doc" ]; then
+          rm -rf "$LATEST_DIR/doc"
+          cp -r "$VERSION_DIR/doc" "$LATEST_DIR/doc"
+          rm -rf "$PUBLIC_DIR/doc"
+          cp -r "$VERSION_DIR/doc" "$PUBLIC_DIR/doc"
+          echo "[INFO] Doc miroir dans /latest/doc et /doc"
+        fi
+      else
+        echo "[ATTENTION] $DOC_SRC/conf.py introuvable — doc non générée"
+      fi
+
     - echo "[INFO] Déploiement terminé. Versions servies :"
     - ls -1 "$PUBLIC_DIR"
   artifacts:
