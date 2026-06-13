@@ -110,6 +110,23 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
     : default_style_id
   const selected_style = styles_dict[selected_style_id]
 
+  // Surcharges du style sélectionné par rapport au style par défaut (pour le menu de reset).
+  // Recalculé à la volée par MenuResetAttrLocal (à l'ouverture / après reset) car l'édition
+  // d'un attribut via le menu d'apparence ne re-rend pas ce composant.
+  const lang = (app_data.language ?? 'fr') as 'fr' | 'en'
+  const computeOverloadedAttr = () => {
+    const dict: { [_: string]: { overloaded: boolean, name: string } } = {}
+    Object.entries(ALL_ATTRIBUTES_CONFIG).forEach(([key, cfg]) => {
+      if (selected_style.isAttributeOverloaded(key as keyof typeof ALL_ATTRIBUTES_CONFIG)) {
+        dict[key] = {
+          overloaded: true,
+          name: (cfg as { labels?: { fr: string, en: string } }).labels?.[lang] ?? key
+        }
+      }
+    })
+    return dict
+  }
+
   // const config = elementType === 'nodes' ? {
   //   selectedRef: app_data.menu_configuration.ref_selected_style,
   const updateAll = () => {
@@ -179,6 +196,28 @@ export const GenericStyleSelector = ({ app_data, children }: React.PropsWithChil
         >
           {icon_remove_element}
         </Button>
+
+        {/* Menu pour enlever les surcharges du style par rapport au style par défaut */}
+        <OSTooltip label={t('Noeud.tooltips.AS')}>
+          <MenuResetAttrLocal
+            new_data={app_data}
+            dict_overwritted_attr={computeOverloadedAttr()}
+            computeOverloadedAttr={computeOverloadedAttr}
+            is_disabled={selected_style_id === default_style_id}
+            onResetAll={() => {
+              app_data.drawing_area.sankey.resetAttrStyle(selected_style)
+              updateAll()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+              setUpdate(!update)
+            }}
+            onResetLocal={(k) => {
+              app_data.drawing_area.sankey.deleteLocalAttrStyle(selected_style, k as keyof typeof ALL_ATTRIBUTES_CONFIG)
+              updateAll()
+              app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
+              setUpdate(!update)
+            }}
+          />
+        </OSTooltip>
       </Box>
 
       <Box as='span' layerStyle='menuconfigpanel_row_2cols' display='flex' gap='0.4rem'>

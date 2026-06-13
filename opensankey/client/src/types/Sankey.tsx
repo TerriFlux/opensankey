@@ -752,6 +752,42 @@ export class Class_Sankey {
     _resetAttrToStyleVal()
   }
 
+  /**
+   * Enlève toutes les surcharges d'un style par rapport au style par défaut
+   * (équivalent de resetAttrSelectedElements, mais pour un style édité).
+   */
+  public resetAttrStyle(style: Class_ElementStyle) {
+    const menu = this.drawing_area.application_data.menu_configuration
+    const curr_attr = { ...style.attributes }
+
+    const inv_resetAttrStyle = () => {
+      style.attributes = { ...curr_attr }
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    const _resetAttrStyle = () => {
+      style.resetOverloadedAttributes()
+      menu.updateAllComponentsRelatedToNodes()
+      menu.updateComponentRelatedToStyles()
+    }
+
+    this.drawing_area.application_data.history.saveUndo(inv_resetAttrStyle)
+    this.drawing_area.application_data.history.saveRedo(_resetAttrStyle)
+    _resetAttrStyle()
+  }
+
+  /** Enlève une surcharge précise d'un style (équivalent deleteLocalAttrSelectedElements). */
+  public deleteLocalAttrStyle(style: Class_ElementStyle, k: keyof typeof ALL_ATTRIBUTES_CONFIG) {
+    if (k in ALL_ATTRIBUTES_CONFIG) {
+      style.deleteAttribute(k as string)
+      style.redrawReferences()
+    }
+    const menu = this.drawing_area.application_data.menu_configuration
+    menu.updateAllComponentsRelatedToNodes()
+    menu.updateComponentRelatedToStyles()
+  }
+
 
   public get styles_dict() { return this._styles }
   public get element_default_style() { return this._styles[default_style_id] }
