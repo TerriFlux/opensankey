@@ -386,7 +386,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @param {Type_JSON} json_object - Raw source JSON (full file, including 'views' key)
    * @memberof Class_ApplicationDataOSP
    */
-  public addViewsFromJSON(json_object: Type_JSON) {
+  public addViewsFromJSON(json_object: Type_JSON): number {
     console.log('[addViewsFromJSON] called, json keys:', Object.keys(json_object))
     // Apply OSP legacy conversion in-place before reading 'views'
     convert_data_plus_legacy(json_object)
@@ -394,8 +394,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     const views_json = getJSONOrUndefinedFromJSON(json_object, 'views')
     if (!views_json) {
       console.warn('[addViewsFromJSON] no views key found, aborting')
-      return
+      return 0
     }
+    let added = 0
     console.log('[addViewsFromJSON] views found:', Object.keys(views_json))
     // Ensure master is set on current app
     if (!this._master_drawing_area) {
@@ -422,6 +423,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       } else {
         this._heredited_attr[view_id] = (raw_attr as { [source_id: string]: string[] } | undefined) ?? {}
       }
+      added++
     })
     // Switch to the active view from the source file if it exists in the imported views
     let active_view_id = getStringFromJSON(json_object, 'current_view', default_main_sankey_id)
@@ -434,6 +436,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     }
     ;(this.menu_configuration as Class_MenuConfigOSP).updateComponentRelatedToViews()
     console.log('[addViewsFromJSON] done, views_order:', this._views_order)
+    return added
   }
 
   /**

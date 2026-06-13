@@ -576,14 +576,19 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
         () => {
           for (let i = 0; i < files.length; i++) {
             drawing_area_plus.bypass_redraws = true
-            const view_id = makeId('view')
             const name = files[i].name.split('.')[0]
-            app_data.createNewView(view_id, name, false)
+            const is_first = i == 0
             decompressUploadedFileUniversal(files[i]).then(JSON_data => {
-              //app_data.views_dict[view_id].name = name
-              JSON_data.id = view_id
-              app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
-              if (i == 0) app_data.setCurrentView(view_id)
+              // Si le fichier contient déjà des vues, on concatène toutes ses vues au catalogue.
+              const nb_views_added = app_data.addViewsFromJSON(JSON_data as unknown as Type_JSON)
+              if (nb_views_added === 0) {
+                // Sinon (diagramme simple sans vues), on emballe le fichier entier comme une vue unique.
+                const view_id = makeId('view')
+                app_data.createNewView(view_id, name, false)
+                JSON_data.id = view_id
+                app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
+                if (is_first) app_data.setCurrentView(view_id)
+              }
               app_data.menu_configuration.updateAllMenuComponents()
               app_data.menu_configuration_osp.updateComponentRelatedToViews()
             })
