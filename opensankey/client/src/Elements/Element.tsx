@@ -1295,7 +1295,9 @@ export class Class_ElementStyle {
     if (!this._default_style ) {
       return this._storage[attr] !== undefined && this._storage[attr] !== this._config[attr].default
     }
-    return true
+    // Style non-défaut : surchargé = stocké ET différent de la valeur du style par défaut
+    const default_value = this._default_style.getElementProperty(attr) ?? this._config[attr].default
+    return this._storage[attr] !== undefined && this._storage[attr] !== default_value
   }
 
   public delete() {
