@@ -1325,6 +1325,33 @@ export class Class_ElementStyle {
     }
   }
   public get attributes() { return this._storage }
+  public set attributes(value: Record<string, unknown>) {
+    this._storage = value
+    this.redrawReferences()
+  }
+
+  /** Redessine tous les éléments qui référencent ce style. */
+  public redrawReferences() {
+    Object.values(this._references).forEach(ref => ref.draw())
+  }
+
+  /**
+   * Enlève toutes les surcharges du style par rapport au style par défaut
+   * (réhéritage). Reconstruit un nouveau _storage pour ne pas muter un éventuel
+   * snapshot d'undo. Sur le style par défaut, isAttributeOverloaded est faux
+   * partout (valeurs == défaut) donc aucun attribut n'est retiré.
+   */
+  public resetOverloadedAttributes() {
+    const new_storage: Record<string, unknown> = {}
+    Object.keys(this._storage).forEach(key => {
+      if (!this.isAttributeOverloaded(key as keyof ConfigType)) {
+        new_storage[key] = this._storage[key]
+      }
+    })
+    this._storage = new_storage
+    this.redrawReferences()
+  }
+
   public get id() { return this._id }
   public get name() { return this._name }
   public set name(value: string) { this._name = value }
