@@ -309,6 +309,27 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   // State for Excel template modal
   const [show_excel_template, set_show_excel_template] = useState(false)
 
+  // Liste des tutoriels disponibles dans SankeyData/tutorials, peuplée par le
+  // sous-menu « Tutoriels » de l'Aide (endpoint /menus/tutorials, lit index.json).
+  const [tutorials_list, setTutorialsList] = useState<{ file: string, title: string }[]>([])
+  const [tuto_submenu_open, setTutoSubmenuOpen] = useState(false)
+  const tutorials_fetched = useRef(false)
+  const fetch_tutorials_list = () => {
+    if (tutorials_fetched.current) return
+    tutorials_fetched.current = true
+    fetch(window.location.origin + '/opensankey//menus/tutorials', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then(response => response.json())
+      .then(json_data => setTutorialsList(json_data.tutorials ?? []))
+      .catch((error) => {
+        // En cas d'échec on retombe sur le tutoriel historique unique.
+        tutorials_fetched.current = false
+        console.error('Error in fetch_tutorials_list - ' + error.toString())
+      })
+  }
+
   // Ouvrir un dropdown du menu du haut (Fichier, Exporter, …) ferme le tiroir de
   // filtres de gauche, sinon les deux se chevauchent à l'écran.
   const closeFilterDrawer = () => new_data.menu_configuration.ref_close_filter_drawer.current?.(false)
@@ -323,11 +344,11 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     ref_setter_show_modal_file_converter.current!(true)
   }
 
-  // Charge directement le tutoriel unique (SankeyData/tutorials/Tutoriel.json)
-  // via le universal converter, sans modale de navigation par dossiers.
-  const open_tutorial_file = () => {
+  // Charge un tutoriel de SankeyData/tutorials via le universal converter, sans
+  // modale de navigation par dossiers. file = nom de fichier dans tutorials/.
+  const open_tutorial_file = (file: string = 'Tutoriel.json.gz') => {
     new_data.menu_configuration.ref_universal_converter_set_config.current(
-      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/Tutoriel.json.gz', true
+      CONVERTER_CONFIGS['load_tutorial'], 'tutorials/' + file, true
     )
     ref_setter_show_modal_file_converter.current!(true)
   }
@@ -845,7 +866,8 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
   const button_aide = <ChakraMenu
     variant='menu_button_subnav_style'
     placement='bottom-start' id='aide'
-    onOpen={closeFilterDrawer}
+    onOpen={() => { closeFilterDrawer(); fetch_tutorials_list() }}
+    onClose={() => setTutoSubmenuOpen(false)}
   >
     <OSTooltip placement='bottom' label={t('Menu.tooltips.aide')}>
       <MenuButton className='menutop_button_aide'>
@@ -867,12 +889,55 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       >
         {t('guide.guide')}
       </MenuItem>
-      <MenuItem
-        icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
-        onClick={() => open_tutorial_file()}
-      >
-        {t('Menu.formation')}
-      </MenuItem>
+      {tutorials_list.length > 1
+        ? (
+          // Plusieurs tutoriels : sous-menu flyout listant tutorials/index.json.
+          // Chakra v2 n'a pas de sous-menu natif : on contrôle l'ouverture au
+          // survol (le clic sur un MenuItem-bouton fermerait le menu parent).
+          <Box
+            onMouseEnter={() => setTutoSubmenuOpen(true)}
+            onMouseLeave={() => setTutoSubmenuOpen(false)}
+          >
+            <Menu isOpen={tuto_submenu_open} placement='right-start' gutter={0} offset={[0, 0]}>
+              <MenuButton
+                as={MenuItem}
+                closeOnSelect={false}
+              >
+                <Box display='flex' alignItems='center' justifyContent='space-between'>
+                  <Box display='flex' alignItems='center' gap='0.75rem'>
+                    {helpMenuIcon(new_data.icon_library.icon_tuto)}
+                    {t('Menu.formation')}
+                  </Box>
+                  <ChevronDownIcon style={{ height: '1rem', width: '1rem', transform: 'rotate(-90deg)' }} />
+                </Box>
+              </MenuButton>
+              <Portal>
+                <MenuList
+                  onMouseEnter={() => setTutoSubmenuOpen(true)}
+                  onMouseLeave={() => setTutoSubmenuOpen(false)}
+                >
+                  {tutorials_list.map((tuto) => (
+                    <MenuItem
+                      key={tuto.file}
+                      onClick={() => open_tutorial_file(tuto.file)}
+                    >
+                      {tuto.title}
+                    </MenuItem>
+                  ))}
+                </MenuList>
+              </Portal>
+            </Menu>
+          </Box>
+        )
+        : (
+          // Un seul tutoriel (ou liste non chargée) : chargement direct.
+          <MenuItem
+            icon={helpMenuIcon(new_data.icon_library.icon_tuto)}
+            onClick={() => open_tutorial_file(tutorials_list[0]?.file)}
+          >
+            {t('Menu.formation')}
+          </MenuItem>
+        )}
       {(new_data.menu_configuration.extra_help_menu_items ?? []).map((item) => {
         const tooltip_text = item.tooltip ? item.tooltip() : ''
         const menu_item = (

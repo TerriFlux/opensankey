@@ -1327,6 +1327,41 @@ def menus_examples():
     return response
 
 
+@opensankey.route("/menus/tutorials", methods=["POST"])
+def menus_tutorials():
+    """
+    Liste les tutoriels disponibles dans SANKEY_DATA/tutorials.
+
+    Renvoie une liste ordonnee [{file, title}] lue depuis tutorials/index.json
+    si present ; sinon repli sur un listing des fichiers .json / .json.gz du
+    dossier (titre = nom de fichier sans extension).
+    """
+    sankey_data = os.environ.get("SANKEY_DATA")
+    folder = os.path.join(sankey_data, "tutorials") if sankey_data else None
+    tutorials = []
+    index_path = os.path.join(folder, "index.json") if folder else None
+    if index_path and os.path.exists(index_path):
+        with open(index_path, encoding="utf-8") as file_index:
+            data_index = json.load(file_index)
+        raw = data_index.get("tutorials", []) if isinstance(data_index, dict) else data_index
+        for item in raw:
+            if isinstance(item, dict) and item.get("file"):
+                tutorials.append({"file": item["file"], "title": item.get("title", item["file"])})
+    elif folder and os.path.isdir(folder):
+        for name in sorted(os.listdir(folder)):
+            if name == "index.json":
+                continue
+            if name.endswith(".json.gz") or name.endswith(".json"):
+                title = name
+                for ext in (".json.gz", ".json"):
+                    if title.endswith(ext):
+                        title = title[: -len(ext)]
+                        break
+                tutorials.append({"file": name, "title": title.replace("_", " ")})
+    response = Response(response=json.dumps({"tutorials": tutorials}), status=200, mimetype="application/json")
+    return response
+
+
 @opensankey.route("/open_sankeymatic", methods=["POST"])
 def open_sankeymatic():
     try:
