@@ -12,7 +12,7 @@
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Box, Button, ButtonGroup, Textarea,
+  Box, Button, ButtonGroup, Textarea, Portal,
   Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -106,6 +106,7 @@ export const DocPanel = (
 ) => {
   const [text, setText] = useState<string>(app_data.documentation_markdown)
   const [mode, setMode] = useState<Type_DocMode>('preview')
+  const [viewSubmenuOpen, setViewSubmenuOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -164,6 +165,16 @@ export const DocPanel = (
   const insertViewLink = (id: string, name: string) => {
     if (mode === 'preview') setMode('split')
     insertAtCursor(`[${name}](view://${id})`)
+  }
+
+  // Génère un sommaire de toutes les vues : pour chaque vue, un titre H2 suivi du lien interne.
+  const insertViewsOutline = () => {
+    if (view_sources.length === 0) return
+    if (mode === 'preview') setMode('split')
+    const block = view_sources
+      .map(({ id, name }) => `## ${name}\n[${name}](view://${id})`)
+      .join('\n\n')
+    insertAtCursor(`\n${block}\n`)
   }
 
   // Vues disponibles comme cibles de lien (vide en OpenSankey de base, peuplé en OpenSankey+).
@@ -299,19 +310,8 @@ export const DocPanel = (
             style={{ display: 'none' }}
             onChange={onPickImage}
           />
-          {/* Bouton d'insertion d'image masqué en aperçu seul (rien à éditer). */}
+          {/* Sélecteur d'insertion unique (image, lien vers une vue, sommaire) masqué en aperçu seul. */}
           {mode !== 'preview' && (
-            <Button
-              size='xs'
-              variant='outline'
-              fontWeight='normal'
-              width='auto'
-              onClick={() => fileInputRef.current?.click()}
-            >
-            Insérer une image
-            </Button>
-          )}
-          {mode !== 'preview' && view_sources.length > 0 && (
             <Menu placement='bottom-end' isLazy>
               <MenuButton
                 as={Button}
@@ -321,14 +321,51 @@ export const DocPanel = (
                 width='auto'
                 rightIcon={<ChevronDownIcon />}
               >
-                Lien vers une vue
+                Insérer
               </MenuButton>
-              <MenuList fontSize='0.85rem' zIndex={1600} maxHeight='16rem' overflowY='auto'>
-                {view_sources.map(({ id, name }) => (
-                  <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
-                    {name}
-                  </MenuItem>
-                ))}
+              <MenuList fontSize='0.85rem' zIndex={1600}>
+                <MenuItem onClick={() => fileInputRef.current?.click()}>
+                  Une image…
+                </MenuItem>
+                {view_sources.length > 0 && (
+                  <>
+                    <MenuItem onClick={insertViewsOutline}>
+                      Titre + lien pour chaque vue
+                    </MenuItem>
+                    <MenuDivider />
+                    {/* Sous-menu flyout des vues. Chakra v2 n'a pas de sous-menu natif : on contrôle
+                        l'ouverture au survol (le clic sur un MenuItem-bouton fermerait le menu parent). */}
+                    <Box
+                      onMouseEnter={() => setViewSubmenuOpen(true)}
+                      onMouseLeave={() => setViewSubmenuOpen(false)}
+                    >
+                      <Menu isOpen={viewSubmenuOpen} placement='right-start' gutter={0} offset={[0, 0]} isLazy>
+                        <MenuButton as={MenuItem} closeOnSelect={false}>
+                          <Box display='flex' alignItems='center' justifyContent='space-between'>
+                            <Box>Lien vers une vue</Box>
+                            <ChevronDownIcon style={{ height: '1rem', width: '1rem', transform: 'rotate(-90deg)' }} />
+                          </Box>
+                        </MenuButton>
+                        <Portal>
+                          <MenuList
+                            fontSize='0.85rem'
+                            zIndex={1700}
+                            maxHeight='20rem'
+                            overflowY='auto'
+                            onMouseEnter={() => setViewSubmenuOpen(true)}
+                            onMouseLeave={() => setViewSubmenuOpen(false)}
+                          >
+                            {view_sources.map(({ id, name }) => (
+                              <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
+                                {name}
+                              </MenuItem>
+                            ))}
+                          </MenuList>
+                        </Portal>
+                      </Menu>
+                    </Box>
+                  </>
+                )}
               </MenuList>
             </Menu>
           )}
