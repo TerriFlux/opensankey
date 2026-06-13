@@ -36,7 +36,7 @@ import { Type_JSON, default_main_sankey_id } from '../../types/Utils'
 import { ActionButtons, ProcessTerminal } from './PersistenceProcessDialogTerminal'
 import {
   CONVERTER_CONFIGS, ConverterConfig, FormatConfigStructure, FormatType, getDefaultInputOptions, getDefaultOutputOptions,
-  getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
+  getInitialFormat, hasOptionsFormat, SOLVER_OPTION_KEYS, INPUT_OPTION_KEYS, OptionGroup, OPTION_GROUP_LABELS
 } from './PersistenceProcessDialogConfigs'
 import { MenuConditionEvaluator } from './SankeyMenuContext'
 import { OSTooltip, WrapperBoxSubSectionMenu } from '../configmenus/MenuCommon'
@@ -730,20 +730,37 @@ export const UniversalFileConverter = ({
     // overrides declared on the ConverterConfig. Overrides let shortcut configs
     // (create_index / create_ter / create_tes) start with a tailored selection
     // (e.g. Index sheet only) without forcing the user to untick everything.
+    // [SA #162] Options persisted in the workbook "Options de réconciliation"
+    // sheet are carried in drawing_area.mfa_options (a flat dict of input AND
+    // solver flags). Pre-fill the dialog by routing each family to its bucket so
+    // the user does not have to re-tick options the file already declares. The
+    // parser also applies the input options at load time, so a file is correct
+    // even on the Excel→reconciliation path where mfa_options is not yet set.
+    const file_opts = (app_data.drawing_area.mfa_options ?? {}) as Record<string, unknown>
+    const pick_file_opts = (keys: readonly string[]): Record<string, unknown> =>
+      Object.fromEntries(Object.entries(file_opts).filter(([k]) => keys.includes(k)))
+    const file_input_opts = pick_file_opts(INPUT_OPTION_KEYS)
+    const file_solver_opts = pick_file_opts(SOLVER_OPTION_KEYS)
+
     set_input_options_excel({ ...getDefaultInputOptions(input_config['excel']), ...(config.input_overrides_excel ?? {}) })
     set_input_options_json({ ...getDefaultInputOptions(input_config['json']), ...(config.input_overrides_json ?? {}) })
-    set_input_options_base({ ...getDefaultOutputOptions(input_config['base']), ...(config.input_overrides_base ?? {}) })
+    // Input (autocorrection) options pre-filled from the workbook last, so they
+    // win over the generic defaults / config overrides.
+    set_input_options_base({
+      ...getDefaultOutputOptions(input_config['base']),
+      ...(config.input_overrides_base ?? {}),
+      ...file_input_opts,
+    })
     set_output_options_excel({ ...getDefaultOutputOptions(output_config['excel']), ...(config.output_overrides_excel ?? {}) })
     set_output_options_json({ ...getDefaultOutputOptions(output_config['json']), ...(config.output_overrides_json ?? {}) })
-    // Pre-set solver-only flags from the caller (e.g. the "Compléter le
-    // diagramme" command pre-checks with_completed so the user does not need
-    // to toggle it manually before launching). These flags live in
-    // output_options_base, declared with group='solver' in the config so they
-    // render alongside enable_uncertainty / debug_mode / skip_rref.
+    // Solver flags live in output_options_base (group='solver'). Order matters:
+    // workbook values win over the generic defaults, but a per-command preset
+    // (default_solver_options, e.g. "Compléter le diagramme" pre-checking
+    // with_completed) still wins over the file for the keys it explicitly sets.
     set_output_options_base({
       ...getDefaultOutputOptions(output_config['base']),
       ...(config.output_overrides_base ?? {}),
-      ...app_data.drawing_area.mfa_options,
+      ...file_solver_opts,
       ...(default_solver_options ?? {}),
     })
 

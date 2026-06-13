@@ -1964,6 +1964,23 @@ export const SOLVER_OPTION_KEYS = [
   'with_completed',
 ] as const
 
+// IID=162: the input (autocorrection) options persisted in the workbook
+// "Options de réconciliation" sheet. These are the permissive-polarity flags
+// (true = create/fix, false = strict/abort) that load_sankey consumes and that
+// decide whether the load/reconciliation succeeds — so they can be frozen in
+// the file and pre-fill the dialog. Single source of truth shared with the
+// parser's MFA_INPUT_OPTION_KEYS (SankeyExcelParser io_excel_constants).
+export const INPUT_OPTION_KEYS = [
+  'create_new_nodes',
+  'create_new_flux',
+  'propagate_flux_to_children',
+  'propagate_flux_to_parent',
+  'autofix_parenthood_mat_balance',
+  'autofix_constraint_redundancies',
+  'allow_flux_to_descendant',
+  'autonormalize_ratio_constraints',
+] as const
+
 export const CONVERTER_CONFIGS = {
   // Convertisseur universel (tous les choix)
   universal: {
