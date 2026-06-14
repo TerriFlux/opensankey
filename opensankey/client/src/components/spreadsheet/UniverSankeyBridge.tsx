@@ -485,10 +485,15 @@ export const attachSankeyBridge = (
     const nodesChanged = nodeSig() !== beforeNodeSig
     const newNodes = sankey.nodes_list.filter((n: any) => !beforeNodeIds.has(n.id))
 
+    // Si exactement une valeur existe sur tout le diagramme, elle fixe l'échelle. À déclencher
+    // AUSSI sur le chemin structurel : créer un flux avec sa valeur (première valeur d'un diagramme
+    // complet) ne lève que `structural`, jamais `value` -> sinon l'échelle ne se calerait jamais.
+    if (structural || value) {
+      drawing_area.updateScaleAtLinkValueSetting()
+    }
     if (structural) {
       redraw(newNodes)
     } else if (value) {
-      drawing_area.updateScaleAtLinkValueSetting()
       app_data.draw()
     } else if (tagChanged) {
       app_data.draw()

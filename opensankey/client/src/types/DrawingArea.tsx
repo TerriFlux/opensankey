@@ -1008,15 +1008,10 @@ export class Class_DrawingArea {
   }
 
   public updateScaleAtLinkValueSetting() {
+    // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.
     const links = this.sankey.links_list.filter(l => l.valueCurrent)
     if (links.length == 1) {
-      // Mono-flux : l'échelle suit toujours la valeur saisie (comportement historique).
       this.scale = links[0].valueCurrent! // will redraw everything
-    } else if (links.length > 1 && this._scale === default_scale) {
-      // Diagramme complet : à la première saisie de valeurs (échelle jamais
-      // modifiée, encore au défaut), on cale l'échelle sur le plus grand flux.
-      // Une fois l'échelle effective, on ne l'écrase plus.
-      this.scale = Math.max(...links.map(l => l.valueCurrent!))
     }
   }
 
