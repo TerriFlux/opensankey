@@ -2,7 +2,7 @@ import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
-  Menu, MenuButton, MenuList, MenuItem
+  Menu, MenuButton, MenuList, MenuItem, HStack
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
@@ -287,7 +287,10 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
     app_data.drawing_area.legend.draw()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
-  let has_results = false
+  // #116 — mode MFA : on traite le diagramme comme s'il avait des résultats même
+  // avant le solveur, pour débloquer Collectées/Calculées et afficher le % dès le
+  // chargement. Le flag vit sur ApplicationData (session, non réinitialisé au load).
+  let has_results = app_data.mfa_mode
   app_data.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
   let has_intervals = false
   app_data.drawing_area.sankey.links_list.forEach(l => has_intervals = has_intervals || l.has_intervals || l.value?.value_option === 'intervals')
@@ -339,6 +342,35 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           )}
         </Select>
       </Box> : <></>}
+    {/* #116 — case « mode MFA » : force l'affichage type-résultats même sans
+        résultats calculés. À côté : « Toutes données » = mode « afficher aussi les
+        flux porteurs de données » (union avec la vue courante). Session-only. */}
+    <Box layerStyle='menuconfig_grid'>
+      <HStack spacing={4} align='center'>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={app_data.mfa_mode}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            app_data.mfa_mode = evt.target.checked
+            setCount(a => a + 1)
+            redrawNodeLinkLegend()
+          }}>
+          {t('Banner.mfa_mode')}
+        </Checkbox>
+        <OSTooltip label={t('Banner.data_links_reveal_tt')}>
+          <Checkbox
+            variant='menuconfigpanel_option_checkbox'
+            isChecked={app_data.reveal_data_links}
+            onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+              app_data.reveal_data_links = evt.target.checked
+              setCount(a => a + 1)
+              redrawNodeLinkLegend()
+            }}>
+            {t('Banner.data_links_reveal')}
+          </Checkbox>
+        </OSTooltip>
+      </HStack>
+    </Box>
   </>
 
   return <FilterWrapperBox
@@ -636,6 +668,11 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
 
   // Logique spécifique pour les data tags
   const handleDataTagSelection = (tagg: Class_DataTagGroup, entries: string[]) => {
+    // La sélection à valeur unique a posé bypass_redraws=true (l.524) — utile au
+    // preview du Menu unitaire, mais ici le draw() final serait un no-op et le
+    // changement d'unité (donc la scale par tag, cf. unit_tag.scale) ne se verrait
+    // pas. On le remet à false pour que le redraw réapplique l'échelle par dataTag.
+    app_data.drawing_area.bypass_redraws = false
     app_data.drawing_area.sankey.links_list.forEach(l => {
       if (l.is_multi_link) return
 
