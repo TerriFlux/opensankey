@@ -35,6 +35,7 @@ import {
   Type_PaperFormat, Type_PaperOrientation, Type_Side
 } from '../Elements/ElementsAttributesConfig'
 import { getStringFromJSON, Type_DataSource, Type_IntervalDisplay } from '../types/Utils'
+import { ratio_flux_constraint_traduction } from '../types/Utils'
 import { Class_ContainerElement } from '../Elements/TextZone'
 import { Class_NodeElement } from '../Elements/Node'
 import { ConfigType } from '../Elements/ElementsAttributesConfig'
@@ -1794,6 +1795,11 @@ export class SankeyPersistence {
         ? json_object['ratio_flux_constraints']
         : []
     ) as unknown as Type_RatioFluxConstraint[]
+    // #116 — génère une traduction par défaut pour toute contrainte chargée sans
+    // (affichée dans le tooltip du flux et la colonne « Traduction » du tableur).
+    sankey.ratio_flux_constraints.forEach(c => {
+      if (!c.traduction) c.traduction = ratio_flux_constraint_traduction(c)
+    })
 
     // Stock constraints (#156). Additive: absent from older files -> empty.
     sankey.ratio_stock_flux_constraints = (

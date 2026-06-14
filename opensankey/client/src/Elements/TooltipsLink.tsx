@@ -4,7 +4,7 @@ import { Class_NodeElement } from './Node'
 import { Class_LinkValue } from './LinkValues'
 import { Class_DataTag } from '../types/Tag'
 import { TOOLTIP_STYLES, TooltipBehaviorManager } from './TooltipsCSS'
-import { link_data_label, format_value } from '../types/Utils'
+import { link_data_label, format_value, link_ratio_constraint, ratio_flux_constraint_traduction } from '../types/Utils'
 import { getNameLabelValues } from './ElementsAttributesConfig'
 
 export class LinkTooltip {
@@ -176,6 +176,14 @@ export class LinkTooltip {
       html += '</tr>'
     }
     this._link.value_label_is_visible = data_label_visible
+
+    // #116 — contrainte de ratio dont ce flux est le terme principal : on affiche sa
+    // traduction (générée par défaut si absente au chargement).
+    const ratio_c = link_ratio_constraint(this._link)
+    if (ratio_c) {
+      const trad = ratio_c.traduction || ratio_flux_constraint_traduction(ratio_c)
+      html += `<tr><th>Contrainte</th><td>${this.escapeHtml(trad)}</td></tr>`
+    }
 
     // Source / URL / Hypothèse de la donnée courante (colonnes "Source"/"URL"/"Hypothèse" de l'onglet Données)
     html += this.getDataSourceUrlRows()

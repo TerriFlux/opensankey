@@ -35,6 +35,7 @@ import { Class_DataTagGroup } from './TagGroup'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_BaseShape } from '../Elements/Element'
 import { getNameLabelValues } from '../Elements/ElementsAttributesConfig'
+import type { Type_RatioFluxConstraint } from './Sankey'
 
 export const default_file_name = 'Diagramme de Sankey'
 
@@ -388,6 +389,65 @@ export const formatValueWithOption = (element:Class_BaseShape,value: number | st
   return value as string
 }
 
+/**
+ * Contrainte de ratio dont le flux (source→destination) est le terme principal,
+ * dans `sankey.ratio_flux_constraints` (#116). null s'il n'y en a pas.
+ * Le data_tag de la contrainte (s'il est défini) doit matcher le tag courant du flux ;
+ * la contrainte référence le data_tag par son nom (résolution par nom côté SEP) alors
+ * que le flux porte un Class_DataTag, d'où le match sur le nom (ou l'id par robustesse).
+ */
+export const link_ratio_constraint = (link: Class_LinkElement): Type_RatioFluxConstraint | null => {
+  const constraints = link.sankey.ratio_flux_constraints
+  if (!constraints || constraints.length === 0) return null
+  const src = link.source.name
+  const dst = link.target.name
+  const dt = link.value?.data_tag ?? null
+  return constraints.find(c =>
+    c.origin === src && c.destination === dst &&
+    (c.data_tag == null || c.data_tag === dt?.name || c.data_tag === dt?.id)) ?? null
+}
+
+/** Pourcentage formaté d'une contrainte : « 30% » (coef), « ≥30% »/« ≤50% », « 30–50% ». */
+export const ratio_flux_coef_text = (c: Type_RatioFluxConstraint): string | null => {
+  const pct = (v: number) => String(parseFloat((v * 100).toFixed(2)))
+  if (c.coef != null) return pct(c.coef) + '%'
+  if (c.min != null && c.max != null) return pct(c.min) + '–' + pct(c.max) + '%'
+  if (c.min != null) return '≥' + pct(c.min) + '%'
+  if (c.max != null) return '≤' + pct(c.max) + '%'
+  return null
+}
+
+/**
+ * Libellé « coefficient » d'un flux contraint (#116) — le % prescrit de la contrainte.
+ * NB : distinct de l'unit_type %IS/%OS de format_value, qui calcule la part RÉELLE des
+ * données ; ici on lit le coefficient PRESCRIT.
+ */
+export const link_ratio_coef_label = (link: Class_LinkElement): string | null => {
+  const c = link_ratio_constraint(link)
+  return c ? ratio_flux_coef_text(c) : null
+}
+
+/**
+ * Traduction lisible par défaut d'une contrainte de ratio (#116), utilisée quand le
+ * champ `traduction` est absent (au chargement, dans le tooltip et le tableur).
+ * Ex : « Blé → Meunerie = 50% de Exploitation agricole → Blé », ou pour un agrégat
+ * « Blé → Meunerie = 50% des sorties de Blé ».
+ */
+export const ratio_flux_constraint_traduction = (c: Type_RatioFluxConstraint): string => {
+  const main = `${c.origin} → ${c.destination}`
+  let ref: string
+  if (c.origin_ref === '*' && c.destination_ref === '*') ref = 'tous les flux'
+  else if (c.destination_ref === '*') ref = `les sorties de ${c.origin_ref}`
+  else if (c.origin_ref === '*') ref = `les entrées de ${c.destination_ref}`
+  else ref = `${c.origin_ref} → ${c.destination_ref}`
+  const pct = (v: number) => String(parseFloat((v * 100).toFixed(2))) + '%'
+  if (c.coef != null) return `${main} = ${pct(c.coef)} de ${ref}`
+  if (c.min != null && c.max != null) return `${main} : entre ${pct(c.min)} et ${pct(c.max)} de ${ref}`
+  if (c.min != null) return `${main} ≥ ${pct(c.min)} de ${ref}`
+  if (c.max != null) return `${main} ≤ ${pct(c.max)} de ${ref}`
+  return main
+}
+
 export const link_data_label = (type_data: Type_Structure, link: Class_LinkElement,prefix:'name_label'|'value_label') => {
   // Helper: append target value as "source→target" when target is set and differs from source
   const withTarget = (source_text: string) => {
@@ -401,6 +461,18 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
 
   const data_source = link.drawing_area.data_source
 
+  // #116 — coefficient prescrit de la contrainte ratio, en %. Affiché sur le label
+  // de valeur quand on est en mode données (le data_type pilote) OU en mode MFA
+  // (force l'affichage du % même sans résultats, dès le chargement). Hors structure.
+  // Un flux défini par ratio n'a souvent ni donnée mesurée ni résultat encore
+  // calculé : withCoef renvoie alors le coef seul (« 50% »), sinon l'accole à la
+  // valeur affichée (« 120 (50%) »).
+  const mfa_mode = link.drawing_area.application_data.mfa_mode
+  const coef = (prefix === 'value_label' && type_data !== 'structure' &&
+      (mfa_mode || type_data === 'data' || type_data === 'data_label'))
+    ? link_ratio_coef_label(link) : null
+  const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
+
   // Intervals links: only show [min - max] in free_interval mode
   if (link.value?.value_option === 'intervals') {
     if (link.drawing_area.interval_display === 'free_interval') {
@@ -408,16 +480,16 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
       const min = use_data ? (link.value?.data_min ?? link.value?.result_min) : (link.value?.result_min ?? link.value?.data_min)
       const max = use_data ? (link.value?.data_max ?? link.value?.result_max) : (link.value?.result_max ?? link.value?.data_max)
       if (min !== null || max !== null) {
-        return '[' + (min ?? '?') + ' - ' + (max ?? '?') + ']'
+        return withCoef('[' + (min ?? '?') + ' - ' + (max ?? '?') + ']')
       }
     }
-    return ''
+    return withCoef('')
   }
 
   if (type_data == 'data' || type_data == 'data_label') {
-    if (!link.value?.valueData) return ''
+    if (!link.value?.valueData) return withCoef('')
     const src_text = formatValueWithOption(link,format_value(type_data, link.value?.valueData, link, link.unit_name(prefix),prefix), link.value?.value_option,prefix)
-    return withTarget(src_text as string)
+    return withCoef(withTarget(src_text as string))
   }
   // Reconciled links with min/max — choose data or result source
   const use_data_minmax = data_source === 'data' || data_source === 'data_label'
@@ -427,15 +499,15 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
     if (type_data === 'free_interval') {
       const min = interval_min ?? link.value?.result_min
       const max = interval_max ?? link.value?.result_max
-      return '[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']'
+      return withCoef('[' + format_value(type_data, min, link, link.unit_name(prefix),prefix) + ',' + format_value(type_data, max, link, link.unit_name(prefix),prefix) + ']')
     }
     if (type_data === 'free_value') {
-      return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
+      return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
     }
-    return ''
+    return withCoef('')
   }
 
-  return withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix))
+  return withCoef(withTarget(format_value(type_data, link.valueCurrent!, link, link.unit_name(prefix),prefix)))
 }
 
 export const format_value = (
