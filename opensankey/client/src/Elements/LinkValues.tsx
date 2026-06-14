@@ -143,6 +143,10 @@ export class Class_ElementValueTree {
     return has_data
   }
 
+  public get has_collected_data(): boolean {
+    return Object.values(this.children).some(child => child.has_collected_data)
+  }
+
   public set_only_data() {
     Object.values(this.children)
       .forEach(child => child.set_only_data())
@@ -614,6 +618,7 @@ export class Class_ElementValue {
   public get has_result(): boolean { return false }
   public get has_intervals(): boolean { return false }
   public get has_data(): boolean { return false }
+  public get has_collected_data(): boolean { return false }
   public set_only_data() { /* subclasses override */ }
 
   public getMaxValue(): number {
@@ -772,6 +777,12 @@ export class Class_LinkValue extends Class_ElementValue {
 
   public get has_data() {
     return this._data_value[Class_LinkValue.SRC] !== null || this._data_min[Class_LinkValue.SRC] !== null || (this.value_option != 'value' && this.value_option != 'intervals')
+  }
+
+  // Valeur collectée SAISIE uniquement (donnée mesurée ou borne min) — exclut les
+  // flux définis seulement par ratio/% (contrairement à has_data ci-dessus).
+  public get has_collected_data(): boolean {
+    return this._data_value[Class_LinkValue.SRC] !== null || this._data_min[Class_LinkValue.SRC] !== null
   }
 
   public set_only_data() {

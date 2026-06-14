@@ -1120,7 +1120,37 @@ export class Class_LinkElement extends Class_LinkAttribute {
   public set is_expansion_link(v: boolean) { this._is_expansion_link = v }
 
   public get is_visible() {
-    return this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes
+    if (this.is_visible_ignoring_container_modes && this.is_allowed_by_container_modes) return true
+    // Mode « afficher aussi les flux porteurs de données » : EN PLUS de la vue
+    // courante (union, pas filtre). On court-circuite les portes niveau/dimension/
+    // container pour révéler un flux normalement masqué par son niveau.
+    if (
+      this.drawing_area.application_data.reveal_data_links &&
+      super.is_visible &&
+      Object.values(this._child_links).length == 0
+    ) {
+      // (a) le flux de donnée lui-même
+      if (this.has_collected_data) return true
+      // (b) flux structurel reliant un nœud nouvellement révélé à un nœud déjà
+      //     visible (ou à un autre nœud révélé) → reconnecte le nœud au diagramme.
+      //     On lit is_visible_without_orphan (pas is_visible) pour éviter la
+      //     récursion orphan_visible ↔ is_visible des liens.
+      const src_vis = this._source.is_visible_without_orphan || this._source.is_revealed_by_data
+      const tgt_vis = this._target.is_visible_without_orphan || this._target.is_revealed_by_data
+      if (src_vis && tgt_vis && (this._source.is_revealed_by_data || this._target.is_revealed_by_data)) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /**
+   * Vrai si ce flux porte une valeur collectée SAISIE (donnée mesurée ou borne
+   * min) sur au moins un datatag — à la différence de `has_data` qui inclut
+   * aussi les flux définis par ratio/pourcentage (sans valeur mesurée).
+   */
+  public get has_collected_data(): boolean {
+    return this._values.has_collected_data
   }
 
   /**

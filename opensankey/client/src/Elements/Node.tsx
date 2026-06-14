@@ -1654,13 +1654,38 @@ export class Class_NodeElement extends Class_NodeBase {
   }
 
   public get is_visible() {
-    return (
+    // Vue courante OU (mode « afficher aussi les flux porteurs de données »)
+    // nœud révélé parce qu'attaché à un flux portant une valeur collectée saisie.
+    // Dans les deux cas, la porte orphelin s'applique encore.
+    if (this.is_visible_without_orphan || this.is_revealed_by_data) {
+      return this.orphan_visible
+    }
+    return false
+  }
+
+  /**
+   * Vrai si ce nœud n'est PAS visible dans la vue courante mais est révélé par le
+   * mode « afficher aussi les flux porteurs de données » (extrémité d'un flux
+   * portant une valeur collectée saisie). Sert à reconnecter ces nœuds au
+   * diagramme via les flux structurels (cf. `Class_LinkElement.is_visible`).
+   * Lit `is_visible_without_orphan` (pas `is_visible`) pour rester non récursif.
+   */
+  public get is_revealed_by_data(): boolean {
+    return this.drawing_area.application_data.reveal_data_links &&
       super.is_visible &&
-      this.are_related_node_tags_selected &&
-      this.are_related_dimensions_selected &&
-      this.are_links_visibilities_ok &&
-      this.orphan_visible
-    )
+      !this.is_visible_without_orphan &&
+      this.is_attached_to_collected_data_link
+  }
+
+  /**
+   * Vrai si ce nœud est l'extrémité d'au moins un flux (feuille, sans child_links)
+   * porteur d'une valeur collectée saisie. Sert au mode « afficher aussi les flux
+   * porteurs de données » (cf. `Class_ApplicationData.reveal_data_links`).
+   */
+  public get is_attached_to_collected_data_link(): boolean {
+    const carries = (l: Class_LinkElement) =>
+      Object.values(l.child_links).length == 0 && l.has_collected_data
+    return this.input_links_list.some(carries) || this.output_links_list.some(carries)
   }
   public get is_visible_without_orphan() {
     return (
