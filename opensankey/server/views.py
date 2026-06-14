@@ -411,11 +411,28 @@ def peek_options():
             xl = pd.ExcelFile(path)
             for sheet_name in xl.sheet_names:
                 ok, refkey = sankey._consistantSheetName(sheet_name)
-                if ok and refkey == PEEK_CONST.MFA_OPTIONS_SHEET:
+                if not ok:
+                    continue
+                if refkey == PEEK_CONST.MFA_OPTIONS_SHEET:
                     ok_read, _ = sankey.xl_read_mfa_options_sheet(xl.parse(sheet_name))
                     if ok_read:
-                        options = sankey.mfa_options
-                    break
+                        options = dict(sankey.mfa_options)
+                elif refkey == PEEK_CONST.TAG_SHEET:
+                    # #161 — parse the Tags sheet so the per dataTag-group
+                    # propagate_structure flags are known (see derivation below).
+                    try:
+                        sankey.xl_read_tags_sheet(xl.parse(sheet_name))
+                    except Exception:
+                        pass
+            # #161 — initialise the dialog's global "Propager la structure"
+            # checkbox from the file: unchecked as soon as one dataTag group is
+            # non-propagating. An explicit value in the Options sheet wins.
+            data_groups = list(sankey.taggs.get(PEEK_CONST.TAG_TYPE_DATA, {}).values())
+            if data_groups and "propagate_datatag_structure" not in options:
+                options = dict(options)
+                options["propagate_datatag_structure"] = all(
+                    g.propagate_structure for g in data_groups
+                )
     except Exception as e:
         trace.logger.warning(f"peek_options: {e}")
         options = {}
