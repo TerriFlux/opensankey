@@ -598,6 +598,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
 
   private _is_unit = false
 
+  // #161 — when false, the diagram structure is not propagated across this
+  // group's tags: a flux absent for a tag does not exist there. Default true
+  // (legacy). Mirrors the parser's TagGroup.propagate_structure.
+  private _propagate_structure = true
+
   // PROTECTED ATTRIBUTES ===============================================================
   protected _tags: { [_: string]: Class_DataTag; }
 
@@ -631,6 +636,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._copyFrom(tagg_to_copy)
     this._use_colors = tagg_to_copy.use_colors
     this._is_unit = tagg_to_copy._is_unit
+    this._propagate_structure = tagg_to_copy._propagate_structure
   }
 
   protected _toJSON(
@@ -640,6 +646,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
     super._toJSON(json_object, kwargs)
     json_object['use_colors'] = this._use_colors
     json_object['is_unit'] = this._is_unit
+    json_object['propagate_structure'] = this._propagate_structure
   }
 
   protected _fromJSON(
@@ -652,6 +659,7 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
       this.banner = 'sequence'
     }
     this._is_unit = getBooleanFromJSON(json_object, 'is_unit', this._is_unit)
+    this._propagate_structure = getBooleanFromJSON(json_object, 'propagate_structure', this._propagate_structure)
   }
 
   // PUBLIC METHODS =====================================================================
@@ -762,6 +770,11 @@ export class Class_DataTagGroup extends Class_ProtoTagGroup {
   }
 
   public set is_unit(value: boolean) { this._is_unit = value }
+
+  // #161 — per-group structure-propagation flag (default true = legacy)
+  public get propagate_structure(): boolean { return this._propagate_structure }
+
+  public set propagate_structure(value: boolean) { this._propagate_structure = value }
 }
 // CLASS LEVEL TAGGROUP *****************************************************************
 /**

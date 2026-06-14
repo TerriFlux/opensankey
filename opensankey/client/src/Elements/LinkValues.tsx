@@ -1,6 +1,6 @@
 import type { Class_DataTag, Class_Tag } from '../types/Tag'
 import type { Class_DataTagGroup, Class_TagGroup } from '../types/TagGroup'
-import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
+import { Type_JSON, makeId, getNumberOrNullFromJSON, getStringOrNullFromJSON, getStringFromJSON, getBooleanFromJSON, getJSONOrUndefinedFromJSON } from '../types/Utils'
 import type { Class_LinkElement } from './Link'
 import type { Class_NodeElement } from './Node'
 
@@ -292,7 +292,12 @@ export class Class_ElementValueTree {
     if (matching_tags.length !== 1) return null
     const child = this.children[matching_tags[0].id]
     if (child !== undefined) {
-      if (child instanceof Class_ElementValue) return child
+      if (child instanceof Class_ElementValue)
+        // #161 — a flux pruned for this dataTag does not exist there: treat it
+        // as having no value, so the link is not drawn for this dataTag (same
+        // path as a missing leaf). Only triggers for option-on files; with no
+        // marker (legacy/default) the behaviour is unchanged.
+        return child.structurally_absent ? null : child
       else return child.getValueForDataTags(remaining_tags)
     }
     else {
@@ -454,6 +459,11 @@ export class Class_ElementValue {
   }
 
   public text_value: string | null = null
+
+  // #161 — true when this (flux, dataTag) cell was pruned by the no-propagation
+  // option: the flux does not exist for this dataTag. Used to omit the link
+  // from the diagram for that dataTag (see getValueForDataTags). Default false.
+  public structurally_absent: boolean = false
 
   // VALUE VECTORS =====================================================================
   // Each vector has length = vectorSize (set by subclass).
@@ -897,6 +907,8 @@ export class Class_LinkValue extends Class_ElementValue {
     if (this._data_source != null) json_object['data_source'] = this._data_source
     if (this._data_url != null) json_object['data_url'] = this._data_url
     if (this._data_hypothesis != null) json_object['data_hypothesis'] = this._data_hypothesis
+    // #161 — preserve the structurally-absent marker on save.
+    if (this.structurally_absent) json_object['structurally_absent'] = true
     return json_object
   }
 
@@ -924,6 +936,9 @@ export class Class_LinkValue extends Class_ElementValue {
     matching_tags_id: { [_: string]: { [_: string]: string; }; } = {}
   ) {
     super.fromJSON(json_object, matching_taggs_id, matching_tags_id)
+    // #161 — the flux does not exist for this dataTag (pruned by the
+    // no-propagation option). Absent in legacy files -> defaults to false.
+    this.structurally_absent = getBooleanFromJSON(json_object, 'structurally_absent', false)
     if (Object.prototype.hasOwnProperty.call(json_object, 'value')) {
       this.fromJSONLegacy(json_object)
     }
