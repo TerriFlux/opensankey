@@ -75,7 +75,92 @@ import { mainZoneRightReservedPx } from '../deps/OpenSankey/components/spreadshe
 import { LevelTagFilter } from '../deps/OpenSankey/components/topmenus/Toolbar'
 import { compressJSONToGzip, decompressGzipDataFixed, decompressUploadedFileUniversal } from '../deps/OpenSankey/Persistence/UniversalJSONCompression'
 import { DrawingAreaPersistence } from '../deps/OpenSankey/Persistence/SankeyPersistence'
+import { INPUT_ATTRIBUTES_CONFIG, OUTPUT_ATTRIBUTES_CONFIG, getDefaultInputOptions, getDefaultOutputOptions } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialogConfigs'
+import { retrieveJSONResults } from '../deps/OpenSankey/components/dialogs/PersistenceProcessDialog'
 import { createUnitaryNewView } from './UnitaryBoard'
+
+// ===========================================================================
+// Chargement d'un fichier Excel comme une vue du catalogue
+// ---------------------------------------------------------------------------
+// Le parsing Excel se fait côté serveur (SankeyExcelParser) : on POST le fichier
+// à convert/launch (qui lance un thread de conversion), on poll
+// upload/check_process jusqu'au statut 'finished'/'failed', puis on récupère le
+// JSON résultat (gzip) via upload/retrieve_result — exactement la séquence du
+// convertisseur universel (PersistenceProcessDialog), mais sans modale ni options.
+// Le serveur ne gère qu'UN process à la fois → les Excel du catalogue sont
+// traités séquentiellement (cf. boucle d'import de input_loader_json_catalog).
+// ===========================================================================
+const loadExcelFileAsSankeyJSON = async (
+  app_data: Class_ApplicationDataOSP,
+  file: File
+): Promise<Type_JSON> => {
+  const origin = window.location.origin
+  const url_prefix = app_data.url_prefix
+
+  // Options par défaut identiques à celles du convertisseur (onglets nœuds/
+  // données/TER + layout lus, autocorrections au défaut), chargement silencieux.
+  const input_options = {
+    ...getDefaultInputOptions(INPUT_ATTRIBUTES_CONFIG['base']),
+    ...getDefaultInputOptions(INPUT_ATTRIBUTES_CONFIG['excel'])
+  }
+  const output_options = {
+    ...getDefaultOutputOptions(OUTPUT_ATTRIBUTES_CONFIG['base']),
+    ...getDefaultOutputOptions(OUTPUT_ATTRIBUTES_CONFIG['json'])
+  }
+
+  // 1. Lancement de la conversion (le serveur répond aussitôt, le thread tourne).
+  const form_data = new FormData()
+  form_data.append('file', file)
+  form_data.append('input_format', 'excel')
+  form_data.append('output_format', 'json')
+  form_data.append('input_options', JSON.stringify(input_options))
+  form_data.append('output_options', JSON.stringify(output_options))
+  form_data.append('process_label', file.name)
+  const launch_resp = await fetch(origin + url_prefix + 'convert/launch', { method: 'POST', body: form_data })
+  if (!launch_resp.ok) {
+    throw new Error('Excel « ' + file.name + ' » : échec du lancement (HTTP ' + launch_resp.status + ')')
+  }
+
+  // 2. Attente de la fin via le statut machine <logname>.status renvoyé par
+  //    upload/check_process. On n'honore 'finished'/'failed' qu'après avoir vu
+  //    'running' (ou passé 2 s) pour ignorer un statut résiduel d'une conversion
+  //    précédente — le serveur ne réinitialise le statut qu'au démarrage du thread.
+  await new Promise<void>((resolve, reject) => {
+    const start_time = Date.now()
+    const MAX_MS = 5 * 60 * 1000
+    let seen_running = false
+    const poll = setInterval(() => {
+      fetch(origin + url_prefix + 'upload/check_process', { method: 'POST', body: '' })
+        .then(r => (r.ok ? r.json() : null))
+        .then(data => {
+          if (!data) return
+          if (data.status === 'running') seen_running = true
+          const elapsed = Date.now() - start_time
+          const settled = seen_running || elapsed > 2000
+          if (data.status === 'finished' && settled) {
+            clearInterval(poll)
+            resolve()
+          } else if (data.status === 'failed' && settled) {
+            clearInterval(poll)
+            reject(new Error('Excel « ' + file.name + ' » : la conversion a échoué (voir le fichier)'))
+          } else if (elapsed > MAX_MS) {
+            clearInterval(poll)
+            reject(new Error('Excel « ' + file.name + ' » : délai de conversion dépassé'))
+          }
+        })
+        .catch(() => { /* erreur transitoire : on retentera au prochain tick */ })
+    }, 1000)
+  })
+
+  // 3. Récupération du JSON résultat (gzip), comme handleFinish du convertisseur.
+  const result_resp = await fetch(origin + url_prefix + 'upload/retrieve_result', { method: 'POST', body: new FormData() })
+  if (!result_resp.ok) {
+    throw new Error('Excel « ' + file.name + ' » : récupération du résultat impossible (HTTP ' + result_resp.status + ')')
+  }
+  const buffer = await result_resp.arrayBuffer()
+  const decompressed = await decompressGzipDataFixed(buffer)
+  return JSON.parse(decompressed) as Type_JSON
+}
 
 interface BaseComponentPropsPlus {
   app_data: Class_ApplicationDataOSP
@@ -567,33 +652,67 @@ export const BannerViewsOSP = ({ app_data }: { app_data: Class_ApplicationDataOS
   const input_loader_json_catalog = <Input
     type="file"
     multiple
-    accept='.json,.json.gz,.gz'
+    accept='.json,.json.gz,.gz,.xlsx,.xls,.xlsm'
     ref={ref_to_input_loader_json_catalog}
     style={{ display: 'none' }}
     onChange={(evt: ChangeEvent) => {
       const files = (evt.target as HTMLFormElement).files
+      // Boucle séquentielle (async) : le JSON se lit côté client, l'Excel passe
+      // par le serveur (un seul process à la fois → pas de parallélisme). Les
+      // vues déjà présentes ne sont jamais effacées : on ne fait qu'ajouter des
+      // vues (addViewsFromJSON concatène, createNewView crée une vue de plus).
       app_data.sendWaitingToast(
-        () => {
+        async () => {
+          drawing_area_plus.bypass_redraws = true
+          let first_view_id: string | undefined
           for (let i = 0; i < files.length; i++) {
-            drawing_area_plus.bypass_redraws = true
-            const name = files[i].name.split('.')[0]
-            const is_first = i == 0
-            decompressUploadedFileUniversal(files[i]).then(JSON_data => {
+            const file = files[i]
+            const name = file.name.split('.')[0]
+            const lower = file.name.toLowerCase()
+            const is_excel = lower.endsWith('.xlsx') || lower.endsWith('.xls') || lower.endsWith('.xlsm')
+            if (is_excel) {
+              // Excel : parse serveur → JSON, puis chargement dans une vue NEUVE
+              // avec la logique standard (mise en page + styles) en mode view_only.
+              // createNewView rend la nouvelle vue courante ; retrieveJSONResults
+              // (view_only) ne réinitialise QUE cette vue, sans toucher au maître
+              // ni aux autres vues.
+              const JSON_data = await loadExcelFileAsSankeyJSON(app_data, file as File)
+              const view_id = makeId('view')
+              app_data.createNewView(view_id, name, false)
+              retrieveJSONResults(
+                app_data,
+                JSON_data,
+                false /* apply_layout_current_sankey : laisse retrieveJSONResults choisir layout vs auto */,
+                {} /* _kwargs */,
+                app_data.layout_h_spacing ?? undefined,
+                app_data.layout_v_spacing ?? undefined,
+                app_data.layout_optimize_crossing,
+                app_data.layout_sources_mode,
+                app_data.layout_sinks_mode,
+                undefined, undefined, undefined,
+                true /* view_only */
+              )
+              if (first_view_id === undefined) first_view_id = view_id
+            } else {
+              // JSON/gz : lecture directe côté client.
+              const JSON_data = await decompressUploadedFileUniversal(file) as unknown as Type_JSON
               // Si le fichier contient déjà des vues, on concatène toutes ses vues au catalogue.
-              const nb_views_added = app_data.addViewsFromJSON(JSON_data as unknown as Type_JSON)
+              const nb_views_added = app_data.addViewsFromJSON(JSON_data)
               if (nb_views_added === 0) {
                 // Sinon (diagramme simple sans vues), on emballe le fichier entier comme une vue unique.
                 const view_id = makeId('view')
                 app_data.createNewView(view_id, name, false)
                 JSON_data.id = view_id
                 app_data.views_dict[view_id].json = compressJSONToGzip(JSON_data)
-                if (is_first) app_data.setCurrentView(view_id)
+                if (first_view_id === undefined) first_view_id = view_id
               }
-              app_data.menu_configuration.updateAllMenuComponents()
-              app_data.menu_configuration_osp.updateComponentRelatedToViews()
-            })
+            }
           }
-
+          // Atterrir sur la première vue importée (rend aussi son contenu, les
+          // branches « wrap » ci-dessus ne faisant que stocker le JSON).
+          if (first_view_id !== undefined) app_data.setCurrentView(first_view_id)
+          app_data.menu_configuration.updateAllMenuComponents()
+          app_data.menu_configuration_osp.updateComponentRelatedToViews()
         })
     }}
   />
