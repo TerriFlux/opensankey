@@ -24,8 +24,13 @@ export const attachSankeyBridge = (
   isSyncing: { current: boolean },
   onlyVisibleRef: { current: boolean }
 ): { dispose: () => void } => {
-  const { drawing_area } = app_data
-  const { sankey } = drawing_area
+  // drawing_area/sankey EN LIVE (let, pas const) : reset()/fromJSON et le changement de vue
+  // remplacent app_data.drawing_area (et sa sankey) par de NOUVELLES instances. Capturer en const
+  // ferait écrire les éditions du tableur dans l'ANCIENNE instance alors que le diagramme visible
+  // vient de app_data en live -> "édite la vue précédente / deux instances coexistent". Chaque
+  // handler réassigne ces liaisons avant usage ; les closures des helpers voient la réassignation.
+  let drawing_area = app_data.drawing_area
+  let sankey = drawing_area.sankey
   const menu_configuration = app_data.menu_configuration
 
   // Mapping ligne -> élément : MÊME ordre/filtrage que le builder (onlyVisible + fusion siblings +
@@ -389,6 +394,10 @@ export const attachSankeyBridge = (
       return
     }
 
+    // Liaisons live : la vue/diagramme courant a pu changer depuis l'attache du bridge.
+    drawing_area = app_data.drawing_area
+    sankey = drawing_area.sankey
+
     drawing_area.setToModeEdition(false)
     const hasAfm = app_data.has_sankey_afm
     // Signature de la liste des nœuds AVANT traitement : une édition de flux peut créer un nœud
@@ -526,6 +535,9 @@ export const attachSankeyBridge = (
     if (!range) {
       return
     }
+    // Liaisons live : la vue/diagramme courant a pu changer depuis l'attache du bridge.
+    drawing_area = app_data.drawing_area
+    sankey = drawing_area.sankey
     const wb = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
     const sheetId = p.subUnitId || (wb && wb.getActiveSheet && wb.getActiveSheet().getSheetId())
     let structural = false
