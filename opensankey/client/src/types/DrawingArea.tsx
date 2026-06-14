@@ -538,6 +538,12 @@ export class Class_DrawingArea {
    */
   protected _initDraw() {
     const height = this.application_data.publish_options.embedded ? '100%' : window.innerHeight
+    // _initDraw est l'UNIQUE point de création de #draw_zoom : on le rend idempotent en
+    // retirant tout #draw_zoom préexistant avant d'en append un nouveau. unDraw() ne
+    // supprime que le nœud référencé par this.d3_selection_zoom_area ; un orphelin laissé
+    // par un autre chemin (double-mount StrictMode, édition tableur → redraw, etc.) lui
+    // échappe et se dédoublait à chaque draw. Ce remove centralisé couvre tous les chemins.
+    d3.select('#sankey_app').selectAll('#draw_zoom').remove()
     // Add zoom zone where we can scroll to zoom or drag with mouse middle button
     this.d3_selection_zoom_area = d3.select('#sankey_app')
       .append('svg')
@@ -1002,10 +1008,15 @@ export class Class_DrawingArea {
   }
 
   public updateScaleAtLinkValueSetting() {
-    // Update scaling if only one link
     const links = this.sankey.links_list.filter(l => l.valueCurrent)
     if (links.length == 1) {
-      this.scale = links[0].valueCurrent! // will redraw everything // will redraw everything
+      // Mono-flux : l'échelle suit toujours la valeur saisie (comportement historique).
+      this.scale = links[0].valueCurrent! // will redraw everything
+    } else if (links.length > 1 && this._scale === default_scale) {
+      // Diagramme complet : à la première saisie de valeurs (échelle jamais
+      // modifiée, encore au défaut), on cale l'échelle sur le plus grand flux.
+      // Une fois l'échelle effective, on ne l'écrase plus.
+      this.scale = Math.max(...links.map(l => l.valueCurrent!))
     }
   }
 
