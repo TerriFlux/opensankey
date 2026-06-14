@@ -26,6 +26,27 @@ export const SHEET_ID_STOCK = 'sheet-stock'
 export const SHEET_ID_RATIO = 'sheet-ratio'
 export const SHEET_ID_RATIO_STOCK = 'sheet-ratio-stock'
 export const SHEET_ID_STOCK_CHAINING = 'sheet-stock-chaining'
+// Séparation produits/secteurs/échanges (format SEP `products_sectors`) : feuilles de nœuds
+// filtrées par le tag `type de noeud` (produit/secteur/echange). + format agrégé global (`nodes_agg`).
+export const SHEET_ID_PRODUITS = 'sheet-produits'
+export const SHEET_ID_SECTEURS = 'sheet-secteurs'
+export const SHEET_ID_ECHANGES = 'sheet-echanges'
+export const SHEET_ID_NOEUDS_AGG = 'sheet-noeuds-agg'
+
+// Groupe de tags interne portant la nature d'un nœud (produit/secteur/échange), comme dans SEP
+// (CONST.NODE_TYPE). Source de vérité partagée builder/bridge.
+export const NODE_TYPE_GROUP_ID = 'type de noeud'
+export const NODE_TYPE_PRODUCT = 'produit'
+export const NODE_TYPE_SECTOR = 'secteur'
+export const NODE_TYPE_EXCHANGE = 'echange'
+
+/** Tag de nature de nœud (produit/secteur/echange) du groupe `type de noeud`, ou undefined. */
+export const nodeTypeTag = (sankey: any, typeName: string): any =>
+  sankey.node_taggs_dict &&
+  sankey.node_taggs_dict[NODE_TYPE_GROUP_ID] &&
+  sankey.node_taggs_dict[NODE_TYPE_GROUP_ID].tags_dict
+    ? sankey.node_taggs_dict[NODE_TYPE_GROUP_ID].tags_dict[typeName]
+    : undefined
 
 // Indices de colonnes de l'onglet Noeuds (ordre = NODES_SHEET_COLS du parser). Les colonnes de
 // node-tags sont ajoutées APRÈS (index >= NOEUDS_CORE_COLS).
@@ -205,11 +226,18 @@ export const fluxRowLinks = (app_data: Class_ApplicationData, onlyVisible: boole
  */
 export const noeudsRowEntries = (
   app_data: Class_ApplicationData,
-  onlyVisible: boolean
+  onlyVisible: boolean,
+  rootTag?: any
 ): Type_NodeRow[] => {
   const { sankey } = app_data.drawing_area
   const baseList = (onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list)
     .filter((n: any) => !n.sibling)
+  // Filtrage par nature (Produits/Secteurs/Échanges) : seuls les nœuds RACINES portant le tag
+  // démarrent une lignée (comme `node in tag.references` dans SEP xl_write_nodes_sheet) ; leurs
+  // descendants sont inclus tels quels. La hiérarchie complète reste l'`allowed` (parent dans
+  // l'ensemble = pas une racine), donc un produit enfant d'un produit n'est pas dupliqué en racine.
+  const matchesRoot = (n: any): boolean =>
+    !rootTag || (n.hasGivenTag && n.hasGivenTag(rootTag))
   const allowed = new Set(baseList.map((n: any) => n.id))
   const childrenOf = (dim: any): any[] =>
     (dim.children || []).filter((c: any) => allowed.has(c.id) && !c.sibling)
@@ -241,11 +269,11 @@ export const noeudsRowEntries = (
     }
   }
 
-  // Racines = nœuds sans parent dans l'ensemble autorisé.
+  // Racines = nœuds sans parent dans l'ensemble autorisé (et, en mode filtré, portant le tag).
   baseList.forEach((node: any) => {
     const hasParent = (node.dimensions_as_child || [])
       .some((d: any) => d.parent && allowed.has(d.parent.id))
-    if (!hasParent) {
+    if (!hasParent && matchesRoot(node)) {
       const lineage: Type_NodeRow[] = []
       lineages.push(lineage)
       descend(node, 1, lineage)
@@ -253,6 +281,110 @@ export const noeudsRowEntries = (
   })
 
   return lineages.flat()
+}
+
+// Indices de colonnes de l'onglet « Noeuds par agrégation ». Les `levelCount` premières colonnes
+// sont les niveaux (level_1 = feuille la plus détaillée … dernière = racine, alignée à droite),
+// puis la colonne Dimension (si au moins une dimension), puis les attributs/tags.
+export type Type_AggRow = {
+  // Noms affichés des cellules de niveau (left-pad par '' pour aligner la racine à droite).
+  levelNames: string[]
+  // Nœud correspondant à chaque colonne de niveau (null = cellule de padding). Sert au write-back.
+  levelNodes: Array<any | null>
+  dimName: string | null
+  attrsNode: any // nœud feuille portant les attributs (couleur, u/v, tags, définition)
+}
+export type Type_AggLayout = { levelCount: number, hasDimCol: boolean, rows: Type_AggRow[] }
+
+/**
+ * Layout dénormalisé de l'onglet « Noeuds par agrégation », réplique de
+ * `SankeyExcelParser.classes.sankey_pandas.xl_write_nodes_agg_sheet` :
+ * une ligne par chaîne feuille→racine et par dimension, colonnes de niveau alignées à droite sur
+ * la racine, plus les nœuds isolés (rattachés à aucune dimension). Source de vérité partagée
+ * builder/bridge (le write-back de renommage mappe (ligne, colonne) → nœud via `levelNodes`).
+ */
+export const nodesAggLayout = (
+  app_data: Class_ApplicationData,
+  onlyVisible: boolean
+): Type_AggLayout => {
+  const { sankey } = app_data.drawing_area
+  const baseList = (onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list)
+    .filter((n: any) => !n.sibling)
+  const allowed = new Set(baseList.map((n: any) => n.id))
+
+  // Regroupe les dimensions (objets Class_NodeDimension parent→enfants) par id de groupe de
+  // level-tags : une « dimension » au sens SEP = un groupe (plusieurs objets le partagent).
+  const childToParent: { [dimId: string]: Map<any, any> } = {}
+  const parentsByDim: { [dimId: string]: Set<any> } = {}
+  const nodesByDim: { [dimId: string]: Set<any> } = {}
+  const dimOrder: string[] = []
+  ;(sankey.dimensions_list || []).forEach((dim: any) => {
+    const parent = dim.parent
+    const kids = (dim.children || []).filter((c: any) => allowed.has(c.id) && !c.sibling)
+    if (!parent || !allowed.has(parent.id) || parent.sibling || kids.length === 0) {
+      return
+    }
+    const id = dim.id
+    if (!childToParent[id]) {
+      childToParent[id] = new Map()
+      parentsByDim[id] = new Set()
+      nodesByDim[id] = new Set()
+      dimOrder.push(id)
+    }
+    parentsByDim[id].add(parent)
+    nodesByDim[id].add(parent)
+    kids.forEach((c: any) => {
+      childToParent[id].set(c, parent)
+      nodesByDim[id].add(c)
+    })
+  })
+
+  const dimName = (dimId: string): string => {
+    const g = (sankey.level_taggs_list || []).find((x: any) => x.id === dimId)
+    return (g && g.name) || dimId
+  }
+
+  // Chaînes feuille→racine par dimension (feuille = nœud sans enfant dans cette dimension).
+  type Chain = { dimId: string, chain: any[] }
+  const chains: Chain[] = []
+  const nodesInDims = new Set<any>()
+  let maxDepth = 1
+  dimOrder.forEach((dimId) => {
+    nodesByDim[dimId].forEach((node: any) => {
+      const isLeaf = !parentsByDim[dimId].has(node)
+      if (!isLeaf) {
+        return
+      }
+      const chain = [node]
+      let current = node
+      while (childToParent[dimId].has(current)) {
+        current = childToParent[dimId].get(current)
+        chain.push(current)
+      }
+      chains.push({ dimId, chain })
+      maxDepth = Math.max(maxDepth, chain.length)
+      chain.forEach((n) => nodesInDims.add(n))
+    })
+  })
+
+  // Nœuds isolés (dans aucune dimension).
+  const loneNodes = baseList.filter((n: any) => !nodesInDims.has(n))
+
+  const hasDimCol = dimOrder.length > 0
+  const rows: Type_AggRow[] = []
+  chains.forEach(({ dimId, chain }) => {
+    const pad = maxDepth - chain.length
+    const levelNodes: Array<any | null> = [...Array(pad).fill(null), ...chain]
+    const levelNames = levelNodes.map((n) => (n ? n.name : ''))
+    rows.push({ levelNames, levelNodes, dimName: dimName(dimId), attrsNode: chain[0] })
+  })
+  loneNodes.forEach((node: any) => {
+    const levelNodes: Array<any | null> = [...Array(maxDepth - 1).fill(null), node]
+    const levelNames = levelNodes.map((n) => (n ? n.name : ''))
+    rows.push({ levelNames, levelNodes, dimName: null, attrsNode: node })
+  })
+
+  return { levelCount: maxDepth, hasDimCol, rows }
 }
 
 /**
@@ -268,6 +400,94 @@ export const tagsRowGroups = (app_data: Class_ApplicationData): any[] => {
     ...(sankey.flux_taggs_list || []),
     ...(sankey.data_taggs_list || [])
   ]
+}
+
+// En-têtes des colonnes "core" d'une feuille de nœuds. `nodeHeaderLabel` = libellé de la colonne du
+// nom (Noeuds / Produits / Secteurs / Echanges, comme les feuilles SEP).
+const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
+  'Niveau d\'agrégation',
+  nodeHeaderLabel,
+  'Equilibre entrée-sortie',
+  'Affichage sur le diagramme de Sankey',
+  'Couleur',
+  'Définitions',
+  'Colonne u',
+  'Ligne v'
+])
+
+type Type_TagCol = { group: any, hex: string, vertical: boolean }
+
+/**
+ * Construit les cellules d'une feuille de nœuds (colonnes core + colonnes de tags + dégradé bleu par
+ * niveau). Mutualisé entre l'onglet Noeuds et les onglets Produits/Secteurs/Échanges (mêmes colonnes,
+ * seul le libellé de la colonne du nom change). Le mat_balance reste présent (vide : calculé par SEP).
+ */
+const buildNodeSheetCells = (
+  noeudsRows: Type_NodeRow[],
+  tagCols: Type_TagCol[],
+  nodeHeaderLabel: string
+): { cells: Type_CellData, headers: string[] } => {
+  const maxLvl = noeudsRows.reduce((m, e) => Math.max(m, e.level), 1)
+  const coreHeaders = nodeCoreHeaders(nodeHeaderLabel)
+  const cells: Type_CellData = { 0: {} }
+  coreHeaders.forEach((h, c) => {
+    cells[0][c] = { v: h, s: headerStyle(HEX_CORE, c === NOEUDS_COL.level) }
+  })
+  tagCols.forEach((tc, j: number) => {
+    cells[0][NOEUDS_CORE_COLS + j] = { v: tc.group.name, s: headerStyle(tc.hex, tc.vertical) }
+  })
+  noeudsRows.forEach((entry, i: number) => {
+    const n = entry.node
+    const lvl = entry.level
+    const r = i + 1
+    const rowStyle = maxLvl > 1 ? levelStyle((lvl - 1) / maxLvl) : undefined
+    const color = (n.getShapeColorToUse ? n.getShapeColorToUse() : '') || ''
+    const rowCells: { [col: number]: Type_Cell } = {
+      [NOEUDS_COL.level]: { v: lvl, s: rowStyle },
+      [NOEUDS_COL.node]: { v: n.name, s: rowStyle },
+      [NOEUDS_COL.mat_balance]: { v: '', s: rowStyle },
+      [NOEUDS_COL.sankey]: { v: '', s: rowStyle },
+      [NOEUDS_COL.color]: { v: color, s: rowStyle },
+      [NOEUDS_COL.definitions]: { v: n.tooltip_text || '', s: rowStyle },
+      [NOEUDS_COL.position_u]: { v: n.position_u != null ? num5(n.position_u) : '', s: rowStyle },
+      [NOEUDS_COL.position_v]: { v: n.position_v != null ? num5(n.position_v) : '', s: rowStyle }
+    }
+    tagCols.forEach((tc, j: number) => {
+      rowCells[NOEUDS_CORE_COLS + j] = { v: nodeTagsInGroup(n, tc.group), s: rowStyle }
+    })
+    cells[r] = rowCells
+  })
+  const headers = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
+  return { cells, headers }
+}
+
+/** Largeurs de colonnes d'une feuille de nœuds (auto + niveau/étiquettes verticales étroits). */
+const nodeSheetColumnData = (cells: Type_CellData, tagCols: Type_TagCol[]) => {
+  const colData = autoColumnWidths(cells, NOEUDS_CORE_COLS + tagCols.length + 2)
+  colData[NOEUDS_COL.level] = { w: 28 }
+  tagCols.forEach((tc, j: number) => {
+    if (tc.vertical) {
+      colData[NOEUDS_CORE_COLS + j] = { w: 28 }
+    }
+  })
+  return colData
+}
+
+/** Objet feuille Univer pour une feuille de nœuds (Noeuds / Produits / Secteurs / Échanges). */
+const makeNodeSheet = (
+  id: string, name: string, noeudsRows: Type_NodeRow[], tagCols: Type_TagCol[], nodeHeaderLabel: string
+): { sheet: any, headers: string[], cells: Type_CellData } => {
+  const { cells, headers } = buildNodeSheetCells(noeudsRows, tagCols, nodeHeaderLabel)
+  const sheet = {
+    id,
+    name,
+    cellData: cells,
+    columnData: nodeSheetColumnData(cells, tagCols),
+    rowData: { 0: { h: 90 } },
+    rowCount: Math.max(100, noeudsRows.length + 20),
+    columnCount: NOEUDS_CORE_COLS + tagCols.length + 2
+  }
+  return { sheet, headers, cells }
 }
 
 /**
@@ -310,58 +530,30 @@ export const buildSankeyWorkbookData = (
     }
   })
 
-  // --- Onglet Noeuds (colonnes Excel + level-tags + node-tags + dégradé bleu par niveau) ----------
+  // --- Onglets de nœuds (Noeuds + séparation Produits/Secteurs/Échanges) --------------------------
   // Colonnes de tags = étiquettes de niveau (turquoise) PUIS étiquettes de nœud (vert), comme le
   // writer Excel de SEP. Exclut le tag interne "type de noeud" (échange/produit/secteur).
   const levelTagGroups = sankey.level_taggs_list || []
-  const nodeTagGroups = (sankey.node_taggs_list || []).filter((g: any) => g.id !== 'type de noeud')
-  const tagCols: Array<{ group: any, hex: string, vertical: boolean }> = [
+  const nodeTagGroups = (sankey.node_taggs_list || []).filter((g: any) => g.id !== NODE_TYPE_GROUP_ID)
+  const tagCols: Type_TagCol[] = [
     ...levelTagGroups.map((g: any) => ({ group: g, hex: HEX_LEVELTAG, vertical: true })),
     ...nodeTagGroups.map((g: any) => ({ group: g, hex: HEX_NODETAG, vertical: false }))
   ]
-  // Lignes hiérarchisées (enfants sous parents par dimension), comme le writer Excel de SEP.
+  // Onglet Noeuds : tous les nœuds, lignes hiérarchisées (enfants sous parents par dimension).
   const noeudsRows = noeudsRowEntries(app_data, onlyVisible)
-  const maxLvl = noeudsRows.reduce((m, e) => Math.max(m, e.level), 1)
-  const coreHeaders = [
-    'Niveau d\'agrégation',
-    'Noeuds',
-    'Equilibre entrée-sortie',
-    'Affichage sur le diagramme de Sankey',
-    'Couleur',
-    'Définitions',
-    'Colonne u',
-    'Ligne v'
-  ]
-  const nodeCells: Type_CellData = { 0: {} }
-  // Niveau d'agrégation : en-tête vertical + colonne étroite (comme les étiquettes de niveau).
-  coreHeaders.forEach((h, c) => {
-    nodeCells[0][c] = { v: h, s: headerStyle(HEX_CORE, c === NOEUDS_COL.level) }
-  })
-  tagCols.forEach((tc, j: number) => {
-    nodeCells[0][NOEUDS_CORE_COLS + j] = { v: tc.group.name, s: headerStyle(tc.hex, tc.vertical) }
-  })
+  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagCols, 'Noeuds')
 
-  noeudsRows.forEach((entry, i: number) => {
-    const n = entry.node
-    const lvl = entry.level
-    const r = i + 1
-    const rowStyle = maxLvl > 1 ? levelStyle((lvl - 1) / maxLvl) : undefined
-    const color = (n.getShapeColorToUse ? n.getShapeColorToUse() : '') || ''
-    const cells: { [col: number]: Type_Cell } = {
-      [NOEUDS_COL.level]: { v: lvl, s: rowStyle },
-      [NOEUDS_COL.node]: { v: n.name, s: rowStyle },
-      [NOEUDS_COL.mat_balance]: { v: '', s: rowStyle },
-      [NOEUDS_COL.sankey]: { v: '', s: rowStyle },
-      [NOEUDS_COL.color]: { v: color, s: rowStyle },
-      [NOEUDS_COL.definitions]: { v: n.tooltip_text || '', s: rowStyle },
-      [NOEUDS_COL.position_u]: { v: n.position_u != null ? num5(n.position_u) : '', s: rowStyle },
-      [NOEUDS_COL.position_v]: { v: n.position_v != null ? num5(n.position_v) : '', s: rowStyle }
-    }
-    tagCols.forEach((tc, j: number) => {
-      cells[NOEUDS_CORE_COLS + j] = { v: nodeTagsInGroup(n, tc.group), s: rowStyle }
-    })
-    nodeCells[r] = cells
-  })
+  // Séparation par nature (format SEP `products_sectors`) : une feuille par type de nœud, filtrée
+  // par le tag `type de noeud`. Onglet vide (tag absent) => masqué par défaut comme les autres.
+  const produitTag = nodeTypeTag(sankey, NODE_TYPE_PRODUCT)
+  const secteurTag = nodeTypeTag(sankey, NODE_TYPE_SECTOR)
+  const echangeTag = nodeTypeTag(sankey, NODE_TYPE_EXCHANGE)
+  const produitsRows = produitTag ? noeudsRowEntries(app_data, onlyVisible, produitTag) : []
+  const secteursRows = secteurTag ? noeudsRowEntries(app_data, onlyVisible, secteurTag) : []
+  const echangesRows = echangeTag ? noeudsRowEntries(app_data, onlyVisible, echangeTag) : []
+  const produits = makeNodeSheet(SHEET_ID_PRODUITS, 'Produits', produitsRows, tagCols, 'Produits')
+  const secteurs = makeNodeSheet(SHEET_ID_SECTEURS, 'Secteurs', secteursRows, tagCols, 'Secteurs')
+  const echanges = makeNodeSheet(SHEET_ID_ECHANGES, 'Echanges', echangesRows, tagCols, 'Echanges')
 
   // --- Onglet Etiquettes (un groupe par ligne) ---------------------------------------------------
   const tagHeaders = ['Nom du groupe d\'étiquette', 'Type d\'étiquette', 'Etiquettes', 'Couleurs']
@@ -486,24 +678,62 @@ export const buildSankeyWorkbookData = (
     stockChainRow++
   })
 
-  const noeudsHeaders = [...coreHeaders, ...tagCols.map((tc) => tc.group.name)]
-
-  // Largeur auto depuis le contenu, puis colonnes à en-tête vertical (Niveau d'agrégation +
-  // étiquettes de niveau) forcées à une largeur réduite (texte pivoté -> pas de mesure pertinente).
-  const noeudsColumnData = autoColumnWidths(nodeCells, NOEUDS_CORE_COLS + tagCols.length + 2)
-  noeudsColumnData[NOEUDS_COL.level] = { w: 28 }
-  tagCols.forEach((tc, j: number) => {
-    if (tc.vertical) {
-      noeudsColumnData[NOEUDS_CORE_COLS + j] = { w: 28 }
-    }
+  // --- Onglet « Noeuds par agrégation » (format SEP `nodes_agg`, dénormalisé) ---------------------
+  // Une ligne par chaîne feuille→racine et par dimension : colonnes de niveau (racine alignée à
+  // droite), colonne Dimension, puis attributs/tags du nœud feuille. Réplique de xl_write_nodes_agg_sheet.
+  const agg = nodesAggLayout(app_data, onlyVisible)
+  const aggDimColIdx = agg.hasDimCol ? agg.levelCount : -1
+  const aggAttrStart = agg.levelCount + (agg.hasDimCol ? 1 : 0)
+  const aggTagStart = aggAttrStart + 4
+  const aggDefIdx = aggTagStart + nodeTagGroups.length
+  const aggHeaders = [
+    ...Array.from({ length: agg.levelCount }, (_, i) => 'Niveau ' + (i + 1)),
+    ...(agg.hasDimCol ? ['Dimension'] : []),
+    'Equilibre entrée-sortie', 'Couleur', 'Colonne u', 'Ligne v',
+    ...nodeTagGroups.map((g: any) => g.name),
+    'Définitions'
+  ]
+  const aggCells: Type_CellData = { 0: {} }
+  aggHeaders.forEach((h, c) => {
+    const isTag = c >= aggTagStart && c < aggDefIdx
+    aggCells[0][c] = { v: h, s: headerStyle(isTag ? HEX_NODETAG : HEX_CORE) }
   })
-  // Ligne d'en-tête plus haute pour accueillir les libellés verticaux.
-  const noeudsRowData = { 0: { h: 90 } }
+  agg.rows.forEach((row, i: number) => {
+    const r = i + 1
+    const leaf = row.attrsNode
+    const maxLvl = agg.levelCount
+    // Dégradé bleu : la cellule racine (colonne la plus à droite) est la plus foncée ; en partant de
+    // la 1re colonne de niveau renseignée. Profondeur = index dans la chaîne (root = niveau 1).
+    const cells: { [col: number]: Type_Cell } = {}
+    row.levelNames.forEach((nm, c) => {
+      const depth = maxLvl - c // colonne 0 = plus détaillée -> grande profondeur ; racine -> 1
+      const style = (nm && maxLvl > 1) ? levelStyle((depth - 1) / maxLvl) : undefined
+      cells[c] = { v: nm, s: style }
+    })
+    if (agg.hasDimCol) {
+      cells[aggDimColIdx] = { v: row.dimName || '' }
+    }
+    cells[aggAttrStart] = { v: '' } // mat_balance (calculé par SEP)
+    cells[aggAttrStart + 1] = { v: (leaf.getShapeColorToUse ? leaf.getShapeColorToUse() : '') || '' }
+    cells[aggAttrStart + 2] = { v: leaf.position_u != null ? num5(leaf.position_u) : '' }
+    cells[aggAttrStart + 3] = { v: leaf.position_v != null ? num5(leaf.position_v) : '' }
+    nodeTagGroups.forEach((g: any, j: number) => {
+      cells[aggTagStart + j] = { v: nodeTagsInGroup(leaf, g) }
+    })
+    cells[aggDefIdx] = { v: leaf.tooltip_text || '' }
+    aggCells[r] = cells
+  })
+  // Colonnes de niveau obligatoires (structurent la hiérarchie) ; le reste optionnel.
+  const AGG_MANDATORY = new Set(Array.from({ length: agg.levelCount }, (_, i) => i))
 
   const data: Partial<Type_WorkbookData> = {
     id: 'sankey-workbook',
     name: 'Sankey',
-    sheetOrder: [SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING, SHEET_ID_STOCK],
+    sheetOrder: [
+      SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES,
+      SHEET_ID_NOEUDS_AGG, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK,
+      SHEET_ID_STOCK_CHAINING, SHEET_ID_STOCK
+    ],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
@@ -513,14 +743,18 @@ export const buildSankeyWorkbookData = (
         rowCount: Math.max(100, links.length + 20),
         columnCount: 9
       },
-      [SHEET_ID_NOEUDS]: {
-        id: SHEET_ID_NOEUDS,
-        name: 'Noeuds',
-        cellData: nodeCells,
-        columnData: noeudsColumnData,
-        rowData: noeudsRowData,
-        rowCount: Math.max(100, noeudsRows.length + 20),
-        columnCount: NOEUDS_CORE_COLS + tagCols.length + 2
+      [SHEET_ID_NOEUDS]: noeuds.sheet,
+      [SHEET_ID_PRODUITS]: produits.sheet,
+      [SHEET_ID_SECTEURS]: secteurs.sheet,
+      [SHEET_ID_ECHANGES]: echanges.sheet,
+      [SHEET_ID_NOEUDS_AGG]: {
+        id: SHEET_ID_NOEUDS_AGG,
+        name: 'Noeuds par agrégation',
+        cellData: aggCells,
+        columnData: autoColumnWidths(aggCells, aggHeaders.length),
+        rowData: { 0: { h: 40 } },
+        rowCount: Math.max(100, agg.rows.length + 20),
+        columnCount: aggHeaders.length
       },
       [SHEET_ID_TAGS]: {
         id: SHEET_ID_TAGS,
@@ -567,7 +801,11 @@ export const buildSankeyWorkbookData = (
 
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
-    [SHEET_ID_NOEUDS]: colMeta(noeudsHeaders, nodeCells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_ECHANGES]: colMeta(echanges.headers, echanges.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_NOEUDS_AGG]: colMeta(aggHeaders, aggCells, AGG_MANDATORY),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
     [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY),
     [SHEET_ID_RATIO]: colMeta(ratioHeaders, ratioCells, RATIO_MANDATORY),
@@ -580,6 +818,12 @@ export const buildSankeyWorkbookData = (
   const sheets: Type_SheetMeta[] = [
     { id: SHEET_ID_TAGS, name: 'Etiquettes', hasData: tagRow > 1 },
     { id: SHEET_ID_NOEUDS, name: 'Noeuds', hasData: noeudsRows.length > 0 },
+    { id: SHEET_ID_PRODUITS, name: 'Produits', hasData: produitsRows.length > 0 },
+    { id: SHEET_ID_SECTEURS, name: 'Secteurs', hasData: secteursRows.length > 0 },
+    { id: SHEET_ID_ECHANGES, name: 'Echanges', hasData: echangesRows.length > 0 },
+    // N'apparaît par défaut que s'il y a une vraie hiérarchie (sinon = doublon plat de Noeuds) ;
+    // reste activable via le sélecteur d'onglets.
+    { id: SHEET_ID_NOEUDS_AGG, name: 'Noeuds par agrégation', hasData: agg.rows.length > 0 && agg.hasDimCol },
     { id: SHEET_ID_FLUX, name: 'Flux', hasData: links.length > 0 },
     { id: SHEET_ID_RATIO, name: 'Ratio flux', hasData: ratioRow > 1 },
     { id: SHEET_ID_RATIO_STOCK, name: 'Ratio stock flux', hasData: ratioStockRow > 1 },

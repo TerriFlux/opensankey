@@ -14,7 +14,12 @@
 
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
-import { SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING, NOEUDS_COL, TAGS_COL, fluxRowLinks, noeudsRowEntries, tagsRowGroups } from './UniverSankeyData'
+import {
+  SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK,
+  SHEET_ID_STOCK_CHAINING, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES, SHEET_ID_NOEUDS_AGG,
+  NOEUDS_COL, TAGS_COL, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
+  fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout
+} from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -38,6 +43,19 @@ export const attachSankeyBridge = (
   // multi-parent ; renommer/supprimer agit sur le nœud sous-jacent unique).
   const rowLinks = (): any[] => fluxRowLinks(app_data, onlyVisibleRef.current)
   const rowNodes = (): any[] => noeudsRowEntries(app_data, onlyVisibleRef.current).map((e: any) => e.node)
+  // Onglets Produits/Secteurs/Échanges : même mapping que Noeuds, mais filtré par le tag de nature.
+  const typeRowNodes = (tag: any): any[] =>
+    noeudsRowEntries(app_data, onlyVisibleRef.current, tag).map((e: any) => e.node)
+  // Nature (produit/secteur/echange) par sheetId. Le tag est résolu À L'ÉVÉNEMENT (pas capturé à
+  // l'attache) pour rester valide si un fichier portant ces tags est chargé pendant que l'onglet
+  // Tableur est ouvert. tag undefined (nature absente) => la feuille reste inerte.
+  const NODE_SHEET_TYPE: { [sheetId: string]: string } = {
+    [SHEET_ID_PRODUITS]: NODE_TYPE_PRODUCT,
+    [SHEET_ID_SECTEURS]: NODE_TYPE_SECTOR,
+    [SHEET_ID_ECHANGES]: NODE_TYPE_EXCHANGE
+  }
+  const sheetTypeTag = (sheetId: string): any =>
+    NODE_SHEET_TYPE[sheetId] ? nodeTypeTag(sankey, NODE_SHEET_TYPE[sheetId]) : undefined
 
   // Place les nœuds NOUVELLEMENT créés (ajout de flux/nœud) sans toucher aux nœuds existants.
   // Heuristique : un nœud se cale juste à DROITE de ses voisins amont (sources) ou juste à
@@ -223,21 +241,53 @@ export const attachSankeyBridge = (
     return { structural, value }
   }
 
-  // Réconcilie une ligne de l'onglet Noeuds (renommage ; création si ligne nouvelle).
-  const reconcileNodeRow = (ws: any, r: number, originalNodeCount: number): boolean => {
+  // Réconcilie une ligne d'une feuille de nœuds (Noeuds / Produits / Secteurs / Échanges) :
+  // renommage d'un nœud existant ; création si ligne nouvelle. `getRowNodes` = mapping ligne->nœud
+  // propre à la feuille (filtré ou non par nature) ; `typeTag` = tag de nature appliqué aux nœuds
+  // créés sur une feuille filtrée (pour qu'ils se rangent dans la bonne feuille, comme SEP).
+  const reconcileNodeRow = (
+    ws: any, r: number, originalNodeCount: number,
+    getRowNodes: () => any[], typeTag?: any
+  ): boolean => {
     const idx = r - 1
     const name = cellText(ws, r, NOEUDS_COL.node)
     if (idx < originalNodeCount) {
-      const node = rowNodes()[idx]
+      const node = getRowNodes()[idx]
       if (node && name && name !== node.name) {
         node.name = name
         return true
       }
     } else if (name && !nameToNode()[name]) {
-      sankey.addNewNodeWithName(name)
+      const node = sankey.addNewNodeWithName(name)
+      if (node && typeTag && node.addTag) {
+        node.addTag(typeTag)
+      }
       return true
     }
     return false
+  }
+
+  // Réconcilie une ligne de l'onglet « Noeuds par agrégation » : write-back = renommage des nœuds.
+  // Chaque colonne de niveau contient le nom d'un nœud de la chaîne feuille->racine ; on renomme
+  // le nœud sous-jacent si la cellule a changé. (Couleur/position/tags = lecture seule pour l'instant.)
+  const reconcileAggRow = (ws: any, r: number, aggLayout: any): boolean => {
+    const aggRow = aggLayout.rows[r - 1]
+    if (!aggRow) {
+      return false
+    }
+    let changed = false
+    for (let c = 0; c < aggLayout.levelCount; c++) {
+      const node = aggRow.levelNodes[c]
+      if (!node) {
+        continue
+      }
+      const name = cellText(ws, r, c)
+      if (name && name !== node.name) {
+        node.name = name
+        changed = true
+      }
+    }
+    return changed
   }
 
   // Réconcilie une ligne de l'onglet Etiquettes : renomme le groupe (col 0), les étiquettes
@@ -277,7 +327,7 @@ export const attachSankeyBridge = (
   // Colonnes : 0 Origine, 1 Destination, 2 Coef, 3 Min, 4 Max, 5 Origine réf, 6 Destination réf,
   // 7 Étiquette, 8 Étiquette réf, 9 Traduction. Pas d'impact visuel sur le diagramme (contrainte
   // solveur) : on met juste à jour le modèle, persisté tel quel.
-  const reconcileRatioRow = (ws: any, r: number, originalRatioCount: number): boolean => {
+  const reconcileRatioRow = (ws: any, r: number, originalRatioCount: number, prune: number[]): boolean => {
     const idx = r - 1
     const origin = cellText(ws, r, 0)
     const destination = cellText(ws, r, 1)
@@ -291,6 +341,14 @@ export const attachSankeyBridge = (
     const traduction = cellText(ws, r, 9) || null
 
     if (idx < originalRatioCount) {
+      // Ligne existante entièrement vidée (sélection + touche Suppr) : suppression réelle de la
+      // contrainte, pas une réécriture en contrainte fantôme aux champs vides. On marque l'index à
+      // purger (le splice et le rebuild sont différés après la passe pour garder les index valides).
+      if (!origin && !destination && !origin_ref && !destination_ref &&
+        coef == null && min == null && max == null && !data_tag && !data_tag_ref && !traduction) {
+        prune.push(idx)
+        return false
+      }
       // Ligne existante : édition in-place (l'édition d'une seule cellule réécrit la ligne entière
       // avec les valeurs courantes des autres cellules, qui sont inchangées).
       const rc = sankey.ratio_flux_constraints[idx]
@@ -323,7 +381,7 @@ export const attachSankeyBridge = (
   // Réconcilie une ligne de l'onglet Ratio stock flux -> sankey.ratio_stock_flux_constraints (#156).
   // Colonnes : 0 Origine, 1 Destination, 2 Coef, 3 Min, 4 Max, 5 Stock, 6 Étiquette, 7 Étiquette réf,
   // 8 Traduction. flux[O->D, période] = Coef · S[Stock, période réf].
-  const reconcileRatioStockRow = (ws: any, r: number, originalCount: number): boolean => {
+  const reconcileRatioStockRow = (ws: any, r: number, originalCount: number, prune: number[]): boolean => {
     const idx = r - 1
     const origin = cellText(ws, r, 0)
     const destination = cellText(ws, r, 1)
@@ -335,6 +393,12 @@ export const attachSankeyBridge = (
     const data_tag_ref = cellText(ws, r, 7) || null
     const traduction = cellText(ws, r, 8) || null
     if (idx < originalCount) {
+      // Ligne existante entièrement vidée -> suppression réelle (voir reconcileRatioRow).
+      if (!origin && !destination && !stock && coef == null && min == null && max == null &&
+        !data_tag && !data_tag_ref && !traduction) {
+        prune.push(idx)
+        return false
+      }
       const rc = sankey.ratio_stock_flux_constraints[idx]
       if (!rc) { return false }
       rc.origin = origin; rc.destination = destination
@@ -356,7 +420,7 @@ export const attachSankeyBridge = (
   // Réconcilie une ligne de l'onglet Chaînage stock -> sankey.stock_chaining_constraints (#156).
   // Colonnes : 0 Stock, 1 Coef, 2 Delta stock, 3 Étiquette, 4 Étiquette réf, 5 Traduction.
   // S[Stock, Année] = Coef · S[Stock, Année réf] + Δstock[Delta stock, Année].
-  const reconcileStockChainRow = (ws: any, r: number, originalCount: number): boolean => {
+  const reconcileStockChainRow = (ws: any, r: number, originalCount: number, prune: number[]): boolean => {
     const idx = r - 1
     const stock = cellText(ws, r, 0)
     const coef = parseNum(cellText(ws, r, 1))
@@ -365,6 +429,11 @@ export const attachSankeyBridge = (
     const data_tag_ref = cellText(ws, r, 4) || null
     const traduction = cellText(ws, r, 5) || null
     if (idx < originalCount) {
+      // Ligne existante entièrement vidée -> suppression réelle (voir reconcileRatioRow).
+      if (!stock && coef == null && !delta_stock && !data_tag && !data_tag_ref && !traduction) {
+        prune.push(idx)
+        return false
+      }
       const sc = sankey.stock_chaining_constraints[idx]
       if (!sc) { return false }
       sc.stock = stock; sc.coef = coef; sc.delta_stock = delta_stock
@@ -412,6 +481,12 @@ export const attachSankeyBridge = (
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
     const originalLinkCount = rowLinks().length
     const originalNodeCount = rowNodes().length
+    // Comptes par feuille de nœuds filtrée (Produits/Secteurs/Échanges) AVANT édition.
+    const originalNodeCountBySheet: { [sheetId: string]: number } = {}
+    Object.keys(NODE_SHEET_TYPE).forEach((sid) => {
+      const tag = sheetTypeTag(sid)
+      originalNodeCountBySheet[sid] = tag ? typeRowNodes(tag).length : 0
+    })
     const originalRatioCount = sankey.ratio_flux_constraints.length
     const originalRatioStockCount = sankey.ratio_stock_flux_constraints.length
     const originalStockChainCount = sankey.stock_chaining_constraints.length
@@ -432,6 +507,11 @@ export const attachSankeyBridge = (
     let structural = false
     let value = false
     let tagChanged = false
+    // Index de contraintes vidées (ligne existante effacée via la touche Suppr) à purger après la
+    // passe : on collecte puis on splice en ordre décroissant pour garder les index valides.
+    const ratioPrune: number[] = []
+    const ratioStockPrune: number[] = []
+    const stockChainPrune: number[] = []
     Object.keys(rowsBySheet).forEach((sheetId) => {
       const ws = wb.getSheetBySheetId(sheetId)
       if (!ws) {
@@ -452,7 +532,30 @@ export const attachSankeyBridge = (
           if (r === 0) {
             return
           }
-          if (reconcileNodeRow(ws, r, originalNodeCount)) {
+          if (reconcileNodeRow(ws, r, originalNodeCount, rowNodes)) {
+            structural = true
+          }
+        })
+      } else if (NODE_SHEET_TYPE[sheetId]) {
+        // Onglets Produits / Secteurs / Échanges : renommage + création (avec tag de nature).
+        const tag = sheetTypeTag(sheetId)
+        const cnt = originalNodeCountBySheet[sheetId]
+        rows.forEach((r) => {
+          if (r === 0) {
+            return
+          }
+          if (tag && reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag)) {
+            structural = true
+          }
+        })
+      } else if (sheetId === SHEET_ID_NOEUDS_AGG) {
+        // Onglet « Noeuds par agrégation » : write-back = renommage des nœuds (cellules de niveau).
+        const aggLayout = nodesAggLayout(app_data, onlyVisibleRef.current)
+        rows.forEach((r) => {
+          if (r === 0) {
+            return
+          }
+          if (reconcileAggRow(ws, r, aggLayout)) {
             structural = true
           }
         })
@@ -470,24 +573,39 @@ export const attachSankeyBridge = (
           if (r === 0) {
             return // en-tête
           }
-          reconcileRatioRow(ws, r, originalRatioCount)
+          reconcileRatioRow(ws, r, originalRatioCount, ratioPrune)
         })
       } else if (sheetId === SHEET_ID_RATIO_STOCK) {
         rows.forEach((r) => {
           if (r === 0) {
             return // en-tête
           }
-          reconcileRatioStockRow(ws, r, originalRatioStockCount)
+          reconcileRatioStockRow(ws, r, originalRatioStockCount, ratioStockPrune)
         })
       } else if (sheetId === SHEET_ID_STOCK_CHAINING) {
         rows.forEach((r) => {
           if (r === 0) {
             return // en-tête
           }
-          reconcileStockChainRow(ws, r, originalStockChainCount)
+          reconcileStockChainRow(ws, r, originalStockChainCount, stockChainPrune)
         })
       }
     })
+
+    // Purge des contraintes vidées (touche Suppr sur une ligne existante) : splice en ordre
+    // décroissant pour ne pas invalider les index restants. Le rebuild différé plus bas réaligne
+    // ensuite l'affichage (lignes vides retirées) sur le modèle.
+    const pruneConstraints = (list: any[], idxs: number[]) => {
+      idxs.sort((a, b) => b - a).forEach((i) => {
+        if (i < list.length) {
+          list.splice(i, 1)
+        }
+      })
+    }
+    pruneConstraints(sankey.ratio_flux_constraints, ratioPrune)
+    pruneConstraints(sankey.ratio_stock_flux_constraints, ratioStockPrune)
+    pruneConstraints(sankey.stock_chaining_constraints, stockChainPrune)
+    const constraintsPruned = ratioPrune.length > 0 || ratioStockPrune.length > 0 || stockChainPrune.length > 0
 
     // La liste des nœuds a-t-elle changé (création/renommage/suppression d'orphelin via l'onglet
     // Flux notamment) ? Si oui, l'onglet Noeuds est devenu obsolète et doit être reconstruit.
@@ -512,7 +630,7 @@ export const attachSankeyBridge = (
     // tags/étiquettes OU les changements de la liste des nœuds induits par une édition de flux.
     // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait l'unit
     // Univer en plein vol (crash "univerInstanceService is null").
-    if (tagChanged || nodesChanged) {
+    if (tagChanged || nodesChanged || constraintsPruned) {
       const ref = app_data.menu_configuration.ref_to_spreadsheet
       if (ref && ref.current) {
         setTimeout(() => { if (ref.current) { ref.current() } }, 0)
@@ -542,10 +660,18 @@ export const attachSankeyBridge = (
     const sheetId = p.subUnitId || (wb && wb.getActiveSheet && wb.getActiveSheet().getSheetId())
     let structural = false
 
-    if (sheetId === SHEET_ID_NOEUDS) {
+    if (sheetId === SHEET_ID_NOEUDS || NODE_SHEET_TYPE[sheetId]) {
+      // Onglet Noeuds ou feuille filtrée par nature : suppression du nœud sous-jacent. Pour une
+      // feuille de type, mapping filtré par le tag ; si le tag est absent (feuille inerte), aucune
+      // suppression (ne PAS retomber sur le mapping global -> mauvaise ligne).
+      const isTypeSheet = !!NODE_SHEET_TYPE[sheetId]
+      const typeTag = isTypeSheet ? sheetTypeTag(sheetId) : undefined
+      const getNodes = isTypeSheet
+        ? (typeTag ? () => typeRowNodes(typeTag) : () => [])
+        : rowNodes
       const toDelete: any[] = []
       for (let r = range.startRow; r <= range.endRow; r++) {
-        const node = r >= 1 ? rowNodes()[r - 1] : null
+        const node = r >= 1 ? getNodes()[r - 1] : null
         if (node) {
           toDelete.push(node)
         }
