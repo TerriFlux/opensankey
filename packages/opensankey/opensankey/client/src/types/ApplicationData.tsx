@@ -517,6 +517,24 @@ export class Class_ApplicationData {
    */
   public layout_optimize_crossing: boolean = true
 
+  /**
+   * Mode MFA (session-only, non persisté dans le JSON, non réinitialisé au chargement
+   * d'un diagramme). Quand `true`, le diagramme se comporte comme s'il y avait des
+   * résultats même avant le solveur : le sélecteur « données affichées » débloque
+   * Collectées/Calculées, et les flux contraints affichent leur coefficient de ratio
+   * en % dès le chargement (#116). Vit sur ApplicationData pour survivre aux chargements.
+   */
+  public mfa_mode: boolean = false
+
+  /**
+   * Mode « afficher aussi les flux porteurs de données » : quand actif, EN PLUS de
+   * la vue courante, on révèle les flux portant une valeur collectée saisie
+   * (`Class_LinkElement.has_collected_data`) et leurs nœuds, tous niveaux
+   * d'agrégation confondus (bypass des portes niveau/dimension). Union avec la vue
+   * normale, pas un filtre. Vue d'exploration de session (non persistée).
+   */
+  public reveal_data_links: boolean = false
+
 
 
   // CONSTRUCTOR ========================================================================
