@@ -751,6 +751,34 @@ export const INPUT_ATTRIBUTES_CONFIG: FormatConfigStructure = {
       ]
     } satisfies FormatAttributeConfig<boolean>,
 
+    // #161 — master toggle. Checked (default) = legacy: the diagram structure is
+    // propagated across every dataTag. Unchecked = keep only the (flux, dataTag)
+    // combinations present in the input; a flux absent for a dataTag is treated
+    // as non-existent (reconciled to 0). Per-group overrides live on each dataTag
+    // group (Tags sheet column "Propager la structure" / tag-group editor).
+    propagate_datatag_structure: {
+      group: 'autocorrection',
+      default: true,
+      type: (() => true) as (() => boolean),
+      labels: {
+        en: 'Propagate structure across dataTags',
+        fr: 'Propager la structure sur les dataTags',
+        es: 'Propagar la estructura a través de los dataTags',
+        de: 'Struktur über dataTags hinweg propagieren',
+        it: 'Propagare la struttura tra i dataTag'
+      },
+      tooltips: {
+        en: 'When unchecked, keep only the (flux, dataTag) combinations present in the input; a flux absent for a dataTag does not exist there (reconciled to 0)',
+        fr: 'Décoché : ne conserver que les combinaisons (flux, dataTag) présentes dans l\'entrée ; un flux absent pour un dataTag n\'y existe pas (réconcilié à 0)',
+        es: 'Sin marcar: conservar solo las combinaciones (flujo, dataTag) presentes en la entrada; un flujo ausente para un dataTag no existe (reconciliado a 0)',
+        de: 'Nicht markiert: nur die im Input vorhandenen (Fluss, dataTag)-Kombinationen behalten; ein für einen dataTag fehlender Fluss existiert dort nicht (auf 0 abgeglichen)',
+        it: 'Deselezionato: mantenere solo le combinazioni (flusso, dataTag) presenti nell\'input; un flusso assente per un dataTag non esiste (riconciliato a 0)'
+      },
+      visibilityConditions: [
+        { type: 'optionProperty', property: '_input_format', operator: '==', value: 'excel' }
+      ]
+    } satisfies FormatAttributeConfig<boolean>,
+
     autofix_parenthood_mat_balance: {
       group: 'autocorrection',
       breakBefore: true,
@@ -1983,6 +2011,7 @@ export const INPUT_OPTION_KEYS = [
   'autofix_ter_duplicate_entries',
   'typo_strict',
   'autocorrect_typo',
+  'propagate_datatag_structure',
 ] as const
 
 export const CONVERTER_CONFIGS = {
