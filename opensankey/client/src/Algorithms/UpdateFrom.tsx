@@ -803,12 +803,14 @@ export const updateFrom = (
       })
   }
 
-  // Parametric mode must not propagate via layout import — always stay absolute.
+  // Le mode parametric GLOBAL ne doit pas se propager via l'import de layout : le style
+  // par défaut repasse en absolu pour que les positions importées soient respectées
+  // (sinon recomputeParametricLayout ré-empile toute la colonne). En revanche, le
+  // marquage parametric PAR NŒUD est conservé : un nœud « Ecartement » doit garder son
+  // calage relatif au nœud du dessus à travers les changements de vue / reload
+  // (anchorParametricNodesToAbsolute le replace après le placement global).
   Object.values(drawing_area.sankey.styles_dict).forEach(style => {
     if (style.shape_position_type === 'parametric') style.shape_position_type = 'absolute'
-  })
-  drawing_area.sankey.nodes_list.forEach(node => {
-    if (node.shape_position_type === 'parametric') node.shape_position_type = 'absolute'
   })
 
   // #1230 — Mode coordonnées absolues : après un re-chargement des positions
@@ -819,6 +821,17 @@ export const updateFrom = (
   // getShape*ToUse() reflète déjà la nouvelle vue. Les changements de taille
   // ULTÉRIEURS (échelle/datatag) re-centreront normalement.
   if (sync_nodes_positions || all) {
+    // u/v ne sont pas persistés (default 0) et ne sont calculés que dans la branche
+    // proportional/parametric ci-dessous. Pour qu'un mix par-nœud (nœuds marqués
+    // « Ecartement ») dispose de colonnes valides quel que soit le mode global, on les
+    // dérive de la géométrie importée s'ils n'ont jamais été calculés (tous à 0).
+    const uv_uncomputed = drawing_area.sankey.visible_nodes_list.length > 0 &&
+      drawing_area.sankey.visible_nodes_list.every(n => n.position_u === 0 && n.position_v === 0)
+    if (uv_uncomputed) {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.computeParametrization(false)
+    }
+
     // #1231 — modes proportionnel ET écart (ex-paramétrique) : re-capturer le cadre de
     // référence (médiane globale, centre par colonne, sommes par colonne) sur les positions
     // importées pour qu'elles soient respectées, puis suivies au prochain datatag.

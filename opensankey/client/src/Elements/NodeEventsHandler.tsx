@@ -597,6 +597,12 @@ export class NodeEventsHandler {
       this._node.drawing_area.setAbsoluteMode()
       this._node.drawing_area.drawElements()
     }
+    // Un nœud déplacé peut être l'ancre absolue de nœuds « Ecartement » de sa colonne :
+    // relancer drawElements pour que anchorParametricNodesToAbsolute les recale sous lui.
+    // (else-if : la branche %/échelle ci-dessus a déjà redessiné en absolu.)
+    else if (this._node.sankey.visible_nodes_list.some(n => n.shape_position_type === 'parametric')) {
+      this._node.drawing_area.drawElements()
+    }
 
     let new_bbox = this._node.drawing_area.d3_selection_elements_group?.node()?.getBBox() ?? undefined
 
