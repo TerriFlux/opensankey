@@ -1928,6 +1928,12 @@ export class Class_DrawingArea {
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target as Class_NodeElement)
           this.drawing_link = false
+          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
+          // les branches de création de flux sélectionnent leurs éléments, celle-ci
+          // l'oubliait, laissant le nœud non sélectionné après le dessin.
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(this._ghost_link.source)
+          this.application_data.menu_configuration.openConfigMenuElementsNodes()
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
@@ -2020,6 +2026,12 @@ export class Class_DrawingArea {
           // So we only created 1 node
           this.deleteNode(this._ghost_link.target as Class_NodeElement)
           this.drawing_link = false
+          // Sélectionner le nœud fraîchement créé (clic simple sans glisser) :
+          // les branches de création de flux sélectionnent leurs éléments, celle-ci
+          // l'oubliait, laissant le nœud non sélectionné après le dessin.
+          this.purgeSelectionOfElement(false)
+          this.addElementToSelection(this._ghost_link.source)
+          this.application_data.menu_configuration.openConfigMenuElementsNodes()
         }
         else if (this.isMouseOverAnExistingNode() === true) {
           let node_id: string = this._ghost_link?.source.id //in case the loop don't find the hovered node we take the source as default
