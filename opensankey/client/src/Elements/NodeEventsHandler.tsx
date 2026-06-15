@@ -656,6 +656,12 @@ export class NodeEventsHandler {
         target,
         this._node.drawing_area,
       )
+      // Indispensable AVANT le 1er rendu : sans ce drapeau, le ghost_link est
+      // jugé invisible (sa cible est un nœud fantôme masqué → are_source_and_
+      // target_displayed=false) et updateLinksPositions le dé-dessine ; aucun
+      // pointillé n'apparaît pendant le glisser. Le chemin « drag depuis le fond »
+      // le pose déjà ; on s'aligne pour le « drag depuis un nœud ».
+      this._node.drawing_area.drawing_link = true
       // Peuple source._output_links_starting_point[ghost_link.id] pour que le
       // 1er rendu du ghost_link voie son starting_point (sinon drawElements
       // est skip et aucun path n'est tracé pendant le drag initial).
