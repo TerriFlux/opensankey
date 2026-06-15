@@ -686,6 +686,13 @@ export class Class_DrawingArea {
       // avant _sankey.draw() pour que le coin recalculé soit utilisé dès cette frame.
       this.nodePositioning.anchorAbsoluteNodesByCenter()
     }
+    // Mix par nœud : les nœuds marqués 'parametric' (« Ecartement ») se calent sous le
+    // nœud du dessus de leur colonne (un absolu placé par le mode global, ou un
+    // parametric déjà calé). Indépendant du mode global, sauf 'parametric' où
+    // recomputeParametricLayout empile déjà la colonne entière.
+    if (this.sankey.styles_dict['default'].shape_position_type !== 'parametric') {
+      this.nodePositioning.anchorParametricNodesToAbsolute()
+    }
     // Draw grid
     this.drawBackground()
     this.drawGrid()
