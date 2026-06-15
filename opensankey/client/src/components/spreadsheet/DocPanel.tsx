@@ -12,7 +12,7 @@
 // External imports
 import React, { useEffect, useRef, useState } from 'react'
 import {
-  Box, Button, ButtonGroup, Textarea, Portal,
+  Box, Button, Textarea, Portal,
   Menu, MenuButton, MenuList, MenuItem, MenuGroup, MenuDivider
 } from '@chakra-ui/react'
 import { ChevronDownIcon } from '@chakra-ui/icons'
@@ -85,6 +85,11 @@ const tab_btn_style = (active: boolean) => ({
   size: 'xs' as const,
   variant: 'ghost' as const,
   fontWeight: 'normal' as const,
+  // width auto : sans cette surcharge le bouton hérite du width:100% global du thème
+  // (Theme.tsx buttonBase) ; dans une rangée flex « wrap » chaque bouton occuperait alors
+  // toute la largeur et s'empilerait verticalement. On veut une rangée compacte qui ne
+  // passe à la ligne que si la largeur du panneau l'exige.
+  width: 'auto' as const,
   color: active ? 'gray.900' : 'gray.600',
   bg: active ? 'gray.200' : 'transparent',
   _hover: { bg: 'gray.100' }
@@ -253,8 +258,10 @@ export const DocPanel = (
         borderColor='gray.200'
         flex='0 0 auto'
       >
-        {/* Groupe gauche : libellé + sélecteur de position */}
-        <Box display='flex' alignItems='center' gap='0.5rem' flex='0 0 auto'>
+        {/* Groupe gauche : libellé + sélecteur de position. flexWrap : sur panneau étroit
+            (modes édition/côte à côte), le sélecteur de position « À droite du tableur » passe
+            sous le libellé au lieu de déborder à droite hors du panneau. */}
+        <Box display='flex' alignItems='center' flexWrap='wrap' gap='0.25rem 0.5rem' flex='0 1 auto' minWidth={0}>
           <Box fontSize='0.8rem' fontWeight='600' color='gray.700'>Documentation</Box>
           {/* Sélecteur de position de la doc dans la grande zone (masqué en aperçu seul). */}
           {mode !== 'preview' && (
@@ -301,8 +308,12 @@ export const DocPanel = (
             </Menu>
           )}
         </Box>
-        {/* Groupe droit : boutons d'insertion et bascule de mode */}
-        <Box display='flex' alignItems='center' gap='0.4rem' flex='0 0 auto'>
+        {/* Groupe droit : boutons d'insertion et bascule de mode.
+            flex='1 1 auto' + minWidth={0} + flexWrap : le groupe peut rétrécir sous sa largeur
+            de contenu (au lieu de l'ancien flex='0 0 auto' qui forçait sa largeur intrinsèque et
+            poussait « Aperçu » hors du panneau étroit) ; ses enfants (menu « Insérer » + rangée de
+            boutons) s'empilent alors proprement, alignés à droite. */}
+        <Box display='flex' alignItems='center' flexWrap='wrap' justifyContent='flex-end' gap='0.4rem' flex='1 1 auto' minWidth={0}>
           <input
             ref={fileInputRef}
             type='file'
@@ -369,11 +380,16 @@ export const DocPanel = (
               </MenuList>
             </Menu>
           )}
-          <ButtonGroup spacing='0.15rem'>
+          {/* Rangée des modes : Box flex « wrap » (et non un ButtonGroup, qui rend une ligne
+              inline-flex non sécable — c'est ce qui faisait déborder « Aperçu » sur panneau étroit).
+              Les boutons passent à la ligne un par un quand la largeur l'exige ; overflowX='auto'
+              n'est qu'un dernier recours pour un panneau plus étroit qu'un seul bouton (ne contient
+              aucun menu déroulant, donc pas de risque de rognage de popover). */}
+          <Box display='flex' flexWrap='wrap' justifyContent='flex-end' gap='0.15rem' minWidth={0} overflowX='auto'>
             <Button {...tab_btn_style(mode === 'edit')} onClick={() => setMode('edit')}>Édition</Button>
             <Button {...tab_btn_style(mode === 'split')} onClick={() => setMode('split')}>Côte à côte</Button>
             <Button {...tab_btn_style(mode === 'preview')} onClick={() => setMode('preview')}>Aperçu</Button>
-          </ButtonGroup>
+          </Box>
         </Box>
       </Box>
 
