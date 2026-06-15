@@ -372,7 +372,7 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
    * @memberof Class_ApplicationData
    */
   protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
-    super._updateFromJSON(json_object)
+    super._updateFromJSON(json_object, kwargs)
     if (this.drawing_area.id != default_main_sankey_id && (kwargs && kwargs['only_current_view'])) {
       this._views[this.drawing_area.id].json = compressJSONToGzip(DrawingAreaPersistenceOSP.toJSON(this.drawing_area as Class_DrawingAreaOSP, kwargs))
     }
