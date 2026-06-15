@@ -942,8 +942,8 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  public updateFromJSON(json_object: Type_JSON) {
-    this._updateFromJSON(json_object)
+  public updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
+    this._updateFromJSON(json_object, kwargs)
     this._menu_configuration!.updateAllMenuComponents()
   }
 
@@ -962,7 +962,7 @@ export class Class_ApplicationData {
    * @param {Type_JSON} json_object
    * @memberof Class_ApplicationData
    */
-  protected _updateFromJSON(json_object: Type_JSON, _?: Type_JSON) {
+  protected _updateFromJSON(json_object: Type_JSON, kwargs?: Type_JSON) {
     //if (json_object['layout'] !== undefined) {
     const json_layout = json_object as Type_JSON
     const drawing_area_from_layout = this.createNewDrawingArea()
@@ -970,10 +970,16 @@ export class Class_ApplicationData {
     DrawingAreaPersistence.fromJSON(drawing_area_from_layout, json_layout)
     drawing_area_from_layout.sankey.nodes_list.forEach(n => n.setVisible())
     this.file_name = getStringFromJSON(json_layout, 'name_file', this.file_name)
+    // `exclude_scale` : au chargement d'un Excel (réconciliation « garder le layout »),
+    // l'échelle a déjà été calculée par computeScale() sur les nouvelles données ; ne pas
+    // la réécraser avec l'échelle stockée dans le layout. Le chargement d'un fichier de
+    // mise en page séparé (window.sankey.diagram_layout), lui, veut bien appliquer l'échelle.
+    const mode = ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel', 'Views', 'tagLevel', 'addTagLevel', 'removeTagLevel', 'tagNode', 'assignTagNode', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      .filter(m => !(kwargs?.['exclude_scale'] && m === 'scale'))
     updateFrom(
       this.drawing_area,
       drawing_area_from_layout,
-      ['attrDrawingArea', 'scale', 'posNode', 'posFlux', 'attrNode', 'attrFlux', 'attrGeneral', 'addFreeLabel', 'removeFreeLabel', 'attrFreeLabel', 'posFreeLabel', 'Views', 'tagLevel', 'addTagLevel', 'removeTagLevel', 'tagNode', 'assignTagNode', 'tagFlux', 'assignTagFlux', 'tagData', 'icon_catalog', 'styleDA', 'styleNode', 'styleFlux', 'styleFreeLabel']
+      mode
     )
     //}
   }
