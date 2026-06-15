@@ -248,23 +248,44 @@ export const attachSankeyBridge = (
   const reconcileNodeRow = (
     ws: any, r: number, originalNodeCount: number,
     getRowNodes: () => any[], typeTag?: any
-  ): boolean => {
+  ): { structural: boolean, value: boolean } => {
     const idx = r - 1
     const name = cellText(ws, r, NOEUDS_COL.node)
+    let structural = false
+    let value = false
     if (idx < originalNodeCount) {
       const node = getRowNodes()[idx]
-      if (node && name && name !== node.name) {
+      if (!node) {
+        return { structural, value }
+      }
+      if (name && name !== node.name) {
         node.name = name
-        return true
+        structural = true
+      }
+      // Couleur : la cellule affiche getShapeColorToUse() ; on réécrit la couleur propre du nœud
+      // (shape_color) si elle a changé — édition basique, comme le sélecteur de couleur du menu.
+      // (Si la couleur est pilotée par des étiquettes, shape_color reste masquée par la couleur de
+      // tag tant que le « cadenas » couleur n'est pas activé : comportement identique au menu.)
+      const colorText = cellText(ws, r, NOEUDS_COL.color)
+      const curColor = (node.getShapeColorToUse ? node.getShapeColorToUse() : node.shape_color) || ''
+      if (colorText && colorText !== curColor) {
+        node.shape_color = colorText
+        value = true
+      }
+      // Définition / infobulle.
+      const defText = cellText(ws, r, NOEUDS_COL.definitions)
+      if (defText !== (node.tooltip_text || '')) {
+        node.tooltip_text = defText
+        value = true
       }
     } else if (name && !nameToNode()[name]) {
       const node = sankey.addNewNodeWithName(name)
       if (node && typeTag && node.addTag) {
         node.addTag(typeTag)
       }
-      return true
+      structural = true
     }
-    return false
+    return { structural, value }
   }
 
   // Réconcilie une ligne de l'onglet « Noeuds par agrégation » : write-back = renommage des nœuds.
@@ -532,9 +553,9 @@ export const attachSankeyBridge = (
           if (r === 0) {
             return
           }
-          if (reconcileNodeRow(ws, r, originalNodeCount, rowNodes)) {
-            structural = true
-          }
+          const res = reconcileNodeRow(ws, r, originalNodeCount, rowNodes)
+          structural = structural || res.structural
+          value = value || res.value
         })
       } else if (NODE_SHEET_TYPE[sheetId]) {
         // Onglets Produits / Secteurs / Échanges : renommage + création (avec tag de nature).
@@ -544,8 +565,10 @@ export const attachSankeyBridge = (
           if (r === 0) {
             return
           }
-          if (tag && reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag)) {
-            structural = true
+          if (tag) {
+            const res = reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag)
+            structural = structural || res.structural
+            value = value || res.value
           }
         })
       } else if (sheetId === SHEET_ID_NOEUDS_AGG) {

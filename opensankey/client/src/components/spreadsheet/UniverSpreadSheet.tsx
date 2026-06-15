@@ -279,6 +279,12 @@ export const UniverSpreadSheet = (
   const [activeSheetId, setActiveSheetId] = useState<string>('')
   // Colonnes masquées par onglet (indices).
   const [hiddenCols, setHiddenCols] = useState<{ [sheetId: string]: number[] }>({})
+  // Choix EXPLICITES de visibilité de colonne par l'utilisateur (sélecteur « Colonnes »), par onglet :
+  // { [sheetId]: { [col]: hidden } }. Persistés à travers les rebuilds (déclenchés à chaque édition de
+  // la zone de dessin) pour que buildAndApply ne réécrase pas les choix par les règles par défaut.
+  const userColOverridesRef = useRef<{ [sheetId: string]: { [col: number]: boolean } }>({})
+  // Idem pour la visibilité des onglets (sélecteur « Onglets ») : { [sheetId]: hidden }.
+  const userSheetOverridesRef = useRef<{ [sheetId: string]: boolean }>({})
   // Onglets du dernier build (ordre d'affichage) + onglets masqués (ids), pour le sélecteur "Onglets".
   const [sheetsMeta, setSheetsMeta] = useState<Type_SheetMeta[]>([])
   const [hiddenSheets, setHiddenSheets] = useState<string[]>([])
@@ -479,8 +485,16 @@ export const UniverSpreadSheet = (
           const hidden: { [sheetId: string]: number[] } = {}
           Object.keys(built.columns).forEach((sheetId) => {
             hidden[sheetId] = []
+            const overrides = userColOverridesRef.current[sheetId] || {}
             built.columns[sheetId].forEach((c) => {
-              if (!c.mandatory && !c.hasData) {
+              if (c.mandatory) {
+                return
+              }
+              // Choix utilisateur explicite prioritaire ; sinon règle par défaut (vide ou forcedHidden).
+              const shouldHide = c.index in overrides
+                ? overrides[c.index]
+                : (!c.hasData || c.forcedHidden)
+              if (shouldHide) {
                 setColHidden(sheetId, c.index, true)
                 hidden[sheetId].push(c.index)
               }
@@ -500,8 +514,12 @@ export const UniverSpreadSheet = (
           }
           // Masque par défaut les onglets vides (sauf Flux, toujours visible, et sauf l'onglet actif).
           const hiddenSh: string[] = []
+          const sheetOverrides = userSheetOverridesRef.current
           built.sheets.forEach((s) => {
-            const shouldHide = !s.hasData && s.id !== SHEET_ID_FLUX && s.id !== targetActive
+            // Choix utilisateur explicite prioritaire ; sinon défaut (onglet vide masqué). Flux et
+            // l'onglet actif restent toujours visibles (Univer interdit de masquer la feuille active).
+            const wantHide = s.id in sheetOverrides ? sheetOverrides[s.id] : !s.hasData
+            const shouldHide = wantHide && s.id !== SHEET_ID_FLUX && s.id !== targetActive
             setSheetHidden(s.id, shouldHide)
             if (shouldHide) {
               hiddenSh.push(s.id)
@@ -567,6 +585,10 @@ export const UniverSpreadSheet = (
   // Visibilité d'une colonne (Univer + état local), par onglet actif.
   const handleColSet = (col: number, hidden: boolean) => {
     setColHidden(activeSheetId, col, hidden)
+    // Mémorise le choix pour le réappliquer aux rebuilds suivants (édition de la zone de dessin).
+    const sheetOverrides = userColOverridesRef.current[activeSheetId] || {}
+    sheetOverrides[col] = hidden
+    userColOverridesRef.current[activeSheetId] = sheetOverrides
     setHiddenCols((prev) => {
       const cur = new Set(prev[activeSheetId] || [])
       if (hidden) {
@@ -594,6 +616,8 @@ export const UniverSpreadSheet = (
       }
     }
     setSheetHidden(sheetId, hidden)
+    // Mémorise le choix pour le réappliquer aux rebuilds suivants (édition de la zone de dessin).
+    userSheetOverridesRef.current[sheetId] = hidden
     setHiddenSheets((prev) => {
       const cur = new Set(prev)
       if (hidden) {
