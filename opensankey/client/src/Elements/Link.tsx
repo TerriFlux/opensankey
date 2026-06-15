@@ -891,6 +891,16 @@ export class Class_LinkElement extends Class_LinkAttribute {
   ) {
     // Apply parent behavior first
     super.eventDoubleLMBClick(event)
+    // Double-clic sur le tracé du flux → éditer sa valeur inline. Marche aussi
+    // quand le flux est encore en pointillé (sans valeur, donc sans label
+    // affiché) : openInlineEditor force le dessin de l'input. Inutile en mode
+    // structure (pas de notion de valeur).
+    const drawing_area = this.drawing_area
+    if (!drawing_area.editable || drawing_area.type_data == 'structure') return
+    if (!this.is_selected) {
+      drawing_area.addElementToSelection(this)
+    }
+    this._link_draw_value.openInlineEditor()
   }
   /**
    * Deal with simple left Mouse Button (LMB) click on given element
