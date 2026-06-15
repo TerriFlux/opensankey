@@ -1262,22 +1262,15 @@ export abstract class DrawLabelBase {
     input.focus()
     const sel = window.getSelection()
     const range = document.createRange()
-    if (initialValue !== undefined) {
-      // Ultra-shortcut "tape directement sur un élément sélectionné" :
-      // on conserve le nom existant et on insère la touche tapée en fin,
-      // comme si l'utilisateur avait double-cliqué puis tapé la touche.
-      input.textContent = (input.textContent ?? '') + initialValue
-      range.selectNodeContents(input)
-      range.collapse(false)
-      sel?.removeAllRanges()
-      sel?.addRange(range)
-      input.dispatchEvent(new Event('input', { bubbles: true }))
-    } else {
-      // Double-clic : sélectionne tout le contenu (équivalent input.select()).
-      range.selectNodeContents(input)
-      sel?.removeAllRanges()
-      sel?.addRange(range)
-    }
+    // Qu'on entre en édition par double-clic (initialValue === undefined) ou par
+    // frappe directe sur un élément sélectionné (ultra-shortcut #688), on adopte
+    // le même comportement : sélectionner tout le mot existant (équivalent
+    // input.select()), focus au début. La touche tapée sert uniquement à entrer
+    // en édition, elle n'est pas insérée en fin de mot.
+    void initialValue
+    range.selectNodeContents(input)
+    sel?.removeAllRanges()
+    sel?.addRange(range)
   }
 
   public setInputLabelInvisible() {
