@@ -88,7 +88,7 @@ export class Class_MenuConfigOSP extends Class_MenuConfig {
 
   public updateComponentRelatedToLinksData() {
     this.ref_to_menu_config_links_data_updater.current()
-    this.ref_to_spreadsheet.current()
+    this.updateSpreadsheet()
     this.ref_to_menu_contextual_config_links_data_updater.current()
   }
 
