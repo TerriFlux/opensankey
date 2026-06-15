@@ -1969,6 +1969,11 @@ export class Class_DrawingArea {
         // In case we get there still deref ghost link
         this._ghost_link.delete()
         this._ghost_link = null
+        // Reset systématique : la 3e branche (relâché dans le vide) oubliait de
+        // le faire, laissant drawing_link=true et faussant la visibilité des
+        // flux normaux + l'aléa du drag suivant. On le remet à false pour TOUTES
+        // les fins de création de flux.
+        this.drawing_link = false
         this.application_data.menu_configuration.updateAllComponentsRelatedToNodes()
         this.application_data.menu_configuration.updateAllComponentsRelatedToLinks()
       }
