@@ -417,7 +417,9 @@ export const retrieveJSONResults = (
   // Case 1 : Apply extracted layout if present -> contains positions
   if (apply_layout_current_sankey) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(layout_source_json)
+    // L'échelle vient d'être recalculée sur les nouvelles données : ne pas la réécraser
+    // avec celle stockée dans le layout importé.
+    app_data.updateFromJSON(layout_source_json, { exclude_scale: true } as Type_JSON)
     // mfa_problem#222 : updateFromJSON merge les positions sans rejouer
     // afterFromJSON → les nœuds import/export d'échange ne sont ni restylés ni
     // replacés. setTrade(true) réapplique les styles import/export à TOUS les
@@ -426,7 +428,7 @@ export const retrieveJSONResults = (
     app_data.drawing_area.sankey.setTrade(true)
   } else if (JSON_data['layout']) {
     app_data.drawing_area.nodePositioning.computeScale()
-    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON)
+    app_data.updateFromJSON(JSON_data['layout'] as Type_JSON, { exclude_scale: true } as Type_JSON)
     app_data.drawing_area.sankey.setTrade(true)
   } else {
     app_data.drawing_area.nodePositioning.computeAutoSankeyWithToast(true, optimize_crossing, h_spacing, v_spacing, sources_mode, sinks_mode)
