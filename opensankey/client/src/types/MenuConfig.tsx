@@ -855,7 +855,7 @@ export class Class_MenuConfig {
       'updateComponentRelatedToLinksData',
       (_this: Class_MenuConfig) => {
         _this._ref_to_menu_config_links_data_updater.current()
-        _this._ref_to_spreadsheet.current()
+        _this.updateSpreadsheet()
         _this._ref_to_menu_contextual_config_links_data_updater.current()
       }
     )
@@ -922,6 +922,20 @@ export class Class_MenuConfig {
   }
 
   /**
+   * Reconstruit le classeur du Tableur (si l'onglet est ouvert) en DEBOUNCE. Le rebuild
+   * (buildAndApply) dispose+recrée l'unit Univer entier : c'est lourd, et il était appelé
+   * directement à chaque update de nœuds/flux -> grosse latence dans la zone de dessin tableur
+   * ouvert. Un id de process partagé collapse les rafales d'updates en un seul rebuild.
+   * @memberof Class_MenuConfig
+   */
+  public updateSpreadsheet() {
+    this._add_waiting_process(
+      'ref_to_spreadsheet',
+      (_this: Class_MenuConfig) => { _this._ref_to_spreadsheet.current() }
+    )
+  }
+
+  /**
    * Re-render all menus for node config
    * - SankeyNodeEdition
    * - OpenSankeyConfigurationNodesAttributes
@@ -930,7 +944,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToNodes() {
-    this.ref_to_spreadsheet.current()
+    this.updateSpreadsheet()
     this.updateComponentRelatedToNodesSelection()
     this.updateAllComponentsRelatedToNodesConfig()
     this.updateComponentRelatedToStyles()
@@ -959,7 +973,7 @@ export class Class_MenuConfig {
    * @memberof Class_MenuConfig
    */
   public updateAllComponentsRelatedToLinks() {
-    this.ref_to_spreadsheet.current()
+    this.updateSpreadsheet()
     this._ref_to_menu_context_links_updater.current()
     this.updateComponentRelatedToLinksSelection()
     this.updateAllComponentsRelatedToLinksConfig()
