@@ -656,6 +656,20 @@ export abstract class Class_NodeBase extends Class_BaseShape {
     this.position_y = new_top - this.shape_margin_top
   }
 
+  // Full re-fit of the top-left onto the attached-node envelope (grows AND
+  // shrinks, unlike expandToContainAttachedNodes which only grows). The size
+  // stays dynamic (_envelopeSize) — we only move the corner. Called after an
+  // operation that moves the nodes without going through a drag (view switch /
+  // layout apply via updateFrom), where the frame would otherwise keep its old
+  // position and sit offset from its nodes until the user nudges it manually.
+  public reanchorTiedFrame() {
+    if (!this._tied_to_nodes || this._attached_node.length === 0) return
+    const bbox = this._computeEnvelopeBBox(this._attached_node)
+    if (!bbox) return
+    this.position_x = bbox.min_x - this.shape_margin_left
+    this.position_y = bbox.min_y - this.shape_margin_top
+  }
+
   public setDragStartPositions(positions: { [x: string]: [number, number] }) { this._drag_start_pos = positions }
   public getDragStartPositions(): { [x: string]: [number, number] } { return this._drag_start_pos }
   public setDragStartSizes(sizes: { [x: string]: [number, number] }) { this._drag_start_sizes = sizes }
