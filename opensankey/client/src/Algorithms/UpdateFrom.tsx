@@ -1,3 +1,4 @@
+import { Class_NodeBase } from '../Elements/NodeBase'
 import { Class_NodeElement } from '../Elements/Node'
 import { Class_NodeDimension } from '../Elements/NodeDimension'
 import { SankeyPersistence } from '../Persistence/SankeyPersistence'
@@ -842,5 +843,34 @@ export const updateFrom = (
     } else {
       drawing_area.sankey.nodes_list.forEach(node => node.settleCenterAnchor())
     }
+
+    // Re-ancrer les cadres géométriques (nœuds/ZDT tied) sur l'enveloppe de leurs
+    // nœuds attachés. La TAILLE du cadre est dynamique (_envelopeSize) donc déjà
+    // correcte, mais son coin haut-gauche n'est re-fitté que lors d'un drag — après
+    // un changement de vue / import de layout (positions des nœuds modifiées), le
+    // cadre restait à son ancienne position et apparaissait décalé jusqu'à ce qu'on
+    // déplace un nœud ou le cadre. On le recale ici, avant le draw du caller.
+    // Ordre bottom-up : un cadre attaché à d'autres cadres doit attendre que
+    // ceux-ci soient recalés (leur position alimente le bbox de l'englobant).
+    const tied_frames: Class_NodeBase[] = [
+      ...drawing_area.sankey.nodes_list,
+      ...drawing_area.sankey.containers_list,
+    ].filter(el => el.tied_to_nodes && el.attached_node.length > 0)
+    const settled = new Set<Class_NodeBase>()
+    let progressed = true
+    while (progressed && settled.size < tied_frames.length) {
+      progressed = false
+      tied_frames.forEach(frame => {
+        if (settled.has(frame)) return
+        const pending = frame.attached_node.some(n =>
+          n.tied_to_nodes && n.attached_node.length > 0 && !settled.has(n))
+        if (pending) return
+        frame.reanchorTiedFrame()
+        settled.add(frame)
+        progressed = true
+      })
+    }
+    // Repli en cas de cycle d'attachement : recaler ce qui reste une fois.
+    tied_frames.forEach(frame => { if (!settled.has(frame)) frame.reanchorTiedFrame() })
   }
 }
