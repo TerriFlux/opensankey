@@ -938,6 +938,66 @@ export class NodePositioning {
   }
 
   /**
+   * Mix de positionnement PAR NŒUD, indépendant du mode global.
+   *
+   * Les nœuds marqués `absolute` restent placés par le mode global (absolu garde le
+   * centre fixe, proportionnel comprime, etc.) — on n'y touche pas. Les nœuds marqués
+   * `parametric` (« Ecartement ») se recalent verticalement sous le nœud directement
+   * AU-DESSUS d'eux dans leur colonne (`position_u`, ordre `position_v`), à l'écart
+   * constant `shape_position_dy`. Le nœud du dessus peut être un nœud absolu (servant
+   * d'ancre) ou un parametric déjà calé → une pile de parametrics pend sous l'ancre
+   * absolue.
+   *
+   * Le premier nœud d'une colonne, s'il est `parametric`, n'a pas de nœud au-dessus :
+   * il conserve la position que le mode global vient de lui donner (repli
+   * proportionnel/absolu courant).
+   *
+   * À appeler en fin de placement global, AVANT `_sankey.draw()`. À NE PAS appeler en
+   * mode global `parametric` (recomputeParametricLayout empile déjà la colonne entière).
+   *
+   * Exclus : nœuds invisibles, échange, `relative` (collés à un voisin), enfants de
+   * cadre englobant (positionnés par leur container).
+   */
+  public anchorParametricNodesToAbsolute() {
+    const echangeTag = this.drawingArea.sankey.node_taggs_dict['type de noeud']?.tags_dict['echange']
+    const isContainerChild = (n: Class_NodeElement): boolean =>
+      n.dimensions_as_child.some(d => d.container_mode)
+
+    const members = this.drawingArea.sankey.visible_nodes_list.filter(n => {
+      if (!n.is_visible) return false
+      if (echangeTag && n.hasGivenTag(echangeTag)) return false
+      if (n.shape_position_type === 'relative') return false
+      if (isContainerChild(n)) return false
+      return true
+    })
+
+    // Rien à faire si aucune colonne ne contient de nœud parametric.
+    if (!members.some(n => n.shape_position_type === 'parametric')) return
+
+    const columns = new Map<number, Class_NodeElement[]>()
+    members.forEach(n => {
+      const col = columns.get(n.position_u) ?? []
+      col.push(n)
+      columns.set(n.position_u, col)
+    })
+
+    columns.forEach(column => {
+      const sorted = [...column].sort((a, b) => {
+        if (a.position_v !== b.position_v) return a.position_v - b.position_v
+        return a.position_y - b.position_y
+      })
+      let prev_bottom: number | null = null
+      sorted.forEach(node => {
+        if (node.shape_position_type === 'parametric' && prev_bottom !== null) {
+          node.position_y = prev_bottom + (node.shape_position_dy ?? 0)
+          node.applyPosition()
+        }
+        prev_bottom = node.position_y + node.getShapeHeightToUse()
+      })
+    })
+  }
+
+  /**
    * #1231 — Nœuds « libres » éligibles au mode proportionnel : visibles, non-échange,
    * non-relatifs, hors cadres tied. (Filtre commun capture/replacement.)
    */

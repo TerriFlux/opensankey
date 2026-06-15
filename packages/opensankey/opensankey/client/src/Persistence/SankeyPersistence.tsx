@@ -2420,6 +2420,18 @@ export class DrawingAreaPersistence {
       drawing_area.sankey.default_style.shape_position_type = 'absolute'
     }
 
+    // u/v ne sont persistés qu'en mode global parametric (cf. NodeBasePersistence.toJSON) :
+    // un fichier sauvé en mode absolu les recharge donc tous à 0. On les dérive de la
+    // géométrie importée s'ils n'ont jamais été calculés (tous à 0), pour que le mix
+    // par-nœud (« Ecartement ») dispose de colonnes valides dès le chargement, quel que
+    // soit le mode global. Si le JSON les portait (mode parametric), on n'y touche pas.
+    const uv_uncomputed = drawing_area.sankey.visible_nodes_list.length > 0 &&
+      drawing_area.sankey.visible_nodes_list.every(n => n.position_u === 0 && n.position_v === 0)
+    if (uv_uncomputed) {
+      drawing_area.nodePositioning.inferPositionUFromX()
+      drawing_area.nodePositioning.computeParametrization(false)
+    }
+
     // #1231 — Persistance du COUPLE de référence (flux + datatag) du mode %. Le flux est
     // ré-attaché depuis l'attribut `shape_is_reference_flux` ; le datatag de réf est relu ici.
     // Le mode étant absolu au chargement, rien n'est appliqué tant que l'utilisateur ne

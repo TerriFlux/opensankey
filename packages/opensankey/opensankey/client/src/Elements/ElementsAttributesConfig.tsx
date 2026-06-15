@@ -2381,7 +2381,9 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: default_position_type,
     type: (() => default_position_type) as (() => Type_Position),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements (pas drawShape) : changer le mode d'un nœud relance le placement
+    // global, dont anchorParametricNodesToAbsolute qui (re)cale les nœuds « Ecartement ».
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'x',
@@ -2402,7 +2404,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: 200,
     type: (() => 200) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements : l'écart d'un nœud « Ecartement » repositionne ses voisins de colonne.
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'Horizontal',
@@ -2423,7 +2426,8 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
     default: 50,
     type: (() => 50) as (() => number),
     category: 'shape' as const,
-    actions: ['drawShape'] as BaseActionType[],
+    // drawElements : l'écart d'un nœud « Ecartement » repositionne ses voisins de colonne.
+    actions: ['drawElements'] as BaseActionType[],
 
     labels: {
       en: 'Vertical',
