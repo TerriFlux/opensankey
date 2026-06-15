@@ -54,20 +54,24 @@ export const NOEUDS_COL = {
   level: 0,
   node: 1,
   mat_balance: 2,
-  sankey: 3,
-  color: 4,
-  definitions: 5,
-  position_u: 6,
-  position_v: 7
+  color: 3,
+  definitions: 4,
+  position_u: 5,
+  position_v: 6
 }
-export const NOEUDS_CORE_COLS = 8
+export const NOEUDS_CORE_COLS = 7
 
 // Indices de colonnes de l'onglet Etiquettes.
 export const TAGS_COL = { group: 0, type: 1, tags: 2, colors: 3 }
 
 // Métadonnées de colonne pour le sélecteur "Colonnes" (par onglet) : obligatoire = toujours visible
 // (pas dans le sélecteur) ; optionnelle = togglable ; hasData = au moins une valeur non vide.
-export type Type_ColMeta = { index: number, label: string, mandatory: boolean, hasData: boolean }
+export type Type_ColMeta = {
+  index: number, label: string, mandatory: boolean, hasData: boolean,
+  // forcedHidden : colonne optionnelle masquée par défaut MÊME si elle contient des données
+  // (l'utilisateur peut toujours la réafficher via le sélecteur « Colonnes »). Ex. position u/v.
+  forcedHidden: boolean
+}
 export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
 
 // Métadonnées d'onglet pour le sélecteur "Onglets" : id stable, nom affiché, hasData = au moins une
@@ -97,6 +101,10 @@ const NOEUDS_DEFAULTS: { [col: number]: any } = {
   [NOEUDS_COL.position_u]: 0,
   [NOEUDS_COL.position_v]: 0
 }
+
+// Colonnes des onglets Noeuds masquées par défaut même si renseignées : positions u/v ne s'affichent
+// que sur choix explicite de l'utilisateur (sélecteur « Colonnes »).
+const NOEUDS_FORCED_HIDDEN = new Set([NOEUDS_COL.position_u, NOEUDS_COL.position_v])
 
 // Couleurs de référence (excel_formatter.py CATEGORY_COLORS / main colors).
 const COLOR_NODE_MAIN = [0x4F, 0x81, 0xBD]  // #4F81BD (core / nodes header, bleu)
@@ -186,13 +194,14 @@ const columnHasMeaningfulData = (cells: Type_CellData, col: number, defaultVal?:
 /** Métadonnées de colonnes d'un onglet (label + obligatoire + hasData hors valeurs par défaut). */
 const colMeta = (
   headers: string[], cells: Type_CellData, mandatory: Set<number>,
-  defaults: { [col: number]: any } = {}
+  defaults: { [col: number]: any } = {}, forcedHidden: Set<number> = new Set()
 ): Type_ColMeta[] =>
   headers.map((label, index) => ({
     index,
     label,
     mandatory: mandatory.has(index),
-    hasData: columnHasMeaningfulData(cells, index, defaults[index])
+    hasData: columnHasMeaningfulData(cells, index, defaults[index]),
+    forcedHidden: forcedHidden.has(index)
   }))
 
 /**
@@ -408,7 +417,6 @@ const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
   'Niveau d\'agrégation',
   nodeHeaderLabel,
   'Equilibre entrée-sortie',
-  'Affichage sur le diagramme de Sankey',
   'Couleur',
   'Définitions',
   'Colonne u',
@@ -446,7 +454,6 @@ const buildNodeSheetCells = (
       [NOEUDS_COL.level]: { v: lvl, s: rowStyle },
       [NOEUDS_COL.node]: { v: n.name, s: rowStyle },
       [NOEUDS_COL.mat_balance]: { v: '', s: rowStyle },
-      [NOEUDS_COL.sankey]: { v: '', s: rowStyle },
       [NOEUDS_COL.color]: { v: color, s: rowStyle },
       [NOEUDS_COL.definitions]: { v: n.tooltip_text || '', s: rowStyle },
       [NOEUDS_COL.position_u]: { v: n.position_u != null ? num5(n.position_u) : '', s: rowStyle },
@@ -801,10 +808,10 @@ export const buildSankeyWorkbookData = (
 
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
-    [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
-    [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
-    [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
-    [SHEET_ID_ECHANGES]: colMeta(echanges.headers, echanges.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS),
+    [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
+    [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
+    [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
+    [SHEET_ID_ECHANGES]: colMeta(echanges.headers, echanges.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
     [SHEET_ID_NOEUDS_AGG]: colMeta(aggHeaders, aggCells, AGG_MANDATORY),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
     [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY),
