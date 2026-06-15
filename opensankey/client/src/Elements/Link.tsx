@@ -2359,9 +2359,15 @@ export class Class_LinkElement extends Class_LinkAttribute {
   protected get is_value_above_threshold(): boolean {
     if (this.drawing_area.filter_link_value == 0) {
       return true
-    } else {
-      return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
     }
+    // Un flux sans valeur (ghost_link en cours de création au cliquer-glisser,
+    // flux de structure) n'est pas concerné par le filtre de valeur minimale :
+    // Number(null) === 0, donc le seuil le masquerait à tort et le pointillé de
+    // création disparaîtrait dès que le filtre est > 0.
+    if (this.valueCurrent == null) {
+      return true
+    }
+    return Number(this.valueCurrent) >= this.drawing_area.filter_link_value
   }
   public get tooltip_text(): string {
     return this._tooltip_text
