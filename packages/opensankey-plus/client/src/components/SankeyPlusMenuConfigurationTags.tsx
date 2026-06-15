@@ -582,7 +582,7 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
   if (elementTagNameProp == 'level_taggs') title = t('Tags.EditDimensionLevel')
   const variant_table_edit_tag_final = showTagPositionMode ? variant_table_edit_tag + '_pos' : variant_table_edit_tag
 
-  let variant_table_edit_grp = elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'
+  const variant_table_edit_grp = elementTagNameProp == 'data_taggs' ? 'table_edit_grp_tag_data' : 'table_edit_grp_tag_node_link'
   const variant_table_edit_grp_final = showGrpPositionMode ? variant_table_edit_grp + '_pos' : variant_table_edit_grp
 
   const tagSetting = (<WrapperBoxSubSectionMenu new_data={new_data} title={title}>
@@ -732,47 +732,46 @@ const SankeySettingsEditionElementTags: FC<FType_SankeySettingsEditionElementTag
                       </Td>
                       {/* Renommer l'étiquette (nom court = id) */}
                       <Td >
-                        <OSTooltip label={t('Tags.tooltips.nom')}>
-                          <InputGroup variant='menuconfigpanel_option_input_table' >
-                            {/* TODO change with ConfigMenuTextInput */}
-                            <Input
-                              variant='menuconfigpanel_option_input_table'
-                              id={tag.id}
-                              type="text"
-                              value={tag.name}
-                              onChange={
-                                (evt: React.ChangeEvent) => {
-                                  // Change tag name
-                                  tag.name = (evt.target as HTMLInputElement).value
-                                  // Update all related menus
-                                  updateThisAndRelatedComponents()
-                                }
-                              } />
-
-
-                          </InputGroup>
-                        </OSTooltip>
+                        <InputGroup variant='menuconfigpanel_option_input_table' >
+                          {/* TODO change with ConfigMenuTextInput */}
+                          <Input
+                            variant='menuconfigpanel_option_input_table'
+                            id={tag.id}
+                            type="text"
+                            value={tag.name}
+                            onChange={
+                              (evt: React.ChangeEvent) => {
+                                // Change tag name
+                                tag.name = (evt.target as HTMLInputElement).value
+                                // Update all related menus
+                                updateThisAndRelatedComponents()
+                              }
+                            } />
+                        </InputGroup>
                       </Td>
                       {/* Renommer le nom long de l'étiquette (affiché sur le diagramme) */}
                       <Td >
-                        <OSTooltip label={t('Tags.tooltips.nomLong')}>
-                          <InputGroup variant='menuconfigpanel_option_input_table' >
-                            <Input
-                              variant='menuconfigpanel_option_input_table'
-                              id={tag.id + '_long'}
-                              type="text"
-                              value={tag.long_name}
-                              placeholder={tag.name}
-                              onChange={
-                                (evt: React.ChangeEvent) => {
-                                  // Change tag long name (display name on the diagram)
-                                  tag.long_name = (evt.target as HTMLInputElement).value
-                                  // Update all related menus
-                                  updateThisAndRelatedComponents()
-                                }
-                              } />
-                          </InputGroup>
-                        </OSTooltip>
+                        <InputGroup variant='menuconfigpanel_option_input_table' >
+                          <Input
+                            // Champ non-contrôlé (defaultValue + onBlur) : le setter long_name
+                            // appelle update() qui redessine, ce qui en mode contrôlé renvoyait
+                            // le curseur en début de champ à chaque frappe. La key force le
+                            // remontage si long_name change de l'extérieur (reset, etc.).
+                            key={tag.id + '_long_' + tag.long_name}
+                            variant='menuconfigpanel_option_input_table'
+                            id={tag.id + '_long'}
+                            type="text"
+                            defaultValue={tag.long_name}
+                            placeholder={tag.name}
+                            onBlur={
+                              (evt: React.FocusEvent) => {
+                                // Change tag long name (display name on the diagram)
+                                tag.long_name = (evt.target as HTMLInputElement).value
+                                // Update all related menus
+                                updateThisAndRelatedComponents()
+                              }
+                            } />
+                        </InputGroup>
                       </Td>
                       {showTagPositionMode ?
                         /* Boutons monter/descendre l'étiquette */
