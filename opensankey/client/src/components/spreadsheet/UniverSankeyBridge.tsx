@@ -571,6 +571,9 @@ export const attachSankeyBridge = (
     // Comptes d'origine : addNewLink/addNewNode font de l'append -> les index existants restent valides.
     const originalLinkCount = rowLinks().length
     const originalNodeCount = rowNodes().length
+    // Nombre de flux déjà valués AVANT l'édition : si le diagramme était « vierge » (0 ou 1 valeur)
+    // et qu'un paste y dépose plusieurs valeurs, l'échelle doit se caler sur le plus gros flux.
+    const beforeValuedLinkCount = sankey.links_list.filter((l: any) => l.valueCurrent).length
     // Comptes par feuille de nœuds filtrée (Produits/Secteurs/Échanges) AVANT édition.
     const originalNodeCountBySheet: { [sheetId: string]: number } = {}
     Object.keys(NODE_SHEET_TYPE).forEach((sid) => {
@@ -736,7 +739,7 @@ export const attachSankeyBridge = (
     // AUSSI sur le chemin structurel : créer un flux avec sa valeur (première valeur d'un diagramme
     // complet) ne lève que `structural`, jamais `value` -> sinon l'échelle ne se calerait jamais.
     if (structural || value) {
-      drawing_area.updateScaleAtLinkValueSetting()
+      drawing_area.updateScaleAtLinkValueSetting(beforeValuedLinkCount)
     }
     if (structural) {
       redraw(newNodes)

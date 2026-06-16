@@ -1014,11 +1014,17 @@ export class Class_DrawingArea {
     this.draw()
   }
 
-  public updateScaleAtLinkValueSetting() {
+  public updateScaleAtLinkValueSetting(previously_valued_count?: number) {
     // Si une seule valeur existe sur tout le diagramme, elle détermine l'échelle.
     const links = this.sankey.links_list.filter(l => l.valueCurrent)
     if (links.length == 1) {
       this.scale = links[0].valueCurrent! // will redraw everything
+    } else if (links.length > 1 && (previously_valued_count ?? links.length) <= 1) {
+      // Diagramme « vierge » (0 ou 1 flux valué) qui reçoit plusieurs valeurs d'un coup
+      // (copy-paste d'un tableau dans l'onglet Flux) : l'échelle se cale sur le plus gros flux.
+      // Appel sans argument (édition unitaire menu) -> previously_valued_count = links.length
+      // -> condition fausse -> l'échelle n'est pas reclobbérée sur un diagramme déjà peuplé.
+      this.scale = Math.max(...links.map(l => l.valueCurrent!))
     }
   }
 
