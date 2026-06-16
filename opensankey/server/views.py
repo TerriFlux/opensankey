@@ -758,6 +758,21 @@ def conversion_thread(
         # _auto_corrected_node_cells / _auto_corrected_constraint_ids.
         input_options.setdefault('do_coherence_checks', True)
 
+        # #181 : comme le pipeline de réconciliation
+        # (sankeyapplication/server/views.py), les fluxTags portés par les
+        # lignes de l'onglet « Données » d'un fichier MFA sont des annotations
+        # (source, méthode, fiabilité…) qui varient par ligne. Les laisser
+        # fragmenter une arête (orig→dest) en un flux distinct par combo
+        # produisait, à l'ouverture, des liens parallèles « fantômes » sans
+        # données doublant le flux réconcilié, et faisait échouer les références
+        # non-taguées des onglets Contraintes/Min-Max (« Could not find or
+        # create specified flux »). On rejoint la convention de la
+        # réconciliation : un seul flux par arête, les annotations restant
+        # portées par les Data. setdefault => un appelant peut toujours
+        # réactiver explicitement le découpage (split_flux_by_fluxtags=True).
+        if input_format == 'excel':
+            input_options.setdefault('split_flux_by_fluxtags', False)
+
         # Charger avec les options d'entrée
         trace.logger.info("📖 Lecture du fichier source...")
         t_read_start = perf_counter()
