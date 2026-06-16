@@ -296,6 +296,10 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
       app_data.drawing_area.sankey.draw()
     }
     app_data.drawing_area.legend.draw()
+    // Le tableur (matrices TES/TER en mode valeur) affiche valueCurrent, qui suit le type de
+    // données (donnée/résultat). Reconstruire le classeur pour que la bascule s'y répercute
+    // sans avoir à fermer/rouvrir le tableur. No-op si le tableur n'est pas ouvert.
+    app_data.menu_configuration.ref_to_spreadsheet?.current()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
   // #116 — mode MFA : on traite le diagramme comme s'il avait des résultats même

@@ -174,6 +174,12 @@ export class Class_MenuConfig {
   // Réglage de session (non persisté).
   protected _spreadsheet_placement_mode: 'auto' | 'none' | 'increment' = 'auto'
 
+  // Affichage des matrices de flux (onglets TES/TER) du tableur :
+  //  - 'cross' : 'x' dès qu'un flux origine→destination existe (vue structurelle pure)
+  //  - 'value' : valeur du flux pour le data_type sélectionné (sinon 'x' si le flux existe)
+  // Réglage de session (non persisté).
+  protected _spreadsheet_matrix_mode: 'cross' | 'value' = 'cross'
+
   /**
    * Dict containing theme of menu according to _type_menu_configuration_selected & elements configurable
    *
@@ -1483,6 +1489,9 @@ export class Class_MenuConfig {
 
   public get spreadsheet_placement_mode() { return this._spreadsheet_placement_mode }
   public set spreadsheet_placement_mode(_: 'auto' | 'none' | 'increment') { this._spreadsheet_placement_mode = _ }
+
+  public get spreadsheet_matrix_mode() { return this._spreadsheet_matrix_mode }
+  public set spreadsheet_matrix_mode(_: 'cross' | 'value') { this._spreadsheet_matrix_mode = _ }
 
   public get type_menu_configuration_selected() { return this._type_menu_configuration_selected }
   public set type_menu_configuration_selected(value) { this._type_menu_configuration_selected = value }

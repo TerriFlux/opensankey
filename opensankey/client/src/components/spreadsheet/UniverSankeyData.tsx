@@ -594,17 +594,25 @@ const makeNodeSheet = (
 // Séparateur d'ids de nœuds pour la clé du dictionnaire de flux (improbable dans un id).
 const NODE_KEY_SEP = ' '
 
+/** Mode d'affichage des cellules de matrice TES/TER (cf. MenuConfig.spreadsheet_matrix_mode). */
+export type Type_MatrixMode = 'cross' | 'value'
+
 /**
- * Étiquette d'une cellule de matrice : valeur réconciliée (sinon saisie) du flux, ou 'x' si le flux
- * existe sans valeur (topologie), ou '' s'il n'y a pas de flux. Aligné sur `_createMatrixFromFlux`
- * de SEP (valeur si `with_values`, sinon 'x').
+ * Étiquette d'une cellule de matrice, selon `mode` :
+ *  - 'cross' : 'x' dès qu'un flux origine→destination existe (vue structurelle pure), '' sinon.
+ *  - 'value' : valeur AFFICHÉE du flux = `valueCurrent`, qui suit le type de données du diagramme
+ *    (`drawing_area.type_data` : donnée vs résultat) ET les data_tags sélectionnés ; 'x' si le flux
+ *    existe sans valeur pour cet état, '' sinon.
+ * Aligné sur `_createMatrixFromFlux` de SEP (valeur si `with_values`, sinon 'x').
  */
-const fluxCellLabel = (link: any): string | number => {
+const fluxCellLabel = (link: any, mode: Type_MatrixMode): string | number => {
   if (!link) {
     return ''
   }
-  const v = link.value
-  const num = v ? (v.valueResult != null ? v.valueResult : v.valueData) : null
+  if (mode === 'cross') {
+    return 'x'
+  }
+  const num = link.valueCurrent
   return num != null ? num5(num) : 'x'
 }
 
@@ -637,7 +645,8 @@ const buildFluxMap = (app_data: Class_ApplicationData, onlyVisible: boolean): Ma
  */
 const writeMatrixBlock = (
   cells: Type_CellData, startRow: number, cornerLabel: string,
-  rowNodes: any[], colNodes: any[], fluxMap: Map<string, any>, flip: boolean
+  rowNodes: any[], colNodes: any[], fluxMap: Map<string, any>, flip: boolean,
+  mode: Type_MatrixMode
 ): number => {
   const header: { [col: number]: Type_Cell } = { 0: { v: cornerLabel, s: headerStyle(HEX_CORE) } }
   colNodes.forEach((c: any, j: number) => {
@@ -648,7 +657,7 @@ const writeMatrixBlock = (
     const row: { [col: number]: Type_Cell } = { 0: { v: rn.name, s: headerStyle(HEX_CORE) } }
     colNodes.forEach((cn: any, j: number) => {
       const key = flip ? (cn.id + NODE_KEY_SEP + rn.id) : (rn.id + NODE_KEY_SEP + cn.id)
-      row[j + 1] = { v: fluxCellLabel(fluxMap.get(key)) }
+      row[j + 1] = { v: fluxCellLabel(fluxMap.get(key), mode) }
     })
     cells[startRow + 1 + i] = row
   })
@@ -731,10 +740,12 @@ export const buildFluxMatrixSheets = (
 ): { tes: { sheet: any, hasData: boolean }, ter: { sheet: any, hasData: boolean } } => {
   const nodes = tesMatrixNodes(app_data, onlyVisible)
   const fluxMap = buildFluxMap(app_data, onlyVisible)
+  // Mode d'affichage des cellules (croix structurelle vs valeur du data_type courant).
+  const mode: Type_MatrixMode = app_data.menu_configuration.spreadsheet_matrix_mode
 
   // --- TES : matrice IO (origines en lignes, destinations en colonnes) ---------------------------
   const tesCells: Type_CellData = {}
-  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false)
+  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false, mode)
   const tesSheet = makeMatrixSheet(
     SHEET_ID_TES, 'TES (matrice IO)', tesCells, nodes.length + 1,
     ['', ...nodes.map((n: any) => n.name)], [0], nodes.length
@@ -746,10 +757,10 @@ export const buildFluxMatrixSheets = (
 
   const terCells: Type_CellData = {}
   // Bloc 1 « Ressources » : flux secteur→produit (produits lignes, secteurs colonnes, flip).
-  writeMatrixBlock(terCells, 0, 'Ressources (secteurs → produits)', products, sectors, fluxMap, true)
+  writeMatrixBlock(terCells, 0, 'Ressources (secteurs → produits)', products, sectors, fluxMap, true, mode)
   // Ligne vide de séparation, puis bloc 2 « Emplois » : flux produit→secteur.
   const afterBlock2 = writeMatrixBlock(
-    terCells, block2HeaderRow, 'Emplois (produits → secteurs)', products, sectors, fluxMap, false)
+    terCells, block2HeaderRow, 'Emplois (produits → secteurs)', products, sectors, fluxMap, false, mode)
   const terSheet = makeMatrixSheet(
     SHEET_ID_TER, 'TER (emplois-ressources)', terCells, sectors.length + 1,
     ['', ...sectors.map((n: any) => n.name)], [0, block2HeaderRow], afterBlock2
