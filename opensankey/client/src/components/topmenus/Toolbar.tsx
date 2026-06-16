@@ -281,9 +281,20 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
 
-  const redrawNodeLinkLegend = () => {
+  // #665 — `relayout=true` relance le PLACEMENT des nœuds (écartement par nœud,
+  // droiture des flux) et pas seulement le tracé. Un changement de type de données
+  // affichées (Valeurs/Structure/…) modifie les épaisseurs et la topologie visible :
+  // sans ce re-placement, les positions restent figées jusqu'au prochain changement de
+  // dataTag (qui, lui, passe par drawing_area.draw → drawElements). On reproduit ici le
+  // même `drawElements` (passes de positionnement + enforceStraightLinks) pour que la
+  // mise en page suive la bascule de type de données, hors mode absolu seul.
+  const redrawNodeLinkLegend = (relayout = false) => {
     app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-    app_data.drawing_area.sankey.draw()
+    if (relayout) {
+      app_data.drawing_area.drawElements()
+    } else {
+      app_data.drawing_area.sankey.draw()
+    }
     app_data.drawing_area.legend.draw()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
@@ -312,7 +323,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
             app_data.drawing_area.interval_display = 'structure'
           }
           setCount(a => a + 1)
-          redrawNodeLinkLegend()
+          redrawNodeLinkLegend(true)
         }}>
         <option key='structure' value='structure' >{t('Banner.structure')}</option>
         {has_results ? <>
@@ -333,7 +344,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           onChange={(evt: React.ChangeEvent<HTMLSelectElement>) => {
             app_data.drawing_area.interval_display = evt.target.value as 'structure' | 'free_value' | 'free_interval'
             setCount(a => a + 1)
-            redrawNodeLinkLegend()
+            redrawNodeLinkLegend(true)
           }}>
           <option key='none' value='structure' >{t('Banner.structure')}</option>
           <option key='free_interval' value='free_interval' >{t('Banner.free_interval')}</option>
