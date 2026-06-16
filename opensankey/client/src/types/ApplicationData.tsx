@@ -815,16 +815,14 @@ export class Class_ApplicationData {
     this._fromJSON(json_object, kwargs)
     // Post processing & menu updating
     this._afterFromJSON()
-    // Le « filtre vue » est un état d'exploration transitoire, pas un état persistant
-    // du diagramme : OFF au chargement (le fichier s'ouvre normal, l'utilisateur active
-    // le filtre à la main). view_mode reste persisté en JSON mais réinitialisé ici.
-    // IMPORTANT : si le fichier a été sauvé filtre actif, la visibilité a pu être
-    // calculée/cachée avec le filtre ON ; remettre view_mode=false ne suffit pas, il
-    // faut INVALIDER les caches (node_tags_fingerprint + visibilité) sinon des nœuds
-    // restent cachés au chargement.
-    const had_view_mode = this._drawing_area.sankey.view_taggs_list.some(t => t.view_mode)
-    this._drawing_area.sankey.view_taggs_list.forEach(t => { t.view_mode = false })
-    if (had_view_mode) {
+    // Le « filtre vue » fait partie de l'état persistant du diagramme : s'il était actif
+    // à l'enregistrement (œil ON / view_mode), il est RESTAURÉ tel quel à l'ouverture pour
+    // que le sous-ensemble curé de la vue s'affiche sans réintervention manuelle.
+    // view_mode (et activated) sont déjà désérialisés par Class_ViewTagGroup ; on se contente
+    // d'INVALIDER les caches (node_tags_fingerprint + visibilité) quand le filtre est actif
+    // pour qu'ils soient recalculés AVEC le filtre — sinon la visibilité reste figée sur un
+    // cache périmé et des nœuds de la vue resteraient masqués au chargement.
+    if (this._drawing_area.sankey.view_mode_active) {
       this._drawing_area.sankey.nodeTagsUpdated()
       this._drawing_area.sankey.nodes_list.forEach(n => n.updateVisibilityFingerprint())
     }
@@ -862,7 +860,10 @@ export class Class_ApplicationData {
     const imgs = json_object['documentation_images']
     this._documentation_images = (imgs && typeof imgs === 'object') ? imgs as { [id: string]: string } : {}
     const mz = json_object['main_zone']
-    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
+    // Garde défensive : menu_configuration est créé via un hook React (useToast) ; si _fromJSON
+    // s'exécute avant son initialisation, l'appel jetait et avortait tout le chargement (et donc
+    // l'application du filtre de vue). Le `?.` saute proprement ce cas (cf. ligne ~608).
+    if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
   }
 
 
