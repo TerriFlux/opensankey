@@ -4,6 +4,14 @@
 
 set -e
 
+# --- Shared-deploy umask ---
+# Ce dossier est deploye a la fois par ce script (utilisateur ubuntu) et par le
+# job CI `dev_opensankey` (utilisateur gitlab-runner). umask 002 rend chaque
+# fichier cree group-writable : combine au groupe partage `deploy` + setgid sur
+# les repertoires, l'autre utilisateur peut ecraser les artefacts (sinon EACCES
+# au build : craco unlink build/, pip wheel sur __init__.py, etc.).
+umask 002
+
 # --- Parse argument ---
 ENV="${1:-dev}"
 if [[ "$ENV" != "dev" && "$ENV" != "test" && "$ENV" != "prod" ]]; then
