@@ -469,6 +469,16 @@ export const UniverSpreadSheet = (
       const buildAndApply = () => {
         isSyncing.current = true
         try {
+          // Source de vérité de l'état d'affichage = sankey.spreadsheet_state (persisté par
+          // diagramme, cf. SankeyPersistence). On y branche DIRECTEMENT les refs d'overrides :
+          // toute modif via les sélecteurs « Onglets »/« Colonnes » écrit alors dans le modèle,
+          // donc sauvegardée au JSON. Lecture LIVE (reset()/changement de vue remplacent
+          // app_data.drawing_area.sankey par une nouvelle instance).
+          const sankeyState = app_data.drawing_area.sankey.spreadsheet_state
+          if (!sankeyState.col_overrides) sankeyState.col_overrides = {}
+          if (!sankeyState.sheet_overrides) sankeyState.sheet_overrides = {}
+          userColOverridesRef.current = sankeyState.col_overrides
+          userSheetOverridesRef.current = sankeyState.sheet_overrides
           let keepActive: string | null = null
           const existing = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           if (existing) {
@@ -508,7 +518,8 @@ export const UniverSpreadSheet = (
           // AVANT de masquer les onglets vides (Univer interdit de masquer la feuille active) et
           // APRÈS les opérations par-feuille (hide colonnes/freeze) qui laissent sinon active la
           // dernière feuille traitée -> l'onglet changeait au moindre rebuild.
-          const targetActive = keepActive || SHEET_ID_FLUX
+          // À la réouverture (keepActive null), on restaure l'onglet persisté ; sinon Flux par défaut.
+          const targetActive = keepActive || sankeyState.active_sheet || SHEET_ID_FLUX
           if (wb && typeof wb.setActiveSheet === 'function') {
             try { wb.setActiveSheet(targetActive) } catch (e) { /* feuille absente */ }
           }
@@ -529,7 +540,9 @@ export const UniverSpreadSheet = (
           const wbA = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           const asNow = wbA && wbA.getActiveSheet && wbA.getActiveSheet()
           if (asNow && asNow.getSheetId) {
-            setActiveSheetId(asNow.getSheetId())
+            const sid = asNow.getSheetId()
+            setActiveSheetId(sid)
+            sankeyState.active_sheet = sid
           }
           syncFilterState()
         } finally {
@@ -550,7 +563,12 @@ export const UniverSpreadSheet = (
         const wb = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
         const as = wb && wb.getActiveSheet && wb.getActiveSheet()
         if (as && as.getSheetId) {
-          setActiveSheetId(as.getSheetId())
+          const sid = as.getSheetId()
+          setActiveSheetId(sid)
+          // Persiste l'onglet courant (sauf pendant un rebuild, où buildAndApply gère active_sheet).
+          if (!isSyncing.current) {
+            app_data.drawing_area.sankey.spreadsheet_state.active_sheet = sid
+          }
         }
         syncFilterState()
       })

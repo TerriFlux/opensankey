@@ -88,6 +88,18 @@ export type Type_StockChainingConstraint = {
   traduction: string | null,
 }
 
+// État d'affichage du tableur (UniverSpreadSheet) persisté par diagramme :
+//   - active_sheet : onglet sélectionné à la réouverture (id Univer, ex. SHEET_ID_FLUX) ;
+//   - sheet_overrides : choix explicites de visibilité d'onglet { [sheetId]: hidden } ;
+//   - col_overrides : choix explicites de visibilité de colonne { [sheetId]: { [colIndex]: hidden } }.
+// Tout est optionnel/additif : absent des anciens fichiers -> comportement par défaut (onglets vides
+// masqués, colonnes par défaut, onglet Flux actif).
+export type Type_SpreadsheetState = {
+  active_sheet?: string,
+  sheet_overrides?: { [sheetId: string]: boolean },
+  col_overrides?: { [sheetId: string]: { [col: number]: boolean } },
+}
+
 export class Class_Sankey {
   public drawing_area: Class_DrawingArea
 
@@ -132,6 +144,9 @@ export class Class_Sankey {
   // shared with the Excel parser and edited from the spreadsheet tabs.
   private _ratio_stock_flux_constraints: Type_RatioStockFluxConstraint[] = []
   private _stock_chaining_constraints: Type_StockChainingConstraint[] = []
+  // État d'affichage du tableur Univer (onglet actif, onglets/colonnes masqués), persisté par
+  // diagramme. Pure préférence d'UI (n'affecte pas le modèle/calcul). Voir Type_SpreadsheetState.
+  private _spreadsheet_state: Type_SpreadsheetState = {}
 
   public normalised_link?: Class_LinkElement
 
@@ -150,6 +165,7 @@ export class Class_Sankey {
     this._ratio_flux_constraints = []
     this._ratio_stock_flux_constraints = []
     this._stock_chaining_constraints = []
+    this._spreadsheet_state = {}
 
     this._styles[default_style_id] = this.createNewElementStyle(default_style_id, default_style_name, false)
     base_styles.forEach(style_id => this.create_internal_style(style_id, elementStyleConfigs))
@@ -181,6 +197,14 @@ export class Class_Sankey {
 
   public set stock_chaining_constraints(_: Type_StockChainingConstraint[]) {
     this._stock_chaining_constraints = _ ?? []
+  }
+
+  public get spreadsheet_state(): Type_SpreadsheetState {
+    return this._spreadsheet_state
+  }
+
+  public set spreadsheet_state(_: Type_SpreadsheetState) {
+    this._spreadsheet_state = _ ?? {}
   }
 
   public delete() {
