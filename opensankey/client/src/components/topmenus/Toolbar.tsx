@@ -368,14 +368,6 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
               // Le toggle change la liste des flux visibles → relancer une mise en
               // page automatique (mêmes paramètres que le bouton « Mise en page »).
               const drawing_area = app_data.drawing_area
-              // Stabiliser la visibilité AVANT le calcul (2 passes de is_visible, comme
-              // le filtre vue / le chargement) : le getter a un cache à fingerprint qui
-              // ne se fige qu'à la seconde lecture. Sans ça, computeAutoSankey tourne sur
-              // une topologie à demi figée et donne un placement différent (et faux) du
-              // bouton « Mise en page » du menu.
-              drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-              drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
-              drawing_area.sankey.nodes_list.forEach(n => { void n.is_visible })
               const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
               const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
               drawing_area.nodePositioning.computeAutoSankeyWithToast(
