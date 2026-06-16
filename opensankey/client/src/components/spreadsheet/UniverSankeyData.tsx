@@ -255,6 +255,12 @@ const num5 = (x: any): any =>
     ? (Math.abs(x) < NUM_DISPLAY_ZERO_EPS ? 0 : Number(x.toPrecision(5)))
     : x
 
+// Incertitude relative par défaut, en POURCENT. Réplique du fallback solveur (MFAProblem/SEP :
+// sigma = valeur · CONST.DEFAULT_SIGMA_RELATIVE = 0.1 quand aucune incertitude n'est renseignée).
+// Utilisée UNIQUEMENT pour l'onglet « Analyse des résultats » (afficher l'incertitude/l'écart σ
+// effectivement utilisés par la réconciliation), PAS pour l'onglet Flux qui reste vide si non saisi.
+const DEFAULT_UNCERT_PERCENT = 10
+
 /**
  * True si la colonne a au moins une valeur "significative" : non vide ET (si un défaut est fourni)
  * différente de ce défaut. Sert au masquage par défaut (colonnes vides ou tout-à-défaut).
@@ -851,8 +857,13 @@ export const buildSankeyWorkbookData = (
     }
     const delta = (vResult != null && vData != null) ? vResult - vData : null
     // Écart en nombre d'écarts-types de l'entrée : |delta| / (incertitude relative · |valeur entrée|).
-    // data_uncertainty est saisie en pourcent (menu Flux, unité %) -> /100. Vide si non calculable.
-    const uncPrct = v ? v.data_uncertainty : null
+    // data_uncertainty est saisie en pourcent (menu Flux, unité %) -> /100. Incertitude EFFECTIVE :
+    // valeur saisie, sinon défaut 10 % dès qu'il y a une valeur d'entrée — c'est ce que le solveur
+    // applique réellement (sigma = valeur · DEFAULT_SIGMA_RELATIVE). Sans ce repli, l'analyse afficherait
+    // une incertitude / un écart σ vides alors que la réconciliation a bel et bien déplacé la valeur.
+    const uncPrct = (v && v.data_uncertainty != null)
+      ? v.data_uncertainty
+      : (vData != null ? DEFAULT_UNCERT_PERCENT : null)
     let nbSigma: number | null = null
     if (delta != null && uncPrct != null && uncPrct > 0 && vData != null && vData !== 0) {
       const sigmaAbs = (uncPrct / 100) * Math.abs(vData)
