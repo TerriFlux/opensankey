@@ -1672,8 +1672,8 @@ export const BASE_LABEL_CONFIG = {
   } satisfies AttributeConfig<number>,
 
   in_out_display_mode: {
-    default: 'both' as 'both' | 'in' | 'out',
-    type: (() => 'both') as (() => 'both' | 'in' | 'out'),
+    default: 'in' as 'both' | 'in' | 'out',
+    type: (() => 'in') as (() => 'both' | 'in' | 'out'),
     category: 'value_label' as const,
     actions: ['drawValueLabel'] as BaseActionType[],
     labels: {
