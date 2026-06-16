@@ -19,6 +19,12 @@ type Type_WorkbookData = any
 
 // Identifiants stables des feuilles (utilisés aussi par le write-back).
 export const SHEET_ID_FLUX = 'sheet-flux'
+export const SHEET_ID_ANALYSIS = 'sheet-analysis'
+// Matrices de flux (réplique SEP) : TES = matrice IO (nœuds × nœuds), TER = table emplois-ressources
+// (produits × secteurs, double matrice ressources/emplois). Éditables : cocher/décocher une cellule
+// crée/supprime le flux origine→destination (write-back dans UniverSankeyBridge).
+export const SHEET_ID_TES = 'sheet-tes'
+export const SHEET_ID_TER = 'sheet-ter'
 export const SHEET_ID_NOEUDS = 'sheet-noeuds'
 export const SHEET_ID_TAGS = 'sheet-tags'
 export const SHEET_ID_DATA = 'sheet-data'
@@ -126,6 +132,11 @@ const COL_W_MIN = 60   // px : largeur plancher (colonnes courtes type Coef/Min/
 const COL_W_MAX = 240  // px : plafond (au-delà, le contenu est tronqué et lisible au survol)
 const COL_W_CHAR = 7   // px : largeur moyenne d'un caractère pour la police par défaut Univer
 const COL_W_PAD = 16   // px : marge interne (gauche + droite) de la cellule
+// Colonnes à en-tête pivoté (vertical) : largeur calée sur les nombres (courts), pas sur le label.
+const COL_W_VERTICAL_MIN = 32 // px : plancher d'une colonne numérique à en-tête vertical
+// Hauteur de la ligne d'en-tête quand des labels sont pivotés à 90° : ~longueur du plus long label.
+const HEADER_H_VERTICAL_MIN = 90  // px
+const HEADER_H_VERTICAL_MAX = 240 // px
 
 const autoColumnWidths = (
   cellData: Type_CellData, columnCount: number
@@ -150,6 +161,73 @@ const autoColumnWidths = (
   return out
 }
 
+/**
+ * Indices des colonnes dont TOUTES les cellules de données (hors en-tête) sont numériques (ou vides),
+ * avec au moins un nombre. Sert à pivoter l'en-tête à 90° et à resserrer la largeur : un en-tête long
+ * (« Borne inférieure non-réconciliée ») au-dessus de nombres courts gaspille beaucoup de largeur.
+ */
+const numericOnlyColumns = (cells: Type_CellData, columnCount: number): Set<number> => {
+  const out = new Set<number>()
+  for (let col = 0; col < columnCount; col++) {
+    let hasNumber = false
+    let allNumeric = true
+    for (const rowKey in cells) {
+      const r = Number(rowKey)
+      if (r === 0) {
+        continue
+      }
+      const v = cells[r][col] ? cells[r][col].v : undefined
+      if (v === undefined || v === null || v === '') {
+        continue
+      }
+      if (typeof v === 'number') {
+        hasNumber = true
+      } else {
+        allNumeric = false
+        break
+      }
+    }
+    if (hasNumber && allNumeric) {
+      out.add(col)
+    }
+  }
+  return out
+}
+
+/**
+ * Largeurs de colonnes comme `autoColumnWidths`, mais pour les colonnes à en-tête vertical la largeur
+ * est calculée sur les DONNÉES seules (l'en-tête pivoté n'impose plus sa longueur à la colonne).
+ */
+const columnWidthsWithVerticalHeaders = (
+  cells: Type_CellData, columnCount: number, verticalCols: Set<number>
+): { [col: number]: { w: number } } => {
+  const out = autoColumnWidths(cells, columnCount)
+  verticalCols.forEach((col) => {
+    let maxLen = 0
+    for (const rowKey in cells) {
+      const r = Number(rowKey)
+      if (r === 0) {
+        continue
+      }
+      const v = cells[r][col] ? cells[r][col].v : undefined
+      const len = (v === undefined || v === null) ? 0 : String(v).length
+      if (len > maxLen) {
+        maxLen = len
+      }
+    }
+    out[col] = { w: Math.min(COL_W_MAX, Math.max(COL_W_VERTICAL_MIN, maxLen * COL_W_CHAR + COL_W_PAD)) }
+  })
+  return out
+}
+
+/** Hauteur d'en-tête nécessaire pour afficher les labels pivotés `verticalCols` (lecture verticale). */
+const verticalHeaderHeight = (headers: string[], verticalCols: Set<number>): number => {
+  let maxLabel = 0
+  verticalCols.forEach((c) => { maxLabel = Math.max(maxLabel, (headers[c] || '').length) })
+  const h = maxLabel * COL_W_CHAR + COL_W_PAD
+  return Math.min(HEADER_H_VERTICAL_MAX, Math.max(HEADER_H_VERTICAL_MIN, h))
+}
+
 const toHex = (rgb: number[]): string =>
   '#' + rgb.map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')
 
@@ -168,6 +246,11 @@ const levelStyle = (t: number) => ({ bg: { rgb: blendBlue(t) } })
 
 /** Affichage : limite un nombre à 5 chiffres significatifs ; '' et non-nombres inchangés. */
 const num5 = (x: any): any => (typeof x === 'number' && isFinite(x)) ? Number(x.toPrecision(5)) : x
+
+// Format de nombre Univer « pourcentage littéral » : suffixe « % » SANS multiplier par 100 (la valeur
+// stockée est déjà la magnitude en pourcent, ex. 10 -> « 10% »). `"%"` entre guillemets = littéral
+// (le token nu `%` multiplierait par 100). Style appliqué aux cellules de données (pas à l'en-tête).
+const PERCENT_CELL_STYLE = { n: { pattern: '0.##"%"' } }
 
 /**
  * True si la colonne a au moins une valeur "significative" : non vide ET (si un défaut est fourni)
@@ -497,6 +580,178 @@ const makeNodeSheet = (
   return { sheet, headers, cells }
 }
 
+// ===== Matrices de flux (TES / TER), réplique de SankeyExcelParser.xl_write_matrix_sheet ==========
+
+// Séparateur d'ids de nœuds pour la clé du dictionnaire de flux (improbable dans un id).
+const NODE_KEY_SEP = ' '
+
+/**
+ * Étiquette d'une cellule de matrice : valeur réconciliée (sinon saisie) du flux, ou 'x' si le flux
+ * existe sans valeur (topologie), ou '' s'il n'y a pas de flux. Aligné sur `_createMatrixFromFlux`
+ * de SEP (valeur si `with_values`, sinon 'x').
+ */
+const fluxCellLabel = (link: any): string | number => {
+  if (!link) {
+    return ''
+  }
+  const v = link.value
+  const num = v ? (v.valueResult != null ? v.valueResult : v.valueData) : null
+  return num != null ? num5(num) : 'x'
+}
+
+/** Liste ordonnée des nœuds (ordre de l'onglet Noeuds), dédoublonnée (un nœud multi-parent = 1 fois). */
+const orderedUniqueNodes = (app_data: Class_ApplicationData, onlyVisible: boolean): any[] => {
+  const seen = new Set<string>()
+  const out: any[] = []
+  noeudsRowEntries(app_data, onlyVisible).forEach((e) => {
+    if (!seen.has(e.node.id)) {
+      seen.add(e.node.id)
+      out.push(e.node)
+    }
+  })
+  return out
+}
+
+/** Dictionnaire flux : clé `source.id\0target.id` -> lien (même filtrage onlyVisible que l'onglet Flux). */
+const buildFluxMap = (app_data: Class_ApplicationData, onlyVisible: boolean): Map<string, any> => {
+  const m = new Map<string, any>()
+  fluxRowLinks(app_data, onlyVisible).forEach((l: any) => {
+    m.set(l.source.id + NODE_KEY_SEP + l.target.id, l)
+  })
+  return m
+}
+
+/**
+ * Écrit un bloc-matrice dans `cells` à partir de `startRow` : ligne d'en-tête (coin + noms de colonnes
+ * pivotés à 90°) puis une ligne par nœud de `rowNodes` (nom en col 0 + cellules de flux). `flip=false`
+ * -> cellule = flux rowNode→colNode ; `flip=true` -> flux colNode→rowNode. Renvoie la 1re ligne libre.
+ */
+const writeMatrixBlock = (
+  cells: Type_CellData, startRow: number, cornerLabel: string,
+  rowNodes: any[], colNodes: any[], fluxMap: Map<string, any>, flip: boolean
+): number => {
+  const header: { [col: number]: Type_Cell } = { 0: { v: cornerLabel, s: headerStyle(HEX_CORE) } }
+  colNodes.forEach((c: any, j: number) => {
+    header[j + 1] = { v: c.name, s: headerStyle(HEX_CORE, true) }
+  })
+  cells[startRow] = header
+  rowNodes.forEach((rn: any, i: number) => {
+    const row: { [col: number]: Type_Cell } = { 0: { v: rn.name, s: headerStyle(HEX_CORE) } }
+    colNodes.forEach((cn: any, j: number) => {
+      const key = flip ? (cn.id + NODE_KEY_SEP + rn.id) : (rn.id + NODE_KEY_SEP + cn.id)
+      row[j + 1] = { v: fluxCellLabel(fluxMap.get(key)) }
+    })
+    cells[startRow + 1 + i] = row
+  })
+  return startRow + 1 + rowNodes.length
+}
+
+/** Objet feuille Univer d'une matrice (en-têtes de colonnes verticaux + largeurs resserrées). */
+const makeMatrixSheet = (
+  id: string, name: string, cells: Type_CellData, colCount: number,
+  colHeaderNames: string[], headerRows: number[], dataRowCount: number
+): any => {
+  const verticalCols = new Set<number>()
+  for (let c = 1; c < colCount; c++) {
+    verticalCols.add(c)
+  }
+  const columnData = columnWidthsWithVerticalHeaders(cells, Math.max(1, colCount), verticalCols)
+  const headerH = verticalCols.size > 0 ? verticalHeaderHeight(colHeaderNames, verticalCols) : undefined
+  const rowData: { [row: number]: { h: number } } = {}
+  if (headerH) {
+    headerRows.forEach((r) => { rowData[r] = { h: headerH } })
+  }
+  return {
+    id,
+    name,
+    cellData: cells,
+    columnData,
+    ...(Object.keys(rowData).length > 0 ? { rowData } : {}),
+    rowCount: Math.max(50, dataRowCount + 20),
+    columnCount: Math.max(1, colCount)
+  }
+}
+
+/**
+ * Mapping ligne↔colonne → nœuds de la matrice TES (IO) : `tesMatrixNodes()[r-1]` est le nœud de la
+ * ligne r ET de la colonne r (matrice carrée nœuds × nœuds). Source de vérité partagée builder/bridge
+ * pour le write-back (ajout/suppression de flux en cochant/décochant une cellule).
+ */
+export const tesMatrixNodes = (app_data: Class_ApplicationData, onlyVisible: boolean): any[] =>
+  orderedUniqueNodes(app_data, onlyVisible)
+
+/** Layout de la matrice TER : axes produits/secteurs + ligne d'en-tête du 2e bloc (« Emplois »). */
+export type Type_TerLayout = { products: any[], sectors: any[], block2HeaderRow: number }
+
+/**
+ * Layout du TER (emplois-ressources) : produits en lignes, secteurs en colonnes. Bloc 1 « Ressources »
+ * = lignes 1..P (flux secteur→produit) ; ligne vide en P+1 ; bloc 2 « Emplois » = en-tête en P+2 puis
+ * lignes P+3.. (flux produit→secteur). Axes via le tag de nature (`type de noeud`) comme
+ * `_split_nodes_into_ter_axes` de SEP : produits = tag produit ; secteurs = tag secteur + échanges purs.
+ * Source de vérité partagée builder/bridge.
+ */
+export const terMatrixLayout = (
+  app_data: Class_ApplicationData, onlyVisible: boolean
+): Type_TerLayout => {
+  const { sankey } = app_data.drawing_area
+  const nodes = orderedUniqueNodes(app_data, onlyVisible)
+  const productTag = nodeTypeTag(sankey, NODE_TYPE_PRODUCT)
+  const sectorTag = nodeTypeTag(sankey, NODE_TYPE_SECTOR)
+  const exchangeTag = nodeTypeTag(sankey, NODE_TYPE_EXCHANGE)
+  const isProduct = (n: any): boolean => !!(productTag && n.hasGivenTag && n.hasGivenTag(productTag))
+  const isSectorBase = (n: any): boolean => !!(sectorTag && n.hasGivenTag && n.hasGivenTag(sectorTag))
+  const isExchange = (n: any): boolean => !!(exchangeTag && n.hasGivenTag && n.hasGivenTag(exchangeTag))
+  const products = nodes.filter((n: any) => isProduct(n))
+  const sectors = nodes.filter((n: any) =>
+    isSectorBase(n) || (!isProduct(n) && !isSectorBase(n) && isExchange(n)))
+  // Bloc 1 : en-tête ligne 0 + produits lignes 1..P -> 1re ligne libre = P+1 (séparateur),
+  // donc l'en-tête du bloc 2 (« Emplois ») tombe en P+2.
+  return { products, sectors, block2HeaderRow: products.length + 2 }
+}
+
+/**
+ * Construit les feuilles matricielles TES (IO, nœuds × nœuds) et TER (emplois-ressources, produits ×
+ * secteurs en double matrice). Réplique de `SankeyExcelParser.classes.sankey_pandas.xl_write_matrix_sheet`.
+ * Visibilité par défaut calquée sur le choix automatique IO/TER de SEP (`ok_for_ter`) : si la structure
+ * produits/secteurs existe, TER est l'onglet pertinent (TES masqué par défaut), sinon l'inverse. Les
+ * deux restent activables via le sélecteur « Onglets ». Éditables : cocher/décocher une cellule crée/
+ * supprime le flux correspondant (write-back dans UniverSankeyBridge).
+ */
+export const buildFluxMatrixSheets = (
+  app_data: Class_ApplicationData, onlyVisible: boolean
+): { tes: { sheet: any, hasData: boolean }, ter: { sheet: any, hasData: boolean } } => {
+  const nodes = tesMatrixNodes(app_data, onlyVisible)
+  const fluxMap = buildFluxMap(app_data, onlyVisible)
+
+  // --- TES : matrice IO (origines en lignes, destinations en colonnes) ---------------------------
+  const tesCells: Type_CellData = {}
+  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false)
+  const tesSheet = makeMatrixSheet(
+    SHEET_ID_TES, 'TES (matrice IO)', tesCells, nodes.length + 1,
+    ['', ...nodes.map((n: any) => n.name)], [0], nodes.length
+  )
+
+  // --- TER : table emplois-ressources (produits en lignes, secteurs en colonnes) -----------------
+  const { products, sectors, block2HeaderRow } = terMatrixLayout(app_data, onlyVisible)
+  const terHasData = products.length > 0 && sectors.length > 0
+
+  const terCells: Type_CellData = {}
+  // Bloc 1 « Ressources » : flux secteur→produit (produits lignes, secteurs colonnes, flip).
+  writeMatrixBlock(terCells, 0, 'Ressources (secteurs → produits)', products, sectors, fluxMap, true)
+  // Ligne vide de séparation, puis bloc 2 « Emplois » : flux produit→secteur.
+  const afterBlock2 = writeMatrixBlock(
+    terCells, block2HeaderRow, 'Emplois (produits → secteurs)', products, sectors, fluxMap, false)
+  const terSheet = makeMatrixSheet(
+    SHEET_ID_TER, 'TER (emplois-ressources)', terCells, sectors.length + 1,
+    ['', ...sectors.map((n: any) => n.name)], [0, block2HeaderRow], afterBlock2
+  )
+
+  return {
+    tes: { sheet: tesSheet, hasData: nodes.length > 0 && !terHasData },
+    ter: { sheet: terSheet, hasData: terHasData }
+  }
+}
+
 /**
  * Construit le classeur Univer (Flux + Noeuds + Etiquettes) reflétant le Sankey courant.
  */
@@ -507,6 +762,8 @@ export const buildSankeyWorkbookData = (
   const { sankey } = app_data.drawing_area
   // onlyVisible : ne garder que les éléments visibles (exclut les flux/nœuds repliés/agrégés).
   const links = fluxRowLinks(app_data, onlyVisible)
+  // Matrices de flux TES (IO) et TER (emplois-ressources) — onglets en lecture seule.
+  const matrices = buildFluxMatrixSheets(app_data, onlyVisible)
 
   // --- Onglet Flux (fusion Flux + Données : un flux par ligne, toutes les colonnes de valeur) -----
   // Origine/Destination/Valeur obligatoires ; le reste optionnel (masqué si vide via le sélecteur).
@@ -515,11 +772,9 @@ export const buildSankeyWorkbookData = (
     'Quantité naturelle', 'Incertitude relative', 'Source', 'Hypothèse'
   ]
   const fluxCells: Type_CellData = { 0: {} }
-  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet.
+  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet. 'Incertitude relative' (col 6)
+  // = affichée au format pourcentage (la valeur stockée est déjà la magnitude en %).
   const FLUX_RESULT_COLS = new Set([3])
-  fluxHeaders.forEach((h, c) => {
-    fluxCells[0][c] = { v: h, s: headerStyle(FLUX_RESULT_COLS.has(c) ? HEX_RESULT : HEX_CORE) }
-  })
   links.forEach((l: any, i: number) => {
     const v = l.value
     fluxCells[i + 1] = {
@@ -531,11 +786,103 @@ export const buildSankeyWorkbookData = (
       3: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
       4: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
       5: { v: '' },
-      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '' },
+      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '', s: PERCENT_CELL_STYLE },
       7: { v: (v && v.data_source) || '' },
       8: { v: '' }
     }
   })
+  // En-tête vertical pour les colonnes purement numériques (Valeur, Valeur calculée, Valeur
+  // destination, Incertitude relative…) : labels longs au-dessus de nombres courts -> on pivote à 90°
+  // et on resserre la largeur (même logique que l'onglet Analyse des résultats).
+  const fluxVerticalCols = numericOnlyColumns(fluxCells, fluxHeaders.length)
+  fluxHeaders.forEach((h, c) => {
+    fluxCells[0][c] = {
+      v: h, s: headerStyle(FLUX_RESULT_COLS.has(c) ? HEX_RESULT : HEX_CORE, fluxVerticalCols.has(c))
+    }
+  })
+  const fluxColumnData = columnWidthsWithVerticalHeaders(fluxCells, fluxHeaders.length, fluxVerticalCols)
+  const fluxHeaderH = fluxVerticalCols.size > 0
+    ? verticalHeaderHeight(fluxHeaders, fluxVerticalCols)
+    : undefined
+
+  // --- Onglet Analyse des résultats (réplique SEP ANALYSIS_SHEET, su-model/sankeyexcelparser) ------
+  // Lecture seule : par flux (même ordre que l'onglet Flux), compare la valeur d'entrée (non-
+  // réconciliée) au résultat réconcilié du solveur MFA, plus le delta, l'écart en σ et le type de
+  // variable. Les colonnes purement solveur de SEP (index de variable dans la matrice Ai,
+  // statistiques Monte-Carlo, valeur « complétée ») n'existent pas côté front et sont omises.
+  // Le write-back du bridge ignore cet onglet (id non routé) -> aucune édition n'est répercutée.
+  const analysisHeaders = [
+    'Origine', 'Destination',
+    'Valeur reconciliée', 'Borne inférieure', 'Borne supérieure',
+    'Valeur non-réconciliée', 'Borne inférieure non-réconciliée', 'Borne supérieure non-réconciliée',
+    'Incertitude relative non-réconciliée (%)',
+    'Delta réconcilié - non-réconcilié', 'Écart réconcilié (nb σ)', 'Type de variable'
+  ]
+  // Colonnes de résultat réconcilié / analyse -> en-tête violet (comme « Valeur calculée » du Flux).
+  const ANALYSIS_RESULT_COLS = new Set([2, 3, 4, 9, 10, 11])
+  const analysisCells: Type_CellData = { 0: {} }
+  // Style d'en-tête appliqué après le remplissage des lignes (l'orientation verticale dépend de la
+  // détection des colonnes numériques, voir plus bas).
+  const analysisHeaderHex = (c: number): string => ANALYSIS_RESULT_COLS.has(c) ? HEX_RESULT : HEX_CORE
+  // Type de variable (classif) approximé à partir des seules données du modèle front :
+  //  - « Mesurée » : une valeur ou une borne a été SAISIE (has_collected_data) ;
+  //  - « Libre (intervalle) » : flux indéterminé, le solveur ne renvoie qu'un intervalle ;
+  //  - « Déterminée » : valeur réconciliée unique sans saisie (calculée par propagation).
+  // (SEP distingue en plus « Redondante » via l'analyse de redondance du solveur, indisponible ici.)
+  const analysisClassif = (v: any): string => {
+    if (!v) return ''
+    if (v.has_collected_data) return 'Mesurée'
+    if (v.has_intervals) return 'Libre (intervalle)'
+    if (v.valueResult != null) return 'Déterminée'
+    return ''
+  }
+  let analysisHasResult = false
+  links.forEach((l: any, i: number) => {
+    const v = l.value
+    const vResult = v ? v.valueResult : null
+    const vData = v ? v.valueData : null
+    if (vResult != null) {
+      analysisHasResult = true
+    }
+    const delta = (vResult != null && vData != null) ? vResult - vData : null
+    // Écart en nombre d'écarts-types de l'entrée : |delta| / (incertitude relative · |valeur entrée|).
+    // data_uncertainty est saisie en pourcent (menu Flux, unité %) -> /100. Vide si non calculable.
+    const uncPrct = v ? v.data_uncertainty : null
+    let nbSigma: number | null = null
+    if (delta != null && uncPrct != null && uncPrct > 0 && vData != null && vData !== 0) {
+      const sigmaAbs = (uncPrct / 100) * Math.abs(vData)
+      if (sigmaAbs > 0) {
+        nbSigma = Math.abs(delta) / sigmaAbs
+      }
+    }
+    analysisCells[i + 1] = {
+      0: { v: l.source.name },
+      1: { v: l.target.name },
+      2: { v: vResult != null ? num5(vResult) : '' },
+      3: { v: v && v.result_min != null ? num5(v.result_min) : '' },
+      4: { v: v && v.result_max != null ? num5(v.result_max) : '' },
+      5: { v: vData != null ? num5(vData) : '' },
+      6: { v: v && v.data_min != null ? num5(v.data_min) : '' },
+      7: { v: v && v.data_max != null ? num5(v.data_max) : '' },
+      8: { v: uncPrct != null ? num5(uncPrct) : '' },
+      9: { v: delta != null ? num5(delta) : '' },
+      10: { v: nbSigma != null ? num5(nbSigma) : '' },
+      11: { v: analysisClassif(v) }
+    }
+  })
+  // En-tête vertical (pivoté 90°) pour les colonnes purement numériques : leurs labels longs
+  // (« Borne inférieure non-réconciliée »…) étaleraient sinon la colonne sur toute sa largeur.
+  const analysisVerticalCols = numericOnlyColumns(analysisCells, analysisHeaders.length)
+  analysisHeaders.forEach((h, c) => {
+    analysisCells[0][c] = { v: h, s: headerStyle(analysisHeaderHex(c), analysisVerticalCols.has(c)) }
+  })
+  const analysisColumnData =
+    columnWidthsWithVerticalHeaders(analysisCells, analysisHeaders.length, analysisVerticalCols)
+  const analysisHeaderH = analysisVerticalCols.size > 0
+    ? verticalHeaderHeight(analysisHeaders, analysisVerticalCols)
+    : undefined
+  // Origine + Destination obligatoires ; le reste optionnel (colonnes vides masquées par défaut).
+  const ANALYSIS_MANDATORY = new Set([0, 1])
 
   // --- Onglets de nœuds (Noeuds + séparation Produits/Secteurs/Échanges) --------------------------
   // Colonnes de tags = étiquettes de niveau (turquoise) PUIS étiquettes de nœud (vert), comme le
@@ -738,18 +1085,30 @@ export const buildSankeyWorkbookData = (
     name: 'Sankey',
     sheetOrder: [
       SHEET_ID_TAGS, SHEET_ID_NOEUDS, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES,
-      SHEET_ID_NOEUDS_AGG, SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK,
-      SHEET_ID_STOCK_CHAINING, SHEET_ID_STOCK
+      SHEET_ID_NOEUDS_AGG, SHEET_ID_FLUX, SHEET_ID_ANALYSIS, SHEET_ID_TES, SHEET_ID_TER,
+      SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING, SHEET_ID_STOCK
     ],
     sheets: {
       [SHEET_ID_FLUX]: {
         id: SHEET_ID_FLUX,
         name: 'Flux',
         cellData: fluxCells,
-        columnData: autoColumnWidths(fluxCells, 9),
+        columnData: fluxColumnData,
+        ...(fluxHeaderH ? { rowData: { 0: { h: fluxHeaderH } } } : {}),
         rowCount: Math.max(100, links.length + 20),
         columnCount: 9
       },
+      [SHEET_ID_ANALYSIS]: {
+        id: SHEET_ID_ANALYSIS,
+        name: 'Analyse des résultats',
+        cellData: analysisCells,
+        columnData: analysisColumnData,
+        ...(analysisHeaderH ? { rowData: { 0: { h: analysisHeaderH } } } : {}),
+        rowCount: Math.max(100, links.length + 20),
+        columnCount: analysisHeaders.length
+      },
+      [SHEET_ID_TES]: matrices.tes.sheet,
+      [SHEET_ID_TER]: matrices.ter.sheet,
       [SHEET_ID_NOEUDS]: noeuds.sheet,
       [SHEET_ID_PRODUITS]: produits.sheet,
       [SHEET_ID_SECTEURS]: secteurs.sheet,
@@ -808,6 +1167,10 @@ export const buildSankeyWorkbookData = (
 
   const columns: Type_SheetColumns = {
     [SHEET_ID_FLUX]: colMeta(fluxHeaders, fluxCells, FLUX_MANDATORY),
+    [SHEET_ID_ANALYSIS]: colMeta(analysisHeaders, analysisCells, ANALYSIS_MANDATORY),
+    // Matrices : colonnes dynamiques (noms de nœuds) -> pas de sélecteur de colonnes (liste vide).
+    [SHEET_ID_TES]: [],
+    [SHEET_ID_TER]: [],
     [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
     [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
     [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
@@ -832,6 +1195,13 @@ export const buildSankeyWorkbookData = (
     // reste activable via le sélecteur d'onglets.
     { id: SHEET_ID_NOEUDS_AGG, name: 'Noeuds par agrégation', hasData: agg.rows.length > 0 && agg.hasDimCol },
     { id: SHEET_ID_FLUX, name: 'Flux', hasData: links.length > 0 },
+    // Masqué par défaut tant qu'aucune réconciliation n'a produit de résultat (sinon doublon vide
+    // de Flux) ; réaffichable via le sélecteur « Onglets ».
+    { id: SHEET_ID_ANALYSIS, name: 'Analyse des résultats', hasData: analysisHasResult },
+    // Matrices de flux : visibilité par défaut selon la structure (cf. buildFluxMatrixSheets) ;
+    // toujours réaffichables via le sélecteur « Onglets ».
+    { id: SHEET_ID_TES, name: 'TES (matrice IO)', hasData: matrices.tes.hasData },
+    { id: SHEET_ID_TER, name: 'TER (emplois-ressources)', hasData: matrices.ter.hasData },
     { id: SHEET_ID_RATIO, name: 'Ratio flux', hasData: ratioRow > 1 },
     { id: SHEET_ID_RATIO_STOCK, name: 'Ratio stock flux', hasData: ratioStockRow > 1 },
     { id: SHEET_ID_STOCK_CHAINING, name: 'Chaînage stock', hasData: stockChainRow > 1 },
