@@ -64,6 +64,34 @@ const allowDataImages = (url: string): string => {
   return ['http', 'https', 'mailto', 'tel'].includes(m[1].toLowerCase()) ? url : ''
 }
 
+// Génère un identifiant d'ancre stable à partir du texte d'un titre : retire les accents,
+// passe en minuscules, remplace tout ce qui n'est pas alphanumérique par « - ». Sert d'id aux
+// titres rendus ET de cible aux liens internes `#ancre` (sommaire). Les deux usages partagent
+// CETTE fonction : changer la règle ici garde sommaire et titres synchronisés.
+const slugifyHeading = (s: string): string =>
+  s.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+
+// Extrait récursivement le texte brut d'un nœud React (pour calculer l'id d'un titre, qui peut
+// contenir du gras, des maths, etc.).
+const nodeText = (node: React.ReactNode): string => {
+  if (node === null || node === undefined || node === false || node === true) return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(nodeText).join('')
+  if (React.isValidElement(node)) return nodeText((node.props as { children?: React.ReactNode }).children)
+  return ''
+}
+
+// Fabrique un composant de titre Hn qui se dote d'un id slugifié, pour être la cible d'un lien
+// interne `#ancre` (navigation dans le sommaire).
+const makeHeading = (level: 1 | 2 | 3) =>
+  ({ children }: { children?: React.ReactNode }) =>
+    React.createElement(`h${level}`, { id: slugifyHeading(nodeText(children)) }, children)
+
+const HeadingRenderers = { h1: makeHeading(1), h2: makeHeading(2), h3: makeHeading(3) }
+
 // Libellés courts des positions de la doc (pour le bouton du menu).
 const DOC_POS_LABEL: Record<Type_MainZoneDocLayout, string> = {
   'sheet-right': 'À droite du tableur',
@@ -231,6 +259,24 @@ export const DocPanel = (
         <a
           href={href}
           onClick={(e) => { e.preventDefault(); app_data.navigateToView(view_id) }}
+          style={{ cursor: 'pointer' }}
+        >
+          {children}
+        </a>
+      )
+    }
+    // Lien interne `#ancre` (sommaire) : défile jusqu'au titre dont l'id correspond, dans
+    // l'aperçu courant (et non la page entière, pour ne pas perturber le reste de l'app).
+    if (href && href.startsWith('#')) {
+      return (
+        <a
+          href={href}
+          onClick={(e) => {
+            e.preventDefault()
+            const root = (e.currentTarget as HTMLElement).closest('.os-md-preview')
+            const target = root ? root.querySelector('#' + CSS.escape(href.slice(1))) : null
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }}
           style={{ cursor: 'pointer' }}
         >
           {children}
@@ -420,7 +466,7 @@ export const DocPanel = (
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
                 urlTransform={resolveUrl}
-                components={{ a: LinkRenderer }}
+                components={{ a: LinkRenderer, ...HeadingRenderers }}
               >{text}</ReactMarkdown>
             </div>
           </Box>
