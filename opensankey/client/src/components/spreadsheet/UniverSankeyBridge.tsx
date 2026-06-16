@@ -17,8 +17,10 @@ import { defaultLinkId } from '../../Elements/Link'
 import {
   SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK,
   SHEET_ID_STOCK_CHAINING, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES, SHEET_ID_NOEUDS_AGG,
+  SHEET_ID_TES, SHEET_ID_TER,
   NOEUDS_COL, TAGS_COL, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
-  fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout
+  fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout,
+  tesMatrixNodes, terMatrixLayout
 } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -471,6 +473,73 @@ export const attachSankeyBridge = (
     return false
   }
 
+  // Résout les deux extrémités (origine, destination) d'une cellule de matrice TES/TER. Renvoie null
+  // pour les cellules d'en-tête / de coin / de séparation (rien à faire).
+  const matrixCellEndpoints = (sheetId: string, r: number, c: number): { orig: any, dest: any } | null => {
+    if (c < 1) {
+      return null
+    }
+    if (sheetId === SHEET_ID_TES) {
+      // Matrice carrée : ligne = origine, colonne = destination.
+      const nodes = tesMatrixNodes(app_data, onlyVisibleRef.current)
+      if (r < 1 || r - 1 >= nodes.length || c - 1 >= nodes.length) {
+        return null
+      }
+      return { orig: nodes[r - 1], dest: nodes[c - 1] }
+    }
+    // TER : produits en lignes, secteurs en colonnes, deux blocs.
+    const lay = terMatrixLayout(app_data, onlyVisibleRef.current)
+    if (c - 1 >= lay.sectors.length) {
+      return null
+    }
+    const sector = lay.sectors[c - 1]
+    // Bloc 1 « Ressources » (lignes 1..P) : flux secteur → produit.
+    if (r >= 1 && r <= lay.products.length) {
+      return { orig: sector, dest: lay.products[r - 1] }
+    }
+    // Bloc 2 « Emplois » (lignes block2HeaderRow+1 .. +P) : flux produit → secteur.
+    const b2first = lay.block2HeaderRow + 1
+    if (r >= b2first && r < b2first + lay.products.length) {
+      return { orig: lay.products[r - b2first], dest: sector }
+    }
+    return null // en-tête de bloc ou ligne de séparation
+  }
+
+  // Réconcilie une cellule de matrice TES/TER : une cellule NON VIDE (croix « x » ou nombre) garantit
+  // l'existence du flux origine→destination (création si absent ; valeur saisie posée si nombre) ;
+  // une cellule VIDÉE supprime le flux. La diagonale (origine == destination) est ignorée.
+  const reconcileMatrixCell = (
+    sheetId: string, ws: any, r: number, c: number
+  ): { structural: boolean, value: boolean } => {
+    const ends = matrixCellEndpoints(sheetId, r, c)
+    if (!ends || !ends.orig || !ends.dest || ends.orig === ends.dest) {
+      return { structural: false, value: false }
+    }
+    const text = cellText(ws, r, c)
+    const existing = sankey.links_dict[defaultLinkId(ends.orig, ends.dest)]
+    if (text === '') {
+      if (existing) {
+        drawing_area.deleteLink(existing)
+        return { structural: true, value: false }
+      }
+      return { structural: false, value: false }
+    }
+    let structural = false
+    let link = existing
+    if (!link) {
+      link = sankey.addNewLink(ends.orig, ends.dest)
+      structural = true
+    }
+    // Cellule numérique -> on pose aussi la valeur saisie (sinon simple « x » = existence seule).
+    const num = parseNum(text)
+    let value = false
+    if (link && link.value && num != null && num !== link.value.valueData) {
+      link.value.valueData = num
+      value = true
+    }
+    return { structural, value }
+  }
+
   const disposable = univerAPI.addEvent(univerAPI.Event.SheetValueChanged, (params: any) => {
     if (isSyncing.current) {
       return
@@ -512,11 +581,24 @@ export const attachSankeyBridge = (
     const originalRatioStockCount = sankey.ratio_stock_flux_constraints.length
     const originalStockChainCount = sankey.stock_chaining_constraints.length
 
-    // Regroupe les lignes affectées par feuille (paste = plage multi-lignes).
+    // Regroupe les lignes affectées par feuille (paste = plage multi-lignes). Les matrices TES/TER
+    // sont traitées par CELLULE (origine×destination) -> collectées à part en (ligne, colonne).
     const rowsBySheet: { [sheetId: string]: Set<number> } = {}
+    const matrixCellsBySheet: { [sheetId: string]: Array<{ r: number, c: number }> } = {}
     ranges.forEach((fr: any) => {
       const sheetId = fr.getSheetId()
       const rng = fr.getRange()
+      if (sheetId === SHEET_ID_TES || sheetId === SHEET_ID_TER) {
+        if (!matrixCellsBySheet[sheetId]) {
+          matrixCellsBySheet[sheetId] = []
+        }
+        for (let r = rng.startRow; r <= rng.endRow; r++) {
+          for (let c = rng.startColumn; c <= rng.endColumn; c++) {
+            matrixCellsBySheet[sheetId].push({ r, c })
+          }
+        }
+        return
+      }
       if (!rowsBySheet[sheetId]) {
         rowsBySheet[sheetId] = new Set()
       }
@@ -615,6 +697,21 @@ export const attachSankeyBridge = (
       }
     })
 
+    // Matrices TES/TER : chaque cellule cochée/décochée crée/supprime le flux origine→destination.
+    let matrixChanged = false
+    Object.keys(matrixCellsBySheet).forEach((sheetId) => {
+      const ws = wb.getSheetBySheetId(sheetId)
+      if (!ws) {
+        return
+      }
+      matrixCellsBySheet[sheetId].forEach(({ r, c }) => {
+        const res = reconcileMatrixCell(sheetId, ws, r, c)
+        structural = structural || res.structural
+        value = value || res.value
+        matrixChanged = matrixChanged || res.structural || res.value
+      })
+    })
+
     // Purge des contraintes vidées (touche Suppr sur une ligne existante) : splice en ordre
     // décroissant pour ne pas invalider les index restants. Le rebuild différé plus bas réaligne
     // ensuite l'affichage (lignes vides retirées) sur le modèle.
@@ -653,7 +750,9 @@ export const attachSankeyBridge = (
     // tags/étiquettes OU les changements de la liste des nœuds induits par une édition de flux.
     // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait l'unit
     // Univer en plein vol (crash "univerInstanceService is null").
-    if (tagChanged || nodesChanged || constraintsPruned) {
+    // matrixChanged : un flux a été créé/supprimé via une matrice -> reconstruire pour réaligner
+    // l'onglet Flux ET la matrice elle-même (cellule canonique « x » ou valeur) sur le modèle.
+    if (tagChanged || nodesChanged || constraintsPruned || matrixChanged) {
       const ref = app_data.menu_configuration.ref_to_spreadsheet
       if (ref && ref.current) {
         setTimeout(() => { if (ref.current) { ref.current() } }, 0)
