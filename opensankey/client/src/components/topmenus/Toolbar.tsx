@@ -365,22 +365,6 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
               app_data.reveal_data_links = evt.target.checked
               setCount(a => a + 1)
               redrawNodeLinkLegend()
-              // Le toggle change la liste des flux visibles → relancer une mise en
-              // page automatique (mêmes paramètres que le bouton « Mise en page »).
-              const drawing_area = app_data.drawing_area
-              const default_dx = drawing_area.sankey.styles_dict['default'].shape_position_dx ?? 0
-              const default_dy = drawing_area.sankey.styles_dict['default'].shape_position_dy ?? 0
-              drawing_area.nodePositioning.computeAutoSankeyWithToast(
-                false,
-                app_data.layout_optimize_crossing,
-                app_data.layout_h_spacing ?? default_dx,
-                app_data.layout_v_spacing ?? default_dy,
-                app_data.layout_sources_mode,
-                app_data.layout_sinks_mode,
-                false,
-                false,
-                true
-              )
             }}>
             {t('Banner.data_links_reveal')}
           </Checkbox>
