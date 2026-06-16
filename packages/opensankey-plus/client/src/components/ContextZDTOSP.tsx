@@ -5,6 +5,7 @@ import { Class_ApplicationData } from '../deps/OpenSankey/types/ApplicationData'
 import { MenuColorPicker } from '../deps/OpenSankey/components/configmenus/MenuCommon'
 import { ButtonContainerContextAssignStyle } from '../deps/OpenSankey/components/dialogs/MenuContextWidgetFactory'
 import { NodeActions } from '../deps/OpenSankey/components/dialogs/NodeActions'
+import { downloadImageSource } from '../deps/OpenSankey/components/dialogs/SaveImage'
 
 export const ContextZDT = (
   { app_data: app_data }: { app_data: Class_ApplicationData }
@@ -200,6 +201,19 @@ export const ContextZDT = (
     {t('Menu.editName')}
   </Button>
 
+  // Télécharger l'image portée par le ZDT (icon_is_image) — n'apparaît que si
+  // le container affiche réellement une image.
+  const btn_save_image = (zdt_to_contextualise.icon_is_image && zdt_to_contextualise.icon_image_src)
+    ? <Button
+      variant='contextmenu_button'
+      onClick={() => {
+        downloadImageSource(zdt_to_contextualise.icon_image_src, zdt_to_contextualise.name || zdt_to_contextualise.id)
+        closeContextMenu()
+      }}>
+      {t('Menu.saveImage')}
+    </Button>
+    : <></>
+
   // Alignement : réutilise les actions de NodeActions, qui opèrent à la fois sur
   // les nœuds et les zones de texte sélectionnés (parent commun Class_NodeBase).
   // Mêmes glyphes/clés de traduction (namespace ContextMenuNodes) que le menu nœud.
@@ -270,6 +284,7 @@ export const ContextZDT = (
     }}>
     <ButtonGroup orientation='vertical' isAttached>
       {btn_edit_name}
+      {btn_save_image}
       {btn_copy}
       {btn_align}
       {zdt_to_contextualise.tied_to_nodes ? button_detach_all_tied_nodes : btn_select_node_inside}

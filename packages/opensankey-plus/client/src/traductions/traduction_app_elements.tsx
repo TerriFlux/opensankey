@@ -62,6 +62,7 @@ export const resources_app_elements = {
         detachTiedNodes: 'Use as simple frame',
         copyElement: 'Copy shape(s)',
         editName: 'Edit name',
+        saveImage: 'Save image',
 
 
         'import_icon': 'Select icon',
@@ -558,6 +559,7 @@ export const resources_app_elements = {
         detachTiedNodes: 'Utiliser comme cadre simple',
         copyElement: 'Copier la/les forme(s)',
         editName: 'Éditer le nom',
+        saveImage: 'Enregistrer l\'image',
 
         'toBeautify': 'Embellir le fichier JSON',
 
@@ -1030,6 +1032,7 @@ export const resources_app_elements = {
         detachTiedNodes: 'Usar como marco simple',
         copyElement: 'Copiar forma(s)',
         editName: 'Editar nombre',
+        saveImage: 'Guardar imagen',
 
         'import_icon': 'Seleccionar icono',
         'import_icon_from_pack': 'Importar iconos desde paquete',
@@ -1517,6 +1520,7 @@ export const resources_app_elements = {
         detachTiedNodes: 'Als einfachen Rahmen verwenden',
         copyElement: 'Form(en) kopieren',
         editName: 'Name bearbeiten',
+        saveImage: 'Bild speichern',
 
         'import_icon': 'Symbol auswählen',
         'import_icon_from_pack': 'Symbole aus Paket importieren',
@@ -2004,6 +2008,7 @@ export const resources_app_elements = {
         detachTiedNodes: 'Usa come cornice semplice',
         copyElement: 'Copia forma/e',
         editName: 'Modifica nome',
+        saveImage: 'Salva immagine',
 
         'import_icon': 'Seleziona icona',
         'import_icon_from_pack': 'Importa icone dal pacchetto',
