@@ -53,6 +53,7 @@ from flask import render_template
 from flask import request
 from flask import Response
 from flask import send_file
+from flask import send_from_directory
 from flask import session
 
 import SankeyExcelParser.su_trace as trace
@@ -484,18 +485,20 @@ def launch_conversion():
 
         if input_format == "example_excel" or input_format == "example_json":
             exemple = request.form["file_name"]
-            # Les tutoriels/templates migres vivent dans le submodule SankeyData
-            # (env SANKEY_DATA, posee automatiquement par app.py depuis la racine
-            # du checkout) ; les exemples historiques restent dans MFAData. On
-            # resout SANKEY_DATA en priorite, avec repli sur MFAData. NB : on ne
-            # peut PAS deduire le chemin depuis __file__ ici, car opensankey est
-            # installe (copie) en site-packages cote serveur.
+            # Tout le contenu servi (templates/tutoriels) vit dans le submodule
+            # SankeyData (env SANKEY_DATA, posee automatiquement par app.py depuis
+            # la racine du checkout). Pas de repli MFAData. NB : on ne peut PAS
+            # deduire le chemin depuis __file__ ici, car opensankey est installe
+            # (copie) en site-packages cote serveur.
             sankey_data = os.environ.get("SANKEY_DATA")
-            candidate = os.path.join(sankey_data, exemple) if sankey_data else None
-            if candidate and os.path.exists(candidate):
-                input_file_name = candidate
-            else:
-                input_file_name = os.path.join(os.environ.get("MFAData"), exemple)
+            input_file_name = os.path.join(sankey_data, exemple) if sankey_data else exemple
+            if input_format == "example_json":
+                # Tolerance .json / .json.gz + conversion automatique en .json.gz
+                # au premier chargement (mise en cache sur disque), exactement
+                # comme pour les tutoriels.
+                resolved = handle_json_or_compressed(input_file_name)
+                if isinstance(resolved, str):
+                    input_file_name = resolved
             extension = os.path.splitext(input_file_name)[1]
             if extension == '.xlsx':
                 input_format = 'excel'
@@ -1332,20 +1335,40 @@ def _generate_excel_template(filepath, sheets, lang="fr"):
 @opensankey.route("/menus/templates", methods=["POST"])
 def menus_templates():
     """
-    Return data from MFAData/Modèles/Template
+    Renvoie l'index des modeles (templates).
 
-    Returns
-    -------
-    :return: _description_
-    :rtype: _type_
+    Les modeles migres vivent dans le submodule SankeyData (env SANKEY_DATA,
+    sous-dossier templates/) ; repli sur MFAData/Modeles/Template/ tant que la
+    migration n'est pas deployee partout. Les chemins file_path / img_path de
+    l'index sont relatifs a la racine SANKEY_DATA (ex. templates/<diff>/...) et
+    sont servis : data via /opensankey/convert/launch (example_json), images via
+    /opensankey/menus/templates_asset/<path>.
     """
-    data_folder = os.environ.get("MFAData")
-    data_folder += "/Modèles/Template/"
-    data_index = {}
-    with open(data_folder + "index.json") as file_index:
+    sankey_data = os.environ.get("SANKEY_DATA")
+    index_path = os.path.join(sankey_data, "templates", "index.json") if sankey_data else None
+    if not (index_path and os.path.exists(index_path)):
+        index_path = os.path.join(os.environ.get("MFAData"), "Modèles", "Template", "index.json")
+    with open(index_path, encoding="utf-8") as file_index:
         data_index = json.load(file_index)
     response = Response(response=json.dumps(data_index), status=200, mimetype="application/json")
     return response
+
+
+@opensankey.route("/menus/templates_asset/<path:asset>", methods=["GET"])
+def menus_templates_asset(asset):
+    """
+    Sert un fichier (image de previsualisation, ...) depuis la racine SANKEY_DATA.
+
+    Le chemin `asset` est relatif a SANKEY_DATA (ex. templates/essential/image/
+    business_simple.png) ; send_from_directory neutralise les remontees de chemin.
+    """
+    sankey_data = os.environ.get("SANKEY_DATA")
+    if not sankey_data:
+        abort(404)
+    # Route GET publique : on ne sert que le contenu des modeles (templates/).
+    if not asset.replace("\\", "/").startswith("templates/"):
+        abort(404)
+    return send_from_directory(sankey_data, asset)
 
 
 @opensankey.route("/menus/examples", methods=["POST"])

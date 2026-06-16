@@ -390,6 +390,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
       </MenuButton>
     </OSTooltip>
     <MenuList>
+      <MenuItem onClick={() => { new_data.reinitialization() }}>
+        {new_data.icon_library.icon_new_da}
+        {t('Menu.from_new')}
+      </MenuItem>
       <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
         {new_data.icon_library.icon_new_da}
         {t('Menu.from_model')}
@@ -760,6 +764,10 @@ export const MenuTopButtons = ({ new_data, additionalMenus }: {
     </OSTooltip>
     <MenuList>
       <MenuGroup title={t('Menu.new')}>
+        <MenuItem onClick={() => { new_data.reinitialization() }}>
+          {new_data.icon_library.icon_new_da}
+          {t('Menu.from_new')}
+        </MenuItem>
         <MenuItem onClick={() => { ref_setter_show_modal_templates_lib.current!(true) }}>
           {new_data.icon_library.icon_new_da}
           {t('Menu.from_model')}
