@@ -78,6 +78,7 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
 }) => {
 
   type Type_TemplateInfos = {
+    'title'?: { [lang: string]: string };
     'file_path': string;
     'img_path': string;
     'lang': string;
@@ -94,7 +95,6 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
   const [indexes, setIndexes] = useState<Type_TemplatesIndexes>({})
   const [, setThemes] = useState<string[]>([])
   const [difficulties, setDifficulties] = useState<string[]>([])
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('')
 
   const { ref_setter_show_modal_templates_lib } = new_data.menu_configuration.dict_setter_show_dialog
   ref_setter_show_modal_templates_lib.current = set_show_template
@@ -123,7 +123,6 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
             }
             if ('difficulties' in json_data) {
               setDifficulties(json_data['difficulties'])
-              setSelectedDifficulty(json_data['difficulties'][0])
             }
             if ('templates' in json_data) {
               Object.entries(json_data['templates'] as Type_TemplatesInfos)
@@ -165,13 +164,6 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
         .map((theme, idx) => {
           return <Tab
             key={idx}
-            onClick={() => {
-              if (!indexes[theme][selectedDifficulty]) {
-                // Back to basic diffuclty if no template for given them & difficulty
-                // -> Avoid having blank templates page
-                setSelectedDifficulty(difficulties[0])
-              }
-            }}
           >
             {new_data.t('templates.themes.' + theme)}
           </Tab>
@@ -181,6 +173,11 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
       {Object.values(indexes)
         .map((index, idx) => {
 
+          // Toutes les difficultes du theme, ordonnees du plus simple (en
+          // premier) au plus expert (en dernier) selon l'ordre de `difficulties`.
+          const ordered_ids = difficulties
+            .flatMap(difficulty => (difficulty in index) ? index[difficulty] : [])
+
           return <TabPanel key={idx}>
             <Box
               display='grid'
@@ -188,38 +185,6 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
               gridRowGap='1rem'
               height='100%'
             >
-              <Box
-                display='grid'
-                gridAutoFlow='column'
-                gridTemplateColumns='1fr 2fr'
-                gridColumnGap='1rem'
-                height='100%'
-              >
-                <Button
-                  variant='template_button_reset'
-                  onClick={() => {
-                    new_data.reinitialization()
-                    set_show_template(false)
-                  }}
-                >
-                  {new_data.t('Menu.from_new')}
-                </Button>
-                <ButtonGroup>
-                  {difficulties
-                    .map((difficulty,idx) => {
-                      return <Button
-                        key={'difficulty_'+idx}
-                        variant='menuconfigpanel_option_button_secondary'
-                        size='sizeButtonDialog'
-                        isActive={difficulty == selectedDifficulty}
-                        isDisabled={!(difficulty in index)}
-                        onClick={() => setSelectedDifficulty(difficulty)}
-                      >
-                        {new_data.t('templates.difficulties.' + difficulty)}
-                      </Button>
-                    })}
-                </ButtonGroup>
-              </Box>
               <Box
                 display="block"
                 overflow='scroll'
@@ -233,88 +198,76 @@ export const ModalTemplate = ({ new_data, additionalMenu }:{
                   gridColumnGap='0.25rem'
                   height='100%'
                 >
-                  {(selectedDifficulty in index) ?
-                    Object.values(index[selectedDifficulty])
-                      .map((id, idx) => {
-                        return <Card
-                          key={idx}
-                          variant='cards_template'
-                          onClick={() => {
-                            // Draw template by downloading data from server
-                            // Reset navigator data without redrawing sankey (UploadExemple will do it after downloading data from server)
-                            new_data.reinitialization(false)
+                  {ordered_ids
+                    .map((id, idx) => {
+                      return <Card
+                        key={idx}
+                        variant='cards_template'
+                        onClick={() => {
+                          // Draw template by downloading data from server
+                          // Reset navigator data without redrawing sankey (UploadExemple will do it after downloading data from server)
+                          new_data.reinitialization(false)
                             
-                            //UploadExemple(templates[id].file_path, new_data)
-                            set_show_template(false)
-                          }}
-                        >
-                          <CardHeader>
-                            <Heading variant='heading_template_sankey'>
-                              {new_data.t('templates.ids.' + id)}
-                            </Heading>
-                            <Divider />
-                          </CardHeader>
+                          //UploadExemple(templates[id].file_path, new_data)
+                          set_show_template(false)
+                        }}
+                      >
+                        <CardHeader>
+                          <Heading variant='heading_template_sankey'>
+                            {templates[id].title?.[new_data.i18n.language]
+                              ?? templates[id].title?.['en']
+                              ?? id}
+                          </Heading>
+                          <Divider />
+                        </CardHeader>
 
-                          <CardBody>
-                            {/* Get the image from the server */}
-                            {
-                              selectedDifficulty !== difficulties[0] ?
-                                <Badge
-                                  variant='badge_on_template_img'
-                                  right='0'
-                                  marginTop='-0.5rem'
-                                  marginRight='1rem'
-                                >
-                                  {new_data.t('templates.need_osp')}
-                                </Badge> : <></>
-                            }
-                            <OSTooltip
-                              label={new_data.t('templates.' + templates[id].lang)}
+                        <CardBody>
+                          {/* Get the image from the server */}
+                          <OSTooltip
+                            label={new_data.t('templates.' + templates[id].lang)}
+                          >
+                            <Badge
+                              variant='badge_on_template_img'
+                              backgroundColor='none'
+                              padding='0'
+                              marginTop='0'
+                              marginLeft='-0.5rem'
                             >
-                              <Badge
-                                variant='badge_on_template_img'
-                                backgroundColor='none'
-                                padding='0'
-                                marginTop='0'
-                                marginLeft='-0.5rem'
-                              >
-                                {svg_flags[templates[id].lang]}
-                              </Badge>
-                            </OSTooltip>
-                            <Image
-                              className='img-card'
-                              src={'/fm/userfiles/' + templates[id].img_path}
-                              style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
-                            >
-                            </Image>
-                          </CardBody>
+                              {svg_flags[templates[id].lang]}
+                            </Badge>
+                          </OSTooltip>
+                          <Image
+                            className='img-card'
+                            src={path + '/opensankey/menus/templates_asset/' + templates[id].img_path}
+                            style={{ 'objectFit': 'contain', 'maxHeight': '150px' }}
+                          >
+                          </Image>
+                        </CardBody>
 
-                          <CardFooter>
-                            <ButtonGroup
-                              //ButtonGroup don't have variants theming so we modify directly the style
-                              style={{
-                                margin: 'auto'
+                        <CardFooter>
+                          <ButtonGroup
+                            //ButtonGroup don't have variants theming so we modify directly the style
+                            style={{
+                              margin: 'auto'
+                            }}>
+                            <Button variant='menuconfigpanel_option_button'
+                              onClick={() => {
+                                // Draw template by downloading data from server
+                                //UploadExemple(templates[id].file_path, new_data)
+                                new_data.menu_configuration.ref_universal_converter_set_config.current(
+                                  CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
+                                )
+                                new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
+                                //new_data.menu_configuration.ref_menu_opened.current[1](true)
+                                set_show_template(false)
                               }}>
-                              <Button variant='menuconfigpanel_option_button'
-                                onClick={() => {
-                                  // Draw template by downloading data from server
-                                  //UploadExemple(templates[id].file_path, new_data)
-                                  new_data.menu_configuration.ref_universal_converter_set_config.current(
-                                    CONVERTER_CONFIGS['load_example_json'], templates[id].file_path, true
-                                  )
-                                  new_data.menu_configuration.dict_setter_show_dialog.ref_setter_show_modal_file_converter.current(true)
-                                  //new_data.menu_configuration.ref_menu_opened.current[1](true)
-                                  set_show_template(false)
-                                }}>
-                                {new_data.t('useTemplate')}
-                              </Button>
+                              {new_data.t('useTemplate')}
+                            </Button>
 
-                            </ButtonGroup>
-                          </CardFooter>
-                        </Card>
-                      })
-                    :
-                    <></>}
+                          </ButtonGroup>
+                        </CardFooter>
+                      </Card>
+                    })}
 
                 </Box>
               </Box>
