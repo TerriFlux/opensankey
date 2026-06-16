@@ -1,5 +1,13 @@
 #! /bin/bash
 
+# --- Shared-deploy umask ---
+# Ce build est lance a la fois par update_opensankey.sh (utilisateur ubuntu) et
+# par les jobs CI dev/test/prod_opensankey (utilisateur gitlab-runner). umask 002
+# rend chaque artefact group-writable : combine au groupe partage `deploy` +
+# setgid sur les repertoires, l'autre utilisateur peut ecraser les artefacts
+# (sinon EACCES : craco unlink build/, pip wheel sur __init__.py, etc.).
+umask 002
+
 # Bash function that ensure exiting if given bash command fail
 exit_if_error() {
   local exit_code=$1

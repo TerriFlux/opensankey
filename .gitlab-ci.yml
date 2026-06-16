@@ -142,6 +142,9 @@ dev_opensankey:
     # Clean and pull repo
     - git config --global --add safe.directory $REPO_FOLDER
     - cd $REPO_FOLDER
+    # Shared-deploy umask : artefacts group-writable pour que gitlab-runner et
+    # l'utilisateur ubuntu (update_opensankey.sh) puissent s'ecraser mutuellement.
+    - umask 002
     - rm -f .git/index.lock || true
     - git reset --hard
     - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
@@ -184,6 +187,8 @@ test_opensankey:
   before_script:
     # Configurer safe.directory AVANT que les submodules soient clonés
     - git config --global safe.directory '*'
+    # Shared-deploy umask : artefacts group-writable (cf. dev_opensankey).
+    - umask 002
   rules:
     - if: $CI_COMMIT_REF_NAME == $TAG_TEST
   needs:
@@ -245,6 +250,8 @@ prod_opensankey:
     - git clean -fdx -e env -e cache -e server/db.sqlite -e server/db.sqlite.bk -e server/__pycache__ -e doc/__pycache__ -e __pycache__
     - git fetch
     - git pull
+    # Shared-deploy umask : artefacts group-writable (cf. dev_opensankey).
+    - umask 002
     - git config --global --add safe.directory /home/ubuntu/prod_opensankey/sankeyapplication/submodules/MFAProblem
     - git config --global --add safe.directory $REPO_FOLDER/sankeyapplication/submodules/LoginComponent
     - git config --global --add safe.directory $REPO_FOLDER/submodules/OpenSankey+
