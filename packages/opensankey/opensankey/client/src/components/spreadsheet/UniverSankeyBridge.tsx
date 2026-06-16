@@ -165,7 +165,10 @@ export const attachSankeyBridge = (
     if (s === '') {
       return null
     }
-    const n = Number(s.replace(',', '.').replace(/\s/g, ''))
+    // Tolère le « % » d'une cellule à format pourcentage (ex. « 15% » saisi/affiché dans la colonne
+    // Incertitude) : sans ce strip, Number(« 15% ») = NaN -> valeur non persistée (cellule qui se vide
+    // au rebuild). Inoffensif pour les autres colonnes (pas de % attendu).
+    const n = Number(s.replace(',', '.').replace(/\s/g, '').replace(/%/g, ''))
     return isNaN(n) ? null : n
   }
 
@@ -220,6 +223,12 @@ export const attachSankeyBridge = (
             value = true
           }
         }
+        // Col 6 = Incertitude relative (en %) : on persiste exactement la valeur saisie (vide -> null).
+        const u = parseNum(cellText(ws, r, 6))
+        if (u !== (link.value.data_uncertainty != null ? link.value.data_uncertainty : null)) {
+          link.value.data_uncertainty = u
+          value = true
+        }
       }
       const map = nameToNode()
       if (src && src !== link.source.name) { applyEndpoint(link, 'source', src, map); structural = true }
@@ -235,6 +244,11 @@ export const attachSankeyBridge = (
           const v2 = parseNum(cellText(ws, r, 2))
           if (l && l.value && v2 != null) {
             l.value.valueData = v2
+          }
+          // Incertitude relative (col 6) : persistée si saisie.
+          const u = parseNum(cellText(ws, r, 6))
+          if (l && l.value && u != null) {
+            l.value.data_uncertainty = u
           }
           structural = true
         }
