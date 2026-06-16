@@ -43,7 +43,7 @@ import { Class_BaseElement, Class_ElementStyle, Class_ProtoElement, ExtractAttri
 import { Class_LinkElement } from '../Elements/Link'
 import { Class_NodeBase, Type_NameLabelSource } from '../Elements/NodeBase'
 import { ClassTemplate_Legend } from '../Elements/Legend'
-import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint } from '../types/Sankey'
+import { Class_Sankey, Type_RatioFluxConstraint, Type_RatioStockFluxConstraint, Type_StockChainingConstraint, Type_SpreadsheetState } from '../types/Sankey'
 import { Class_Tag } from '../types/Tag'
 import { node_exchanges_style, elementStyleConfigs, product_sector_styles, ElementStyleKey, LinkStyle, NodeStyle, ContainerStyle } from '../Elements/ElementStyle'
 import { Class_DrawingArea } from '../types/DrawingArea'
@@ -1563,6 +1563,11 @@ export class SankeyPersistence {
     if (sankey.stock_chaining_constraints.length > 0)
       json_object['stock_chaining_constraints'] = sankey.stock_chaining_constraints as unknown as Type_JSON
 
+    // État d'affichage du tableur (onglet actif, onglets/colonnes masqués). Préférence d'UI,
+    // additive & rétro-compatible : absente des anciens fichiers -> comportement par défaut.
+    if (Object.keys(sankey.spreadsheet_state).length > 0)
+      json_object['spreadsheet_state'] = sankey.spreadsheet_state as unknown as Type_JSON
+
     sankey.create_child_links()
     // Out
     return json_object
@@ -1812,6 +1817,14 @@ export class SankeyPersistence {
         ? json_object['stock_chaining_constraints']
         : []
     ) as unknown as Type_StockChainingConstraint[]
+
+    // État d'affichage du tableur (onglet actif, onglets/colonnes masqués). Additif :
+    // absent des anciens fichiers -> objet vide (comportement par défaut au build du tableur).
+    sankey.spreadsheet_state = (
+      typeof json_object['spreadsheet_state'] === 'object' && json_object['spreadsheet_state'] !== null
+        ? json_object['spreadsheet_state']
+        : {}
+    ) as unknown as Type_SpreadsheetState
 
     // Legacy migration: older files store the %IS/%OS/... family per-link via
     // value_option; fold them into the canonical list (sankeyexcelparser#116).
