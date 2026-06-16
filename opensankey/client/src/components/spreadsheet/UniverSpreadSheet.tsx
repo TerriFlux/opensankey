@@ -20,7 +20,8 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import {
   buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, Type_SheetMeta, SHEET_ID_NOEUDS,
-  SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING
+  SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING,
+  SHEET_ID_TES, SHEET_ID_TER
 } from './UniverSankeyData'
 import { attachSankeyBridge } from './UniverSankeyBridge'
 import { parseHierarchyFromLevels, refreshAfterHierarchyChange } from './UniverHierarchyOps'
@@ -41,6 +42,12 @@ const PLACEMENT_MODES: { id: 'auto' | 'none' | 'increment', label: string }[] = 
   { id: 'auto', label: 'Placement : auto' },
   { id: 'none', label: 'Placement : aucun' },
   { id: 'increment', label: 'Placement : incrémental' }
+]
+
+// Mode d'affichage des matrices TES/TER (cf. MenuConfig.spreadsheet_matrix_mode).
+const MATRIX_MODES: { id: 'cross' | 'value', label: string }[] = [
+  { id: 'cross', label: 'Matrice : croix' },
+  { id: 'value', label: 'Matrice : valeur' }
 ]
 
 /**
@@ -296,6 +303,10 @@ export const UniverSpreadSheet = (
   // Mode de placement des nœuds créés depuis le tableur (miroir de menu_configuration).
   const [placementMode, setPlacementMode] = useState<'auto' | 'none' | 'increment'>(
     app_data.menu_configuration.spreadsheet_placement_mode
+  )
+  // Mode d'affichage des matrices TES/TER (miroir de menu_configuration).
+  const [matrixMode, setMatrixMode] = useState<'cross' | 'value'>(
+    app_data.menu_configuration.spreadsheet_matrix_mode
   )
   // Modale « Ajouter une contrainte » (onglets Ratio flux / Ratio stock flux / Chaînage stock).
   const [isAddConstraintOpen, setIsAddConstraintOpen] = useState(false)
@@ -662,6 +673,17 @@ export const UniverSpreadSheet = (
   const isNoeuds = activeSheetId === SHEET_ID_NOEUDS
   const isConstraintSheet = activeSheetId === SHEET_ID_RATIO ||
     activeSheetId === SHEET_ID_RATIO_STOCK || activeSheetId === SHEET_ID_STOCK_CHAINING
+  const isMatrixSheet = activeSheetId === SHEET_ID_TES || activeSheetId === SHEET_ID_TER
+
+  // Bascule croix/valeur des matrices TES/TER : met à jour le ref + reconstruit le classeur.
+  const toggleMatrixMode = (m: 'cross' | 'value') => {
+    setMatrixMode(m)
+    app_data.menu_configuration.spreadsheet_matrix_mode = m
+    const ref = app_data.menu_configuration.ref_to_spreadsheet
+    if (ref && ref.current) {
+      ref.current()
+    }
+  }
 
   // Après ajout d'une contrainte depuis la modale : bascule sur l'onglet de la famille concernée
   // (l'onglet actif est mis avant le rebuild -> buildAndApply le restaure via keepActive).
@@ -747,6 +769,16 @@ export const UniverSpreadSheet = (
           onChange={(v) => toggleOnlyVisible(v === 'visible')}
           title="Filtre d'affichage des lignes du tableur"
         />
+
+        {/* Affichage des matrices TES/TER : croix (structure) ou valeur (suit le data_type courant). */}
+        {isMatrixSheet && (
+          <SingleSelectMenu
+            value={matrixMode}
+            options={MATRIX_MODES}
+            onChange={toggleMatrixMode}
+            title="Contenu des cellules de la matrice : croix (le flux existe) ou valeur du flux pour le data_type sélectionné"
+          />
+        )}
 
         {/* Mode de placement des nœuds créés depuis le tableur (ajout de flux/nœud). */}
         <SingleSelectMenu
