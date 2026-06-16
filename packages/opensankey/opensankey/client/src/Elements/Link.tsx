@@ -1274,7 +1274,12 @@ export class Class_LinkElement extends Class_LinkAttribute {
    * cible d'un flux sans valeur n'est pas atteint et reste mal placé en X.
    */
   public get is_visible_ignoring_zero(): boolean {
-    return this.is_visible_ignoring_container_modes_and_zero && this.is_allowed_by_container_modes
+    if (this.is_visible_ignoring_container_modes_and_zero && this.is_allowed_by_container_modes) return true
+    // Mode « Toutes données » : les flux révélés (cf. is_visible) doivent aussi
+    // définir la topologie du placement auto, sinon les nœuds révélés n'obtiennent
+    // pas de colonne et restent mal placés. is_visible encode déjà la logique
+    // reveal_data_links et est indépendant de la valeur nulle.
+    return this.is_visible
   }
 
   /**
