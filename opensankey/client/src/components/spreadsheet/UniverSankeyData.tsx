@@ -244,13 +244,16 @@ const headerStyle = (hex: string, vertical = false) => ({
 })
 const levelStyle = (t: number) => ({ bg: { rgb: blendBlue(t) } })
 
-/** Affichage : limite un nombre à 5 chiffres significatifs ; '' et non-nombres inchangés. */
-const num5 = (x: any): any => (typeof x === 'number' && isFinite(x)) ? Number(x.toPrecision(5)) : x
-
-// Format de nombre Univer « pourcentage littéral » : suffixe « % » SANS multiplier par 100 (la valeur
-// stockée est déjà la magnitude en pourcent, ex. 10 -> « 10% »). `"%"` entre guillemets = littéral
-// (le token nu `%` multiplierait par 100). Style appliqué aux cellules de données (pas à l'en-tête).
-const PERCENT_CELL_STYLE = { n: { pattern: '0.##"%"' } }
+// Seuil d'AFFICHAGE en-dessous duquel une valeur est traitée comme du bruit numérique
+// (résidu de solveur / flottant, ex. 1.4211e-14 après réconciliation) et affichée 0. Purement
+// cosmétique : la donnée stockée sur le sankey n'est PAS modifiée. Nécessaire parce que
+// `toPrecision` garde les chiffres SIGNIFICATIFs et n'effondre donc jamais ces résidus tout seul.
+const NUM_DISPLAY_ZERO_EPS = 1e-9
+/** Affichage : 0 si bruit numérique, sinon 5 chiffres significatifs ; '' et non-nombres inchangés. */
+const num5 = (x: any): any =>
+  (typeof x === 'number' && isFinite(x))
+    ? (Math.abs(x) < NUM_DISPLAY_ZERO_EPS ? 0 : Number(x.toPrecision(5)))
+    : x
 
 /**
  * True si la colonne a au moins une valeur "significative" : non vide ET (si un défaut est fourni)
@@ -769,11 +772,12 @@ export const buildSankeyWorkbookData = (
   // Origine/Destination/Valeur obligatoires ; le reste optionnel (masqué si vide via le sélecteur).
   const fluxHeaders = [
     'Origine', 'Destination', 'Valeur', 'Valeur calculée', 'Valeur destination',
-    'Quantité naturelle', 'Incertitude relative', 'Source', 'Hypothèse'
+    'Quantité naturelle', 'Incertitude %', 'Source', 'Hypothèse'
   ]
   const fluxCells: Type_CellData = { 0: {} }
-  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet. 'Incertitude relative' (col 6)
-  // = affichée au format pourcentage (la valeur stockée est déjà la magnitude en %).
+  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet. 'Incertitude %' (col 6) = nombre
+  // simple (le « % » est porté par l'en-tête, pas par un format de cellule -> saisie/parsing sans
+  // ambiguïté).
   const FLUX_RESULT_COLS = new Set([3])
   links.forEach((l: any, i: number) => {
     const v = l.value
@@ -786,13 +790,14 @@ export const buildSankeyWorkbookData = (
       3: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
       4: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
       5: { v: '' },
-      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '', s: PERCENT_CELL_STYLE },
+      // Incertitude % : valeur saisie (nombre simple), vide sinon (le défaut Python s'applique en aval).
+      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '' },
       7: { v: (v && v.data_source) || '' },
       8: { v: '' }
     }
   })
   // En-tête vertical pour les colonnes purement numériques (Valeur, Valeur calculée, Valeur
-  // destination, Incertitude relative…) : labels longs au-dessus de nombres courts -> on pivote à 90°
+  // destination, Incertitude %…) : labels longs au-dessus de nombres courts -> on pivote à 90°
   // et on resserre la largeur (même logique que l'onglet Analyse des résultats).
   const fluxVerticalCols = numericOnlyColumns(fluxCells, fluxHeaders.length)
   fluxHeaders.forEach((h, c) => {
