@@ -18,6 +18,7 @@ import { StorageType } from '../../Elements/Element'
 import { ALL_ATTRIBUTES_CONFIG } from '../../Elements/ElementsAttributesConfig'
 import { NodePositioning } from '../../Algorithms/NodePositioning'
 import { Class_NodeDimension } from '../../Elements/NodeDimension'
+import { downloadImageSource } from './SaveImage'
 
 // ==================================================================================================
 // CLASSE PRINCIPALE D'ACTIONS DES NŒUDS
@@ -934,6 +935,14 @@ export class NodeActions {
     this.refreshAndSave()
   }
 
+  // Télécharge l'image affichée sur le nœud (icon_is_image) sous forme de fichier.
+  saveNodeImage = () => {
+    const node = this.contextualised_node
+    if (!node?.icon_is_image || !node.icon_image_src) return
+    downloadImageSource(node.icon_image_src, node.name || node.id)
+    this.closeContextMenu()
+  }
+
   static createModifier = (app_data: Class_ApplicationData) => {
     const nodeActions = new NodeActions(app_data)
 
@@ -1001,6 +1010,7 @@ export class NodeActions {
       selectOutputLinks: nodeActions.selectOutputLinks,
       selectInputLinks: nodeActions.selectInputLinks,
       copyElement: nodeActions.copyElement,
+      saveNodeImage: nodeActions.saveNodeImage,
 
       // Actions dynamiques générées pour les dimensions
       // ...setChildActions,

@@ -2,6 +2,7 @@ import { applyRandomColors } from '../../Algorithms/Colors'
 import { prepositionAllInPlace, centerChildrenOnParent } from '../../Algorithms/Hierarchies'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { MenuConfig } from './SankeyMenuContext'
+import { downloadImageSource } from './SaveImage'
 
 export const ZDD_MENU_CONFIG: MenuConfig = {
   structure: [
@@ -113,6 +114,15 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         customCheck: (app_data) => {
           return app_data.drawing_area.sankey.containers_list.length > 0
         }
+      }]
+    },
+    {
+      type: 'button',
+      actionName: 'saveBgImage',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) =>
+          app_data.drawing_area.show_background_image && !!app_data.drawing_area.background_image
       }]
     }
   ],
@@ -537,6 +547,24 @@ export const ZDD_MENU_CONFIG: MenuConfig = {
         it: 'Aprire la finestra di configurazione dello stile visivo dei nodi'
       }
     },
+
+    saveBgImage: {
+      type: 'action',
+      labels: {
+        en: 'Save background image',
+        fr: 'Enregistrer l\'image de fond',
+        es: 'Guardar imagen de fondo',
+        de: 'Hintergrundbild speichern',
+        it: 'Salva immagine di sfondo'
+      },
+      tooltips: {
+        en: 'Download the background image to a file',
+        fr: 'Télécharger l\'image de fond dans un fichier',
+        es: 'Descargar la imagen de fondo a un archivo',
+        de: 'Hintergrundbild in eine Datei herunterladen',
+        it: 'Scarica l\'immagine di sfondo in un file'
+      }
+    },
     // openGraphOrder: {
     //   type: 'action',
     //   labels: {
@@ -630,6 +658,8 @@ export const createZDDModifier = (app_data: Class_ApplicationData) => {
     resetNodeColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.nodes_list); saveToCache() },
     resetLinkColors: () => { sankey.deleteLocalAttrSelectedElements('shape_color', sankey.links_list); saveToCache() },
     openStyleModal: () => ref_setter_show_modal_styles.current(true),
+
+    saveBgImage: () => downloadImageSource(drawing_area.background_image, (app_data.file_name || 'sankey') + '_background'),
 
     toggleZDTActivated: () => {
       app_data.drawing_area.sankey.container_activated = !app_data.drawing_area.sankey.container_activated

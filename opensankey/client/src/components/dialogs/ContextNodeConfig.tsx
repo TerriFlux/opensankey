@@ -329,7 +329,18 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       ]
     },
     { type: 'button', actionName: 'startAnimation' },
-    { type: 'button', actionName: 'copyElement' }
+    { type: 'button', actionName: 'copyElement' },
+    {
+      type: 'button',
+      actionName: 'saveNodeImage',
+      visibilityConditions: [{
+        type: 'custom',
+        customCheck: (app_data) => {
+          const node = app_data.drawing_area.node_contextualised
+          return !!node?.icon_is_image && !!node?.icon_image_src
+        }
+      }]
+    }
   ],
 
   actions: {
@@ -755,6 +766,13 @@ export const NODE_MENU_CONFIG: MenuConfig = {
       type: 'action',
       labels: { en: 'Copy element(s)', fr: 'Copier les éléments', es: 'Copiar elemento(s)', de: 'Element(e) kopieren', it: 'Copia elemento/i' },
       tooltips: { en: 'Duplicate the selected element(s) — copies remain selected', fr: 'Dupliquer les éléments sélectionnés — les copies restent sélectionnées', es: 'Duplicar los elementos seleccionados — las copias permanecen seleccionadas', de: 'Ausgewählte Element(e) duplizieren — Kopien bleiben ausgewählt', it: 'Duplicare gli elementi selezionati — le copie rimangono selezionate' }
+    },
+
+    saveNodeImage: {
+      type: 'action',
+      labels: { en: 'Save image', fr: 'Enregistrer l\'image', es: 'Guardar imagen', de: 'Bild speichern', it: 'Salva immagine' },
+      tooltips: { en: 'Download the node image to a file', fr: 'Télécharger l\'image du nœud dans un fichier', es: 'Descargar la imagen del nodo a un archivo', de: 'Knotenbild in eine Datei herunterladen', it: 'Scarica l\'immagine del nodo in un file' },
+      closeMenuAfter: true
     }
   },
 
