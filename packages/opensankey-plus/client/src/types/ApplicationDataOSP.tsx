@@ -320,7 +320,9 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
     // Restaure l'état d'affichage de la grande zone (absent => valeur courante préservée, ex. switch
     // de vue only_current_view qui ne porte pas les métadonnées master).
     const mz = json_object['main_zone']
-    if (mz && typeof mz === 'object') this.menu_configuration.mainZoneStateFromJSON(mz as Type_JSON)
+    // Garde défensive (cf. ApplicationData._fromJSON) : menu_configuration peut ne pas être
+    // encore initialisé (créé via un hook React) ; le `?.` évite d'avorter tout le chargement.
+    if (mz && typeof mz === 'object') this.menu_configuration?.mainZoneStateFromJSON(mz as Type_JSON)
 
     if (kwargs && kwargs['only_current_view']) {
       return
