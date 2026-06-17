@@ -93,14 +93,12 @@ const TermEditor = (
   const TYPE_LABELS: { [k in TermType]: string } = {
     flux: 'Flux', node_total: 'Nœud (total)', stock: 'Stock', delta_stock: 'Δ stock'
   }
-  // Flux : une fois un côté choisi, l'autre se limite aux extrémités d'un flux réel
-  // (via input_links_list / output_links_list du nœud sélectionné).
+  // Flux : l'origine reste TOUJOURS libre (tous les nœuds) ; seule la destination se restreint
+  // aux cibles réelles de l'origine choisie. Un filtrage mutuel bloquerait l'édition une fois les
+  // deux côtés sélectionnés (chaque liste ne contenant plus que la combinaison courante).
   const uniq = (a: string[]) => Array.from(new Set(a)).sort((x, y) => x.localeCompare(y))
-  const origNode = state.dest ? nodeByName[state.dest] : null
   const destNode = state.orig ? nodeByName[state.orig] : null
-  const fluxOrigOptions = origNode
-    ? uniq(origNode.input_links_list.map((l: any) => l.source.name))
-    : nodes
+  const fluxOrigOptions = nodes
   const fluxDestOptions = destNode
     ? uniq(destNode.output_links_list.map((l: any) => l.target.name))
     : nodes
