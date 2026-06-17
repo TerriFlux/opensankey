@@ -438,9 +438,13 @@ export const DocPanel = (
                             overflowY='auto'
                             onMouseEnter={() => setViewSubmenuOpen(true)}
                             onMouseLeave={() => setViewSubmenuOpen(false)}
-                            // Empêche le clic sur l'ascenseur de retirer le focus de l'item courant :
-                            // sans ça, le blur ferme le menu parent « Insérer » (closeOnBlur) et tout se démonte.
-                            onMouseDown={(e) => e.preventDefault()}
+                            // Ascenseur masqué : cliquer dessus retirait le focus de l'item courant
+                            // (blur) et fermait le menu parent « Insérer » (closeOnBlur). On garde le
+                            // défilement à la molette mais sans barre cliquable.
+                            sx={{
+                              scrollbarWidth: 'none',
+                              '::-webkit-scrollbar': { display: 'none' }
+                            }}
                           >
                             {view_sources.map(({ id, name }) => (
                               <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
