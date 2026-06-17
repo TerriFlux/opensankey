@@ -20,7 +20,7 @@ import {
   SHEET_ID_TES, SHEET_ID_TER,
   NOEUDS_COL, TAGS_COL, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
   fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout,
-  tesMatrixNodes, terMatrixLayout
+  nodeSheetTagColumns, tesMatrixNodes, terMatrixLayout
 } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -113,27 +113,31 @@ export const attachSankeyBridge = (
     // leur position par défaut — rien à faire, ils restent où createNewNode les a posés.
   }
 
+  // Disposition automatique reproduisant EXACTEMENT l'appel du bouton « disposition auto »
+  // (MenuContextAutoLayout) : mêmes espacements et modes sources/puits configurés par l'utilisateur.
+  // L'ancien appel `(true, true)` figeait les défauts (before_neighbor/after_neighbor, espacements =
+  // dx/dy du NŒUD au lieu du style par défaut) → disposition différente de celle obtenue via le menu
+  // après rechargement (que l'utilisateur prend comme référence).
+  const computeAutoLayout = () => {
+    const default_dx = sankey.styles_dict['default'].shape_position_dx ?? 0
+    const default_dy = sankey.styles_dict['default'].shape_position_dy ?? 0
+    drawing_area.nodePositioning.computeAutoSankeyWithToast(
+      false,
+      app_data.layout_optimize_crossing,
+      app_data.layout_h_spacing ?? default_dx,
+      app_data.layout_v_spacing ?? default_dy,
+      app_data.layout_sources_mode,
+      app_data.layout_sinks_mode
+    )
+  }
+
   // newNodes : nœuds créés par l'édition courante (mode 'increment' uniquement).
   const redraw = (newNodes: any[] = []) => {
     const mode = menu_configuration.spreadsheet_placement_mode
     // 'spreadsheet_freeze' (legacy reactgrid) force le mode 'none' s'il est actif.
     const effective = menu_configuration.spreadsheet_freeze ? 'none' : mode
     if (effective === 'auto') {
-      // Reproduire EXACTEMENT l'appel du bouton « disposition auto » (MenuContextAutoLayout) :
-      // mêmes espacements et modes sources/puits configurés par l'utilisateur. L'ancien appel
-      // `(true, true)` figeait les défauts (before_neighbor/after_neighbor, espacements = dx/dy
-      // du NŒUD au lieu du style par défaut) → disposition différente de celle obtenue via le
-      // menu après rechargement (que l'utilisateur prend comme référence).
-      const default_dx = sankey.styles_dict['default'].shape_position_dx ?? 0
-      const default_dy = sankey.styles_dict['default'].shape_position_dy ?? 0
-      drawing_area.nodePositioning.computeAutoSankeyWithToast(
-        false,
-        app_data.layout_optimize_crossing,
-        app_data.layout_h_spacing ?? default_dx,
-        app_data.layout_v_spacing ?? default_dy,
-        app_data.layout_sources_mode,
-        app_data.layout_sinks_mode
-      )
+      computeAutoLayout()
     } else if (effective === 'increment') {
       placeNewNodesIncrementally(newNodes)
     }
@@ -261,18 +265,41 @@ export const attachSankeyBridge = (
   // renommage d'un nœud existant ; création si ligne nouvelle. `getRowNodes` = mapping ligne->nœud
   // propre à la feuille (filtré ou non par nature) ; `typeTag` = tag de nature appliqué aux nœuds
   // créés sur une feuille filtrée (pour qu'ils se rangent dans la bonne feuille, comme SEP).
+  // Aligne l'appartenance d'un nœud aux étiquettes d'un groupe (colonne de tags) sur la cellule
+  // (liste déroulante multi-valeurs, valeurs jointes par virgule). N'ajoute/ne retire QUE des
+  // étiquettes EXISTANTES du groupe (la liste déroulante ne propose qu'elles) ; les noms inconnus
+  // sont ignorés. Retourne true si l'appartenance a changé.
+  const reconcileNodeTagCell = (node: any, group: any, text: string): boolean => {
+    const wanted = new Set(
+      text.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+    )
+    let changed = false
+    ;(group.tags_list || []).forEach((tag: any) => {
+      const has = !!(node.hasGivenTag && node.hasGivenTag(tag))
+      if (wanted.has(tag.name) && !has) {
+        node.addTag(tag)
+        changed = true
+      } else if (!wanted.has(tag.name) && has) {
+        node.removeTag(tag)
+        changed = true
+      }
+    })
+    return changed
+  }
+
   const reconcileNodeRow = (
     ws: any, r: number, originalNodeCount: number,
-    getRowNodes: () => any[], typeTag?: any
-  ): { structural: boolean, value: boolean } => {
+    getRowNodes: () => any[], typeTag?: any, tagColumns: Array<{ col: number, group: any }> = []
+  ): { structural: boolean, value: boolean, tag: boolean } => {
     const idx = r - 1
     const name = cellText(ws, r, NOEUDS_COL.node)
     let structural = false
     let value = false
+    let tag = false
     if (idx < originalNodeCount) {
       const node = getRowNodes()[idx]
       if (!node) {
-        return { structural, value }
+        return { structural, value, tag }
       }
       if (name && name !== node.name) {
         node.name = name
@@ -294,14 +321,29 @@ export const attachSankeyBridge = (
         node.tooltip_text = defText
         value = true
       }
+      // Étiquettes : colonnes de tags (sélecteur déroulant). Aligne l'appartenance du nœud aux
+      // étiquettes de chaque groupe sur la cellule. Marqué `tag` (pas `structural`) -> redraw simple
+      // + reconstruction différée de l'onglet (rafraîchit la colonne Couleur si pilotée par tag),
+      // sans relayout des positions.
+      tagColumns.forEach(({ col, group }) => {
+        if (reconcileNodeTagCell(node, group, cellText(ws, r, col))) {
+          tag = true
+        }
+      })
     } else if (name && !nameToNode()[name]) {
       const node = sankey.addNewNodeWithName(name)
       if (node && typeTag && node.addTag) {
         node.addTag(typeTag)
       }
+      // Étiquettes saisies sur la ligne du nouveau nœud (au-delà du tag de nature).
+      if (node) {
+        tagColumns.forEach(({ col, group }) => {
+          reconcileNodeTagCell(node, group, cellText(ws, r, col))
+        })
+      }
       structural = true
     }
-    return { structural, value }
+    return { structural, value, tag }
   }
 
   // Réconcilie une ligne de l'onglet « Noeuds par agrégation » : write-back = renommage des nœuds.
@@ -559,6 +601,13 @@ export const attachSankeyBridge = (
       return
     }
     const ranges = (params && params.effectedRanges) || []
+    // [DEBUG paste-reset] à retirer
+    try {
+      console.log('[bridge] SheetValueChanged ' + JSON.stringify(ranges.map((fr: any) => {
+        const rg = fr.getRange()
+        return { sheet: fr.getSheetId(), sr: rg.startRow, er: rg.endRow, sc: rg.startColumn, ec: rg.endColumn }
+      })))
+    } catch (e) { console.log('[bridge] SheetValueChanged (introspection failed)', e) }
     if (ranges.length === 0) {
       return
     }
@@ -573,6 +622,84 @@ export const attachSankeyBridge = (
 
     drawing_area.setToModeEdition(false)
     const hasAfm = app_data.has_sankey_afm
+
+    // RESET sur collage d'un tableau en A2 de l'onglet Flux : un paste qui démarre en A2 (1re ligne
+    // de données, colonne Origine) et couvre PLUSIEURS lignes ET au moins 2 colonnes (Origine +
+    // Destination) est interprété comme l'import d'une NOUVELLE liste de flux. Plutôt que de
+    // réconcilier ligne par ligne (ce qui mapperait les anciens flux sur les nouvelles lignes), on
+    // VIDE entièrement le diagramme puis on le reconstruit à partir des seules lignes collées.
+    const fluxPaste = ranges
+      .map((fr: any) => ({ id: fr.getSheetId(), rng: fr.getRange() }))
+      .find((x: any) => x.id === SHEET_ID_FLUX &&
+        x.rng.startRow === 1 && x.rng.startColumn === 0 &&
+        x.rng.endRow > x.rng.startRow && x.rng.endColumn >= 1)
+    // [DEBUG paste-reset] à retirer
+    console.log('[bridge] fluxPaste match=', !!fluxPaste, 'SHEET_ID_FLUX=', SHEET_ID_FLUX,
+      fluxPaste ? JSON.stringify(fluxPaste) : '')
+    if (fluxPaste) {
+      const ws = wb.getSheetBySheetId(SHEET_ID_FLUX)
+      if (ws) {
+        // Vider entièrement le diagramme (flux PUIS nœuds : un nœud orphelin se supprime seul).
+        ;[...sankey.links_list].forEach((l: any) => drawing_area.deleteLink(l))
+        ;[...sankey.nodes_list].forEach((n: any) => drawing_area.deleteNode(n))
+        // Reconstruire depuis les lignes collées. Dédoublonnage des nœuds par nom (un nom = un nœud).
+        const map: { [name: string]: any } = {}
+        const getNode = (name: string): any => {
+          if (!map[name]) {
+            map[name] = sankey.addNewNodeWithName(name)
+          }
+          return map[name]
+        }
+        for (let r = fluxPaste.rng.startRow; r <= fluxPaste.rng.endRow; r++) {
+          const src = cellText(ws, r, 0)
+          const tgt = cellText(ws, r, 1)
+          if (!src || !tgt) {
+            continue
+          }
+          const sNode = getNode(src)
+          const tNode = getNode(tgt)
+          if (sankey.links_dict[defaultLinkId(sNode, tNode)]) {
+            continue
+          }
+          const l = sankey.addNewLink(sNode, tNode)
+          if (l && l.value) {
+            const v2 = parseNum(cellText(ws, r, 2))
+            if (v2 != null) {
+              l.value.valueData = v2
+            }
+            if (hasAfm) {
+              const v3 = parseNum(cellText(ws, r, 3))
+              if (v3 != null) {
+                l.value.valueResult = v3
+              }
+            }
+            const u = parseNum(cellText(ws, r, 6))
+            if (u != null) {
+              l.value.data_uncertainty = u
+            }
+          }
+        }
+        // [DEBUG paste-reset] à retirer
+        console.log('[bridge] RESET done: nodes=', sankey.nodes_list.length,
+          'links=', sankey.links_list.length, 'rows', fluxPaste.rng.startRow, '..', fluxPaste.rng.endRow)
+        // Diagramme reconstruit de zéro -> diagramme « vierge » (0 flux valué avant) : l'échelle se
+        // cale sur le plus gros flux collé.
+        drawing_area.updateScaleAtLinkValueSetting(0)
+        // Tout le diagramme est neuf -> disposition automatique (les modes increment/none laisseraient
+        // les nœuds empilés à l'origine faute de repère déjà positionné).
+        computeAutoLayout()
+        app_data.draw()
+        // Réaligner l'onglet Flux/Noeuds sur le modèle (purge des lignes obsolètes au-delà du collage,
+        // reconstruction de l'onglet Noeuds). En différé : reconstruire pendant le traitement de la
+        // commande disposerait l'unit Univer en plein vol.
+        const ref = app_data.menu_configuration.ref_to_spreadsheet
+        if (ref && ref.current) {
+          setTimeout(() => { if (ref.current) { ref.current() } }, 0)
+        }
+      }
+      return
+    }
+
     // Signature de la liste des nœuds AVANT traitement : une édition de flux peut créer un nœud
     // (origine/destination inédite), renommer une extrémité ou supprimer un nœud devenu orphelin.
     // Ces changements doivent se répercuter dans l'onglet Noeuds (et Flux) -> rebuild différé si la
@@ -648,26 +775,30 @@ export const attachSankeyBridge = (
           value = value || res.value
         })
       } else if (sheetId === SHEET_ID_NOEUDS) {
+        const tagCols = nodeSheetTagColumns(app_data, SHEET_ID_NOEUDS)
         rows.forEach((r) => {
           if (r === 0) {
             return
           }
-          const res = reconcileNodeRow(ws, r, originalNodeCount, rowNodes)
+          const res = reconcileNodeRow(ws, r, originalNodeCount, rowNodes, undefined, tagCols)
           structural = structural || res.structural
           value = value || res.value
+          tagChanged = tagChanged || res.tag
         })
       } else if (NODE_SHEET_TYPE[sheetId]) {
         // Onglets Produits / Secteurs / Échanges : renommage + création (avec tag de nature).
         const tag = sheetTypeTag(sheetId)
         const cnt = originalNodeCountBySheet[sheetId]
+        const tagCols = nodeSheetTagColumns(app_data, sheetId)
         rows.forEach((r) => {
           if (r === 0) {
             return
           }
           if (tag) {
-            const res = reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag)
+            const res = reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag, tagCols)
             structural = structural || res.structural
             value = value || res.value
+            tagChanged = tagChanged || res.tag
           }
         })
       } else if (sheetId === SHEET_ID_NOEUDS_AGG) {
@@ -783,6 +914,10 @@ export const attachSankeyBridge = (
   const removeDisposable = univerAPI.addEvent(univerAPI.Event.CommandExecuted, (event: any) => {
     if (isSyncing.current) {
       return
+    }
+    // [DEBUG paste-reset] à retirer : tracer les ids de commande (repérer la commande de collage)
+    if (event && event.id && /paste|clipboard|value|set-range/i.test(String(event.id))) {
+      console.log('[bridge] CommandExecuted', event.id)
     }
     if (event.id !== 'sheet.command.remove-row' && event.id !== 'sheet.command.remove-row-by-range') {
       return
