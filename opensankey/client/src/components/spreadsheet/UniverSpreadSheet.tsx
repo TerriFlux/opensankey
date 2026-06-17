@@ -20,6 +20,7 @@ import { ChevronDownIcon } from '@chakra-ui/icons'
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import {
   buildSankeyWorkbookData, Type_SheetColumns, Type_ColMeta, Type_SheetMeta, SHEET_ID_NOEUDS,
+  allNodesTyped,
   SHEET_ID_FLUX, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK, SHEET_ID_STOCK_CHAINING,
   SHEET_ID_TES, SHEET_ID_TER
 } from './UniverSankeyData'
@@ -410,7 +411,8 @@ export const UniverSpreadSheet = (
     const init = async () => {
       const [
         presets, sheetsCore, localeMod,
-        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod
+        sheetsFilter, filterLocaleMod, sheetsSort, sortLocaleMod,
+        sheetsDataValidation, dataValidationLocaleMod
       ] = await Promise.all([
         import('@univerjs/presets'),
         import('@univerjs/presets/preset-sheets-core'),
@@ -418,12 +420,15 @@ export const UniverSpreadSheet = (
         import('@univerjs/presets/preset-sheets-filter'),
         import('@univerjs/presets/preset-sheets-filter/locales/fr-FR'),
         import('@univerjs/presets/preset-sheets-sort'),
-        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR')
+        import('@univerjs/presets/preset-sheets-sort/locales/fr-FR'),
+        import('@univerjs/presets/preset-sheets-data-validation'),
+        import('@univerjs/presets/preset-sheets-data-validation/locales/fr-FR')
       ])
       await Promise.all([
         import('@univerjs/presets/lib/styles/preset-sheets-core.css'),
         import('@univerjs/presets/lib/styles/preset-sheets-filter.css'),
-        import('@univerjs/presets/lib/styles/preset-sheets-sort.css')
+        import('@univerjs/presets/lib/styles/preset-sheets-sort.css'),
+        import('@univerjs/presets/lib/styles/preset-sheets-data-validation.css')
       ])
       const liveContainer = containerRef.current
       if (disposed || !liveContainer) {
@@ -433,12 +438,16 @@ export const UniverSpreadSheet = (
       const { UniverSheetsCorePreset } = sheetsCore
       const { UniverSheetsFilterPreset } = sheetsFilter
       const { UniverSheetsSortPreset } = sheetsSort
+      const { UniverSheetsDataValidationPreset } = sheetsDataValidation
       const sheetsCoreFrFR = localeMod.default
 
       const { univer, univerAPI } = createUniver({
         locale: LocaleType.FR_FR,
         locales: {
-          [LocaleType.FR_FR]: merge({}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default)
+          [LocaleType.FR_FR]: merge(
+            {}, sheetsCoreFrFR, filterLocaleMod.default, sortLocaleMod.default,
+            dataValidationLocaleMod.default
+          )
         },
         theme: defaultTheme,
         presets: [
@@ -455,7 +464,10 @@ export const UniverSpreadSheet = (
           }),
           // Filtre (autofilter Excel : flèche par colonne, tri, recherche, valeurs) + tri par colonne.
           UniverSheetsFilterPreset(),
-          UniverSheetsSortPreset()
+          UniverSheetsSortPreset(),
+          // Validation de données : listes déroulantes (sélecteur d'étiquette dans les colonnes de
+          // tags des feuilles de nœuds).
+          UniverSheetsDataValidationPreset()
         ]
       })
       univerInstance = univer
@@ -524,6 +536,29 @@ export const UniverSpreadSheet = (
             freezeHeaderRow(sheetId)
           })
           setHiddenCols(hidden)
+          // Listes déroulantes (sélecteur d'étiquette) sur les colonnes de tags des feuilles de
+          // nœuds : validation de liste appliquée aux lignes de données (en-tête figé exclu). Le
+          // write-back (UniverSankeyBridge) aligne ensuite l'appartenance du nœud sur la cellule.
+          Object.keys(built.validations || {}).forEach((sheetId) => {
+            const rules = built.validations[sheetId]
+            if (!rules || rules.length === 0) {
+              return
+            }
+            const ws = wb.getSheetBySheetId ? wb.getSheetBySheetId(sheetId) : null
+            if (!ws) {
+              return
+            }
+            const rowCount = typeof ws.getMaxRows === 'function' ? ws.getMaxRows() : 1000
+            const numRows = Math.max(1, rowCount - 1)
+            rules.forEach((rule) => {
+              try {
+                const dv = univerAPI.newDataValidation()
+                  .requireValueInList(rule.options, rule.multiple, true)
+                  .build()
+                ws.getRange(1, rule.col, numRows, 1).setDataValidation(dv)
+              } catch (e) { /* preset absent / API indispo : pas de dropdown, édition libre */ }
+            })
+          })
           // Onglet actif cible : on conserve celui sur lequel l'utilisateur était (keepActive) ;
           // au tout premier build (keepActive null) l'onglet par défaut est Flux. On le rend actif
           // AVANT de masquer les onglets vides (Univer interdit de masquer la feuille active) et
@@ -537,10 +572,16 @@ export const UniverSpreadSheet = (
           // Masque par défaut les onglets vides (sauf Flux, toujours visible, et sauf l'onglet actif).
           const hiddenSh: string[] = []
           const sheetOverrides = userSheetOverridesRef.current
+          // Format `products_sectors` : l'onglet Noeuds n'est redondant avec Produits/Secteurs/Échanges
+          // que si CHAQUE nœud porte un tag de nature -> masqué par défaut. S'il reste des nœuds non
+          // catégorisés (visibles seulement dans Noeuds), on garde l'onglet.
+          const noeudsRedundant = allNodesTyped(app_data, onlyVisibleRef.current)
           built.sheets.forEach((s) => {
-            // Choix utilisateur explicite prioritaire ; sinon défaut (onglet vide masqué). Flux et
+            // Choix utilisateur explicite prioritaire ; sinon défaut (onglet vide masqué, ou Noeuds
+            // masqué quand tous les nœuds sont ventilés en produits/secteurs/échanges). Flux et
             // l'onglet actif restent toujours visibles (Univer interdit de masquer la feuille active).
-            const wantHide = s.id in sheetOverrides ? sheetOverrides[s.id] : !s.hasData
+            const defaultHide = !s.hasData || (s.id === SHEET_ID_NOEUDS && noeudsRedundant)
+            const wantHide = s.id in sheetOverrides ? sheetOverrides[s.id] : defaultHide
             const shouldHide = wantHide && s.id !== SHEET_ID_FLUX && s.id !== targetActive
             setSheetHidden(s.id, shouldHide)
             if (shouldHide) {
