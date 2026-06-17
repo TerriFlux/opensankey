@@ -141,7 +141,34 @@ export const DocPanel = (
   const [mode, setMode] = useState<Type_DocMode>('preview')
   const [viewSubmenuOpen, setViewSubmenuOpen] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const previewRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Fraction de défilement (0..1) du dernier panneau scrollé, pour conserver la position de
+  // lecture en basculant entre Aperçu et Édition (sources et rendu n'ont pas la même hauteur,
+  // donc on raisonne en proportion plutôt qu'en pixels).
+  const scrollFracRef = useRef(0)
+
+  const recordScroll = (el: HTMLElement | null) => {
+    if (!el) return
+    const max = el.scrollHeight - el.clientHeight
+    scrollFracRef.current = max > 0 ? el.scrollTop / max : 0
+  }
+
+  const applyScroll = (el: HTMLElement | null) => {
+    if (!el) return
+    const max = el.scrollHeight - el.clientHeight
+    el.scrollTop = max > 0 ? scrollFracRef.current * max : 0
+  }
+
+  // Au changement de mode, réapplique la fraction mémorisée au(x) panneau(x) désormais visible(s)
+  // (après le paint, le temps que le contenu — textarea ou markdown rendu — soit mis en page).
+  useEffect(() => {
+    const id = requestAnimationFrame(() => {
+      if (mode !== 'preview') applyScroll(textareaRef.current)
+      if (mode !== 'edit') applyScroll(previewRef.current)
+    })
+    return () => cancelAnimationFrame(id)
+  }, [mode])
 
   // À l'activation de l'onglet, resynchroniser depuis le modèle (un nouveau fichier a pu être chargé).
   useEffect(() => {
@@ -447,6 +474,7 @@ export const DocPanel = (
               ref={textareaRef}
               value={text}
               onChange={(e) => onChange(e.target.value)}
+              onScroll={(e) => recordScroll(e.currentTarget)}
               onPaste={onPaste}
               placeholder={'Rédigez la documentation de ce diagramme en markdown…\n\n# Titre\n\n- point 1\n- point 2'}
               height='100%'
@@ -461,7 +489,12 @@ export const DocPanel = (
         )}
         {showPreview && (
           <Box flex='1 1 50%' minWidth={0}>
-            <div className='os-md-preview' style={PREVIEW_STYLE}>
+            <div
+              ref={previewRef}
+              className='os-md-preview'
+              style={PREVIEW_STYLE}
+              onScroll={(e) => recordScroll(e.currentTarget)}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkMath]}
                 rehypePlugins={[rehypeKatex]}
