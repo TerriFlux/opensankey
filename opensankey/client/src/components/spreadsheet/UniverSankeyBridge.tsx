@@ -362,6 +362,15 @@ export const attachSankeyBridge = (
         node.tooltip_text = defText
         value = true
       }
+      // Équilibre entrée-sortie : pertinent uniquement pour un nœud interne (flux entrant ET sortant ;
+      // une extrémité ne peut pas être équilibrée). « 0 » -> has_material_balance=false ; sinon true.
+      if (node.hasInputLinks && node.hasOutputLinks && node.hasInputLinks() && node.hasOutputLinks()) {
+        const wantBalance = cellText(ws, r, NOEUDS_COL.mat_balance) !== '0'
+        if (wantBalance !== (node.has_material_balance !== false)) {
+          node.has_material_balance = wantBalance
+          value = true
+        }
+      }
       // Étiquettes : colonnes de tags (sélecteur déroulant). Aligne l'appartenance du nœud aux
       // étiquettes de chaque groupe sur la cellule. Marqué `tag` (pas `structural`) -> redraw simple
       // + reconstruction différée de l'onglet (rafraîchit la colonne Couleur si pilotée par tag),
