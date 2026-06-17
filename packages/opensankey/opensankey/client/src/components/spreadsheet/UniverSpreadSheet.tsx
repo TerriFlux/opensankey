@@ -582,7 +582,11 @@ export const UniverSpreadSheet = (
             // l'onglet actif restent toujours visibles (Univer interdit de masquer la feuille active).
             const defaultHide = !s.hasData || (s.id === SHEET_ID_NOEUDS && noeudsRedundant)
             const wantHide = s.id in sheetOverrides ? sheetOverrides[s.id] : defaultHide
-            const shouldHide = wantHide && s.id !== SHEET_ID_FLUX && s.id !== targetActive
+            // Flux n'est jamais masqué PAR DÉFAUT (il a toujours des données -> defaultHide=false),
+            // mais un choix utilisateur explicite (sheet_overrides) doit pouvoir le masquer. Seule
+            // contrainte conservée : ne pas masquer l'onglet actif (interdit par Univer ; l'appelant
+            // bascule l'onglet actif avant de masquer Flux).
+            const shouldHide = wantHide && s.id !== targetActive
             setSheetHidden(s.id, shouldHide)
             if (shouldHide) {
               hiddenSh.push(s.id)
