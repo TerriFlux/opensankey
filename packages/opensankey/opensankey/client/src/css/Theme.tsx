@@ -2918,8 +2918,8 @@ const layerStyles = {
     // Hauteur minimale : sans elle, une box de config qui ne contient que son
     // titre + la ligne sélecteur (cas « aucune sélection » sur Nœuds/ZDT)
     // s'écrase en un mince bandeau. On lui garde une présence lisible et de
-    // la place pour ouvrir le menu déroulant des éléments.
-    minHeight: '8rem',
+    // la place pour dérouler le menu des éléments (recherche + liste).
+    minHeight: '16rem',
     '.title_box': {
       padding: '0.4rem',
       width: '100%',
