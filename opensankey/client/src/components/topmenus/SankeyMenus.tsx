@@ -561,7 +561,7 @@ export const MenuDraggable = ({
       position='absolute'
       minW={minW}
       maxW={maxW}
-      zIndex='2'
+      zIndex='40'
     >
       <Box
         className='title_menu'
