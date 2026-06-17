@@ -139,6 +139,24 @@ const NOEUDS_DEFAULTS: { [col: number]: any } = {
 // que sur choix explicite de l'utilisateur (sélecteur « Colonnes »).
 const NOEUDS_FORCED_HIDDEN = new Set([NOEUDS_COL.position_u, NOEUDS_COL.position_v])
 
+// Équilibre entrée-sortie : seuls les nœuds INTERNES (flux entrant ET sortant) portent une contrainte
+// d'équilibre. Valeur affichée 1 si la contrainte s'applique, 0 sinon (extrémités, ou nœud interne
+// explicitement désactivé via has_material_balance=false).
+const nodeHasInOut = (n: any): boolean =>
+  !!(n.hasInputLinks && n.hasOutputLinks && n.hasInputLinks() && n.hasOutputLinks())
+const nodeBalanceValue = (n: any): number =>
+  (nodeHasInOut(n) && n.has_material_balance !== false) ? 1 : 0
+// Défaut structurel : 1 pour un nœud interne, 0 pour une extrémité. La colonne reste masquée tant
+// qu'aucun nœud ne dévie de ce défaut (= aucun nœud interne forcé à 0).
+const nodeBalanceIsDefault = (n: any): boolean =>
+  nodeBalanceValue(n) === (nodeHasInOut(n) ? 1 : 0)
+const nodeSheetBalanceMeaningful = (rows: Type_NodeRow[]): boolean =>
+  rows.some(({ node }) => !nodeBalanceIsDefault(node))
+const nodeForcedHidden = (balanceMeaningful: boolean): Set<number> =>
+  balanceMeaningful
+    ? NOEUDS_FORCED_HIDDEN
+    : new Set([...NOEUDS_FORCED_HIDDEN, NOEUDS_COL.mat_balance])
+
 // Couleurs de référence (excel_formatter.py CATEGORY_COLORS / main colors).
 const COLOR_NODE_MAIN = [0x4F, 0x81, 0xBD]  // #4F81BD (core / nodes header, bleu)
 const COLOR_WHITE = [0xFF, 0xFF, 0xFF]
@@ -561,7 +579,7 @@ export const nodeSheetTagColumns = (
 const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
   'Niveau d\'agrégation',
   nodeHeaderLabel,
-  'Equilibre entrée-sortie',
+  'Équilibrée',
   'Couleur',
   'Définitions',
   'Colonne u',
@@ -573,7 +591,7 @@ type Type_TagCol = { group: any, hex: string, vertical: boolean }
 /**
  * Construit les cellules d'une feuille de nœuds (colonnes core + colonnes de tags + dégradé bleu par
  * niveau). Mutualisé entre l'onglet Noeuds et les onglets Produits/Secteurs/Échanges (mêmes colonnes,
- * seul le libellé de la colonne du nom change). Le mat_balance reste présent (vide : calculé par SEP).
+ * seul le libellé de la colonne du nom change). La colonne mat_balance affiche has_material_balance (0/1).
  */
 const buildNodeSheetCells = (
   noeudsRows: Type_NodeRow[],
@@ -584,7 +602,7 @@ const buildNodeSheetCells = (
   const coreHeaders = nodeCoreHeaders(nodeHeaderLabel)
   const cells: Type_CellData = { 0: {} }
   coreHeaders.forEach((h, c) => {
-    cells[0][c] = { v: h, s: headerStyle(HEX_CORE, c === NOEUDS_COL.level) }
+    cells[0][c] = { v: h, s: headerStyle(HEX_CORE, c === NOEUDS_COL.level || c === NOEUDS_COL.mat_balance) }
   })
   tagCols.forEach((tc, j: number) => {
     cells[0][NOEUDS_CORE_COLS + j] = { v: tc.group.name, s: headerStyle(tc.hex, tc.vertical) }
@@ -598,7 +616,9 @@ const buildNodeSheetCells = (
     const rowCells: { [col: number]: Type_Cell } = {
       [NOEUDS_COL.level]: { v: lvl, s: rowStyle },
       [NOEUDS_COL.node]: { v: n.name, s: rowStyle },
-      [NOEUDS_COL.mat_balance]: { v: '', s: rowStyle },
+      // Équilibre entrée-sortie : 1 = nœud interne équilibré, 0 = extrémité ou interne désactivé
+      // (has_material_balance=false, persisté au JSON) ; write-back côté UniverSankeyBridge.
+      [NOEUDS_COL.mat_balance]: { v: nodeBalanceValue(n), s: rowStyle },
       [NOEUDS_COL.color]: { v: color, s: rowStyle },
       [NOEUDS_COL.definitions]: { v: n.tooltip_text || '', s: rowStyle },
       [NOEUDS_COL.position_u]: { v: n.position_u != null ? num5(n.position_u) : '', s: rowStyle },
@@ -618,6 +638,7 @@ const buildNodeSheetCells = (
 const nodeSheetColumnData = (cells: Type_CellData, tagCols: Type_TagCol[]) => {
   const colData = autoColumnWidths(cells, NOEUDS_CORE_COLS + tagCols.length + 2)
   colData[NOEUDS_COL.level] = { w: 28 }
+  colData[NOEUDS_COL.mat_balance] = { w: 28 }
   tagCols.forEach((tc, j: number) => {
     if (tc.vertical) {
       colData[NOEUDS_CORE_COLS + j] = { w: 28 }
@@ -629,7 +650,7 @@ const nodeSheetColumnData = (cells: Type_CellData, tagCols: Type_TagCol[]) => {
 /** Objet feuille Univer pour une feuille de nœuds (Noeuds / Produits / Secteurs / Échanges). */
 const makeNodeSheet = (
   id: string, name: string, noeudsRows: Type_NodeRow[], tagCols: Type_TagCol[], nodeHeaderLabel: string
-): { sheet: any, headers: string[], cells: Type_CellData } => {
+): { sheet: any, headers: string[], cells: Type_CellData, balanceMeaningful: boolean } => {
   const { cells, headers } = buildNodeSheetCells(noeudsRows, tagCols, nodeHeaderLabel)
   const sheet = {
     id,
@@ -640,7 +661,7 @@ const makeNodeSheet = (
     rowCount: Math.max(100, noeudsRows.length + 20),
     columnCount: NOEUDS_CORE_COLS + tagCols.length + 2
   }
-  return { sheet, headers, cells }
+  return { sheet, headers, cells, balanceMeaningful: nodeSheetBalanceMeaningful(noeudsRows) }
 }
 
 // ===== Matrices de flux (TES / TER), réplique de SankeyExcelParser.xl_write_matrix_sheet ==========
@@ -1266,10 +1287,10 @@ export const buildSankeyWorkbookData = (
     // Matrices : colonnes dynamiques (noms de nœuds) -> pas de sélecteur de colonnes (liste vide).
     [SHEET_ID_TES]: [],
     [SHEET_ID_TER]: [],
-    [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
-    [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
-    [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
-    [SHEET_ID_ECHANGES]: colMeta(echanges.headers, echanges.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, NOEUDS_FORCED_HIDDEN),
+    [SHEET_ID_NOEUDS]: colMeta(noeuds.headers, noeuds.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, nodeForcedHidden(noeuds.balanceMeaningful)),
+    [SHEET_ID_PRODUITS]: colMeta(produits.headers, produits.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, nodeForcedHidden(produits.balanceMeaningful)),
+    [SHEET_ID_SECTEURS]: colMeta(secteurs.headers, secteurs.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, nodeForcedHidden(secteurs.balanceMeaningful)),
+    [SHEET_ID_ECHANGES]: colMeta(echanges.headers, echanges.cells, NOEUDS_MANDATORY, NOEUDS_DEFAULTS, nodeForcedHidden(echanges.balanceMeaningful)),
     [SHEET_ID_NOEUDS_AGG]: colMeta(aggHeaders, aggCells, AGG_MANDATORY),
     [SHEET_ID_TAGS]: colMeta(tagHeaders, tagCells, TAGS_MANDATORY),
     [SHEET_ID_STOCK]: colMeta(stockHeaders, stockCells, STOCK_MANDATORY),
