@@ -54,6 +54,27 @@ export const nodeTypeTag = (sankey: any, typeName: string): any =>
     ? sankey.node_taggs_dict[NODE_TYPE_GROUP_ID].tags_dict[typeName]
     : undefined
 
+/**
+ * True si CHAQUE nœud (hors moitiés d'échange) porte un tag du groupe `type de noeud`
+ * (produit/secteur/échange). False si le groupe est absent, vide, sans nœud, ou s'il reste au
+ * moins un nœud non catégorisé. Sert à décider si l'onglet Noeuds est redondant avec les onglets
+ * Produits/Secteurs/Échanges : il ne l'est que si aucun nœud n'échappe à cette ventilation.
+ */
+export const allNodesTyped = (app_data: Class_ApplicationData, onlyVisible: boolean): boolean => {
+  const { sankey } = app_data.drawing_area
+  const group = sankey.node_taggs_dict && sankey.node_taggs_dict[NODE_TYPE_GROUP_ID]
+  const tags = (group && group.tags_list) || []
+  if (!tags.length) {
+    return false
+  }
+  const baseList = (onlyVisible ? sankey.visible_nodes_list : sankey.nodes_list)
+    .filter((n: any) => !n.sibling)
+  if (!baseList.length) {
+    return false
+  }
+  return baseList.every((n: any) => tags.some((t: any) => n.hasGivenTag && n.hasGivenTag(t)))
+}
+
 // Indices de colonnes de l'onglet Noeuds (ordre = NODES_SHEET_COLS du parser). Les colonnes de
 // node-tags sont ajoutées APRÈS (index >= NOEUDS_CORE_COLS).
 export const NOEUDS_COL = {
@@ -79,6 +100,12 @@ export type Type_ColMeta = {
   forcedHidden: boolean
 }
 export type Type_SheetColumns = { [sheetId: string]: Type_ColMeta[] }
+
+// Validation de liste (sélecteur déroulant) d'une colonne : `options` = valeurs proposées,
+// `multiple` = sélection multi-valeurs (cellule = valeurs jointes par virgule). Appliquée par
+// UniverSpreadSheet via la façade data-validation d'Univer.
+export type Type_ColValidation = { col: number, options: string[], multiple: boolean }
+export type Type_SheetValidations = { [sheetId: string]: Type_ColValidation[] }
 
 // Métadonnées d'onglet pour le sélecteur "Onglets" : id stable, nom affiché, hasData = au moins une
 // ligne de données (hors en-tête). Les onglets vides sont masqués par défaut (sauf Flux).
@@ -302,10 +329,15 @@ const colMeta = (
  */
 export type Type_NodeRow = { node: any, level: number }
 
-/** Noms des tags d'un nœud appartenant à un groupe donné, joints. */
-const nodeTagsInGroup = (node: any, group: any): string => {
+/**
+ * Noms des tags d'un nœud appartenant à un groupe donné, joints par `sep`. Les feuilles de nœuds
+ * (colonnes à liste déroulante multi-valeurs) utilisent ',' SANS espace : Univer dé-sérialise la
+ * valeur d'une cellule LIST_MULTIPLE via `split(',')`, donc un séparateur ', ' produirait une option
+ * « <espace>secteur » non reconnue. La feuille d'agrégation (sans validation) garde ', ' lisible.
+ */
+const nodeTagsInGroup = (node: any, group: any, sep = ', '): string => {
   const tags = (group.tags_list || []).filter((t: any) => node.hasGivenTag && node.hasGivenTag(t))
-  return tags.map((t: any) => t.name).join(', ')
+  return tags.map((t: any) => t.name).join(sep)
 }
 
 /**
@@ -503,6 +535,27 @@ export const tagsRowGroups = (app_data: Class_ApplicationData): any[] => {
   ]
 }
 
+/**
+ * Colonnes d'étiquettes (tags) d'une feuille de nœuds : pour chaque groupe affiché en colonne
+ * (level-tags turquoise PUIS node-tags vert), l'index de colonne et le groupe. MÊME ordre que
+ * `buildNodeSheetCells` (tagCols / tagColsNoeuds). Source de vérité partagée builder (liste
+ * déroulante de validation) / bridge (write-back de l'appartenance aux étiquettes).
+ *  - Onglet Noeuds : level-tags + TOUS les node-tags (incl. « type de noeud »).
+ *  - Onglets Produits/Secteurs/Échanges : level-tags + node-tags SAUF « type de noeud » (redondant,
+ *    la feuille EST déjà filtrée par cette nature).
+ */
+export const nodeSheetTagColumns = (
+  app_data: Class_ApplicationData, sheetId: string
+): Array<{ col: number, group: any }> => {
+  const { sankey } = app_data.drawing_area
+  const levelTagGroups = sankey.level_taggs_list || []
+  const nodeTagGroupsAll = sankey.node_taggs_list || []
+  const groups = sheetId === SHEET_ID_NOEUDS
+    ? [...levelTagGroups, ...nodeTagGroupsAll]
+    : [...levelTagGroups, ...nodeTagGroupsAll.filter((g: any) => g.id !== NODE_TYPE_GROUP_ID)]
+  return groups.map((g: any, j: number) => ({ col: NOEUDS_CORE_COLS + j, group: g }))
+}
+
 // En-têtes des colonnes "core" d'une feuille de nœuds. `nodeHeaderLabel` = libellé de la colonne du
 // nom (Noeuds / Produits / Secteurs / Echanges, comme les feuilles SEP).
 const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
@@ -552,7 +605,8 @@ const buildNodeSheetCells = (
       [NOEUDS_COL.position_v]: { v: n.position_v != null ? num5(n.position_v) : '', s: rowStyle }
     }
     tagCols.forEach((tc, j: number) => {
-      rowCells[NOEUDS_CORE_COLS + j] = { v: nodeTagsInGroup(n, tc.group), s: rowStyle }
+      // ',' sans espace : round-trip avec la liste déroulante multi-valeurs Univer (cf. nodeTagsInGroup).
+      rowCells[NOEUDS_CORE_COLS + j] = { v: nodeTagsInGroup(n, tc.group, ','), s: rowStyle }
     })
     cells[r] = rowCells
   })
@@ -778,7 +832,10 @@ export const buildFluxMatrixSheets = (
 export const buildSankeyWorkbookData = (
   app_data: Class_ApplicationData,
   onlyVisible = false
-): { data: Partial<Type_WorkbookData>, columns: Type_SheetColumns, sheets: Type_SheetMeta[] } => {
+): {
+  data: Partial<Type_WorkbookData>, columns: Type_SheetColumns, sheets: Type_SheetMeta[],
+  validations: Type_SheetValidations
+} => {
   const { sankey } = app_data.drawing_area
   // onlyVisible : ne garder que les éléments visibles (exclut les flux/nœuds repliés/agrégés).
   const links = fluxRowLinks(app_data, onlyVisible)
@@ -916,13 +973,24 @@ export const buildSankeyWorkbookData = (
   // writer Excel de SEP. Exclut le tag interne "type de noeud" (échange/produit/secteur).
   const levelTagGroups = sankey.level_taggs_list || []
   const nodeTagGroups = (sankey.node_taggs_list || []).filter((g: any) => g.id !== NODE_TYPE_GROUP_ID)
+  const levelTagCols: Type_TagCol[] = levelTagGroups.map(
+    (g: any) => ({ group: g, hex: HEX_LEVELTAG, vertical: true })
+  )
+  // Onglets Produits/Secteurs/Échanges : exclut le tag interne "type de noeud" (la feuille EST déjà
+  // filtrée par cette nature -> colonne redondante).
   const tagCols: Type_TagCol[] = [
-    ...levelTagGroups.map((g: any) => ({ group: g, hex: HEX_LEVELTAG, vertical: true })),
+    ...levelTagCols,
     ...nodeTagGroups.map((g: any) => ({ group: g, hex: HEX_NODETAG, vertical: false }))
+  ]
+  // Onglet Noeuds : toutes les natures cohabitent -> on GARDE la colonne "type de noeud" pour
+  // distinguer produit/secteur/échange. Le filtre ci-dessus ne s'applique qu'aux feuilles par nature.
+  const tagColsNoeuds: Type_TagCol[] = [
+    ...levelTagCols,
+    ...(sankey.node_taggs_list || []).map((g: any) => ({ group: g, hex: HEX_NODETAG, vertical: false }))
   ]
   // Onglet Noeuds : tous les nœuds, lignes hiérarchisées (enfants sous parents par dimension).
   const noeudsRows = noeudsRowEntries(app_data, onlyVisible)
-  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagCols, 'Noeuds')
+  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagColsNoeuds, 'Noeuds')
 
   // Séparation par nature (format SEP `products_sectors`) : une feuille par type de nœud, filtrée
   // par le tag `type de noeud`. Onglet vide (tag absent) => masqué par défaut comme les autres.
@@ -1235,5 +1303,26 @@ export const buildSankeyWorkbookData = (
     { id: SHEET_ID_STOCK, name: 'Stocks', hasData: stockRow > 1 }
   ]
 
-  return { data, columns, sheets }
+  // Validations de liste (sélecteur d'étiquette) des colonnes de tags des feuilles de nœuds : chaque
+  // cellule propose les étiquettes du groupe (multi-sélection, comme l'affichage joint par virgule).
+  // Le write-back (UniverSankeyBridge.reconcileNodeRow) aligne l'appartenance du nœud sur la cellule.
+  // Le groupe « type de noeud » (produit/secteur/échange) est EXCLUSIF : un nœud a une seule nature
+  // -> sélection unique (choisir « secteur » remplace « produit », le nœud bascule d'onglet). Les
+  // autres groupes (catégories, niveaux) restent multi-valeurs.
+  const nodeSheetValidations = (sheetId: string): Type_ColValidation[] =>
+    nodeSheetTagColumns(app_data, sheetId)
+      .map(({ col, group }) => ({
+        col,
+        options: (group.tags_list || []).map((t: any) => String(t.name)),
+        multiple: group.id !== NODE_TYPE_GROUP_ID
+      }))
+      .filter((v) => v.options.length > 0)
+  const validations: Type_SheetValidations = {
+    [SHEET_ID_NOEUDS]: nodeSheetValidations(SHEET_ID_NOEUDS),
+    [SHEET_ID_PRODUITS]: nodeSheetValidations(SHEET_ID_PRODUITS),
+    [SHEET_ID_SECTEURS]: nodeSheetValidations(SHEET_ID_SECTEURS),
+    [SHEET_ID_ECHANGES]: nodeSheetValidations(SHEET_ID_ECHANGES)
+  }
+
+  return { data, columns, sheets, validations }
 }
