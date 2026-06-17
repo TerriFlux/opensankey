@@ -62,7 +62,8 @@ import {
   faExclamation,
   faDiagramProject,
   faTable,
-  faFileLines
+  faFileLines,
+  faBan
 } from '@fortawesome/free-solid-svg-icons'
 import {
   FontAwesomeIcon
@@ -188,13 +189,22 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
   }
   new_data.menu_configuration.ref_to_save_in_cache_indicator_value.current = save_boolean
 
+  // Session toggle "ne jamais enregistrer la vue" : driven from the "Vue non
+  // enregistrée" modal, surfaced/reset here on the cache cloud button.
+  const [never_save_session, setNeverSaveSession] = useState(false)
+  new_data.menu_configuration.ref_to_never_save_view_session.current = (b: boolean) => {
+    new_data.menu_configuration.ref_to_never_save_view_session_value.current = b
+    setNeverSaveSession(b)
+  }
+  new_data.menu_configuration.ref_to_never_save_view_session_value.current = never_save_session
+
   if (new_data.is_static) return <></>
 
   const ok_saved = save_boolean
-  const indicator_saved_data = <Box color={ok_saved ? 'tertiaire.3' : 'tertiaire.1'}>
+  const indicator_saved_data = <Box color={never_save_session ? 'tertiaire.1' : (ok_saved ? 'tertiaire.3' : 'tertiaire.1')}>
     <FontAwesomeIcon
       style={{ 'height': '0.75em', 'width': '0.75rem' }}
-      icon={(ok_saved) ? faCheck : faExclamation} />
+      icon={never_save_session ? faBan : (ok_saved ? faCheck : faExclamation)} />
   </Box>
 
   return <ButtonGroup spacing='0.1rem' alignItems='center'>
@@ -218,11 +228,17 @@ export const TopBarStateButtons = ({ new_data }: BaseApplicationDataType) => {
         {...topbar_state_btn_style}
       />
     </OSTooltip>
-    <OSTooltip placement='bottom' label={t('Menu.tooltips.checkpoint')}>
+    <OSTooltip placement='bottom' label={never_save_session ? t('Menu.tooltips.reactivate_view_save') : t('Menu.tooltips.checkpoint')}>
       <Button
         aria-label={t('Menu.tooltips.checkpoint')}
         className='topbar_button_save_in_cache'
         onClick={() => {
+          // If the session "ne jamais enregistrer la vue" mode is on, a click
+          // re-enables the "Vue non enregistrée" dialog. The checkpoint save runs
+          // on the same click.
+          if (new_data.menu_configuration.ref_to_never_save_view_session_value.current) {
+            new_data.menu_configuration.ref_to_never_save_view_session.current(false)
+          }
           const ev = document; const tmp = new KeyboardEvent('keydown', { key: 's', ctrlKey: true })
           if (ev.onkeydown) {
             ev.onkeydown(tmp)

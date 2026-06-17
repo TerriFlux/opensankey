@@ -319,7 +319,12 @@ export const retrieveJSONResults = (
   paper_format?: Type_PaperFormat,
   paper_orientation?: Type_PaperOrientation,
   margin_mm?: number,
-  view_only: boolean = false
+  view_only: boolean = false,
+  // When true (default), a view_only load writes the result back into the view's
+  // compressed cache (normal "load into current view" UX). The reconciliation
+  // blob→blob path passes false: the reconciled diagram is a preview that must
+  // not silently overwrite the saved view.
+  persist_view_to_cache: boolean = true
 ) => {
   // // Failsafe
   // if (text === '{}')
@@ -438,10 +443,20 @@ export const retrieveJSONResults = (
   app_data.menu_configuration.updateComponentRelatedToStyles()
 
   // In view_only mode, every mutation above happened on the current view's DA.
-  // Refresh its compressed cache so that the next view switch or save sees the
-  // reconciled diagram instead of the pre-reconciliation snapshot.
-  if (view_only) {
+  // Normally we refresh its compressed cache so the next view switch or save
+  // sees the loaded diagram. The reconciliation blob→blob path opts out
+  // (persist_view_to_cache=false): there the reconciled diagram is a preview
+  // that must not silently overwrite the saved view — switching view or
+  // reloading reverts to the pre-reconciliation snapshot.
+  if (view_only && persist_view_to_cache) {
     app_data.saveCurrentViewToCache()
+  } else if (view_only) {
+    // Reconciliation preview: we deliberately skip saveCurrentViewToCache so the
+    // reconciled diagram is NOT frozen into the view. But it IS an unsaved change
+    // on the live view, so flag the view as dirty (indicator = false) — leaving
+    // the view then raises the "Vue non enregistrée" modal, letting the user keep
+    // or discard the reconciliation instead of losing it silently.
+    app_data.menu_configuration.ref_to_save_in_cache_indicator.current(false)
   }
 }
 
@@ -896,11 +911,12 @@ export const UniversalFileConverter = ({
             //   - Excel import with the user-set ``only_current_view`` option
             //     (checked by default, only shown when inside a view).
             const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
+            // Reconciliation runs blob→blob; Excel-into-current-view is the other
+            // view_only trigger.
+            const is_reconciliation_preview = is_inside_view && input_format == 'blob' && output_format == 'blob'
             const view_only =
-              is_inside_view && (
-                (input_format == 'blob' && output_format == 'blob') ||
-                (input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
-              )
+              is_reconciliation_preview ||
+              (is_inside_view && input_format == 'excel' && Boolean(getCurrentInputOptions()?.['only_current_view']))
             retrieveJSONResults(
               app_data,
               jsonData,
@@ -914,7 +930,10 @@ export const UniversalFileConverter = ({
               paperFormat,
               paperOrientation,
               marginMm,
-              view_only
+              view_only,
+              // Reconciliation is a preview — don't freeze it into the view cache.
+              // The Excel-into-current-view load keeps the default (persist).
+              !is_reconciliation_preview
             )
           }
           //setAutoLoad(false)
