@@ -55,6 +55,22 @@ export const nodeTypeTag = (sankey: any, typeName: string): any =>
     : undefined
 
 /**
+ * Tag de nature (produit/secteur/echange) du groupe `type de noeud`, CRÉÉ À LA DEMANDE si le groupe
+ * et/ou l'étiquette n'existent pas encore. Permet de saisir un nœud dans l'onglet Produits/Secteurs/
+ * Échanges sur un diagramme qui n'a pas (encore) la ventilation produits/secteurs : la 1re saisie
+ * crée le groupe « type de noeud », l'étiquette correspondante (id = nom = produit/secteur/echange,
+ * pour rester compatible avec tous les `tags_dict[...]` du code) puis l'assigne au nœud (write-back).
+ */
+export const ensureNodeTypeTag = (sankey: any, typeName: string): any => {
+  let group = sankey.node_taggs_dict && sankey.node_taggs_dict[NODE_TYPE_GROUP_ID]
+  if (!group) {
+    // Sans étiquette par défaut : on n'ajoute que les natures réellement saisies.
+    group = sankey.addNodeTagGroup(NODE_TYPE_GROUP_ID, NODE_TYPE_GROUP_ID, false)
+  }
+  return group.tags_dict[typeName] || group.addTag(typeName, typeName)
+}
+
+/**
  * True si CHAQUE nœud (hors moitiés d'échange) porte un tag du groupe `type de noeud`
  * (produit/secteur/échange). False si le groupe est absent, vide, sans nœud, ou s'il reste au
  * moins un nœud non catégorisé. Sert à décider si l'onglet Noeuds est redondant avec les onglets

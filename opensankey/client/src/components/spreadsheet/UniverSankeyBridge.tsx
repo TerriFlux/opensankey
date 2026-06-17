@@ -22,7 +22,7 @@ import {
   SHEET_ID_STOCK_CHAINING, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES, SHEET_ID_NOEUDS_AGG,
   SHEET_ID_TES, SHEET_ID_TER,
   NOEUDS_COL, TAGS_COL, NODE_TYPE_GROUP_ID, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
-  fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout,
+  fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, ensureNodeTypeTag, nodesAggLayout,
   nodeSheetTagColumns, tesMatrixNodes, terMatrixLayout, fluxCellLabel
 } from './UniverSankeyData'
 
@@ -384,6 +384,9 @@ export const attachSankeyBridge = (
       const node = sankey.addNewNodeWithName(name)
       if (node && typeTag && node.addTag) {
         node.addTag(typeTag)
+        // Applique le style produit/secteur (hack syncNodeTypeStyle) pour que le nœud créé via une
+        // feuille de nature prenne l'apparence dédiée, comme à l'import d'un fichier products_sectors.
+        syncNodeTypeStyle(node, new Set([typeTag.name]))
       }
       // Étiquettes saisies sur la ligne du nouveau nœud (au-delà du tag de nature).
       if (node) {
@@ -837,20 +840,28 @@ export const attachSankeyBridge = (
         })
       } else if (NODE_SHEET_TYPE[sheetId]) {
         // Onglets Produits / Secteurs / Échanges : renommage + création (avec tag de nature).
-        const tag = sheetTypeTag(sheetId)
-        const cnt = originalNodeCountBySheet[sheetId]
-        const tagCols = nodeSheetTagColumns(app_data, sheetId)
-        rows.forEach((r) => {
-          if (r === 0) {
-            return
-          }
-          if (tag) {
+        let tag = sheetTypeTag(sheetId)
+        const dataRows = rows.filter((r) => r !== 0)
+        // Le groupe « type de noeud » et l'étiquette de nature sont créés À LA DEMANDE si absents :
+        // taper un nom dans l'onglet Produits crée le nœud, le groupe « type de noeud » et
+        // l'étiquette « produit », puis l'assigne au nœud (idem Secteurs/Échanges). On ne crée le
+        // groupe que si une ligne porte effectivement un nom (sinon onglet ouvert = inerte).
+        if (!tag && dataRows.some((r) => cellText(ws, r, NOEUDS_COL.node))) {
+          tag = ensureNodeTypeTag(sankey, NODE_SHEET_TYPE[sheetId])
+          tagChanged = true
+        }
+        if (tag) {
+          // cnt = nombre de nœuds de cette nature AVANT édition (0 si le groupe vient d'être créé) ->
+          // les lignes saisies sont toutes traitées comme des créations.
+          const cnt = originalNodeCountBySheet[sheetId]
+          const tagCols = nodeSheetTagColumns(app_data, sheetId)
+          dataRows.forEach((r) => {
             const res = reconcileNodeRow(ws, r, cnt, () => typeRowNodes(tag), tag, tagCols)
             structural = structural || res.structural
             value = value || res.value
             tagChanged = tagChanged || res.tag
-          }
-        })
+          })
+        }
       } else if (sheetId === SHEET_ID_NOEUDS_AGG) {
         // Onglet « Noeuds par agrégation » : write-back = renommage des nœuds (cellules de niveau).
         const aggLayout = nodesAggLayout(app_data, onlyVisibleRef.current)
