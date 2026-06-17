@@ -137,6 +137,12 @@ export abstract class DrawLabelBase {
   // d'un flux encore en pointillé (sans valeur), qui n'a normalement aucun label.
   protected _force_editable_draw: boolean = false
 
+  // Détection manuelle du double-clic (cf. attachDoubleClickEdit). Stockée sur
+  // l'instance (qui survit au redraw du DOM), pas sur le <text> : le 1er clic peut
+  // recréer le <text>, ce qui casse le `dblclick` natif (les deux clics doivent
+  // atterrir sur le MÊME nœud DOM — non garanti sur Mac). Timestamp en ms.
+  private _last_label_click_ts: number = 0
+
   public d3_selection: d3_selection_type | null = null
 
   // Poignées de redimensionnement de la "boîte" du label (label.box_width).
@@ -1422,6 +1428,18 @@ export abstract class DrawLabelBase {
         // stopPropagation pour éviter le double-trigger via le <g> du nœud
         // (qui purge + ré-ajoute → flicker visuel).
         evt.stopPropagation()
+        // Détection MANUELLE du double-clic : le 1er clic (addElementToSelection)
+        // peut recréer le <text>, donc le second clic atterrit sur un autre nœud
+        // DOM et le `dblclick` natif ne se déclenche pas (systématique sur Mac).
+        // On mesure l'écart entre deux clics sur l'instance (qui survit au redraw).
+        const now = Date.now()
+        const is_double = (now - this._last_label_click_ts) <= 400
+        this._last_label_click_ts = is_double ? 0 : now
+        if (is_double) {
+          evt.preventDefault()
+          this.setInputLabelVisible()
+          return
+        }
         const el = this._element as Class_BaseShape
         const drawing_area = el.drawing_area
         // Sélectionne l'élément (via _selection) sinon Escape/purgeSelection
@@ -1436,8 +1454,12 @@ export abstract class DrawLabelBase {
         this.refreshLabelResizeHandles()
       })
       .on('dblclick', (evt: MouseEvent) => {
+        // Conservé pour les plateformes où le `dblclick` natif fonctionne ;
+        // la détection manuelle ci-dessus prend le relais sinon. setInputLabelVisible
+        // est idempotent, un éventuel double-déclenchement est sans effet.
         evt.stopPropagation()
         evt.preventDefault()
+        this._last_label_click_ts = 0
         this.setInputLabelVisible()
       })
   }
