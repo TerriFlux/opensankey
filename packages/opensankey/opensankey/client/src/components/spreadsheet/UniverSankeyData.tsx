@@ -179,6 +179,11 @@ const COL_W_CHAR = 7   // px : largeur moyenne d'un caractère pour la police pa
 const COL_W_PAD = 16   // px : marge interne (gauche + droite) de la cellule
 // Colonnes à en-tête pivoté (vertical) : largeur calée sur les nombres (courts), pas sur le label.
 const COL_W_VERTICAL_MIN = 32 // px : plancher d'une colonne numérique à en-tête vertical
+// Colonnes de données d'une matrice TES/TER : une cellule ne contient qu'une croix « x » ou un
+// nombre court -> colonnes TRÈS étroites (plancher 22, plafond 56). En-tête pivoté (nom de
+// nœud) -> la largeur ne dépend QUE des cellules de données (lignes d'en-tête de bloc exclues).
+const COL_W_MATRIX_MIN = 22 // px : plancher d'une colonne de matrice (largeur d'une croix)
+const COL_W_MATRIX_MAX = 56 // px : plafond (au-delà, le nombre est tronqué et lisible au survol)
 // Hauteur de la ligne d'en-tête quand des labels sont pivotés à 90° : ~longueur du plus long label.
 const HEADER_H_VERTICAL_MIN = 90  // px
 const HEADER_H_VERTICAL_MAX = 240 // px
@@ -262,6 +267,36 @@ const columnWidthsWithVerticalHeaders = (
     }
     out[col] = { w: Math.min(COL_W_MAX, Math.max(COL_W_VERTICAL_MIN, maxLen * COL_W_CHAR + COL_W_PAD)) }
   })
+  return out
+}
+
+/**
+ * Largeurs de colonnes d'une feuille matricielle TES/TER : colonne 0 (noms de lignes) = auto ;
+ * colonnes de données (>= 1) resserrées sur leur contenu réel (croix/nombre), en EXCLUANT les
+ * lignes d'en-tête de bloc (`headerRows`) dont les cellules portent les noms de nœuds (pivotés à
+ * 90° -> ils imposent la hauteur de ligne, pas la largeur de colonne). Sans cette exclusion, le nom
+ * de secteur de l'en-tête du 2e bloc du TER étalait chaque colonne sur toute sa longueur.
+ */
+const matrixColumnWidths = (
+  cells: Type_CellData, columnCount: number, headerRows: number[]
+): { [col: number]: { w: number } } => {
+  const out = autoColumnWidths(cells, Math.max(1, columnCount))
+  const skip = new Set(headerRows)
+  for (let col = 1; col < columnCount; col++) {
+    let maxLen = 0
+    for (const rowKey in cells) {
+      const r = Number(rowKey)
+      if (skip.has(r)) {
+        continue
+      }
+      const v = cells[r][col] ? cells[r][col].v : undefined
+      const len = (v === undefined || v === null) ? 0 : String(v).length
+      if (len > maxLen) {
+        maxLen = len
+      }
+    }
+    out[col] = { w: Math.min(COL_W_MATRIX_MAX, Math.max(COL_W_MATRIX_MIN, maxLen * COL_W_CHAR)) }
+  }
   return out
 }
 
@@ -680,7 +715,7 @@ export type Type_MatrixMode = 'cross' | 'value'
  *    existe sans valeur pour cet état, '' sinon.
  * Aligné sur `_createMatrixFromFlux` de SEP (valeur si `with_values`, sinon 'x').
  */
-const fluxCellLabel = (link: any, mode: Type_MatrixMode): string | number => {
+export const fluxCellLabel = (link: any, mode: Type_MatrixMode): string | number => {
   if (!link) {
     return ''
   }
@@ -713,23 +748,63 @@ const buildFluxMap = (app_data: Class_ApplicationData, onlyVisible: boolean): Ma
   return m
 }
 
+// Style du coin d'une matrice (« Ressources », « Emplois », « Origine ╲ Destination ») : gras et
+// centré, SANS fond (le coin n'est pas un en-tête de nœud -> ne pas le colorer).
+const matrixCornerStyle = () => ({ bl: 1, ht: 2, vt: 2 })
+
+/**
+ * Niveau d'agrégation de chaque nœud (1re occurrence dans l'ordre de l'onglet Noeuds) + niveau max.
+ * Sert à teinter les en-têtes de lignes/colonnes des matrices avec le MÊME dégradé bleu que l'onglet
+ * Noeuds (blendBlue par niveau).
+ */
+const nodeLevelMap = (
+  app_data: Class_ApplicationData, onlyVisible: boolean
+): { levels: Map<string, number>, maxLvl: number } => {
+  const levels = new Map<string, number>()
+  let maxLvl = 1
+  noeudsRowEntries(app_data, onlyVisible).forEach((e) => {
+    if (!levels.has(e.node.id)) {
+      levels.set(e.node.id, e.level)
+    }
+    if (e.level > maxLvl) {
+      maxLvl = e.level
+    }
+  })
+  return { levels, maxLvl }
+}
+
+/**
+ * Style d'un en-tête de nœud (ligne ou colonne) d'une matrice : dégradé bleu suivant le niveau
+ * d'agrégation (même palette blendBlue que l'onglet Noeuds), gras, centré, pivoté à 90° pour les
+ * colonnes. t = niveau / (maxLvl + 1) -> reste un bleu VISIBLE même pour un diagramme plat (niveau 1)
+ * ou un nœud racine, tout en fonçant avec la profondeur comme le dégradé des nœuds.
+ */
+const matrixNodeHeaderStyle = (
+  node: any, levels: Map<string, number>, maxLvl: number, vertical: boolean
+) => {
+  const lvl = levels.get(node.id) || 1
+  const t = lvl / (maxLvl + 1)
+  return { bg: { rgb: blendBlue(t) }, bl: 1, ht: 2, vt: 2, ...(vertical ? { tr: { a: 90, v: 0 } } : {}) }
+}
+
 /**
  * Écrit un bloc-matrice dans `cells` à partir de `startRow` : ligne d'en-tête (coin + noms de colonnes
  * pivotés à 90°) puis une ligne par nœud de `rowNodes` (nom en col 0 + cellules de flux). `flip=false`
- * -> cellule = flux rowNode→colNode ; `flip=true` -> flux colNode→rowNode. Renvoie la 1re ligne libre.
+ * -> cellule = flux rowNode→colNode ; `flip=true` -> flux colNode→rowNode. `headerStyleFor(node,
+ * vertical)` teinte les en-têtes de nœuds (dégradé bleu par niveau). Renvoie la 1re ligne libre.
  */
 const writeMatrixBlock = (
   cells: Type_CellData, startRow: number, cornerLabel: string,
   rowNodes: any[], colNodes: any[], fluxMap: Map<string, any>, flip: boolean,
-  mode: Type_MatrixMode
+  mode: Type_MatrixMode, headerStyleFor: (node: any, vertical: boolean) => any
 ): number => {
-  const header: { [col: number]: Type_Cell } = { 0: { v: cornerLabel, s: headerStyle(HEX_CORE) } }
+  const header: { [col: number]: Type_Cell } = { 0: { v: cornerLabel, s: matrixCornerStyle() } }
   colNodes.forEach((c: any, j: number) => {
-    header[j + 1] = { v: c.name, s: headerStyle(HEX_CORE, true) }
+    header[j + 1] = { v: c.name, s: headerStyleFor(c, true) }
   })
   cells[startRow] = header
   rowNodes.forEach((rn: any, i: number) => {
-    const row: { [col: number]: Type_Cell } = { 0: { v: rn.name, s: headerStyle(HEX_CORE) } }
+    const row: { [col: number]: Type_Cell } = { 0: { v: rn.name, s: headerStyleFor(rn, false) } }
     colNodes.forEach((cn: any, j: number) => {
       const key = flip ? (cn.id + NODE_KEY_SEP + rn.id) : (rn.id + NODE_KEY_SEP + cn.id)
       row[j + 1] = { v: fluxCellLabel(fluxMap.get(key), mode) }
@@ -748,7 +823,7 @@ const makeMatrixSheet = (
   for (let c = 1; c < colCount; c++) {
     verticalCols.add(c)
   }
-  const columnData = columnWidthsWithVerticalHeaders(cells, Math.max(1, colCount), verticalCols)
+  const columnData = matrixColumnWidths(cells, Math.max(1, colCount), headerRows)
   const headerH = verticalCols.size > 0 ? verticalHeaderHeight(colHeaderNames, verticalCols) : undefined
   const rowData: { [row: number]: { h: number } } = {}
   if (headerH) {
@@ -817,10 +892,14 @@ export const buildFluxMatrixSheets = (
   const fluxMap = buildFluxMap(app_data, onlyVisible)
   // Mode d'affichage des cellules (croix structurelle vs valeur du data_type courant).
   const mode: Type_MatrixMode = app_data.menu_configuration.spreadsheet_matrix_mode
+  // En-têtes de nœuds (lignes/colonnes) teintés du dégradé bleu par niveau, comme l'onglet Noeuds.
+  const { levels, maxLvl } = nodeLevelMap(app_data, onlyVisible)
+  const headerStyleFor = (node: any, vertical: boolean) =>
+    matrixNodeHeaderStyle(node, levels, maxLvl, vertical)
 
   // --- TES : matrice IO (origines en lignes, destinations en colonnes) ---------------------------
   const tesCells: Type_CellData = {}
-  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false, mode)
+  writeMatrixBlock(tesCells, 0, 'Origine ╲ Destination', nodes, nodes, fluxMap, false, mode, headerStyleFor)
   const tesSheet = makeMatrixSheet(
     SHEET_ID_TES, 'TES (matrice IO)', tesCells, nodes.length + 1,
     ['', ...nodes.map((n: any) => n.name)], [0], nodes.length
@@ -832,10 +911,10 @@ export const buildFluxMatrixSheets = (
 
   const terCells: Type_CellData = {}
   // Bloc 1 « Ressources » : flux secteur→produit (produits lignes, secteurs colonnes, flip).
-  writeMatrixBlock(terCells, 0, 'Ressources (secteurs → produits)', products, sectors, fluxMap, true, mode)
+  writeMatrixBlock(terCells, 0, 'Ressources', products, sectors, fluxMap, true, mode, headerStyleFor)
   // Ligne vide de séparation, puis bloc 2 « Emplois » : flux produit→secteur.
   const afterBlock2 = writeMatrixBlock(
-    terCells, block2HeaderRow, 'Emplois (produits → secteurs)', products, sectors, fluxMap, false, mode)
+    terCells, block2HeaderRow, 'Emplois', products, sectors, fluxMap, false, mode, headerStyleFor)
   const terSheet = makeMatrixSheet(
     SHEET_ID_TER, 'TER (emplois-ressources)', terCells, sectors.length + 1,
     ['', ...sectors.map((n: any) => n.name)], [0, block2HeaderRow], afterBlock2

@@ -23,7 +23,7 @@ import {
   SHEET_ID_TES, SHEET_ID_TER,
   NOEUDS_COL, TAGS_COL, NODE_TYPE_GROUP_ID, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
   fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout,
-  nodeSheetTagColumns, tesMatrixNodes, terMatrixLayout
+  nodeSheetTagColumns, tesMatrixNodes, terMatrixLayout, fluxCellLabel
 } from './UniverSankeyData'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -948,13 +948,44 @@ export const attachSankeyBridge = (
     // tags/étiquettes OU les changements de la liste des nœuds induits par une édition de flux.
     // En DIFFÉRÉ (setTimeout) : reconstruire pendant le traitement de la commande disposerait l'unit
     // Univer en plein vol (crash "univerInstanceService is null").
-    // matrixChanged : un flux a été créé/supprimé via une matrice -> reconstruire pour réaligner
-    // l'onglet Flux ET la matrice elle-même (cellule canonique « x » ou valeur) sur le modèle.
-    if (tagChanged || nodesChanged || constraintsPruned || matrixChanged) {
+    if (tagChanged || nodesChanged || constraintsPruned) {
       const ref = app_data.menu_configuration.ref_to_spreadsheet
       if (ref && ref.current) {
         setTimeout(() => { if (ref.current) { ref.current() } }, 0)
       }
+    } else if (matrixChanged) {
+      // Édition d'une matrice TES/TER : un flux a été créé/supprimé via une cellule. On NE
+      // reconstruit PAS tout le classeur (un rebuild ré-ordonnerait les axes — l'ordre des nœuds
+      // dépend de visible_nodes_list, qui peut changer après addNewLink/redraw — et reconstruirait
+      // chaque onglet à chaque croix). Une édition de matrice ne change jamais l'ensemble des nœuds
+      // (extrémités = nœuds existants ; deleteLink ne supprime pas les orphelins), donc l'ordre est
+      // stable : on se contente de réécrire EN PLACE la valeur canonique des cellules éditées (croix
+      // « x » ou valeur du modèle, '' si flux supprimé). Différé + isSyncing pour ne pas re-déclencher
+      // l'événement ni écrire pendant le traitement de la commande courante.
+      const cells = matrixCellsBySheet
+      setTimeout(() => {
+        isSyncing.current = true
+        try {
+          const mode = app_data.menu_configuration.spreadsheet_matrix_mode
+          Object.keys(cells).forEach((sheetId) => {
+            const ws2 = wb.getSheetBySheetId(sheetId)
+            if (!ws2) {
+              return
+            }
+            cells[sheetId].forEach(({ r, c }) => {
+              const ends = matrixCellEndpoints(sheetId, r, c)
+              // En-tête / coin / séparateur (ends null) : ne pas toucher.
+              if (!ends || !ends.orig || !ends.dest || ends.orig === ends.dest) {
+                return
+              }
+              const link = sankey.links_dict[defaultLinkId(ends.orig, ends.dest)]
+              ws2.getRange(r, c).setValue(fluxCellLabel(link || null, mode))
+            })
+          })
+        } finally {
+          isSyncing.current = false
+        }
+      }, 0)
     }
   })
 
