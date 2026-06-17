@@ -15,10 +15,13 @@
 import { Class_ApplicationData } from '../../types/ApplicationData'
 import { defaultLinkId } from '../../Elements/Link'
 import {
+  NodeProductStyle, NodeSectorStyle, elementStyleConfigs, ElementStyleKey
+} from '../../Elements/ElementStyle'
+import {
   SHEET_ID_FLUX, SHEET_ID_NOEUDS, SHEET_ID_TAGS, SHEET_ID_RATIO, SHEET_ID_RATIO_STOCK,
   SHEET_ID_STOCK_CHAINING, SHEET_ID_PRODUITS, SHEET_ID_SECTEURS, SHEET_ID_ECHANGES, SHEET_ID_NOEUDS_AGG,
   SHEET_ID_TES, SHEET_ID_TER,
-  NOEUDS_COL, TAGS_COL, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
+  NOEUDS_COL, TAGS_COL, NODE_TYPE_GROUP_ID, NODE_TYPE_PRODUCT, NODE_TYPE_SECTOR, NODE_TYPE_EXCHANGE,
   fluxRowLinks, noeudsRowEntries, tagsRowGroups, nodeTypeTag, nodesAggLayout,
   nodeSheetTagColumns, tesMatrixNodes, terMatrixLayout
 } from './UniverSankeyData'
@@ -269,6 +272,40 @@ export const attachSankeyBridge = (
   // (liste déroulante multi-valeurs, valeurs jointes par virgule). N'ajoute/ne retire QUE des
   // étiquettes EXISTANTES du groupe (la liste déroulante ne propose qu'elles) ; les noms inconnus
   // sont ignorés. Retourne true si l'appartenance a changé.
+  // HACK (temporaire) : assigne/retire le style produit/secteur selon l'étiquette de nature, en
+  // attendant un vrai « style associé à une étiquette ». Mapping tag de nature -> style de nœud.
+  const TYPE_TAG_STYLE: { [tagName: string]: ElementStyleKey } = {
+    [NODE_TYPE_PRODUCT]: NodeProductStyle,
+    [NODE_TYPE_SECTOR]: NodeSectorStyle
+  }
+  // Aligne le style produit/secteur du nœud sur ses étiquettes de nature (cellule du groupe
+  // « type de noeud »). `wanted` = noms d'étiquettes saisis dans la cellule.
+  const syncNodeTypeStyle = (node: any, wanted: Set<string>): boolean => {
+    let changed = false
+    Object.keys(TYPE_TAG_STYLE).forEach((tagName) => {
+      const styleId = TYPE_TAG_STYLE[tagName]
+      // Les styles produit/secteur ne sont créés qu'au chargement d'un fichier portant le groupe
+      // « type de noeud » ; on les crée à la demande (idempotent) pour que le hack marche aussi sur
+      // un groupe ajouté à l'exécution.
+      if (!sankey.styles_dict[styleId]) {
+        sankey.create_internal_style(styleId, elementStyleConfigs)
+      }
+      const style = sankey.styles_dict[styleId]
+      if (!style) {
+        return
+      }
+      const want = wanted.has(tagName)
+      if (want && !node.hasStyle(styleId)) {
+        node.addStyle(style)
+        changed = true
+      } else if (!want && node.hasStyle(styleId)) {
+        node.removeStyleById(styleId)
+        changed = true
+      }
+    })
+    return changed
+  }
+
   const reconcileNodeTagCell = (node: any, group: any, text: string): boolean => {
     const wanted = new Set(
       text.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
@@ -284,6 +321,10 @@ export const attachSankeyBridge = (
         changed = true
       }
     })
+    // Groupe de nature : synchronise le style produit/secteur (hack ci-dessus).
+    if (group.id === NODE_TYPE_GROUP_ID && syncNodeTypeStyle(node, wanted)) {
+      changed = true
+    }
     return changed
   }
 
