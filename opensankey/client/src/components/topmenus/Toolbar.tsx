@@ -302,10 +302,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
     app_data.menu_configuration.ref_to_spreadsheet?.current()
     app_data.menu_configuration.ref_to_save_in_cache_indicator.current(true)
   }
-  // #116 — mode MFA : on traite le diagramme comme s'il avait des résultats même
-  // avant le solveur, pour débloquer Collectées/Calculées et afficher le % dès le
-  // chargement. Le flag vit sur ApplicationData (session, non réinitialisé au load).
-  let has_results = app_data.mfa_mode
+  let has_results = false
   app_data.drawing_area.sankey.links_list.forEach(l => has_results = has_results || l.has_result)
   let has_intervals = false
   app_data.drawing_area.sankey.links_list.forEach(l => has_intervals = has_intervals || l.has_intervals || l.value?.value_option === 'intervals')
@@ -334,7 +331,7 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           <option key='data' value='data' >{t('Banner.collected_data')}</option>
           <option key='data_label' value='data_label' >{t('Banner.collected_data_label')}</option>
           <option key='reconciled' value='reconciled' >{t('Banner.reconciled')}</option>
-        </> : <option key='reconciled' value='reconciled' >{t('Banner.only_data')}</option>}
+        </> : <option key='reconciled' value='reconciled' >{t('Banner.collected_data')}</option>}
       </Select>
     </Box>
     {/* Selector 2: Interval display */}
@@ -357,33 +354,22 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           )}
         </Select>
       </Box> : <></>}
-    {/* #116 — case « mode MFA » : force l'affichage type-résultats même sans
-        résultats calculés. À côté : « Toutes données » = mode « afficher aussi les
-        flux porteurs de données » (union avec la vue courante). Session-only. */}
+    {/* « Toutes données » = mode « afficher aussi les flux porteurs de données »
+        (union avec la vue courante). Session-only. */}
     <Box layerStyle='menuconfig_grid'>
       <HStack spacing={4} align='center'>
         <Checkbox
           variant='menuconfigpanel_option_checkbox'
-          isChecked={app_data.mfa_mode}
+          isChecked={app_data.reveal_data_links}
           onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-            app_data.mfa_mode = evt.target.checked
+            app_data.reveal_data_links = evt.target.checked
             setCount(a => a + 1)
             redrawNodeLinkLegend()
           }}>
-          {t('Banner.mfa_mode')}
-        </Checkbox>
-        <OSTooltip label={t('Banner.data_links_reveal_tt')}>
-          <Checkbox
-            variant='menuconfigpanel_option_checkbox'
-            isChecked={app_data.reveal_data_links}
-            onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-              app_data.reveal_data_links = evt.target.checked
-              setCount(a => a + 1)
-              redrawNodeLinkLegend()
-            }}>
+          <OSTooltip label={t('Banner.data_links_reveal_tt')}>
             {t('Banner.data_links_reveal')}
-          </Checkbox>
-        </OSTooltip>
+          </OSTooltip>
+        </Checkbox>
       </HStack>
     </Box>
   </>
