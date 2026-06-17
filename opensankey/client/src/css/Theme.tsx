@@ -2898,6 +2898,14 @@ const layerStyles = {
     gridRowGap: '0.2rem',
     color: 'primaire.5',
     // overflowY: 'auto',
+    // Hauteur minimale des box de config : sans elle, une box qui ne contient
+    // que son titre + la ligne sélecteur (cas « aucune sélection » sur
+    // Nœuds/ZDT) s'écrase en un mince bandeau. On la scope ici (panneau de
+    // config) et non sur le layerStyle partagé box_content_config, qui est
+    // aussi réutilisé ailleurs (modale Réconciliation, etc.).
+    '> *': {
+      minHeight: '16rem',
+    },
   },
 
   element_box: {
@@ -2915,11 +2923,6 @@ const layerStyles = {
     display: 'grid',
     gridRowGap: '0.2rem',
     gridAutoRows: 'max-content',
-    // Hauteur minimale : sans elle, une box de config qui ne contient que son
-    // titre + la ligne sélecteur (cas « aucune sélection » sur Nœuds/ZDT)
-    // s'écrase en un mince bandeau. On lui garde une présence lisible et de
-    // la place pour dérouler le menu des éléments (recherche + liste).
-    minHeight: '16rem',
     '.title_box': {
       padding: '0.4rem',
       width: '100%',
