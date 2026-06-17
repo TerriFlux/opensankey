@@ -656,6 +656,14 @@ export class Class_ApplicationDataOSP extends Class_ApplicationData {
       (this._original_current_view !== undefined) &&
       !this.menu_configuration.ref_to_save_in_cache_indicator_value.current
     ) {
+      if (this.menu_configuration.ref_to_never_save_view_session_value.current) {
+        // Session "ne jamais enregistrer" : discard unsaved changes silently and
+        // switch — no modal. Reuse resetViewWithOriginal (restores the clean
+        // snapshot, marks saved, then switches to _waiting_to_set_view).
+        this._waiting_to_set_view = id
+        this.resetViewWithOriginal()
+        return
+      }
       // In this instruction we prevent normal view changing & save the view we want but ask the user if he want to save current view
       this._waiting_to_set_view = id
       this.menu_configuration_osp.dict_setter_show_dialog_plus.ref_setter_show_menu_view_not_saved.current(true)
