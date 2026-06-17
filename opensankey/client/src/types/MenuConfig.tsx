@@ -391,6 +391,12 @@ export class Class_MenuConfig {
   private _ref_to_toolbar_updater: MutableRefObject<() => void>
   private _ref_to_save_in_cache_indicator: MutableRefObject<(b: boolean) => void>
   private _ref_to_save_in_cache_indicator_value: MutableRefObject<boolean>
+  // Session toggle "ne jamais enregistrer la vue" : when true, switching away
+  // from an edited view discards changes silently (no "Vue non enregistrée"
+  // modal). Reset by clicking the cache cloud icon. Lives here (OS base) so the
+  // OS-base cloud button and the OSP view machinery share one flag.
+  private _ref_to_never_save_view_session: MutableRefObject<(b: boolean) => void>
+  private _ref_to_never_save_view_session_value: MutableRefObject<boolean>
 
   private _ref_to_save_diagram_updater: MutableRefObject<() => void>
   private _ref_to_load_diagram_updater: MutableRefObject<() => void>
@@ -535,6 +541,8 @@ export class Class_MenuConfig {
     // Toolbar+
     this._ref_to_save_in_cache_indicator = useRef((_: boolean) => null)
     this._ref_to_save_in_cache_indicator_value = useRef(true)
+    this._ref_to_never_save_view_session = useRef((_: boolean) => null)
+    this._ref_to_never_save_view_session_value = useRef(false)
     this._ref_to_toolbar_updater = useRef(() => null)
     this._ref_to_toolbar_link_visual_filter_updater = useRef(() => null)
     this._ref_to_toolbar_node_tag_updater = useRef(() => null)
@@ -1399,6 +1407,14 @@ export class Class_MenuConfig {
 
   public get ref_to_save_in_cache_indicator_value(): MutableRefObject<boolean> {
     return this._ref_to_save_in_cache_indicator_value
+  }
+
+  public get ref_to_never_save_view_session(): MutableRefObject<(b: boolean) => void> {
+    return this._ref_to_never_save_view_session
+  }
+
+  public get ref_to_never_save_view_session_value(): MutableRefObject<boolean> {
+    return this._ref_to_never_save_view_session_value
   }
 
   public get ref_to_toolbar_updater(): MutableRefObject<() => void> {
