@@ -462,14 +462,17 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
   const data_source = link.drawing_area.data_source
 
   // #116 — coefficient prescrit de la contrainte ratio, en %. Affiché sur le label
-  // de valeur quand on est en mode données (le data_type pilote) OU en mode MFA
-  // (force l'affichage du % même sans résultats, dès le chargement). Hors structure.
-  // Un flux défini par ratio n'a souvent ni donnée mesurée ni résultat encore
-  // calculé : withCoef renvoie alors le coef seul (« 50% »), sinon l'accole à la
-  // valeur affichée (« 120 (50%) »).
-  const mfa_mode = link.drawing_area.application_data.mfa_mode
-  const coef = (prefix === 'value_label' && type_data !== 'structure' &&
-      (mfa_mode || type_data === 'data' || type_data === 'data_label'))
+  // de valeur dès qu'on affiche une valeur (collectées, étiquetées ou réconciliées) :
+  // le coef est une donnée structurelle de la contrainte, présente indépendamment du
+  // calcul, donc son affichage ne dépend pas des résultats. Exclu seulement en
+  // structure et en mode intervalle libre (free_interval = un intervalle, pas une
+  // valeur). NB : l'affichage réconcilié par défaut résout type_data='free_value'
+  // (interval_display défaut), il faut donc l'inclure explicitement. Un flux défini
+  // par ratio n'a souvent ni donnée mesurée ni résultat encore calculé : withCoef
+  // renvoie alors le coef seul (« 50% »), sinon l'accole à la valeur (« 120 (50%) »).
+  const coef = (prefix === 'value_label' &&
+      (type_data === 'data' || type_data === 'data_label' ||
+        type_data === 'reconciled' || type_data === 'free_value'))
     ? link_ratio_coef_label(link) : null
   const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
 
