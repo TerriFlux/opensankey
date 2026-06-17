@@ -1084,12 +1084,12 @@ export const UniversalFileConverter = ({
     // true = fix + populate _auto_corrected_* for the red highlight.
     form_data.append('input_options', JSON.stringify(input_options))
     if (input_format == 'blob') {
-      // In blob→blob mode (e.g. reconciliation_sankey), when the user is inside a
-      // view, only serialize that view so the optimizer receives just the visible
-      // sub-diagram — not the master + every view.
+      // In blob→blob mode (e.g. reconciliation_sankey) and blob→excel (save Excel),
+      // when the user is inside a view, only serialize that view so the export /
+      // optimizer receives just the visible sub-diagram — not the master + every view.
       const toJSON_kwargs = { ...output_options_base, ...output_options } as Type_JSON
       const is_inside_view = app_data.drawing_area.id !== default_main_sankey_id
-      if (output_format == 'blob' && is_inside_view) toJSON_kwargs['only_current_view'] = true
+      if ((output_format == 'blob' || output_format == 'excel') && is_inside_view) toJSON_kwargs['only_current_view'] = true
       // Forward the user-set ``only_current_view`` from the blob input options
       // (Sankey courant) to the toJSON serialization.
       if (input_options['only_current_view']) toJSON_kwargs['only_current_view'] = true
