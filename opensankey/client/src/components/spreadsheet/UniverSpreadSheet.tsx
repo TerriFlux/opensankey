@@ -283,6 +283,11 @@ export const UniverSpreadSheet = (
   const apiRef = useRef<any>(null)
   // Métadonnées de colonnes (par onglet) du dernier build, pour le sélecteur "Colonnes".
   const columnsRef = useRef<Type_SheetColumns>({})
+  // Instance Sankey pour laquelle on a construit le dernier classeur. reset()/nouveau diagramme/
+  // changement de vue/chargement JSON remplacent app_data.drawing_area.sankey par une NOUVELLE
+  // instance : dans ce cas on ne conserve PAS l'onglet actif du classeur précédent (keepActive),
+  // sinon le tableur « se souvient » de l'onglet du diagramme précédent.
+  const builtForSankeyRef = useRef<any>(null)
 
   const [activeSheetId, setActiveSheetId] = useState<string>('')
   // Colonnes masquées par onglet (indices).
@@ -502,11 +507,18 @@ export const UniverSpreadSheet = (
           if (!sankeyState.sheet_overrides) sankeyState.sheet_overrides = {}
           userColOverridesRef.current = sankeyState.col_overrides
           userSheetOverridesRef.current = sankeyState.sheet_overrides
+          // Si la sankey courante a été remplacée depuis le dernier build (nouveau diagramme,
+          // reset, changement de vue, chargement JSON), on ne reporte pas l'onglet actif du
+          // classeur précédent : on repart de l'état persisté du nouveau diagramme (Flux par défaut).
+          const sankeyChanged = builtForSankeyRef.current !== app_data.drawing_area.sankey
+          builtForSankeyRef.current = app_data.drawing_area.sankey
           let keepActive: string | null = null
           const existing = univerAPI.getActiveWorkbook && univerAPI.getActiveWorkbook()
           if (existing) {
-            const as = existing.getActiveSheet && existing.getActiveSheet()
-            keepActive = as && as.getSheetId ? as.getSheetId() : null
+            if (!sankeyChanged) {
+              const as = existing.getActiveSheet && existing.getActiveSheet()
+              keepActive = as && as.getSheetId ? as.getSheetId() : null
+            }
             if (univerAPI.disposeUnit) {
               univerAPI.disposeUnit(existing.getId())
             }
