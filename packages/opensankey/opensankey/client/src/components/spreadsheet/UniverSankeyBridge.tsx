@@ -223,15 +223,26 @@ export const attachSankeyBridge = (
           link.value.valueData = v2
           value = true
         }
+        // Col 3 / 4 = Min / Max (bornes de la donnée d'entrée) : valeur saisie, vide -> null.
+        const vmin = parseNum(cellText(ws, r, 3))
+        if (vmin !== (link.value.data_min != null ? link.value.data_min : null)) {
+          link.value.data_min = vmin
+          value = true
+        }
+        const vmax = parseNum(cellText(ws, r, 4))
+        if (vmax !== (link.value.data_max != null ? link.value.data_max : null)) {
+          link.value.data_max = vmax
+          value = true
+        }
         if (hasAfm) {
-          const v3 = parseNum(cellText(ws, r, 3))
+          const v3 = parseNum(cellText(ws, r, 5))
           if (v3 !== (link.value.valueResult != null ? link.value.valueResult : null)) {
             link.value.valueResult = v3
             value = true
           }
         }
-        // Col 6 = Incertitude relative (en %) : on persiste exactement la valeur saisie (vide -> null).
-        const u = parseNum(cellText(ws, r, 6))
+        // Col 8 = Incertitude relative (en %) : on persiste exactement la valeur saisie (vide -> null).
+        const u = parseNum(cellText(ws, r, 8))
         if (u !== (link.value.data_uncertainty != null ? link.value.data_uncertainty : null)) {
           link.value.data_uncertainty = u
           value = true
@@ -252,8 +263,17 @@ export const attachSankeyBridge = (
           if (l && l.value && v2 != null) {
             l.value.valueData = v2
           }
-          // Incertitude relative (col 6) : persistée si saisie.
-          const u = parseNum(cellText(ws, r, 6))
+          // Min / Max (col 3 / 4) : bornes persistées si saisies.
+          const vmin = parseNum(cellText(ws, r, 3))
+          if (l && l.value && vmin != null) {
+            l.value.data_min = vmin
+          }
+          const vmax = parseNum(cellText(ws, r, 4))
+          if (l && l.value && vmax != null) {
+            l.value.data_max = vmax
+          }
+          // Incertitude relative (col 8) : persistée si saisie.
+          const u = parseNum(cellText(ws, r, 8))
           if (l && l.value && u != null) {
             l.value.data_uncertainty = u
           }
@@ -720,13 +740,21 @@ export const attachSankeyBridge = (
             if (v2 != null) {
               l.value.valueData = v2
             }
+            const vmin = parseNum(cellText(ws, r, 3))
+            if (vmin != null) {
+              l.value.data_min = vmin
+            }
+            const vmax = parseNum(cellText(ws, r, 4))
+            if (vmax != null) {
+              l.value.data_max = vmax
+            }
             if (hasAfm) {
-              const v3 = parseNum(cellText(ws, r, 3))
+              const v3 = parseNum(cellText(ws, r, 5))
               if (v3 != null) {
                 l.value.valueResult = v3
               }
             }
-            const u = parseNum(cellText(ws, r, 6))
+            const u = parseNum(cellText(ws, r, 8))
             if (u != null) {
               l.value.data_uncertainty = u
             }

@@ -961,14 +961,14 @@ export const buildSankeyWorkbookData = (
   // --- Onglet Flux (fusion Flux + Données : un flux par ligne, toutes les colonnes de valeur) -----
   // Origine/Destination/Valeur obligatoires ; le reste optionnel (masqué si vide via le sélecteur).
   const fluxHeaders = [
-    'Origine', 'Destination', 'Valeur', 'Valeur calculée', 'Valeur destination',
+    'Origine', 'Destination', 'Valeur', 'Min', 'Max', 'Valeur calculée', 'Valeur destination',
     'Quantité naturelle', 'Incertitude %', 'Source', 'Hypothèse'
   ]
   const fluxCells: Type_CellData = { 0: {} }
-  // 'Valeur calculée' (col 3) = résultat réconcilié -> en-tête violet. 'Incertitude %' (col 6) = nombre
+  // 'Valeur calculée' (col 5) = résultat réconcilié -> en-tête violet. 'Incertitude %' (col 8) = nombre
   // simple (le « % » est porté par l'en-tête, pas par un format de cellule -> saisie/parsing sans
   // ambiguïté).
-  const FLUX_RESULT_COLS = new Set([3])
+  const FLUX_RESULT_COLS = new Set([5])
   links.forEach((l: any, i: number) => {
     const v = l.value
     fluxCells[i + 1] = {
@@ -977,13 +977,16 @@ export const buildSankeyWorkbookData = (
       // "Valeur" = donnée d'entrée uniquement (vide si seul un résultat existe -> il est dans
       // "Valeur calculée"). Pas de repli sur le résultat.
       2: { v: v && v.valueData != null ? num5(v.valueData) : '' },
-      3: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
-      4: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
-      5: { v: '' },
+      // Min / Max = bornes de la donnée d'entrée (contraintes saisies, vides sinon).
+      3: { v: v && v.data_min != null ? num5(v.data_min) : '' },
+      4: { v: v && v.data_max != null ? num5(v.data_max) : '' },
+      5: { v: v && v.valueResult != null ? num5(v.valueResult) : '' },
+      6: { v: v && v.valueDataTarget != null ? num5(v.valueDataTarget) : '' },
+      7: { v: '' },
       // Incertitude % : valeur saisie (nombre simple), vide sinon (le défaut Python s'applique en aval).
-      6: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '' },
-      7: { v: (v && v.data_source) || '' },
-      8: { v: '' }
+      8: { v: v && v.data_uncertainty != null ? num5(v.data_uncertainty) : '' },
+      9: { v: (v && v.data_source) || '' },
+      10: { v: '' }
     }
   })
   // En-tête vertical pour les colonnes purement numériques (Valeur, Valeur calculée, Valeur
@@ -1307,7 +1310,7 @@ export const buildSankeyWorkbookData = (
         columnData: fluxColumnData,
         ...(fluxHeaderH ? { rowData: { 0: { h: fluxHeaderH } } } : {}),
         rowCount: Math.max(100, links.length + 20),
-        columnCount: 9
+        columnCount: 11
       },
       [SHEET_ID_ANALYSIS]: {
         id: SHEET_ID_ANALYSIS,
