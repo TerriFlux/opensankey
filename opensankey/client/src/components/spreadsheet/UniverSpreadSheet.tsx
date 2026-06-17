@@ -752,6 +752,9 @@ export const UniverSpreadSheet = (
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+      {/* Masque le bouton "+" d'ajout d'onglet de la barre Univer : créer une feuille arbitraire
+          n'a pas de sens ici (onglets calqués sur le format Excel, gérés via le sélecteur « Onglets »). */}
+      <style>{'[data-u-comp="sheet-bar-append-button"] { display: none !important; }'}</style>
       <div style={{
         display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto',
         padding: '1px 6px', borderBottom: '1px solid #e2e8f0', background: '#f7fafc'
