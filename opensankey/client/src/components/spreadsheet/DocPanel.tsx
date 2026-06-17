@@ -438,6 +438,9 @@ export const DocPanel = (
                             overflowY='auto'
                             onMouseEnter={() => setViewSubmenuOpen(true)}
                             onMouseLeave={() => setViewSubmenuOpen(false)}
+                            // Empêche le clic sur l'ascenseur de retirer le focus de l'item courant :
+                            // sans ça, le blur ferme le menu parent « Insérer » (closeOnBlur) et tout se démonte.
+                            onMouseDown={(e) => e.preventDefault()}
                           >
                             {view_sources.map(({ id, name }) => (
                               <MenuItem key={id} onClick={() => insertViewLink(id, name)}>
