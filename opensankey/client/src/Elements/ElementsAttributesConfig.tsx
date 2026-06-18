@@ -2566,26 +2566,6 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
     }
   } satisfies AttributeConfig<Type_HatchOrientation>,
-  link_caps: {
-    default: false as boolean,
-    type: (() => false) as (() => boolean),
-    category: 'shape' as const,
-    actions: ['drawElements'] as BaseActionType[],
-    labels: {
-      en: 'Link caps',
-      fr: 'Raccords de flux',
-      es: 'Empalmes de flujo',
-      de: 'Flussübergänge',
-      it: 'Raccordi di flusso'
-    },
-    tooltips: {
-      en: 'For elliptical nodes only: fill the gap between the ellipse edge and each link start with the link color, for a smoother junction.',
-      fr: 'Pour les nœuds elliptiques uniquement : comble l\'espace entre le bord de l\'ellipse et le départ de chaque flux avec la couleur du flux, pour une jonction plus fluide.',
-      es: 'Solo para nodos elípticos: rellena el espacio entre el borde de la elipse y el inicio de cada flujo con el color del flujo, para una unión más fluida.',
-      de: 'Nur für elliptische Knoten: füllt den Zwischenraum zwischen dem Ellipsenrand und dem Beginn jedes Flusses mit der Flussfarbe, für einen weicheren Übergang.',
-      it: 'Solo per nodi ellittici: riempie lo spazio tra il bordo dell\'ellisse e l\'inizio di ogni flusso con il colore del flusso, per un raccordo più fluido.'
-    }
-  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
@@ -3130,6 +3110,26 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Mostrar siempre este flujo aunque su valor sea cero (anula el filtrado de flujos nulos solo para este flujo)',
       de: 'Diesen Fluss immer anzeigen, auch wenn sein Wert null ist (überschreibt die Nullfluss-Filterung nur für diesen Fluss)',
       it: 'Mostra sempre questo flusso anche se il suo valore è zero (ignora il filtro dei flussi nulli solo per questo flusso)'
+    }
+  } satisfies AttributeConfig<boolean>,
+  link_caps: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawWithNodes', 'drawElements'] as LinkBaseActionType[],
+    labels: {
+      en: 'Cap',
+      fr: 'Raccord',
+      es: 'Empalme',
+      de: 'Übergang',
+      it: 'Raccordo'
+    },
+    tooltips: {
+      en: 'On elliptical source/target nodes, fill the gap between the ellipse edge and this link start with the link color, for a smoother junction.',
+      fr: 'Sur les nœuds source/cible elliptiques, comble l\'espace entre le bord de l\'ellipse et le départ de ce flux avec sa couleur, pour une jonction plus fluide.',
+      es: 'En nodos origen/destino elípticos, rellena el espacio entre el borde de la elipse y el inicio de este flujo con su color, para una unión más fluida.',
+      de: 'Bei elliptischen Quell-/Zielknoten den Zwischenraum zwischen dem Ellipsenrand und dem Beginn dieses Flusses mit dessen Farbe füllen, für einen weicheren Übergang.',
+      it: 'Su nodi sorgente/destinazione ellittici, riempie lo spazio tra il bordo dell\'ellisse e l\'inizio di questo flusso con il suo colore, per un raccordo più fluido.'
     }
   } satisfies AttributeConfig<boolean>,
 } as const

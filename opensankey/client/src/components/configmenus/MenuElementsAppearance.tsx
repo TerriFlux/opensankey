@@ -1415,22 +1415,6 @@ export const MenuConfigurationAppearance = ({
                   elements={elements}
                   attributePath={'Noeud.apparence'}
                   refreshUI={refreshAll} />
-                {/* Raccords de flux sur nœuds elliptiques (option, pas auto) */}
-                <OverloadedButton
-                  elements={elements}
-                  config={NODE_SHAPE_SPECIFIC_CONFIG}
-                  attributePath={'Noeud.apparence'}
-                  prefix={'shape'}
-                  attributeKey="link_caps"
-                  variant={getButtonVariant(
-                    '',
-                    isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'link_caps'),
-                    nodeShapeValues.link_caps
-                  )}
-                  onClick={() => { nodeShapeValues.link_caps = !nodeShapeValues.link_caps }}
-                >
-                  <FaBezierCurve />
-                </OverloadedButton>
               </Box>)}
               <MenuShapeAttributes
                 app_data={app_data}
@@ -1866,6 +1850,22 @@ export const MenuConfigurationAppearance = ({
                                 buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
                                 {app_data.icon_library.icon_link_visible_when_zero}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Raccord du flux sur nœud elliptique (comble l'espace
+                                ellipse <-> départ du flux). */}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="link_caps"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'link_caps'), linkShapeValues.link_caps)}
+                                onClick={() => { linkShapeValues.link_caps = !linkShapeValues.link_caps }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                <FaBezierCurve />
                               </OverloadedButton>
                             </Box>
                           </Box>
