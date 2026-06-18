@@ -341,6 +341,7 @@ export const resources_nodes = {
           column_u: 'Colonne (u)',
           position_v: 'Ligne',
           row_v: 'Ligne (v)',
+          column_row_uv: 'Colonne (u) / Ligne (v)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
           anchor_align: 'Ancre flux',
