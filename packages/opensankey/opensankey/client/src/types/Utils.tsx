@@ -494,19 +494,21 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
 
   const data_source = link.drawing_area.data_source
 
-  // #116 — coefficient prescrit de la contrainte ratio, en %. Affiché sur le label
-  // de valeur UNIQUEMENT en mode données saisies (collectées / étiquetées) : le coef
-  // est une donnée structurelle de la contrainte. En modes résultats (réconciliées /
-  // free_value) on n'affiche que la valeur calculée, sans le coef entre parenthèses
-  // (« 120 » et non « 120 (50%) ») — cf. retour utilisateur. Exclu aussi en structure
-  // et en mode intervalle libre. Un flux défini par ratio n'a souvent ni donnée mesurée
-  // ni résultat : withCoef renvoie alors le coef seul (« 50% »), sinon l'accole à la
-  // valeur (« 120 (50%) ») en mode données. Le coef suit les réglages du label de
-  // valeur : masqué si « valeur visible » est décoché, et formaté avec le même nombre
-  // de chiffres après la virgule.
+  // #116 — coefficient prescrit de la contrainte ratio, en %. Affiché sur le label de
+  // valeur dès qu'on affiche une valeur (collectées, étiquetées, réconciliées ou
+  // free_value) : le coef est une donnée structurelle de la contrainte, présente
+  // indépendamment du calcul. Il FAUT inclure reconciled/free_value car, sans résultats
+  // calculés, l'option « Collectées » du sélecteur mappe en réalité sur data_source
+  // 'reconciled' (cf. FilterDataType) : les exclure masque le % en mode collecté.
+  // Exclu seulement en structure et en mode intervalle libre. Un flux défini par ratio
+  // n'a souvent ni donnée mesurée ni résultat : withCoef renvoie alors le coef seul
+  // (« 50% »), sinon l'accole à la valeur (« 120 (50%) »). Le coef suit les réglages du
+  // label de valeur : masqué si « valeur visible » est décoché, et formaté avec le même
+  // nombre de chiffres après la virgule.
   const coef_label_values = getNameLabelValues(link, prefix)
   const coef = (prefix === 'value_label' && coef_label_values.is_visible &&
-      (type_data === 'data' || type_data === 'data_label'))
+      (type_data === 'data' || type_data === 'data_label' ||
+        type_data === 'reconciled' || type_data === 'free_value'))
     ? link_ratio_coef_label(link, coef_label_values) : null
   const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
 
