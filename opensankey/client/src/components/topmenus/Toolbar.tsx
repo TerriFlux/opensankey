@@ -263,6 +263,10 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
         isChecked={app_data.drawing_area.show_zero_links}
         onChange={evt => {
           app_data.drawing_area.show_zero_links = evt.target.checked
+          // La visibilité des flux nuls change : invalider la mémorisation de
+          // visibilité des liens côté nœuds, sinon draw() relit l'ancienne liste
+          // et les flux à 0 restent masqués (cf. handler « Toutes données »).
+          app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
           setCount(a => a + 1)
           app_data.drawing_area.sankey.draw()
         }}
