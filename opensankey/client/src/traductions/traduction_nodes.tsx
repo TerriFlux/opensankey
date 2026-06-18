@@ -343,6 +343,7 @@ export const resources_nodes = {
           row_v: 'Ligne (v)',
           position_dx: 'Ecart horizontal',
           position_dy: 'Ecart vertical',
+          anchor_align: 'Ancre flux',
           anchor_align_vertical: 'Ancres (côtés verticaux)',
           anchor_align_horizontal: 'Ancres (côtés horizontaux)',
           asn: 'Appliquer le style aux noeuds',

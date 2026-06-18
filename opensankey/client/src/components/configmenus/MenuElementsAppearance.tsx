@@ -1539,42 +1539,41 @@ export const MenuConfigurationAppearance = ({
                           />
                         </Box>
                         <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_vertical')}</Box>
-                          <OverloadedButtonGroup
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            attributePath={'Noeud.apparence'}
-                            prefix={'shape'}
-                            attributeKey="anchor_align_vertical"
-                            currentValue={nodeShapeValues.anchor_align_vertical}
-                            items={[
-                              { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
-                              { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
-                              { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
-                            ]}
-                            onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
-                            t={t}
-                          />
-                        </Box>
-                        <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align_horizontal')}</Box>
-                          <OverloadedButtonGroup
-                            elements={nodes_elements}
-                            config={NODE_SHAPE_SPECIFIC_CONFIG}
-                            attributePath={'Noeud.apparence'}
-                            prefix={'shape'}
-                            attributeKey="anchor_align_horizontal"
-                            currentValue={nodeShapeValues.anchor_align_horizontal}
-                            items={[
-                              { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
-                              { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
-                              { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
-                            ]}
-                            onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
-                            getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
-                            t={t}
-                          />
+                          <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.anchor_align')}</Box>
+                          <Box display='flex' alignItems='center' gap='2'>
+                            <OverloadedButtonGroup
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              attributePath={'Noeud.apparence'}
+                              prefix={'shape'}
+                              attributeKey="anchor_align_vertical"
+                              currentValue={nodeShapeValues.anchor_align_vertical}
+                              items={[
+                                { value: 'top' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_top },
+                                { value: 'center' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_center },
+                                { value: 'bottom' as Type_AnchorAlignVertical, icon: app_data.icon_library.icon_text_vert_pos_bottom }
+                              ]}
+                              onChange={(value) => { nodeShapeValues.anchor_align_vertical = value }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_vertical')}
+                              t={t}
+                            />
+                            <OverloadedButtonGroup
+                              elements={nodes_elements}
+                              config={NODE_SHAPE_SPECIFIC_CONFIG}
+                              attributePath={'Noeud.apparence'}
+                              prefix={'shape'}
+                              attributeKey="anchor_align_horizontal"
+                              currentValue={nodeShapeValues.anchor_align_horizontal}
+                              items={[
+                                { value: 'left' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_left },
+                                { value: 'center' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_center },
+                                { value: 'right' as Type_AnchorAlignHorizontal, icon: app_data.icon_library.icon_text_align_right }
+                              ]}
+                              onChange={(value) => { nodeShapeValues.anchor_align_horizontal = value }}
+                              getIsIndeterminate={() => isNodeShapeSpecificValueIndeterminate(nodes_elements, 'anchor_align_horizontal')}
+                              t={t}
+                            />
+                          </Box>
                         </Box>
                         {nodeShapeValues.position_type == 'parametric' ? <>
                           <ElementAttrSetterNumberInput2Cols
