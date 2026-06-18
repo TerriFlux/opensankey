@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaBezierCurve, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
 import { MdTextRotationAngleup } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -75,7 +75,6 @@ import {
   getNodeShapeAttributeKey,
   getLabelAttributeKey,
   getConfigValues,
-  getLinkShapeAttributeKey,
   Type_AnchorAlignVertical,
   Type_AnchorAlignHorizontal,
   Type_HatchOrientation
@@ -1416,6 +1415,22 @@ export const MenuConfigurationAppearance = ({
                   elements={elements}
                   attributePath={'Noeud.apparence'}
                   refreshUI={refreshAll} />
+                {/* Raccords de flux sur nœuds elliptiques (option, pas auto) */}
+                <OverloadedButton
+                  elements={elements}
+                  config={NODE_SHAPE_SPECIFIC_CONFIG}
+                  attributePath={'Noeud.apparence'}
+                  prefix={'shape'}
+                  attributeKey="link_caps"
+                  variant={getButtonVariant(
+                    '',
+                    isNodeShapeSpecificValueIndeterminate(elements as Class_NodeBase[], 'link_caps'),
+                    nodeShapeValues.link_caps
+                  )}
+                  onClick={() => { nodeShapeValues.link_caps = !nodeShapeValues.link_caps }}
+                >
+                  <FaBezierCurve />
+                </OverloadedButton>
               </Box>)}
               <MenuShapeAttributes
                 app_data={app_data}
@@ -1740,21 +1755,47 @@ export const MenuConfigurationAppearance = ({
                                 </Select>
                               </OSTooltip>
                             </Box>
-                            <Box layerStyle='menuconfigpanel_row_2cols'>
-                              <OverloadedCheckbox
+                          </Box>
+                          {/* Bascules d'apparence du flux sous forme de boutons-icônes
+                              (flèche, inverser la flèche, encoche source, hachuré, afficher
+                              si nul). Tooltips auto-générés par OverloadedButton depuis la
+                              config. Les tailles (flèche/encoche) sont inline, sans label,
+                              juste après leur icône. */}
+                          <Box as='span' display='flex' alignItems='center' gap='0.25rem' flexWrap='wrap'>
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
                                 elements={links_elements}
                                 config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
                                 prefix={'shape'}
                                 attributeKey="is_arrow"
-                                isChecked={linkShapeValues.is_arrow}
-                                onChange={(checked) => { linkShapeValues.is_arrow = checked }}
-                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow')}
-                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow')}`)}
-                                t={t}
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow'), linkShapeValues.is_arrow)}
+                                onClick={() => { linkShapeValues.is_arrow = !linkShapeValues.is_arrow }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                {t('Flux.apparence.shape_is_arrow')}
-                              </OverloadedCheckbox>
-                              {linkShapeValues.is_arrow && (
+                                {app_data.icon_library.icon_link_arrow}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Flèche côté source, indépendante de la flèche cible :
+                                les deux peuvent être actives en même temps. */}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="arrow_at_source"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_at_source'), linkShapeValues.arrow_at_source)}
+                                onClick={() => { linkShapeValues.arrow_at_source = !linkShapeValues.arrow_at_source }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_arrow_reversed}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Taille de flèche (partagée par les deux pointes), inline sans
+                                label, visible dès qu'une des deux flèches est active. */}
+                            {(linkShapeValues.is_arrow || linkShapeValues.arrow_at_source) && (
+                              <Box flexShrink={0} w='4.5rem'>
                                 <InputGroup variant='menuconfigpanel_option_input'>
                                   <ConfigMenuNumberInput
                                     t={t}
@@ -1767,55 +1808,68 @@ export const MenuConfigurationAppearance = ({
                                     multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'arrow_size')}
                                   />
                                 </InputGroup>
-                              )}
-                            </Box>
-                            {linkShapeValues.is_arrow && (
-                              <Box layerStyle='menuconfigpanel_row_2cols'>
-                                <OverloadedCheckbox
-                                  elements={links_elements}
-                                  config={LINK_SHAPE_SPECIFIC_CONFIG}
-                                  prefix={'shape'}
-                                  attributeKey="is_arrow_reversed"
-                                  isChecked={linkShapeValues.is_arrow_reversed}
-                                  onChange={(checked) => { linkShapeValues.is_arrow_reversed = checked }}
-                                  getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_arrow_reversed')}
-                                  tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_arrow_reversed')}`)}
-                                  t={t}
-                                >
-                                  {t('Flux.apparence.shape_is_arrow_reversed')}
-                                </OverloadedCheckbox>
                               </Box>
                             )}
-                            <Box layerStyle='menuconfigpanel_row_2cols'>
-                              <OverloadedCheckbox
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
                                 elements={links_elements}
                                 config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
+                                prefix={'shape'}
+                                attributeKey="source_notch"
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'source_notch'), linkShapeValues.source_notch)}
+                                onClick={() => { linkShapeValues.source_notch = !linkShapeValues.source_notch }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
+                              >
+                                {app_data.icon_library.icon_link_source_notch}
+                              </OverloadedButton>
+                            </Box>
+                            {/* Profondeur d'encoche, inline sans label juste après l'icône. */}
+                            {linkShapeValues.source_notch && (
+                              <Box flexShrink={0} w='4.5rem'>
+                                <InputGroup variant='menuconfigpanel_option_input'>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={linkShapeValues.source_notch_size}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={1}
+                                    unit_text='px'
+                                    stepper={true}
+                                    function_on_blur={(value) => { linkShapeValues.source_notch_size = value ?? linkShapeValues.source_notch_size }}
+                                    multiValue={isLinkShapeSpecificValueIndeterminate(links_elements, 'source_notch_size')}
+                                  />
+                                </InputGroup>
+                              </Box>
+                            )}
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
+                                elements={links_elements}
+                                config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
                                 prefix={'shape'}
                                 attributeKey="is_dashed"
-                                isChecked={linkShapeValues.is_dashed}
-                                onChange={(checked) => { linkShapeValues.is_dashed = checked }}
-                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed')}
-                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'is_dashed')}`)}
-                                t={t}
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'is_dashed'), linkShapeValues.is_dashed)}
+                                onClick={() => { linkShapeValues.is_dashed = !linkShapeValues.is_dashed }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                {t('Flux.apparence.shape_is_dashed')}
-                              </OverloadedCheckbox>
+                                {app_data.icon_library.icon_link_dashed}
+                              </OverloadedButton>
                             </Box>
-                            <Box layerStyle='menuconfigpanel_row_2cols'>
-                              <OverloadedCheckbox
+                            <Box display='inline-flex' flexShrink={0} flexGrow={0} w='1.5rem' h='1.5rem'>
+                              <OverloadedButton
                                 elements={links_elements}
                                 config={LINK_SHAPE_SPECIFIC_CONFIG}
+                                attributePath='Flux.apparence'
                                 prefix={'shape'}
                                 attributeKey="visible_when_zero"
-                                isChecked={linkShapeValues.visible_when_zero}
-                                onChange={(checked) => { linkShapeValues.visible_when_zero = checked }}
-                                getIsIndeterminate={() => isLinkShapeSpecificValueIndeterminate(links_elements, 'visible_when_zero')}
-                                tooltipLabel={t(`Flux.apparence.tooltips.${getLinkShapeAttributeKey('shape', 'visible_when_zero')}`)}
-                                t={t}
+                                variant={getButtonVariant('', isLinkShapeSpecificValueIndeterminate(links_elements, 'visible_when_zero'), linkShapeValues.visible_when_zero)}
+                                onClick={() => { linkShapeValues.visible_when_zero = !linkShapeValues.visible_when_zero }}
+                                buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                {t('Flux.apparence.shape_visible_when_zero')}
-                              </OverloadedCheckbox>
-                            </Box></Box>
+                                {app_data.icon_library.icon_link_visible_when_zero}
+                              </OverloadedButton>
+                            </Box>
+                          </Box>
                         </> : <></>}
 
                       {/* Recyclage tristate (taille d'un bouton d'orientation) + 4 orientations

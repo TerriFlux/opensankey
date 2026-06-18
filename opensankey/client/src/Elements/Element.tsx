@@ -846,6 +846,7 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
+  shape_link_caps!: boolean
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']
@@ -889,8 +890,10 @@ export abstract class Class_BaseShape extends Class_ProtoElement {
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
-  shape_is_arrow_reversed!: LinkShapeSpecificValues['is_arrow_reversed']
+  shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_source_notch!: LinkShapeSpecificValues['source_notch']
+  shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1188,8 +1191,10 @@ export class Class_ElementStyle {
   shape_ending_tangeant!: LinkShapeSpecificValues['ending_tangeant']
   shape_middle_recycling!: LinkShapeSpecificValues['middle_recycling']
   shape_is_arrow!: LinkShapeSpecificValues['is_arrow']
-  shape_is_arrow_reversed!: LinkShapeSpecificValues['is_arrow_reversed']
+  shape_arrow_at_source!: LinkShapeSpecificValues['arrow_at_source']
   shape_arrow_size!: LinkShapeSpecificValues['arrow_size']
+  shape_source_notch!: LinkShapeSpecificValues['source_notch']
+  shape_source_notch_size!: LinkShapeSpecificValues['source_notch_size']
   shape_is_dashed!: LinkShapeSpecificValues['is_dashed']
   shape_color_rule!: LinkShapeSpecificValues['color_rule']
   shape_visible_when_zero!: LinkShapeSpecificValues['visible_when_zero']
@@ -1224,6 +1229,7 @@ export class Class_ElementStyle {
   shape_anchor_align_vertical!: NodeShapeSpecificAttributeTypes['anchor_align_vertical']
   shape_anchor_align_horizontal!: NodeShapeSpecificAttributeTypes['anchor_align_horizontal']
   shape_hatch!: NodeShapeSpecificAttributeTypes['hatch']
+  shape_link_caps!: boolean
   shape_position_u_locked!: boolean
   shape_position_v_locked!: boolean
   shape_margin_bottom!: ShapeAttributeTypes['margin_bottom']

@@ -786,6 +786,14 @@ export class LinkElementPersistence extends ProtoElementPersistence {
     ) {
       link.attributes['shape_is_recycling_locked'] = true
     }
+    // Migration flèche inversée → modèle deux flèches indépendantes. Avant, l'unique
+    // flèche (shape_is_arrow) était déplacée côté source par shape_is_arrow_reversed.
+    // Désormais shape_is_arrow = flèche côté cible et shape_arrow_at_source = flèche
+    // côté source : un ancien flux « inversé » devient une flèche source seule.
+    if (json_local && json_local['shape_is_arrow_reversed'] === true) {
+      link.attributes['shape_is_arrow'] = false
+      link.attributes['shape_arrow_at_source'] = true
+    }
   }
 }
 export class NodeElementPersistence extends NodeBasePersistence {

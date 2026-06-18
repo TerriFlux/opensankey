@@ -712,6 +712,11 @@ export class Class_NodeElement extends Class_NodeBase {
     this._orderD3Elements()
   }
 
+  public drawLinksSourceNotch() {
+    this._drawLinksSourceNotch()
+    this._orderD3Elements()
+  }
+
   /**
    * Launch animation from this node
    */
@@ -981,7 +986,7 @@ export class Class_NodeElement extends Class_NodeBase {
     if (this.value_label_stick_to_label) {
       this._nodeDrawNameLabel?.refreshStickLayout()
     }
-    //this._drawLinksStartCaps() // Ajouter ici
+    this._drawLinksStartCaps()
   }
   /**
    * Apply node position to it shape in d3
@@ -1041,26 +1046,29 @@ export class Class_NodeElement extends Class_NodeBase {
    * Function that draw all the arrow of link visible linked to this node
    */
   private _drawLinksArrow() {
-    // Normal arrows: this node is the target, arrow drawn on link.target_side.
-    const normal_arrows = this.input_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && !link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Target arrows: this node is the target, arrow drawn on link.target_side.
+    const target_arrows = this.input_links_list
+      .filter(link => link.is_visible && link.shape_is_arrow && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: false,
         arrow_side: link.target_side,
         link_thickness: link.thicknessTarget,
         is_horizontal_at_anchor: link.is_horizontal || link.is_vertical_horizontal
       }))
-    // Reversed arrows: this node is the source, arrow drawn on link.source_side
-    // (visual reversal only — the data flow direction is unchanged).
-    const reversed_arrows = this.output_links_list
-      .filter(link => link.is_visible && link.shape_is_arrow && link.shape_is_arrow_reversed && link.isRelatedD3SelectionPresentAndSynced)
+    // Source arrows: this node is the source, arrow drawn on link.source_side
+    // (independent of the target arrow — a link can carry both; graphical only,
+    // the data flow direction is unchanged).
+    const source_arrows = this.output_links_list
+      .filter(link => link.is_visible && link.shape_arrow_at_source && link.isRelatedD3SelectionPresentAndSynced)
       .map(link => ({
         link,
+        is_source_arrow: true,
         arrow_side: link.source_side,
         link_thickness: link.thicknessSource,
         is_horizontal_at_anchor: link.is_horizontal || link.is_horizontal_vertical
       }))
-    const list_link_to_add_arrow = [...normal_arrows, ...reversed_arrows]
+    const list_link_to_add_arrow = [...target_arrows, ...source_arrows]
       .sort((a, b) => this._links_order.indexOf(a.link) - this._links_order.indexOf(b.link))
 
     const node_height = this.getShapeHeightToUse()
@@ -1103,7 +1111,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
         // Visible link thickness at the anchor (clamped to minimum_flux / 2px).
         const link_value = item.link_thickness
-        const is_reversed = link.shape_is_arrow_reversed
+        // Côté source ou cible : déterminé par la nature de cette entrée (un flux
+        // peut porter une flèche aux deux extrémités), pas par un drapeau du flux.
+        const is_reversed = item.is_source_arrow
         // Arrow length : in fan mode, the user-set shape_arrow_size is used
         // as-is. In standalone, cap the length to link_value so a wide flow
         // doesn't end with a squashed triangle (height/base <<1) — unless
@@ -1177,7 +1187,7 @@ export class Class_NodeElement extends Class_NodeBase {
         const is_horizontal_at_target = item.is_horizontal_at_anchor
         const is_revert = (is_horizontal_at_target && link_arrow_side_right) || (!is_horizontal_at_target && link_arrow_side_bottom)
 
-        link.shape_arrow_path = draw_arrow_part(
+        const arrow_path = draw_arrow_part(
           arrow_half_height,
           p5,
           +link_value,
@@ -1188,9 +1198,80 @@ export class Class_NodeElement extends Class_NodeBase {
           node_arrow_shift,
           arrows_adjustment
         )
+        // Router vers la bonne extrémité : chaque flèche est stockée séparément
+        // sur le flux pour que cible et source ne s'écrasent pas.
+        if (item.is_source_arrow) {
+          link.shape_arrow_path_source = arrow_path
+        } else {
+          link.shape_arrow_path = arrow_path
+        }
       })
 
     //this._drawLinksStartCaps()
+  }
+
+  /**
+   * Compute the "source notch" (negative arrow) chevrons for this node's
+   * outgoing links. All links leaving the same node side share a SINGLE notch:
+   * one chevron whose base spans every link's attach band on that side and whose
+   * apex is pushed into the ribbon (toward the targets) by the deepest requested
+   * notch size. The resulting path is pushed onto every participating link, which
+   * draws a background-colored copy on its own d3 selection — so the notch is
+   * carved consistently whatever the global element z-order.
+   */
+  private _drawLinksSourceNotch() {
+    const links = this.output_links_list.filter(
+      link => link.is_visible && link.shape_source_notch && link.isRelatedD3SelectionPresentAndSynced
+    )
+    if (links.length === 0)
+      return
+
+    const sides: Type_Side[] = ['left', 'right', 'top', 'bottom']
+    sides.forEach(side => {
+      const side_links = links.filter(link => link.source_side === side)
+      if (side_links.length === 0)
+        return
+
+      const depth = Math.max(...side_links.map(link => link.shape_source_notch_size ?? 0))
+      if (!(depth > 0))
+        return
+
+      let path: string
+      if (side === 'left' || side === 'right') {
+        // Base = vertical segment at the node edge, spanning all attach bands.
+        const x_base = side_links[0].position_x_start
+        let y_min = Infinity, y_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          y_min = Math.min(y_min, link.position_y_start - half)
+          y_max = Math.max(y_max, link.position_y_start + half)
+        })
+        const apex_x = x_base + (side === 'right' ? depth : -depth)
+        const y_mid = (y_min + y_max) / 2
+        path = 'M ' + x_base + ',' + y_min
+          + ' L ' + apex_x + ',' + y_mid
+          + ' L ' + x_base + ',' + y_max
+          + ' Z'
+      }
+      else {
+        // Base = horizontal segment at the node edge, spanning all attach bands.
+        const y_base = side_links[0].position_y_start
+        let x_min = Infinity, x_max = -Infinity
+        side_links.forEach(link => {
+          const half = link.thicknessSource / 2
+          x_min = Math.min(x_min, link.position_x_start - half)
+          x_max = Math.max(x_max, link.position_x_start + half)
+        })
+        const apex_y = y_base + (side === 'bottom' ? depth : -depth)
+        const x_mid = (x_min + x_max) / 2
+        path = 'M ' + x_min + ',' + y_base
+          + ' L ' + x_mid + ',' + apex_y
+          + ' L ' + x_max + ',' + y_base
+          + ' Z'
+      }
+
+      side_links.forEach(link => { link.shape_source_notch_path = path })
+    })
   }
 
   /**
@@ -2069,8 +2150,8 @@ export class Class_NodeElement extends Class_NodeBase {
    * Dessine le début des flux sur les ellipses pour un rendu plus fluide
    */
   private _drawLinksStartCaps() {
-    // Seulement pour les nœuds elliptiques
-    if (this.shape_type !== 'ellipse') return
+    // Option à activer (pas automatique), et seulement pour les nœuds elliptiques
+    if (!this.shape_link_caps || this.shape_type !== 'ellipse') return
 
     // Nettoyer les caps précédents
     this.d3_selection?.selectAll('.link_cap_output').remove()
@@ -2091,7 +2172,7 @@ export class Class_NodeElement extends Class_NodeBase {
     sides.forEach(side => {
       // Récupérer les liens pour ce côté dans l'ordre
       const output_links = this._links_order.filter(link =>
-        link.is_visible && link.source === this && link.source_side === side
+        link.is_visible && !link.shape_arrow_at_source && link.source === this && link.source_side === side
       )
       const input_links = this._links_order.filter(link =>
         link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side

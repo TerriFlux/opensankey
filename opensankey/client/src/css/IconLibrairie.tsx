@@ -1612,6 +1612,41 @@ export class Class_IconLibrary {
   protected _icon_link_curved = logo_courbe
   protected _icon_link_structure = logo_structure
 
+  // Bascules d'apparence du flux (rangée de boutons-icônes du menu « Flux »).
+  protected _icon_link_arrow = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="2" y1="8.5" x2="12" y2="8.5" />
+      <polyline points="9,5 13,8.5 9,12" />
+    </svg>
+  )
+  protected _icon_link_arrow_reversed = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="5" y1="8.5" x2="15" y2="8.5" />
+      <polyline points="8,5 4,8.5 8,12" />
+    </svg>
+  )
+  protected _icon_link_source_notch = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="7" y1="8.5" x2="15.5" y2="8.5" />
+      <polyline points="2,3.5 7,8.5 2,13.5" />
+    </svg>
+  )
+  protected _icon_link_dashed = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="3 2.5">
+      <line x1="1.5" y1="8.5" x2="15.5" y2="8.5" />
+    </svg>
+  )
+  protected _icon_link_visible_when_zero = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5">
+      <ellipse cx="8.5" cy="8.5" rx="4" ry="6" />
+    </svg>
+  )
+
   protected _icon_order_up = <FaAngleUp />
   protected _icon_order_down = <FaAngleDown />
   protected _icon_order_top = <FaAngleDoubleUp />
@@ -1848,6 +1883,11 @@ export class Class_IconLibrary {
   public get icon_orientation_recycle() { return this.normalizeIcon(this._icon_orientation_recycle) }
   public get icon_link_curved() { return this.normalizeIcon(this._icon_link_curved) }
   public get icon_link_structure() { return this.normalizeIcon(this._icon_link_structure) }
+  public get icon_link_arrow() { return this.normalizeIcon(this._icon_link_arrow) }
+  public get icon_link_arrow_reversed() { return this.normalizeIcon(this._icon_link_arrow_reversed) }
+  public get icon_link_source_notch() { return this.normalizeIcon(this._icon_link_source_notch) }
+  public get icon_link_dashed() { return this.normalizeIcon(this._icon_link_dashed) }
+  public get icon_link_visible_when_zero() { return this.normalizeIcon(this._icon_link_visible_when_zero) }
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
   public get icon_rect_shape() { return this.normalizeIcon(this._icon_rect_shape) }
   public get icon_capsule_shape() { return this.normalizeIcon(this._icon_capsule_shape) }
