@@ -5,7 +5,7 @@
 
 import React, { useState, useRef, ChangeEvent, MutableRefObject } from 'react'
 import { Box, Button, Checkbox, InputGroup, Select, Divider, Input } from '@chakra-ui/react'
-import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaBezierCurve, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
+import { FaAlignCenter, FaAlignLeft, FaAlignRight, FaLock, FaLockOpen, FaRecycle } from 'react-icons/fa'
 import { MdTextRotationAngleup } from 'react-icons/md'
 import { TFunction } from 'i18next'
 import { Class_ApplicationData } from '../../types/ApplicationData'
@@ -1864,7 +1864,7 @@ export const MenuConfigurationAppearance = ({
                                 onClick={() => { linkShapeValues.link_caps = !linkShapeValues.link_caps }}
                                 buttonSx={{ width: '1.5rem', minWidth: '1.5rem', height: '1.5rem', padding: '0', '& svg': { width: '16px', height: '16px' } }}
                               >
-                                <FaBezierCurve />
+                                {app_data.icon_library.icon_link_caps}
                               </OverloadedButton>
                             </Box>
                           </Box>
