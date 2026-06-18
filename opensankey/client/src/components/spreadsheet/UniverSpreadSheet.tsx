@@ -794,7 +794,7 @@ export const UniverSpreadSheet = (
             width='auto'
             maxW='110px'
             flexShrink={0}
-            title="Construit la hiérarchie d'agrégation depuis la colonne Niveau d'agrégation"
+            title="Construit la hiérarchie d'agrégation depuis la colonne Niveau"
             onClick={runOp(parseHierarchyFromLevels)}
           >
             Parser

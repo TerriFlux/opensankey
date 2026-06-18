@@ -628,9 +628,9 @@ export const nodeSheetTagColumns = (
 // En-têtes des colonnes "core" d'une feuille de nœuds. `nodeHeaderLabel` = libellé de la colonne du
 // nom (Noeuds / Produits / Secteurs / Echanges, comme les feuilles SEP).
 const nodeCoreHeaders = (nodeHeaderLabel: string): string[] => ([
-  'Niveau d\'agrégation',
+  'Niveau',
   nodeHeaderLabel,
-  'Équilibrée',
+  'Equilibre',
   'Couleur',
   'Définitions',
   'Colonne u',
@@ -1109,7 +1109,7 @@ export const buildSankeyWorkbookData = (
   ]
   // Onglet Noeuds : tous les nœuds, lignes hiérarchisées (enfants sous parents par dimension).
   const noeudsRows = noeudsRowEntries(app_data, onlyVisible)
-  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagColsNoeuds, 'Noeuds')
+  const noeuds = makeNodeSheet(SHEET_ID_NOEUDS, 'Noeuds', noeudsRows, tagColsNoeuds, 'Nom')
 
   // Séparation par nature (format SEP `products_sectors`) : une feuille par type de nœud, filtrée
   // par le tag `type de noeud`. Onglet vide (tag absent) => masqué par défaut comme les autres.
@@ -1119,9 +1119,9 @@ export const buildSankeyWorkbookData = (
   const produitsRows = produitTag ? noeudsRowEntries(app_data, onlyVisible, produitTag) : []
   const secteursRows = secteurTag ? noeudsRowEntries(app_data, onlyVisible, secteurTag) : []
   const echangesRows = echangeTag ? noeudsRowEntries(app_data, onlyVisible, echangeTag) : []
-  const produits = makeNodeSheet(SHEET_ID_PRODUITS, 'Produits', produitsRows, tagCols, 'Produits')
-  const secteurs = makeNodeSheet(SHEET_ID_SECTEURS, 'Secteurs', secteursRows, tagCols, 'Secteurs')
-  const echanges = makeNodeSheet(SHEET_ID_ECHANGES, 'Echanges', echangesRows, tagCols, 'Echanges')
+  const produits = makeNodeSheet(SHEET_ID_PRODUITS, 'Produits', produitsRows, tagCols, 'Nom')
+  const secteurs = makeNodeSheet(SHEET_ID_SECTEURS, 'Secteurs', secteursRows, tagCols, 'Nom')
+  const echanges = makeNodeSheet(SHEET_ID_ECHANGES, 'Echanges', echangesRows, tagCols, 'Nom')
 
   // --- Onglet Etiquettes (un groupe par ligne) ---------------------------------------------------
   const tagHeaders = ['Nom du groupe d\'étiquette', 'Type d\'étiquette', 'Etiquettes', 'Couleurs']
