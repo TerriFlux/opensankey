@@ -1601,83 +1601,82 @@ export const MenuConfigurationAppearance = ({
                           const all_same_v_lock = real_nodes.every(n => (n.shape_position_v_locked === true) === first_v_locked)
                           return <>
                             <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_u')}</Box>
-                              <Box display='flex' alignItems='center' gap={1}>
-                                <ConfigMenuNumberInput
-                                  t={t}
-                                  default_value={first_u}
-                                  menu_for_style={menu_for_style}
-                                  minimum_value={0}
-                                  step={1}
-                                  stepper={true}
-                                  function_on_blur={(value) => {
-                                    const new_u = value ?? 0
-                                    const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
-                                    const apply = () => {
-                                      real_nodes.forEach(n => { n.position_u = new_u })
-                                      refreshAll()
-                                    }
-                                    const revert = () => {
-                                      snapshots.forEach(s => { s.node.position_u = s.u })
-                                      refreshAll()
-                                    }
-                                    app_data.history.saveUndo(revert)
-                                    app_data.history.saveRedo(apply)
-                                    apply()
-                                  }}
-                                  multiValue={u_indeterminate}
-                                />
-                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
-                                  <Button
-                                    variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                    onClick={() => {
-                                      const new_locked = !(first_u_locked && all_same_u_lock)
-                                      nodeShapeValues.position_u_locked = new_locked
+                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.column_row_uv')}</Box>
+                              <Box display='flex' alignItems='center' gap={2}>
+                                <Box display='flex' alignItems='center' gap={1}>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={first_u}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={0}
+                                    step={1}
+                                    stepper={true}
+                                    function_on_blur={(value) => {
+                                      const new_u = value ?? 0
+                                      const snapshots = real_nodes.map(n => ({ node: n, u: n.position_u }))
+                                      const apply = () => {
+                                        real_nodes.forEach(n => { n.position_u = new_u })
+                                        refreshAll()
+                                      }
+                                      const revert = () => {
+                                        snapshots.forEach(s => { s.node.position_u = s.u })
+                                        refreshAll()
+                                      }
+                                      app_data.history.saveUndo(revert)
+                                      app_data.history.saveRedo(apply)
+                                      apply()
                                     }}
-                                  >
-                                    {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
-                                  </Button>
-                                </OSTooltip>
-                              </Box>
-                            </Box>
-                            <Box as='span' layerStyle='menuconfigpanel_row_2cols'>
-                              <Box layerStyle='menuconfigpanel_option_name'>{t('Noeud.apparence.row_v')}</Box>
-                              <Box display='flex' alignItems='center' gap={1}>
-                                <ConfigMenuNumberInput
-                                  t={t}
-                                  default_value={first_v}
-                                  menu_for_style={menu_for_style}
-                                  minimum_value={0}
-                                  step={1}
-                                  stepper={true}
-                                  function_on_blur={(value) => {
-                                    const new_v = value ?? 0
-                                    const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
-                                    const apply = () => {
-                                      real_nodes.forEach(n => { n.position_v = new_v })
-                                      refreshAll()
-                                    }
-                                    const revert = () => {
-                                      snapshots.forEach(s => { s.node.position_v = s.v })
-                                      refreshAll()
-                                    }
-                                    app_data.history.saveUndo(revert)
-                                    app_data.history.saveRedo(apply)
-                                    apply()
-                                  }}
-                                  multiValue={v_indeterminate}
-                                />
-                                <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
-                                  <Button
-                                    variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
-                                    onClick={() => {
-                                      const new_locked = !(first_v_locked && all_same_v_lock)
-                                      nodeShapeValues.position_v_locked = new_locked
+                                    multiValue={u_indeterminate}
+                                  />
+                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_u_locked')}>
+                                    <Button
+                                      variant={first_u_locked && all_same_u_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                      onClick={() => {
+                                        const new_locked = !(first_u_locked && all_same_u_lock)
+                                        nodeShapeValues.position_u_locked = new_locked
+                                      }}
+                                    >
+                                      {first_u_locked && all_same_u_lock ? <FaLock /> : <FaLockOpen />}
+                                    </Button>
+                                  </OSTooltip>
+                                </Box>
+                                <Box display='flex' alignItems='center' gap={1}>
+                                  <ConfigMenuNumberInput
+                                    t={t}
+                                    default_value={first_v}
+                                    menu_for_style={menu_for_style}
+                                    minimum_value={0}
+                                    step={1}
+                                    stepper={true}
+                                    function_on_blur={(value) => {
+                                      const new_v = value ?? 0
+                                      const snapshots = real_nodes.map(n => ({ node: n, v: n.position_v }))
+                                      const apply = () => {
+                                        real_nodes.forEach(n => { n.position_v = new_v })
+                                        refreshAll()
+                                      }
+                                      const revert = () => {
+                                        snapshots.forEach(s => { s.node.position_v = s.v })
+                                        refreshAll()
+                                      }
+                                      app_data.history.saveUndo(revert)
+                                      app_data.history.saveRedo(apply)
+                                      apply()
                                     }}
-                                  >
-                                    {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
-                                  </Button>
-                                </OSTooltip>
+                                    multiValue={v_indeterminate}
+                                  />
+                                  <OSTooltip label={t('Noeud.apparence.tooltips.shape_position_v_locked')}>
+                                    <Button
+                                      variant={first_v_locked && all_same_v_lock ? 'menuconfigpanel_option_button_activated' : 'menuconfigpanel_option_button'}
+                                      onClick={() => {
+                                        const new_locked = !(first_v_locked && all_same_v_lock)
+                                        nodeShapeValues.position_v_locked = new_locked
+                                      }}
+                                    >
+                                      {first_v_locked && all_same_v_lock ? <FaLock /> : <FaLockOpen />}
+                                    </Button>
+                                  </OSTooltip>
+                                </Box>
                               </Box>
                             </Box>
                           </>
@@ -2575,41 +2574,37 @@ export const MenuShapeAttributes = ({
             maximum_value={20}
             stepper={true}
             isOverloaded={isElementAttributeOverloaded(elements, prefix + '_' + String('border_thickness') as keyof typeof BASE_SHAPE_CONFIG, BASE_SHAPE_CONFIG)} />
-          <Box />
-        </Box>
-
-        {/* Tireté et Ombre portée côte à côte */}
-        <Box as='span' layerStyle='options_2cols'>
-          <OverloadedCheckbox
-            elements={elements}
-            config={config}
-            prefix={prefix}
-            attributeKey="border_dashed"
-            isChecked={shapeValues.border_dashed}
-            onChange={(checked) => { shapeValues.border_dashed = checked }}
-            getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
-            tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-            t={t}
-          >
-            {t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
-          </OverloadedCheckbox>
-          {prefix === 'shape' ? (
+          {/* Tireté et Ombre portée (icônes) inline avec l'épaisseur */}
+          <Box display='flex' alignItems='center' justifyContent='flex-end' gap={2} fontSize='xl'>
             <OverloadedCheckbox
               elements={elements}
-              config={BASE_SHAPE_CONFIG}
+              config={config}
               prefix={prefix}
-              attributeKey="shadow_visible"
-              isChecked={shapeValues.shadow_visible}
-              onChange={(checked) => { shapeValues.shadow_visible = checked }}
-              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
-              tooltipLabel={t(`${attributePath}.tooltips.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+              attributeKey="border_dashed"
+              isChecked={shapeValues.border_dashed}
+              onChange={(checked) => { shapeValues.border_dashed = checked }}
+              getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'border_dashed')}
+              tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'border_dashed')}`)}
               t={t}
             >
-              {t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+              {app_data.icon_library.icon_border_dashed}
             </OverloadedCheckbox>
-          ) : (
-            <Box />
-          )}
+            {prefix === 'shape' ? (
+              <OverloadedCheckbox
+                elements={elements}
+                config={BASE_SHAPE_CONFIG}
+                prefix={prefix}
+                attributeKey="shadow_visible"
+                isChecked={shapeValues.shadow_visible}
+                onChange={(checked) => { shapeValues.shadow_visible = checked }}
+                getIsIndeterminate={() => isShapeValueIndeterminate(elements, prefix, 'shadow_visible')}
+                tooltipLabel={t(`${attributePath}.${getShapeAttributeKey(prefix, 'shadow_visible')}`)}
+                t={t}
+              >
+                {app_data.icon_library.icon_drop_shadow}
+              </OverloadedCheckbox>
+            ) : null}
+          </Box>
         </Box>
 
         {/* Largeur du fond :
