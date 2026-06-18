@@ -257,24 +257,39 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
         </Box>
       </HStack>
 
-      <Checkbox
-        size='sm'
-        isChecked={app_data.drawing_area.show_zero_links}
-        onChange={evt => {
-          app_data.drawing_area.show_zero_links = evt.target.checked
-          // Bascule de visibilité des flux nuls : on rejoue EXACTEMENT le chemin du
-          // rechargement (drawing_area.draw() = bypass_redraws=false + unDraw +
-          // _initDraw + drawElements + fit). Un sankey.draw()/drawElements() seul ne
-          // suffisait pas (mémo de visibilité + bypass_redraws éventuel) : l'effet
-          // n'était visible qu'après rechargement du document.
-          app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
-          setCount(a => a + 1)
-          app_data.drawing_area.draw()
-          app_data.drawing_area.legend.draw()
-        }}
-      >
-        <Text fontSize='xs'>{t('Banner.fn')}</Text>
-      </Checkbox>
+      {/* Flux nuls visibles + Nœuds orphelins, sur une même ligne. Chacun rejoue le
+          chemin complet du rechargement (drawing_area.draw()) : un sankey.draw()/
+          drawElements() seul ne reflète pas la bascule (mémo de visibilité +
+          bypass_redraws éventuel). */}
+      <HStack spacing='0.8rem' align='center'>
+        <Checkbox
+          size='sm'
+          isChecked={app_data.drawing_area.show_zero_links}
+          onChange={evt => {
+            app_data.drawing_area.show_zero_links = evt.target.checked
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
+            setCount(a => a + 1)
+            app_data.drawing_area.draw()
+            app_data.drawing_area.legend.draw()
+          }}
+        >
+          <Text fontSize='xs'>{t('Banner.fn')}</Text>
+        </Checkbox>
+
+        <Checkbox
+          size='sm'
+          isChecked={app_data.drawing_area.show_orphan_nodes}
+          onChange={evt => {
+            app_data.drawing_area.show_orphan_nodes = evt.target.checked
+            app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
+            setCount(a => a + 1)
+            app_data.drawing_area.draw()
+            app_data.drawing_area.legend.draw()
+          }}
+        >
+          <Text fontSize='xs'>{t('Banner.no')}</Text>
+        </Checkbox>
+      </HStack>
     </Box>
   )
 }
