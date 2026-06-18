@@ -407,9 +407,39 @@ export const link_ratio_constraint = (link: Class_LinkElement): Type_RatioFluxCo
     (c.data_tag == null || c.data_tag === dt?.name || c.data_tag === dt?.id)) ?? null
 }
 
-/** Pourcentage formaté d'une contrainte : « 30% » (coef), « ≥30% »/« ≤50% », « 30–50% ». */
-export const ratio_flux_coef_text = (c: Type_RatioFluxConstraint): string | null => {
-  const pct = (v: number) => String(parseFloat((v * 100).toFixed(2)))
+/**
+ * Formate un nombre (déjà en %) selon les réglages de chiffres du label de valeur
+ * (notation scientifique / chiffres significatifs / chiffres après la virgule).
+ * Sans `label_values`, retombe sur le comportement historique (.toFixed(2)).
+ */
+const format_percent_number = (
+  v: number,
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string => {
+  if (!label_values) return String(parseFloat(v.toFixed(2)))
+  if (label_values.scientific_notation) {
+    return label_values.significant_digits
+      ? v.toExponential(label_values.nb_significant_digits! - 1)
+      : v.toExponential()
+  }
+  if (label_values.significant_digits === true) {
+    let t = String(parseFloat(v.toPrecision(label_values.nb_significant_digits)))
+    if (label_values.custom_digit) t = String(parseFloat(parseFloat(t).toFixed(label_values.nb_digit)))
+    return t
+  }
+  if (label_values.custom_digit) return String(parseFloat(v.toFixed(label_values.nb_digit)))
+  return String(v)
+}
+
+/**
+ * Pourcentage formaté d'une contrainte : « 30% » (coef), « ≥30% »/« ≤50% », « 30–50% ».
+ * `label_values` (réglages du label de valeur) gouverne les chiffres après la virgule.
+ */
+export const ratio_flux_coef_text = (
+  c: Type_RatioFluxConstraint,
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string | null => {
+  const pct = (v: number) => format_percent_number(v * 100, label_values)
   if (c.coef != null) return pct(c.coef) + '%'
   if (c.min != null && c.max != null) return pct(c.min) + '–' + pct(c.max) + '%'
   if (c.min != null) return '≥' + pct(c.min) + '%'
@@ -422,9 +452,12 @@ export const ratio_flux_coef_text = (c: Type_RatioFluxConstraint): string | null
  * NB : distinct de l'unit_type %IS/%OS de format_value, qui calcule la part RÉELLE des
  * données ; ici on lit le coefficient PRESCRIT.
  */
-export const link_ratio_coef_label = (link: Class_LinkElement): string | null => {
+export const link_ratio_coef_label = (
+  link: Class_LinkElement,
+  label_values?: ReturnType<typeof getNameLabelValues>
+): string | null => {
   const c = link_ratio_constraint(link)
-  return c ? ratio_flux_coef_text(c) : null
+  return c ? ratio_flux_coef_text(c, label_values) : null
 }
 
 /**
@@ -462,18 +495,19 @@ export const link_data_label = (type_data: Type_Structure, link: Class_LinkEleme
   const data_source = link.drawing_area.data_source
 
   // #116 — coefficient prescrit de la contrainte ratio, en %. Affiché sur le label
-  // de valeur dès qu'on affiche une valeur (collectées, étiquetées ou réconciliées) :
-  // le coef est une donnée structurelle de la contrainte, présente indépendamment du
-  // calcul, donc son affichage ne dépend pas des résultats. Exclu seulement en
-  // structure et en mode intervalle libre (free_interval = un intervalle, pas une
-  // valeur). NB : l'affichage réconcilié par défaut résout type_data='free_value'
-  // (interval_display défaut), il faut donc l'inclure explicitement. Un flux défini
-  // par ratio n'a souvent ni donnée mesurée ni résultat encore calculé : withCoef
-  // renvoie alors le coef seul (« 50% »), sinon l'accole à la valeur (« 120 (50%) »).
-  const coef = (prefix === 'value_label' &&
-      (type_data === 'data' || type_data === 'data_label' ||
-        type_data === 'reconciled' || type_data === 'free_value'))
-    ? link_ratio_coef_label(link) : null
+  // de valeur UNIQUEMENT en mode données saisies (collectées / étiquetées) : le coef
+  // est une donnée structurelle de la contrainte. En modes résultats (réconciliées /
+  // free_value) on n'affiche que la valeur calculée, sans le coef entre parenthèses
+  // (« 120 » et non « 120 (50%) ») — cf. retour utilisateur. Exclu aussi en structure
+  // et en mode intervalle libre. Un flux défini par ratio n'a souvent ni donnée mesurée
+  // ni résultat : withCoef renvoie alors le coef seul (« 50% »), sinon l'accole à la
+  // valeur (« 120 (50%) ») en mode données. Le coef suit les réglages du label de
+  // valeur : masqué si « valeur visible » est décoché, et formaté avec le même nombre
+  // de chiffres après la virgule.
+  const coef_label_values = getNameLabelValues(link, prefix)
+  const coef = (prefix === 'value_label' && coef_label_values.is_visible &&
+      (type_data === 'data' || type_data === 'data_label'))
+    ? link_ratio_coef_label(link, coef_label_values) : null
   const withCoef = (text: string) => coef ? (text ? text + ' (' + coef + ')' : coef) : text
 
   // Intervals links: only show [min - max] in free_interval mode

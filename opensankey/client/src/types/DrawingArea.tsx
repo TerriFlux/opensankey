@@ -285,6 +285,10 @@ export class Class_DrawingArea {
   // Filter out link label inferior to this value (null is considered as 0)
   private _filter_label: number = 0
 
+  // #fn — when true, links with a null value stay visible (global override of the
+  // null-link filter). Per-link override is Link.shape_visible_when_zero.
+  private _show_zero_links: boolean = false
+
   // Display
   private _type_data: Type_Structure = initial_show_structure
   private _data_source: Type_DataSource = 'reconciled'
@@ -422,6 +426,7 @@ export class Class_DrawingArea {
     this._color = drawing_area_to_copy._color
     this._filter_label = drawing_area_to_copy._filter_label
     this._filter_link_value = drawing_area_to_copy._filter_link_value
+    this._show_zero_links = drawing_area_to_copy._show_zero_links
     this._fit_margin = drawing_area_to_copy._fit_margin
     this._grid_color = drawing_area_to_copy._grid_color
     this._grid_size = drawing_area_to_copy._grid_size
@@ -3111,6 +3116,9 @@ export class Class_DrawingArea {
 
   public get filter_link_value(): number { return this._filter_link_value }
   public set filter_link_value(value: number) { this._filter_link_value = value }
+
+  public get show_zero_links(): boolean { return this._show_zero_links }
+  public set show_zero_links(value: boolean) { this._show_zero_links = value }
 
   public get fit_margin(): number { return this._fit_margin }
 

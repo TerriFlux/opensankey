@@ -2,7 +2,7 @@ import React, { useState, RefObject, useRef, ReactNode, useReducer } from 'react
 import {
   Drawer, Button, Collapse, DrawerContent, DrawerBody, Box, useDisclosure,
   Heading, Slider, SliderTrack, SliderFilledTrack, SliderThumb, Text, Select, Checkbox, Switch,
-  Menu, MenuButton, MenuList, MenuItem, HStack
+  Menu, MenuButton, MenuList, MenuItem, HStack, Divider
 } from '@chakra-ui/react'
 import { CheckIcon, ChevronDownIcon } from '@chakra-ui/icons'
 import { OSMultiSelect, typeElementSelectable, CustomFaEyeCheckIcon, OSTooltip, ConfigMenuNumberInput } from '../configmenus/MenuCommon'
@@ -55,7 +55,8 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
     const has_data_filter = app_data.publish_options.data_filter &&
       data_taggs.some(tagg => Object.keys(tagg.tags_dict || {}).length >= 1)
     return has_data_type_filter || has_value_filter || has_unitary_filter ||
-      has_level_filter || has_element_filter || has_data_filter
+      has_level_filter || has_element_filter || has_data_filter ||
+      app_data.has_sankey_dev // « Toutes données » (dev) suffit à ouvrir le drawer
   }
   const [drawerOpen, setDrawerOpen] = useState(app_data.is_static)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
@@ -114,14 +115,13 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
         >
           <Box layerStyle='drawerFilterBox'>
             {
-              app_data.publish_options.data_type ? <FilterDataType app_data={app_data} /> : <></>
-            }
-            {
-              app_data.publish_options.value_filter ? <FlowValueFilter app_data={app_data} /> : <></>
+              (app_data.publish_options.data_type || app_data.publish_options.value_filter)
+                ? <FilterDisplay app_data={app_data} /> : <></>
             }
             {
               app_data.publish_options.view_filter ? <UnitaryTagGroupFilter app_data={app_data} /> : <></>
             }
+            <RevealAllDataDevControl app_data={app_data} />
             {
               app_data.publish_options.level_filter ? <LevelTagFilter app_data={app_data} /> : <></>
             }
@@ -137,7 +137,9 @@ export const ToolbarFilter = ({ app_data }: { app_data: Class_ApplicationData })
     </Drawer></>
 }
 
-const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
+// Contenu « Paramètres d'affichage » (seuils flux/étiquettes + flux nuls), rendu
+// sans cadre propre pour être fusionné dans le panneau « Affichage » (cf. FilterDisplay).
+const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData }) => {
   const { t } = app_data
 
   // Get the maximum value a link can have, so it is used as maximum value we wan filter in popover_link_visual_filter
@@ -148,102 +150,127 @@ const FlowValueFilter = ({ app_data }: { app_data: Class_ApplicationData }) => {
   // Ref to popover button trigger to trap focus at popover when onBlur of NumberInput
   const ref: RefObject<HTMLButtonElement> = useRef(null)
 
-  return <FilterWrapperBox
-    app_data={app_data}
-    title={t('Banner.p_aff')}
-  >
+  return (
     <Box
       layerStyle='menuconfigpanel_grid'>
 
-      <Text >
-        {t('Banner.filtre')}
+      <Text fontSize='sm'>
+        {t('Banner.p_aff_seuil')}
       </Text>
-      <Box layerStyle='filter_grid_row'>
-        <Slider
-          variant='slider_filter_link_value'
-          min={0}
-          max={max_link_value}
-          value={app_data.drawing_area.filter_link_value}
-          onChange={evt => {
-            app_data.drawing_area.filter_link_value = +evt
-            setCount(a => a + 1)
-            app_data.drawing_area.sankey.visible_links_list.forEach(link => {
-              link.draw()
-              link.target.drawLinksArrow()
-            })
-          }
-          } >
-          <SliderTrack>
-            <SliderFilledTrack />
-          </SliderTrack>
-          <SliderThumb />
-        </Slider>
 
-        <ConfigMenuNumberInput
-          t={app_data.t}
-          default_value={app_data.drawing_area.filter_link_value}
-          function_on_blur={(value) => {
-            if (value && value > max_link_value) {
-              value = max_link_value
-            }
-            if (value) {
-              app_data.drawing_area.filter_link_value = value
-              setCount(a => a + 1)
-              app_data.drawing_area.sankey.draw()
-            }
-
-            ref.current?.focus() //avoid closure of popover
-          }}
-          minimum_value={0}
-          maximum_value={max_link_value}
-          stepper={false}
-        />
-      </Box>
-
-      <Text>
-        {t('Banner.fl')}
-      </Text>
-      <Box layerStyle='filter_grid_row'>
-
-        <Slider
-          variant='slider_filter_link_value'
-          min={0}
-          max={max_link_value}
-          value={app_data.drawing_area.filter_label}
-          onChange={(evt) => {
-            app_data.drawing_area.filter_label = +evt
-            setCount(a => a + 1)
-            app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
-          }}
+      {/* Les deux seuils (flux + étiquettes) sur une seule ligne, chacun :
+          libellé court + slider + saisie compacte. */}
+      <HStack spacing='0.6rem' align='center' width='100%'>
+        <Box
+          display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
+          alignItems='center' flex='1' minW={0}
         >
-          <SliderTrack>
-            <SliderFilledTrack />
-          </SliderTrack>
-          <SliderThumb />
-        </Slider>
-        <ConfigMenuNumberInput
-          t={app_data.t}
-          default_value={app_data.drawing_area.filter_label}
-          function_on_blur={(value) => {
-
-            if (value) {
-              if (value > max_link_value) {
-                value = max_link_value
-              }
-              app_data.drawing_area.filter_label = value
+          <OSTooltip label={t('Banner.filtre')}>
+            <Text fontSize='xs'>{t('Banner.seuil_flux')}</Text>
+          </OSTooltip>
+          <Slider
+            variant='slider_filter_link_value'
+            min={0}
+            max={max_link_value}
+            value={app_data.drawing_area.filter_link_value}
+            onChange={evt => {
+              app_data.drawing_area.filter_link_value = +evt
               setCount(a => a + 1)
-              app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
+              app_data.drawing_area.sankey.visible_links_list.forEach(link => {
+                link.draw()
+                link.target.drawLinksArrow()
+              })
             }
+            } >
+            <SliderTrack>
+              <SliderFilledTrack />
+            </SliderTrack>
+            <SliderThumb />
+          </Slider>
+          <Box width='2.4rem'>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.filter_link_value}
+              function_on_blur={(value) => {
+                if (value && value > max_link_value) {
+                  value = max_link_value
+                }
+                if (value) {
+                  app_data.drawing_area.filter_link_value = value
+                  setCount(a => a + 1)
+                  app_data.drawing_area.sankey.draw()
+                }
 
-            ref.current?.focus() //avoid closure of popover
-          }}
-          minimum_value={0}
-          maximum_value={max_link_value}
-          stepper={false}
-        />
-      </Box>
+                ref.current?.focus() //avoid closure of popover
+              }}
+              minimum_value={0}
+              maximum_value={max_link_value}
+              stepper={false}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          display='grid' gridTemplateColumns='auto 1fr auto' gap='0.2rem'
+          alignItems='center' flex='1' minW={0}
+        >
+          <OSTooltip label={t('Banner.fl')}>
+            <Text fontSize='xs'>{t('Banner.seuil_label')}</Text>
+          </OSTooltip>
+          <Slider
+            variant='slider_filter_link_value'
+            min={0}
+            max={max_link_value}
+            value={app_data.drawing_area.filter_label}
+            onChange={(evt) => {
+              app_data.drawing_area.filter_label = +evt
+              setCount(a => a + 1)
+              app_data.drawing_area.sankey.visible_links_list.forEach(link => link.drawValueLabel())
+            }}
+          >
+            <SliderTrack>
+              <SliderFilledTrack />
+            </SliderTrack>
+            <SliderThumb />
+          </Slider>
+          <Box width='2.4rem'>
+            <ConfigMenuNumberInput
+              t={app_data.t}
+              default_value={app_data.drawing_area.filter_label}
+              function_on_blur={(value) => {
+
+                if (value) {
+                  if (value > max_link_value) {
+                    value = max_link_value
+                  }
+                  app_data.drawing_area.filter_label = value
+                  setCount(a => a + 1)
+                  app_data.drawing_area.sankey.links_list.forEach(link => link.drawValueLabel())
+                }
+
+                ref.current?.focus() //avoid closure of popover
+              }}
+              minimum_value={0}
+              maximum_value={max_link_value}
+              stepper={false}
+            />
+          </Box>
+        </Box>
+      </HStack>
+
+      <Checkbox
+        size='sm'
+        isChecked={app_data.drawing_area.show_zero_links}
+        onChange={evt => {
+          app_data.drawing_area.show_zero_links = evt.target.checked
+          setCount(a => a + 1)
+          app_data.drawing_area.sankey.draw()
+        }}
+      >
+        <Text fontSize='xs'>{t('Banner.fn')}</Text>
+      </Checkbox>
     </Box>
-  </FilterWrapperBox>
+  )
 }
 
 export const CollapseButton = ({ app_data, isOpen, onToggle }: {
@@ -276,7 +303,7 @@ export const FilterWrapperBox = ({ app_data, title, defaultOpen, children }: Rea
   </Box>
 }
 
-export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?: boolean }) => {
+export const FilterDataType = ({ app_data, defaultOpen, bare }: { app_data: Class_ApplicationData, defaultOpen?: boolean, bare?: boolean }) => {
   const { t } = app_data
   const [, setCount] = useState(0)
   app_data.menu_configuration.ref_to_toolbar_updater.current = () => setCount(a => a + 1)
@@ -354,31 +381,38 @@ export const FilterDataType = ({ app_data, defaultOpen }: { app_data: Class_Appl
           )}
         </Select>
       </Box> : <></>}
-    {/* « Toutes données » = mode « afficher aussi les flux porteurs de données »
-        (union avec la vue courante). Session-only. */}
-    <Box layerStyle='menuconfig_grid'>
-      <HStack spacing={4} align='center'>
-        <Checkbox
-          variant='menuconfigpanel_option_checkbox'
-          isChecked={app_data.reveal_data_links}
-          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
-            app_data.reveal_data_links = evt.target.checked
-            setCount(a => a + 1)
-            redrawNodeLinkLegend()
-          }}>
-          <OSTooltip label={t('Banner.data_links_reveal_tt')}>
-            {t('Banner.data_links_reveal')}
-          </OSTooltip>
-        </Checkbox>
-      </HStack>
-    </Box>
+    {/* « Toutes données » a été déplacé dans le filtre des view tags (mode développeur) —
+        cf. RevealDataLinksControl dans UnifiedTagGroupFilter. */}
   </>
+
+  // En mode `bare`, on renvoie le contenu nu pour l'intégrer dans le panneau
+  // fusionné « Affichage » (cf. FilterDisplay) ; sinon, cadre autonome historique.
+  if (bare) return content
 
   return <FilterWrapperBox
     app_data={app_data}
     title={t('Banner.title_data_type')}
     defaultOpen={defaultOpen}>
     {content}
+  </FilterWrapperBox>
+}
+
+/**
+ * Panneau unifié « Affichage » : fusionne « Données affichées » (type de données +
+ * révélation) et « Paramètres d'affichage » (seuils flux/étiquettes + flux nuls)
+ * sous un seul titre/cadre. Chaque sous-bloc reste conditionné à son publish_option.
+ */
+const FilterDisplay = ({ app_data, defaultOpen }: { app_data: Class_ApplicationData, defaultOpen?: boolean }) => {
+  const { t } = app_data
+  const show_data_type = app_data.publish_options.data_type
+  const show_value_filter = app_data.publish_options.value_filter
+  return <FilterWrapperBox
+    app_data={app_data}
+    title={t('Banner.title_display')}
+    defaultOpen={defaultOpen}>
+    {show_data_type ? <FilterDataType app_data={app_data} bare /> : <></>}
+    {show_data_type && show_value_filter ? <Divider my='0.4rem' /> : <></>}
+    {show_value_filter ? <FlowValueFilterContent app_data={app_data} /> : <></>}
   </FilterWrapperBox>
 }
 
@@ -1140,6 +1174,36 @@ export const UnifiedTagGroupFilter = ({ app_data, mode, }: {
       {GapModeControl}
     </FilterWrapperBox>
   ) : <></>
+}
+
+// « Toutes données » (reveal_data_links) : déplacé hors du panneau « Affichage », rendu
+// une seule fois dans le drawer et réservé au MODE DÉVELOPPEUR (temporaire). Union avec la
+// vue courante : affiche aussi les flux porteurs d'une donnée collectée, tous niveaux confondus.
+const RevealAllDataDevControl = ({ app_data }: { app_data: Class_ApplicationData }) => {
+  const { t, drawing_area } = app_data
+  const { sankey } = drawing_area
+  const [, setCount] = useState(0)
+  if (!app_data.has_sankey_dev) return <></>
+  return <FilterWrapperBox app_data={app_data} title={t('Banner.data_links_reveal')}>
+    <Box layerStyle='menuconfig_grid'>
+      <HStack spacing={4} align='center'>
+        <Checkbox
+          variant='menuconfigpanel_option_checkbox'
+          isChecked={app_data.reveal_data_links}
+          onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
+            app_data.reveal_data_links = evt.target.checked
+            sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
+            sankey.draw()
+            drawing_area.legend.draw()
+            setCount(a => a + 1)
+          }}>
+          <OSTooltip label={t('Banner.data_links_reveal_tt')}>
+            {t('Banner.data_links_reveal')}
+          </OSTooltip>
+        </Checkbox>
+      </HStack>
+    </Box>
+  </FilterWrapperBox>
 }
 
 // Composants wrapper pour maintenir la compatibilité avec l'API existante
