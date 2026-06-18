@@ -1821,7 +1821,9 @@ export class Class_NodeElement extends Class_NodeBase {
 
   private get orphan_visible() {
     if (this.visible_input_links_list.length + this.visible_output_links_list.length == 0) {
-      if (this.shape_orphan_node_visible) return true
+      // Option globale « Nœuds orphelins » (drawing_area) OU override par-nœud
+      // (shape_orphan_node_visible) : un nœud sans lien visible reste affiché.
+      if (this.shape_orphan_node_visible || this.drawing_area.show_orphan_nodes) return true
       else return false
     }
     return true

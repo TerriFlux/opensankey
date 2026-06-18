@@ -289,6 +289,10 @@ export class Class_DrawingArea {
   // null-link filter). Per-link override is Link.shape_visible_when_zero.
   private _show_zero_links: boolean = false
 
+  // when true, orphan nodes (no visible link) stay visible (global override of the
+  // orphan filter). Per-node override is NodeBase.shape_orphan_node_visible.
+  private _show_orphan_nodes: boolean = false
+
   // Display
   private _type_data: Type_Structure = initial_show_structure
   private _data_source: Type_DataSource = 'reconciled'
@@ -427,6 +431,7 @@ export class Class_DrawingArea {
     this._filter_label = drawing_area_to_copy._filter_label
     this._filter_link_value = drawing_area_to_copy._filter_link_value
     this._show_zero_links = drawing_area_to_copy._show_zero_links
+    this._show_orphan_nodes = drawing_area_to_copy._show_orphan_nodes
     this._fit_margin = drawing_area_to_copy._fit_margin
     this._grid_color = drawing_area_to_copy._grid_color
     this._grid_size = drawing_area_to_copy._grid_size
@@ -3119,6 +3124,9 @@ export class Class_DrawingArea {
 
   public get show_zero_links(): boolean { return this._show_zero_links }
   public set show_zero_links(value: boolean) { this._show_zero_links = value }
+
+  public get show_orphan_nodes(): boolean { return this._show_orphan_nodes }
+  public set show_orphan_nodes(value: boolean) { this._show_orphan_nodes = value }
 
   public get fit_margin(): number { return this._fit_margin }
 
