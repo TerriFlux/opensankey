@@ -2150,8 +2150,9 @@ export class Class_NodeElement extends Class_NodeBase {
    * Dessine le début des flux sur les ellipses pour un rendu plus fluide
    */
   private _drawLinksStartCaps() {
-    // Option à activer (pas automatique), et seulement pour les nœuds elliptiques
-    if (!this.shape_link_caps || this.shape_type !== 'ellipse') return
+    // Caps seulement sur les nœuds elliptiques ; l'activation est par flux
+    // (attribut shape_link_caps), pas au niveau du nœud.
+    if (this.shape_type !== 'ellipse') return
 
     // Nettoyer les caps précédents
     this.d3_selection?.selectAll('.link_cap_output').remove()
@@ -2172,10 +2173,10 @@ export class Class_NodeElement extends Class_NodeBase {
     sides.forEach(side => {
       // Récupérer les liens pour ce côté dans l'ordre
       const output_links = this._links_order.filter(link =>
-        link.is_visible && !link.shape_arrow_at_source && link.source === this && link.source_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_arrow_at_source && link.source === this && link.source_side === side
       )
       const input_links = this._links_order.filter(link =>
-        link.is_visible && !link.shape_is_arrow && link.target === this && link.target_side === side
+        link.is_visible && link.shape_link_caps && !link.shape_is_arrow && link.target === this && link.target_side === side
       )
 
       // Dessiner les caps pour ce côté
