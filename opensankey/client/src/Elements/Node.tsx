@@ -1832,7 +1832,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const input_links_visible = this.input_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.source.are_related_node_tags_selected &&
       link.source.are_related_dimensions_selected
@@ -1841,7 +1841,7 @@ export class Class_NodeElement extends Class_NodeBase {
       return true
     }
     const output_links_visible = this.output_links_list.filter(link =>
-      link.is_not_zero &&
+      (link.is_not_zero || link.is_forced_visible_when_zero) &&
       link.are_related_flux_tags_selected &&
       link.target.are_related_node_tags_selected &&
       link.target.are_related_dimensions_selected
