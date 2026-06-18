@@ -2566,6 +2566,26 @@ export const NODE_SHAPE_SPECIFIC_CONFIG = {
       it: 'Riempie il/i nodo/i selezionato/i con un motivo tratteggiato (nessuno / verticale / orizzontale / diagonale / anti-diagonale)'
     }
   } satisfies AttributeConfig<Type_HatchOrientation>,
+  link_caps: {
+    default: false as boolean,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Link caps',
+      fr: 'Raccords de flux',
+      es: 'Empalmes de flujo',
+      de: 'Flussübergänge',
+      it: 'Raccordi di flusso'
+    },
+    tooltips: {
+      en: 'For elliptical nodes only: fill the gap between the ellipse edge and each link start with the link color, for a smoother junction.',
+      fr: 'Pour les nœuds elliptiques uniquement : comble l\'espace entre le bord de l\'ellipse et le départ de chaque flux avec la couleur du flux, pour une jonction plus fluide.',
+      es: 'Solo para nodos elípticos: rellena el espacio entre el borde de la elipse y el inicio de cada flujo con el color del flujo, para una unión más fluida.',
+      de: 'Nur für elliptische Knoten: füllt den Zwischenraum zwischen dem Ellipsenrand und dem Beginn jedes Flusses mit der Flussfarbe, für einen weicheren Übergang.',
+      it: 'Solo per nodi ellittici: riempie lo spazio tra il bordo dell\'ellisse e l\'inizio di ogni flusso con il colore del flusso, per un raccordo più fluido.'
+    }
+  } satisfies AttributeConfig<boolean>,
 } as const
 
 export const LINK_SHAPE_SPECIFIC_CONFIG = {
@@ -2951,32 +2971,36 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       it: 'Freccia'
     },
     tooltips: {
-      en: 'Represents the selected link(s) with an arrow tip at the end',
-      fr: 'Représente le/les flux sélectionné(s) avec une pointe de flèche à la fin',
-      es: 'Representa el/los flujo(s) seleccionado(s) con una punta de flecha al final',
-      de: 'Stellt den/die ausgewählten Fluss/Flüsse mit einer Pfeilspitze am Ende dar',
-      it: 'Rappresenta il/i flusso/i selezionato/i con una punta di freccia alla fine'
+      en: 'Draw an arrow tip on the target side of the selected link(s)',
+      fr: 'Dessine une pointe de flèche du côté cible du/des flux sélectionné(s)',
+      es: 'Dibuja una punta de flecha en el lado de destino del/los flujo(s) seleccionado(s)',
+      de: 'Zeichnet eine Pfeilspitze auf der Zielseite des/der ausgewählten Flusses/Flüsse',
+      it: 'Disegna una punta di freccia sul lato destinazione del/dei flusso/i selezionato/i'
     }
   } satisfies AttributeConfig<boolean>,
 
-  is_arrow_reversed: {
+  // Flèche côté source, indépendante de is_arrow (flèche côté cible). Un flux peut
+  // donc porter une flèche à chaque extrémité, une seule, ou aucune. Purement
+  // graphique : le sens du flux dans les données est inchangé. (Remplace l'ancien
+  // is_arrow_reversed qui déplaçait l'unique flèche ; migration dans la persistance.)
+  arrow_at_source: {
     default: false,
     type: (() => false) as (() => boolean),
     category: 'shape' as const,
     actions: ['drawElements'] as BaseActionType[],
     labels: {
-      en: 'Reverse arrow',
-      fr: 'Inverser la flèche',
-      es: 'Invertir flecha',
-      de: 'Pfeil umkehren',
-      it: 'Inverti freccia'
+      en: 'Source arrow',
+      fr: 'Flèche source',
+      es: 'Flecha origen',
+      de: 'Quellpfeil',
+      it: 'Freccia sorgente'
     },
     tooltips: {
-      en: 'Draw the arrow tip on the source side instead of the target side (graphical only, the data flow direction is unchanged)',
-      fr: 'Dessine la pointe de flèche du côté source au lieu du côté cible (purement graphique, le sens du flux dans les données reste inchangé)',
-      es: 'Dibuja la punta de flecha en el lado de origen en lugar del lado de destino (solo gráfico, el sentido del flujo no cambia)',
-      de: 'Zeichnet die Pfeilspitze auf der Quellseite statt auf der Zielseite (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
-      it: 'Disegna la punta della freccia sul lato sorgente invece che sul lato destinazione (solo grafico, il senso del flusso non cambia)'
+      en: 'Draw an arrow tip on the source side of the selected link(s), independently of the target arrow (graphical only, the data flow direction is unchanged)',
+      fr: 'Dessine une pointe de flèche du côté source du/des flux sélectionné(s), indépendamment de la flèche côté cible (purement graphique, le sens du flux dans les données reste inchangé)',
+      es: 'Dibuja una punta de flecha en el lado de origen del/los flujo(s) seleccionado(s), independientemente de la flecha de destino (solo gráfico, el sentido del flujo no cambia)',
+      de: 'Zeichnet eine Pfeilspitze auf der Quellseite des/der ausgewählten Flusses/Flüsse, unabhängig vom Zielpfeil (rein grafisch, die Flussrichtung in den Daten bleibt unverändert)',
+      it: 'Disegna una punta di freccia sul lato sorgente del/dei flusso/i selezionato/i, indipendentemente dalla freccia di destinazione (solo grafico, il senso del flusso non cambia)'
     }
   } satisfies AttributeConfig<boolean>,
 
@@ -2998,6 +3022,48 @@ export const LINK_SHAPE_SPECIFIC_CONFIG = {
       es: 'Cambiar el tamaño de la flecha (desde el final del flujo al nodo)',
       de: 'Größe des Pfeils ändern (vom Ende des Flusses zum Knoten)',
       it: 'Cambiare la dimensione della freccia (dalla fine del flusso al nodo)'
+    }
+  } satisfies AttributeConfig<number>,
+
+  source_notch: {
+    default: false,
+    type: (() => false) as (() => boolean),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Source notch',
+      fr: 'Encoche source',
+      es: 'Muesca de origen',
+      de: 'Quellkerbe',
+      it: 'Tacca sorgente'
+    },
+    tooltips: {
+      en: 'Carve a chevron notch (reversed arrow tail) into the start of the selected link(s). Links leaving the same node side share a single notch.',
+      fr: 'Creuse une encoche en chevron (flèche en négatif) au départ du/des flux sélectionné(s). Les flux partant du même côté d\'un nœud partagent une seule encoche.',
+      es: 'Talla una muesca en forma de galón (flecha invertida) al inicio del/los flujo(s) seleccionado(s). Los flujos que salen del mismo lado de un nodo comparten una sola muesca.',
+      de: 'Schneidet eine Pfeil-Kerbe (umgekehrte Pfeilspitze) am Anfang des/der ausgewählten Flusses/Flüsse ein. Flüsse, die dieselbe Knotenseite verlassen, teilen sich eine einzige Kerbe.',
+      it: 'Incide una tacca a freccia (freccia invertita) all\'inizio del/dei flusso/i selezionato/i. I flussi che escono dallo stesso lato di un nodo condividono un\'unica tacca.'
+    }
+  } satisfies AttributeConfig<boolean>,
+
+  source_notch_size: {
+    default: 10,
+    type: (() => 10) as (() => number),
+    category: 'shape' as const,
+    actions: ['drawElements'] as BaseActionType[],
+    labels: {
+      en: 'Notch depth',
+      fr: 'Profondeur encoche',
+      es: 'Profundidad de muesca',
+      de: 'Kerbentiefe',
+      it: 'Profondità tacca'
+    },
+    tooltips: {
+      en: 'Depth (in px) of the source notch carved into the start of the link',
+      fr: 'Profondeur (en px) de l\'encoche creusée au départ du flux',
+      es: 'Profundidad (en px) de la muesca tallada al inicio del flujo',
+      de: 'Tiefe (in px) der am Flussanfang eingeschnittenen Kerbe',
+      it: 'Profondità (in px) della tacca incisa all\'inizio del flusso'
     }
   } satisfies AttributeConfig<number>,
 
