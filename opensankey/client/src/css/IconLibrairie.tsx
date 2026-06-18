@@ -1646,6 +1646,14 @@ export class Class_IconLibrary {
       <ellipse cx="8.5" cy="8.5" rx="4" ry="6" />
     </svg>
   )
+  // Raccord de flux : une ellipse (le nœud) d'où part un flux plein plus fin.
+  protected _icon_link_caps = (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
+      fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
+      <rect x="4.5" y="6.5" width="11" height="4" rx="0.5" fill="currentColor" stroke="none" />
+      <ellipse cx="4.5" cy="8.5" rx="3" ry="6" />
+    </svg>
+  )
   protected _icon_border_dashed = (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 17 17" width="1em" height="1em"
       fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2.5 2">
@@ -1901,6 +1909,7 @@ export class Class_IconLibrary {
   public get icon_link_source_notch() { return this.normalizeIcon(this._icon_link_source_notch) }
   public get icon_link_dashed() { return this.normalizeIcon(this._icon_link_dashed) }
   public get icon_link_visible_when_zero() { return this.normalizeIcon(this._icon_link_visible_when_zero) }
+  public get icon_link_caps() { return this.normalizeIcon(this._icon_link_caps) }
   public get icon_border_dashed() { return this.normalizeIcon(this._icon_border_dashed) }
   public get icon_drop_shadow() { return this.normalizeIcon(this._icon_drop_shadow) }
   public get icon_ellipse_shape() { return this.normalizeIcon(this._icon_ellipse_shape) }
