@@ -28,6 +28,16 @@ pip_install() {
 # Anchor to repo root (this script lives in scripts/)
 cd "$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )/.." && pwd )"
 
+# Nettoyage des distributions corrompues "~xxx" laissees dans le site-packages par
+# des pip install/uninstall interrompus (EACCES du double canal ubuntu/gitlab-runner,
+# process tue en plein milieu). pip les renomme en ~<nom> (ex. logincomponent ->
+# ~ogincomponent) sans jamais les supprimer -> "WARNING: Ignoring invalid distribution"
+# a chaque build et venv qui se degrade. Suppression idempotente avant install.
+SITE_PACKAGES=$(python -c "import sysconfig; print(sysconfig.get_paths()['purelib'])" 2>/dev/null)
+if [ -n "$SITE_PACKAGES" ] && [ -d "$SITE_PACKAGES" ]; then
+  find "$SITE_PACKAGES" -maxdepth 1 -name '~*' -exec rm -rf {} + 2>/dev/null || true
+fi
+
 # Install requirements
 pip_install -r requirements.txt  || exit_if_error $?
 
