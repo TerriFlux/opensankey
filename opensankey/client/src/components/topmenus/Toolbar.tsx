@@ -263,13 +263,14 @@ const FlowValueFilterContent = ({ app_data }: { app_data: Class_ApplicationData 
         isChecked={app_data.drawing_area.show_zero_links}
         onChange={evt => {
           app_data.drawing_area.show_zero_links = evt.target.checked
-          // Bascule de visibilité des flux nuls : invalider la mémo de visibilité
-          // des liens côté nœuds PUIS relayout COMPLET (drawElements, comme au
-          // chargement). Un simple sankey.draw() ne suffisait pas — l'apparition/
-          // disparition des flux à 0 n'était visible qu'après rechargement.
+          // Bascule de visibilité des flux nuls : on rejoue EXACTEMENT le chemin du
+          // rechargement (drawing_area.draw() = bypass_redraws=false + unDraw +
+          // _initDraw + drawElements + fit). Un sankey.draw()/drawElements() seul ne
+          // suffisait pas (mémo de visibilité + bypass_redraws éventuel) : l'effet
+          // n'était visible qu'après rechargement du document.
           app_data.drawing_area.sankey.nodes_list.forEach(n => n.resetLinkVisibilitiesMemorization())
           setCount(a => a + 1)
-          app_data.drawing_area.drawElements()
+          app_data.drawing_area.draw()
           app_data.drawing_area.legend.draw()
         }}
       >
